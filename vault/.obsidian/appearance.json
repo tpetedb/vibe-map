@@ -1,0 +1,8 @@
+{
+  "baseFontSize": 16,
+  "theme": "obsidian",
+  "accentColor": "#FF8C1A",
+  "enabledCssSnippets": [
+    "grimoire"
+  ]
+}

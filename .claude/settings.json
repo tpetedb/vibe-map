@@ -6,7 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "mkdir -p backups && cp -R data backups/data-$(date +%Y%m%d-%H%M%S) 2>/dev/null || true"
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && mkdir -p backups && cp -R data \"backups/data-$(date +%Y%m%d-%H%M%S)-$$\" 2>/dev/null || true",
+            "timeout": 30
           }
         ]
       }

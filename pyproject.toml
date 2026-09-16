@@ -1,0 +1,66 @@
+# Project Grimoire: the Python side of Vibe Code Camp.
+# TOML in practice: one file declares the package, its dependencies, the
+# scripts it installs and how ruff, pyright and pytest are configured.
+# Read it top to bottom; every table is explained in docs/SYLLABUS.md.
+[project]
+name = "grimoire"
+version = "0.2.0"
+description = "Terminal companion, vault builder and test harness for Vibe Code Camp"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Tom" }]
+dependencies = [
+  "click>=8.1",          # the command-line interface
+  "rich>=13.7",          # tables, panels and colour in the terminal
+  "pydantic>=2.7",       # the state file has a schema and it is enforced
+  "polars>=1.0",         # scores.csv as a DataFrame, fast and readable
+  "duckdb>=1.0",         # the same scores.csv in SQL, no server
+  "python-dotenv>=1.0",  # .env files for tokens, never committed
+  "pyyaml>=6.0",         # read the CI workflow back, YAML in practice
+  "textual>=0.80",       # the `just start` onboarding screen
+]
+
+[project.scripts]
+grimoire = "grimoire.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.2",
+  "playwright>=1.45",    # drives Chromium and WebKit for the game tests
+  "pillow>=10.0",        # looks at the screenshots the tests take
+  "ruff>=0.5",
+  "basedpyright>=1.15",
+]
+
+[build-system]
+requires = ["uv_build>=0.8,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "grimoire"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# Vendored skills keep their upstream formatting; see docs/SKILLS.md.
+extend-exclude = [".agents"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Data modules: one long string per fact, wrapped only where it reads well.
+"tools/tech.py" = ["E501"]
+"grimoire/personas.py" = ["E501"]
+"grimoire/toolbelt.py" = ["E501"]
+
+[tool.basedpyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = ["integration: slow end-to-end runs (the full play-through)"]

@@ -1,0 +1,37 @@
+const WORLDS={
+ campus:{name:"Innovation Campus",tag:"Green island, harbour, airstrip. The default environment.",swatch:"#79CC72",
+  grass:"#79CC72",dirt:"#9C7A4E",bank:"#E3D2B0",water:"#2E9BD6",river:"#3FB0E8",fog:"#9BD3F5",tree:"mixed",
+  sky:["#9BD3F5","#F7C88A","#E58C78","#7C6BA8","#2E3468","#171C48","#0B1230","#070B22","#04061A"],
+  land:[[0,0,15],[10,-9,6],[-12,7,5.5],[7,13,5],[-9,-12,5.5],[4,-16,6],[15,4,5]],
+  plots:[[0,10],[-9,8],[-13,-1],[-7,-11],[3,-13],[12,-8],[14,3],[8,11]],
+  way:[[2.5,5],[0,10],[-9,8],[-13,-1],[-7,-11],[3,-13],[12,-8],[14,3],[8,11],[3.5,6]],
+  river:[[-21,6],[-16,4.5],[-11,3.5],[-7,3.6],[-4,4]],lake:[-4,4],bridge:[-11,3.5,.22],
+  extras:["harbour","airstrip","windmill","lighthouse","balloon","mountain","stall","well","birds","flowers"]},
+ winter:{name:"Cold Storage Cluster",tag:"Snow, ice, pines, aurora at night. Data at rest.",swatch:"#E8F1FA",
+  grass:"#EAF2F8",dirt:"#7C8B9A",bank:"#D6E3EC",water:"#4C8FD1",river:"#A9D5F2",fog:"#C7DCEB",tree:"pine",
+  sky:["#C7DCEB","#E9C9B4","#C58AA1","#6C6AA6","#2A3660","#12203F","#0A1530","#060D24","#04081A"],
+  land:[[0,0,15],[11,8,6],[-12,-8,6],[-8,12,5],[8,-14,6],[-16,3,4.5],[15,-5,5]],
+  plots:[[0,10],[-9,9],[-14,3],[-11,-8],[-2,-13],[9,-12],[15,-3],[10,8]],
+  way:[[2.5,5],[0,10],[-9,9],[-14,3],[-11,-8],[-2,-13],[9,-12],[15,-3],[10,8],[3.5,6]],
+  river:[[-20,-2],[-15,-1],[-10,1],[-6,3]],lake:[-4,4],bridge:[-12.5,-.2,.2],
+  extras:["harbour","mountain","snowmen","aurora","snow","well","birds","icefloes"]},
+ desert:{name:"Sandbox Environment",tag:"Dunes, mesas, an oasis, tumbleweed. Non-prod.",swatch:"#E9C46A",
+  grass:"#E9C46A",dirt:"#B07D3A",bank:"#F1DDA2",water:"#2AA7B8",river:"#3FC1CF",fog:"#F4D9A6",tree:"palm",
+  sky:["#F4D9A6","#F7B267","#E8845C","#9B5C8E","#4A3D7A","#25234E","#141634","#0B0C24","#06071A"],
+  land:[[0,0,15],[12,-7,6],[-13,5,6],[6,13,5],[-8,-13,5.5],[16,6,5]],
+  plots:[[2,10],[-8,9],[-14,1],[-9,-10],[2,-13],[12,-9],[15,2],[9,10]],
+  way:[[2.5,5],[2,10],[-8,9],[-14,1],[-9,-10],[2,-13],[12,-9],[15,2],[9,10],[3.5,6]],
+  river:null,lake:[-4,4],bridge:null,
+  extras:["mesas","cacti","tumbleweed","balloon","stall","well","dunes","flowers"]},
+ prod:{name:"Production Environment",tag:"Volcano, lava, ash. Do not touch anything.",swatch:"#3A3A46",
+  grass:"#4A4A58",dirt:"#26262E",bank:"#5B5B6A",water:"#1B3A5C",river:"#FF6A1A",fog:"#5A3C46",tree:"dead",
+  sky:["#5A3C46","#8B4A3E","#6B2E3C","#3F2245","#24173A","#150E2B","#0B0720","#07051A","#040312"],
+  land:[[0,0,15],[10,-9,6],[-12,7,5.5],[7,13,5],[-9,-12,5.5],[15,4,5]],
+  plots:[[0,10],[-9,8],[-13,-1],[-7,-11],[3,-13],[12,-8],[14,3],[8,11]],
+  way:[[2.5,5],[0,10],[-9,8],[-13,-1],[-7,-11],[3,-13],[12,-8],[14,3],[8,11],[3.5,6]],
+  river:[[-21,6],[-16,4.5],[-11,3.5],[-7,3.6],[-4,4]],lake:[-4,4],bridge:[-11,3.5,.22],
+  extras:["volcano","embers","harbour","lighthouse","well","birds"]}
+};
+let W=WORLDS.campus,obstacles=[];
+CAMPAIGN.campus.ws=CH.map(c=>({h:c.h,n:c.n,d:c.d}));
+let CHW=CH;
