@@ -88,6 +88,8 @@ def screenshots(browser, url: str) -> list[Path]:
     )
     page = ctx.new_page()
     _load(page, url, None)
+    # The island orbits behind the title; give it a turn before the shot.
+    page.wait_for_timeout(2200)
     page.screenshot(
         path=str(OUT / "hero.png"), clip={"x": 0, "y": 0, "width": 1200, "height": 630}
     )

@@ -15,6 +15,7 @@ from __future__ import annotations
 import functools
 import json
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,10 +80,14 @@ def _config_js() -> str:
     from vibemap.themes import load_theme, theme_for_game  # noqa: PLC0415
 
     cfg = Config.load()
+    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
+        "project"
+    ]["version"]
     theme = theme_for_game(
         load_theme(cfg.theme.preset), show_pairings=cfg.game.show_pairings
     )
     data = {
+        "version": version,
         "theme": theme,
         "dates": cfg.finale.dates,
         "repo": cfg.game.repo_url,

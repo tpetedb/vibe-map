@@ -31,8 +31,9 @@ function animate(){
   if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*.05}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
   marker.material.opacity*=.985;marker.rotation.z+=dt*2;
-  // camera
-  const asp=$("stage").clientWidth/$("stage").clientHeight;const port=Math.min(1.5,Math.max(1,1.15/asp));const lv=chars.lotte.vel||new T.Vector3();const cp=new T.Vector3(pos.x*.55+lv.x*.4,16*port,pos.z*.55+18*port+lv.z*.4);camera.position.lerp(cp,.06);const lk=new T.Vector3(pos.x*.65,.8,pos.z*.65-1);camera.lookAt(lk);
+  // camera: a slow orbit of the island behind the title, then it follows
+  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*36,20,Math.cos(oa)*36),.04);camera.lookAt(0,-1,0)}
+  else{const asp=$("stage").clientWidth/$("stage").clientHeight;const port=Math.min(1.5,Math.max(1,1.15/asp));const lv=chars.lotte.vel||new T.Vector3();const cp=new T.Vector3(pos.x*.55+lv.x*.4,16*port,pos.z*.55+18*port+lv.z*.4);camera.position.lerp(cp,.06);const lk=new T.Vector3(pos.x*.65,.8,pos.z*.65-1);camera.lookAt(lk)}
   // water
   const a=wGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){a[i+1]=Math.sin(wBase[i]*.35+t*1.3)*.16+Math.cos(wBase[i+2]*.3+t*1.1)*.16}wGeo.attributes.position.needsUpdate=true;wGeo.computeVertexNormals();
   clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>50)c.position.x=-50});

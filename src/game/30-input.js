@@ -18,4 +18,4 @@ function setupInput(){
   $("c").addEventListener("dblclick",()=>{wantJump=true});
 }
 function nearestPlot(){let best=-1,bd=99;PLOT_POS.forEach((p,i)=>{const d=p.distanceTo(chars.lotte.g.position);if(d<bd){bd=d;best=i}});return {i:best,d:bd}}
-let nearK=0,started=false,lastSay="";
+let nearK=0,started=false,inited=false,lastSay="";
