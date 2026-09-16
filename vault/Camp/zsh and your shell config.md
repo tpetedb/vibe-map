@@ -15,7 +15,7 @@ tags: [tech, dark]
 - Unlocks: [[Dotfiles]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

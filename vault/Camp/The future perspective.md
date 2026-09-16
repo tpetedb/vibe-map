@@ -14,7 +14,7 @@ Every age here shortened the distance between an idea and a working thing: the t
 - Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [Agentic AI Foundation](https://agents.md), [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol)
 - Age: Future Age · Level: Expert
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -15,7 +15,7 @@ pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (ta
 - Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

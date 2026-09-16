@@ -15,7 +15,7 @@ Tools read settings from text files in a few formats. JSON: strict, braces, what
 - Unlocks: [[.env files and secrets]], [[YAML in practice - CI and Compose]], [[TOML in practice - pyproject.toml]], [[AGENTS.md]], [[Skills (Agent Skills standard)]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

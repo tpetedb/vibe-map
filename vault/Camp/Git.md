@@ -15,7 +15,7 @@ A time machine for a folder. Commit = named snapshot, branch = parallel line of 
 - Unlocks: [[GitHub, pull requests, Pages]], [[Hooks]], [[CI-CD and automation]], [[Semantic Versioning]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

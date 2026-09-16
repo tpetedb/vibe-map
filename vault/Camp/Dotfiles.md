@@ -15,7 +15,7 @@ Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure
 - Unlocks: [[Config formats - JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

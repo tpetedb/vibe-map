@@ -15,7 +15,7 @@ The terminal is a text conversation with the computer. Every tool in this tree i
 - Unlocks: [[Bash and shell scripts]], [[Files, folders and paths]], [[Git]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

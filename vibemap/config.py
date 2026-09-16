@@ -14,7 +14,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-ROOT = Path(__file__).resolve().parents[1]
+from vibemap import project
+
+ROOT = project.root()
 CONFIG_PATH = ROOT / "vibe.toml"
 
 Difficulty = Literal["beginner", "easy", "normal", "hard", "expert", "god"]

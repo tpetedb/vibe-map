@@ -1,22 +1,18 @@
 """The campaign data: four evenings, twelve mentors, the tech tree.
 
-src/data/campaign.json is the one source the game and the CLI share; the
-tech tree comes from tools/tech.py so the notes, the roadmap and the quests
+vibemap/data/campaign.json is the one source the game and the CLI share; the
+tech tree comes from vibemap/tech.py so the notes, the roadmap and the quests
 can never disagree.
 """
 
 from __future__ import annotations
 
-import importlib.util
 import json
 from dataclasses import dataclass
 from functools import cache
-from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[1]
-CAMPAIGN_PATH = ROOT / "src" / "data" / "campaign.json"
-TECH_PATH = ROOT / "tools" / "tech.py"
+from vibemap import project, tech
 
 WORLD_NAMES = {
     "campus": "Innovation Campus",
@@ -62,7 +58,7 @@ class TechNode:
 
 @cache
 def raw() -> dict[str, Any]:
-    return json.loads(CAMPAIGN_PATH.read_text(encoding="utf-8"))
+    return json.loads(project.data_text("campaign.json"))
 
 
 @cache
@@ -120,9 +116,4 @@ def tech_nodes() -> list[TechNode]:
 
 
 def _tech_module() -> Any:
-    spec = importlib.util.spec_from_file_location("vibemap_tech", TECH_PATH)
-    if spec is None or spec.loader is None:
-        raise FileNotFoundError(f"cannot load {TECH_PATH}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    return tech

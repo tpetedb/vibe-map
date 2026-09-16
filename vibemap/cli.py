@@ -27,7 +27,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign
+from vibemap import __version__, campaign, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
@@ -38,7 +38,7 @@ from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
 from vibemap.vault import Vault
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project.root()
 console = Console(theme=RICH_THEME, highlight=False)
 WORLDS = list(campaign.WORLD_NAMES)
 
@@ -102,6 +102,11 @@ def status(ctx: Ctx, as_json: bool) -> None:
             )
         )  # fmt: skip
         return
+    if not project.is_camp():
+        console.print(
+            f"[warn]No camp in {ROOT}[/] (no vibe.toml). "
+            "Start one with [accent]vibe new[/], or cd into a camp."
+        )
     diff = DIFFICULTIES[cfg.learner.difficulty]
     head = (
         f"[title]{st.name}[/] · {ctx.persona.label} · {diff.label} · "
@@ -707,6 +712,51 @@ def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
         status = f"[ok]{v}[/]" if v else f"[warn]missing[/] [muted]{tool.install}[/]"
         t.add_row(tool.label, tool.tier, status, tool.what)
     console.print(t)
+
+
+@cli.command()
+@click.argument("directory", default="vibe-map")
+@click.option(
+    "--github", default=None, help="also create OWNER/NAME on GitHub from the template"
+)
+def new(directory: str, github: str | None) -> None:
+    """Start a new camp: clone the template into DIRECTORY, or generate it on GitHub."""
+    target = Path(directory).expanduser().resolve()
+    if target.exists() and any(target.iterdir()):
+        _fail(f"{target} exists and is not empty")
+    if github:
+        cmd = [
+            "gh",
+            "repo",
+            "create",
+            github,
+            "--template",
+            "tpetedb/vibe-map",
+            "--public",
+            "--clone",
+        ]
+        console.print(f"[muted]$ {' '.join(cmd)}[/]")
+        rc = subprocess.run(cmd, cwd=target.parent).returncode
+        cloned = target.parent / github.split("/")[-1]
+        if rc == 0 and cloned != target and cloned.exists():
+            cloned.rename(target)
+    else:
+        cmd = [
+            "git",
+            "clone",
+            "--depth",
+            "1",
+            "https://github.com/tpetedb/vibe-map.git",
+            str(target),
+        ]
+        console.print(f"[muted]$ {' '.join(cmd)}[/]")
+        rc = subprocess.run(cmd).returncode
+    if rc != 0:
+        _fail("clone failed; is git (or gh, with --github) installed and logged in?")
+    console.print(
+        f"[ok]camp ready[/] at {target}\nNext:\n  cd {target.name}\n"
+        "  just setup\n  just start"
+    )
 
 
 @cli.command()

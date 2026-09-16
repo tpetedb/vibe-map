@@ -15,7 +15,7 @@ Continuous integration: every push runs the tests and checks in a clean machine.
 - Unlocks: [[Headless agents and scheduling]], [[Tests and evals]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

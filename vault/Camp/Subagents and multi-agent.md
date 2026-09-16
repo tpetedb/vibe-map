@@ -15,7 +15,7 @@ A subagent is a second model instance with its own instructions and context, cal
 - Unlocks: [[Headless agents and scheduling]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

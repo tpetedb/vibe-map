@@ -7,7 +7,7 @@ allowed-tools: Bash(uv run vibe *) Read
 
 The pattern is Andrej Karpathy's llm-council (https://github.com/karpathy/llm-council):
 several answers, anonymised peer review, one chairman synthesis. Here the
-"models" are the mentors in `src/data/campaign.json`, each grounded in their
+"models" are the mentors in `vibemap/data/campaign.json`, each grounded in their
 recorded ideas and sources, so nobody invents a quote.
 
 ## Fast path (one command)
@@ -26,7 +26,7 @@ Add `--dry-run` to see the prompts without calling anything.
 
 When you are the agent and the user wants it live in the session:
 
-1. Read the mentors from `src/data/campaign.json`; pick at most four whose
+1. Read the mentors from `vibemap/data/campaign.json`; pick at most four whose
    `ideas` touch the question.
 2. Spawn one subagent per mentor with this brief: "You are NAME, ROLE. Answer
    only with positions attributable to these recorded ideas and sources: IDEAS,

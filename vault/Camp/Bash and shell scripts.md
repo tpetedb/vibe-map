@@ -15,7 +15,7 @@ Bash is the language the terminal speaks. A shell script is a text file of comma
 - Unlocks: [[zsh and your shell config]], [[Dotfiles]], [[Docker and containers]], [[Hooks]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

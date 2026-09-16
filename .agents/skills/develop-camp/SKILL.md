@@ -9,8 +9,8 @@ Read `HANDOVER.md` first, every session: architecture, ground rules, priority li
 ## Where things live
 
 - Game source: `src/` (`src/game/*.js` modules in load order, `src/style.css`, `src/head.html`, `src/body.html`, `src/vendor/three.min.js`). `game/vibe-map.html` is built by `just build` (`tools/build.py`, plain concatenation). Never hand-edit the built file; `just build-check` catches it.
-- One source for the game and the CLI: `src/data/campaign.json` (evenings, workstreams, mentors).
-- Tech tree: `tools/tech.py`. `just tree` regenerates the notes, the tree JS and `docs/ROADMAP.md`, then rebuilds the game. No pasting.
+- One source for the game and the CLI: `vibemap/data/campaign.json` (evenings, workstreams, mentors).
+- Tech tree: `vibemap/tech.py`. `just tree` regenerates the notes, the tree JS and `docs/ROADMAP.md`, then rebuilds the game. No pasting.
 - CLI: `vibemap/` (`uv run vibe <cmd>`). Tests: `tests/` (`just test`; browser smoke only: `just smoke`).
 
 ## Loop for any change
@@ -34,6 +34,6 @@ Read `HANDOVER.md` first, every session: architecture, ground rules, priority li
 ## Adding things
 
 - World: add a config to `WORLDS` in `src/game/20-worlds.js` (palette, sky, land blobs, plots, way, river, extras); `buildWorld(id)` does the rest. Test with `setWorld('id')` in the console, then `just smoke`.
-- Workstream: new section `s-N` in `src/body.html`, entry in `CH` and `SAY[N]` (`src/game/00-state.js`), a `building(N)` case (`src/game/12-buildings.js`), pairing, vault note, syllabus section, and `src/data/campaign.json`. Eight is the current count; bump every `8`.
-- Tech note: edit `tools/tech.py`, then `just tree`.
+- Workstream: new section `s-N` in `src/body.html`, entry in `CH` and `SAY[N]` (`src/game/00-state.js`), a `building(N)` case (`src/game/12-buildings.js`), pairing, vault note, syllabus section, and `vibemap/data/campaign.json`. Eight is the current count; bump every `8`.
+- Tech note: edit `vibemap/tech.py`, then `just tree`.
 - Diagrams in docs or notes: the mermaid-diagrams skill (palette classDefs, ISO 5807 shapes, a legend).

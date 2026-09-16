@@ -15,7 +15,7 @@ claude -p runs the agent as a command: prompt in, result out, no chat. Put it in
 - Unlocks: [[Tests and evals]], [[Cost, tokens and model choice]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

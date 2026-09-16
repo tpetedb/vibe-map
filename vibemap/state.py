@@ -16,10 +16,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from vibemap import project
+
 STATE_VERSION = 2
 CODE_VERSION = 2
 WORLDS = ("campus", "winter", "desert", "prod")
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project.root()
 STATE_PATH = ROOT / ".vibe" / "state.json"
 
 

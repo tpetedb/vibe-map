@@ -14,7 +14,7 @@ None
 - Docs: [Source: Obsidian help](https://help.obsidian.md)
 - Age: Future Age · Level: Expert
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -15,7 +15,7 @@ A server is a computer that is always on. The cloud rents you one by the hour (A
 - Unlocks: [[Kubernetes and platforms]], [[Cost, tokens and model choice]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

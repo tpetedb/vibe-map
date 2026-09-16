@@ -1,6 +1,7 @@
-"""Regenerate the tech tree outputs from tools/tech.py.
+"""Regenerate the tech tree outputs from vibemap/tech.py.
 
-Writes docs/ROADMAP.md and tools/generated/{notes,tree}.js; tools/build.py
+Writes docs/ROADMAP.md, docs/RESOURCES.md and tools/generated/{notes,tree}.js;
+tools/build.py
 embeds the JS into the game. Never hand-edit those outputs.
 
     uv run python tools/regen_tree.py           write the three outputs
@@ -13,12 +14,14 @@ import json
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from tech import AGES, T  # noqa: E402
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from vibemap.project import data_text  # noqa: E402
+from vibemap.tech import AGES, T  # noqa: E402
+
 GENERATED = ROOT / "tools" / "generated"
 ROADMAP = ROOT / "docs" / "ROADMAP.md"
+RESOURCES = ROOT / "docs" / "RESOURCES.md"
 
 # Topics that already have a handwritten vault note under this title.
 EXIST = {
@@ -115,6 +118,7 @@ def main() -> None:
         GENERATED / "notes.js": _notes_js(notes),
         GENERATED / "tree.js": tree_js,
         ROADMAP: md,
+        RESOURCES: data_text("resources.md"),
     }
     if "--check" in sys.argv:
         stale = [
@@ -125,7 +129,7 @@ def main() -> None:
         if stale:
             print("stale tech tree outputs: " + ", ".join(stale) + "; run: just tree")
             sys.exit(1)
-        print("tree OK: outputs match tools/tech.py")
+        print("tree OK: outputs match vibemap/tech.py")
         return
     GENERATED.mkdir(exist_ok=True)
     for p, text in outputs.items():

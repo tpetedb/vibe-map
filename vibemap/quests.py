@@ -17,16 +17,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from vibemap import campaign
+from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.state import State
 from vibemap.vault import safe_title
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project.root()
 XP_BASE = 100
 Level = Literal["lenient", "strict", "extra"]
 
-# (age id, level label, xp needed). The names are the ages of tools/tech.py;
+# (age id, level label, xp needed). The names are the ages of vibemap/tech.py;
 # tests assert the two lists agree.
 LEVELS: tuple[tuple[str, str, int], ...] = (
     ("dark", "Intern", 0),

@@ -15,7 +15,7 @@ localhost (127.0.0.1) is your own machine talking to itself over the network sta
 - Unlocks: [[HTTP and APIs]], [[Docker and containers]], [[MCP (Model Context Protocol)]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

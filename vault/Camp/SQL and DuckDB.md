@@ -15,7 +15,7 @@ SQL asks questions of tables: select what, from where, filter, group, order. Duc
 - Unlocks: [[Data - files, schemas, warehouses]], [[Building and consuming APIs]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

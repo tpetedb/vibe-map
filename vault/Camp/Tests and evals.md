@@ -15,7 +15,7 @@ A test runs code and checks the result. An eval does the same for an agent: a se
 - Unlocks: [[CI-CD and automation]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -15,7 +15,7 @@ SSH is an encrypted terminal to another computer. ssh user@host gives you a shel
 - Unlocks: [[Cloud and servers]], [[Docker and containers]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

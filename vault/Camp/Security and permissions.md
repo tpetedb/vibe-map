@@ -15,7 +15,7 @@ Agents run commands. Give them the least they need: a folder, a permission list,
 - Unlocks: [[Cost, tokens and model choice]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

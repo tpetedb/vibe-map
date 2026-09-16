@@ -15,7 +15,7 @@ The context window is the model's working memory for one conversation: everythin
 - Unlocks: [[AGENTS.md]], [[Skills (Agent Skills standard)]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

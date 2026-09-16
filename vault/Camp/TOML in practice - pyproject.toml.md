@@ -15,7 +15,7 @@ TOML is INI with types. [tables] group keys; key = "value" pairs are typed (stri
 - Unlocks: [[Python libraries - what they are for]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

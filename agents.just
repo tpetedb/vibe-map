@@ -29,7 +29,7 @@ links-check:
 build-check:
     @uv run python tools/build.py --check
 
-# the tech tree outputs are in sync with tools/tech.py
+# the tech tree outputs are in sync with vibemap/tech.py
 [group('check')]
 tree-check:
     @uv run python tools/regen_tree.py --check
