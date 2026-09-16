@@ -40,7 +40,10 @@ def test_nothing_loads_the_learners_index_html() -> None:
     """game/index.html is replaced on the night; only prose may mention it."""
     html = GAME.read_text()
     assert not re.search(r'(src|href)="[^"]*index\.html"', html)
+    # quests.py may look at the file to verify workstream 1; nothing else may.
     for py in (ROOT / "grimoire").glob("*.py"):
+        if py.name == "quests.py":
+            continue
         assert "index.html" not in py.read_text(), py
 
 
