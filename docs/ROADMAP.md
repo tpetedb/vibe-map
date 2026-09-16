@@ -36,7 +36,7 @@ Unlocks: zsh and your shell config, Dotfiles, Docker and containers, Hook
 
 **History.** zsh was written by Paul Falstad while a student at Princeton, around 1990. Apple made it the default login shell with macOS 10.15 Catalina in October 2019, replacing bash.
 
-**Try in five minutes.** source scripts/grimoire.zsh then g status.
+**Try in five minutes.** source scripts/vibe.zsh then g status.
 
 Docs: [zsh manual](https://zsh.sourceforge.io/Doc/) · [oh-my-zsh](https://ohmyz.sh) · [starship prompt](https://starship.rs) · [Source: zsh FAQ, 1.1 What is it?](https://zsh.sourceforge.io/FAQ/zshfaq01.html) · [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360) · [Source: Apple newsroom, macOS Catalina is available today (October 2019)](https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/)
 
@@ -44,7 +44,7 @@ Unlocks: Dotfiles
 
 ### Files, folders and paths
 
-A project is a folder. A path is an address inside it: absolute (/Users/lotte/grimoire) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 
@@ -60,7 +60,7 @@ Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure
 
 **History.** Sharing dotfile repos on GitHub took off after GitHub launched in 2008; the community guide dotfiles.github.io followed in 2012. Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.
 
-**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='python3 grimoire/cli.py'.
+**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='uv run vibe'.
 
 Docs: [dotfiles.github.io](https://dotfiles.github.io) · [Claude Code settings](https://code.claude.com/docs/en/settings) · [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/) · [Source: dotfiles.github.io repository (created April 2012)](https://github.com/dotfiles/dotfiles.github.com)
 
@@ -196,7 +196,7 @@ Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the fil
 
 **History.** Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
 
-**Try in five minutes.** Write vault/Grimoire/Me.md with three sentences and two `[[links]]`. Open the graph.
+**Try in five minutes.** Write vault/Camp/Me.md with three sentences and two `[[links]]`. Open the graph.
 
 Docs: [Markdown guide](https://www.markdownguide.org) · [Obsidian help](https://help.obsidian.md) · [Mermaid](https://mermaid.js.org/intro/) · [Source: Markdown 1.0.1 (December 2004)](https://daringfireball.net/projects/markdown/) · [Source: Daring Fireball on GitHub Flavored Markdown (October 2009)](https://daringfireball.net/linked/2009/10/23/github-flavored-markdown) · [Source: Obsidian, About](https://obsidian.md/about)
 
@@ -332,7 +332,7 @@ A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change b
 
 **History.** Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.
 
-**Try in five minutes.** uv run grimoire --version, then open pyproject.toml and grimoire/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
+**Try in five minutes.** uv run vibe --version, then open pyproject.toml and vibemap/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
 
 Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) · [Source: semver.org, About (authored by Tom Preston-Werner)](https://semver.org/) · [Source: semver/semver, merge of release-2.0 (18 June 2013)](https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9) · [Source: semver/semver, the commit tagged v1.0.0 (September 2011)](https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27)
 
@@ -372,7 +372,7 @@ The context window is the model's working memory for one conversation: everythin
 
 **History.** GPT-3 had a 2,048-token window (2020); Claude went to 100k in May 2023; Gemini 1.5 ran a million tokens in February 2024 and Claude Sonnet 4 in August 2025. Bigger windows did not remove the need for good instructions; they moved it to what you load.
 
-**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple cloak, keep stats, touch nothing else'. Compare the diff.
+**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple badge, keep stats, touch nothing else'. Compare the diff.
 
 Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview) · [Claude Code best practices](https://code.claude.com/docs/en/best-practices) · [Source: GPT-3 paper, section 2 (context window of 2048 tokens)](https://arxiv.org/abs/2005.14165) · [Source: Anthropic, Introducing 100K context windows (May 2023)](https://www.anthropic.com/news/100k-context-windows) · [Source: Google, Gemini 1.5 (February 2024)](https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/) · [Source: Claude Sonnet 4 1M token context (August 2025)](https://claude.com/blog/1m-context)
 
@@ -502,7 +502,7 @@ Every age here shortened the distance between an idea and a working thing: the t
 
 **History.** 1969 Unix, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.
 
-**Try in five minutes.** Write vault/Grimoire/Bets.md: three things you think will be true in two years, dated. Reread in two years.
+**Try in five minutes.** Write vault/Camp/Bets.md: three things you think will be true in two years, dated. Reread in two years.
 
 Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents) · [Agentic AI Foundation](https://agents.md) · [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html) · [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol)
 

@@ -11,9 +11,9 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import Browser
 
-from grimoire.state import State
 from tests.conftest import GAME_PATH
 from tools.play import play_everything
+from vibemap.state import State
 
 
 @pytest.mark.integration

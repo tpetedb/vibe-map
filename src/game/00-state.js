@@ -9,7 +9,9 @@ let CH=[
   {h:"22:30",n:"Go-to-Market Tower",d:"GitHub and GitHub Pages: a real URL"},
   {h:"23:00",n:"Autonomous Operations Plant",d:"Headless Claude on a schedule, and a subagent"},
 ];
-const SAY={
+// Two voices for the same beats: the wine-night original, and the plain set
+// every other theme uses. Rolinda asks the simple question in both.
+const SAY_WINE={
   title:["tom","Welcome aboard, and thank you for prioritising this. Confirm your preferred name, then we kick off. I have blocked four hours, one bottle, and a contingency bottle."],
   walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the 18:00 signpost before it warms up."],
   near:["rolinda","Go on then. Tap Enter. Swirl first, it needs air, like most of your MVP."],
@@ -25,9 +27,28 @@ const SAY={
   done:["tom","OKR unlocked. Tremendous synergy. The campus just scaled horizontally. Rolinda is pouring the next pairing, please proceed to the next signpost with your glass."],
   fin:["rolinda","All eight built. Come back to the inn, we still need to pick a date, and I am not decanting for a maybe."]
 };
-let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,creature:null};
-function save(){try{localStorage.setItem("grimoire3",JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem("grimoire3");if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+const SAY_PLAIN={
+  title:["tom","Welcome. Confirm your name and we start. Four hours are blocked, the coffee is on, and nothing on this island can break in a way we cannot undo."],
+  walk:["rolinda","Coffee is poured. Walk to the 18:00 signpost; the first stop is the one where you build something."],
+  near:["rolinda","Go on, tap Enter. Read the definition of done first, then do the thing, then tell me in one sentence what happened."],
+  1:["tom","Three sentences, one file, ship it. We fix the loop before we fix the game."],
+  2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Write that down; that is the whole lesson."],
+  3:["rolinda","Where do the numbers live? In the game, or somewhere you can query? Second coffee, by the way."],
+  4:["rolinda","What happens if you delete it by accident? Show me the way back before you show me the way forward."],
+  5:["rolinda","Can it see my email now? I want to be clear about this before I say yes."],
+  6:["rolinda","Is that a mind map? Click a node and read me what it says, in your own words."],
+  7:["rolinda","Can my mother open it on her iPad? A link is not a link until someone else opens it."],
+  8:["rolinda","So it works while you sleep? Then show me what it did this morning."],
+  9:["tom","Campus is live and I am off call. Pick the date, pick what we drink, circulate the message."],
+  done:["tom","OKR unlocked. Next signpost. Bring the coffee."],
+  fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
+};
+const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
+let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null};
+// Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
+const KEY="vibemap1",OLD_KEY="grimoire3";
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just

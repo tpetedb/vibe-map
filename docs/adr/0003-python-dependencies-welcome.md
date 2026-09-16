@@ -4,7 +4,7 @@ Status: Accepted, 2026-09-16
 
 ## Context
 
-The first `AGENTS.md` said "Python: standard library first; add a dependency only when it removes real work", and the companion was one file, `grimoire/cli.py`, run with `python3`. That kept the template runnable on a bare Mac and taught nothing about packaging.
+The first `AGENTS.md` said "Python: standard library first; add a dependency only when it removes real work", and the companion was one file, `vibemap/cli.py`, run with `python3`. That kept the template runnable on a bare Mac and taught nothing about packaging.
 
 The companion grew: a CLI with twenty-one commands, a state file with a schema, tables and colour in the terminal, scores through a DataFrame and through SQL, an onboarding screen. With the standard library alone that is argparse, hand-rolled validation, ANSI codes and CSV loops: more code, worse code, and none of the tools a learner meets in a real Python repo. The syllabus wants the learner to read a `pyproject.toml` and understand it (the TOML node of the tech tree).
 
@@ -20,7 +20,7 @@ We will keep `python/scores.py` and the `sql/` queries runnable without the pack
 
 ## Consequences
 
-- `uv sync` is a prerequisite for the CLI and the tests. `uv run grimoire` is the entry point; `python3 grimoire/cli.py` is not. `README.md` still shows the old command in its quickstart and has to follow.
+- `uv sync` is a prerequisite for the CLI and the tests. `uv run vibe` is the entry point; `uv run vibe` is not. `README.md` still shows the old command in its quickstart and has to follow.
 - The learner sees a real packaging setup: a `[project]` table, dependency groups, the tool tables for ruff, pyright and pytest, and a lock file.
 - Every new dependency is a decision: it must remove real work, get its comment, and survive `uv sync` on a fresh clone.
 - Playwright needs a browser download on top of `uv sync`; it is the heaviest thing in the toolchain and the one the browser tests cannot do without.

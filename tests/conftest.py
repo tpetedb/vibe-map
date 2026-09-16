@@ -23,8 +23,8 @@ from playwright.sync_api import Browser, Page, Playwright, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "out"
-GAME_PATH = "/game/grimoire.html"
-STORAGE_KEY = "grimoire3"
+GAME_PATH = "/game/vibe-map.html"
+STORAGE_KEY = "vibemap1"
 
 # Software WebGL for headless Chromium. Without ANGLE on SwiftShader the
 # canvas has no context and the game falls back to the roadmap list, which

@@ -12,9 +12,9 @@ Some outcomes cannot be checked exactly from the repo (a deployed URL, a schedul
 
 ## Decision
 
-We will award XP only through checks that inspect the repository: files and their content, git history, the vault, the settings, test results. `grimoire check N` runs the checks for workstream N and reports each with a hint; `grimoire done N` runs them first and claims only when they pass.
+We will award XP only through checks that inspect the repository: files and their content, git history, the vault, the settings, test results. `vibe check N` runs the checks for workstream N and reports each with a hint; `vibe done N` runs them first and claims only when they pass.
 
-We will let `grimoire done N --force` claim anyway, at half XP, and record which checks passed and failed in the state file next to the claim.
+We will let `vibe done N --force` claim anyway, at half XP, and record which checks passed and failed in the state file next to the claim.
 
 We will grade by difficulty: lenient checks always apply, strict ones from `hard` up, extra ones from `expert` up; XP is 100 times the difficulty multiplier.
 
@@ -25,5 +25,5 @@ We will keep the checks with the campaign: a workstream without a quest and hint
 - XP means something: the state file records what was verified, and the vault note for the workstream lists the checks that passed.
 - The checks must track the campaign and the repo layout. A renamed file breaks a check, and a check that is wrong frustrates a learner who did the work; `--force` is the escape hatch, and its half XP is the honest price of not being checked.
 - Checks that shell out (git, the tests) run with a timeout and never crash the CLI: a crashed check is a failed check with a message.
-- The game's progress code still exists and `grimoire import` reads it, but the verified state file is the source of truth, not the game.
+- The game's progress code still exists and `vibe import` reads it, but the verified state file is the source of truth, not the game.
 - A learner who wants full XP has to do the work. That is the course.

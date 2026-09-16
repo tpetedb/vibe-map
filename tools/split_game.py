@@ -1,4 +1,4 @@
-"""One-shot: split the monolithic game/grimoire.html into src/.
+"""One-shot: split the monolithic game/vibe-map.html into src/.
 
 Run once against the 2026-09-16 build (1708 lines). Line ranges are exact so
 that tools/build.py reproduces the original byte for byte; afterwards src/ is
@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GAME = ROOT / "game" / "grimoire.html"
+GAME = ROOT / "game" / "vibe-map.html"
 SRC = ROOT / "src"
 
 # (file, first line, last line), 1-based inclusive, contiguous over 654..1704

@@ -1,12 +1,12 @@
-"""Build game/grimoire.html from src/.
+"""Build game/vibe-map.html from src/.
 
 The game ships as one file with three.js embedded and no CDN. src/ holds the
 parts in load order; this script concatenates them and injects the generated
-data (campaign JSON, tech notes, tech tree) and the values from grimoire.toml
+data (campaign JSON, tech notes, tech tree) and the values from vibe.toml
 that the game exposes as constants. Concatenation is the whole build: no
 bundler, no minifier, so the output stays readable and diffable.
 
-    uv run python tools/build.py           write game/grimoire.html
+    uv run python tools/build.py           write game/vibe-map.html
     uv run python tools/build.py --check   exit 1 if the file differs from a fresh build
 """
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-OUT = ROOT / "game" / "grimoire.html"
+OUT = ROOT / "game" / "vibe-map.html"
 GENERATED = ROOT / "tools" / "generated"
 
 # Game modules in load order. The state module must come first (S, save,
@@ -70,10 +70,10 @@ def _tree_js() -> str:
 
 
 def _config_js() -> str:
-    """The values from grimoire.toml the game exposes as a constant."""
+    """The values from vibe.toml the game exposes as a constant."""
     sys.path.insert(0, str(ROOT))
-    from grimoire.config import Config  # noqa: PLC0415
-    from grimoire.themes import load_theme, theme_for_game  # noqa: PLC0415
+    from vibemap.config import Config  # noqa: PLC0415
+    from vibemap.themes import load_theme, theme_for_game  # noqa: PLC0415
 
     cfg = Config.load()
     theme = theme_for_game(
@@ -139,10 +139,10 @@ def main() -> None:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
         if current != html:
             print(
-                "game/grimoire.html differs from a fresh build of src/; run: just build"
+                "game/vibe-map.html differs from a fresh build of src/; run: just build"
             )
             sys.exit(1)
-        print("build OK: game/grimoire.html matches src/")
+        print("build OK: game/vibe-map.html matches src/")
         return
     OUT.write_text(html, encoding="utf-8")
     print(f"wrote {OUT.relative_to(ROOT)} ({len(html.encode()) // 1024} KB)")

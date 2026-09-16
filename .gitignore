@@ -1,6 +1,6 @@
 .venv/
 backups/
-.grimoire/
+.vibe/
 python/out/
 .DS_Store
 __pycache__/

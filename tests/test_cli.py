@@ -8,17 +8,17 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from grimoire import campaign
-from grimoire.cli import cli
-from grimoire.config import DIFFICULTIES, Config
-from grimoire.personas import PERSONAS, get_persona
-from grimoire.quests import LEVELS, level_for, quest_for, required_levels, xp_for
-from grimoire.scores import read_scores, run_sql, summary
-from grimoire.state import State, decode_code
-from grimoire.themes import THEMES, load_theme
-from grimoire.toolbelt import TOOLS
-from grimoire.vault import Vault, safe_title
 from tests.conftest import ROOT
+from vibemap import campaign
+from vibemap.cli import cli
+from vibemap.config import DIFFICULTIES, Config
+from vibemap.personas import PERSONAS, get_persona
+from vibemap.quests import LEVELS, level_for, quest_for, required_levels, xp_for
+from vibemap.scores import read_scores, run_sql, summary
+from vibemap.state import State, decode_code
+from vibemap.themes import THEMES, load_theme
+from vibemap.toolbelt import TOOLS
+from vibemap.vault import Vault, safe_title
 
 # ---- state ---------------------------------------------------------------------
 
@@ -85,7 +85,7 @@ def test_progress_code_round_trip_and_version_gate() -> None:
 
 
 def test_config_defaults_and_round_trip(tmp_path: Path) -> None:
-    p = tmp_path / "grimoire.toml"
+    p = tmp_path / "vibe.toml"
     cfg = Config()
     cfg.save(p)
     assert Config.load(p) == cfg
@@ -93,7 +93,7 @@ def test_config_defaults_and_round_trip(tmp_path: Path) -> None:
 
 
 def test_config_refuses_unknown_keys(tmp_path: Path) -> None:
-    p = tmp_path / "grimoire.toml"
+    p = tmp_path / "vibe.toml"
     p.write_text('[learner]\nname = "x"\ndifficulty = "insane"\n[typo]\nx = 1\n')
     with pytest.raises(ValueError) as e:
         Config.load(p)
@@ -101,7 +101,7 @@ def test_config_refuses_unknown_keys(tmp_path: Path) -> None:
 
 
 def test_committed_config_is_valid() -> None:
-    cfg = Config.load(ROOT / "grimoire.toml")
+    cfg = Config.load(ROOT / "vibe.toml")
     assert cfg.learner.persona in PERSONAS
     assert cfg.theme.preset in THEMES
 
@@ -242,7 +242,7 @@ def test_cli_status_json_and_export() -> None:
 
 
 def test_note_methods_bootstrap_into_a_fresh_vault(tmp_path: Path) -> None:
-    from grimoire.methods import METHODS, get_method
+    from vibemap.methods import METHODS, get_method
 
     assert len(METHODS) == 8
     cfg = Config.model_validate({"vault": {"path": str(tmp_path), "folder": "G"}})

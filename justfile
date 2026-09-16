@@ -16,7 +16,7 @@ default:
 
 # the onboarding terminal: checks the machine, offers installs, launches things
 start:
-    uv run grimoire start
+    uv run vibe start
 
 # install what the evening needs: Python env, browsers for the tests, skill links, vault
 setup *args:
@@ -24,9 +24,9 @@ setup *args:
 
 # open the game in the default browser
 game:
-    open game/grimoire.html
+    open game/vibe-map.html
 
-# rebuild game/grimoire.html from src/
+# rebuild game/vibe-map.html from src/
 build:
     uv run python tools/build.py
 
@@ -37,16 +37,16 @@ tree:
 
 # where you are in the campaign, with XP and quests
 status:
-    uv run grimoire status
+    uv run vibe status
 
 # verify the definition of done for a workstream, award the XP (all if omitted)
 check *n:
-    uv run grimoire check {{n}}
+    uv run vibe check {{n}}
 
 # rebuild the vault notes and the Mermaid map, then lint for orphans and dead links
 vault:
-    uv run grimoire vault build
-    uv run grimoire vault lint
+    uv run vibe vault build
+    uv run vibe vault lint
 
 # run the whole pytest battery (CLI, build, Playwright in Chromium and WebKit)
 test:
@@ -75,18 +75,18 @@ cookbook:
 toolbelt *install:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -n "{{install}}" ]; then uv run grimoire toolbelt --install "{{install}}"; else uv run grimoire toolbelt; fi
+    if [ -n "{{install}}" ]; then uv run vibe toolbelt --install "{{install}}"; else uv run vibe toolbelt; fi
 
 # ask the provider to explain the last commits in plain words
 explain n="3":
-    uv run grimoire explain -n {{n}}
+    uv run vibe explain -n {{n}}
 
 # example: just council "Should I learn git before Python?"
 # convene the mentors on a question; minutes land in the vault
 council topic:
-    uv run grimoire council "{{topic}}"
+    uv run vibe council "{{topic}}"
 
-# example: just break dragons
+# example: just break sandbox
 # a sandbox branch to break things in: play/<name>, from the current branch
 break name:
     git switch -c play/{{name}}
@@ -101,7 +101,7 @@ rescue:
     git add -A && git commit -qm "Play session on $branch" || true
     git switch main
     echo "Back on main. $branch is kept; delete it with: git branch -D $branch"
-    uv run grimoire explain -n 1 || true
+    uv run vibe explain -n 1 || true
 
 # remove build caches and test output
 clean:

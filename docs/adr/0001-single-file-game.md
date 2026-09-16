@@ -12,11 +12,11 @@ The source outgrew one file for editing: state, scene, character, buildings, wor
 
 ## Decision
 
-We will ship the game as one file, `game/grimoire.html`, with three.js and motion embedded from `src/vendor/`, no CDN and no external request.
+We will ship the game as one file, `game/vibe-map.html`, with three.js and motion embedded from `src/vendor/`, no CDN and no external request.
 
-We will keep the source in `src/`: `head.html`, `style.css`, `body.html`, `src/game/*.js` in numbered load order, `src/data/campaign.json`. `tools/build.py` concatenates them and injects the campaign JSON, the generated tech notes and tree, and the constants from `grimoire.toml`. Concatenation is the whole build: no bundler and no minifier of our own code, so the output stays readable.
+We will keep the source in `src/`: `head.html`, `style.css`, `body.html`, `src/game/*.js` in numbered load order, `src/data/campaign.json`. `tools/build.py` concatenates them and injects the campaign JSON, the generated tech notes and tree, and the constants from `vibe.toml`. Concatenation is the whole build: no bundler and no minifier of our own code, so the output stays readable.
 
-We will never hand-edit `game/grimoire.html`. `tools/build.py --check` fails when the file differs from a fresh build, and the test suite runs that check.
+We will never hand-edit `game/vibe-map.html`. `tools/build.py --check` fails when the file differs from a fresh build, and the test suite runs that check.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 # Publish the game to GitHub Pages on every push to main (workstream 7).
 # The site is the game/ folder: one HTML file, no build step on the runner
-# because game/grimoire.html is committed already built. Enable Pages once in
+# because game/vibe-map.html is committed already built. Enable Pages once in
 # the repo settings with source "GitHub Actions"; after that this workflow
 # owns the URL.
 name: pages
@@ -33,8 +33,8 @@ jobs:
       - name: Make the game the front page
         run: |
           mkdir -p site
-          cp game/grimoire.html site/index.html
-          cp game/grimoire.html site/grimoire.html
+          cp game/vibe-map.html site/index.html
+          cp game/vibe-map.html site/vibe-map.html
           cp game/index.html site/your-game.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

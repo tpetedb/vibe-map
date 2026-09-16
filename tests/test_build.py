@@ -39,6 +39,6 @@ def test_campaign_json_has_four_evenings_of_eight_and_twelve_mentors() -> None:
 
 
 def test_three_js_is_embedded_not_linked() -> None:
-    html = (ROOT / "game" / "grimoire.html").read_text()
+    html = (ROOT / "game" / "vibe-map.html").read_text()
     assert "Copyright 2010-2021 Three.js Authors" in html
     assert '<script src="http' not in html

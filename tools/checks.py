@@ -56,7 +56,7 @@ LINK_SOURCES = (
     "docs/ROADMAP.md",
     "docs/AOE-STUDY.md",
     "tools/tech.py",
-    "grimoire/campaign.json",
+    "vibemap/campaign.json",
 )
 # Sites that answer bots with 403 or 405 are reported, not failed: the link
 # still works for a person in a browser.

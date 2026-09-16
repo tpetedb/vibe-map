@@ -1,10 +1,10 @@
-# Project Grimoire: the Python side of Vibe Code Camp.
+# Vibe Code Camp: the Python side of Vibe Code Camp.
 # TOML in practice: one file declares the package, its dependencies, the
 # scripts it installs and how ruff, pyright and pytest are configured.
 # Read it top to bottom; every table is explained in docs/SYLLABUS.md.
 [project]
-name = "grimoire"
-version = "0.2.0"
+name = "vibe-map"
+version = "0.3.0"
 description = "Terminal companion, vault builder and test harness for Vibe Code Camp"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-grimoire = "grimoire.cli:main"
+vibe = "vibemap.cli:main"
 
 [dependency-groups]
 dev = [
@@ -39,7 +39,7 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = ""
-module-name = "grimoire"
+module-name = "vibemap"
 
 [tool.ruff]
 line-length = 88
@@ -53,8 +53,8 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.ruff.lint.per-file-ignores]
 # Data modules: one long string per fact, wrapped only where it reads well.
 "tools/tech.py" = ["E501"]
-"grimoire/personas.py" = ["E501"]
-"grimoire/toolbelt.py" = ["E501"]
+"vibemap/personas.py" = ["E501"]
+"vibemap/toolbelt.py" = ["E501"]
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
