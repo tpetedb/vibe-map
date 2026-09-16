@@ -1,10 +1,10 @@
 # Study: sokrypton/aoe (Age of Epochs)
 
-What a browser Age-of-Empires clone written with Claude Code can teach Project Grimoire. Studied on 2026-09-16 from a fresh clone of https://github.com/sokrypton/aoe at commit `b8f3346`. Live game: https://ageofepochs.com.
+What a browser Age-of-Empires clone written with Claude Code can teach Vibe Code Camp. Studied on 2026-09-16 from a fresh clone of https://github.com/sokrypton/aoe at commit `b8f3346`. Live game: https://ageofepochs.com.
 
 ## Licence, first
 
-The repo ships a `LICENSE` file: **GNU GPL version 2 or later** (the README says so too, "the same license Blender uses"). Project Grimoire is MIT. GPL code copied into an MIT project makes the combined work GPL, so:
+The repo ships a `LICENSE` file: **GNU GPL version 2 or later** (the README says so too, "the same license Blender uses"). Vibe Code Camp is MIT. GPL code copied into an MIT project makes the combined work GPL, so:
 
 - **Nothing is copied.** No JavaScript, no `sprites.png`, no CSS, no test harness code. Everything below is ideas and structure, which copyright does not cover.
 - The Python test harness in `tests/` and the build script in `tools/` were written from scratch for this repo.
@@ -52,7 +52,7 @@ The one place aoe breaks its own no-dependency habit: `peerjs` and `qrcode-gener
 
 Adopted into `AGENTS.md` (2026-09-16):
 
-| Convention | Why it fits Grimoire |
+| Convention | Why it fits Vibe Code Camp |
 |---|---|
 | A **file map** table: file, what it owns | Our game is about to be split into `src/`; the map is how the next agent finds things. |
 | Comments state **constraints and why**, tersely; never change-narration, datelines, war stories or line-number references | The game was produced by scripted edits and has almost no comments; this is the rule for the ones we add. |

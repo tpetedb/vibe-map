@@ -94,7 +94,7 @@ T = [
         "zsh and your shell config",
         "~/.zshrc runs every time you open a terminal: it sets PATH (the folders where commands are looked up), aliases (short names for long commands), the prompt, and small functions. zsh is the macOS default; it is bash-compatible for daily use and adds better completion and globbing. oh-my-zsh bundles plugins and themes; starship is a fast prompt that works in any shell. Keep .zshrc in your dotfiles repo so a new machine is one clone away.",
         "zsh was written by Paul Falstad while a student at Princeton, around 1990. Apple made it the default login shell with macOS 10.15 Catalina in October 2019, replacing bash.",
-        "source scripts/grimoire.zsh then g status.",
+        "source scripts/vibe.zsh then g status.",
         [
             ("zsh manual", "https://zsh.sourceforge.io/Doc/"),
             ("oh-my-zsh", "https://ohmyz.sh"),
@@ -118,7 +118,7 @@ T = [
         "files",
         "dark",
         "Files, folders and paths",
-        "A project is a folder. A path is an address inside it: absolute (/Users/lotte/grimoire) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.",
+        "A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.",
         "The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.",
         "In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for.",
         [
@@ -143,7 +143,7 @@ T = [
         "Dotfiles",
         "Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable.",
         "Sharing dotfile repos on GitHub took off after GitHub launched in 2008; the community guide dotfiles.github.io followed in 2012. Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.",
-        "ls -la ~ and open ~/.zshrc. Add one alias: alias g='python3 grimoire/cli.py'.",
+        "ls -la ~ and open ~/.zshrc. Add one alias: alias g='uv run vibe'.",
         [
             ("dotfiles.github.io", "https://dotfiles.github.io"),
             ("Claude Code settings", "https://code.claude.com/docs/en/settings"),
@@ -480,7 +480,7 @@ T = [
         "Markdown and Obsidian",
         "Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.",
         "Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.",
-        "Write vault/Grimoire/Me.md with three sentences and two `[[links]]`. Open the graph.",
+        "Write vault/Camp/Me.md with three sentences and two `[[links]]`. Open the graph.",
         [
             ("Markdown guide", "https://www.markdownguide.org"),
             ("Obsidian help", "https://help.obsidian.md"),
@@ -865,7 +865,7 @@ T = [
         "Context window and prompts",
         "The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file.",
         "GPT-3 had a 2,048-token window (2020); Claude went to 100k in May 2023; Gemini 1.5 ran a million tokens in February 2024 and Claude Sonnet 4 in August 2025. Bigger windows did not remove the need for good instructions; they moved it to what you load.",
-        "Give the same task twice: 'make it cooler' and 'add a purple cloak, keep stats, touch nothing else'. Compare the diff.",
+        "Give the same task twice: 'make it cooler' and 'add a purple badge, keep stats, touch nothing else'. Compare the diff.",
         [
             (
                 "Claude prompt engineering",
@@ -1100,7 +1100,7 @@ T = [
         "The future perspective",
         "Every age here shortened the distance between an idea and a working thing: the terminal (hours), languages (days), the web (weeks to ship), the cloud (minutes to deploy), agents (a sentence). What does not change: someone has to know what they want, check the result, and own the consequences. For a knowledge worker: learn to specify, verify and version. For a founder: your moat moves from building to judgement, data and distribution. Expect agents to run inside every tool, models on the laptop, memory as files you own, and audits of what agents did as a routine compliance question.",
         "1969 Unix, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.",
-        "Write vault/Grimoire/Bets.md: three things you think will be true in two years, dated. Reread in two years.",
+        "Write vault/Camp/Bets.md: three things you think will be true in two years, dated. Reread in two years.",
         [
             (
                 "Anthropic: building effective agents",
@@ -1124,7 +1124,7 @@ T = [
         "Semantic Versioning",
         "A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.",
         "Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.",
-        "uv run grimoire --version, then open pyproject.toml and grimoire/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.",
+        "uv run vibe --version, then open pyproject.toml and vibemap/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.",
         [
             ("Semantic Versioning 2.0.0", "https://semver.org/spec/v2.0.0.html"),
             (

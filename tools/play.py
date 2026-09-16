@@ -22,7 +22,7 @@ from pathlib import Path
 from playwright.sync_api import Browser, Page, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
-GAME = "/game/grimoire.html"
+GAME = "/game/vibe-map.html"
 WORLDS = ("campus", "winter", "desert", "prod")
 CHROMIUM_ARGS = [
     "--use-angle=swiftshader",
@@ -108,13 +108,13 @@ class Player:
     def _minigame(self, n: int) -> None:
         p = self.page
         if n == 1:
-            p.evaluate("summon()")
+            p.evaluate("spinUp()")
         elif n == 2:
             p.evaluate("speak(true)")
         elif n == 3:
             p.evaluate("roll(5)")
         elif n == 4:
-            p.fill("#spell", "A dragon that hoards spreadsheets")
+            p.fill("#release", "A scoring board ranked by coffee")
             p.evaluate("commit()")
             p.evaluate("ruin()")
             p.evaluate("revert(0)")

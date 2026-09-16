@@ -55,7 +55,7 @@ Download from obsidian.md, open it once, close it. Do not create anything yet.
 
 ### 5. Think of a game
 
-One small fantasy game you would enjoy having on your laptop. A card duel, a dungeon room, a dragon that hoards spreadsheets and refuses to sort them. Three sentences, in your head.
+One small game you would enjoy having on your laptop. A card duel, a dungeon room, a scoring board that ranks the team by coffee consumption. Three sentences, in your head.
 
 **Definition of done.** Terminal shows a version for claude --version, and git --version prints something. That is the whole pre-flight.
 
@@ -73,7 +73,7 @@ Claude Code is not a chat box. You give it a goal in plain language, it reads an
 
 1. Make a folder and step into it:
    ```
-   mkdir -p ~/grimoire && cd ~/grimoire
+   mkdir -p ~/vibe && cd ~/vibe
    ```
 2. Start Claude Code:
    ```
@@ -94,7 +94,7 @@ Claude Code is not a chat box. You give it a goal in plain language, it reads an
 
 Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.
 
-**Definition of done.** index.html exists in ~/grimoire, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.
+**Definition of done.** index.html exists in ~/vibe, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.
 
 **Why it matters.** You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.
 
@@ -108,7 +108,7 @@ This is the hour that separates people who vibe code from people who got lucky o
 
 ### Concept 1: the model has no line of sight into your head
 
-It only has what is in the folder and what you typed. "Make it more impactful" is a request it will fulfil according to its own idea of impact. "Give the dragon a purple cloak, keep the stats, do not touch the score" has a scope, a keep-list and a do-not-touch list. That is the entire craft.
+It only has what is in the folder and what you typed. "Make it more impactful" is a request it will fulfil according to its own idea of impact. "Give the mascot a purple badge, keep the stats, do not touch the score" has a scope, a keep-list and a do-not-touch list. That is the entire craft.
 
 ### Do this: break it, then fix it
 
@@ -118,7 +118,7 @@ It only has what is in the folder and what you typed. "Make it more impactful" i
    ```
 2. Now ask for one precise thing. State what to add, what to keep, what not to touch:
    ```
-   Add a purple cloak to the main character. Keep all stats and the score exactly as they are. Do not change anything else. Reply with one line describing what you changed.
+   Add a purple badge to the main character. Keep all stats and the score exactly as they are. Do not change anything else. Reply with one line describing what you changed.
    ```
 3. Compare. The second one is a change request. The first was a mood.
 
@@ -198,7 +198,7 @@ A browser page cannot write files to your disk on its own, so the pattern is: th
    ```
 2. Play three rounds, export, and move the file into the project:
    ```
-   mv ~/Downloads/scores.csv ~/grimoire/scores.csv
+   mv ~/Downloads/scores.csv ~/vibe-map/scores.csv
    ```
 3. Now ask for analysis on top of the file, not the game:
    ```
@@ -358,10 +358,10 @@ An Obsidian vault is a normal folder on disk. Every note is a .md file. A link f
 
 ### Do this
 
-1. In Obsidian: bottom left, Vault profile, Manage vaults, Create new vault. Name it grimoire-vault, put it in your home folder.
+1. In Obsidian: bottom left, Vault profile, Manage vaults, Create new vault. Name it vibe-vault, put it in your home folder.
 2. Start Claude Code inside the vault:
    ```
-   cd ~/grimoire-vault && claude
+   cd ~/vibe-vault && claude
    ```
 3. Give it the conventions once, as a CLAUDE.md in the vault root:
    ```
@@ -369,7 +369,7 @@ An Obsidian vault is a normal folder on disk. Every note is a .md file. A link f
    ```
 4. Now capture tonight:
    ```
-   Create Projects/Grimoire game.md summarising what we built tonight (single-file game, scores.csv schema, git, hooks). Create Tools/Claude Code.md, Tools/CLAUDE.md and skills.md, Tools/Hooks.md, Tools/MCP.md, Tools/Obsidian.md, each with a short explanation in my words and a "how to" section. Create People/Tom.md and People/Rolinda.md. Link everything that is related with [[wikilinks]] and make sure every note links to at least two others.
+   Create Projects/Vibe Code Camp game.md summarising what we built tonight (single-file game, scores.csv schema, git, hooks). Create Tools/Claude Code.md, Tools/CLAUDE.md and skills.md, Tools/Hooks.md, Tools/MCP.md, Tools/Obsidian.md, each with a short explanation in my words and a "how to" section. Create People/Tom.md and People/Rolinda.md. Link everything that is related with [[wikilinks]] and make sure every note links to at least two others.
    ```
 5. Open the graph: click the graph icon in the left ribbon, or Cmd+P and type "graph". Hover a node to highlight its links. Click one to open it.
 6. Local graph: with a note open, Cmd+P, "Open local graph", to see only what connects to that note.
@@ -401,7 +401,7 @@ A remote is a copy of your git history on GitHub. GitHub Pages serves the files 
    ```
    brew install gh && gh auth login
    ```
-2. In Claude Code: "create a public GitHub repo called grimoire from this folder and push it."
+2. In Claude Code: "create a public GitHub repo called vibe from this folder and push it."
 3. Then: "enable GitHub Pages for this repo from the main branch, root folder, and tell me the URL." If Claude cannot flip the setting, open the repo on github.com, Settings, Pages, choose main and root, save.
 4. Open the URL on your phone. Send it to someone who was not there.
 
@@ -425,7 +425,7 @@ The goal: a note in your vault changes without you at the keyboard.
 
 1. From the project folder, once by hand:
    ```
-   claude -p "read scores.csv and append a one-paragraph summary of tonight's best runs to the vault note Grimoire/Scores.md"
+   claude -p "read scores.csv and append a one-paragraph summary of tonight's best runs to the vault note Vibe Code Camp/Scores.md"
    ```
 2. In Claude Code: "create a subagent called scorekeeper that only does that job, and document it in the vault."
 3. Then: "schedule the scorekeeper to run every morning at 08:00 with launchd." Read the plist it writes; it should call `claude -p` with `--output-format text`. Load it with `launchctl load`.
@@ -447,14 +447,14 @@ Agent Skills is the open format behind skills: a folder with a SKILL.md (name, d
 
 ## The template repo and the terminal companion
 
-Fork the template with "Use this template" on GitHub. It ships AGENTS.md, a one-line CLAUDE.md, five skills (Obsidian notes, Mermaid diagrams, DuckDB SQL, Python for data, Grimoire progress), the scorekeeper subagent, a data-backup hook, sample scores with tested DuckDB queries, a starter vault, and `grimoire/cli.py`.
+Fork the template with "Use this template" on GitHub. It ships AGENTS.md, a one-line CLAUDE.md, five skills (Obsidian notes, Mermaid diagrams, DuckDB SQL, Python for data, Vibe Code Camp progress), the scorekeeper subagent, a data-backup hook, sample scores with tested DuckDB queries, a starter vault, and `vibemap/cli.py`.
 
 ```
 bash scripts/setup.sh                 # gh, uv, DuckDB, Obsidian, skill links, vault
-python3 grimoire/cli.py status        # which of the eight are done
-python3 grimoire/cli.py done 1 "shipped the dragon game"
-python3 grimoire/cli.py map           # Mermaid progress map in vault/Grimoire/Map.md
-python3 grimoire/cli.py export        # code to paste into the game (Roadmap, Import)
+uv run vibe status        # which of the eight are done
+uv run vibe done 1 "shipped the coffee scoreboard"
+uv run vibe map           # Mermaid progress map in vault/Camp/Map.md
+uv run vibe export        # code to paste into the game (Roadmap, Import)
 ```
 
 ## SQL and Python, in the 20:00 hour
@@ -785,7 +785,7 @@ _Fork, clone, branch, commit, push, pull request, learned by doing it to the tem
 Git is a database of snapshots with names. A repository is the database; a commit is a snapshot; a branch is a movable name pointing at a commit; a remote is another copy of the database on another computer; a fork is your own copy on GitHub; a pull request is a request to merge your branch into someone else's. Every command tonight is one of those nouns plus a verb. You will do it by hand once, then let Claude do it, then check that you can still read what it did.
 
 Do this:
-1. Fork the template on GitHub, gh repo clone YOUR-USER/grimoire, git switch -c feature/nickname.
+1. Fork the template on GitHub, gh repo clone YOUR-USER/vibe, git switch -c feature/nickname.
 2. Make one change by hand, git add -p (review every hunk), git commit, git push -u origin feature/nickname, gh pr create.
 3. Ask Claude to do the same for a second change and read git log --oneline --graph afterwards.
 4. Talk to Torvalds on this island.
@@ -802,7 +802,7 @@ Undo has flavours. git revert makes a new commit that undoes an old one (safe, s
 
 Do this:
 1. On a throwaway branch: make three commits, git rebase -i HEAD~3, squash them into one. Then git reflog to see nothing was lost.
-2. git worktree add ../grimoire-2 feature/second, open a second Ghostty tab, run a second Claude there. Give each a different task.
+2. git worktree add ../vibe-2 feature/second, open a second Ghostty tab, run a second Claude there. Give each a different task.
 3. Ask Claude to revert a commit by hash and explain the difference from reset in the commit message.
 
 Sources: [git rebase](https://git-scm.com/docs/git-rebase) · [git worktree](https://git-scm.com/docs/git-worktree) · [Cherny on parallel checkouts (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/)
@@ -933,7 +933,7 @@ Unlocks: Dotfiles, Docker and containers, Hook
 
 #### Files, folders and paths
 
-A project is a folder. A path is an address inside it: absolute (/Users/lotte/grimoire) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 
 **History.** The hierarchical file system with slashes comes from Multics (1965) via Unix. Hidden dotfiles exist because of a 1970s bug: ls skipped names starting with a dot to hide . and .., and people started using it on purpose.
 
@@ -949,7 +949,7 @@ Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure
 
 **History.** Dotfile repos on GitHub became a movement around 2008 to 2012 ("dotfiles are how you customise your system"). Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.
 
-**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='python3 grimoire/cli.py'.
+**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='uv run vibe'.
 
 Docs: [dotfiles.github.io](https://dotfiles.github.io) · [Claude Code settings](https://code.claude.com/docs/en/settings)
 
@@ -1061,7 +1061,7 @@ Markdown is prose with a little structure (#, -, **, [[links]]). It is the file 
 
 **History.** Markdown 2004; GitHub-flavoured Markdown 2009 made it the format of READMEs; Obsidian 2020 made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
 
-**Try in five minutes.** Write vault/Grimoire/Me.md with three sentences and two [[links]]. Open the graph.
+**Try in five minutes.** Write vault/Camp/Me.md with three sentences and two [[links]]. Open the graph.
 
 Docs: [Markdown guide](https://www.markdownguide.org) · [Obsidian help](https://help.obsidian.md) · [Mermaid](https://mermaid.js.org/intro/)
 
@@ -1189,7 +1189,7 @@ The context window is the model's working memory for one conversation: everythin
 
 **History.** GPT-3 had 2k tokens (2020); 100k+ arrived in 2023; models with a million are now common. Bigger windows did not remove the need for good instructions; they moved it to what you load.
 
-**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple cloak, keep stats, touch nothing else'. Compare the diff.
+**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple badge, keep stats, touch nothing else'. Compare the diff.
 
 Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview) · [Claude Code best practices](https://code.claude.com/docs/en/best-practices)
 
@@ -1309,7 +1309,7 @@ Every age here shortened the distance between an idea and a working thing: the t
 
 **History.** 1969 terminal, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.
 
-**Try in five minutes.** Write vault/Grimoire/Bets.md: three things you think will be true in two years, dated. Reread in two years.
+**Try in five minutes.** Write vault/Camp/Bets.md: three things you think will be true in two years, dated. Reread in two years.
 
 Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents) · [Agentic AI Foundation](https://agents.md)
 

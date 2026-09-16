@@ -9,7 +9,7 @@ import pytest
 
 from tests.conftest import ROOT
 
-GAME = ROOT / "game" / "grimoire.html"
+GAME = ROOT / "game" / "vibe-map.html"
 
 
 def _origin_url() -> str | None:
@@ -43,7 +43,7 @@ def test_nothing_loads_the_learners_index_html() -> None:
     # quests.py may look at the file to verify workstream 1; nothing else may
     # read it (prose mentions in notes and recipes are fine).
     readers = ("read_text", "open(", 'Path("', '/ "index.html"')
-    for py in (ROOT / "grimoire").glob("*.py"):
+    for py in (ROOT / "vibe").glob("*.py"):
         if py.name == "quests.py":
             continue
         for line in py.read_text().splitlines():

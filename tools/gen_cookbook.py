@@ -1,4 +1,4 @@
-"""Render docs/COOKBOOK.md from grimoire/personas.py and the general recipes.
+"""Render docs/COOKBOOK.md from vibemap/personas.py and the general recipes.
 
 One source for the recipes: the personas module. This script writes the
 Markdown the docs and the vault both point at.
@@ -14,8 +14,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from grimoire.personas import PERSONAS  # noqa: E402
-from grimoire.providers import PROVIDERS  # noqa: E402
+from vibemap.personas import PERSONAS  # noqa: E402
+from vibemap.providers import PROVIDERS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "COOKBOOK.md"
@@ -35,9 +35,9 @@ GENERAL = [
         "Claim a workstream",
         "Let the CLI check your work and award the XP.",
         [
-            "uv run grimoire status",
-            "uv run grimoire check 1",
-            'uv run grimoire done 1 "a dragon that hoards spreadsheets"',
+            "uv run vibe status",
+            "uv run vibe check 1",
+            'uv run vibe done 1 "a scoring board that ranks the team by coffee"',
         ],
         "The vault has a dated note for the workstream and Tonight lists it as done.",
     ),
@@ -45,9 +45,9 @@ GENERAL = [
         "Break something on purpose, then come back",
         "A branch is a sandbox. Nothing on main can be hurt from a play branch.",
         [
-            "just break dragons",
+            "just break sandbox",
             "# ask the agent for anything, however wild",
-            "uv run grimoire explain",
+            "uv run vibe explain",
             "just rescue",
         ],
         "You are back on main, the play branch still exists, "
@@ -57,8 +57,8 @@ GENERAL = [
         "Ask the council",
         "Four mentors answer, review each other, a chairman decides.",
         [
-            'uv run grimoire council "Should I learn git before Python?"',
-            "open vault/Grimoire",
+            'uv run vibe council "Should I learn git before Python?"',
+            "open vault/Camp",
         ],
         "A Council note in the vault with a verdict and three steps for tonight.",
     ),
@@ -66,9 +66,9 @@ GENERAL = [
         "Change the voice",
         "Serious, academic, plain, or one the model writes for you.",
         [
-            "uv run grimoire theme boardroom",
+            "uv run vibe theme boardroom",
             "just build",
-            "uv run grimoire theme rainforest --create "
+            "uv run vibe theme rainforest --create "
             '--brief "a jungle expedition, plain tone, no drinks"',
         ],
         "The title screen reads in the new voice after a rebuild.",
@@ -82,7 +82,7 @@ def render() -> str:
         "",
         "Recipes are prompts you paste into your provider plus a definition of done. "
         "The general ones work for everyone; the persona ones are tuned to a field of "
-        "work. Switch persona with `uv run grimoire persona <id>`; the vault note "
+        "work. Switch persona with `uv run vibe persona <id>`; the vault note "
         "*Cookbook* mirrors your persona's section.",
         "",
         "## Your provider",
@@ -105,7 +105,7 @@ def render() -> str:
         lines += [
             f"**Your dataset (workstream 3).** `data/examples/{ds.filename}`, "
             f"columns `{', '.join(ds.columns)}`. Write it with "
-            f"`uv run grimoire persona {p.id}`. Question to answer: {ds.question}",
+            f"`uv run vibe persona {p.id}`. Question to answer: {ds.question}",
             "",
             f"**Rolinda asks.** {p.rolinda}",
             "",

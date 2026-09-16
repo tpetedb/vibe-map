@@ -1,12 +1,12 @@
 # Vibe Code Camp
 
-From intern to expert in one evening, with wine. A 3D island you walk across, eight workstreams that each leave something real on your machine, a terminal companion that checks your work and awards XP, and an Obsidian vault that grows as you go. Internal codename: Project Grimoire.
+From intern to expert in one evening, with wine. A 3D island you walk across, eight workstreams that each leave something real on your machine, a terminal companion that checks your work and awards XP, and an Obsidian vault that grows as you go. .
 
 ![The Innovation Campus at dusk, five of eight OKRs lit](docs/media/island-campus.png)
 
 ## Play now, nothing to install
 
-Download or clone, then double-click `game/grimoire.html`. One file, three.js embedded, no CDN, works offline on a Mac, a phone or a locked-down laptop. It is also served at https://tpetedb.github.io/vibe-map/ once GitHub Pages is switched on.
+Download or clone, then double-click `game/vibe-map.html`. One file, three.js embedded, no CDN, works offline on a Mac, a phone or a locked-down laptop. It is also served at https://tpetedb.github.io/vibe-map/ once GitHub Pages is switched on.
 
 ![Walking to the 18:00 signpost, opening the workstream, unlocking the OKR](docs/media/gameplay.gif)
 
@@ -33,33 +33,33 @@ just start     # the onboarding screen: who you are, what the machine has, where
 | 22:30 | Go-to-Market          | the game at a public URL                             | a Pages workflow or a live Pages site |
 | 23:00 | Autonomous Operations | headless Claude on a schedule, a subagent            | a subagent file and a schedule |
 
-`uv run grimoire check 3` runs the checks for a workstream and awards the XP when they pass. Levels mirror the ages of the tech tree: Intern, Junior, Medior, Senior, Expert. Four evenings, four islands, thirty-two stops, twelve mentors from the field who stand on the islands with their real ideas and sources.
+`uv run vibe check 3` runs the checks for a workstream and awards the XP when they pass. Levels mirror the ages of the tech tree: Intern, Junior, Medior, Senior, Expert. Four evenings, four islands, thirty-two stops, twelve mentors from the field who stand on the islands with their real ideas and sources.
 
 ## Make it yours
 
-- **Persona.** `uv run grimoire persona data-engineer` tunes the example game, the dataset, Rolinda's questions and the recipes to your field. Six presets: chief of staff, cleaning-company CEO, university managing director, pabo teacher, data engineer, interior stylist.
-- **Difficulty.** `uv run grimoire difficulty hard`: beginner and easy spell every command out, hard and expert add strict and extra checks, god needs `just verify` green to claim.
-- **Theme.** `uv run grimoire theme boardroom` swaps the wine-night jargon for a serious voice; `--create` asks your provider to write a new one into `themes/`.
+- **Persona.** `uv run vibe persona data-engineer` tunes the example game, the dataset, Rolinda's questions and the recipes to your field. Six presets: chief of staff, cleaning-company CEO, university managing director, pabo teacher, data engineer, interior stylist.
+- **Difficulty.** `uv run vibe difficulty hard`: beginner and easy spell every command out, hard and expert add strict and extra checks, god needs `just verify` green to claim.
+- **Theme.** `uv run vibe theme boardroom` swaps the wine-night jargon for a serious voice; `--create` asks your provider to write a new one into `themes/`.
 - **Provider.** Everything that talks to a model (`explain`, `council`, custom themes) uses the CLI you chose, in print mode.
-- **Note-taking.** `uv run grimoire vault method zettelkasten` bootstraps a method into the vault: Zettelkasten, PARA, Johnny.Decimal, LYT, Evergreen, Cornell, Bullet Journal, or daily notes with a weekly review.
+- **Note-taking.** `uv run vibe vault method zettelkasten` bootstraps a method into the vault: Zettelkasten, PARA, Johnny.Decimal, LYT, Evergreen, Cornell, Bullet Journal, or daily notes with a weekly review.
 
-Every knob lives in `grimoire.toml`; delete the file and everything still works.
+Every knob lives in `vibe.toml`; delete the file and everything still works.
 
 ## Break things on purpose
 
 ```bash
-just break dragons          # a play/dragons branch, a sandbox
-uv run grimoire explain     # your provider explains the last commits in plain words
+just break sandbox          # a play/sandbox branch, a sandbox
+uv run vibe explain     # your provider explains the last commits in plain words
 just rescue                 # back on main, nothing lost
-uv run grimoire council "Should I learn git before Python?"   # four mentors answer, review each other, a chairman decides
+uv run vibe council "Should I learn git before Python?"   # four mentors answer, review each other, a chairman decides
 ```
 
 ## What is in the box
 
 | Path | What |
 |---|---|
-| `game/grimoire.html` | The game, built from `src/` by `just build`. |
-| `grimoire/` | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
+| `game/vibe-map.html` | The game, built from `src/` by `just build`. |
+| `vibemap/` | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
 | `vault/` | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
 | `.agents/skills/` | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
 | `docs/` | [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |

@@ -2,7 +2,7 @@
 
 # Claude Code specifics
 
-- Skills for this project live in `.agents/skills/` (Agent Skills standard). `just setup` links them into `.claude/skills/` so you load them automatically. `develop-grimoire` is the loop for any change to this product; `install-grimoire` is for setting a machine up.
+- Skills for this project live in `.agents/skills/` (Agent Skills standard). `just setup` links them into `.claude/skills/` so you load them automatically. `develop-camp` is the loop for any change to this product; `install-camp` is for setting a machine up.
 - A subagent `scorekeeper` exists in `.claude/agents/`. Use it for anything that summarises `data/scores.csv` into the vault.
 - A PostToolUse hook backs up `data/` to `backups/` after every edit (`.claude/settings.json`).
 - Vault path for the Obsidian skill: `vault/`.

@@ -21,7 +21,7 @@ from playwright.sync_api import Page, sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "media"
-GAME = "/game/grimoire.html"
+GAME = "/game/vibe-map.html"
 CHROMIUM_ARGS = [
     "--use-angle=swiftshader",
     "--use-gl=angle",
@@ -35,14 +35,14 @@ PLAYED = {
     "doneW": {"campus": [1, 2, 3, 4, 5], "winter": [1, 2], "desert": [], "prod": []},
     "path": {"cherny": "deep", "karpathy": "deep", "lecun": "skip"},
     "rolls": [12, 7, 19],
-    "versions": [{"t": "A dragon that hoards spreadsheets", "at": "2026-09-25T20:41"}],
+    "versions": [{"t": "A scoring board ranked by coffee", "at": "2026-09-25T20:41"}],
     "bridges": {"cal": True, "files": True},
     "date": None,
     "wine": None,
     "world": "campus",
-    "creature": {
-        "name": "Gilded Sphinx", "str": 12, "wis": 17, "cha": 9,
-        "cloak": False, "hue": 40,
+    "mascot": {
+        "name": "Gilded Otter", "str": 12, "wis": 17, "cha": 9,
+        "badge": False, "hue": 40,
     },
 }  # fmt: skip
 
@@ -65,7 +65,7 @@ def _load(page: Page, url: str, state: dict | None) -> None:
     if state is not None:
         page.evaluate(
             "([k, v]) => localStorage.setItem(k, JSON.stringify(v))",
-            ["grimoire3", state],
+            ["vibemap1", state],
         )
         page.reload()
     page.wait_for_function("typeof window.__S === 'function'")

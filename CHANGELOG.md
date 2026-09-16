@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Version 0.2.0 in `pyproject.toml`, not tagged yet.
+Version 0.3.0 in `pyproject.toml`, not tagged yet.
 
 ### Added
 
-- The `grimoire` package: a click CLI (`uv run grimoire`) with status, check, done, map, vault, export, import, scores, council, explain, init, play, start, persona, theme, toolbelt, provider, difficulty, mode and mentor, and rich output in the house palette.
-- Quests that verify real work: `grimoire check N` inspects the repo and awards XP, `grimoire done --force` claims at half XP, levels mirror the ages of the tech tree, badges (ADR 0004).
-- Versioned pydantic state, migrated on load, and config in `grimoire.toml` with unknown keys refused; personas, themes, a toolbelt report, model providers, the council of mentors, and a Textual onboarding screen (`just start`).
+- The `vibe` package: a click CLI (`uv run vibe`) with status, check, done, map, vault, export, import, scores, council, explain, init, play, start, persona, theme, toolbelt, provider, difficulty, mode and mentor, and rich output in the house palette.
+- Quests that verify real work: `vibe check N` inspects the repo and awards XP, `vibe done --force` claims at half XP, levels mirror the ages of the tech tree, badges (ADR 0004).
+- Versioned pydantic state, migrated on load, and config in `vibe.toml` with unknown keys refused; personas, themes, a toolbelt report, model providers, the council of mentors, and a Textual onboarding screen (`just start`).
 - The vault builder with lint, a committed vault baseline of 96 notes, and the Obsidian vault pre-configured: graph colour groups by tag, a dark base in the house palette, note templates, `docs/VAULT.md`.
 - The Python toolchain: a uv project with `pyproject.toml`, a `justfile` with agent recipes, style and link checks in `tools/checks.py` (ADR 0003).
 - Browser tests with Playwright: seven Chromium smoke tests and a WebKit iPhone battery (tap, joystick, sheet scroll, HUD width, WebGL draw budget); pytest tests for the CLI (state migration, the progress code version gate, quests, vault build and lint, scores through polars and DuckDB).
@@ -25,10 +25,16 @@ Version 0.2.0 in `pyproject.toml`, not tagged yet.
 
 ### Changed
 
+- The product is Vibe Code Camp everywhere: the Python package is `vibemap`, the command is `vibe`, the config is `vibe.toml`, state lives in `.vibe/`, the vault folder is `vault/Camp/`, the game is `game/vibe-map.html`, the skills are `develop-camp`, `install-camp` and `camp-progress`. The game reads progress from the new `vibemap1` key and, once, from the old `grimoire3` key, so nobody loses an evening.
+- The default theme is `studio`: professional, plain, coffee, with Rolinda's questions intact. `wine-night` keeps the original jargon and pairings as an optional mode (`vibe theme wine-night`).
 - `AGENTS.md` adopts the file map, comment and test-loop conventions studied in sokrypton/aoe, ideas only (ADR 0002), and the standard-library-only rule for Python is lifted (ADR 0003).
 - The seven house skills rewritten for the `src/` layout and the uv CLI.
 - The existing Python formatted with ruff; regenerated outputs stay byte-identical.
 - The onboarding test runs on injectable paths instead of the real config.
+
+### Removed
+
+- The fantasy layer: the Grimoire codename, the summoned creature with strength and wisdom, the dice, the spell and the dragon. In their place: a project mascot with speed, insight and charm, logged runs, releases and a coffee scoreboard. The satire of corporate language stays.
 
 ### Fixed
 
@@ -42,11 +48,11 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 
 ### Added
 
-- The single-file 3D game `game/grimoire.html` and the placeholder `game/index.html` for workstream 1.
-- `grimoire/cli.py`, a standard-library terminal companion (`python3 grimoire/cli.py status`), with `grimoire/campaign.json`.
+- The single-file 3D game `game/vibe-map.html` and the placeholder `game/index.html` for workstream 1.
+- `vibemap/cli.py`, a standard-library terminal companion (`uv run vibe status`), with `vibemap/campaign.json`.
 - `AGENTS.md`, `CLAUDE.md`, `HANDOVER.md`, seven house skills in `.agents/skills/`, the `scorekeeper` subagent and the backup hook.
 - `data/scores.csv`, three DuckDB queries in `sql/`, and `python/scores.py`.
-- The Obsidian vault seed in `vault/Grimoire/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
+- The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
 [Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.1.0...HEAD

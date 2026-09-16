@@ -17,13 +17,13 @@ Bash is the language the terminal speaks. A shell script is a text file of comma
 "zsh and your shell config":{t:"dark",md:`# zsh and your shell config
 ~/.zshrc runs every time you open a terminal: it sets PATH (the folders where commands are looked up), aliases (short names for long commands), the prompt, and small functions. zsh is the macOS default; it is bash-compatible for daily use and adds better completion and globbing. oh-my-zsh bundles plugins and themes; starship is a fast prompt that works in any shell. Keep .zshrc in your dotfiles repo so a new machine is one clone away.
 **History.** zsh was written by Paul Falstad while a student at Princeton, around 1990. Apple made it the default login shell with macOS 10.15 Catalina in October 2019, replacing bash.
-**Try in five minutes.** source scripts/grimoire.zsh then g status.
+**Try in five minutes.** source scripts/vibe.zsh then g status.
 - Docs: [zsh manual](https://zsh.sourceforge.io/Doc/), [oh-my-zsh](https://ohmyz.sh), [starship prompt](https://starship.rs), [Source: zsh FAQ, 1.1 What is it?](https://zsh.sourceforge.io/FAQ/zshfaq01.html), [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360), [Source: Apple newsroom, macOS Catalina is available today (October 2019)](https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/)
 - Unlocks: [[Dotfiles]]
 - Age: Dark Age · Level: Intern
 #tech #dark`},
 "Files, folders and paths":{t:"dark",md:`# Files, folders and paths
-A project is a folder. A path is an address inside it: absolute (/Users/lotte/grimoire) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 **Try in five minutes.** In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for.
 - Docs: [Unix filesystem basics](https://missing.csail.mit.edu/2020/course-shell/), [Source: Daley and Neumann, A General-Purpose File System for Secondary Storage (FJCC 1965)](https://multicians.org/fjcc4.html), [Source: Rob Pike, A lesson in shortcuts (2012, archived copy)](https://www.moldvan.com/hidden-dot-files-linux-came-rob-pike-g/)
@@ -33,7 +33,7 @@ A project is a folder. A path is an address inside it: absolute (/Users/lotte/gr
 "Dotfiles":{t:"dark",md:`# Dotfiles
 Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable.
 **History.** Sharing dotfile repos on GitHub took off after GitHub launched in 2008; the community guide dotfiles.github.io followed in 2012. Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.
-**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='python3 grimoire/cli.py'.
+**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='uv run vibe'.
 - Docs: [dotfiles.github.io](https://dotfiles.github.io), [Claude Code settings](https://code.claude.com/docs/en/settings), [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/), [Source: dotfiles.github.io repository (created April 2012)](https://github.com/dotfiles/dotfiles.github.com)
 - Unlocks: [[Config formats: JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]]
 - Age: Dark Age · Level: Intern
@@ -121,7 +121,7 @@ TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one bina
 "Markdown and Obsidian":{t:"feudal",md:`# Markdown and Obsidian
 Markdown is prose with a little structure (#, -, **, \`[[links]]\`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.
 **History.** Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
-**Try in five minutes.** Write vault/Grimoire/Me.md with three sentences and two \`[[links]]\`. Open the graph.
+**Try in five minutes.** Write vault/Camp/Me.md with three sentences and two \`[[links]]\`. Open the graph.
 - Docs: [Markdown guide](https://www.markdownguide.org), [Obsidian help](https://help.obsidian.md), [Mermaid](https://mermaid.js.org/intro/), [Source: Markdown 1.0.1 (December 2004)](https://daringfireball.net/projects/markdown/), [Source: Daring Fireball on GitHub Flavored Markdown (October 2009)](https://daringfireball.net/linked/2009/10/23/github-flavored-markdown), [Source: Obsidian, About](https://obsidian.md/about)
 - Unlocks: [[Claude and Obsidian]], [[AGENTS.md]], [[README and the quickstart]], [[Architecture decision records]]
 - Age: Feudal Age · Level: Junior
@@ -209,7 +209,7 @@ The LLM is the model: text in, text out, no memory, no hands. The harness is eve
 "Context window and prompts":{t:"imperial",md:`# Context window and prompts
 The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file.
 **History.** GPT-3 had a 2,048-token window (2020); Claude went to 100k in May 2023; Gemini 1.5 ran a million tokens in February 2024 and Claude Sonnet 4 in August 2025. Bigger windows did not remove the need for good instructions; they moved it to what you load.
-**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple cloak, keep stats, touch nothing else'. Compare the diff.
+**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple badge, keep stats, touch nothing else'. Compare the diff.
 - Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview), [Claude Code best practices](https://code.claude.com/docs/en/best-practices), [Source: GPT-3 paper, section 2 (context window of 2048 tokens)](https://arxiv.org/abs/2005.14165), [Source: Anthropic, Introducing 100K context windows (May 2023)](https://www.anthropic.com/news/100k-context-windows), [Source: Google, Gemini 1.5 (February 2024)](https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/), [Source: Claude Sonnet 4 1M token context (August 2025)](https://claude.com/blog/1m-context)
 - Unlocks: [[AGENTS.md]], [[Agent Skills standard]]
 - Age: Imperial Age · Level: Senior
@@ -273,14 +273,14 @@ Kubernetes runs containers across many machines: scheduling, scaling, self-heali
 "The future perspective":{t:"future",md:`# The future perspective
 Every age here shortened the distance between an idea and a working thing: the terminal (hours), languages (days), the web (weeks to ship), the cloud (minutes to deploy), agents (a sentence). What does not change: someone has to know what they want, check the result, and own the consequences. For a knowledge worker: learn to specify, verify and version. For a founder: your moat moves from building to judgement, data and distribution. Expect agents to run inside every tool, models on the laptop, memory as files you own, and audits of what agents did as a routine compliance question.
 **History.** 1969 Unix, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.
-**Try in five minutes.** Write vault/Grimoire/Bets.md: three things you think will be true in two years, dated. Reread in two years.
+**Try in five minutes.** Write vault/Camp/Bets.md: three things you think will be true in two years, dated. Reread in two years.
 - Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [Agentic AI Foundation](https://agents.md), [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol)
 - Age: Future Age · Level: Expert
 #tech #future`},
 "Semantic Versioning":{t:"castle",md:`# Semantic Versioning
 A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.
 **History.** Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.
-**Try in five minutes.** uv run grimoire --version, then open pyproject.toml and grimoire/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
+**Try in five minutes.** uv run vibe --version, then open pyproject.toml and vibemap/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
 - Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html), [Source: semver.org, About (authored by Tom Preston-Werner)](https://semver.org/), [Source: semver/semver, merge of release-2.0 (18 June 2013)](https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9), [Source: semver/semver, the commit tagged v1.0.0 (September 2011)](https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27)
 - Unlocks: [[Changelogs (Keep a Changelog)]]
 - Age: Castle Age · Level: Medior

@@ -1,6 +1,6 @@
 # Design: Vibe Code Camp
 
-Future retro, playful but serious, terminal-nerdy, one coherent whole across the game (`src/style.css`), the terminal companion (rich and Textual), the vault (`vault/.obsidian/snippets/grimoire.css`) and the docs. The palette is fixed by `toms-toolbox.toml [palette]`; every number below was fetched or measured on 2026-09-16 (sources at the end).
+Future retro, playful but serious, terminal-nerdy, one coherent whole across the game (`src/style.css`), the terminal companion (rich and Textual), the vault (`vault/.obsidian/snippets/vibe.css`) and the docs. The palette is fixed by `toms-toolbox.toml [palette]`; every number below was fetched or measured on 2026-09-16 (sources at the end).
 
 ## Principles
 
@@ -53,7 +53,7 @@ Measured contrast on `#000000`: text 18.7:1, muted 6.8:1, yellow 12.7, orange 9.
 | mono | `--font-mono` | terminal font | terminal font | `--font-monospace-theme` |
 | motion | `--t-*`, `--ease*` | none by default | spinner only | Obsidian's own |
 
-Textual: `dark=True`, register with `self.register_theme(theme); self.theme = "grimoire"`.
+Textual: `dark=True`, register with `self.register_theme(theme); self.theme = "vibe"`.
 
 ## Components
 
@@ -65,7 +65,7 @@ Textual: `dark=True`, register with `self.register_theme(theme); self.theme = "g
 | Sheet (lesson) | Surface-1, hairline top, 640px column, `pre` in mono 12.5/1.5 on surface-2 | Smooth `scrollIntoView` (exists) | `role="dialog"` plus `aria-labelledby` the h2; Close first in tab order; Escape closes |
 | Callouts | 1px border at 40 percent hue, fill at 8 percent, 10px uppercase label in the bright variant: done green, why blue, try yellow, Rolinda orange 3px left rule, italic | None | The label word carries the meaning, colour never alone |
 | Buttons | Secondary: surface-2, hairline-2, `--text`. Primary: yellow fill, black text (12.7:1). Danger (reset): `--red-bright` text and border, no fill | Hover lifts 1px in 150 ms; active resets | `:focus-visible` ring as above; disabled keeps text at 35 percent opacity plus a "blocked" word |
-| Vault graph and reader | Black canvas; nodes by tag (workstream green, people blue, tech yellow, decision red, concept orange, as in `grimoire.css`); links white 16 percent; selected halo `--blue-bright` at 25 percent. Reader: Inter 15/1.6, wikilinks `--blue-bright` | Halo scales 1 to 1.15 in 240 ms on select; the force layout is content, not decoration | Canvas `aria-label` with counts; every note reachable through the Tech tree buttons by keyboard; links focusable |
+| Vault graph and reader | Black canvas; nodes by tag (workstream green, people blue, tech yellow, decision red, concept orange, as in `vibe.css`); links white 16 percent; selected halo `--blue-bright` at 25 percent. Reader: Inter 15/1.6, wikilinks `--blue-bright` | Halo scales 1 to 1.15 in 240 ms on select; the force layout is content, not decoration | Canvas `aria-label` with counts; every note reachable through the Tech tree buttons by keyboard; links focusable |
 | TUI welcome | `Panel` with `accent` border, `title` style header, one status line: name, persona, level, XP, stops | None | Pass and fail are words, colour is extra |
 | TUI checks | Table tool, tier, status, what; status `ok`, `err` (missing), `warn` (hint) | Spinner only while a probe runs | Documented install command printed in `path`, copyable |
 | TUI launcher | Numbered `Button` list: game, vault, docs, claude; focused button uses `$primary` | None | Keys 1 to 9 bound, footer lists them |

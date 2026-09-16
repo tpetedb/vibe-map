@@ -121,12 +121,12 @@ Used for the parts SQL is bad at: a script, a chart, a loop over files. The [[Te
 - Environments and packages: [uv](https://docs.astral.sh/uv/)
 #concept`},
 "Template repo":{t:"c",md:`# Template repo
-A GitHub template you fork with "Use this template". It contains: [[AGENTS.md]], a CLAUDE.md that imports it, five skills in the [[Agent Skills standard]] (Obsidian notes, Mermaid diagrams, [[DuckDB]] SQL, [[Python]] for data, Grimoire progress), the scorekeeper [[Subagent]], one [[Hook]] that backs up data, the [[Terminal companion]], sample data with tested queries, and a starter [[Vault]].
+A GitHub template you fork with "Use this template". It contains: [[AGENTS.md]], a CLAUDE.md that imports it, five skills in the [[Agent Skills standard]] (Obsidian notes, Mermaid diagrams, [[DuckDB]] SQL, [[Python]] for data, Vibe Code Camp progress), the scorekeeper [[Subagent]], one [[Hook]] that backs up data, the [[Terminal companion]], sample data with tested queries, and a starter [[Vault]].
 - \`bash scripts/setup.sh\` installs gh, uv, DuckDB, Obsidian, links the skills, initialises the vault.
 Resources: [[Resources]]
 #concept`},
 "Terminal companion":{t:"c",md:`# Terminal companion
-\`python3 grimoire/cli.py\`, standard library only.
+\`uv run vibe\`, standard library only.
 - \`status\`: which of the eight are done
 - \`done <n> "what I built"\`: marks it and writes the note into the vault
 - \`map\`: rebuilds Map.md, a Mermaid flowchart of your progress, green for done
@@ -172,7 +172,7 @@ The things you keep repeating, written down once:
 Stored as [[CLAUDE.md]] for one project or as a [[Skills]] file for all of them. Born in [[Centre of Excellence]].
 #concept`},
 "Prompt specificity":{t:"c",md:`# Prompt specificity
-"Make it cooler" gives the agent permission to change anything. "Add a purple cloak, keep the stats, touch nothing else" gives it a scope.
+"Make it cooler" gives the agent permission to change anything. "Add a purple badge, keep the stats, touch nothing else" gives it a scope.
 - Say what to add.
 - Say what to keep.
 - Say what not to touch.

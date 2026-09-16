@@ -119,7 +119,7 @@ def test_every_world_builds(game: GamePage) -> None:
         "date": None,
         "wine": None,
         "world": "campus",
-        "creature": None,
+        "mascot": None,
     }
     game.goto(state=seeded)
     game.resume()

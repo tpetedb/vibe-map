@@ -3,10 +3,10 @@
 Eight well-respected ways to keep notes, each one command away:
 
 ```sh
-uv run grimoire vault method <id>
+uv run vibe vault method <id>
 ```
 
-Each method gets a folder under `vault/Grimoire/Methods/<name>/`, templates under `vault/Grimoire/_templates/<id>/`, and a hub note `Method - <name>` linked from [[Tonight]]. Every claim below was checked against the author's own page on 2026-09-16; the URLs are at the end.
+Each method gets a folder under `vault/Camp/Methods/<name>/`, templates under `vault/Camp/_templates/<id>/`, and a hub note `Method - <name>` linked from [[Tonight]]. Every claim below was checked against the author's own page on 2026-09-16; the URLs are at the end.
 
 ## At a glance
 
@@ -42,14 +42,14 @@ Each method gets a folder under `vault/Grimoire/Methods/<name>/`, templates unde
 ## Bootstrap
 
 ```sh
-uv run grimoire vault method zettelkasten
-uv run grimoire vault method para
-uv run grimoire vault method johnny-decimal
-uv run grimoire vault method lyt
-uv run grimoire vault method evergreen
-uv run grimoire vault method cornell
-uv run grimoire vault method bullet-journal
-uv run grimoire vault method daily-weekly
+uv run vibe vault method zettelkasten
+uv run vibe vault method para
+uv run vibe vault method johnny-decimal
+uv run vibe vault method lyt
+uv run vibe vault method evergreen
+uv run vibe vault method cornell
+uv run vibe vault method bullet-journal
+uv run vibe vault method daily-weekly
 ```
 
 Each command creates the folders (empty, with a `.gitkeep`), writes the templates, and writes the hub note: folder list, a five-step daily loop, one worked example, sources. In Obsidian, **Templates: Insert template** then finds them under `_templates/<id>/`.

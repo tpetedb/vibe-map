@@ -90,14 +90,14 @@ main() {
 
   step "Vault and state"
   if [ "$CHECK" = 1 ]; then
-    if [ -f .grimoire/state.json ]; then ok "state.json exists"; else warn "no state yet; grimoire init would create it"; fi
+    if [ -f .vibe/state.json ]; then ok "state.json exists"; else warn "no state yet; vibe init would create it"; fi
   else
-    uv run --no-sync grimoire init >/dev/null && ok "vault built (uv run grimoire vault lint to check it)"
+    uv run --no-sync vibe init >/dev/null && ok "vault built (uv run vibe vault lint to check it)"
   fi
 
   if [ "$YOLO" = 1 ] && [ "$CHECK" = 0 ]; then
     step "YOLO: everything missing from the toolbelt"
-    uv run --no-sync grimoire toolbelt --install missing
+    uv run --no-sync vibe toolbelt --install missing
   fi
 
   step "Done"
