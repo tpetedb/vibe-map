@@ -29,6 +29,8 @@ Lotte, Chief of Staff, on Normal. Level Intern (dark) with 0 XP, 300 to the next
 Map: [[Map]] · Mentors: [[Your path]] · Your field: [[Your field]] · Resources: [[Resources]] · Tree: [[Tech tree]]
 
 ## Build log
+- 2026-09-16 The game split into src/, two bugs fixed by the play-through, Motion embedded, the design tokens applied; see docs/DESIGN.md
+- 2026-09-16 [[Tech tree]] fact-checked (40 nodes, every date sourced), [[Cookbook]] and [[Your field]] added, the vault rebuilt lint-clean
 - 2026-09-16 [[Age of Epochs study]]: what a GPL Age of Empires clone taught this repo; conventions adopted into AGENTS.md.
 
 #overview
