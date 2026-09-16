@@ -11,7 +11,7 @@ A gamified course and a template: a single-file 3D browser game (`game/vibe-map.
 | Path | Owns |
 |---|---|
 | `game/vibe-map.html` | The built game, one file, three.js embedded, no CDN. Produced by `just build` from `src/`; never hand-edit once `src/` exists. |
-| `src/` | The game's source parts in load order; `tools/build.py` concatenates them and injects the campaign, the tech notes and `CONFIG` from `vibe.toml`. `src/vendor/` holds three.js r128 and Motion 12, never edited. |
+| `src/` | The game's source parts in load order; `tools/build.py` concatenates them and injects the campaign, the tech notes and `CONFIG` from `vibe.toml`. `src/vendor/` holds three.js r128, Motion 12, d3-force 3 and the Lucide licence, never edited; `src/game/05-icons.js` is generated from Lucide SVGs. |
 | `vibemap/data/` | Package data the game and the CLI share: `campaign.json` (four evenings, twelve mentors), `resources.md` (the curated links; `docs/RESOURCES.md` is generated from it). `vibemap/tech.py` is the tech tree. Installed copies of the CLI carry all three. |
 | `game/index.html` | Lotte's own game from workstream 1. Nothing may depend on its contents. |
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`vibe.toml`). |

@@ -126,3 +126,12 @@ Jesse Vincent, Matt Pocock and Seth Hobson are cited in section 1 through their 
 |---|---|---|
 | claude-buddy | [btcromesh/claude-buddy](https://github.com/btcromesh/claude-buddy) (MIT) | The eighteen sprites, the idle and blink sequence and the seeded roll behind `vibe pet`, ported to `vibemap/pet.py`. It is the /buddy feature Claude Code shipped in 2.1.89 and pulled in 2.1.97, extracted into a single-file CLI. |
 | any-buddy | [cpaczek/any-buddy](https://github.com/cpaczek/any-buddy) (WTFPL) | Nothing vendored; the reference for the eye and hat options. |
+
+## Embedded in the game
+
+| Library | Licence | Where |
+|---|---|---|
+| three.js r128 | MIT | the island |
+| Motion 12 | MIT | springs on the sheet, the roadmap and the KPI count-up; optional |
+| d3-force 3 (with d3-quadtree, d3-timer, d3-dispatch) | ISC | the vault graph: a cooled simulation with collision, pan and zoom |
+| Lucide | ISC | the icons on every button in the HUD, the sheet and the vault toolbar |
