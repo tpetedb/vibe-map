@@ -41,9 +41,9 @@ a{color:var(--a1);text-decoration:none;border-bottom:1px solid rgba(34,211,238,.
 /* overlays */
 .ui{position:absolute;z-index:5;pointer-events:none}
 .ui>*{pointer-events:auto}
-#hud{top:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#hud{top:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 #hud-name{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;flex:1}
-.pill{flex-shrink:0;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--line2);backdrop-filter:blur(12px);border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.pill{flex-shrink:1;min-width:0;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--line2);backdrop-filter:blur(12px);border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center;white-space:nowrap}
 .pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line2)}
 .pill i.on{background:var(--grass);box-shadow:0 0 8px var(--grass)}
 .pill button{padding:4px 10px;font-size:11px;border-radius:999px}
@@ -51,6 +51,10 @@ a{color:var(--a1);text-decoration:none;border-bottom:1px solid rgba(34,211,238,.
 .kpi{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:999px;padding:4px 10px;display:flex;gap:6px;align-items:baseline}
 .kpi b{display:inline;font-family:Sora,sans-serif;font-size:13px;letter-spacing:-.02em;background:var(--accent);-webkit-background-clip:text;background-clip:text;color:transparent}
 .kpi span{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+/* Phones: the button pill is wider than the screen minus the name, so the
+   name takes its own row and the KPIs drop below the second row. Must come
+   after the #kpis rule above or the cascade keeps top:54px. */
+@media (max-width:480px){#hud-name{flex-basis:100%}#kpis{top:100px}}
 #bottom{left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
 #enter{align-self:center;display:none;animation:rise .3s ease both}
 #enter.on{display:flex}
@@ -956,7 +960,7 @@ function animate(){
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
   if(started&&sp>.01){const prev=pos.clone();pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
-    if(!onLand(pos.x,pos.z)){const px=onLand(pos.x,prev.z),pz=onLand(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
+    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
     // obstacles: push out
     obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+.45;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
     if(hasTarget&&target.distanceTo(pos)<.6){hasTarget=false;marker.material.opacity=0}
@@ -1698,7 +1702,10 @@ function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";retu
 window.copyMsg=function(){const m=$("msg").textContent;const ok=()=>{$("copybtn").textContent="Copied";setTimeout(()=>$("copybtn").textContent="Copy to clipboard",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(m).then(ok).catch(()=>{})};
 window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;$("syncmsg").textContent="Code is in the box. Copy it, then in the repo: python3 grimoire/cli.py import "+code.slice(0,12)+"…";if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{})};
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));const dw=d.doneW||{campus:d.done||[]};Object.keys(dw).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{n=+n;if(n>=1&&n<=8&&!S.doneW[w].includes(n)){S.doneW[w].push(n);if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);$("syncmsg").textContent="Imported: "+S.done.length+"/8 workstreams."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
-window.__S=()=>S;window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem("grimoire3")}catch(e){}location.reload()};
+window.__S=()=>S;
+// Test seam: read-only view of the walker for the Playwright battery, never written to.
+window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,near:nearK,started,world:S.world,draws:renderer?renderer.info.render.calls:0});
+window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem("grimoire3")}catch(e){}location.reload()};
 
 if(load()){$("name").value=S.name;if(S.done.length)$("btn-continue").style.display=""}
 say("title");hud();renderWorldPicker();

@@ -13,7 +13,7 @@ function animate(){
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
   if(started&&sp>.01){const prev=pos.clone();pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
-    if(!onLand(pos.x,pos.z)){const px=onLand(pos.x,prev.z),pz=onLand(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
+    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
     // obstacles: push out
     obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+.45;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
     if(hasTarget&&target.distanceTo(pos)<.6){hasTarget=false;marker.material.opacity=0}
