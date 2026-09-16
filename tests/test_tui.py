@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 
 from textual.widgets import Button, DataTable, Input
 
 from grimoire.tui import Checks, GrimoireApp, Launch, Welcome
 
 
-def test_onboarding_screens_walk_through() -> None:
+def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
     async def drive() -> str | None:
-        app = GrimoireApp()
+        app = GrimoireApp(
+            config_path=tmp_path / "grimoire.toml", state_path=tmp_path / "state.json"
+        )
         async with app.run_test(size=(120, 50)) as pilot:
             await pilot.pause()
             assert isinstance(app.screen, Welcome)
@@ -31,3 +34,4 @@ def test_onboarding_screens_walk_through() -> None:
         return app.return_value
 
     assert asyncio.run(drive()) == "quit"
+    assert (tmp_path / "grimoire.toml").exists() and (tmp_path / "state.json").exists()

@@ -44,7 +44,9 @@ def test_tap_on_the_ground_moves_lotte(phone: GamePage) -> None:
     before = _pos(phone)
     box = phone.page.locator("#c").bounding_box()
     assert box
-    phone.page.touchscreen.tap(box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.55)
+    phone.page.touchscreen.tap(
+        box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.55
+    )
     phone.page.wait_for_timeout(1500)
     after = _pos(phone)
     assert _dist(before, after) > 0.5, f"did not move: {before} -> {after}"

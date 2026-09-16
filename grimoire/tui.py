@@ -36,7 +36,7 @@ from grimoire.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELL
 from grimoire.personas import PERSONAS
 from grimoire.providers import PROVIDERS
 from grimoire.quests import level_for
-from grimoire.state import State
+from grimoire.state import STATE_PATH, State
 from grimoire.themes import THEMES
 from grimoire.toolbelt import TOOLS, Tool
 
@@ -137,10 +137,12 @@ class Welcome(Screen[None]):
         name = self.query_one("#name", Input).value.strip() or "Lotte"
         data["learner"]["name"] = name
         cfg = Config.model_validate(data)
-        cfg.save(CONFIG_PATH)
+        app = self.app
+        assert isinstance(app, GrimoireApp)
+        cfg.save(app.config_path)
         self.state.name = name
-        self.state.save()
-        self.app.push_screen(Checks(cfg, self.state))
+        self.state.save(app.state_path)
+        app.push_screen(Checks(cfg, self.state))
 
 
 class Checks(Screen[None]):
@@ -292,10 +294,14 @@ class GrimoireApp(App[str]):
     #welcome, #checks, #launch {{ padding: 0 1; }}
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, config_path: Path = CONFIG_PATH, state_path: Path = STATE_PATH
+    ) -> None:
         super().__init__()
-        self.cfg = Config.load()
-        self.state = State.load()
+        self.config_path = config_path
+        self.state_path = state_path
+        self.cfg = Config.load(config_path)
+        self.state = State.load(state_path)
 
     def on_mount(self) -> None:
         self.push_screen(Welcome(self.cfg, self.state))
