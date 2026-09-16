@@ -28,3 +28,10 @@ shadow_map = 2048  # drop to 1024 if a phone stutters
 [vault]
 path = "vault"
 folder = "Camp"
+
+[pet]  # the terminal companion; empty means what your name rolled
+enabled = true
+species = ""  # duck | goose | blob | cat | dragon | octopus | owl | penguin | turtle | snail | ghost | axolotl | capybara | cactus | robot | rabbit | mushroom | chonk | crab
+name = ""
+eye = ""  # one of: · * × ◉ @ °
+hat = ""  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck

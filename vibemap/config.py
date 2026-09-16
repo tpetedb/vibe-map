@@ -64,6 +64,16 @@ class VaultConfig(_Strict):
     folder: str = "Camp"
 
 
+class PetConfig(_Strict):
+    """The terminal companion. Empty strings mean: keep what the name rolled."""
+
+    enabled: bool = True
+    species: str = ""
+    name: str = ""
+    eye: str = ""
+    hat: str = ""
+
+
 class Config(_Strict):
     """The whole of vibe.toml with defaults for every table."""
 
@@ -72,6 +82,7 @@ class Config(_Strict):
     finale: Finale = Field(default_factory=Finale)
     game: GameConfig = Field(default_factory=GameConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
+    pet: PetConfig = Field(default_factory=PetConfig)
 
     @classmethod
     def load(cls, path: Path = CONFIG_PATH) -> Config:
@@ -130,6 +141,17 @@ class Config(_Strict):
             "[vault]",
             f"path = {_q(self.vault.path)}",
             f"folder = {_q(self.vault.folder)}",
+            "",
+            "[pet]  # the terminal companion; empty means what your name rolled",
+            f"enabled = {str(self.pet.enabled).lower()}",
+            f"species = {_q(self.pet.species)}"
+            "  # duck | goose | blob | cat | dragon | octopus | owl | penguin"
+            " | turtle | snail | ghost | axolotl | capybara | cactus | robot"
+            " | rabbit | mushroom | chonk | crab",
+            f"name = {_q(self.pet.name)}",
+            f"eye = {_q(self.pet.eye)}  # one of: · * × ◉ @ °",
+            f"hat = {_q(self.pet.hat)}"
+            "  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck",
             "",
         ]
         if self.game.show_pairings is not None:
