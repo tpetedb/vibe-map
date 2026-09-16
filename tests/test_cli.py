@@ -167,6 +167,17 @@ def test_vault_build_is_lint_clean_in_a_fresh_folder(tmp_path: Path) -> None:
     assert v.path("Cookbook").exists() and v.path("Your field").exists()
 
 
+def test_vault_rewrite_keeps_the_original_date(tmp_path: Path) -> None:
+    cfg = Config.model_validate({"vault": {"path": str(tmp_path), "folder": "G"}})
+    v = Vault(cfg, State())
+    p = v.write("Stable", "first", tags=["concept"])
+    text = p.read_text().replace("date: 20", "date: 19")
+    p.write_text(text)
+    v.write("Stable", "second", tags=["concept"])
+    again = p.read_text()
+    assert "date: 19" in again and "second" in again
+
+
 def test_vault_build_log_and_upsert(tmp_path: Path) -> None:
     cfg = Config.model_validate({"vault": {"path": str(tmp_path), "folder": "G"}})
     v = Vault(cfg, State())
