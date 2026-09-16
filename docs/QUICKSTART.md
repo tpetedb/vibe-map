@@ -1,0 +1,135 @@
+# Quickstart
+
+Three ways in, from nothing installed to a full camp. Every step is a command you can paste; every block says what you should see afterwards. Numbers are steps, not minutes.
+
+## Path A: play now, install nothing
+
+1. Get the file.
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html -o vibe-map.html
+   ```
+
+2. Open it.
+
+   ```bash
+   open vibe-map.html        # macOS; double-click works too
+   ```
+
+   You should see the island turning behind the title panel. One file, three.js embedded, no CDN, works on a phone and offline.
+
+3. Type a name, press **Kick off the engagement**, walk to the 18:00 signpost. The first workstream opens with a full lesson, a definition of done and one question from Rolinda.
+
+Progress lives in the browser. When you later install the CLI, **Roadmap, Export progress** gives a code you paste into `vibe import`.
+
+## Path B: the CLI, installed once
+
+Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install uv git`.
+
+1. Install the command.
+
+   ```bash
+   uv tool install vibe-map
+   vibe --version
+   ```
+
+   Prints the version, for example `vibe, version 0.3.0`. Until the package is on PyPI, install from the repository instead: `uv tool install git+https://github.com/tpetedb/vibe-map`.
+
+2. Start a camp.
+
+   ```bash
+   vibe new ~/camp              # a clone of the template
+   cd ~/camp
+   vibe status
+   ```
+
+   `vibe status` prints your name, level, XP and the four-by-eight grid of workstreams. Add `--github you/camp` to `vibe new` to create a GitHub repository from the template instead of a clone (needs `gh auth login`).
+
+3. Pick a provider. Everything that talks to a model runs the CLI you already pay for, in print mode.
+
+   ```bash
+   vibe provider claude         # Claude Code, works with a Claude Max subscription
+   vibe provider codex          # OpenAI Codex CLI, works with a ChatGPT subscription
+   ```
+
+   Also `gemini`, `copilot` and `opencode`. The provider is only used by `vibe explain`, `vibe council` and `vibe theme --create`; the game and the quests never call a model.
+
+4. Say who you are.
+
+   ```bash
+   vibe persona data-engineer   # or chief-of-staff, cleaning-ceo, university-md, pabo-teacher, interior-stylist
+   vibe difficulty normal       # beginner, easy, normal, hard, expert, god
+   vibe theme studio            # studio is the default; wine-night is the original
+   ```
+
+   Each command rewrites `vibe.toml`. Delete the file and everything falls back to defaults.
+
+5. Play, then claim.
+
+   ```bash
+   vibe play                    # opens the game
+   vibe check 1                 # runs the checks for workstream 1, awards the XP when they pass
+   vibe done 1 "a scoring board that ranks the team by coffee"
+   ```
+
+   `vibe done` writes a dated note into the vault and links it from `vault/Camp/Tonight.md`.
+
+6. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links.
+
+## Path C: the whole workshop with just
+
+For a machine you intend to keep. Adds the test browsers, the skills and the onboarding screen.
+
+1. Clone and enter.
+
+   ```bash
+   git clone https://github.com/tpetedb/vibe-map.git camp && cd camp
+   brew install just
+   ```
+
+2. Install what the evening needs.
+
+   ```bash
+   just setup                   # uv sync, Playwright browsers, skill links, the vault
+   just setup --check           # dry run: only report what is missing
+   ```
+
+3. Open the onboarding screen.
+
+   ```bash
+   just start
+   ```
+
+   A terminal UI: your name, your field, difficulty, provider and theme; a toolbelt check with one-key installs; launchers for the game, the vault, the docs and Claude Code. The YOLO button installs everything at once.
+
+4. Verify like CI does, before you commit anything.
+
+   ```bash
+   just verify                  # ruff, pytest with Playwright, build check
+   ```
+
+5. Break something on purpose, then come back.
+
+   ```bash
+   just break sandbox           # a play/sandbox branch
+   vibe explain                 # the provider explains the last commits in plain words
+   just rescue                  # back on main, nothing lost
+   ```
+
+## Where things end up
+
+| You did | It landed in |
+|---|---|
+| `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
+| `vibe persona`, `vibe theme`, `vibe provider` | `vibe.toml` |
+| `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
+| the game | `localStorage` in the browser, exported as a progress code |
+| `vibe council` | `vault/Camp/Council: <topic>.md` |
+| `just setup` | `.venv/`, `.claude/skills/` symlinks, Playwright browsers |
+
+## When something is off
+
+- `vibe status` says there is no camp: you are outside a folder with a `vibe.toml`. `cd` into one, run `vibe new`, or set `VIBE_HOME=/path/to/camp`.
+- `claude -p` fails with a model catalog error: the CLI retries with `--model sonnet`; run `claude` once interactively to log in.
+- The game shows the Roadmap list instead of the island: WebGL is off or blocked. Chrome on a Mac with Apple silicon is the reference; the lessons still work.
+- Tests hang on the first run: `uv run playwright install chromium webkit` was skipped; `just setup` runs it.

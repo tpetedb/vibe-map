@@ -1,11 +1,12 @@
 """`just start`: the onboarding terminal.
 
-Three screens: who you are (name, persona, difficulty, provider, theme),
+Four screens: who you are (name, persona, difficulty, provider, theme),
 what the machine has (the toolbelt, with one-key installs and a YOLO button
-that installs everything missing), and where to go (the game, Claude Code
-in this folder, Claude in YOLO mode, Zed with Claude over ACP, the vault in
-Obsidian, the tests). Anything that needs the real terminal runs after the
-screen closes, never inside it.
+that installs everything missing), where to go (the game, Claude Code in
+this folder, Claude in YOLO mode, Zed with Claude over ACP, the vault in
+Obsidian, the tests) and the campaign map (the four-by-eight grid of
+workstreams). Anything that needs the real terminal runs after the screen
+closes, never inside it.
 """
 
 from __future__ import annotations
@@ -31,7 +32,7 @@ from textual.widgets import (
     Static,
 )
 
-from vibemap import project
+from vibemap import campaign, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLOW
 from vibemap.personas import PERSONAS
@@ -57,6 +58,7 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "zed": ("Zed with Claude over ACP", "zed . then the agent panel, Claude Code"),
     "obsidian": ("Obsidian vault", "open vault/ as a vault"),
     "tests": ("Run the tests", "just test"),
+    "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
     "status": ("Campaign status", "uv run vibe status"),
     "quit": ("Quit", ""),
 }
@@ -270,13 +272,60 @@ class Launch(Screen[None]):
 
     @on(Button.Pressed)
     def choose(self, event: Button.Pressed) -> None:
-        if event.button.id and event.button.id.startswith("act-"):
+        if event.button.id == "act-map":
+            self.app.push_screen(Map(self.state))
+        elif event.button.id and event.button.id.startswith("act-"):
             self.app.exit(event.button.id[4:])
 
 
+class Map(Screen[None]):
+    """The campaign grid: four evenings, eight stops each, like `vibe status`."""
+
+    def __init__(self, state: State) -> None:
+        super().__init__()
+        self.state = state
+
+    def _row(self, world: str, ev: campaign.Evening) -> str:
+        nxt = next((i for i in range(1, 9) if not self.state.is_done(world, i)), None)
+        cells = []
+        for i in range(1, 9):
+            if self.state.is_done(world, i):
+                cells.append(f"[{GREEN}]x[/]")
+            elif i == nxt:
+                cells.append(f"[{YELLOW}]>[/]")
+            else:
+                cells.append(f"[{MUTED}].[/]")
+        done = len(self.state.done_w.get(world, []))
+        label = f"{ev.short} · {ev.island}"
+        return f"[{BLUE}]{label:<34}[/] " + " ".join(cells) + f"  [{MUTED}]{done}/8[/]"
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=False)
+        with Vertical(id="map"):
+            yield Static(
+                f"{self.state.total_done()}/32 stops, {self.state.xp} XP. "
+                "Each row is an island; each cell is a workstream.",
+                classes="lead",
+            )
+            for world, ev in campaign.evenings().items():
+                yield Static(self._row(world, ev), classes="maprow", markup=True)
+            yield Static(
+                f"[{GREEN}]x[/] done   [{YELLOW}]>[/] next   [{MUTED}].[/] to do",
+                classes="legend",
+                markup=True,
+            )
+            with Horizontal(classes="row"):
+                yield Button("Back", id="back", variant="primary")
+        yield Footer()
+
+    @on(Button.Pressed, "#back")
+    def back(self) -> None:
+        self.app.pop_screen()
+
+
 class VibeApp(App[str]):
-    TITLE = "Vibe Code Camp"
-    SUB_TITLE = "the onboarding terminal"
+    TITLE = "Vibe Code Camp: the onboarding terminal"
+    SUB_TITLE = ""
     CSS = f"""
     Screen {{ background: {BLACK}; color: {TEXT}; }}
     Header {{ background: {BLACK}; color: {YELLOW}; }}
@@ -292,7 +341,9 @@ class VibeApp(App[str]):
     .hint {{ color: {MUTED}; padding: 1 0; }}
     DataTable {{ height: 1fr; margin: 0 1; border: round {GREEN}; }}
     Log {{ height: 10; margin: 0 1; border: round {BLUE}; }}
-    #welcome, #checks, #launch {{ padding: 0 1; }}
+    #welcome, #checks, #launch, #map {{ padding: 0 1; }}
+    .maprow {{ margin: 0 1; }}
+    .legend {{ color: {MUTED}; margin: 1 1 0 1; }}
     """
 
     def __init__(

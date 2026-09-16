@@ -8,7 +8,7 @@ from pathlib import Path
 
 from textual.widgets import Button, DataTable, Input
 
-from vibemap.tui import Checks, Launch, VibeApp, Welcome
+from vibemap.tui import Checks, Launch, Map, VibeApp, Welcome
 
 
 def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
@@ -30,6 +30,13 @@ def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
             assert isinstance(app.screen, Launch)
             buttons = app.screen.query(Button)
             assert any(b.id == "act-yolo" for b in buttons)
+            await pilot.click("#act-map")
+            await pilot.pause()
+            assert isinstance(app.screen, Map)
+            assert len(app.screen.query(".maprow")) == 4
+            await pilot.click("#back")
+            await pilot.pause()
+            assert isinstance(app.screen, Launch)
             await pilot.click("#act-quit")
             await pilot.pause()
         return app.return_value

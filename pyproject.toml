@@ -9,7 +9,8 @@ description = "Terminal companion, vault builder and test harness for Vibe Code 
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "Tom" }]
+authors = [{ name = "Tom Peters", email = "t.petersprivate@gmail.com" }]
+keywords = ["learning", "game", "obsidian", "claude-code", "agents"]
 dependencies = [
   "click>=8.1",          # the command-line interface
   "rich>=13.7",          # tables, panels and colour in the terminal
@@ -20,6 +21,11 @@ dependencies = [
   "pyyaml>=6.0",         # read the CI workflow back, YAML in practice
   "textual>=0.80",       # the `just start` onboarding screen
 ]
+
+[project.urls]
+Homepage = "https://github.com/tpetedb/vibe-map"
+Changelog = "https://github.com/tpetedb/vibe-map/blob/main/CHANGELOG.md"
+Played = "https://github.com/tpetedb/vibe-map-played"
 
 [project.scripts]
 vibe = "vibemap.cli:main"

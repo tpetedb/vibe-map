@@ -3,7 +3,7 @@ function init3d(){
   camera=new T.PerspectiveCamera(46,st.clientWidth/st.clientHeight,.1,300);camera.position.set(0,22,26);
   clock=new T.Clock();
   addEventListener("resize",()=>{const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()});
-  buildWorld(S.world||"campus");setupInput();animate();
+  buildWorld(S.world||"campus");setupInput();inited=true;animate();
 }
 function buildWorld(id){
   W=WORLDS[id]||WORLDS.campus;S.world=id;if(!S.doneW[id])S.doneW[id]=[];S.done=S.doneW[id];CH=CAMPAIGN[id].ws;save();

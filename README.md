@@ -12,11 +12,15 @@ Download or clone, then double-click `game/vibe-map.html`. One file, three.js em
 
 ## The whole thing, in three commands
 
+Step by step, with what you should see after each command: [docs/QUICKSTART.md](docs/QUICKSTART.md).
+
 ```bash
 brew install just
 just setup     # Homebrew tools, uv and the Python env, Playwright browsers, skills, the vault
 just start     # the onboarding screen: who you are, what the machine has, where to go
 ```
+
+![just start: name, field, difficulty, provider and theme, in the house palette](docs/media/tui-welcome.png)
 
 `just start` asks for your name, your field, a difficulty from beginner to god, your model provider (Claude Code, Codex, Gemini, Copilot or OpenCode) and a theme, checks the toolbelt with one-key installs (or a YOLO button that installs everything), and launches the game, Claude Code, Claude in YOLO mode, Zed with Claude over ACP, the vault in Obsidian or the tests.
 
@@ -32,6 +36,8 @@ cd ~/camp && vibe status          # the CLI finds the camp from any subfolder
 `vibe` carries the campaign, the tech tree and the resources inside the package. `VIBE_HOME` points it at a camp from elsewhere.
 
 ## What one evening leaves behind
+
+![The campaign map in the onboarding terminal: four islands, eight stops each](docs/media/tui-map.png)
 
 | Time  | Workstream            | You end up with                                      | The check |
 |-------|-----------------------|------------------------------------------------------|-----------|
@@ -73,7 +79,7 @@ uv run vibe council "Should I learn git before Python?"   # four mentors answer,
 | `vibemap/` | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
 | `vault/` | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
 | `.agents/skills/` | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
-| `docs/` | [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
+| `docs/` | [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
 | `tests/` | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
 | `justfile` | Every task, for people and for agents. `just` lists them. |
 
