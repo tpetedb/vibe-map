@@ -32,7 +32,7 @@ from textual.widgets import (
     Static,
 )
 
-from vibemap import campaign, project
+from vibemap import campaign, pet, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLOW
 from vibemap.personas import PERSONAS
@@ -62,6 +62,34 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "status": ("Campaign status", "uv run vibe status"),
     "quit": ("Quit", ""),
 }
+
+
+class PetWidget(Static):
+    """The companion: idles, blinks, strolls the width of its box."""
+
+    def __init__(self, cfg: Config, name: str) -> None:
+        super().__init__(markup=False)
+        self.pet = pet.resolve(
+            name,
+            species=cfg.pet.species,
+            name=cfg.pet.name,
+            eye=cfg.pet.eye,
+            hat=cfg.pet.hat,
+        )
+        self.tick = 0
+
+    def on_mount(self) -> None:
+        self.paint()
+        self.set_interval(0.5, self.step)
+
+    def step(self) -> None:
+        self.tick += 1
+        self.paint()
+
+    def paint(self) -> None:
+        width = max(pet.WIDTH, self.size.width or 40)
+        offset = pet.stroll(self.tick, width)
+        self.update(pet.render(self.pet, self.tick, stats=False, offset=offset))
 
 
 class Welcome(Screen[None]):
@@ -260,6 +288,8 @@ class Launch(Screen[None]):
                 f"({age} age), {self.state.xp} XP, {self.state.total_done()}/32 stops.",
                 classes="lead",
             )
+            if self.cfg.pet.enabled:
+                yield PetWidget(self.cfg, self.state.name)
             for key, (title, hint) in ACTIONS.items():
                 with Horizontal(classes="action"):
                     yield Button(
@@ -343,6 +373,7 @@ class VibeApp(App[str]):
     Log {{ height: 10; margin: 0 1; border: round {BLUE}; }}
     #welcome, #checks, #launch, #map {{ padding: 0 1; }}
     .maprow {{ margin: 0 1; }}
+    PetWidget {{ height: 8; width: 60; margin: 0 1 1 1; }}
     .legend {{ color: {MUTED}; margin: 1 1 0 1; }}
     """
 

@@ -62,6 +62,19 @@ cd ~/camp && vibe status          # the CLI finds the camp from any subfolder
 
 Every knob lives in `vibe.toml`; delete the file and everything still works.
 
+## A pet in the terminal
+
+![The launch screen of just start with the pet strolling under the status line](docs/media/tui-pet.gif)
+
+```bash
+uv run vibe pet                       # the creature your name rolled, with its stats
+uv run vibe pet --animate             # it fidgets and blinks until Ctrl-C
+uv run vibe pet --species crab --name Pinch --hat crown
+uv run vibe pet --all                 # the gallery: nineteen species
+```
+
+It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `vibe.toml` under `[pet]`, or switch it off with `--off`.
+
 ## Break things on purpose
 
 ```bash
@@ -93,4 +106,4 @@ Read [HANDOVER.md](HANDOVER.md), then [AGENTS.md](AGENTS.md). `just verify` is t
 
 ## Credits and licences
 
-MIT. three.js (MIT) and [Motion](https://motion.dev) (MIT) are embedded in the game. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.
+MIT. three.js (MIT) and [Motion](https://motion.dev) (MIT) are embedded in the game. The terminal pet's sprites, idle animation and name roll are ported from [claude-buddy](https://github.com/btcromesh/claude-buddy) by Romesh Niriella (MIT), itself extracted from the /buddy feature Claude Code shipped for a week in April 2026; the crab is ours. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.

@@ -27,7 +27,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign, project
+from vibemap import __version__, campaign, pet, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
@@ -116,7 +116,13 @@ def status(ctx: Ctx, as_json: bool) -> None:
         + (f" · {nxt - st.xp} to the next level" if nxt else " · top level")
         + f" · {st.total_done()}/32 stops"
     )
-    console.print(Panel(head, title="Vibe Code Camp", border_style="accent"))
+    panel = Panel(head, title="Vibe Code Camp", border_style="accent")
+    if cfg.pet.enabled:
+        grid = Table.grid(padding=(0, 2))
+        grid.add_row(panel, pet.render(_pet(ctx), stats=False))
+        console.print(grid)
+    else:
+        console.print(panel)
     t = Table(header_style="path", box=None, padding=(0, 1))
     t.add_column("evening")
     for i in range(1, 9):
@@ -591,6 +597,96 @@ def theme(ctx: Ctx, name: str | None, create: bool, brief: str) -> None:
     data["theme"]["preset"] = name
     Config.model_validate(data).save(CONFIG_PATH)
     console.print(f"[ok]theme[/] = {name}. Run `just build` to bake it into the game.")
+
+
+# ---- pet ----------------------------------------------------------------------
+
+
+def _pet(ctx: Ctx) -> pet.Pet:
+    c = ctx.cfg.pet
+    try:
+        return pet.resolve(
+            ctx.state.name, species=c.species, name=c.name, eye=c.eye, hat=c.hat
+        )
+    except ValueError as e:
+        _fail(f"vibe.toml [pet]: {e}")
+        raise
+
+
+@cli.command("pet")
+@click.option("--animate", "-a", is_flag=True, help="idle loop until Ctrl-C")
+@click.option("--all", "gallery", is_flag=True, help="every species, frame 0")
+@click.option("--species", default=None, help="set the species in vibe.toml")
+@click.option("--name", "pet_name", default=None, help="set the name in vibe.toml")
+@click.option("--eye", default=None, help="set the eye in vibe.toml")
+@click.option("--hat", default=None, help="set the hat in vibe.toml")
+@click.option("--on/--off", "enabled", default=None, help="show or hide the pet")
+@click.option("--reset", is_flag=True, help="back to what your name rolled")
+@pass_ctx
+def pet_cmd(
+    ctx: Ctx,
+    animate: bool,
+    gallery: bool,
+    species: str | None,
+    pet_name: str | None,
+    eye: str | None,
+    hat: str | None,
+    enabled: bool | None,
+    reset: bool,
+) -> None:
+    """Your terminal companion: show it, animate it, or configure it.
+
+    The creature, its rarity and its stats are rolled from your name, the
+    same roll as claude-buddy. Overrides live in vibe.toml under [pet].
+    """
+    if gallery:
+        for name, rows in pet.gallery():
+            console.print(f"[path]{name}[/]")
+            console.print("\n".join(rows))
+            console.print()
+        return
+    changes = {
+        k: v
+        for k, v in {
+            "species": species,
+            "name": pet_name,
+            "eye": eye,
+            "hat": hat,
+        }.items()
+        if v is not None
+    }
+    if reset:
+        changes = {"species": "", "name": "", "eye": "", "hat": ""}
+    if changes or enabled is not None:
+        data = ctx.cfg.model_dump()
+        data["pet"].update(changes)
+        if enabled is not None:
+            data["pet"]["enabled"] = enabled
+        cfg = Config.model_validate(data)
+        try:
+            pet.resolve(ctx.state.name, **{k: data["pet"][k] for k in changes})
+        except ValueError as e:
+            _fail(str(e))
+        cfg.save(CONFIG_PATH)
+        ctx.cfg = cfg
+        console.print("[ok]vibe.toml [pet] updated[/]")
+    p = _pet(ctx)
+    if not animate:
+        console.print(pet.render(p))
+        return
+    import time
+
+    from rich.live import Live
+
+    tick = 0
+    try:
+        with Live(pet.render(p, 0), console=console, refresh_per_second=4) as live:
+            while True:
+                time.sleep(0.5)
+                tick += 1
+                live.update(pet.render(p, tick))
+    except KeyboardInterrupt:
+        console.print(f"{p.face}  bye")
 
 
 # ---- explain, council, toolbelt ------------------------------------------------
