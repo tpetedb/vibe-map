@@ -16,6 +16,7 @@ Everything below is built, tested and committed on `main` after the PR from `fea
 | Docs | Syllabus, generated Roadmap (40 tech nodes, every date sourced), Cookbook (generated from personas), Design, Ecosystem, Vault, Note methods, Skills, Age of Epochs study, ADRs, CHANGELOG. | `just cookbook`, `just tree`, `tools/checks.py links` |
 | Template | CI and Pages workflows, `env.example`, `scripts/setup.sh` (`--check`, `--yolo`), `scripts/grimoire.zsh`, `justfile` plus `agents.just`. | `.github/workflows/`, `just --list` |
 | Media | `docs/media/`: hero, four islands, roadmap, vault, tree, phone, gameplay GIF, rendered by `just media`. | |
+| Played instance | https://github.com/tpetedb/vibe-map-played, generated from this template and filled by `tools/play.py`: 32 stops, 12 mentors, 1600 XP (Senior), vault of 100 notes, `.grimoire/state.json` committed. Also cloned at `~/vibe-map-played` on Tom's Mac mini. | its own `just verify` |
 
 ## What Tom has to do himself (the agent cannot)
 
