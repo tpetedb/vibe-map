@@ -1,6 +1,7 @@
 """Regenerate the tech tree outputs from vibemap/tech.py.
 
-Writes docs/ROADMAP.md, docs/RESOURCES.md and tools/generated/{notes,tree}.js;
+Writes docs/ROADMAP.md, docs/RESOURCES.md, docs/OBSIDIAN.md and
+tools/generated/{notes,tree}.js;
 tools/build.py
 embeds the JS into the game. Never hand-edit those outputs.
 
@@ -16,12 +17,14 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from vibemap.obsidian import doc_markdown  # noqa: E402
 from vibemap.project import data_text  # noqa: E402
 from vibemap.tech import AGES, T  # noqa: E402
 
 GENERATED = ROOT / "tools" / "generated"
 ROADMAP = ROOT / "docs" / "ROADMAP.md"
 RESOURCES = ROOT / "docs" / "RESOURCES.md"
+OBSIDIAN = ROOT / "docs" / "OBSIDIAN.md"
 
 # Topics that already have a handwritten vault note under this title.
 EXIST = {
@@ -119,6 +122,7 @@ def main() -> None:
         GENERATED / "tree.js": tree_js,
         ROADMAP: md,
         RESOURCES: data_text("resources.md"),
+        OBSIDIAN: doc_markdown(),
     }
     if "--check" in sys.argv:
         stale = [
