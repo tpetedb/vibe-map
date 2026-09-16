@@ -29,16 +29,18 @@ def test_claim_first_workstream_from_the_roadmap(game: GamePage) -> None:
     game.goto()
     game.start()
     game.open_roadmap()
-    buttons = game.page.locator("#plotlist button")
-    assert buttons.count() >= 8
-    assert "blocked by dependency" in (buttons.nth(1).text_content() or "")
+    first = game.page.locator("#plotlist button").nth(0).text_content() or ""
+    assert "Pre-flight" in first, "Pre-flight must be the first roadmap entry"
+    buttons = game.workstream_buttons()
+    assert "blocked by dependency" in (buttons[1].text_content() or "")
     game.claim(1)
     state = game.state()
     assert state["done"] == [1]
     assert state["doneW"]["campus"] == [1]
     game.open_roadmap()
-    assert "(delivered)" in (buttons.nth(0).text_content() or "")
-    assert "blocked" not in (buttons.nth(1).text_content() or "")
+    buttons = game.workstream_buttons()
+    assert "(delivered)" in (buttons[0].text_content() or "")
+    assert "blocked" not in (buttons[1].text_content() or "")
     game.screenshot("smoke_roadmap_after_claim")
     game.assert_clean()
 

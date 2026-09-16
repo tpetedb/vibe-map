@@ -145,9 +145,15 @@ class GamePage:
         self.page.wait_for_selector("#sheet.on", state="attached")
         self.page.wait_for_selector("#plotlist button", state="attached")
 
+    def workstream_buttons(self):
+        """The eight workstream buttons, skipping Pre-flight on the campus."""
+        buttons = self.page.locator("#plotlist button")
+        offset = 1 if "Pre-flight" in (buttons.nth(0).text_content() or "") else 0
+        return [buttons.nth(offset + i) for i in range(8)]
+
     def open_workstream(self, n: int) -> None:
         self.open_roadmap()
-        self.page.click(f"#plotlist button >> nth={n - 1}")
+        self.workstream_buttons()[n - 1].click()
         self.page.wait_for_selector("#sheet .screen.on", state="attached")
 
     def claim(self, n: int) -> None:

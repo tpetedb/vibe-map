@@ -16,10 +16,11 @@ function vstep(k){
 function vdraw(){
   const c=vctx;c.setTransform(vctxScale,0,0,vctxScale,0,0);c.clearRect(0,0,vW,vH);
   const nb=new Set();if(vsel!==null)VL.forEach(([i,j])=>{if(i===vsel)nb.add(j);if(j===vsel)nb.add(i)});
-  VL.forEach(([i,j])=>{const a=VN[i],b=VN[j];const hot=vsel!==null&&(i===vsel||j===vsel);c.strokeStyle=hot?"rgba(167,139,250,.9)":"rgba(255,255,255,"+(vsel===null?.16:.06)+")";c.lineWidth=hot?1.6:1;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()});
-  const col={ws:"#22D3EE",c:"#A78BFA",p:"#FBBF24",dark:"#94A3B8",feudal:"#34D399",castle:"#F59E0B",imperial:"#C084FC",future:"#67E8F9"};
+  VL.forEach(([i,j])=>{const a=VN[i],b=VN[j];const hot=vsel!==null&&(i===vsel||j===vsel);c.strokeStyle=hot?"rgba(0,136,204,.9)":"rgba(255,255,255,"+(vsel===null?.16:.06)+")";c.lineWidth=hot?1.6:1;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()});
+  // Same legend as the Obsidian graph (docs/VAULT.md): workstreams green, people blue, concepts orange, ages by tier.
+  const col={ws:"#00A86B",c:"#FF8C1A",p:"#0088CC",dark:"#94A3B8",feudal:"#00D084",castle:"#FF8C1A",imperial:"#F04923",future:"#FFBF00"};
   VN.forEach((n,i)=>{const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);c.globalAlpha=dim?.3:1;
-    if(i===vsel){c.fillStyle="rgba(167,139,250,.25)";c.beginPath();c.arc(n.x,n.y,r+8,0,7);c.fill()}
+    if(i===vsel){c.fillStyle="rgba(0,136,204,.25)";c.beginPath();c.arc(n.x,n.y,r+8,0,7);c.fill()}
     c.fillStyle=col[n.t];c.beginPath();c.arc(n.x,n.y,r,0,7);c.fill();
     if(!dim||i===vsel){c.fillStyle="#dcddde";c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";c.fillText(n.id,n.x,n.y+r+13)}
     c.globalAlpha=1});
@@ -39,7 +40,7 @@ function vrender(id){
   $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
   const n=VN[vsel];if(n){n.vx+=(vW/2-n.x)*.15;n.vy+=(vH/2-n.y)*.15}
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=VN.length+" notes · "+VL.length+" links · tap a node, drag to arrange";
+window.openVault=function(){NOTES["Your path"].md=pathMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=VN.length+" notes · "+VL.length+" links · tap a node, drag to arrange";
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
   cv.onpointerdown=e=>{const [x,y]=pos(e);const i=vpick(x,y);moved=false;if(i!==null){vdrag=VN[i];cv.setPointerCapture(e.pointerId)}};
   cv.onpointermove=e=>{if(!vdrag)return;const [x,y]=pos(e);vdrag.x=x;vdrag.y=y;vdrag.vx=vdrag.vy=0;moved=true};
@@ -48,7 +49,7 @@ window.openVault=function(){NOTES["Your path"].md=pathMd();MENTORS.forEach(m=>{N
 let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
 window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").textContent=treeOn?"Graph":"Tech tree";if(treeOn)renderTree()};
-function renderTree(){const col={dark:"#94A3B8",feudal:"#34D399",castle:"#F59E0B",imperial:"#C084FC",future:"#67E8F9"};const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
+function renderTree(){const col={dark:"#94A3B8",feudal:"#00D084",castle:"#FF8C1A",imperial:"#F04923",future:"#FFBF00"};const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
   $("vtree").innerHTML='<div class="ages">'+AGES.map(([a,an,lv,d])=>`<div class="age"><div class="lvl">${lv}</div><h4>${an}</h4><p>${d}</p>${TREE[a].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${col[a]}"></i>${t.n}</button>`).join("")}</div>`).join("")+'</div>';
   $("vtree").querySelectorAll(".tech").forEach(b=>b.onclick=()=>{vrender(b.dataset.n);renderTree();$("vnote").scrollIntoView({behavior:"smooth",block:"start"})})}
 window.closeVault=function(){const was=$("vault").classList.contains("on");$("vault").classList.remove("on");if(vraf)cancelAnimationFrame(vraf);vraf=null;if(was)window.scrollTo({top:0,behavior:"smooth"})};

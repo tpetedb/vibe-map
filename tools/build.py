@@ -25,6 +25,7 @@ GENERATED = ROOT / "tools" / "generated"
 # Game modules in load order. The state module must come first (S, save,
 # load) and boot last (it reads localStorage and paints the title screen).
 GAME_ORDER = [
+    "@config",
     "00-state.js",
     "10-scene.js",
     "11-character.js",
@@ -68,10 +69,34 @@ def _tree_js() -> str:
     return (GENERATED / "tree.js").read_text(encoding="utf-8").rstrip("\n") + "\n"
 
 
+def _config_js() -> str:
+    """The values from grimoire.toml the game exposes as a constant."""
+    sys.path.insert(0, str(ROOT))
+    from grimoire.config import Config  # noqa: PLC0415
+    from grimoire.themes import load_theme, theme_for_game  # noqa: PLC0415
+
+    cfg = Config.load()
+    theme = theme_for_game(
+        load_theme(cfg.theme.preset), show_pairings=cfg.game.show_pairings
+    )
+    data = {
+        "theme": theme,
+        "dates": cfg.finale.dates,
+        "repo": cfg.game.repo_url,
+        "shadowMap": cfg.game.shadow_map,
+        "difficulty": cfg.learner.difficulty,
+        "persona": cfg.learner.persona,
+        "mode": cfg.learner.mode,
+    }
+    return "const CONFIG=" + json.dumps(data, ensure_ascii=False) + ";\n"
+
+
 def _game_script() -> str:
     parts = []
     for name in GAME_ORDER:
-        if name == "@campaign":
+        if name == "@config":
+            parts.append(_config_js())
+        elif name == "@campaign":
             parts.append(_campaign_js())
         elif name == "@notes":
             parts.append(_notes_js())
@@ -96,6 +121,11 @@ def build() -> str:
         + "<script>\n"
         + _read("vendor/three.min.js")
         + "</script>\n"
+        # Motion (MIT, https://motion.dev) is optional: the game checks for
+        # window.Motion and degrades to instant transitions without it.
+        + "<script>\n/* motion 12.43.0, MIT, https://github.com/motiondivision/motion */\n"
+        + _read("vendor/motion.min.js").rstrip("\n")
+        + "\n</script>\n"
         + "<script>\n"
         + _game_script()
         + "</script>\n</body>\n</html>"

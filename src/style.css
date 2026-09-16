@@ -1,13 +1,28 @@
+/* Design tokens: docs/DESIGN.md. Black is the brand; each hue means one thing
+   (red action, green done, blue paths, yellow curiosity, orange XP). Base red
+   and base blue are fills only; as text use the bright variants. */
 :root{
-  --bg:#0B0F1A; --bg2:#121A2B; --panel:rgba(14,18,30,.78); --panel2:rgba(255,255,255,.08); --ink:#EEF2FF; --muted:#8B93A7;
-  --grass:#34D399; --gold:#FBBF24; --line:rgba(255,255,255,.1); --line2:rgba(255,255,255,.18);
-  --a1:#22D3EE; --a2:#8B5CF6; --accent:linear-gradient(120deg,var(--a1),var(--a2));
-  --ring:0 0 0 1px rgba(255,255,255,.06) inset, 0 1px 0 rgba(255,255,255,.08) inset;
+  --bg:#000000; --surface-1:#0A0A0A; --surface-2:#141414; --surface-3:#1A1A1A;
+  --hairline:rgba(255,255,255,.10); --hairline-2:rgba(255,255,255,.18);
+  --text:#F1F1F8; --muted:#8B93A7;
+  --red:#D32F2F; --red-dim:#9A2A2A; --red-bright:#F04923;
+  --orange:#FF8C1A; --orange-dim:#C26A14; --orange-bright:#FFA94D;
+  --yellow:#FFBF00; --yellow-dim:#C29200; --yellow-bright:#FFD500;
+  --green:#00A86B; --green-dim:#0A7A52; --green-bright:#00D084;
+  --blue:#0067A5; --blue-dim:#0A4E7A; --blue-bright:#0088CC;
+  --radius-s:8px; --radius-m:12px; --radius-l:16px; --radius-pill:999px;
+  --font-display:Sora,system-ui,sans-serif; --font-body:Inter,system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --edge:inset 0 0 0 1px rgba(255,255,255,.08); --lift:0 10px 30px rgba(0,0,0,.6);
+  --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
+  --t-fast:150ms; --t-base:240ms; --t-slow:400ms;
+  --ease:cubic-bezier(.4,1,.75,.9); --ease-out:cubic-bezier(.2,.8,.2,1);
+  /* Names the older rules below still use, mapped onto the tokens. */
+  --bg2:var(--surface-1); --panel:rgba(10,10,10,.78); --panel2:var(--surface-2); --ink:var(--text);
+  --grass:var(--green-bright); --gold:var(--yellow); --line:var(--hairline); --line2:var(--hairline-2);
+  --a1:var(--blue-bright); --a2:var(--orange); --accent:var(--yellow);
+  --ring:var(--edge);
 }
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){ --bg:#F5F7FD; --bg2:#EEF1FA; --panel:rgba(255,255,255,.86); --panel2:rgba(15,23,42,.05); --ink:#0F172A; --muted:#64748B; --line:rgba(15,23,42,.08); --line2:rgba(15,23,42,.14); --ring:0 1px 0 rgba(255,255,255,.9) inset }
-}
-:root[data-theme="light"]{ --bg:#F5F7FD; --bg2:#EEF1FA; --panel:rgba(255,255,255,.86); --panel2:rgba(15,23,42,.05); --ink:#0F172A; --muted:#64748B; --line:rgba(15,23,42,.08); --line2:rgba(15,23,42,.14); --ring:0 1px 0 rgba(255,255,255,.9) inset }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -18,16 +33,18 @@ h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
 h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
 p{margin:0 0 .9em;max-width:38em}
 button{font:inherit;font-weight:600;font-size:14px;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:11px 18px;cursor:pointer;box-shadow:var(--ring);transition:transform .12s,box-shadow .2s,border-color .2s}
-button:hover{border-color:var(--a1);transform:translateY(-1px)} button:active{transform:none}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--a1);outline-offset:2px}
-button.primary{background:var(--accent);border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(139,92,246,.35)}
+button:hover{border-color:var(--blue-bright);transform:translateY(-1px)} button:active{transform:none}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--yellow-bright);outline-offset:2px}
+/* One yellow primary per view, black text (12.7:1 on yellow). */
+button.primary{background:var(--yellow);border-color:transparent;color:#000;box-shadow:var(--glow-yellow)}
+button.primary:hover{background:var(--yellow-bright)}
 button:disabled{opacity:.35;cursor:default;transform:none}
 input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;width:100%}
 textarea{min-height:120px;resize:vertical;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.55}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
 .card{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:14px 0}
 .muted{color:var(--muted)}.small{font-size:14px}.num{font-variant-numeric:tabular-nums}
-a{color:var(--a1);text-decoration:none;border-bottom:1px solid rgba(34,211,238,.4)}
+a{color:var(--blue-bright);text-decoration:none;border-bottom:1px solid rgba(0,136,204,.4)}
 
 /* overlays */
 .ui{position:absolute;z-index:5;pointer-events:none}
@@ -36,16 +53,28 @@ a{color:var(--a1);text-decoration:none;border-bottom:1px solid rgba(34,211,238,.
 #hud-name{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;flex:1}
 .pill{flex-shrink:1;min-width:0;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--line2);backdrop-filter:blur(12px);border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center;white-space:nowrap}
 .pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line2)}
-.pill i.on{background:var(--grass);box-shadow:0 0 8px var(--grass)}
+/* The one glow on the stage: a rune lighting when an OKR is unlocked. */
+.pill i.on{background:var(--green-bright);box-shadow:var(--glow-green)}
+@media (prefers-reduced-motion:no-preference){
+  .pill i.on{animation:rune var(--t-slow) var(--ease-out)}
+  @keyframes rune{0%{transform:scale(.6);box-shadow:none}60%{transform:scale(1.3);box-shadow:0 0 18px rgba(0,208,132,.8)}100%{transform:scale(1)}}
+}
 .pill button{padding:4px 10px;font-size:11px;border-radius:999px}
 #kpis{position:absolute;top:54px;left:12px;display:flex;flex-direction:row;gap:6px;z-index:5;pointer-events:none}
 .kpi{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:999px;padding:4px 10px;display:flex;gap:6px;align-items:baseline}
-.kpi b{display:inline;font-family:Sora,sans-serif;font-size:13px;letter-spacing:-.02em;background:var(--accent);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kpi b{display:inline;font-family:var(--font-display);font-size:13px;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
 .kpi span{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 /* Phones: the button pill is wider than the screen minus the name, so the
    name takes its own row and the KPIs drop below the second row. Must come
    after the #kpis rule above or the cascade keeps top:54px. */
 @media (max-width:480px){#hud-name{flex-basis:100%}#kpis{top:100px}}
+/* Future-retro, kept subtle: 4 percent scanlines on the title box only, never on body text elsewhere. */
+#title .box{position:relative;overflow:hidden}
+#title .box::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 1px,rgba(0,0,0,.04) 1px 2px)}
+@media (prefers-reduced-motion:no-preference){
+  #title .box{animation:rise var(--t-slow) var(--ease-out)}
+  @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+}
 #bottom{left:12px;right:12px;bottom:10px;display:flex;flex-direction:column;gap:8px;align-items:stretch}
 #enter{align-self:center;display:none;animation:rise .3s ease both}
 #enter.on{display:flex}

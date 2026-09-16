@@ -29,12 +29,20 @@ let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{
 function save(){try{localStorage.setItem("grimoire3",JSON.stringify(S))}catch(e){}}
 function load(){try{const r=localStorage.getItem("grimoire3");if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 const $=id=>document.getElementById(id);
+// Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
+// spring in and KPIs count up; without it, or under reduced motion, they just
+// appear. Springs are stiff so nothing takes longer than about 400 ms.
+const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+function fx(el){if(!window.Motion||reducedMotion())return;Motion.animate(el,{opacity:[0,1],transform:["translateY(16px)","translateY(0px)"]},{type:"spring",stiffness:420,damping:34,mass:.8})}
+function countUp(el,to,fmt){if(!window.Motion||reducedMotion()){el.textContent=fmt(to);return}const from=parseFloat(el.textContent)||0;if(from===to){el.textContent=fmt(to);return}Motion.animate(from,to,{duration:.4,ease:"easeOut",onUpdate:v=>{el.textContent=fmt(v)}})}
 
 /* ---------------- faces for bubble (2D) ---------------- */
 const FACE={
  tom:`<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="6" fill="#F5D7BC"/><rect x="4" y="4" width="32" height="10" rx="4" fill="#1F2A44"/><rect x="2" y="12" width="36" height="4" rx="2" fill="#E8E8E8"/><rect x="4" y="16" width="5" height="12" fill="#6B4A2B"/><rect x="31" y="16" width="5" height="12" fill="#6B4A2B"/><rect x="11" y="21" width="5" height="2" fill="#333"/><circle cx="26" cy="22" r="2" fill="#333"/><rect x="15" y="27" width="10" height="2.5" rx="1" fill="#6B4A2B"/></svg>`,
  rolinda:`<svg viewBox="0 0 40 40"><rect x="8" y="10" width="24" height="24" rx="6" fill="#F5D7BC"/>${[[8,8],[14,4],[20,3],[26,4],[32,8],[6,15],[34,15]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#F2CF6F"/>`).join("")}<circle cx="15" cy="22" r="2" fill="#333"/><circle cx="25" cy="22" r="2" fill="#333"/><path d="M15 28 Q20 32 25 28" stroke="#B0534B" stroke-width="2" fill="none"/></svg>`
 };
-function say(k){const [who,t]=SAY[k];$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, Site Reliability Engineer":"Rolinda, Head of Hospitality Operations";$("bub-text").textContent=t}
+// Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
+function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
+function say(k){const [who,t]=SAY[k];$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").textContent=t}}
 
 /* ---------------- 3D ---------------- */

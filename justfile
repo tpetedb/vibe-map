@@ -63,6 +63,10 @@ lint:
 # what CI runs: lint + tests + build check
 verify: lint test
 
+# render the screenshots and the gameplay GIF in docs/media from the built game
+media:
+    uv run python tools/media.py
+
 # regenerate docs/COOKBOOK.md from the personas
 cookbook:
     uv run python tools/gen_cookbook.py
