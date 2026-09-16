@@ -1,0 +1,72 @@
+# YAML in practice: a GitHub Actions workflow. Indentation is structure,
+# `-` starts a list item, `key: value` is a map. Three jobs run on every push
+# and pull request: lint and the fast tests, the browser tests, and the checks
+# that generated files are in sync with their sources.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Monday 07:00 UTC: the link check, so a dead docs link is found by the
+    # robot before a learner finds it.
+    - cron: "0 7 * * 1"
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.12.x"
+
+jobs:
+  lint-and-unit:
+    name: lint, unit tests, generated files in sync
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run python tools/checks.py style
+      - run: uv run python tools/regen_tree.py --check
+      - run: uv run python tools/build.py --check
+      - run: uv run python tools/gen_cookbook.py --check
+      - run: uv run pytest -q tests/test_cli.py tests/test_repo.py tests/test_build.py
+
+  browser:
+    name: Playwright smoke tests (Chromium and WebKit)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv run playwright install chromium webkit
+      - run: uv run pytest -q tests/test_game_smoke.py tests/test_game_webkit.py tests/test_tui.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: tests/out/
+          if-no-files-found: ignore
+
+  links:
+    name: every link answers (weekly)
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv run python tools/checks.py links

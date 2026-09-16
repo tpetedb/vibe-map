@@ -63,6 +63,42 @@ lint:
 # what CI runs: lint + tests + build check
 verify: lint test
 
+# regenerate docs/COOKBOOK.md from the personas
+cookbook:
+    uv run python tools/gen_cookbook.py
+
+# what is installed and what is missing; `just toolbelt missing` installs everything missing
+toolbelt *install:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -n "{{install}}" ]; then uv run grimoire toolbelt --install "{{install}}"; else uv run grimoire toolbelt; fi
+
+# ask the provider to explain the last commits in plain words
+explain n="3":
+    uv run grimoire explain -n {{n}}
+
+# example: just council "Should I learn git before Python?"
+# convene the mentors on a question; minutes land in the vault
+council topic:
+    uv run grimoire council "{{topic}}"
+
+# example: just break dragons
+# a sandbox branch to break things in: play/<name>, from the current branch
+break name:
+    git switch -c play/{{name}}
+    @echo "You are on play/{{name}}. Break anything. Come back with: just rescue"
+
+# commit whatever is lying around on the play branch and return to main, unhurt
+rescue:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    branch=$(git branch --show-current)
+    case "$branch" in play/*) ;; *) echo "not on a play branch (on $branch); nothing to rescue"; exit 0;; esac
+    git add -A && git commit -qm "Play session on $branch" || true
+    git switch main
+    echo "Back on main. $branch is kept; delete it with: git branch -D $branch"
+    uv run grimoire explain -n 1 || true
+
 # remove build caches and test output
 clean:
     rm -rf .pytest_cache .ruff_cache tests/out

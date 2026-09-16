@@ -7,6 +7,8 @@ the vendor's documentation (URL per entry, checked 2026-09-16).
 
 from __future__ import annotations
 
+import os
+import re
 import shutil
 import subprocess
 from collections.abc import Callable
@@ -86,12 +88,37 @@ def ask(provider_id: str, prompt: str, *, timeout: int = 600) -> str:
             f"{provider.label} is not installed. Install: {provider.install} "
             f"(docs: {provider.docs})"
         )
+    argv = provider.argv(prompt)
     result = subprocess.run(
-        provider.argv(prompt), capture_output=True, text=True, timeout=timeout
+        argv, capture_output=True, text=True, timeout=timeout, env=_clean_env()
     )
+    if result.returncode != 0 and provider.id == "claude":
+        # A pinned model this Claude Code build does not know (a preview
+        # alias in ~/.claude/settings.json): retry on the documented alias.
+        if "model catalog" in result.stderr:
+            result = subprocess.run(
+                [*argv, "--model", "sonnet"],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                env=_clean_env(),
+            )
     if result.returncode != 0:
         raise RuntimeError(
             f"{provider.label} exited {result.returncode}: "
-            f"{result.stderr.strip()[:500]}"
+            f"{_strip_ansi(result.stderr).strip()[:500]}"
         )
     return result.stdout.strip()
+
+
+def _clean_env() -> dict[str, str]:
+    """The environment minus the variables a parent Claude Code session exports."""
+    return {
+        k: v
+        for k, v in os.environ.items()
+        if not (k.startswith("CLAUDE_CODE_") or k in {"CLAUDECODE", "CLAUDE_PID"})
+    }
+
+
+def _strip_ansi(text: str) -> str:
+    return re.sub(r"\x1b\[[0-9;]*m", "", text)

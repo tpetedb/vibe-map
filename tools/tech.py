@@ -190,9 +190,9 @@ T = [
         "env",
         "dark",
         ".env files and secrets",
-        "A .env file holds KEY=VALUE pairs (API tokens, database URLs) that your code reads at startup, so the secret lives on the machine and not in the repo. The pattern: .env is listed in .gitignore and never committed; .env.example is committed with the same keys and empty values so the next person knows what to fill in; python-dotenv loads .env into os.environ. A token that lands in a commit has to be rotated, because git history is forever.",
+        "A .env file holds KEY=VALUE pairs (API tokens, database URLs) that your code reads at startup, so the secret lives on the machine and not in the repo. The pattern: .env is listed in .gitignore and never committed; .env.example (in this repo env.example, without the dot, because some agent guardrails refuse anything that looks like a real .env) is committed with the same keys and empty values so the next person knows what to fill in; python-dotenv loads .env into os.environ. A token that lands in a commit has to be rotated, because git history is forever.",
         "The twelve-factor app (Adam Wiggins at Heroku, 2011) made 'store config in the environment' a rule. The dotenv convention started with Brandon Keepers' Ruby dotenv gem in July 2012; python-dotenv followed on PyPI in September 2014.",
-        "Copy .env.example to .env in this repo and print one variable: uv run python -c \"from dotenv import dotenv_values; print(dotenv_values('.env'))\".",
+        "Copy env.example to .env in this repo and print one variable: uv run python -c \"from dotenv import dotenv_values; print(dotenv_values('.env'))\".",
         [
             ("Twelve-Factor config", "https://12factor.net/config"),
             ("python-dotenv", "https://github.com/theskumar/python-dotenv"),

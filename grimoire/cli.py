@@ -580,9 +580,9 @@ def explain(ctx: Ctx, commits: int) -> None:
                 border_style="accent",
             )
         )
-    except ProviderMissing as e:
-        console.print(f"[warn]{e}[/]")
-        console.print(log)
+    except (ProviderMissing, RuntimeError) as e:
+        console.print(f"[warn]{escape(str(e))}[/]")
+        console.print(escape(log))
 
 
 @cli.command()

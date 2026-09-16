@@ -1,0 +1,44 @@
+# Publish the game to GitHub Pages on every push to main (workstream 7).
+# The site is the game/ folder: one HTML file, no build step on the runner
+# because game/grimoire.html is committed already built. Enable Pages once in
+# the repo settings with source "GitHub Actions"; after that this workflow
+# owns the URL.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "game/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Make the game the front page
+        run: |
+          mkdir -p site
+          cp game/grimoire.html site/index.html
+          cp game/grimoire.html site/grimoire.html
+          cp game/index.html site/your-game.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
