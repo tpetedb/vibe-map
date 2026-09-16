@@ -63,3 +63,4 @@ pythonVersion = "3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["integration: slow end-to-end runs (the full play-through)"]

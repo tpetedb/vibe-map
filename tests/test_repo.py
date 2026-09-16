@@ -40,11 +40,15 @@ def test_nothing_loads_the_learners_index_html() -> None:
     """game/index.html is replaced on the night; only prose may mention it."""
     html = GAME.read_text()
     assert not re.search(r'(src|href)="[^"]*index\.html"', html)
-    # quests.py may look at the file to verify workstream 1; nothing else may.
+    # quests.py may look at the file to verify workstream 1; nothing else may
+    # read it (prose mentions in notes and recipes are fine).
+    readers = ("read_text", "open(", 'Path("', '/ "index.html"')
     for py in (ROOT / "grimoire").glob("*.py"):
         if py.name == "quests.py":
             continue
-        assert "index.html" not in py.read_text(), py
+        for line in py.read_text().splitlines():
+            if "index.html" in line:
+                assert not any(r in line for r in readers), (py.name, line.strip())
 
 
 def test_no_em_dashes_or_emoji_in_tracked_text() -> None:

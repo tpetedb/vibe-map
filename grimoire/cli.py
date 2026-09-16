@@ -322,6 +322,47 @@ def vault_log(ctx: Ctx, line: str) -> None:
     console.print("[ok]logged[/]")
 
 
+@vault.command("method")
+@click.argument("method_id", required=False)
+@pass_ctx
+def vault_method(ctx: Ctx, method_id: str | None) -> None:
+    """List note-taking methods, or bootstrap one into the vault."""
+    from grimoire.methods import METHODS, get_method
+
+    if method_id is None:
+        t = Table(box=None, header_style="path")
+        t.add_column("id")
+        t.add_column("method")
+        t.add_column("best for", style="muted")
+        for m in METHODS.values():
+            t.add_row(m.id, m.name, m.when)
+        console.print(t)
+        console.print(
+            "[muted]docs/NOTE-METHODS.md compares them; methods can coexist.[/]"
+        )
+        return
+    try:
+        m = get_method(method_id)
+    except ValueError as e:
+        _fail(str(e))
+    base = ctx.vault.dir / "Methods" / m.name
+    for folder in m.folders:
+        (base / folder).mkdir(parents=True, exist_ok=True)
+        (base / folder / ".gitkeep").touch()
+    tdir = ctx.vault.dir / "_templates" / m.id
+    tdir.mkdir(parents=True, exist_ok=True)
+    for tpl in m.templates:
+        (tdir / tpl.filename).write_text(tpl.body, encoding="utf-8")
+    title = f"Method - {m.name}"
+    ctx.vault.write(title, m.hub, tags=["tech"])
+    ctx.vault.add_build_log(f"[[{title}]] bootstrapped under Methods/{m.name}/")
+    console.print(
+        f"[ok]{m.name}[/]: {len(m.folders)} folders under vault/{ctx.cfg.vault.folder}/"
+        f"Methods/{m.name}, {len(m.templates)} templates in _templates/{m.id}, "
+        f"hub note {title}"
+    )
+
+
 @cli.command()
 @pass_ctx
 def init(ctx: Ctx) -> None:

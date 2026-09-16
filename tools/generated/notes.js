@@ -67,7 +67,7 @@ A time machine for a folder. Commit = named snapshot, branch = parallel line of 
 **History.** Linus Torvalds wrote git in April 2005, in about ten days, after the Linux kernel lost its previous tool (BitKeeper). GitHub launched in 2008 and made it social; today git is the default version control system almost everywhere.
 **Try in five minutes.** git log --oneline | head, then change one line, git diff, git commit -am 'why', git revert HEAD.
 - Docs: [Git tutorial](https://git-scm.com/docs/gittutorial), [Oh Shit, Git!?!](https://ohshitgit.com), [Claude Code common workflows](https://code.claude.com/docs/en/common-workflows), [Source: Pro Git, A Short History of Git](https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git), [Source: Linux Foundation, 10 Years of Git interview with Linus Torvalds (2015)](https://www.linuxfoundation.org/blog/blog/10-years-of-git-an-interview-with-git-creator-linus-torvalds), [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/)
-- Unlocks: [[GitHub, pull requests, Pages]], [[Hook]], [[CI/CD and automation]]
+- Unlocks: [[GitHub, pull requests, Pages]], [[Hook]], [[CI/CD and automation]], [[Semantic Versioning]]
 - Age: Dark Age · Level: Intern
 #tech #dark`},
 "Python":{t:"feudal",md:`# Python
@@ -123,7 +123,7 @@ Markdown is prose with a little structure (#, -, **, \`[[links]]\`). It is the f
 **History.** Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
 **Try in five minutes.** Write vault/Grimoire/Me.md with three sentences and two \`[[links]]\`. Open the graph.
 - Docs: [Markdown guide](https://www.markdownguide.org), [Obsidian help](https://help.obsidian.md), [Mermaid](https://mermaid.js.org/intro/), [Source: Markdown 1.0.1 (December 2004)](https://daringfireball.net/projects/markdown/), [Source: Daring Fireball on GitHub Flavored Markdown (October 2009)](https://daringfireball.net/linked/2009/10/23/github-flavored-markdown), [Source: Obsidian, About](https://obsidian.md/about)
-- Unlocks: [[Claude and Obsidian]], [[AGENTS.md]]
+- Unlocks: [[Claude and Obsidian]], [[AGENTS.md]], [[README and the quickstart]], [[Architecture decision records]]
 - Age: Feudal Age · Level: Junior
 #tech #feudal`},
 "Data: files, schemas, warehouses":{t:"feudal",md:`# Data: files, schemas, warehouses
@@ -277,12 +277,43 @@ Every age here shortened the distance between an idea and a working thing: the t
 - Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [Agentic AI Foundation](https://agents.md), [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol)
 - Age: Future Age · Level: Expert
 #tech #future`},
+"Semantic Versioning":{t:"castle",md:`# Semantic Versioning
+A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.
+**History.** Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.
+**Try in five minutes.** uv run grimoire --version, then open pyproject.toml and grimoire/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
+- Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html), [Source: semver.org, About (authored by Tom Preston-Werner)](https://semver.org/), [Source: semver/semver, merge of release-2.0 (18 June 2013)](https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9), [Source: semver/semver, the commit tagged v1.0.0 (September 2011)](https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27)
+- Unlocks: [[Changelogs (Keep a Changelog)]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"Changelogs (Keep a Changelog)":{t:"castle",md:`# Changelogs (Keep a Changelog)
+A CHANGELOG.md lists what changed for the person using your thing: newest first, one section per version with its date, six kinds of change (Added, Changed, Deprecated, Removed, Fixed, Security) and an Unreleased section on top. It is not the git log. Commits are for the people who wrote them; the changelog is for everyone else.
+**History.** Olivier Lacan started Keep a Changelog on 31 May 2014 as a CHANGELOG that documents itself, under the motto 'Don't let your friends dump git logs into changelogs.' Version 1.0.0 followed on 20 June 2017, 1.1.0 on 15 February 2019 and 2.0.0 on 7 June 2026. The site is MIT licensed; this repo follows 1.1.0.
+**Try in five minutes.** cat CHANGELOG.md. Then make one change to the repo and add its line under Unreleased in the same commit.
+- Docs: [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/), [Source: keep-a-changelog, its own CHANGELOG.md (dated releases since 2014-05-31)](https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md), [Source: Keep a Changelog 2.0.0 (2026-06-07)](https://keepachangelog.com/en/2.0.0/)
+- Unlocks: [[CI/CD and automation]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"Architecture decision records":{t:"imperial",md:`# Architecture decision records
+An ADR is one short file per decision: Title, Status, Context (the forces), Decision (we will ...), Consequences (all of them). Numbered, never deleted, superseded instead. It is the memory an agent cannot infer from the code: why the repo is MIT, why the game is one file, why XP is verified. AGENTS.md says what the rules are; docs/adr/ says why.
+**History.** Michael Nygard published Documenting Architecture Decisions on 15 November 2011: a page per decision, kept in the repo with the code, in a form borrowed from Alexandrian patterns. The GitHub adr organisation (adr.github.io) collects the templates and tools that followed; MADR, the Markdown variant with drivers and options, reached 4.0.0 in September 2024.
+**Try in five minutes.** ls docs/adr, then cat docs/adr/0004-quests-verify-real-work.md. Write ADR 0005 with the adr skill for the next thing you decide.
+- Docs: [ADR home (the GitHub adr organisation)](https://adr.github.io), [MADR](https://adr.github.io/madr/), [Source: Nygard, Documenting Architecture Decisions (15 November 2011)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions), [Source: MADR 4.0.0 (September 2024)](https://adr.github.io/madr/)
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"README and the quickstart":{t:"feudal",md:`# README and the quickstart
+The README is the front page: what this is, for whom, and the commands that get a stranger from clone to a working run, on the first screen. GitHub shows it under the file list, agents read it first, and it is the last thing maintainers update, which is why every command in it must be one you just ran.
+**History.** The name is older than most of this tree. Seventh Edition Unix (1979) shipped /usr/doc/README, a few lines telling you how to format the manual's papers, and DECUS library tapes for the PDP-10 carried READ.ME files of 'random notes' for whoever installed the software. Markdown and GitHub turned README.md into the page a repository opens on; makeareadme.com is the modern checklist.
+**Try in five minutes.** head -30 README.md, then run the first Quickstart command exactly as written. If it fails, fix the README, not the reader.
+- Docs: [Make a README](https://www.makeareadme.com), [GitHub docs, About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes), [Source: TUHS, V7 /usr/doc/README (listed 1979-01-11)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/doc/README), [Source: Trailing-Edge PDP-10 archive, DECUS UCI LISP READ.ME](http://pdp-10.trailing-edge.com/decuslib10-04/01/43,50322/read.me.html), [Source: GitHub docs, About READMEs (often the first item a visitor sees)](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes)
+- Unlocks: [[GitHub, pull requests, Pages]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
 "Tech tree":{t:"future",md:`# Tech tree
 The roadmap from intern to expert, Age of Empires style. Each age has a level; each technology says what it is, real history, a five-minute try, docs, and what it unlocks.
 **Dark Age (Intern).** The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier. [[Unix and the terminal]], [[Bash and shell scripts]], [[zsh and your shell config]], [[Files, folders and paths]], [[Dotfiles]], [[Config formats: JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[localhost and ports]], [[Git]]
-**Feudal Age (Junior).** Languages and data. You can now make the machine do a specific thing and keep the result. [[Python]], [[TOML in practice: pyproject.toml]], [[Python libraries: what they are for]], [[SQL and DuckDB]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Markdown and Obsidian]], [[Data: files, schemas, warehouses]]
-**Castle Age (Medior).** Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. [[HTTP and APIs]], [[Building and consuming APIs]], [[SSH and remote machines]], [[YAML in practice: CI and Compose]], [[Docker and containers]], [[GitHub, pull requests, Pages]], [[CI/CD and automation]], [[Cloud and servers]]
-**Imperial Age (Senior).** The AI harness. You stop typing code and start directing agents, with guardrails you wrote. [[LLM versus harness]], [[Context window and prompts]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]], [[AGENTS.md]], [[Agent Skills standard]], [[Hook]], [[MCP]], [[Subagents and multi-agent]], [[Headless agents and scheduling]], [[Tests and evals]], [[Security and permissions]], [[Cost, tokens and model choice]]
+**Feudal Age (Junior).** Languages and data. You can now make the machine do a specific thing and keep the result. [[Python]], [[TOML in practice: pyproject.toml]], [[Python libraries: what they are for]], [[SQL and DuckDB]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Markdown and Obsidian]], [[Data: files, schemas, warehouses]], [[README and the quickstart]]
+**Castle Age (Medior).** Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. [[HTTP and APIs]], [[Building and consuming APIs]], [[SSH and remote machines]], [[YAML in practice: CI and Compose]], [[Docker and containers]], [[GitHub, pull requests, Pages]], [[CI/CD and automation]], [[Cloud and servers]], [[Semantic Versioning]], [[Changelogs (Keep a Changelog)]]
+**Imperial Age (Senior).** The AI harness. You stop typing code and start directing agents, with guardrails you wrote. [[LLM versus harness]], [[Context window and prompts]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]], [[AGENTS.md]], [[Agent Skills standard]], [[Hook]], [[MCP]], [[Subagents and multi-agent]], [[Headless agents and scheduling]], [[Tests and evals]], [[Security and permissions]], [[Cost, tokens and model choice]], [[Architecture decision records]]
 **Future Age (Expert).** What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. [[Kubernetes and platforms]], [[Claude and Obsidian]], [[The future perspective]]
 - See also: [[Resources]], [[Template repo]], [[Tonight]]
 #overview`}

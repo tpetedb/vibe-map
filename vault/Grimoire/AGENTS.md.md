@@ -12,6 +12,7 @@ None
 **Try in five minutes.** None
 
 - Docs: [Source: agents.md](https://agents.md)
+- Unlocks: [[Architecture decision records]]
 - Age: Imperial Age · Level: Senior
 
 <!-- generated from tools/tech.py; edit there -->

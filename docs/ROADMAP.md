@@ -112,7 +112,7 @@ A time machine for a folder. Commit = named snapshot, branch = parallel line of 
 
 Docs: [Git tutorial](https://git-scm.com/docs/gittutorial) · [Oh Shit, Git!?!](https://ohshitgit.com) · [Claude Code common workflows](https://code.claude.com/docs/en/common-workflows) · [Source: Pro Git, A Short History of Git](https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git) · [Source: Linux Foundation, 10 Years of Git interview with Linus Torvalds (2015)](https://www.linuxfoundation.org/blog/blog/10-years-of-git-an-interview-with-git-creator-linus-torvalds) · [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/)
 
-Unlocks: GitHub, pull requests, Pages, Hook, CI/CD and automation
+Unlocks: GitHub, pull requests, Pages, Hook, CI/CD and automation, Semantic Versioning
 
 ## Feudal Age (Junior)
 
@@ -200,7 +200,7 @@ Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the fil
 
 Docs: [Markdown guide](https://www.markdownguide.org) · [Obsidian help](https://help.obsidian.md) · [Mermaid](https://mermaid.js.org/intro/) · [Source: Markdown 1.0.1 (December 2004)](https://daringfireball.net/projects/markdown/) · [Source: Daring Fireball on GitHub Flavored Markdown (October 2009)](https://daringfireball.net/linked/2009/10/23/github-flavored-markdown) · [Source: Obsidian, About](https://obsidian.md/about)
 
-Unlocks: Claude and Obsidian, AGENTS.md
+Unlocks: Claude and Obsidian, AGENTS.md, README and the quickstart, Architecture decision records
 
 ### Data: files, schemas, warehouses
 
@@ -213,6 +213,18 @@ Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses
 Docs: [Parquet](https://parquet.apache.org/docs/) · [SQLite](https://www.sqlite.org/docs.html) · [Postgres tutorial](https://www.postgresql.org/docs/current/tutorial.html) · [Source: IBM, The relational database (Codd, 1970)](https://www.ibm.com/history/relational-database) · [Source: PostgreSQL docs, A Brief History of PostgreSQL](https://www.postgresql.org/docs/current/history.html) · [Source: SQLite release history (2000-05-29)](https://www.sqlite.org/changes.html) · [Source: SQLite, Most Widely Deployed Database](https://www.sqlite.org/mostdeployed.html) · [Source: Google Cloud blog, Google BigQuery Service (November 2011)](https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-data.html) · [Source: AWS, Announcing Amazon Redshift (November 2012)](https://aws.amazon.com/about-aws/whats-new/2012/11/28/announcing-amazon-redshift/) · [Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)](https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf) · [Source: Twitter Engineering, Announcing Parquet 1.0 (2013)](https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop)
 
 Unlocks: Building and consuming APIs, Tests and evals
+
+### README and the quickstart
+
+The README is the front page: what this is, for whom, and the commands that get a stranger from clone to a working run, on the first screen. GitHub shows it under the file list, agents read it first, and it is the last thing maintainers update, which is why every command in it must be one you just ran.
+
+**History.** The name is older than most of this tree. Seventh Edition Unix (1979) shipped /usr/doc/README, a few lines telling you how to format the manual's papers, and DECUS library tapes for the PDP-10 carried READ.ME files of 'random notes' for whoever installed the software. Markdown and GitHub turned README.md into the page a repository opens on; makeareadme.com is the modern checklist.
+
+**Try in five minutes.** head -30 README.md, then run the first Quickstart command exactly as written. If it fails, fix the README, not the reader.
+
+Docs: [Make a README](https://www.makeareadme.com) · [GitHub docs, About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes) · [Source: TUHS, V7 /usr/doc/README (listed 1979-01-11)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/doc/README) · [Source: Trailing-Edge PDP-10 archive, DECUS UCI LISP READ.ME](http://pdp-10.trailing-edge.com/decuslib10-04/01/43,50322/read.me.html) · [Source: GitHub docs, About READMEs (often the first item a visitor sees)](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes)
+
+Unlocks: GitHub, pull requests, Pages
 
 ## Castle Age (Medior)
 
@@ -313,6 +325,30 @@ A server is a computer that is always on. The cloud rents you one by the hour (A
 Docs: [AWS getting started](https://aws.amazon.com/getting-started/) · [Fly.io docs](https://fly.io/docs/) · [Cloudflare Pages](https://developers.cloudflare.com/pages/) · [Source: AWS, Announcing Amazon S3 (March 2006)](https://aws.amazon.com/about-aws/whats-new/2006/03/announcing-amazon-s3---simple-storage-service) · [Source: AWS, Announcing Amazon EC2 beta (August 2006)](https://aws.amazon.com/about-aws/whats-new/2006/08/24/announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/) · [Source: Google blog, Developers, start your engines (April 2008)](https://googleblog.blogspot.com/2008/04/developers-start-your-engines.html) · [Source: Microsoft, Windows Azure general availability (February 2010)](https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availability/) · [Source: AWS, Introducing AWS Lambda (November 2014)](https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/)
 
 Unlocks: Kubernetes and platforms, Cost, tokens and model choice
+
+### Semantic Versioning
+
+A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.
+
+**History.** Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.
+
+**Try in five minutes.** uv run grimoire --version, then open pyproject.toml and grimoire/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need.
+
+Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) · [Source: semver.org, About (authored by Tom Preston-Werner)](https://semver.org/) · [Source: semver/semver, merge of release-2.0 (18 June 2013)](https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9) · [Source: semver/semver, the commit tagged v1.0.0 (September 2011)](https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27)
+
+Unlocks: Changelogs (Keep a Changelog)
+
+### Changelogs (Keep a Changelog)
+
+A CHANGELOG.md lists what changed for the person using your thing: newest first, one section per version with its date, six kinds of change (Added, Changed, Deprecated, Removed, Fixed, Security) and an Unreleased section on top. It is not the git log. Commits are for the people who wrote them; the changelog is for everyone else.
+
+**History.** Olivier Lacan started Keep a Changelog on 31 May 2014 as a CHANGELOG that documents itself, under the motto 'Don't let your friends dump git logs into changelogs.' Version 1.0.0 followed on 20 June 2017, 1.1.0 on 15 February 2019 and 2.0.0 on 7 June 2026. The site is MIT licensed; this repo follows 1.1.0.
+
+**Try in five minutes.** cat CHANGELOG.md. Then make one change to the repo and add its line under Unreleased in the same commit.
+
+Docs: [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) · [Source: keep-a-changelog, its own CHANGELOG.md (dated releases since 2014-05-31)](https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md) · [Source: Keep a Changelog 2.0.0 (2026-06-07)](https://keepachangelog.com/en/2.0.0/)
+
+Unlocks: CI/CD and automation
 
 ## Imperial Age (Senior)
 
@@ -429,6 +465,16 @@ You pay per token in and out. A big context and a strong model cost more per cal
 Docs: [Claude Code costs](https://code.claude.com/docs/en/costs) · [Claude pricing](https://claude.com/pricing) · [Source: OpenAI API announcement (June 2020)](https://openai.com/index/openai-api/)
 
 Unlocks: The future perspective
+
+### Architecture decision records
+
+An ADR is one short file per decision: Title, Status, Context (the forces), Decision (we will ...), Consequences (all of them). Numbered, never deleted, superseded instead. It is the memory an agent cannot infer from the code: why the repo is MIT, why the game is one file, why XP is verified. AGENTS.md says what the rules are; docs/adr/ says why.
+
+**History.** Michael Nygard published Documenting Architecture Decisions on 15 November 2011: a page per decision, kept in the repo with the code, in a form borrowed from Alexandrian patterns. The GitHub adr organisation (adr.github.io) collects the templates and tools that followed; MADR, the Markdown variant with drivers and options, reached 4.0.0 in September 2024.
+
+**Try in five minutes.** ls docs/adr, then cat docs/adr/0004-quests-verify-real-work.md. Write ADR 0005 with the adr skill for the next thing you decide.
+
+Docs: [ADR home (the GitHub adr organisation)](https://adr.github.io) · [MADR](https://adr.github.io/madr/) · [Source: Nygard, Documenting Architecture Decisions (15 November 2011)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) · [Source: MADR 4.0.0 (September 2024)](https://adr.github.io/madr/)
 
 ## Future Age (Expert)
 

@@ -230,6 +230,26 @@ def test_cli_status_json_and_export() -> None:
     assert r.exit_code == 0 and decode_code(r.output.strip())["v"] == 2
 
 
+def test_note_methods_bootstrap_into_a_fresh_vault(tmp_path: Path) -> None:
+    from grimoire.methods import METHODS, get_method
+
+    assert len(METHODS) == 8
+    cfg = Config.model_validate({"vault": {"path": str(tmp_path), "folder": "G"}})
+    v = Vault(cfg, State())
+    v.build(get_persona("chief-of-staff"))
+    m = get_method("zettelkasten")
+    base = v.dir / "Methods" / m.name
+    for folder in m.folders:
+        (base / folder).mkdir(parents=True)
+    v.write(f"Method - {m.name}", m.hub, tags=["tech"])
+    v.add_build_log(f"[[Method - {m.name}]] bootstrapped")
+    report = v.lint()
+    assert report.ok, (report.orphans, report.dead_links)
+    assert all(t.filename.endswith(".md") and "{{" in t.body for t in m.templates)
+    with pytest.raises(ValueError, match="unknown method"):
+        get_method("no-such-method")
+
+
 def test_cli_lists_personas_and_themes() -> None:
     runner = CliRunner()
     assert "data-engineer" in runner.invoke(cli, ["persona"]).output

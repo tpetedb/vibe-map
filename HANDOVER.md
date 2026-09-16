@@ -1,69 +1,54 @@
 # Handover for the next agent
 
-You are picking up Vibe Code Camp (internal codename Project Grimoire): a one-evening course in building with AI coding agents, packaged as a 3D browser game, a syllabus, a template repo and a terminal companion. Owner: Tom. Learner: Lotte (Chief of Staff, plays games, likes spreadsheets). Character: Rolinda (knows nothing about AI, insufferable about wine). Tone: over-the-top corporate jargon on top of real, useful content; Rolinda speaks plainly. No em-dashes anywhere.
+You are picking up Vibe Code Camp (internal codename Project Grimoire): a gamified course in building with AI coding agents, packaged as a 3D browser game, a terminal companion with quests and XP, an Obsidian vault, a syllabus and a template repo. Owner: Tom. Learner: Lotte (Chief of Staff, plays games, likes spreadsheets). Character: Rolinda (knows nothing about AI, insufferable about wine). Tone: over-the-top corporate jargon on top of real, useful content; Rolinda speaks plainly. No em-dashes anywhere, no emoji.
 
-Read in this order: this file, `AGENTS.md`, `docs/ROADMAP.md`, then `.agents/skills/develop-grimoire/SKILL.md` before touching the game.
+Read in this order: this file, `AGENTS.md`, `docs/adr/README.md`, then `.agents/skills/develop-grimoire/SKILL.md` before touching the game.
 
-## What exists
+## State on 2026-09-16 (end of the one-shot session)
 
-| Path | What | State |
+Everything below is built, tested and committed on `main` after the PR from `feat/grimoire-oneshot`.
+
+| Area | What exists | Proof |
 |---|---|---|
-| `game/grimoire.html` | The game. Single file, ~1 MB, three.js r128 embedded (no CDN). 4 worlds, 8 workstreams, physics, vault with 111 notes and a tech tree, progress import/export. | Works on desktop Chrome and Android Claude app. Not yet verified on iOS Safari. |
-| `docs/SYLLABUS.md` | Written version of the course, incl. tech tree. Also published as a Claude artifact. | Complete; the pre-flight and per-workstream lesson blocks were written in another session, review for consistency. |
-| `docs/ROADMAP.md` | The tech tree, generated from `tools/tech.py` (see below) | Generated |
-| `docs/RESOURCES.md` | Curated links | Curated by hand, all official pages |
-| `grimoire/cli.py` | Terminal companion: status, done, map, export, import, scores | Tested, stdlib only |
-| `.agents/skills/*` | 7 skills in the Agent Skills standard | Written, not yet exercised by an agent |
-| `.claude/agents/scorekeeper.md`, `.claude/settings.json` | Subagent and backup hook | Hook shape follows the docs; verify it fires on your Claude Code version |
-| `data/`, `sql/`, `python/` | Sample data, 3 DuckDB queries (tested), 1 script (tested) | Done |
-| `scripts/setup.sh` | Mac setup | Read it; it installs things |
-
-## How the game is built (important before editing)
-
-The HTML was produced by scripted edits, so some structure is unusual:
-- Everything is in one `<script>` IIFE after the embedded three.js. Public functions are attached to `window` (start, openSheet, claim, openVault, openTree, setWorld, nextWorld, exportProgress, importProgress, ...).
-- State `S` is persisted in `localStorage["grimoire3"]`. Shape: `{name, done:[1..8], rolls, versions, bridges, date, wine, world, creature}`.
-- Worlds are the `WORLDS` config; `buildWorld(id)` rebuilds the whole scene. Add a world by adding a config, no other code.
-- Buildings are `building(k)` cases 1..8; plots come from `W.plots`; the path is a Catmull-Rom through `W.way`.
-- The vault is `NOTES` (id -> {t, md}); notes are a tiny Markdown subset: `#` title, `-` bullets, `**bold**`, `[label](url)`, `[[wikilink]]`, trailing `#tags`. The tech tree is `AGES`/`TREE`. Both the 32 tech notes and `docs/ROADMAP.md` are generated from `tools/tech.py`; edit that, regenerate, do not hand-edit both.
-- Layout: the 3D stage is a normal block at the top, everything else flows below (no fixed layers; Android webviews scroll badly otherwise).
-- Colours: materials go through `mat()` which converts sRGB to linear; use it, or run `fixColors()` on anything you add.
+| Game | `src/` in 22 parts, built into `game/grimoire.html` (1 MB, three.js r128 and Motion 12 embedded, no CDN). Theme, dates, repo URL and shadow map come from `grimoire.toml` through `tools/build.py`. Design tokens from `docs/DESIGN.md`. Pre-flight is back on the roadmap. Export code carries `v:2`. | `just build`, `tests/test_build.py`, `tests/test_game_smoke.py`, `tests/test_game_webkit.py` (iPhone WebKit), `tests/test_game_playthrough.py` (every island, stop, mentor and the finale, zero page errors) |
+| CLI | `grimoire/` package: click commands, rich output in the house palette, pydantic state (versioned, migrates v1) and config (unknown keys refused), quests with checks that inspect the repo, XP and levels, badges, personas, themes, toolbelt, providers, council, note-taking methods, Textual onboarding (`just start`). | `tests/test_cli.py`, `tests/test_tui.py` |
+| Vault | `vault/` pre-configured (graph colours by tag, dark base, templates); `grimoire vault build` writes 100 lint-clean notes; `vault lint` finds orphans and dead links. | `uv run grimoire vault lint` |
+| Docs | Syllabus, generated Roadmap (40 tech nodes, every date sourced), Cookbook (generated from personas), Design, Ecosystem, Vault, Note methods, Skills, Age of Epochs study, ADRs, CHANGELOG. | `just cookbook`, `just tree`, `tools/checks.py links` |
+| Template | CI and Pages workflows, `env.example`, `scripts/setup.sh` (`--check`, `--yolo`), `scripts/grimoire.zsh`, `justfile` plus `agents.just`. | `.github/workflows/`, `just --list` |
+| Media | `docs/media/`: hero, four islands, roadmap, vault, tree, phone, gameplay GIF, rendered by `just media`. | |
 
 ## What Tom has to do himself (the agent cannot)
 
-1. `gh auth login` once, so the agent can create Pages and PRs.
-2. Approve every install the install-grimoire skill proposes; it will not install without a yes.
-3. Push. The agent commits locally and never pushes; run `git push` when a batch looks good.
-4. On GitHub: Settings, tick "Template repository"; Settings, Pages, source main / root (or let the agent run `gh` and confirm).
-5. Test on your phone after each Pages deploy and paste what you see (screenshot or error text) back to the agent.
-6. Confirm the go-live dates in the finale picker and Lotte's actual free evenings.
-7. Decide the licence question in task 0 below before any code from sokrypton/aoe is reused.
-
-## Task 0: learn from sokrypton/aoe (Age of Epochs II)
-
-Tom wants the ideas from https://github.com/sokrypton/aoe folded into this product. It is a browser Age-of-Empires-style game in plain JavaScript (`js/`, sprites, `classic.html`, `tests/`, `MULTIPLAYER.md`), live at https://ageofepochs.com, and it has a `CLAUDE.md` that describes how its author works with Claude Code on a game of this kind.
-
-Do this, in order:
-1. `gh repo clone sokrypton/aoe ../aoe` and read `CLAUDE.md`, `README.md`, `MULTIPLAYER.md`, the `tests/` folder and the top of `js/`. Write a one-page note `docs/AOE-STUDY.md`: architecture, how sprites and the map are done, how tests are run, how multiplayer works, and every convention in its CLAUDE.md worth adopting here.
-2. Check the licence. If the repo has no LICENSE file, nothing is copied; only ideas and structure are reused. Say so in the study note.
-3. Adopt into `AGENTS.md`/`CLAUDE.md` the conventions from its CLAUDE.md that fit (test loop, file layout, how to describe a game change), and say which you skipped and why.
-4. Propose, do not build yet: a "classic view" of the campus as a 2D sprite map in the style of aoe alongside the 3D view, and a multiplayer mode where Tom, Lotte and Rolinda walk the same island (aoe's MULTIPLAYER.md is the reference). Estimate size, list risks, ask Tom which to build.
-5. If Tom says yes to either, build it as a separate `src/` module with its own tests, behind a toggle, without breaking the single-file output.
+1. On GitHub: Settings, Pages, source **GitHub Actions**, so `pages.yml` can publish the game at the Pages URL. Then run the workflow once (Actions, pages, Run workflow).
+2. Test the game on an iPhone with real Safari (the WebKit tests are the closest headless proxy) and paste what you see back to the agent.
+3. Confirm the go-live dates in `grimoire.toml` `[finale] dates` (placeholders: Fridays and Saturdays from 25 September to 23 October 2026) and Lotte's actual free evenings.
+4. Decide on the classic 2D view proposal in `docs/AOE-STUDY.md` (recommended) and the multiplayer proposal (not recommended before the first evening).
+5. `git tag v0.1.0 e08deb6` and, when 0.2.0 ships, `git tag v0.2.0`, so the CHANGELOG links resolve.
+6. If you want `grimoire explain` and `grimoire council` on a provider other than Claude Code, install that CLI (`uv run grimoire toolbelt --tier provider`) and set it with `uv run grimoire provider <id>`; only the Claude path was exercised end to end.
 
 ## Known gaps and suggested next work, in priority order
 
-1. Repo URL is set in the game (`id="tplink"`, https://github.com/tpetedb/vibe-map). Clone: `git clone git@github.com:tpetedb/vibe-map.git`.
-2. iOS Safari test of the game (tap-to-move, joystick, sheet scrolling, WebGL memory with 2048 shadow map; drop to 1024 if it stutters).
-3. Split `game/grimoire.html` into `src/` files with a tiny build (concat) so it is editable, while keeping the single-file output. Keep three.js embedded.
-4. Fact-check the 32 tech notes against a primary source each and add the citation to the note's Docs line. Dates are believed correct but were written from memory.
-5. Exercise every skill with Claude Code once and fix what does not trigger (descriptions decide triggering).
-6. Add `tests/`: a Playwright smoke test that starts the game, imports a code, claims a workstream, opens the vault (the previous session's tests are in `tools/tests/`).
-7. Content: Lotte's actual game will replace `game/index.html` on the night; nothing should depend on its contents.
-8. The dates in the finale picker are placeholders; confirm with Tom.
+1. **Classic view** (docs/AOE-STUDY.md, proposal A): a 2D canvas map of the campus behind a toggle, reading the same `WORLDS` config. One evening of work, the strongest visual addition left.
+2. **Persona guides on the islands**: a walker per persona (the cleaning CEO, the pabo teacher...) as extra characters, using `src/game/11-character.js`. The data is in `grimoire/personas.py`; the game does not read it yet.
+3. **Roadmap mode** (`[learner] mode = "roadmap"`): the config and the `roadmap_done` state exist, the quests do not; every tech node should become a quest whose check is a vault note with the "Try in five minutes" done.
+4. **marimo notebook** for workstream 3 (`uv add marimo`, `marimo edit python/scores.py`): the design doc recommends it; not started.
+5. **Council in the game**: the CLI and the skill exist; a "Convene" button on the roadmap that shows the last minutes from the vault would close the loop.
+6. Textual onboarding: a fourth screen with the campaign grid (`docs/DESIGN.md` specifies it) is not built; `grimoire status` covers it in the terminal.
+7. `tools/checks.py links` reports two pre-existing placeholders as broken (`http://localhost:8000` in the localhost lesson, `github.com/YOUR-USER/dotfiles` in the syllabus); both are intentional.
+
+## How the game is built (important before editing)
+
+- Edit `src/`, never `game/grimoire.html`. `just build` concatenates in the order in `tools/build.py` and injects `CONFIG` (from `grimoire.toml`), the campaign JSON, the generated tech notes and the tree.
+- Everything is in one IIFE. Public functions are attached to `window` (start, openSheet, claim, openVault, openTree, setWorld, nextWorld, exportProgress, importProgress, ...). `window.__S()` returns the state, `window.__debug()` the walker, draw calls and mentors, for tests only.
+- State `S` is persisted in `localStorage["grimoire3"]`. Shape: `{name, done, doneW, path, rolls, versions, bridges, date, wine, world, creature}`.
+- Worlds are `WORLDS` in `src/game/20-worlds.js`; `buildWorld(id)` rebuilds the scene. Buildings are `building(k)` in `12-buildings.js`. The vault is `NOTES` (handwritten in `50-notes.js`, generated tech notes injected). The tech tree and the 40 tech notes come from `tools/tech.py` via `just tree`; never hand-edit outputs.
+- Layout: the 3D stage is a normal block, everything else flows below (no fixed layers). Colours: `mat()` converts sRGB to linear; use it or `fixColors()`. Motion is optional: `fx()` and `countUp()` in `00-state.js` degrade to instant when `window.Motion` is missing or reduced motion is on.
+- Tests: `just smoke` while iterating, `just verify` before a commit. The play-through (`tests/test_game_playthrough.py`, about a minute) is the strongest guard; it found a stray closing tag in workstream 6 and a `ReferenceError` in the walking code that no smoke test saw.
 
 ## Ground rules
 
-- Never push to remotes, never rewrite history, never run DDL. Tom does remote git himself.
-- Do not add dependencies to the CLI. The game stays one file with no CDN.
-- Ask before changing the tone of any copy; the jargon is intentional.
+- Never force-push, never rewrite history on `main`, never run DDL. Push feature branches and open a PR; Tom merges (he asked for merges when a branch is green, so an agent may merge a green PR he has approved in his instructions).
+- Python dependencies are welcome when they remove real work (ADR 0003). Declare them in `pyproject.toml`, install with `uv`.
+- The game stays one file with no CDN. Anything vendored is embedded in `src/vendor/` with its licence named in `tools/build.py`.
+- Ask before changing the tone of any copy; the jargon is intentional. Serious voices are themes, not edits.
 - End every change with one line: what changed.

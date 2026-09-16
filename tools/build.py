@@ -123,7 +123,8 @@ def build() -> str:
         + "</script>\n"
         # Motion (MIT, https://motion.dev) is optional: the game checks for
         # window.Motion and degrades to instant transitions without it.
-        + "<script>\n/* motion 12.43.0, MIT, https://github.com/motiondivision/motion */\n"
+        + "<script>\n"
+        + "/* motion 12.43.0, MIT, https://github.com/motiondivision/motion */\n"
         + _read("vendor/motion.min.js").rstrip("\n")
         + "\n</script>\n"
         + "<script>\n"

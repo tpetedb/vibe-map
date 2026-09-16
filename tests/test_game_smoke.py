@@ -16,6 +16,24 @@ def test_game_loads_without_errors(game: GamePage) -> None:
     game.assert_clean()
 
 
+def test_every_claim_button_sits_in_its_own_screen(game: GamePage) -> None:
+    """A stray closing tag once pushed workstream 6's button out of its section."""
+    game.goto()
+    homes = game.page.evaluate(
+        """() => [1,2,3,4,5,6,7,8].map(n => {
+          const b = document.querySelector(`[onclick="claim(${n})"]`);
+          const s = b && b.closest('section.screen');
+          return s ? s.id : 'none'; })"""
+    )
+    assert homes == [f"s-{n}" for n in range(1, 9)], homes
+    assert (
+        game.page.evaluate(
+            "document.querySelectorAll('#sheet > .inner > section').length"
+        )
+        >= 13
+    )
+
+
 def test_start_renders_the_island(game: GamePage) -> None:
     game.goto()
     game.start("Lotte")

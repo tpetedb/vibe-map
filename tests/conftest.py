@@ -144,6 +144,7 @@ class GamePage:
         self.page.click("#hud button:has-text('Roadmap')")
         self.page.wait_for_selector("#sheet.on", state="attached")
         self.page.wait_for_selector("#plotlist button", state="attached")
+        self.page.wait_for_timeout(500)  # the sheet springs in over ~400 ms
 
     def workstream_buttons(self):
         """The eight workstream buttons, skipping Pre-flight on the campus."""

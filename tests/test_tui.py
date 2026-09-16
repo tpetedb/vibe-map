@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 from pathlib import Path
 
 from textual.widgets import Button, DataTable, Input
@@ -33,5 +34,11 @@ def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
             await pilot.pause()
         return app.return_value
 
-    assert asyncio.run(drive()) == "quit"
+    # The Playwright fixtures leave an event loop on the main thread during the
+    # full battery, so the Textual pilot runs on its own thread with its own loop.
+    result: dict[str, str | None] = {}
+    thread = threading.Thread(target=lambda: result.update(value=asyncio.run(drive())))
+    thread.start()
+    thread.join(timeout=120)
+    assert result.get("value") == "quit"
     assert (tmp_path / "grimoire.toml").exists() and (tmp_path / "state.json").exists()

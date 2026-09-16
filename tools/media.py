@@ -41,7 +41,8 @@ PLAYED = {
     "wine": None,
     "world": "campus",
     "creature": {
-        "name": "Gilded Sphinx", "str": 12, "wis": 17, "cha": 9, "cloak": False, "hue": 40,
+        "name": "Gilded Sphinx", "str": 12, "wis": 17, "cha": 9,
+        "cloak": False, "hue": 40,
     },
 }  # fmt: skip
 
