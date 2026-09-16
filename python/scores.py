@@ -4,8 +4,11 @@ New concept in this file: a dictionary comprehension builds {player: [scores]}
 in one line, then max()/statistics.mean() summarise each list.
 Run: python3 python/scores.py
 """
-import csv, statistics
+
+import csv
+import statistics
 from pathlib import Path
+
 
 def main():
     rows = list(csv.DictReader(open(Path(__file__).parents[1] / "data" / "scores.csv")))
@@ -17,6 +20,7 @@ def main():
         s = scores[p]
         bar = "#" * int(30 * max(s) / top)
         print(f"{p:<10}{len(s):>5}{max(s):>6}{statistics.mean(s):>7.1f}  {bar}")
+
 
 if __name__ == "__main__":
     main()
