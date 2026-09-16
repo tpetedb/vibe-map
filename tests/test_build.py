@@ -26,7 +26,7 @@ def test_tree_outputs_match_tech_py() -> None:
 
 
 def test_campaign_json_has_four_evenings_of_eight_and_twelve_mentors() -> None:
-    data = json.loads((ROOT / "src" / "data" / "campaign.json").read_text())
+    data = json.loads((ROOT / "vibemap" / "data" / "campaign.json").read_text())
     assert list(data["evenings"]) == ["campus", "winter", "desert", "prod"]
     for world, ev in data["evenings"].items():
         assert len(ev["ws"]) == 8, world

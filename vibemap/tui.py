@@ -31,6 +31,7 @@ from textual.widgets import (
     Static,
 )
 
+from vibemap import project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLOW
 from vibemap.personas import PERSONAS
@@ -40,7 +41,7 @@ from vibemap.state import STATE_PATH, State
 from vibemap.themes import THEMES
 from vibemap.toolbelt import TOOLS, Tool
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project.root()
 
 BANNER = r"""
  __   _____ ___ ___    ___ ___  ___  ___    ___   _   __  __ ___

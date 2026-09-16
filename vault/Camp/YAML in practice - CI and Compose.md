@@ -15,7 +15,7 @@ YAML is data shaped by indentation: a map is key: value, a list is lines startin
 - Unlocks: [[CI-CD and automation]], [[Docker and containers]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

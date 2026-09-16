@@ -15,7 +15,7 @@ A project is a folder. A path is an address inside it: absolute (/Users/lotte/vi
 - Unlocks: [[Dotfiles]], [[Config formats - JSON, YAML, TOML, Markdown]], [[Git]]
 - Age: Dark Age · Level: Intern
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

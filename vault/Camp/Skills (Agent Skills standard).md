@@ -14,7 +14,7 @@ None
 - Docs: [Source: Claude Code skills](https://code.claude.com/docs/en/skills)
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

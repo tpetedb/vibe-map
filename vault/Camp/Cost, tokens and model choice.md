@@ -15,7 +15,7 @@ You pay per token in and out. A big context and a strong model cost more per cal
 - Unlocks: [[The future perspective]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

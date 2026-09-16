@@ -15,7 +15,7 @@ The README is the front page: what this is, for whom, and the commands that get 
 - Unlocks: [[GitHub, pull requests, Pages]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

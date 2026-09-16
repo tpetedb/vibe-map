@@ -11,10 +11,12 @@ A gamified course and a template: a single-file 3D browser game (`game/vibe-map.
 | Path | Owns |
 |---|---|
 | `game/vibe-map.html` | The built game, one file, three.js embedded, no CDN. Produced by `just build` from `src/`; never hand-edit once `src/` exists. |
-| `src/` | The game's source parts in load order; `tools/build.py` concatenates them. `src/data/campaign.json` is the one source for the four evenings and twelve mentors (the game and the CLI both read it). `src/vendor/three.min.js` is three.js r128, never edited. |
+| `src/` | The game's source parts in load order; `tools/build.py` concatenates them and injects the campaign, the tech notes and `CONFIG` from `vibe.toml`. `src/vendor/` holds three.js r128 and Motion 12, never edited. |
+| `vibemap/data/` | Package data the game and the CLI share: `campaign.json` (four evenings, twelve mentors), `resources.md` (the curated links; `docs/RESOURCES.md` is generated from it). `vibemap/tech.py` is the tech tree. Installed copies of the CLI carry all three. |
 | `game/index.html` | Lotte's own game from workstream 1. Nothing may depend on its contents. |
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`vibe.toml`). |
-| `tools/tech.py` | The one source of truth for the tech tree. `tools/regen_tree.py` emits the vault notes, the tree JS and `docs/ROADMAP.md`. |
+| `vibemap/project.py` | Where a camp is: `VIBE_HOME`, else the nearest ancestor with a `vibe.toml`. The CLI installs globally (`uv tool install vibe-map`) and runs in any camp; `vibe new` clones the template. |
+| `tools/regen_tree.py` | Emits the vault notes, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `sql/` and `python/`. |
 | `docs/` | `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us). |
@@ -42,7 +44,7 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 2. Before every commit, the full battery: `just verify` (ruff, pytest with Playwright, build check). Zero page errors in the browser is the bar.
 3. Test the entry point, not the mechanism. The smoke test clicks the real buttons; it does not call `claim()` directly.
 4. Take a screenshot and look at it. They land in `tests/out/`.
-5. Regenerate, never hand-edit: `just tree` after editing `tools/tech.py`.
+5. Regenerate, never hand-edit: `just tree` after editing `vibemap/tech.py`.
 
 ## Commands
 

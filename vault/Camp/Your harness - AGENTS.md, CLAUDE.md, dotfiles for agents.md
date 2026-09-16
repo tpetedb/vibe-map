@@ -15,7 +15,7 @@ Your standing instructions, per repo and per machine, in files the agent reads b
 - Unlocks: [[Skills (Agent Skills standard)]], [[Hooks]], [[MCP (Model Context Protocol)]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

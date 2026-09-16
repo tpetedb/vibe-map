@@ -15,7 +15,7 @@ A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change b
 - Unlocks: [[Changelogs (Keep a Changelog)]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

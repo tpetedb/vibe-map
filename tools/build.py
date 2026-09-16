@@ -52,7 +52,10 @@ def _read(rel: str) -> str:
 
 
 def _campaign_js() -> str:
-    data = json.loads(_read("data/campaign.json"))
+    sys.path.insert(0, str(ROOT))
+    from vibemap.project import data_text  # noqa: PLC0415
+
+    data = json.loads(data_text("campaign.json"))
     dump = functools.partial(json.dumps, ensure_ascii=False)
     return (
         "const CAMPAIGN=" + dump(data["evenings"]) + ";\n"

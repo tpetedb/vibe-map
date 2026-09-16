@@ -15,7 +15,7 @@ The three languages of a web page: structure, style, behaviour. A single HTML fi
 - Unlocks: [[HTTP and APIs]], [[localhost and ports]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import tomllib
 from dataclasses import asdict, dataclass
-from pathlib import Path
 from typing import Literal
 
-ROOT = Path(__file__).resolve().parents[1]
+from vibemap import project
+
+ROOT = project.root()
 THEMES_DIR = ROOT / "themes"
 
 PairingKind = Literal["wine", "coffee", "tea", "none"]

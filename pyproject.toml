@@ -52,7 +52,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 # Data modules: one long string per fact, wrapped only where it reads well.
-"tools/tech.py" = ["E501"]
+"vibemap/tech.py" = ["E501"]
 "vibemap/personas.py" = ["E501"]
 "vibemap/toolbelt.py" = ["E501"]
 

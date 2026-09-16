@@ -30,7 +30,7 @@ game:
 build:
     uv run python tools/build.py
 
-# regenerate the tech tree outputs from tools/tech.py (notes, tree JS, ROADMAP)
+# regenerate the tech tree outputs from vibemap/tech.py (notes, tree JS, ROADMAP)
 tree:
     uv run python tools/regen_tree.py
     uv run python tools/build.py

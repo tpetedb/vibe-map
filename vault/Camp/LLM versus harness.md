@@ -15,7 +15,7 @@ The LLM is the model: text in, text out, no memory, no hands. The harness is eve
 - Unlocks: [[Context window and prompts]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]]
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

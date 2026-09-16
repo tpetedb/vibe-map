@@ -15,7 +15,7 @@ GitHub hosts git repositories and adds the social layer: issues, pull requests (
 - Unlocks: [[CI-CD and automation]], [[Cloud and servers]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

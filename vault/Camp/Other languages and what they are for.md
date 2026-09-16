@@ -15,7 +15,7 @@ TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one bina
 - Unlocks: [[Docker and containers]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -15,7 +15,7 @@ The general-purpose language of data, automation and AI tooling. Readable, batte
 - Unlocks: [[TOML in practice - pyproject.toml]], [[Python libraries - what they are for]], [[SQL and DuckDB]], [[Building and consuming APIs]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

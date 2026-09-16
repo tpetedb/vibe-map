@@ -15,7 +15,7 @@ Consuming: read the docs, get a key, make a request, parse JSON. Building: FastA
 - Unlocks: [[MCP (Model Context Protocol)]], [[Docker and containers]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

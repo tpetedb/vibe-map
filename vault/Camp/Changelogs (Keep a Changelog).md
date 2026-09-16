@@ -15,7 +15,7 @@ A CHANGELOG.md lists what changed for the person using your thing: newest first,
 - Unlocks: [[CI-CD and automation]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

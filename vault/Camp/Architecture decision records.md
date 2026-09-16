@@ -14,7 +14,7 @@ An ADR is one short file per decision: Title, Status, Context (the forces), Deci
 - Docs: [ADR home (the GitHub adr organisation)](https://adr.github.io), [MADR](https://adr.github.io/madr/), [Source: Nygard, Documenting Architecture Decisions (15 November 2011)](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions), [Source: MADR 4.0.0 (September 2024)](https://adr.github.io/madr/)
 - Age: Imperial Age · Level: Senior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

@@ -15,7 +15,7 @@ Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the fil
 - Unlocks: [[Memory - the vault as long-term memory]], [[AGENTS.md]], [[README and the quickstart]], [[Architecture decision records]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

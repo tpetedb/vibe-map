@@ -14,13 +14,13 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from vibemap import campaign
+from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.palette import BLUE, GREEN, ORANGE, RED, YELLOW, hex_to_int
 from vibemap.personas import Persona
 from vibemap.state import State
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = project.root()
 WIKILINK = re.compile(r"\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]")
 
 # Colour groups for the graph, first match wins in Obsidian.
@@ -344,14 +344,14 @@ class Vault:
                 + (f"- Unlocks: {unlocks}\n" if unlocks else "")
                 + f"- Age: {age_name} · Level: {level}"
                 + (" · done" if done else "")
-                + "\n\n<!-- generated from tools/tech.py; edit there -->\n\n"
+                + "\n\n<!-- generated from vibemap/tech.py; edit there -->\n\n"
                 f"Back to [[Tech tree]]\n\n#tech #{n.age}"
             )
             out.append(self.write(n.name, body, tags=["tech", n.age]))
         return out
 
     def _write_resources(self) -> list[Path]:
-        src = (ROOT / "docs" / "RESOURCES.md").read_text(encoding="utf-8")
+        src = project.data_text("resources.md")
         body = src.split("\n", 1)[1].strip() + "\n\nBack to [[Tonight]]\n\n#overview"
         return [self.write("Resources", body, tags=["overview"])]
 
@@ -494,4 +494,8 @@ def _section(p: Path, heading: str) -> str:
 
 
 def _is_generated(p: Path) -> bool:
-    return "generated from tools/tech.py" in p.read_text(encoding="utf-8")
+    text = p.read_text(encoding="utf-8")
+    # Notes written before the package move carry the old path.
+    return "generated from vibemap/tech.py" in text or (
+        "generated from tools/tech.py" in text
+    )

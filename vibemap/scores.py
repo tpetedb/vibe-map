@@ -12,7 +12,9 @@ import duckdb
 import polars as pl
 from rich.table import Table
 
-ROOT = Path(__file__).resolve().parents[1]
+from vibemap import project
+
+ROOT = project.root()
 SCORES = ROOT / "data" / "scores.csv"
 SQL_DIR = ROOT / "sql"
 COLUMNS = ("played_at", "player", "score", "duration_s")

@@ -15,7 +15,7 @@ Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses
 - Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
 - Age: Feudal Age · Level: Junior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

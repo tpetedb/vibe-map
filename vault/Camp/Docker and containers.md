@@ -15,7 +15,7 @@ A container is a packaged process: your code, its dependencies, and a slice of a
 - Unlocks: [[Cloud and servers]], [[CI-CD and automation]], [[Kubernetes and platforms]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

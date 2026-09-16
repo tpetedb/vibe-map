@@ -15,7 +15,7 @@ Kubernetes runs containers across many machines: scheduling, scaling, self-heali
 - Unlocks: [[The future perspective]]
 - Age: Future Age · Level: Expert
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

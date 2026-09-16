@@ -15,7 +15,7 @@ HTTP is request and response: a URL, a method (GET, POST), headers, a body, a st
 - Unlocks: [[Building and consuming APIs]], [[MCP (Model Context Protocol)]], [[SSH and remote machines]]
 - Age: Castle Age · Level: Medior
 
-<!-- generated from tools/tech.py; edit there -->
+<!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 

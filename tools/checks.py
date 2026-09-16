@@ -55,8 +55,9 @@ LINK_SOURCES = (
     "docs/RESOURCES.md",
     "docs/ROADMAP.md",
     "docs/AOE-STUDY.md",
-    "tools/tech.py",
-    "vibemap/campaign.json",
+    "vibemap/tech.py",
+    "vibemap/data/campaign.json",
+    "vibemap/data/resources.md",
 )
 # Sites that answer bots with 403 or 405 are reported, not failed: the link
 # still works for a person in a browser.
