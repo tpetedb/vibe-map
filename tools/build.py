@@ -28,6 +28,7 @@ GENERATED = ROOT / "tools" / "generated"
 GAME_ORDER = [
     "@config",
     "00-state.js",
+    "05-icons.js",
     "10-scene.js",
     "11-character.js",
     "12-buildings.js",
@@ -134,6 +135,11 @@ def build() -> str:
         + "<script>\n"
         + "/* motion 12.43.0, MIT, https://github.com/motiondivision/motion */\n"
         + _read("vendor/motion.min.js").rstrip("\n")
+        + "\n</script>\n"
+        # d3-force (ISC) runs the vault graph: a simulation that cools
+        # and stops, the same physics as Obsidian's graph view.
+        + "<script>\n"
+        + _read("vendor/d3-force.min.js").rstrip("\n")
         + "\n</script>\n"
         + "<script>\n"
         + _game_script()

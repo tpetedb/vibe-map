@@ -5,7 +5,7 @@
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Lotte's Innovation Campus</div>
-  <div class="pill">OKRs <span id="hud-okrs"></span><button onclick="openSheet('s-map')">Roadmap</button><button onclick="openVault()">Vault</button><button onclick="openTree()">Tree</button><button onclick="nextWorld()">World</button></div>
+  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
@@ -18,7 +18,7 @@
   <div class="hint" id="hint">Tap the ground, or use the stick · arrows / WASD · space to jump</div>
 </div>
 <div id="joy" aria-hidden="true"><div id="knob"></div></div>
-<button id="jump" aria-label="Jump">↑</button>
+<button id="jump" aria-label="Jump" data-icon="arrow-up"></button>
 </div><!-- /stage -->
 <div id="talk"><div class="bubble"><div id="bub-face"></div><div><b id="bub-who">Tom</b><span id="bub-text"></span></div></div></div>
 
@@ -30,7 +30,7 @@
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Preferred name (per HR system of record)"></div>
-    <div class="row"><button class="primary" onclick="start()">Kick off the engagement</button><button id="btn-continue" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+    <div class="row"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
     <p class="small">This is Evening 1 of a four-evening campaign. The other three islands (history and how the models work, from vibes to determinism, terminal and git) are one World button away, and real people from the field stand on them: Karpathy, LeCun, Hinton, Fei-Fei Li, Sutton, Amodei, Olah, Cherny, Wu, Hashimoto, Torvalds. Talk to them or walk past; your choices become your path in the vault. Built for a MacBook with Apple silicon and Chrome.</p>
@@ -41,13 +41,13 @@
 </div>
 
 <div id="vault" role="dialog" aria-label="Obsidian vault">
-  <div id="vtop"><b>Vault</b><span id="vcount"></span><button id="vmode" onclick="toggleTree()">Tech tree</button><button onclick="closeVault()">Back to campus</button></div>
+  <div id="vtop"><b>Vault</b><span id="vcount"></span><button id="vmode" data-icon="git-branch" onclick="toggleTree()">Tech tree</button><button data-icon="book-open" onclick="openObsidian()" title="The real vault, in Obsidian">Open in Obsidian</button><button data-icon="compass" onclick="closeVault()">Back to campus</button></div>
   <canvas id="vg"></canvas>
   <div id="vtree"></div>
   <div id="vnote"></div>
 </div>
 <div id="sheet" role="dialog">
-  <div class="grab"></div><button class="x" onclick="closeSheet()">Close</button>
+  <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
@@ -56,7 +56,7 @@
       <div class="card">
         <h3>Sync with the template repo</h3>
         <p class="small">The game and the terminal companion share one progress code. In the repo: <code>uv run vibe export</code> prints a code to paste here; <code>uv run vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
-        <div class="row"><button onclick="exportProgress()">Export progress</button><input type="text" id="impcode" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" onclick="importProgress()">Import</button></div>
+        <div class="row"><button data-icon="download" onclick="exportProgress()">Export progress</button><input type="text" id="impcode" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" data-icon="upload" onclick="importProgress()">Import</button></div>
         <p class="small muted" id="syncmsg"></p>
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>

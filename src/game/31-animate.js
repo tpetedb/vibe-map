@@ -73,9 +73,9 @@ function animate(){
     const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").textContent="Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=9;$("enterbtn").textContent=S.world==="campus"?"Calendar alignment":"Evening complete";$("enter").classList.add("on")}
-    else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").textContent=(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
+    else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon(S.world==="campus"?"milestone":"trophy")+(S.world==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
     else{nearK=0;$("enter").classList.remove("on")}}
   renderer.render(scene,camera);
 }
