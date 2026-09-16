@@ -3,3 +3,9 @@ backups/
 .grimoire/
 python/out/
 .DS_Store
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+tests/out/
+node_modules/
+.env
