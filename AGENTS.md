@@ -11,9 +11,9 @@ A gamified course and a template: a single-file 3D browser game (`game/grimoire.
 | Path | Owns |
 |---|---|
 | `game/grimoire.html` | The built game, one file, three.js embedded, no CDN. Produced by `just build` from `src/`; never hand-edit once `src/` exists. |
-| `src/` | The game's source parts in load order; `tools/build.py` concatenates them. |
+| `src/` | The game's source parts in load order; `tools/build.py` concatenates them. `src/data/campaign.json` is the one source for the four evenings and twelve mentors (the game and the CLI both read it). `src/vendor/three.min.js` is three.js r128, never edited. |
 | `game/index.html` | Lotte's own game from workstream 1. Nothing may depend on its contents. |
-| `grimoire/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `campaign.json` (four evenings, twelve mentors). |
+| `grimoire/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`grimoire.toml`). |
 | `tools/tech.py` | The one source of truth for the tech tree. `tools/regen_tree.py` emits the vault notes, the tree JS and `docs/ROADMAP.md`. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `sql/` and `python/`. |

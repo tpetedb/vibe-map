@@ -1,0 +1,473 @@
+<body>
+<div id="stage">
+<canvas id="c"></canvas>
+<div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
+
+<div class="ui" id="hud">
+  <div class="pill" id="hud-name">Lotte's Innovation Campus</div>
+  <div class="pill">OKRs <span id="hud-runes"></span><button onclick="openSheet('s-map')">Roadmap</button><button onclick="openVault()">Vault</button><button onclick="openTree()">Tree</button><button onclick="nextWorld()">World</button></div>
+</div>
+<div id="kpis">
+  <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
+  <div class="kpi"><b id="k2">0%</b><span>Synergy</span></div>
+  <div class="kpi"><b id="k3">0</b><span>Integrations</span></div>
+</div>
+
+<div class="ui" id="bottom">
+  <div id="enter"><button class="primary" id="enterbtn" onclick="enterNear()">Enter</button></div>
+  <div class="hint" id="hint">Tap the ground, or use the stick · arrows / WASD · space to jump</div>
+</div>
+<div id="joy" aria-hidden="true"><div id="knob"></div></div>
+<button id="jump" aria-label="Jump">↑</button>
+</div><!-- /stage -->
+<div id="talk"><div class="bubble"><div id="bub-face"></div><div><b id="bub-who">Tom</b><span id="bub-text"></span></div></div></div>
+
+<div id="title">
+  <div class="box">
+    <h1>Vibe Code Camp</h1>
+    <p class="muted small" style="margin-top:-4px">From intern to expert in one evening, with wine. Internal codename: Project Grimoire · FY26 H2 · Confidential</p>
+    <p>Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
+    <p class="small">This is Evening 1 of a four-evening campaign. The other three islands (history and how the models work, from vibes to determinism, terminal and git) are one World button away, and real people from the field stand on them: Karpathy, LeCun, Hinton, Fei-Fei Li, Sutton, Amodei, Olah, Cherny, Wu, Hashimoto, Torvalds. Talk to them or walk past; your choices become your path in the vault. Built for a MacBook with Apple silicon and Chrome.</p>
+    <p>Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
+    <p class="small muted">Walk to a signposted plot to open a workstream. Tap the ground to move. Each workstream carries a full lesson with commands, so this also works as the manual afterwards. Start with Pre-flight in the Roadmap if Claude Code is not installed yet.</p>
+    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Preferred name (per HR system of record)"></div>
+    <div class="row"><button class="primary" onclick="start()">Kick off the engagement</button><button id="btn-continue" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+  </div>
+</div>
+
+<div id="vault" role="dialog" aria-label="Obsidian vault">
+  <div id="vtop"><b>Vault</b><span id="vcount"></span><button id="vmode" onclick="toggleTree()">Tech tree</button><button onclick="closeVault()">Back to campus</button></div>
+  <canvas id="vg"></canvas>
+  <div id="vtree"></div>
+  <div id="vnote"></div>
+</div>
+<div id="sheet" role="dialog">
+  <div class="grab"></div><button class="x" onclick="closeSheet()">Close</button>
+  <div class="inner">
+    <section class="screen" id="s-map">
+      <h2>Roadmap</h2>
+      <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
+      <div id="plotlist"></div>
+      <div class="card">
+        <h3>Sync with the template repo</h3>
+        <p class="small">The game and the terminal companion share one progress code. In the repo: <code>python3 grimoire/cli.py export</code> prints a code to paste here; <code>python3 grimoire/cli.py import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
+        <div class="row"><button onclick="exportProgress()">Export progress</button><input type="text" id="impcode" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" onclick="importProgress()">Import</button></div>
+        <p class="small muted" id="syncmsg"></p>
+        <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
+      </div>
+    </section>
+<section class="screen" id="s-0">
+      <div class="hour">Workstream 0</div>
+      <h2>Pre-flight</h2>
+      <p>Twenty minutes of unglamorous enablement so that the evening has zero blockers, zero dependencies and zero excuses.</p>
+      <div class="lesson"><h3 style="margin-top:6px">Lesson: Pre-flight: set up the machine</h3>
+<p>Twenty minutes, alone, before the night. Everything here is boring on purpose so the evening itself is not.</p>
+<h4>1. Install Claude Code</h4>
+<p>Open Terminal (Cmd+Space, type Terminal). Paste this and press Enter. It installs the native build, which updates itself in the background:</p>
+<pre><code>curl -fsSL https://claude.ai/install.sh | bash</code></pre>
+<p>Then confirm it worked. It should print a version number followed by (Claude Code):</p>
+<pre><code>claude --version</code></pre>
+<h4>2. Log in</h4>
+<p>Start it once. Your browser opens, you sign in with your Claude account (Pro, Max, Team or Enterprise), and the credentials are stored. You will not be asked again.</p>
+<pre><code>claude</code></pre>
+<p>Type /exit to leave. If you ever need to switch accounts, type /login inside a session.</p>
+<h4>3. Install git and jq</h4>
+<p>git is the save-point system for workstream 4, jq is a tiny helper the hook uses. On a Mac:</p>
+<pre><code>xcode-select --install
+brew install jq</code></pre>
+<p>If brew is not installed, the first line still gives you git; ask Claude to install Homebrew for you on the night, it takes two minutes.</p>
+<h4>4. Install Obsidian</h4>
+<p>Download from obsidian.md, open it once, close it. Do not create anything yet.</p>
+<h4>5. Think of a game</h4>
+<p>One small fantasy game you would enjoy having on your laptop. A card duel, a dungeon room, a dragon that hoards spreadsheets and refuses to sort them. Three sentences, in your head.</p>
+<div class="callout ok"><b>Definition of done</b>Terminal shows a version for claude --version, and git --version prints something. That is the whole pre-flight.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Claude Code quickstart</a>, <a href="https://obsidian.md" target="_blank" rel="noopener">Obsidian</a></p>
+</div>
+      <div class="row"><button onclick="closeSheet()">Back to the campus</button></div>
+    </section>
+    <section class="screen" id="s-1">
+  <div class="hour">18:00, Workstream 1</div>
+  <h2>The Innovation Hub</h2>
+  <div class="pairing"><b>Pairing, 18:00</b>Bourgogne Blanc, Chardonnay, unoaked, served at a disciplined 11°C. Rolinda's note, verbatim and in the original: <i>"lekker arrogant aan de wang hangt en goed tegen de huig galoppeert."</i> Accompanied by gougères, because shipping an MVP deserves warm cheese pastry, not a slide.</div>
+  <p>Before the first glass is empty we ship a minimum viable product to production. You articulate the north-star vision in a three-sentence elevator pitch. Tom imposes one non-negotiable guardrail: single-file architecture, no third-party dependencies, zero technical debt on day one. Then it exists. Time to value: sub ten minutes. Please update your priors accordingly.</p>
+  <p>No knowledge transfer takes place this hour. This is intentional. We front-load the quick win, socialise the outcome, and backload the target operating model into subsequent workstreams.</p>
+  <div class="card">
+    <h3>Proof of concept</h3>
+    <div class="row"><button class="primary" onclick="summon()">Spin up an AI-powered synergy agent</button><button onclick="summon()">Again</button></div>
+    <div id="creature" class="creature"></div>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Ship an MVP</h3>
+<p>The goal of this hour is one thing: a playable game exists before the Chardonnay warms up. We explain almost nothing. That is the design.</p>
+<h4>Concept: the agentic loop</h4>
+<p>Claude Code is not a chat box. You give it a goal in plain language, it reads and writes files in the folder you started it in, runs commands, looks at the result, and keeps going until the goal is met. The folder you start it in is its whole world, so start it in an empty one.</p>
+<h4>Do this</h4>
+<ol>
+<li>Make a folder and step into it:</li>
+<pre><code>mkdir -p ~/grimoire &amp;&amp; cd ~/grimoire</code></pre>
+<li>Start Claude Code:</li>
+<pre><code>claude</code></pre>
+<li>On Pro and Max plans the session starts in auto mode: Claude edits files and runs most commands without asking each time, and a classifier reviews risky actions. Press Shift+Tab at any time to cycle to a mode that asks first. Tonight, auto is fine.</li>
+<li>Say your three sentences out loud to Tom first. Then type them, with the one guardrail added. A template:</li>
+<pre><code>Build a small browser game as a single file called index.html, no external libraries, no frameworks. The game: [your three sentences]. Keep score. When done, tell me how to open it.</code></pre>
+<li>When it says it is done, open the file:</li>
+<pre><code>open index.html</code></pre>
+<li>Play it. Send it to someone. That is the OKR.</li>
+</ol>
+<h4>One more thing, then stop</h4>
+<p>Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.</p>
+<div class="callout ok"><b>Definition of done</b>index.html exists in ~/grimoire, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</div>
+<div class="callout why"><b>Why it matters</b>You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.</div>
+<div class="callout try"><b>Try this</b>If the first result is broken, do not fix it yourself. Paste the error, or describe what you see, and let it iterate. Say what is wrong, not how to fix it.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Quickstart</a>, <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">How Claude Code works</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(1)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-2">
+  <div class="hour">19:00, Workstream 2</div>
+  <h2>The Centre of Excellence</h2>
+  <div class="card" style="margin-top:6px">
+    <h3>Provider-agnostic: AGENTS.md and the Agent Skills standard</h3>
+    <p class="small">Two open standards mean your rules are not locked to one vendor. <b>AGENTS.md</b> is a plain Markdown file at the repo root that 30+ coding agents read (Codex, Cursor, Copilot, Gemini CLI, Aider, Zed and more), stewarded by the Linux Foundation's Agentic AI Foundation: <a href="https://agents.md" target="_blank" rel="noopener">agents.md</a>. Claude Code reads CLAUDE.md instead, so the template's CLAUDE.md is one line, <code>@AGENTS.md</code>, plus Claude-only extras: <a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">memory docs</a>.</p>
+    <p class="small"><b>Agent Skills</b> is the open format for skills: a folder with a <code>SKILL.md</code> (name, description, instructions), loaded only when relevant: <a href="https://agentskills.io" target="_blank" rel="noopener">agentskills.io</a>. The cross-tool folder is <code>.agents/skills/</code>; Claude Code reads <code>.claude/skills/</code>, so the template symlinks one to the other. Community packs you can install into any agent: <a href="https://github.com/wshobson/agents" target="_blank" rel="noopener">wshobson/agents</a>.</p>
+    <p class="small muted">Do this: open the template's AGENTS.md, change one rule to your taste, and watch Claude follow it next session.</p>
+  </div>
+  <div class="pairing"><b>Pairing, 19:00</b>Same Chardonnay, now two degrees warmer and "opening up", which is Rolinda's way of saying the bottle has been on the table for an hour. Marcona almonds, lightly salted, to reward specificity. Vague prompts get the plain ones.</div>
+  <p>Tom asks you to make the MVP "more impactful". It regresses across every dimension of the scorecard. Then you raise one well-scoped, outcome-oriented change request with explicit in-scope and out-of-scope sections, and it lands first time, on time, on budget. Key learning for the lessons-learned log: the agent has zero line of sight into your mental model. Specificity is not a nice-to-have. Specificity is the deliverable.</p>
+  <p>Anything you catch yourself repeating gets codified into a skill: a living playbook the agent ingests automatically at every touchpoint, so you stop re-onboarding it session after session. Think of it as a standing operating procedure with executive sign-off.</p>
+  <div class="card">
+    <h3>Stakeholder communication</h3>
+    <div id="creature2" class="creature"></div>
+    <button class="prompt" onclick="speak(false)">"Make it more impactful."</button>
+    <button class="prompt" onclick="speak(true)">"Give it a purple cloak. Keep its stats. Do not touch anything else."</button>
+    <p id="speak-out" class="muted small"></p>
+  </div>
+  <div class="card">
+    <h3>Your first playbook</h3>
+    <p class="small muted">Edit freely. This is the standing operating procedure the agent reads at every touchpoint.</p>
+    <textarea id="skill">Ways of working for all deliverables:
+- single-file architecture, no external dependencies, double-click to launch
+- laptop-readable, no micro-fonts
+- scores are a system of record, never reset without sign-off
+- close every change with a one-line executive summary</textarea>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Specificity, CLAUDE.md and your first skill</h3>
+<p>This is the hour that separates people who vibe code from people who got lucky once.</p>
+<h4>Concept 1: the model has no line of sight into your head</h4>
+<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Give the dragon a purple cloak, keep the stats, do not touch the score&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
+<h4>Do this: break it, then fix it</h4>
+<ol>
+<li>Ask for the vague thing and watch what happens:</li>
+<pre><code>make it more impactful</code></pre>
+<li>Now ask for one precise thing. State what to add, what to keep, what not to touch:</li>
+<pre><code>Add a purple cloak to the main character. Keep all stats and the score exactly as they are. Do not change anything else. Reply with one line describing what you changed.</code></pre>
+<li>Compare. The second one is a change request. The first was a mood.</li>
+</ol>
+<h4>Concept 2: CLAUDE.md, the note it reads every session</h4>
+<p>Every session starts with a blank memory. CLAUDE.md is a plain markdown file in your project folder that Claude reads at the start of every session. It is where you write down what you would otherwise re-explain: build commands, conventions, &quot;always do X&quot; rules. Target under 200 lines, concrete enough to verify. &quot;Keep it one file&quot; beats &quot;keep it simple&quot;.</p>
+<ol>
+<li>Let Claude draft one from what it sees in the folder:</li>
+<pre><code>/init</code></pre>
+<li>Then add your own rules. Ask Claude to add them, or open the file yourself with /memory. A good starting set:</li>
+<pre><code># Rules for this project
+- Single file: index.html only, no external libraries
+- Readable on a laptop, minimum font size 14px
+- Scores are a system of record: never reset or reformat stored scores without asking
+- After every change, reply with one line saying what changed</code></pre>
+<li>Confirm it loaded. Start a new session and run:</li>
+<pre><code>/context</code></pre>
+<li>Your CLAUDE.md should be listed under Memory files. If it is not there, Claude cannot see it.</li>
+</ol>
+<h4>Concept 3: skills, procedures that load on demand</h4>
+<p>CLAUDE.md is for facts that apply every session. A skill is a folder with a SKILL.md for a repeatable procedure, loaded only when it is relevant or when you type /skill-name. Personal skills live in ~/.claude/skills/ and work in every project.</p>
+<ol>
+<li>Create one for adding features to your game:</li>
+<pre><code>mkdir -p ~/.claude/skills/add-feature</code></pre>
+<li>Ask Claude to write ~/.claude/skills/add-feature/SKILL.md with this content, or paste it yourself:</li>
+<pre><code>---
+description: Add a feature to the game safely. Use when the user asks to add, change or extend gameplay.
+---
+
+When adding a feature:
+1. Restate the request in one sentence and list what will NOT change.
+2. Make the change in index.html only.
+3. Open index.html and check it still loads without console errors.
+4. Reply with one line: what changed, and one sentence: what to test.</code></pre>
+<li>Use it:</li>
+<pre><code>/add-feature give the enemy a health bar</code></pre>
+<li>Or just ask normally. Claude loads it automatically when the description matches.</li>
+</ol>
+<h4>Bonus: auto memory</h4>
+<p>If you tell Claude &quot;remember that I prefer British spelling&quot;, it saves that to its own notes for this project and loads them next time. Run /memory to see and edit everything it has saved. Everything is plain markdown you can delete.</p>
+<div class="callout ok"><b>Definition of done</b>/context lists your CLAUDE.md. /add-feature appears when you type / in a session. A vague prompt now gets a clarifying question or a scoped change instead of a rewrite.</div>
+<div class="callout why"><b>Why it matters</b>CLAUDE.md for what is always true, skills for how to do a thing, your prompt for what to do right now. Once those three are separated you stop re-onboarding the agent every evening.</div>
+<div class="callout try"><b>Try this</b>Rolinda&#x27;s test: read your CLAUDE.md to her. Every line she can verify (&quot;is it one file? yes/no&quot;) is a good line. Every line she has to interpret is a bad one.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">How Claude remembers your project</a>, <a href="https://code.claude.com/docs/en/skills" target="_blank" rel="noopener">Skills</a>, <a href="https://code.claude.com/docs/en/best-practices" target="_blank" rel="noopener">Best practices</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(2)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-3">
+  <div class="hour">20:00, Workstream 3</div>
+  <h2>The Data Warehouse</h2>
+  <div class="card" style="margin-top:6px">
+    <h3>Real tools: DuckDB SQL and a little Python</h3>
+    <p class="small">The template ships <code>data/scores.csv</code>, three DuckDB queries and one Python script, all tested. DuckDB reads a CSV as a table with no server: <code>duckdb -c "select * from 'data/scores.csv' order by score desc limit 5"</code>. Docs: <a href="https://duckdb.org/docs/" target="_blank" rel="noopener">duckdb.org/docs</a>. Zero-to-SQL in an evening: <a href="https://sqlbolt.com" target="_blank" rel="noopener">SQLBolt</a>; analytics-flavoured: <a href="https://mode.com/sql-tutorial/" target="_blank" rel="noopener">Mode SQL tutorial</a>.</p>
+    <p class="small">Do this, in order: <code>duckdb &lt; sql/top_runs.sql</code>, then <code>sql/per_player.sql</code> (group by), then <code>sql/streaks.sql</code> (window functions, <code>lag()</code>). Then <code>python3 python/scores.py</code> and read the one new concept explained at the top of the file (a dict comprehension). Then ask Claude: "add a column to scores.csv and update every query that breaks". Python reference: <a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">the official tutorial</a>; practice: <a href="https://exercism.org/tracks/python" target="_blank" rel="noopener">Exercism</a>, <a href="https://www.kaggle.com/learn" target="_blank" rel="noopener">Kaggle Learn</a>.</p>
+  </div>
+  <div class="pairing"><b>Pairing, 20:00</b>Sancerre, Loire, mineral, "a chalky finish that lingers like an unresolved action item". Served with a chèvre plate arranged by ash content, ascending. Data has a schema; so does the cheese board.</div>
+  <p>The MVP pivots to a data-driven, insight-led, metrics-first posture. Every session is persisted to a file, which we will refer to as the enterprise data warehouse for the remainder of the evening. Then we surface actionable insights: top performers, rolling averages, streak analytics, all visualised on a self-serve dashboard. You will observe that the file rapidly becomes the single source of truth and the game a mere presentation layer.</p>
+  <p>Data requires a fixed location and a governed schema. Relocate the file, rename a column, and downstream dashboards are impacted, incidents are raised, and Tom is paged. This is the precise moment a folder graduates into a platform.</p>
+  <div class="card">
+    <h3>Capture and report</h3>
+    <div class="row"><button class="primary" onclick="roll(1)">Roll a d20</button><button onclick="roll(10)">Roll ten</button><button onclick="clearLedger()">Purge the data lake</button></div>
+    <div class="ledger">
+      <table><tbody>
+        <tr><td>Rolls</td><td class="num" id="l-n">0</td></tr>
+        <tr><td>Mean</td><td class="num" id="l-mean">0</td></tr>
+        <tr><td>Best</td><td class="num" id="l-best">0</td></tr>
+        <tr><td>Twenties</td><td class="num" id="l-crit">0</td></tr>
+      </tbody></table>
+      <svg class="chart" id="chart" viewBox="0 0 200 100" preserveAspectRatio="none" aria-label="Histogram of rolls"></svg>
+    </div>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Persisted scores and a dashboard</h3>
+<p>Time to feed the spreadsheet person. The game learns to remember, the data gets a home, and the home turns out to matter more than the game.</p>
+<h4>Concept: a fixed home and a fixed shape</h4>
+<p>A browser page cannot write files to your disk on its own, so the pattern is: the game stores every finished round in the browser (localStorage), and offers an Export button that downloads a CSV. Once that CSV has a fixed name and fixed columns, anything can be built on top of it. Rename one column and everything downstream breaks. That is not a bug, that is what a schema is.</p>
+<h4>Do this</h4>
+<ol>
+<li>Add persistence with an explicit schema:</li>
+<pre><code>Every time a round ends, save a record to localStorage with exactly these fields: ts (ISO timestamp), player (string), score (integer), seconds (integer). Add an &quot;Export CSV&quot; button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.</code></pre>
+<li>Play three rounds, export, and move the file into the project:</li>
+<pre><code>mv ~/Downloads/scores.csv ~/grimoire/scores.csv</code></pre>
+<li>Now ask for analysis on top of the file, not the game:</li>
+<pre><code>Write analyze.py that reads scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.</code></pre>
+<li>Open the chart:</li>
+<pre><code>open chart.png</code></pre>
+<li>Break the schema on purpose. Rename the score column in scores.csv to points, run analyze.py again, watch it fail. Rename it back.</li>
+</ol>
+<h4>What Lotte will notice</h4>
+<p>The game is now a front end. The CSV is the thing. Any spreadsheet, script or chart can read it, and Claude can build the next one in a minute because the shape is known. This is the same idea as a table in a database: the columns are a contract.</p>
+<div class="callout ok"><b>Definition of done</b>scores.csv has a header row with ts,player,score,seconds. analyze.py runs and produces chart.png. Renaming a column breaks it, restoring it fixes it.</div>
+<div class="callout why"><b>Why it matters</b>Every useful tool you build for work will be this pattern: something produces a file with a fixed shape, something else reads it. Meeting notes to action list, calendar export to weekly summary. Learn to name the columns first.</div>
+<div class="callout try"><b>Try this</b>Add a fifth column, difficulty, in both the game and the script, in one prompt. Notice you have to say both places.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/common-workflows" target="_blank" rel="noopener">Common workflows</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(3)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-4">
+  <div class="hour">21:00, Workstream 4</div>
+  <h2>The Business Continuity Tower</h2>
+  <div class="pairing"><b>Pairing, 21:00</b>Pivot to red. Barolo, Nebbiolo, decanted at 19:30 in anticipation of the Sev 1. Tannins "structured, almost bureaucratic". Cured meats, sliced thin enough to be auditable. Rollback pairs with a second glass.</div>
+  <p>Git, in two bullet points for the executive summary: a commit is a named, immutable, auditable snapshot, and rollback is always on the table. Tonight you ship a change, commit it, deliberately introduce a Sev 1 incident with full customer impact, and execute a controlled rollback within the agreed recovery time objective. Tom, as SRE, will be on call and will visibly age.</p>
+  <p>Then one hook: an automated control that fires at a defined lifecycle event, for example snapshotting the data warehouse after every edit. A hook is not guidance, a best practice, or a gentle nudge. A hook is enforcement. Compliance will be delighted.</p>
+  <div class="card">
+    <h3>Change management</h3>
+    <textarea id="spell">A small dragon who hoards spreadsheets and refuses to sort them, pending a prioritisation workshop.</textarea>
+    <div class="row"><button class="primary" onclick="commit()">Commit and tag release</button><button onclick="ruin()">Trigger a P1</button></div>
+    <ul class="versions" id="versions"></ul>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Git, rollback, and one hook</h3>
+<p>Fear of breaking things is what stops people from experimenting. This hour removes the fear.</p>
+<h4>Concept 1: commits are named snapshots</h4>
+<p>git keeps a history of your folder. A commit is a snapshot with a message. You can look at old ones, compare them, and go back. Claude Code makes this conversational, you never have to memorise commands.</p>
+<ol>
+<li>Turn the folder into a repository and take the first snapshot:</li>
+<pre><code>initialise git in this folder, add a .gitignore that excludes backups/ and .DS_Store, and commit everything with the message &quot;first playable&quot;</code></pre>
+<li>Make a change (any feature), then:</li>
+<pre><code>commit my changes with a descriptive message</code></pre>
+<li>Look at the history:</li>
+<pre><code>show me the last 5 commits</code></pre>
+<li>Now break it on purpose. Ask for something destructive: &quot;replace all text in the game with Comic Sans and remove the score&quot;. Confirm it is ruined.</li>
+<li>Roll back:</li>
+<pre><code>discard all uncommitted changes and restore the last commit</code></pre>
+<li>Open index.html. It is fine again. Tom can stop pretending to be paged.</li>
+</ol>
+<h4>Concept 2: two undo buttons</h4>
+<p>Inside a session, Claude Code also keeps its own checkpoints: /rewind takes the files back to an earlier point in the conversation. That is for &quot;the last ten minutes went wrong&quot;. git is for &quot;I want this to survive closing the laptop&quot;. Use both.</p>
+<h4>Concept 3: hooks, things that happen every time</h4>
+<p>CLAUDE.md is advice. Claude reads it and tries. A hook is a shell command Claude Code runs at a fixed moment in its lifecycle, whether Claude wants to or not. PostToolUse fires after a tool ran, PreToolUse fires before and can block. Hooks live in a settings file, and the /hooks menu shows what is registered.</p>
+<ol>
+<li>Create the project settings file. Ask Claude, or write .claude/settings.json yourself:</li>
+<pre><code>{
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Edit|Write&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;mkdir -p backups &amp;&amp; cp scores.csv backups/scores-$(date +%Y%m%d-%H%M%S).csv 2&gt;/dev/null || true&quot;
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+<li>The matcher means: only after the Edit or Write tools. The command copies scores.csv into backups/ with a timestamp, and the || true means a missing file does not count as an error.</li>
+<li>Check it registered:</li>
+<pre><code>/hooks</code></pre>
+<li>Ask Claude to edit any file. Then look in backups/. A copy appeared without anyone asking for it.</li>
+<li>The other kind: a hook that blocks. Ask Claude to add a PreToolUse hook that refuses any Edit or Write to scores.csv, exits with code 2 and prints a reason. Then ask it to edit scores.csv and watch it get refused and explain why.</li>
+</ol>
+<h4>Optional, if the Barolo allows</h4>
+<p>Put the folder somewhere other than the laptop: &quot;create a private GitHub repository for this project and push it&quot;. Claude will ask you to sign in to GitHub the first time.</p>
+<div class="callout ok"><b>Definition of done</b>git log shows at least three commits. Ruining and restoring works. /hooks lists your PostToolUse hook and backups/ fills up when files change.</div>
+<div class="callout why"><b>Why it matters</b>Advice can be ignored, enforcement cannot. When something must happen every single time, it is a hook, not a sentence in CLAUDE.md. And with git underneath, no experiment is expensive.</div>
+<div class="callout try"><b>Try this</b>Ask Claude to add a Notification hook that shows a macOS notification when it needs your input, so you can walk to the kitchen while it works.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/hooks-guide" target="_blank" rel="noopener">Hooks guide</a>, <a href="https://code.claude.com/docs/en/checkpointing" target="_blank" rel="noopener">Checkpointing and /rewind</a>, <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Quickstart: git section</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(4)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-5">
+  <div class="hour">21:30, Workstream 5</div>
+  <h2>The Stakeholder Alignment Bridge</h2>
+  <div class="pairing"><b>Pairing, 21:30</b>A Grüner Veltliner, "peppery, cross-functional", chosen because it goes with everything, much like an interoperability standard. Truffle crisps. Rolinda would like it noted that the truffle is real.</div>
+  <p>The chat window is not the enterprise perimeter. You integrate one system of record you already operate in, calendar, files or mail, and run a query that only works because of the integration. In Claude Code this is an MCP server. In the app it is a connector. Same underlying capability, different go-to-market. This is the workstream with the highest projected ROI, and the one most likely to quietly transform your Tuesday.</p>
+  <p>MCP in one sentence for the board pack: an open interoperability standard, so any tool plugs in the same way. Think USB-C, but for cross-functional enablement and ecosystem synergies.</p>
+  <div class="card">
+    <h3>Integration layer</h3>
+    <div class="bridge" id="b-cal"><button onclick="bridge('cal')">Calendar</button><span class="muted">Not integrated</span></div>
+    <div class="bridge" id="b-files"><button onclick="bridge('files')">Files</button><span class="muted">Not integrated</span></div>
+    <div class="bridge" id="b-mail"><button onclick="bridge('mail')">Mail</button><span class="muted">Not integrated</span></div>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Connectors and MCP</h3>
+<p>Until now Claude could only see the folder. This hour it reaches your calendar, your files, your mail. This is the part that quietly changes a work week.</p>
+<h4>Concept: MCP is the plug</h4>
+<p>The Model Context Protocol is an open standard for giving an AI model tools. An MCP server is a program or a hosted service that exposes tools: search an issue tracker, read a calendar, drive a browser. Claude Code connects to servers; the Claude app calls the same thing connectors. Same idea, different door.</p>
+<h4>Do this: a server that needs no account</h4>
+<ol>
+<li>From your shell, not inside a session, add the Claude Code documentation server. The name claude-code-docs is one you choose:</li>
+<pre><code>claude mcp add --transport http claude-code-docs https://code.claude.com/docs/mcp</code></pre>
+<li>Check it connected:</li>
+<pre><code>claude mcp list</code></pre>
+<li>Start a session and force it through the new server so you can see it happen:</li>
+<pre><code>Use the claude-code-docs server to look up what a PostToolUse hook is</code></pre>
+<li>The tool call in the output is labelled with the server name. That label is how you know it went out, not from memory.</li>
+</ol>
+<h4>Scopes: where it is saved</h4>
+<p>By default the server is local: only you, only this project. Add --scope user to have it in every project, or --scope project to write it to .mcp.json in the folder so anyone who clones the project gets it too. Inside a session, /mcp shows the panel and lets you authenticate or reconnect.</p>
+<h4>Do this: something you actually use</h4>
+<ol>
+<li>Connectors you add at claude.ai (Settings, Connectors) load automatically in Claude Code when you are signed in with the same account. Connect Google Calendar or Google Drive there.</li>
+<li>Or, for a hosted service with a sign-in, add it and authenticate in the /mcp panel:</li>
+<pre><code>claude mcp add --transport http notion https://mcp.notion.com/mcp
+# then inside a session: /mcp → notion → Authenticate</code></pre>
+<li>Then ask something only the connection can answer:</li>
+<pre><code>What is on my calendar Thursday? Draft an agenda for the 10:00 as a markdown file called thursday-agenda.md</code></pre>
+<li>When done experimenting, unplug what you do not need. Every connected server uses some of Claude&#x27;s context window:</li>
+<pre><code>claude mcp remove claude-code-docs</code></pre>
+</ol>
+<div class="callout ok"><b>Definition of done</b>claude mcp list shows at least one Connected server. A prompt that needs it produces a tool call labelled with the server name.</div>
+<div class="callout why"><b>Why it matters</b>The chat window is not the boundary. Once Claude can read the systems your work lives in, the tools you build stop being toys: a meeting note to action list, a week of calendar to a summary, a thread to three decisions.</div>
+<div class="callout try"><b>Try this</b>Rolinda&#x27;s question, answered properly: it can only see what you connected, only while it is connected, and claude mcp remove unplugs it. Say that sentence back to her.</div>
+<p class="small muted">Source: <a href="https://code.claude.com/docs/en/mcp-quickstart" target="_blank" rel="noopener">Connect to MCP servers</a>, <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noopener">MCP reference</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(5)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-6">
+  <div class="hour">22:00, Workstream 6</div>
+  <h2>The Knowledge Management Tree</h2>
+  <div class="pairing"><b>Pairing, 22:00</b>Grower Champagne, zero dosage, "austere, honest, vendor-neutral". Dark chocolate at 72% because institutional knowledge deserves a proper finish. If this bottle is open, the retrospective can begin.</div>
+  <p>The final workstream has, by a distance, the best optics. You open Obsidian, point the agent at the vault, and have it document tonight's learnings, cross-link them, and tag them for discoverability. Then you open the graph view and watch institutional knowledge materialise in real time. Screenshots are encouraged for the all-hands.</p>
+  <p>Long-term memory is files with links. You own them, they are fully human-readable without any agent in the loop, they are vendor-neutral, and they compound quarter over quarter. This is your knowledge moat.</p>
+  <div class="card">
+    <h3>Knowledge capture</h3>
+    <p class="small">Below is a working vault: a live graph view of every note from tonight. Drag nodes, tap one to read it, follow the [[links]]. This is what your Obsidian will look like once Claude has written it for you.</p>
+    <div class="row"><button class="primary" onclick="openVault()">Open the vault</button></div>
+  </div>
+    <svg class="web" id="web" viewBox="0 0 400 320" aria-label="Graph of tonight's notes"></svg>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Obsidian and the graph</h3>
+<p>The last hour is the prettiest, and the one that gives everything before it a place to live.</p>
+<h4>Concept: a vault is a folder of markdown, links are just text</h4>
+<p>An Obsidian vault is a normal folder on disk. Every note is a .md file. A link from one note to another is the text [[Note name]]. The graph view draws a circle per note and a line per link; the more notes point at a note, the bigger it gets. Because it is all plain files, Claude can read and write the vault directly, and you can read it without any AI at all.</p>
+<h4>Do this</h4>
+<ol>
+<li>In Obsidian: bottom left, Vault profile, Manage vaults, Create new vault. Name it grimoire-vault, put it in your home folder.</li>
+<li>Start Claude Code inside the vault:</li>
+<pre><code>cd ~/grimoire-vault &amp;&amp; claude</code></pre>
+<li>Give it the conventions once, as a CLAUDE.md in the vault root:</li>
+<pre><code>Create CLAUDE.md with these rules: every note is markdown; link related notes with [[wikilinks]]; each note starts with a one-line summary; project notes live in Projects/, people in People/, tools in Tools/.</code></pre>
+<li>Now capture tonight:</li>
+<pre><code>Create Projects/Grimoire game.md summarising what we built tonight (single-file game, scores.csv schema, git, hooks). Create Tools/Claude Code.md, Tools/CLAUDE.md and skills.md, Tools/Hooks.md, Tools/MCP.md, Tools/Obsidian.md, each with a short explanation in my words and a &quot;how to&quot; section. Create People/Tom.md and People/Rolinda.md. Link everything that is related with [[wikilinks]] and make sure every note links to at least two others.</code></pre>
+<li>Open the graph: click the graph icon in the left ribbon, or Cmd+P and type &quot;graph&quot;. Hover a node to highlight its links. Click one to open it.</li>
+<li>Local graph: with a note open, Cmd+P, &quot;Open local graph&quot;, to see only what connects to that note.</li>
+<li>Colour it: graph settings (cog top right), Groups, New group, search path:Tools, pick a colour. Do the same for Projects and People.</li>
+</ol>
+<h4>This is your long-term memory</h4>
+<p>Next week, when Lotte builds the meeting-note tool, she starts Claude Code in the vault, and it can read Tools/Hooks.md to remember how she likes hooks written. Every project adds notes, every note adds links, the graph grows. Nothing is locked in: it is a folder of text files she owns. Put the vault in git too, and ignore the .obsidian folder.</p>
+<div class="callout ok"><b>Definition of done</b>The graph shows at least ten nodes in three colours, and clicking any node opens a note Claude wrote that reads like Lotte, not like a manual.</div>
+<div class="callout why"><b>Why it matters</b>Memory is files with links. You own it, it compounds, and both you and the agent can read it. That is the whole knowledge moat, and it cost one prompt.</div>
+<div class="callout try"><b>Try this</b>Ask Claude, inside the vault: &quot;what did we decide about scores?&quot; and watch it find the answer by reading the notes, not by remembering.</div>
+<p class="small muted">Source: <a href="https://help.obsidian.md/plugins/graph" target="_blank" rel="noopener">Obsidian: graph view</a>, <a href="https://help.obsidian.md/links" target="_blank" rel="noopener">Obsidian: internal links</a>, <a href="https://help.obsidian.md/manage-vaults" target="_blank" rel="noopener">Obsidian: manage vaults</a></p>
+</div>
+  <div class="row"><button class="primary" onclick="claim(6)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+
+<section class="screen" id="s-7">
+  <div class="hour">22:30, Workstream 7</div>
+  <h2>The Go-to-Market Tower</h2>
+  <div class="pairing"><b>Pairing, 22:30</b>Tokaji Aszú, 5 puttonyos, "sweet, but earned", with Roquefort. Rolinda notes that a launch without dessert wine is a soft launch.</div>
+  <p>The MVP has lived on one laptop all evening. That is a single point of failure and, frankly, a governance risk. This workstream takes it public: the folder goes to GitHub, GitHub Pages serves it, and the game gets a URL you can send to anyone. Time to market: fifteen minutes, including the Roquefort.</p>
+  <p><b>Concept.</b> A remote is a copy of your [[Git]] history on someone else's computer. GitHub Pages is a static host that serves the files in a repository as a website, which is exactly what a single-file game is. No server, no build step, no ops. Claude Code can do every step of this from the terminal.</p>
+  <div class="card">
+    <h3>Do this</h3>
+    <ol class="small">
+      <li>Create a free GitHub account if you do not have one, and install the GitHub CLI: <code>brew install gh</code>, then <code>gh auth login</code>.</li>
+      <li>In Claude Code: "create a public GitHub repo called grimoire from this folder and push it."</li>
+      <li>Then: "enable GitHub Pages for this repo from the main branch, root folder, and tell me the URL." If Claude cannot flip the setting, do it in the repo's Settings, Pages tab.</li>
+      <li>Open the URL on your phone. Send it to someone who was not here tonight.</li>
+    </ol>
+    <p class="small muted">Definition of done: the game loads on a device that is not your laptop.</p>
+  </div>
+  <p class="small">Docs: <a href="https://docs.github.com/en/pages/quickstart" target="_blank" rel="noopener">GitHub Pages quickstart</a> · <a href="https://cli.github.com/manual/gh_repo_create" target="_blank" rel="noopener">gh repo create</a> · <a href="https://code.claude.com/docs/en/common-workflows" target="_blank" rel="noopener">Claude Code common workflows (git)</a></p>
+  <div class="row"><button class="primary" onclick="claim(7)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-8">
+  <div class="hour">23:00, Workstream 8</div>
+  <h2>The Autonomous Operations Plant</h2>
+  <div class="pairing"><b>Pairing, 23:00</b>Armagnac, 1998, in the small glasses. No food. Rolinda has called last orders and is prepared to enforce it.</div>
+  <p>Everything so far needed you at the keyboard. The final workstream removes you from the loop: Claude runs headless, on a schedule, does one job, and writes the result into your vault. This is the SRE hour. Tom is visibly moved.</p>
+  <p><b>Concept.</b> <code>claude -p "prompt"</code> runs Claude Code without the interactive session: it takes the prompt, does the work in the folder, prints the result and exits. Put that in a scheduled job and you have an agent that runs while you sleep. A subagent is a second Claude the first one delegates to, with its own instructions, useful for a job you want done the same way every time.</p>
+  <div class="card">
+    <h3>Do this</h3>
+    <ol class="small">
+      <li>Try it once by hand from the project folder: <code>claude -p "read scores.csv and append a one-paragraph summary of tonight's best runs to the vault note Grimoire/Scores.md"</code></li>
+      <li>Ask Claude Code to "create a subagent called scorekeeper that only does that job, and document it in the vault."</li>
+      <li>Ask Claude Code to "schedule the scorekeeper to run every morning at 08:00 with launchd" (on a Mac). Check the plist it writes. It should call <code>claude -p</code> with <code>--output-format text</code>.</li>
+      <li>Tomorrow morning: open the vault. The note updated itself.</li>
+    </ol>
+    <p class="small muted">Definition of done: a note in your vault changed without you touching the keyboard.</p>
+  </div>
+  <p class="small">Docs: <a href="https://code.claude.com/docs/en/headless" target="_blank" rel="noopener">Run Claude Code programmatically (headless)</a> · <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">Subagents</a> · <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">CLI reference</a></p>
+  <div class="row"><button class="primary" onclick="claim(8)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
+</section>
+<section class="screen" id="s-gen"></section>
+<section class="screen" id="s-mentor"></section>
+<section class="screen" id="s-9">
+  <div class="hour">Final slide</div>
+  <h2>Calendar alignment</h2>
+  <div class="pairing"><b>Beverage stack, go-live</b>Rolinda has pre-approved the following: Bourgogne Chardonnay to open, Sancerre with the data, Barolo for the incident, Grüner for the integrations, Champagne for the graph, Tokaji for the launch, Armagnac for last orders. Anything else requires a change request and a decanter.</div>
+  <p>Eight OKRs unlocked, eight capabilities stood up, zero Sev 1s outstanding, the campus is fully operational and the Steering Committee has been briefed. The only open action item on the tracker is the go-live date. Tom has the following availability, subject to change control.</p>
+  <div class="card"><h3>Go-live date</h3><div id="dates"></div></div>
+  <div class="card"><h3>Beverage stack (Rolinda has veto)</h3><div class="row" id="wines"></div></div>
+  <div class="card" id="msgcard" style="display:none">
+    <h3>Circulate to the Executive Sponsor</h3>
+    <p class="msg" id="msg"></p>
+    <div class="row"><button class="primary" onclick="copyMsg()" id="copybtn">Copy to clipboard</button><a id="wa" target="_blank" rel="noopener">Open in WhatsApp</a></div>
+  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: After the evening</h3>
+<p>Three things, in order, each one evening or less.</p>
+<ol>
+<li>Build one boring tool for work: a messy meeting note pasted in, a clean action list out. Start in a new folder, write CLAUDE.md first, then ask.</li>
+<li>Give it a file with a fixed shape and a chart, like workstream 3. Calendar export to a weekly summary is a good one.</li>
+<li>Write the note about it in the vault, link it to Tools notes, look at the graph grow.</li>
+</ol>
+<p>Tom is available for one panicked message per week. Rolinda is available for wine.</p>
+</div>
+  <p class="small">Supporting documentation, runbooks and enablement material for any workstreams deferred beyond the session window: <a href="https://claude.ai/artifact/SKSiMuyZHAPQZbZGFj54fG" target="_blank" rel="noopener">the syllabus</a>.</p>
+  <div class="row"><button onclick="closeSheet()">Back to the campus</button><button onclick="reset()">Reset to greenfield</button></div>
+</section>
+  </div>
+</div>
+

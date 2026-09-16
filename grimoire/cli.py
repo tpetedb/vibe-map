@@ -69,7 +69,7 @@ WS = [
     ),
 ]
 
-CAMP = json.loads((ROOT / "grimoire" / "campaign.json").read_text())
+CAMP = json.loads((ROOT / "src" / "data" / "campaign.json").read_text())
 EV = CAMP["evenings"]
 MENTORS = {m["id"]: m for m in CAMP["mentors"]}
 WORLD_NAMES = {

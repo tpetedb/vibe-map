@@ -246,7 +246,7 @@ Every age here shortened the distance between an idea and a working thing: the t
 - Age: Future Age · Level: Expert
 #tech #future`},
 "Tech tree":{t:"future",md:`# Tech tree
-The roadmap from intern to expert, Age of Empires style.
+The roadmap from intern to expert, Age of Empires style. Each age has a level; each technology says what it is, real history, a five-minute try, docs, and what it unlocks.
 **Dark Age (Intern).** The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier. [[Unix and the terminal]], [[Bash and shell scripts]], [[Files, folders and paths]], [[Dotfiles]], [[Config formats: JSON, YAML, TOML, Markdown]], [[localhost and ports]], [[Git]]
 **Feudal Age (Junior).** Languages and data. You can now make the machine do a specific thing and keep the result. [[Python]], [[Python libraries: what they are for]], [[SQL and DuckDB]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Markdown and Obsidian]], [[Data: files, schemas, warehouses]]
 **Castle Age (Medior).** Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. [[HTTP and APIs]], [[Building and consuming APIs]], [[SSH and remote machines]], [[Docker and containers]], [[GitHub, pull requests, Pages]], [[CI/CD and automation]], [[Cloud and servers]]
