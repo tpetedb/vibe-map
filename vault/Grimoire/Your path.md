@@ -1,3 +1,8 @@
+---
+title: "Your path"
+date: 2026-09-16
+tags: [people]
+---
 # Your path
 
 The mentors you met and what you chose. Change it in the game; re-import to update.
@@ -14,5 +19,7 @@ The mentors you met and what you chose. Change it in the game; re-import to upda
 - [[Mitchell Hashimoto]] (Production Environment): not met yet
 - [[Linus Torvalds]] (Production Environment): not met yet
 - [[The OpenCode team]] (Production Environment): not met yet
+
+Back to [[Tonight]] · [[Map]]
 
 #people

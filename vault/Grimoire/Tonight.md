@@ -1,10 +1,32 @@
+---
+title: "Tonight"
+date: 2026-09-16
+tags: [overview]
+---
 # Tonight
 
-Evening 1 of four. Workstreams: [[Innovation Hub]], [[Centre of Excellence]], [[Data Warehouse]], [[Business Continuity]], [[Stakeholder Bridge]], [[Knowledge Tree]], [[Go-to-Market]], [[Autonomous Operations]]
+Lotte, Chief of Staff, on Normal. Level Intern (dark) with 0 XP, 300 to the next level. 0 of 32 stops done.
 
-The campaign: [[Evening 1]] · [[Evening 2]] · [[Evening 3]] · [[Evening 4]]
+## Workstreams
+- 18:00 [[Innovation Hub]]: a playable single-file game (to do)
+- 19:00 [[Centre of Excellence]]: AGENTS.md rules and a first skill (to do)
+- 20:00 [[Data Warehouse]]: scores.csv, DuckDB queries, a Python chart (to do)
+- 21:00 [[Business Continuity]]: git history, one rollback, one hook (to do)
+- 21:30 [[Stakeholder Bridge]]: one MCP integration (to do)
+- 22:00 [[Knowledge Tree]]: a linked vault and its graph (to do)
+- 22:30 [[Go-to-Market]]: the game at a public URL (to do)
+- 23:00 [[Autonomous Operations]]: headless Claude on a schedule (to do)
 
-Map: [[Map]] · Mentors: [[Your path]] · Resources: [[Resources]]
+## The campaign
+- [[Evening 1]] Ship first, then discipline: 0/8 on the Innovation Campus
+- [[Evening 2]] History, and how these models actually work: 0/8 on the Cold Storage Cluster
+- [[Evening 3]] From vibes to determinism: 0/8 on the Sandbox Environment
+- [[Evening 4]] Terminal, git and the toolbelt, on Apple silicon: 0/8 on the Production Environment
+
+## Hot cache
+- Nothing yet. Walk to the 18:00 signpost.
+
+Map: [[Map]] · Mentors: [[Your path]] · Your field: [[Your field]] · Resources: [[Resources]] · Tree: [[Tech tree]]
 
 ## Build log
 - 2026-09-16 [[Age of Epochs study]]: what a GPL Age of Empires clone taught this repo; conventions adopted into AGENTS.md.

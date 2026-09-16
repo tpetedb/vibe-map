@@ -1,3 +1,8 @@
+---
+title: "Resources"
+date: 2026-09-16
+tags: [overview]
+---
 # Resources
 
 Real, current references. Everything here is what the workstreams point to.
@@ -40,5 +45,9 @@ Real, current references. Everything here is what the workstreams point to.
 - Git tutorial: https://git-scm.com/docs/gittutorial
 - GitHub CLI: https://cli.github.com/manual/
 - GitHub Pages quickstart: https://docs.github.com/en/pages/quickstart
+
+#overview
+
+Back to [[Tonight]]
 
 #overview

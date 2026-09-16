@@ -294,7 +294,7 @@ T = [
         "toml",
         "feudal",
         "TOML in practice: pyproject.toml",
-        'TOML is INI with types. [tables] group keys; key = "value" pairs are typed (strings, numbers, booleans, dates, arrays); [[arrays.of.tables]] repeat a section, one block per item. Python packaging chose it because it is unambiguous, has a small spec, and stays readable when hand-edited: pyproject.toml declares the package, its dependencies and the tool settings (ruff, pytest) in one file.',
+        'TOML is INI with types. [tables] group keys; key = "value" pairs are typed (strings, numbers, booleans, dates, arrays); `[[arrays.of.tables]]` repeat asection, one block per item. Python packaging chose it because it is unambiguous, has a small spec, and stays readable when hand-edited: pyproject.toml declares the package, its dependencies and the tool settings (ruff, pytest) in one file.',
         "TOML was started by Tom Preston-Werner in 2013 and reached 1.0.0 in January 2021. PEP 518 (2016) introduced pyproject.toml for build requirements, PEP 621 (2020) added the [project] table, and tomllib joined the standard library with Python 3.11 in October 2022.",
         "Read pyproject.toml in this repo and add a dependency, then uv sync.",
         [
@@ -478,9 +478,9 @@ T = [
         "markdown",
         "feudal",
         "Markdown and Obsidian",
-        "Markdown is prose with a little structure (#, -, **, [[links]]). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.",
+        "Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.",
         "Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.",
-        "Write vault/Grimoire/Me.md with three sentences and two [[links]]. Open the graph.",
+        "Write vault/Grimoire/Me.md with three sentences and two `[[links]]`. Open the graph.",
         [
             ("Markdown guide", "https://www.markdownguide.org"),
             ("Obsidian help", "https://help.obsidian.md"),

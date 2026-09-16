@@ -18,6 +18,7 @@ dependencies = [
   "duckdb>=1.0",         # the same scores.csv in SQL, no server
   "python-dotenv>=1.0",  # .env files for tokens, never committed
   "pyyaml>=6.0",         # read the CI workflow back, YAML in practice
+  "textual>=0.80",       # the `just start` onboarding screen
 ]
 
 [project.scripts]
@@ -43,13 +44,17 @@ module-name = "grimoire"
 [tool.ruff]
 line-length = 88
 target-version = "py312"
+# Vendored skills keep their upstream formatting; see docs/SKILLS.md.
+extend-exclude = [".agents"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
-# tech.py is data: one long string per fact, wrapped only where it reads well.
+# Data modules: one long string per fact, wrapped only where it reads well.
 "tools/tech.py" = ["E501"]
+"grimoire/personas.py" = ["E501"]
+"grimoire/toolbelt.py" = ["E501"]
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
