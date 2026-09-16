@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p backups && cp -R data backups/data-$(date +%Y%m%d-%H%M%S) 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

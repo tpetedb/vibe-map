@@ -1,0 +1,256 @@
+"Unix and the terminal":{t:"dark",md:`# Unix and the terminal
+The terminal is a text conversation with the computer. Every tool in this tree is a command you type; every agent in the Imperial Age is, underneath, typing those same commands for you. Learning ten commands (ls, cd, cat, mkdir, cp, mv, rm, grep, find, man) covers most of daily use.
+**History.** Unix was written at Bell Labs in 1969 (Thompson, Ritchie). macOS is a certified Unix, so your Mac terminal is the direct descendant. Linux (1991, Torvalds) is the free reimplementation that runs most servers and containers.
+**Try in five minutes.** Open Terminal.app. Type pwd, then ls -la, then man ls (q to quit).
+- Docs: [The Missing Semester (MIT)](https://missing.csail.mit.edu), [Linux Journey](https://linuxjourney.com)
+- Unlocks: [[Bash and shell scripts]], [[Files, folders and paths]], [[Git]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Bash and shell scripts":{t:"dark",md:`# Bash and shell scripts
+Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in.
+**History.** The Bourne shell arrived in 1979; bash (Bourne-again shell) in 1989 as the GNU replacement. macOS switched its default to zsh in 2019, which is bash-compatible for everything you will meet tonight.
+**Try in five minutes.** cat data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written).
+- Docs: [Bash Guide (Greg's wiki)](https://mywiki.wooledge.org/BashGuide), [ShellCheck, lint your scripts](https://www.shellcheck.net)
+- Unlocks: [[Dotfiles]], [[Docker and containers]], [[Hook]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Files, folders and paths":{t:"dark",md:`# Files, folders and paths
+A project is a folder. A path is an address inside it: absolute (/Users/lotte/grimoire) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+**History.** The hierarchical file system with slashes comes from Multics (1965) via Unix. Hidden dotfiles exist because of a 1970s bug: ls skipped names starting with a dot to hide . and .., and people started using it on purpose.
+**Try in five minutes.** In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for.
+- Docs: [Unix filesystem basics](https://missing.csail.mit.edu/2020/course-shell/)
+- Unlocks: [[Dotfiles]], [[Config formats: JSON, YAML, TOML, Markdown]], [[Git]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Dotfiles":{t:"dark",md:`# Dotfiles
+Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable.
+**History.** Dotfile repos on GitHub became a movement around 2008 to 2012 ("dotfiles are how you customise your system"). Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.
+**Try in five minutes.** ls -la ~ and open ~/.zshrc. Add one alias: alias g='python3 grimoire/cli.py'.
+- Docs: [dotfiles.github.io](https://dotfiles.github.io), [Claude Code settings](https://code.claude.com/docs/en/settings)
+- Unlocks: [[Config formats: JSON, YAML, TOML, Markdown]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Config formats: JSON, YAML, TOML, Markdown":{t:"dark",md:`# Config formats: JSON, YAML, TOML, Markdown
+Tools read settings from text files in a few formats. JSON: strict, braces, what APIs speak. YAML: indentation, what CI and Docker Compose use. TOML: sections, what Python packaging uses. Markdown: prose with light structure, what agents and Obsidian read.
+**History.** JSON was named by Douglas Crockford in 2001; YAML 2001; Markdown by John Gruber in 2004; TOML by Tom Preston-Werner in 2013. Agents made Markdown the config format for instructions (AGENTS.md, SKILL.md) because it is readable by both people and models.
+**Try in five minutes.** Open .claude/settings.json (JSON) and .agents/skills/duckdb-sql/SKILL.md (Markdown with YAML frontmatter). Spot the three formats in one repo.
+- Docs: [JSON](https://www.json.org/json-en.html), [YAML](https://yaml.org/spec/1.2.2/), [TOML](https://toml.io), [Markdown](https://daringfireball.net/projects/markdown/)
+- Unlocks: [[AGENTS.md]], [[Agent Skills standard]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"localhost and ports":{t:"dark",md:`# localhost and ports
+localhost (127.0.0.1) is your own machine talking to itself over the network stack. A port is a numbered door; a dev server on port 8000 means open http://localhost:8000. Everything web starts here before it goes anywhere.
+**History.** The loopback address is in RFC 990 (1986) territory; TCP/IP itself became the ARPANET standard on 1 January 1983. Ports were assigned by hand by Jon Postel for years.
+**Try in five minutes.** python3 -m http.server 8000 in the game folder, open http://localhost:8000/game/ in a browser. Ctrl-C to stop.
+- Docs: [MDN: How the web works](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works)
+- Unlocks: [[HTTP and APIs]], [[Docker and containers]], [[MCP]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Git":{t:"dark",md:`# Git
+A time machine for a folder. Commit = named snapshot, branch = parallel line of work, merge = bring them together, revert = undo safely. Agents can produce a lot of change fast; git is what makes that safe.
+**History.** Linus Torvalds wrote git in April 2005 in about two weeks after the Linux kernel lost its previous tool. GitHub launched in 2008 and made it social; today most code on earth lives in git.
+**Try in five minutes.** git log --oneline | head, then change one line, git diff, git commit -am 'why', git revert HEAD.
+- Docs: [Git tutorial](https://git-scm.com/docs/gittutorial), [Oh Shit, Git!?!](https://ohshitgit.com), [Claude Code common workflows](https://code.claude.com/docs/en/common-workflows)
+- Unlocks: [[GitHub, pull requests, Pages]], [[Hook]], [[CI/CD and automation]]
+- Age: Dark Age · Level: Intern
+#tech #dark`},
+"Python":{t:"feudal",md:`# Python
+The general-purpose language of data, automation and AI tooling. Readable, batteries included, the language agents write most fluently. Use it for scripts, data, glue, and small services.
+**History.** Guido van Rossum released Python in 1991; Python 3 in 2008 broke compatibility and took a decade to win. It became the language of machine learning through NumPy, pandas and PyTorch, and of AI agents through their SDKs.
+**Try in five minutes.** python3 python/scores.py, then add one line that prints the worst run.
+- Docs: [Official tutorial](https://docs.python.org/3/tutorial/), [Exercism track](https://exercism.org/tracks/python), [uv](https://docs.astral.sh/uv/)
+- Unlocks: [[Python libraries: what they are for]], [[SQL and DuckDB]], [[Building and consuming APIs]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"Python libraries: what they are for":{t:"feudal",md:`# Python libraries: what they are for
+pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (talk to APIs), duckdb (SQL on files), pydantic (validate data), fastapi (build an API), typer/click (build a CLI), playwright (drive a browser), pytest (tests). Install with uv; import only what removes real work.
+**History.** NumPy 2006, pandas 2008 (Wes McKinney, at a hedge fund), requests 2011, pytest 2004 lineage, FastAPI 2018, pydantic 2017, Playwright 2020, DuckDB 2019. The stack is young; most of it postdates the iPhone.
+**Try in five minutes.** uv pip install pandas, then python3 -c "import pandas as pd; print(pd.read_csv('data/scores.csv').describe())".
+- Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html), [Requests](https://requests.readthedocs.io), [pytest](https://docs.pytest.org), [FastAPI](https://fastapi.tiangolo.com)
+- Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"SQL and DuckDB":{t:"feudal",md:`# SQL and DuckDB
+SQL asks questions of tables: select what, from where, filter, group, order. DuckDB runs it on CSV and Parquet files with no server, which is why the data hour uses it. Window functions (lag, row_number) are the step from junior to medior.
+**History.** SQL was designed at IBM in 1974 (as SEQUEL) and standardised in 1986. It has outlived every technology that promised to replace it. DuckDB (2019, CWI Amsterdam) brought analytics SQL to a single file.
+**Try in five minutes.** duckdb < sql/streaks.sql, then change limit 3 to limit 10 and read the lag() comment.
+- Docs: [DuckDB docs](https://duckdb.org/docs/), [SQLBolt](https://sqlbolt.com), [Mode SQL tutorial](https://mode.com/sql-tutorial/)
+- Unlocks: [[Data: files, schemas, warehouses]], [[Building and consuming APIs]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"HTML, CSS and JavaScript":{t:"feudal",md:`# HTML, CSS and JavaScript
+The three languages of a web page: structure, style, behaviour. A single HTML file can hold all three, which is why the game is one file. JavaScript is also the language of Node and most CLIs you install with npm.
+**History.** HTML 1993 (Berners-Lee), CSS 1996, JavaScript written by Brendan Eich in ten days in 1995. Node.js (2009) put JavaScript on servers; npm is now the largest package registry in the world.
+**Try in five minutes.** Open game/index.html in a text editor and in a browser side by side. Change the h1, reload.
+- Docs: [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Learn_web_development), [three.js (what the game uses)](https://threejs.org/docs/)
+- Unlocks: [[HTTP and APIs]], [[localhost and ports]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"Other languages and what they are for":{t:"feudal",md:`# Other languages and what they are for
+TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one binary. Rust: speed and safety, the new systems language. Java/Kotlin, C#: enterprise and Android. Swift: Apple. C/C++: everything underneath. Bash: gluing them. You do not learn them all; you learn to read them, and agents write them.
+**History.** C 1972, C++ 1985, Java 1995, C# 2000, Go 2009, Rust 2015 (1.0), Swift 2014, TypeScript 2012. Each language is a bet on what is expensive: programmer time (Python), machine time (Rust), or organisational scale (Java).
+**Try in five minutes.** Ask Claude: 'rewrite python/scores.py in Go, explain each line to a Python person'. Read it. Delete it.
+- Docs: [Stack Overflow developer survey](https://survey.stackoverflow.co), [Rust book](https://doc.rust-lang.org/book/), [Go tour](https://go.dev/tour/)
+- Unlocks: [[Docker and containers]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"Markdown and Obsidian":{t:"feudal",md:`# Markdown and Obsidian
+Markdown is prose with a little structure (#, -, **, [[links]]). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.
+**History.** Markdown 2004; GitHub-flavoured Markdown 2009 made it the format of READMEs; Obsidian 2020 made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
+**Try in five minutes.** Write vault/Grimoire/Me.md with three sentences and two [[links]]. Open the graph.
+- Docs: [Markdown guide](https://www.markdownguide.org), [Obsidian help](https://help.obsidian.md), [Mermaid](https://mermaid.js.org/intro/)
+- Unlocks: [[Claude and Obsidian]], [[AGENTS.md]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"Data: files, schemas, warehouses":{t:"feudal",md:`# Data: files, schemas, warehouses
+Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses (Snowflake, BigQuery, DuckDB locally). A schema is the contract: column names and types. Most data pain is schema drift, which is why AGENTS.md pins the columns of scores.csv.
+**History.** Relational databases: Codd 1970. Postgres 1986 (Berkeley). SQLite 2000, in every phone. Cloud warehouses (Redshift 2012, Snowflake 2014, BigQuery 2011) separated storage from compute. Parquet (2013) is the file format they all read.
+**Try in five minutes.** duckdb -c "copy 'data/scores.csv' to 'data/scores.parquet'" then query the parquet file. Same SQL, smaller file.
+- Docs: [Parquet](https://parquet.apache.org/docs/), [SQLite](https://www.sqlite.org/docs.html), [Postgres tutorial](https://www.postgresql.org/docs/current/tutorial.html)
+- Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
+- Age: Feudal Age · Level: Junior
+#tech #feudal`},
+"HTTP and APIs":{t:"castle",md:`# HTTP and APIs
+HTTP is request and response: a URL, a method (GET, POST), headers, a body, a status code (200, 404, 500). An API is an HTTP endpoint that returns data instead of a page, usually JSON. Every AI model you call is an HTTP API; MCP is a layer on top of the same idea.
+**History.** HTTP 0.9 in 1991, HTTP/1.1 in 1997, HTTP/2 in 2015. REST was named in Roy Fielding's 2000 dissertation. The OpenAI API (2020) made calling a model one POST request.
+**Try in five minutes.** curl -s https://api.github.com/repos/duckdb/duckdb | head -20. You just used an API.
+- Docs: [MDN HTTP overview](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview), [curl](https://curl.se/docs/manual.html), [Postman](https://learning.postman.com)
+- Unlocks: [[Building and consuming APIs]], [[MCP]], [[SSH and remote machines]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"Building and consuming APIs":{t:"castle",md:`# Building and consuming APIs
+Consuming: read the docs, get a key, make a request, parse JSON. Building: FastAPI turns a Python function into an endpoint in five lines. Keys are secrets: environment variables, never in git. This is the bridge between your data and every other system.
+**History.** SOAP (1998) was replaced by REST-with-JSON in the 2010s; GraphQL (2015) and gRPC (2016) added alternatives. Today the agent-facing version of an API is an MCP server.
+**Try in five minutes.** Ask Claude: 'wrap sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL.
+- Docs: [FastAPI tutorial](https://fastapi.tiangolo.com/tutorial/), [httpx](https://www.python-httpx.org), [Twelve-Factor config](https://12factor.net/config)
+- Unlocks: [[MCP]], [[Docker and containers]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"SSH and remote machines":{t:"castle",md:`# SSH and remote machines
+SSH is an encrypted terminal to another computer. ssh user@host gives you a shell on a server; the same key pair authenticates you to GitHub. Once you can SSH somewhere, everything in the Dark Age works there too, including running an agent on a remote box.
+**History.** SSH was written by Tatu Ylonen in Finland in 1995 after a password-sniffing attack on his university network; OpenSSH (1999) is what every Mac and Linux ships.
+**Try in five minutes.** ssh-keygen -t ed25519, then gh ssh-key add ~/.ssh/id_ed25519.pub, then ssh -T git@github.com.
+- Docs: [OpenSSH manual](https://www.openssh.com/manual.html), [GitHub: connecting with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
+- Unlocks: [[Cloud and servers]], [[Docker and containers]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"Docker and containers":{t:"castle",md:`# Docker and containers
+A container is a packaged process: your code, its dependencies, and a slice of an operating system, running the same on any machine. A Dockerfile is the recipe; an image is the result; a container is a running copy. It ends 'works on my machine'.
+**History.** Chroot 1979, Linux namespaces and cgroups 2002 to 2008, Docker 2013 (Solomon Hykes, dotCloud) made them usable, Kubernetes 2014 (Google) made them run in fleets. Most cloud software today runs in containers.
+**Try in five minutes.** Install Docker Desktop or OrbStack. docker run -it python:3.12 python -c 'print(1)'. You just ran Python in a box you did not install.
+- Docs: [Docker get started](https://docs.docker.com/get-started/), [OrbStack (lighter on Mac)](https://orbstack.dev), [Dev containers](https://containers.dev)
+- Unlocks: [[Cloud and servers]], [[CI/CD and automation]], [[Kubernetes and platforms]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"GitHub, pull requests, Pages":{t:"castle",md:`# GitHub, pull requests, Pages
+GitHub hosts git repositories and adds the social layer: issues, pull requests (proposed changes with review), Actions (CI), Pages (free static hosting). A PR is how professionals let others check work before it lands; it is also how you check an agent's work.
+**History.** GitHub 2008, acquired by Microsoft 2018, over 100 million developers by 2023. Pull requests (2008) turned code review into a habit; Copilot (2021) put a model in the editor; Copilot and Codex agents (2025) now open PRs themselves.
+**Try in five minutes.** gh repo create, gh pr create after a branch, then enable Pages. The 22:30 workstream.
+- Docs: [GitHub docs](https://docs.github.com/en), [GitHub CLI](https://cli.github.com/manual/), [Pages quickstart](https://docs.github.com/en/pages/quickstart)
+- Unlocks: [[CI/CD and automation]], [[Cloud and servers]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"CI/CD and automation":{t:"castle",md:`# CI/CD and automation
+Continuous integration: every push runs the tests and checks in a clean machine. Continuous delivery: passing pushes deploy. GitHub Actions is a YAML file in .github/workflows/. This is where headless agents also live: a PR review bot is claude -p in a workflow.
+**History.** CruiseControl 2001, Jenkins 2011, Travis 2011, GitHub Actions 2019. CI made 'it works' a machine's opinion instead of a person's.
+**Try in five minutes.** Ask Claude: 'add a GitHub Actions workflow that runs python3 python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab.
+- Docs: [GitHub Actions quickstart](https://docs.github.com/en/actions/quickstart), [Claude Code GitHub Actions](https://code.claude.com/docs/en/github-actions)
+- Unlocks: [[Headless agents and scheduling]], [[Tests and evals]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"Cloud and servers":{t:"castle",md:`# Cloud and servers
+A server is a computer that is always on. The cloud rents you one by the hour (AWS 2006, Azure 2010, GCP 2008) or runs your code without one (serverless: Lambda 2014, Vercel, Cloudflare Workers). For most people's first project, a static host (GitHub Pages) or a small VPS (Hetzner, Fly.io) is enough.
+**History.** AWS launched S3 and EC2 in 2006; renting compute by the hour changed who could start a company. Serverless (2014) removed the server from view; today agents can provision all of it with one prompt, which is why understanding the bill matters.
+**Try in five minutes.** Deploy the game to GitHub Pages (free). Later: fly launch on the FastAPI endpoint.
+- Docs: [AWS getting started](https://aws.amazon.com/getting-started/), [Fly.io docs](https://fly.io/docs/), [Cloudflare Pages](https://developers.cloudflare.com/pages/)
+- Unlocks: [[Kubernetes and platforms]], [[Cost, tokens and model choice]]
+- Age: Castle Age · Level: Medior
+#tech #castle`},
+"LLM versus harness":{t:"imperial",md:`# LLM versus harness
+The LLM is the model: text in, text out, no memory, no hands. The harness is everything around it: the loop that calls it repeatedly, the tools it can run (bash, edit file), the files it reads first (AGENTS.md), permissions, hooks, memory. Claude Code, Codex CLI, Cursor are harnesses. Most of the difference in results comes from the harness and what you put in it, not from the model.
+**History.** Transformer 2017 (Google, 'Attention is all you need'). GPT-3 2020. ChatGPT November 2022. Claude 2023. Agentic coding harnesses (Claude Code, Codex CLI, Cursor agent mode) 2025. MCP November 2024. AGENTS.md August 2025.
+**Try in five minutes.** Run claude in the template folder and ask 'what files did you read before answering?'. That list is the harness.
+- Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works)
+- Unlocks: [[Context window and prompts]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Context window and prompts":{t:"imperial",md:`# Context window and prompts
+The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file.
+**History.** GPT-3 had 2k tokens (2020); 100k+ arrived in 2023; models with a million are now common. Bigger windows did not remove the need for good instructions; they moved it to what you load.
+**Try in five minutes.** Give the same task twice: 'make it cooler' and 'add a purple cloak, keep stats, touch nothing else'. Compare the diff.
+- Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview), [Claude Code best practices](https://code.claude.com/docs/en/best-practices)
+- Unlocks: [[AGENTS.md]], [[Agent Skills standard]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents":{t:"imperial",md:`# Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
+Your standing instructions, per repo and per machine, in files the agent reads before it starts. AGENTS.md for every agent; CLAUDE.md importing it for Claude; .claude/settings.json for permissions and hooks; ~/.claude/ for personal defaults. This is your operating model, versioned.
+**History.** Cursor rules (2023), CLAUDE.md (2025), AGENTS.md (August 2025, now Linux Foundation). In one year instruction files went from a hack to a standard read by 30+ tools.
+**Try in five minutes.** Edit AGENTS.md, add 'always end with one line: what changed'. Next session, check it does.
+- Docs: [agents.md](https://agents.md), [Claude Code memory](https://code.claude.com/docs/en/memory), [Settings](https://code.claude.com/docs/en/settings)
+- Unlocks: [[Agent Skills standard]], [[Hook]], [[MCP]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Subagents and multi-agent":{t:"imperial",md:`# Subagents and multi-agent
+A subagent is a second model instance with its own instructions and context, called by the first for a bounded job (scorekeeper). Teams of agents split large work; the risk is coordination cost and compounding errors, so keep each one's job small and testable.
+**History.** AutoGPT (2023) showed loops of agents; they mostly wandered. 2025 harnesses added typed subagents with their own tools and permissions, which is what made delegation reliable.
+**Try in five minutes.** The 23:00 workstream: create the scorekeeper, run it, read its note.
+- Docs: [Subagents](https://code.claude.com/docs/en/sub-agents)
+- Unlocks: [[Headless agents and scheduling]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Headless agents and scheduling":{t:"imperial",md:`# Headless agents and scheduling
+claude -p runs the agent as a command: prompt in, result out, no chat. Put it in launchd, cron, a GitHub Action or a webhook and you have automation that reasons. This is where the leverage is for a business: one boring job, done on a timer, forever.
+**History.** Cron is from 1975. The new part is that the scheduled job can now read a mailbox, decide, and write a note. Programmatic agents (2025) are the successor of the scheduled script.
+**Try in five minutes.** The 23:00 workstream: schedule the scorekeeper for 08:00.
+- Docs: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless), [launchd tutorial](https://www.launchd.info)
+- Unlocks: [[Tests and evals]], [[Cost, tokens and model choice]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Tests and evals":{t:"imperial",md:`# Tests and evals
+A test runs code and checks the result. An eval does the same for an agent: a set of tasks with known good answers, run after every change to AGENTS.md or a skill. Without tests, an agent will happily make things worse faster.
+**History.** JUnit 1997, pytest 2004, property-based testing 1999 (QuickCheck). Model evals became an engineering discipline around 2023; today teams keep an eval set next to their instruction files.
+**Try in five minutes.** Ask Claude: 'write pytest tests for python/scores.py and run them'. Then break scores.py and watch them fail.
+- Docs: [pytest](https://docs.pytest.org), [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests)
+- Unlocks: [[CI/CD and automation]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Security and permissions":{t:"imperial",md:`# Security and permissions
+Agents run commands. Give them the least they need: a folder, a permission list, hooks that veto dangerous commands, secrets in the environment, and a git history to undo. Prompt injection (instructions hidden in data the agent reads) is the new phishing.
+**History.** Least privilege dates to Saltzer and Schroeder, 1975. It applies unchanged to agents; the harness enforces it with permissions and hooks.
+**Try in five minutes.** Open .claude/settings.json; add a PreToolUse hook that blocks 'rm -rf'. Test it.
+- Docs: [Claude Code permissions](https://code.claude.com/docs/en/permissions), [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+- Unlocks: [[Cost, tokens and model choice]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Cost, tokens and model choice":{t:"imperial",md:`# Cost, tokens and model choice
+You pay per token in and out. A big context and a strong model cost more per call; a scheduled job that runs hourly multiplies it. Pick the smallest model that passes your evals, cache what repeats, and read the bill weekly.
+**History.** Per-token pricing arrived with the GPT-3 API (2020). Prices fell roughly ten-fold per year for equal capability; usage rose faster.
+**Try in five minutes.** In Claude Code, /cost after a session. Write the number in your vault.
+- Docs: [Claude Code costs](https://code.claude.com/docs/en/costs), [Claude pricing](https://claude.com/pricing)
+- Unlocks: [[The future perspective]]
+- Age: Imperial Age · Level: Senior
+#tech #imperial`},
+"Kubernetes and platforms":{t:"future",md:`# Kubernetes and platforms
+Kubernetes runs containers across many machines: scheduling, scaling, self-healing. Most knowledge workers never need to touch it; they need to know it is why 'the cloud' can scale, and that agents can now write its YAML for them.
+**History.** Google's Borg (2003) became Kubernetes (2014). By 2020 it was the default substrate of cloud software; by 2025 platform engineering teams hid it behind internal tools.
+**Try in five minutes.** Read one Deployment YAML and identify: image, replicas, port.
+- Docs: [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/)
+- Unlocks: [[The future perspective]]
+- Age: Future Age · Level: Expert
+#tech #future`},
+"The future perspective":{t:"future",md:`# The future perspective
+Every age here shortened the distance between an idea and a working thing: the terminal (hours), languages (days), the web (weeks to ship), the cloud (minutes to deploy), agents (a sentence). What does not change: someone has to know what they want, check the result, and own the consequences. For a knowledge worker: learn to specify, verify and version. For a founder: your moat moves from building to judgement, data and distribution. Expect agents to run inside every tool, models on the laptop, memory as files you own, and audits of what agents did as a routine compliance question.
+**History.** 1969 terminal, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.
+**Try in five minutes.** Write vault/Grimoire/Bets.md: three things you think will be true in two years, dated. Reread in two years.
+- Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [Agentic AI Foundation](https://agents.md)
+- Age: Future Age · Level: Expert
+#tech #future`},
+"Tech tree":{t:"future",md:`# Tech tree
+The roadmap from intern to expert, Age of Empires style.
+**Dark Age (Intern).** The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier. [[Unix and the terminal]], [[Bash and shell scripts]], [[Files, folders and paths]], [[Dotfiles]], [[Config formats: JSON, YAML, TOML, Markdown]], [[localhost and ports]], [[Git]]
+**Feudal Age (Junior).** Languages and data. You can now make the machine do a specific thing and keep the result. [[Python]], [[Python libraries: what they are for]], [[SQL and DuckDB]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Markdown and Obsidian]], [[Data: files, schemas, warehouses]]
+**Castle Age (Medior).** Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. [[HTTP and APIs]], [[Building and consuming APIs]], [[SSH and remote machines]], [[Docker and containers]], [[GitHub, pull requests, Pages]], [[CI/CD and automation]], [[Cloud and servers]]
+**Imperial Age (Senior).** The AI harness. You stop typing code and start directing agents, with guardrails you wrote. [[LLM versus harness]], [[Context window and prompts]], [[Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents]], [[AGENTS.md]], [[Agent Skills standard]], [[Hook]], [[MCP]], [[Subagents and multi-agent]], [[Headless agents and scheduling]], [[Tests and evals]], [[Security and permissions]], [[Cost, tokens and model choice]]
+**Future Age (Expert).** What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. [[Kubernetes and platforms]], [[Claude and Obsidian]], [[The future perspective]]
+- See also: [[Resources]], [[Template repo]], [[Tonight]]
+#overview`}
