@@ -33,7 +33,7 @@ from grimoire.palette import RICH_THEME
 from grimoire.personas import PERSONAS, get_persona
 from grimoire.providers import PROVIDERS, ProviderMissing, ask
 from grimoire.quests import BADGES, level_for, new_badges, quest_for, run_quest, xp_for
-from grimoire.state import CheckRecord, State
+from grimoire.state import CheckRecord, LogEntry, State
 from grimoire.themes import THEMES, load_theme
 from grimoire.toolbelt import TOOLS, get_tool, install
 from grimoire.vault import Vault
@@ -397,14 +397,28 @@ def export(ctx: Ctx) -> None:
 @pass_ctx
 def import_(ctx: Ctx, code: str) -> None:
     """Take a progress code from the game and update state and vault."""
+    before = {(w, n) for w, lst in ctx.state.done_w.items() for n in lst}
     try:
         ctx.state.merge_code(code)
     except ValueError as e:
         _fail(str(e))
+    # A claim in the game is self-report, so it earns half the XP a verified
+    # check does (ADR 0004); `grimoire check` can top it up later.
+    half = xp_for(ctx.cfg.learner.difficulty) // 2
+    fresh = sorted(
+        {(w, n) for w, lst in ctx.state.done_w.items() for n in lst} - before
+    )
+    for w, n in fresh:
+        ctx.state.log.append(
+            LogEntry(world=w, n=n, note="done in the game, imported", xp=half)
+        )
+    ctx.state.xp += half * len(fresh)
+    new_badges(ctx.state, ctx.cfg)
     ctx.save()
     ctx.vault.build(ctx.persona)
     console.print(
-        f"[ok]imported[/]: {ctx.state.total_done()}/32 stops, {ctx.state.xp} XP"
+        f"[ok]imported[/]: {len(fresh)} new stops, {ctx.state.total_done()}/32 "
+        f"in total, {ctx.state.xp} XP"
     )
 
 

@@ -381,11 +381,12 @@ class Vault:
                 if self.exists(ws.name):
                     continue
                 e = logged.get((world, ws.n))
-                bullets = (
-                    [f"done at {e.at[11:16]}", e.note or "built it"]
-                    if e
-                    else ["not done yet; run `grimoire check` when it is"]
-                )
+                if e:
+                    bullets = [f"done at {e.at[11:16]}", e.note or "built it"]
+                elif self.state.is_done(world, ws.n):
+                    bullets = ["done in the game, imported with `grimoire import`"]
+                else:
+                    bullets = ["not done yet; run `grimoire check` when it is"]
                 out.append(
                     self.upsert_dated(
                         ws.name,
