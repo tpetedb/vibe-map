@@ -9,3 +9,5 @@ __pycache__/
 tests/out/
 node_modules/
 .env
+# symlinks that `just setup` creates so Claude Code sees .agents/skills
+.claude/skills/

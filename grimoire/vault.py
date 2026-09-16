@@ -104,11 +104,17 @@ class Vault:
         return self.path(title).exists()
 
     def write(self, title: str, body: str, *, tags: list[str]) -> Path:
-        """Write a whole note (frontmatter, H1, body). Overwrites."""
+        """Write a whole note (frontmatter, H1, body). Overwrites.
+
+        The frontmatter date is the day the note was first written and is
+        kept on rewrite, so a rebuild changes only notes whose content moved
+        instead of stamping a hundred files with today.
+        """
         self.dir.mkdir(parents=True, exist_ok=True)
         p = self.path(title)
+        date = _existing_date(p)
         p.write_text(
-            frontmatter(title, tags) + f"# {title}\n\n{body.rstrip()}\n",
+            frontmatter(title, tags, date) + f"# {title}\n\n{body.rstrip()}\n",
             encoding="utf-8",
         )
         return p
@@ -460,6 +466,21 @@ class Vault:
             t for t, n in inbound.items() if n == 0 and t != "Tonight"
         )
         return report
+
+
+def _existing_date(p: Path) -> str | None:
+    """The `date:` of a note's frontmatter, if the note exists and has one."""
+    if not p.exists():
+        return None
+    with p.open(encoding="utf-8") as fh:
+        head = [next(fh, "") for _ in range(6)]
+    if not head or head[0].strip() != "---":
+        return None
+    for line in head[1:]:
+        if line.startswith("date:"):
+            value = line.split(":", 1)[1].strip()
+            return value if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) else None
+    return None
 
 
 def _section(p: Path, heading: str) -> str:
