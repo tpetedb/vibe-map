@@ -1,0 +1,66 @@
+/* grimoire: Tom's palette on OLED black, for the Grimoire vault.
+   Enabled by .obsidian/appearance.json (enabledCssSnippets). Base hues come
+   from the toolbox palette; the bright variants are for text on black.
+   The accent colour is set in appearance.json (accentColor), not here, so
+   Settings, Appearance still changes it. */
+
+.theme-dark {
+  /* OLED black: the default theme derives its backgrounds from these */
+  --color-base-00: #000000;
+  --color-base-10: #0a0a0a;
+  --color-base-20: #1a1a1a;
+  --background-primary: #000000;
+  --background-primary-alt: #0a0a0a;
+
+  /* the five hues, hex and rgb triplet; built-in callouts read the triplets */
+  --color-red: #D32F2F;
+  --color-red-rgb: 211, 47, 47;
+  --color-orange: #FF8C1A;
+  --color-orange-rgb: 255, 140, 26;
+  --color-yellow: #FFBF00;
+  --color-yellow-rgb: 255, 191, 0;
+  --color-green: #00A86B;
+  --color-green-rgb: 0, 168, 107;
+  --color-blue: #0067A5;
+  --color-blue-rgb: 0, 103, 165;
+}
+
+body {
+  /* code font: JetBrains Mono when installed, else the system monospace */
+  --font-monospace-theme: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+
+/* callouts: blue organises, green is done, yellow asks, red stops */
+.callout[data-callout="note"],
+.callout[data-callout="info"],
+.callout[data-callout="todo"],
+.callout[data-callout="abstract"] {
+  --callout-color: 0, 103, 165;
+  --callout-title-color: #0088CC;
+}
+
+.callout[data-callout="tip"],
+.callout[data-callout="success"] {
+  --callout-color: 0, 168, 107;
+  --callout-title-color: #00D084;
+}
+
+.callout[data-callout="question"],
+.callout[data-callout="warning"] {
+  --callout-color: 255, 191, 0;
+  --callout-title-color: #FFD500;
+}
+
+.callout[data-callout="danger"],
+.callout[data-callout="failure"],
+.callout[data-callout="bug"] {
+  --callout-color: 211, 47, 47;
+  --callout-title-color: #F04923;
+}
+
+/* the tag line at the bottom of a note matches the graph colour groups */
+.tag[href="#workstream"] { color: #00D084; background-color: #00A86B22; }
+.tag[href="#people"]     { color: #0088CC; background-color: #0067A522; }
+.tag[href="#tech"]       { color: #FFD500; background-color: #FFBF0022; }
+.tag[href="#decision"]   { color: #F04923; background-color: #D32F2F22; }
+.tag[href="#concept"]    { color: #FFA94D; background-color: #FF8C1A22; }
