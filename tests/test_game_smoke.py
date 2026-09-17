@@ -6,7 +6,7 @@ zero errors. Screenshots land in tests/out/ so a human can look at them.
 
 from __future__ import annotations
 
-from tests.conftest import GamePage, encode_progress
+from tests.conftest import WAIT_MS, GamePage, encode_progress
 
 
 def test_game_loads_without_errors(game: GamePage) -> None:
@@ -225,7 +225,13 @@ def test_the_tech_tree_says_it_scrolls(game: GamePage) -> None:
     assert game.page.locator("#vtree .treenav button").count() == 2
     before = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     game.page.click("#vtree .treenav button:has-text('Later')")
-    game.still("document.getElementById('vtree').scrollLeft")
+    # A smooth scroll starts a few frames after the click on a slow runner;
+    # wait for movement rather than for stillness, which can be the start.
+    game.page.wait_for_function(
+        "b => document.getElementById('vtree').scrollLeft > b",
+        arg=before,
+        timeout=WAIT_MS,
+    )
     after = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     assert after > before, (before, after)
     game.assert_clean()
