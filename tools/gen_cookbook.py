@@ -103,7 +103,8 @@ def render() -> str:
         lines += [f"**Your game (workstream 1).** {p.game_idea}", ""]
         ds = p.dataset
         lines += [
-            f"**Your dataset (workstream 3).** `data/examples/{ds.filename}`, "
+            "**Your dataset (workstream 3).** "
+            f"`workspace/data/examples/{ds.filename}`, "
             f"columns `{', '.join(ds.columns)}`. Write it with "
             f"`uv run vibe persona {p.id}`. Question to answer: {ds.question}",
             "",
