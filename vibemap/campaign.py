@@ -86,6 +86,11 @@ def evenings() -> dict[str, Evening]:
 
 
 @cache
+def artifacts() -> list[dict[str, Any]]:
+    """The props on the island that teach one concept each."""
+    return list(raw().get("artifacts", []))
+
+
 def mentors() -> list[dict[str, Any]]:
     return list(raw()["mentors"])
 

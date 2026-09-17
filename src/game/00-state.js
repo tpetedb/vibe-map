@@ -44,11 +44,11 @@ const SAY_PLAIN={
   fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
 };
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
-let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null};
+let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!Array.isArray(S.artifacts))S.artifacts=[];S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just

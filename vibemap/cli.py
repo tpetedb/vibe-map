@@ -115,6 +115,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
         f"Level [ok]{label}[/] ({age} age) · [xp]{st.xp} XP[/]"
         + (f" · {nxt - st.xp} to the next level" if nxt else " · top level")
         + f" · {st.total_done()}/32 stops"
+        + f" · {len(st.artifacts)}/{len(campaign.artifacts())} artifacts"
     )
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:

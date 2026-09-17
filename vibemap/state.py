@@ -64,6 +64,7 @@ class State(BaseModel):
     badges: list[str] = Field(default_factory=list)
     checks: dict[str, CheckRecord] = Field(default_factory=dict)
     roadmap_done: list[str] = Field(default_factory=list)
+    artifacts: list[str] = Field(default_factory=list)
 
     @property
     def done(self) -> list[int]:
@@ -119,6 +120,7 @@ class State(BaseModel):
             "doneW": self.done_w,
             "path": self.path,
             "xp": self.xp,
+            "artifacts": list(self.artifacts),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
         return base64.urlsafe_b64encode(raw).decode().rstrip("=")
@@ -146,6 +148,9 @@ class State(BaseModel):
         )
         if isinstance(payload.get("xp"), int):
             self.xp = max(self.xp, payload["xp"])
+        for a in payload.get("artifacts") or []:
+            if str(a) not in self.artifacts:
+                self.artifacts.append(str(a))
         return payload
 
 

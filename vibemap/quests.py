@@ -485,6 +485,7 @@ BADGES: dict[str, str] = {
     "streak-3": "Streak: three stops in one day",
     "linked": "Linked: twenty wikilinks in the vault",
     "shipped": "Shipped: GitHub Pages is live",
+    "collector": "Collector: found every artifact on the island",
 }
 
 
@@ -506,6 +507,8 @@ def new_badges(state: State, cfg: Config) -> list[str]:
     rec = state.checks.get("campus:7")
     if rec and rec.ok and any("live" in p for p in rec.passed):
         earned.append("shipped")
+    if state.artifacts and len(state.artifacts) >= len(campaign.artifacts()):
+        earned.append("collector")
     fresh = [b for b in earned if b not in state.badges]
     state.badges.extend(fresh)
     return fresh

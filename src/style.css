@@ -72,7 +72,7 @@ h3 .ic{width:13px;height:13px;margin-right:6px;vertical-align:-2px}
 /* Phones: the button pill is wider than the screen minus the name, so the
    name takes its own row and the KPIs drop below the second row. Must come
    after the #kpis rule above or the cascade keeps top:54px. */
-@media (max-width:480px){#hud-name{flex-basis:100%}#kpis{top:100px}}
+@media (max-width:480px){#hud-name{flex-basis:100%}#kpis{top:100px;flex-wrap:wrap;right:12px}}
 /* Future-retro, kept subtle: 4 percent scanlines on the title box only, never on body text elsewhere. */
 #title .box{position:relative;overflow:hidden}
 #title .box::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='2'%3E%3Crect y='1' width='1' height='1' fill='%23000' fill-opacity='.04'/%3E%3C/svg%3E");background-size:1px 2px}
@@ -135,6 +135,8 @@ details.brief p{margin-top:8px}
 .callout.why{border-color:rgba(0,136,204,.4);background:rgba(0,136,204,.08)}.callout.why b{color:var(--blue-bright)}
 .callout.try{border-color:rgba(255,213,0,.4);background:rgba(255,213,0,.08)}.callout.try b{color:var(--gold)}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
+/* The artifact demos print like a terminal: mono, one line per step. */
+.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
 .mascot{display:flex;gap:16px;align-items:center;margin-top:8px}
 .mascot svg{width:96px;height:96px;flex:0 0 96px;background:var(--panel2);border-radius:18px;border:1px solid var(--line)}
 .mascot h3{font-size:16px;text-transform:none;letter-spacing:-.01em;color:var(--ink);margin:0 0 2px;font-family:Sora,sans-serif}

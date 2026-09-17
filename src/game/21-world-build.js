@@ -75,6 +75,7 @@ function buildWorld(id){
   if(ex("embers")){const g=new T.BufferGeometry();const v=[];for(let i=0;i<250;i++)v.push(-9+(Math.random()-.5)*10,Math.random()*16,-14+(Math.random()-.5)*10);g.setAttribute("position",new T.Float32BufferAttribute(v,3));const pts=new T.Points(g,new T.PointsMaterial({color:"#FF7A1A",size:.22,transparent:true,opacity:.9}));scene.add(pts);props.embers=pts}
   if(ex("aurora")){const ag=new T.PlaneGeometry(90,14,40,4);const am=new T.MeshBasicMaterial({color:"#00D084",transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending});const au=new T.Mesh(ag,am);au.position.set(0,26,-45);scene.add(au);props.aurora=au;props.auroraBase=ag.attributes.position.array.slice()}
   // plots
+  placeArtifacts();
   PLOT_POS.forEach((p,i)=>{const g=new T.Group();g.position.copy(p);const ring=new T.Mesh(new T.TorusGeometry(2,.07,6,32),new T.MeshBasicMaterial({color:"#ffffff",transparent:true,opacity:.7}));ring.rotation.x=Math.PI/2;ring.position.y=.06;g.add(ring);
     const post=box(.1,1.6,.1,"#7B5128",0,.8,0);const sign=box(1.3,.6,.1,"#FFF3C2",0,1.6,0);g.add(post,sign);const lb=label(CH[i].h,.55);lb.position.y=2.3;g.add(lb);
     [[-1.6,-1.6],[1.6,-1.6]].forEach(([x,z])=>g.add(box(.08,.6,.08,"#7B5128",x,.3,z)));g.add(box(3.3,.06,.06,"#7B5128",0,.55,-1.6));g.userData={ring,post,sign,lb};scene.add(g);plots.push(g)});

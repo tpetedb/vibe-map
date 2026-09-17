@@ -154,6 +154,7 @@ class Vault:
             self._write_evenings(),
             self._write_map(),
             self._write_path(),
+            self._write_artifacts(),
             self._write_field(persona),
             self._write_cookbook(persona),
             self._write_tech_tree(),
@@ -208,8 +209,8 @@ class Vault:
             hubs += " · Obsidian: [[Obsidian features]]"
         lines += [
             "",
-            "Map: [[Map]] · Mentors: [[Your path]] · Your field: [[Your field]] · "
-            + hubs,
+            "Map: [[Map]] · Mentors: [[Your path]] · Artifacts: [[Artifacts]] · "
+            "Your field: [[Your field]] · " + hubs,
             "",
             "## Build log",
             build_log.strip() or "- (the agent adds one line per session here)",
@@ -273,6 +274,25 @@ class Vault:
             "Back to [[Tonight]] · [[Your path]]\n\n#overview"
         )
         return [self.write("Map", body, tags=["overview"])]
+
+    def _write_artifacts(self) -> list[Path]:
+        """One note listing the island artifacts and what each teaches."""
+        found = set(self.state.artifacts)
+        body = [
+            "Things on the island that explain one idea each. Walk up to the "
+            "yellow ring and press Inspect; a found one turns green. The CLI "
+            "learns about them through the progress code.",
+            "",
+        ]
+        for a in campaign.artifacts():
+            mark = "found" if a["id"] in found else "not yet"
+            links = ", ".join(f"[[{t}]]" for t in a["links"])
+            body.append(
+                f"- {mark}: **{a['name']}** ({a['prop']}): {a['concept']}. "
+                f"{a['what']} See {links}."
+            )
+        body += ["", "Back to [[Tonight]]", "", "#concept"]
+        return [self.write("Artifacts", "\n".join(body), tags=["concept"])]
 
     def _write_path(self) -> list[Path]:
         out = []

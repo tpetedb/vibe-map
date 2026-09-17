@@ -1047,5 +1047,189 @@
    ],
    "ask": "So this one is free and it reads my rules too?"
   }
+ ],
+ "artifacts": [
+  {
+   "id": "cafe",
+   "name": "The cafe",
+   "prop": "the terrace of the Hospitality Hub",
+   "world": "campus",
+   "pos": [
+    3.2,
+    3.4
+   ],
+   "r": 2.3,
+   "concept": "client, server, protocol",
+   "what": "You are the client, Rolinda is the server, the menu is the protocol. You send a request; she sends a response with a status code and a body. Every API on the internet is this cafe with more tables.",
+   "rolinda": "You asked for a coffee and got a coffee. What did you get when you asked for something that is not on the menu?",
+   "links": [
+    "HTTP and APIs",
+    "Building and consuming APIs"
+   ]
+  },
+  {
+   "id": "fountain",
+   "name": "The fountain",
+   "prop": "the fountain by the lake",
+   "world": "campus",
+   "pos": [
+    -4,
+    4
+   ],
+   "r": 2.3,
+   "concept": "a cache",
+   "what": "The first cup takes a walk to the well. The fountain keeps a copy, so the second cup is instant. A cache is a remembered answer: fast, cheap, and wrong once the world moves on. Claude's prompt cache does the same for the start of your prompt.",
+   "rolinda": "The second cup was instant. How does the fountain know when the water in it is old?",
+   "links": [
+    "HTTP and APIs",
+    "Context window and prompts",
+    "Cost, tokens and model choice"
+   ]
+  },
+  {
+   "id": "well",
+   "name": "The well",
+   "prop": "the stone well",
+   "world": "campus",
+   "pos": [
+    -3,
+    -4
+   ],
+   "r": 1.9,
+   "concept": "a database",
+   "what": "Pulling a bucket is a query. Without a rope marked in metres you go down the whole well; an index is that rope. Two buckets at once is a transaction: both come up, or neither.",
+   "rolinda": "Why did the second pull take four milliseconds when the first took most of a second?",
+   "links": [
+    "SQL and DuckDB",
+    "Data - files, schemas, warehouses"
+   ]
+  },
+  {
+   "id": "lighthouse",
+   "name": "The lighthouse",
+   "prop": "the lighthouse on the point",
+   "world": "campus",
+   "pos": [
+    19,
+    5
+   ],
+   "r": 2.9,
+   "concept": "DNS, names to addresses",
+   "what": "Ships know the harbour by name; packets need a number. The lighthouse is the resolver: it turns tpetedb.github.io into an address and remembers the answer for a while. It never carries you anywhere.",
+   "rolinda": "The lighthouse pointed at the harbour. Who told the lighthouse where the harbour is?",
+   "links": [
+    "localhost and ports",
+    "HTTP and APIs"
+   ]
+  },
+  {
+   "id": "dock",
+   "name": "The dock",
+   "prop": "the harbour",
+   "world": "campus",
+   "pos": [
+    15,
+    -8
+   ],
+   "r": 2.7,
+   "concept": "containers and deployment",
+   "what": "A crate packed here opens the same on every island: the code, its runtime and its libraries in one box. Build packs it, push ships it, run unloads it. That is why it works on the other machine too.",
+   "rolinda": "The crate ran on the other island without a single change. What exactly was in it?",
+   "links": [
+    "Docker and containers",
+    "CI-CD and automation"
+   ]
+  },
+  {
+   "id": "windmill",
+   "name": "The windmill",
+   "prop": "the windmill on the hill",
+   "world": "campus",
+   "pos": [
+    11,
+    14.5
+   ],
+   "r": 2.7,
+   "concept": "schedules and cron",
+   "what": "The mill turns without you. A schedule is five fields (minute, hour, day, month, weekday) and a command; a hook is the same command fired by an event instead of a clock. Both are how agents work while you sleep.",
+   "rolinda": "It turned at nine on Monday. What happens if nobody is there to see it fail?",
+   "links": [
+    "Headless agents and scheduling",
+    "CI-CD and automation"
+   ]
+  },
+  {
+   "id": "balloon",
+   "name": "The balloon",
+   "prop": "the hot-air balloon",
+   "world": "campus",
+   "pos": [
+    -15,
+    11
+   ],
+   "r": 2.7,
+   "concept": "the cloud, rented by the hour",
+   "what": "The cloud is a computer you rent and never see. The meter runs while the balloon is up, whether you look at it or not; region, size, storage and traffic are four meters, not one. Landing it is the only way to stop paying.",
+   "rolinda": "You rented it for an hour and left it up for a month. Who got the bill?",
+   "links": [
+    "Cloud and servers",
+    "Cost, tokens and model choice"
+   ]
+  },
+  {
+   "id": "mountain",
+   "name": "The mountain",
+   "prop": "the mountain in the north",
+   "world": "campus",
+   "pos": [
+    -9,
+    -14
+   ],
+   "r": 7.6,
+   "concept": "the stack, layer by layer",
+   "what": "Hardware at the foot, then the operating system, the runtime, the libraries, your app, and the agent at the summit reading and writing all of it. Every layer stands on the one below; a bug can live on any of them.",
+   "rolinda": "The app said it crashed. Which of the six layers actually did?",
+   "links": [
+    "Unix and the terminal",
+    "Python",
+    "Python libraries - what they are for"
+   ]
+  },
+  {
+   "id": "stall",
+   "name": "The market stall",
+   "prop": "the stall by the Hub",
+   "world": "campus",
+   "pos": [
+    4.5,
+    2
+   ],
+   "r": 1.6,
+   "concept": "an API and its documentation",
+   "what": "The menu on the stall is the API: what you may ask for, in which words, and what comes back. Order without reading it and you get a 400. Show your key and you get the good stuff.",
+   "rolinda": "You ordered with the wrong words and got an error. Was that the stall's fault or yours?",
+   "links": [
+    "Building and consuming APIs",
+    "Security and permissions"
+   ]
+  },
+  {
+   "id": "bridge",
+   "name": "The bridge",
+   "prop": "the bridge over the river",
+   "world": "campus",
+   "pos": [
+    -11,
+    3.5
+   ],
+   "r": 2.3,
+   "concept": "an integration, MCP",
+   "what": "On the other bank lives a tool the agent does not have. The bridge has a rulebook: first ask what is over there, then call it by name with the arguments it expects. That rulebook is MCP, and every connector is one more bridge.",
+   "rolinda": "The agent found three tools on the other side. Who decides which of them it may use?",
+   "links": [
+    "MCP (Model Context Protocol)",
+    "Security and permissions"
+   ]
+  }
  ]
 }
