@@ -333,6 +333,43 @@ def vault_log(ctx: Ctx, line: str) -> None:
     console.print("[ok]logged[/]")
 
 
+@vault.command("feature")
+@click.argument("feature_id", required=False)
+@click.option("--all", "everything", is_flag=True, help="bootstrap every feature")
+@pass_ctx
+def vault_feature(ctx: Ctx, feature_id: str | None, everything: bool) -> None:
+    """List Obsidian features, or bootstrap one (or all) into the vault.
+
+    Each feature gets a note with the facts, the syntax and a five-minute
+    try from the official help; canvases, bases, templates, slides and
+    snippets also get a working example file.
+    """
+    from vibemap import obsidian
+
+    if feature_id is None and not everything:
+        t = Table(box=None, header_style="path")
+        t.add_column("id")
+        t.add_column("feature")
+        t.add_column("kind", style="muted")
+        for f in obsidian.features().values():
+            t.add_row(f.id, f.name, f.kind)
+        console.print(t)
+        console.print("[muted]docs/OBSIDIAN.md has the table with the tries.[/]")
+        return
+    ids = list(obsidian.features()) if everything else [feature_id]
+    try:
+        titles = obsidian.bootstrap(ctx.vault.dir, ids, write=ctx.vault.write)
+    except ValueError as e:
+        _fail(str(e))
+    ctx.vault.add_build_log(
+        f"[[Obsidian features]]: {len(titles)} feature note(s) bootstrapped"
+    )
+    console.print(
+        f"[ok]{len(titles)} feature note(s)[/] under vault/{ctx.cfg.vault.folder}/, "
+        "hub [[Obsidian features]]. Open the vault and follow the tries."
+    )
+
+
 @vault.command("method")
 @click.argument("method_id", required=False)
 @pass_ctx

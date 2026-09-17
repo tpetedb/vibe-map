@@ -202,10 +202,14 @@ class Vault:
                 )
         else:
             lines.append("- Nothing yet. Walk to the 18:00 signpost.")
+        hubs = "Resources: [[Resources]] · Tree: [[Tech tree]]"
+        # Bootstrapped hubs (features, methods) stay reachable across rebuilds.
+        if self.path("Obsidian features").exists():
+            hubs += " · Obsidian: [[Obsidian features]]"
         lines += [
             "",
             "Map: [[Map]] · Mentors: [[Your path]] · Your field: [[Your field]] · "
-            "Resources: [[Resources]] · Tree: [[Tech tree]]",
+            + hubs,
             "",
             "## Build log",
             build_log.strip() or "- (the agent adds one line per session here)",

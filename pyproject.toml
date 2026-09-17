@@ -62,6 +62,7 @@ select = ["E", "F", "I", "UP", "B"]
 "vibemap/personas.py" = ["E501"]
 "vibemap/toolbelt.py" = ["E501"]
 "vibemap/pet.py" = ["E501"]
+"vibemap/obsidian.py" = ["E501"]
 
 [tool.basedpyright]
 typeCheckingMode = "basic"
