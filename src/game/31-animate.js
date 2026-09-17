@@ -7,7 +7,7 @@ function animate(){
   let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
   else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){hasTarget=false;marker.material.opacity=0;mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
-  const MAXV=4.6*speedMult(),ACC=22,FRIC=14;
+  const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult(),ACC=22*WS,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
@@ -28,27 +28,29 @@ function animate(){
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
   const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
-  if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*.05}
+  if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*.05}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
   marker.material.opacity*=.985;marker.rotation.z+=dt*2;
-  // camera: a slow orbit of the island behind the title, then it follows
-  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*36,20,Math.cos(oa)*36),.04);camera.lookAt(0,-1,0)}
-  else{const asp=$("stage").clientWidth/$("stage").clientHeight;const port=Math.min(1.5,Math.max(1,1.15/asp));const lv=chars.lotte.vel||new T.Vector3();const cp=new T.Vector3(pos.x*.55+lv.x*.4,16*port,pos.z*.55+18*port+lv.z*.4);camera.position.lerp(cp,.06);const lk=new T.Vector3(pos.x*.65,.8,pos.z*.65-1);camera.lookAt(lk)}
+  // camera: a slow orbit of the island behind the title, then it follows.
+  // Height and offset scale with the world; the follow is partial (.7 of the
+  // walker's position) so the island centre stays in frame from an annex.
+  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*36*WS,20*WS,Math.cos(oa)*36*WS),.04);camera.lookAt(0,-1,0)}
+  else{const asp=$("stage").clientWidth/$("stage").clientHeight;const port=Math.min(1.5,Math.max(1,1.15/asp));const lv=chars.lotte.vel||new T.Vector3();const cp=new T.Vector3(pos.x*.7+lv.x*.4,16*port*WS,pos.z*.7+18*port*WS+lv.z*.4);camera.position.lerp(cp,.06);const lk=new T.Vector3(pos.x*.8,.8,pos.z*.8-WS);camera.lookAt(lk)}
   // water
   const a=wGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){a[i+1]=Math.sin(wBase[i]*.35+t*1.3)*.16+Math.cos(wBase[i+2]*.3+t*1.1)*.16}wGeo.attributes.position.needsUpdate=true;wGeo.computeVertexNormals();
-  clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>50)c.position.x=-50});
+  clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>50*WS)c.position.x=-50*WS});
   // props
   const P=props;if(P.boat){P.boat.rotation.z=Math.sin(t*1.3)*.06;P.boat.rotation.x=Math.sin(t*.9)*.04;P.boat.position.y=-1.35+Math.sin(t*1.5)*.08}
-  if(P.boat2){const a=t*.12;P.boat2.position.set(Math.cos(a)*34,-1.35+Math.sin(t*1.4)*.08,Math.sin(a)*34);P.boat2.rotation.y=-a-Math.PI/2;P.boat2.rotation.z=Math.sin(t*1.2)*.05}
-  if(P.plane2){const a=t*.25;P.plane2.position.set(Math.cos(a)*30,15+Math.sin(t*.7)*1.2,Math.sin(a)*30);P.plane2.rotation.y=-a-Math.PI/2;P.plane2.rotation.z=.25;P.plane2.userData.prop.rotation.x+=dt*40}
+  if(P.boat2){const a=t*.12;P.boat2.position.set(Math.cos(a)*34*WS,-1.35+Math.sin(t*1.4)*.08,Math.sin(a)*34*WS);P.boat2.rotation.y=-a-Math.PI/2;P.boat2.rotation.z=Math.sin(t*1.2)*.05}
+  if(P.plane2){const a=t*.25;P.plane2.position.set(Math.cos(a)*30*WS,15*WS+Math.sin(t*.7)*1.2,Math.sin(a)*30*WS);P.plane2.rotation.y=-a-Math.PI/2;P.plane2.rotation.z=.25;P.plane2.userData.prop.rotation.x+=dt*40}
   if(P.plane)P.plane.userData.prop.rotation.x+=dt*6;
   if(P.windmill)P.windmill.userData.blades.rotation.z+=dt*1.2;
   (P.artProps||[]).forEach(g=>{if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.5});
-  if(P.balloon){P.balloon.position.y=7+Math.sin(t*.6)*.5;P.balloon.position.x=-15+Math.sin(t*.15)*3;P.balloon.rotation.y=t*.1}
-  if(P.birds)P.birds.forEach(b=>{const o=b.userData.o,a=t*.5+o;b.position.set(Math.cos(a)*(12+o*1.5),9+o*.5+Math.sin(t*2+o)*.4,Math.sin(a)*(12+o*1.5)-4);b.rotation.y=-a;const f=Math.sin(t*10+o)*.6;b.userData.w1.rotation.z=f;b.userData.w2.rotation.z=-f});
+  if(P.balloon){P.balloon.position.y=7+Math.sin(t*.6)*.5;P.balloon.position.x=-15*WS+Math.sin(t*.15)*3;P.balloon.rotation.y=t*.1}
+  if(P.birds)P.birds.forEach(b=>{const o=b.userData.o,a=t*.5+o;b.position.set(Math.cos(a)*(12+o*1.5)*WS,9+o*.5+Math.sin(t*2+o)*.4,Math.sin(a)*(12+o*1.5)*WS-4*WS);b.rotation.y=-a;const f=Math.sin(t*10+o)*.6;b.userData.w1.rotation.z=f;b.userData.w2.rotation.z=-f});
   if(P.fountain)P.fountain.userData.drops.forEach(d=>{const u=(t*.9+d.userData.p)%1;d.position.set(Math.cos(d.userData.p*6.28)*u*1.1,1.8+Math.sin(u*Math.PI)*1.4-u*.6,Math.sin(d.userData.p*6.28)*u*1.1)});
   if(P.lighthouse){const nt=skyN>=4;P.lighthouse.userData.beam.rotation.y=t*.8;P.lighthouse.userData.beamM.material.opacity=nt?.18:0;P.lighthouse.userData.lamp.material.emissiveIntensity=nt?2:0}
-  if(P.tumble){const a=t*.35;P.tumble.position.set(Math.cos(a)*11,.6,Math.sin(a)*11);P.tumble.rotation.x+=dt*3;P.tumble.rotation.z+=dt*2}
+  if(P.tumble){const a=t*.35;P.tumble.position.set(Math.cos(a)*11*WS,.6,Math.sin(a)*11*WS);P.tumble.rotation.x+=dt*3;P.tumble.rotation.z+=dt*2}
   if(P.snow){const a=P.snow.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*2.2;a[i-1]+=Math.sin(t+i)*dt*.6;if(a[i]<0)a[i]=20}P.snow.geometry.attributes.position.needsUpdate=true}
   if(P.embers){const a=P.embers.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]+=dt*(1.5+(i%5)*.3);a[i-1]+=Math.sin(t*2+i)*dt*.8;if(a[i]>16)a[i]=6}P.embers.geometry.attributes.position.needsUpdate=true}
   if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.35+Math.sin(t*.7)*.1:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
@@ -56,7 +58,8 @@ function animate(){
   if(P.lamps)P.lamps.forEach((l,i)=>{l.material.emissiveIntensity=skyN>=3?1.2+Math.sin(t*3+i)*.3:0});
   // plots pulse & buildings
   plots.forEach((p,i)=>{const k=i+1,locked=k>1&&!S.done.includes(k-1);p.userData.ring.material.opacity=locked?.15:.55+Math.sin(t*3+i)*.3;p.userData.ring.scale.setScalar(1+Math.sin(t*3+i)*.04)});
-  for(const k in builds){const g=builds[k];if(g.userData.popT!==undefined){g.userData.popT+=dt;const x=Math.min(1,g.userData.popT/.9);const s=1+Math.sin(x*Math.PI*1.5)*(1-x)*.35;g.scale.setScalar(x<1?Math.max(.01,x*x*(3-2*x))*s:1);if(x>=1)delete g.userData.popT}
+  annexes.forEach(a=>{tickPop(a.g,dt);a.g.userData.flag.rotation.y=Math.sin(t*4+a.k)*.35});
+  for(const k in builds){const g=builds[k];tickPop(g,dt);
     if(g.userData.spin){g.userData.spin.rotation.y+=dt;g.userData.spin.position.y=1.6+Math.sin(t*2)*.2}
     if(g.userData.flag)g.userData.flag.rotation.y=Math.sin(t*4)*.35;
     if(g.userData.orbs)g.userData.orbs.forEach((o,j)=>{o.position.y+=Math.sin(t*2+j)*.004});
@@ -67,7 +70,7 @@ function animate(){
   // sky
   if(skyT<1){skyT=Math.min(1,skyT+dt*.5);const c=skyFrom.clone().lerp(skyTo,skyT);scene.background=c;scene.fog.color.copy(c)}
   const n=skyN;const day=Math.max(0,1-n/4);dirL.intensity=.2+day*.95;hemiL.intensity=.12+day*.6;ambL.intensity=.04+day*.12;stars.material.opacity=Math.max(0,(n-3)/3);
-  sunM.position.set(-30+n*14,26-n*6,-50);sunM.visible=n<4;moonM.position.set(30,26,-50);moonM.visible=n>=4;
+  sunM.position.set((-30+n*14)*WS,(26-n*6)*WS,-50*WS);sunM.visible=n<4;moonM.position.set(30*WS,26*WS,-50*WS);moonM.visible=n>=4;
   builds.inn.userData.light.intensity=n>=3?1.6:0;
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
