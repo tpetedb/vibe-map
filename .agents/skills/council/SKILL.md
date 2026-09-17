@@ -19,7 +19,7 @@ uv run vibe council "How do I keep an agent from deleting my data?" --mentors ch
 
 It writes `vault/Camp/Council - <topic>.md` with Verdict, Where they agree,
 Where they disagree, What to do tonight, Ranking, and every answer. It uses the
-provider in `vibe.toml` (claude, codex, gemini, copilot or opencode).
+provider in `config/camp.toml` (claude, codex, gemini, copilot or opencode).
 Add `--dry-run` to see the prompts without calling anything.
 
 ## Agent path (subagents, no extra CLI calls)

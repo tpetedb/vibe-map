@@ -1,5 +1,7 @@
-# Vibe Code Camp configuration. Every key has a default; delete the
-# file and `just start` still works. Unknown keys are refused.
+# Vibe Code Camp, journey configuration: who you are, how hard, the
+# theme, the vault. Every key has a default; delete the file and
+# `just start` still works. Unknown keys are refused. The game's own
+# configuration is src/config/, see docs/CONFIG.md.
 
 [learner]
 name = "<your_name>"

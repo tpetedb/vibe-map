@@ -9,9 +9,11 @@ Levels mirror the ages of the tech tree.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import re
 import subprocess
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -541,6 +543,107 @@ GOD: tuple[Check, ...] = (
         "extra",
     ),
 )
+
+
+# ---- the fork -----------------------------------------------------------------
+
+FORK_DIR = Path("workspace") / "forks" / "vibe-map"
+FORK_MANIFEST = "fork.json"
+FORK_VERSION = 1
+
+
+def fork_dir(base: Path | None = None) -> Path:
+    return (base or ROOT) / FORK_DIR
+
+
+def config_fingerprint(config_dir: Path) -> str:
+    """One hash over src/config/*.js: what "changed the configuration" means."""
+    h = hashlib.sha256()
+    for f in sorted(config_dir.glob("*.js")):
+        h.update(f.name.encode())
+        h.update(f.read_bytes())
+    return h.hexdigest()
+
+
+def read_manifest(base: Path | None = None) -> dict:
+    """The fork's fork.json. An unknown version is refused, not patched around."""
+    p = fork_dir(base) / FORK_MANIFEST
+    data = json.loads(p.read_text(encoding="utf-8"))
+    if data.get("version") != FORK_VERSION:
+        raise ValueError(
+            f"{FORK_MANIFEST} version {data.get('version')} is not {FORK_VERSION}; "
+            "run vibe fork --force to make a fresh fork"
+        )
+    return data
+
+
+def _fork_exists(_: Config) -> tuple[bool, str]:
+    d = fork_dir()
+    if not (d / "src" / "config").is_dir():
+        return False, f"no {FORK_DIR.as_posix()}/src/config"
+    if not (d / FORK_MANIFEST).exists():
+        return False, f"no {FORK_MANIFEST}; this fork was not made by vibe fork"
+    read_manifest()
+    return True, f"{FORK_DIR.as_posix()} with its own src/config"
+
+
+def _fork_changed(_: Config) -> tuple[bool, str]:
+    d = fork_dir()
+    if not (d / FORK_MANIFEST).exists():
+        return False, "no fork yet"
+    now = config_fingerprint(d / "src" / "config")
+    if now == read_manifest()["config_sha256"]:
+        return False, "src/config is still the product's"
+    return True, "src/config differs from the product build"
+
+
+def _fork_builds(_: Config) -> tuple[bool, str]:
+    d = fork_dir()
+    if not (d / "tools" / "build.py").exists():
+        return False, "no fork yet"
+    out = d / "game" / "vibe-map.html"
+    before = out.stat().st_mtime if out.exists() else 0.0
+    r = subprocess.run(
+        [sys.executable, "tools/build.py"],
+        cwd=d,
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    if r.returncode != 0:
+        return False, _plain(r.stderr or r.stdout)[-160:]
+    if not out.exists() or out.stat().st_mtime == before:
+        return False, "the build wrote no game/vibe-map.html"
+    return True, f"{out.stat().st_size // 1024} KB from your own src/"
+
+
+FORK_CHECKS: tuple[Check, ...] = (
+    Check(
+        "fork exists",
+        _fork_exists,
+        f"make it: vibe fork (writes {FORK_DIR.as_posix()})",
+    ),
+    Check(
+        "your configuration",
+        _fork_changed,
+        "edit workspace/forks/vibe-map/src/config/00-config.js, "
+        "the world scale or a palette colour",
+    ),
+    Check(
+        "it builds",
+        _fork_builds,
+        "in the fork: just build (or python tools/build.py) and read the error",
+    ),
+)
+
+
+def fork_quest(cfg: Config) -> Quest:
+    """The checks behind `vibe check --fork`: it exists, it differs, it builds."""
+    wanted = required_levels(cfg.learner.difficulty)
+    return Quest(
+        "production", 0, "Your fork of the game",
+        tuple(c for c in FORK_CHECKS if c.level in wanted),
+    )  # fmt: skip
 
 
 def quest_for(world: str, n: int, cfg: Config) -> Quest:

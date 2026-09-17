@@ -17,6 +17,7 @@ import getpass
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import unicodedata
@@ -32,12 +33,20 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign, pet, project
-from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
+from vibemap import __version__, campaign, pet, project, quests
+from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config, deprecation_note
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
 from vibemap.providers import PROVIDERS, ProviderMissing, ask
-from vibemap.quests import BADGES, level_for, new_badges, quest_for, run_quest, xp_for
+from vibemap.quests import (
+    BADGES,
+    fork_quest,
+    level_for,
+    new_badges,
+    quest_for,
+    run_quest,
+    xp_for,
+)
 from vibemap.state import PLACEHOLDER, CheckRecord, LogEntry, State
 from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
@@ -54,7 +63,7 @@ class Ctx:
     def __init__(self) -> None:
         self.cfg = Config.load()
         self.state = State.load()
-        # vibe.toml is where a learner types their name, so the state follows
+        # camp.toml is where a learner types their name, so the state follows
         # it while the state still holds the placeholder.
         if self.state.name == PLACEHOLDER and self.cfg.learner.name != PLACEHOLDER:
             self.state.name = self.cfg.learner.name
@@ -85,6 +94,9 @@ def cli(ctx: click.Context) -> None:
         ctx.obj = Ctx()
     except ValueError as e:
         _fail(str(e))
+    note = deprecation_note()
+    if note:
+        console.print(f"[warn]deprecated:[/] {note}")
 
 
 # ---- status -------------------------------------------------------------------
@@ -113,7 +125,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
         return
     if not project.is_camp():
         console.print(
-            f"[warn]No camp in {ROOT}[/] (no vibe.toml). "
+            f"[warn]No camp in {ROOT}[/] (no config/camp.toml). "
             "Start one with [accent]vibe new[/], or cd into a camp."
         )
     diff = DIFFICULTIES[cfg.learner.difficulty]
@@ -258,9 +270,21 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     "--all", "all_", is_flag=True, help="check every workstream of the island"
 )
 @click.option("--claim/--no-claim", default=True, help="mark done when the checks pass")
+@click.option(
+    "--fork", "fork_", is_flag=True, help="check your fork of the game instead"
+)
 @pass_ctx
-def check(ctx: Ctx, n: int | None, world: str | None, all_: bool, claim: bool) -> None:
+def check(
+    ctx: Ctx, n: int | None, world: str | None, all_: bool, claim: bool, fork_: bool
+) -> None:
     """Verify the definition of done for a workstream and award the XP."""
+    if fork_:
+        quest = fork_quest(ctx.cfg)
+        if _print_results(run_quest(quest, ctx.cfg), quest, ctx.cfg):
+            console.print("[ok]your fork builds and is yours[/]")
+        else:
+            console.print("[warn]not yet.[/] Fix the failed checks and run it again.")
+        return
     world = world or "campus"
     if all_:
         targets = list(range(1, 9))
@@ -614,7 +638,7 @@ def scores(sql_name: str | None) -> None:
 
 @cli.group()
 def config() -> None:
-    """Show or change vibe.toml."""
+    """Show or change config/camp.toml."""
 
 
 @config.command("show")
@@ -628,7 +652,7 @@ def _set_learner(ctx: Ctx, field: str, value: str) -> None:
     data["learner"][field] = value
     ctx.cfg = Config.model_validate(data)
     ctx.cfg.save(CONFIG_PATH)
-    console.print(f"[ok]{field}[/] = {value} (vibe.toml)")
+    console.print(f"[ok]{field}[/] = {value} ({CONFIG_PATH.name})")
 
 
 @cli.command()
@@ -926,17 +950,17 @@ def _pet(ctx: Ctx) -> pet.Pet:
             ctx.state.name, species=c.species, name=c.name, eye=c.eye, hat=c.hat
         )
     except ValueError as e:
-        _fail(f"vibe.toml [pet]: {e}")
+        _fail(f"camp.toml [pet]: {e}")
         raise
 
 
 @cli.command("pet")
 @click.option("--animate", "-a", is_flag=True, help="idle loop until Ctrl-C")
 @click.option("--all", "gallery", is_flag=True, help="every species, frame 0")
-@click.option("--species", default=None, help="set the species in vibe.toml")
-@click.option("--name", "pet_name", default=None, help="set the name in vibe.toml")
-@click.option("--eye", default=None, help="set the eye in vibe.toml")
-@click.option("--hat", default=None, help="set the hat in vibe.toml")
+@click.option("--species", default=None, help="set the species in camp.toml")
+@click.option("--name", "pet_name", default=None, help="set the name in camp.toml")
+@click.option("--eye", default=None, help="set the eye in camp.toml")
+@click.option("--hat", default=None, help="set the hat in camp.toml")
 @click.option("--on/--off", "enabled", default=None, help="show or hide the pet")
 @click.option("--reset", is_flag=True, help="back to what your name rolled")
 @pass_ctx
@@ -954,7 +978,7 @@ def pet_cmd(
     """Your terminal companion: show it, animate it, or configure it.
 
     The creature, its rarity and its stats are rolled from your name, the
-    same roll as claude-buddy. Overrides live in vibe.toml under [pet].
+    same roll as claude-buddy. Overrides live in config/camp.toml under [pet].
     """
     if gallery:
         for name, rows in pet.gallery():
@@ -986,7 +1010,7 @@ def pet_cmd(
             _fail(str(e))
         cfg.save(CONFIG_PATH)
         ctx.cfg = cfg
-        console.print("[ok]vibe.toml [pet] updated[/]")
+        console.print(f"[ok]{CONFIG_PATH.name} [pet] updated[/]")
     p = _pet(ctx)
     if not animate:
         console.print(pet.render(p))
@@ -1204,7 +1228,7 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     n = copy_template(target)
     console.print(f"[ok]{n} files[/] from the template into {target}")
     if who:
-        toml = target / "vibe.toml"
+        toml = target / project.CAMP_CONFIG
         toml.write_text(
             toml.read_text(encoding="utf-8").replace(
                 'name = "<your_name>"', f'name = "{who}"', 1
@@ -1247,6 +1271,124 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
         "  just start          # or: vibe start\n"
         "  vibe play           # the game, hosted; vibe play --offline caches it"
     )
+
+
+@cli.command()
+@click.option(
+    "--from",
+    "source",
+    default=None,
+    help="a product checkout to copy from (default: this one)",
+)
+@click.option("--force", is_flag=True, help="replace an existing fork")
+@pass_ctx
+def fork(ctx: Ctx, source: str | None, force: bool) -> None:
+    """Copy the game's source into workspace/forks/vibe-map and make it yours.
+
+    The fork carries src/ (with its own src/config/), tools/build.py and the
+    generated inputs the build needs, so `just build` there produces your own
+    game file. Its journey configuration is still the camp's config/camp.toml.
+    """
+    src_root = Path(source).expanduser().resolve() if source else ROOT
+    if not (src_root / "src" / "config").is_dir():
+        _fail(
+            f"{src_root} is not a product checkout (no src/config). "
+            "Clone https://github.com/tpetedb/vibe-map and pass it with --from."
+        )
+    dest = quests.fork_dir()
+    if dest.exists() and any(dest.iterdir()) and not force:
+        _fail(f"{dest} exists; pass --force to replace it")
+    if dest.exists():
+        shutil.rmtree(dest)
+    n = _copy_fork(src_root, dest)
+    console.print(f"[ok]{n} files[/] into [path]{dest}[/]")
+    console.print(
+        "Next:\n"
+        f"  cd {dest}\n"
+        "  edit src/config/00-config.js   # the world scale, the palette\n"
+        "  just build                     # your own game/vibe-map.html\n"
+        "  vibe check --fork              # it builds and it is yours"
+    )
+
+
+FORK_JUSTFILE = """# Your fork of the game. One command: build it, then open it.
+# The source configuration is src/config/; the journey configuration stays in
+# your camp's config/camp.toml. See docs/CONFIG.md in the product.
+
+# show the task list
+default:
+    @just --list
+
+# concatenate src/ into game/vibe-map.html
+build:
+    python3 tools/build.py
+
+# open your build
+game: build
+    open game/vibe-map.html
+"""
+
+FORK_README = """# Your fork of Vibe Map
+
+Your fork is yours to break and repair; the course keeps living in the
+product (https://github.com/tpetedb/vibe-map). Nothing here feeds back into
+it, and nothing here is needed to play: this is the copy you experiment on.
+
+Everything the build needs is here: `src/` (the game in load order, with
+`src/vendor/` and your own `src/config/`), `tools/build.py` and the generated
+inputs under `tools/generated/`.
+
+    just build      # or: python3 tools/build.py
+    open game/vibe-map.html
+
+Your camp's `config/camp.toml` still decides who you are, how hard and which
+theme; `src/config/00-config.js` is the game's own level: the world scale,
+the island radius, the palette. `vibe check --fork` verifies that it builds
+and that your configuration is no longer the product's.
+
+## Challenges
+
+1. Change one value in `src/config/00-config.js` (the world scale, or a
+   palette colour) and rebuild. Look at the result.
+2. Pick a topic from `vibe news` or an article you found, and have your agent
+   add it to the game: a note, a sign, a stop of your own.
+3. Break the build on purpose, read the error, and repair it.
+"""
+
+
+def _copy_fork(src_root: Path, dest: Path) -> int:
+    """Write the fork: src/, the build tool, the generated inputs, the tasks."""
+    dest.mkdir(parents=True, exist_ok=True)
+    n = _copy_tree(src_root / "src", dest / "src")
+    (dest / "tools").mkdir(exist_ok=True)
+    shutil.copyfile(src_root / "tools" / "build.py", dest / "tools" / "build.py")
+    n += 1
+    generated = dest / "tools" / "generated"
+    generated.mkdir(exist_ok=True)
+    for name in ("notes.js", "tree.js"):
+        shutil.copyfile(src_root / "tools" / "generated" / name, generated / name)
+        n += 1
+    # The campaign travels with the fork so the build never needs the package.
+    (generated / "campaign.json").write_text(
+        project.data_text("campaign.json"), encoding="utf-8"
+    )
+    (dest / "justfile").write_text(FORK_JUSTFILE, encoding="utf-8")
+    (dest / "README.md").write_text(FORK_README, encoding="utf-8")
+    (dest / "game").mkdir(exist_ok=True)
+    (dest / quests.FORK_MANIFEST).write_text(
+        json.dumps(
+            {
+                "version": quests.FORK_VERSION,
+                "source": str(src_root),
+                "created": date.today().isoformat(),
+                "config_sha256": quests.config_fingerprint(dest / "src" / "config"),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return n + 4
 
 
 HOSTED_GAME = "https://tpetedb.github.io/vibe-map/"

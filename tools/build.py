@@ -1,13 +1,18 @@
 """Build game/vibe-map.html from src/.
 
 The game ships as one file with three.js embedded and no CDN. src/ holds the
-parts in load order; this script concatenates them and injects the generated
-data (campaign JSON, tech notes, tech tree) and the values from vibe.toml
-that the game exposes as constants. Concatenation is the whole build: no
-bundler, no minifier, so the output stays readable and diffable.
+parts in load order: src/config/ first (the source configuration a fork
+edits), then the game modules. This script concatenates them and injects the
+generated data (campaign JSON, tech notes, tech tree) and the journey values
+from config/camp.toml that the game exposes as CONFIG. Concatenation is the
+whole build: no bundler, no minifier, so the output stays readable.
 
-    uv run python tools/build.py           write game/vibe-map.html
-    uv run python tools/build.py --check   exit 1 if the file differs from a fresh build
+Every input is resolved relative to the folder holding tools/build.py, so a
+copy of src/ and this file in workspace/forks/ builds on its own (`vibe fork`).
+
+    uv run python tools/build.py             write game/vibe-map.html
+    uv run python tools/build.py --check     exit 1 if the file differs
+    uv run python tools/build.py --root DIR  build the fork in DIR
 """
 
 from __future__ import annotations
@@ -18,15 +23,25 @@ import sys
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+
+def _root(argv: list[str] | None = None) -> Path:
+    """Where to build: --root DIR, else the folder holding this file's tools/."""
+    args = list(argv if argv is not None else sys.argv[1:])
+    if "--root" in args:
+        return Path(args[args.index("--root") + 1]).expanduser().resolve()
+    return Path(__file__).resolve().parents[1]
+
+
+ROOT = _root()
 SRC = ROOT / "src"
 OUT = ROOT / "game" / "vibe-map.html"
 GENERATED = ROOT / "tools" / "generated"
+CONFIG_DIR = SRC / "config"
 
 # Game modules in load order. The state module must come first (S, save,
 # load) and boot last (it reads localStorage and paints the title screen).
 GAME_ORDER = [
-    "@config",
+    "@config",  # CONFIG, NEWS and src/config/*.js
     "00-state.js",
     "05-icons.js",
     "10-scene.js",
@@ -57,11 +72,23 @@ def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
 
 
-def _campaign_js() -> str:
-    sys.path.insert(0, str(ROOT))
-    from vibemap.project import data_text  # noqa: PLC0415
+def _config_modules() -> str:
+    """src/config/*.js: the source configuration, in name order, first."""
+    return "".join(
+        f.read_text(encoding="utf-8") for f in sorted(CONFIG_DIR.glob("*.js"))
+    )
 
-    data = json.loads(data_text("campaign.json"))
+
+def _campaign_js() -> str:
+    """The campaign a fork carries, else the one inside the installed package."""
+    sys.path.insert(0, str(ROOT))
+    local = GENERATED / "campaign.json"
+    if local.exists():
+        data = json.loads(local.read_text(encoding="utf-8"))
+    else:
+        from vibemap.project import data_text  # noqa: PLC0415
+
+        data = json.loads(data_text("campaign.json"))
     dump = functools.partial(json.dumps, ensure_ascii=False)
     return (
         "const CAMPAIGN=" + dump(data["evenings"]) + ";\n"
@@ -91,16 +118,27 @@ def _news_js() -> str:
     return "const NEWS=" + json.dumps(payload, ensure_ascii=False) + ";\n"
 
 
+def _version() -> str:
+    """The product version: this checkout's pyproject, else the installed package."""
+    pyproject = ROOT / "pyproject.toml"
+    if pyproject.exists():
+        return tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"][
+            "version"
+        ]
+    from vibemap import __version__  # noqa: PLC0415
+
+    return __version__
+
+
 def _config_js() -> str:
-    """The values from vibe.toml the game exposes as a constant."""
+    """The journey values (config/camp.toml) the game exposes as a constant."""
     sys.path.insert(0, str(ROOT))
+    from vibemap import project  # noqa: PLC0415
     from vibemap.config import Config  # noqa: PLC0415
     from vibemap.themes import load_theme, theme_for_game  # noqa: PLC0415
 
-    cfg = Config.load()
-    version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
-        "project"
-    ]["version"]
+    cfg = Config.load(project.nearest_config(ROOT))
+    version = _version()
     theme = theme_for_game(
         load_theme(cfg.theme.preset), show_pairings=cfg.game.show_pairings
     )
@@ -124,6 +162,7 @@ def _game_script() -> str:
         if name == "@config":
             parts.append(_config_js())
             parts.append(_news_js())
+            parts.append(_config_modules())
         elif name == "@campaign":
             parts.append(_campaign_js())
         elif name == "@notes":
