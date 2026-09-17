@@ -285,12 +285,13 @@ class GamePage:
 
     def import_code(self, code: str) -> str:
         self.open_roadmap()
-        before = self.page.text_content("#syncmsg") or ""
+        # Two imports in a row can produce the same message; clear it first so
+        # the wait is for this import's answer, not the previous one's.
+        self.page.evaluate("document.getElementById('syncmsg').textContent = ''")
         self.page.fill("#impcode", code)
         self.page.click("#s-map button:has-text('Import')")
         self.page.wait_for_function(
-            "t => (document.getElementById('syncmsg').textContent || '') !== t",
-            arg=before,
+            "() => (document.getElementById('syncmsg').textContent || '') !== ''",
             timeout=WAIT_MS,
         )
         return self.page.text_content("#syncmsg") or ""
