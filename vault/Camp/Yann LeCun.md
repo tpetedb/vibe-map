@@ -19,10 +19,35 @@ His 2022 position paper lays out a world-model architecture (JEPA) where the sys
 
 **Rolinda asks:** He does not think the thing I am using is the future?
 
+## The encounter
+- Why is he not impressed by the thing I am using?
+- Yann LeCun: He argues that predicting the next token does not give a system a model of the world: it can sound right, hallucinate, and neither reason nor plan. ([Interview with TIME](https://time.com/6694432/yann-lecun-meta-ai-interview/))
+- What would, then?
+- Yann LeCun: Predicting in an abstract representation space instead of predicting every pixel. V-JEPA drops the detail nobody can predict, such as each leaf moving, and keeps what the scene is about. ([V-JEPA (Meta AI)](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/))
+- And why open weights?
+- Yann LeCun: Because these assistants will sit between people and their knowledge, and he does not think one company should own that layer. ([Interview with TIME](https://time.com/6694432/yann-lecun-meta-ai-interview/))
+- Should I be frightened?
+- Yann LeCun: He calls the doom case overstated: intelligence on its own does not produce a will to dominate. Hold that next to what Hinton says and keep both. ([Interview with TIME](https://time.com/6694432/yann-lecun-meta-ai-interview/))
+
+## Your exercise: What mattered, and what you could throw away
+About 12 minutes, in `workspace/mentors/lecun/`. Status: not yet.
+
+1. Take one task you gave an agent recently.
+2. Write workspace/mentors/lecun/abstraction.md with ## What mattered and ## What I could throw away.
+3. Under the first, the few facts the answer depended on. Under the second, everything you fed it that turned out to be noise.
+4. Add notes.md with ## What I learned.
+
+Checked by `vibe check --mentor lecun`: abstraction.md separates what mattered from what you could throw away.
+
+The plaque on the island reads: Predict the idea, not the pixel.
+
+
 ## Sources
 - [A Path Towards Autonomous Machine Intelligence (LeCun 2022, OpenReview)](https://openreview.net/pdf?id=BZ5a1r-kVsf)
 - [Backpropagation applied to handwritten zip code recognition (1989)](https://ieeexplore.ieee.org/document/6795724)
 - [Karpathy's reproduction](https://github.com/karpathy/lecun1989-repro)
+- [V-JEPA (Meta AI)](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/)
+- [Interview with TIME](https://time.com/6694432/yann-lecun-meta-ai-interview/)
 
 Back to [[Your path]]
 

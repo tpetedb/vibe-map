@@ -476,8 +476,10 @@ class Vault:
             label = {"deep": "on your path", "skip": "skipped for now"}.get(
                 st, "not met yet"
             )
+            done = "exercise done" if m["id"] in self.state.mentors else "exercise open"
             body.append(
-                f"- [[{m['name']}]] ({campaign.WORLD_NAMES[m['world']]}): {label}"
+                f"- [[{m['name']}]] ({campaign.WORLD_NAMES[m['world']]}): "
+                f"{label}, {done}"
             )
             out.append(self._write_mentor(m))
         body += ["", "Back to [[Tonight]] · [[Map]]", "", "#people"]
@@ -490,9 +492,30 @@ class Vault:
         body = (
             f"*{m['role']}*\n\n{m['bio']}\n\n**What they would tell you**\n{ideas}\n\n"
             f"**Going deeper**\n{m['deep']}\n\n**Rolinda asks:** {m['ask']}\n\n"
+            f"{self._encounter_md(m)}\n"
             f"## Sources\n{srcs}\n\nBack to [[Your path]]\n\n#people"
         )
         return self.write(m["name"], body, tags=["people"])
+
+    def _encounter_md(self, m: dict) -> str:
+        """The exercise this mentor sets, and whether vibe check has seen it."""
+        enc = m["encounter"]
+        ex = enc["exercise"]
+        steps = "\n".join(f"{i}. {s}" for i, s in enumerate(ex["steps"], 1))
+        state = "done" if m["id"] in self.state.mentors else "not yet"
+        lines = "\n".join(
+            f"- {d['you']}\n- {m['name']}: {d['m']} "
+            f"([{m['src'][d['src']][0]}]({m['src'][d['src']][1]}))"
+            for d in enc["dialogue"]
+        )
+        return (
+            f"## The encounter\n{lines}\n\n"
+            f"## Your exercise: {ex['title']}\n"
+            f"About {ex['minutes']} minutes, in `{ex['dir']}/`. Status: {state}.\n\n"
+            f"{steps}\n\n"
+            f"Checked by `vibe check --mentor {m['id']}`: {ex['done']}.\n\n"
+            f"The plaque on the island reads: {enc['plaque']}.\n\n"
+        )
 
     def _write_field(self, persona: Persona) -> list[Path]:
         ds = persona.dataset

@@ -19,6 +19,27 @@ The story of ImageNet is the story of how a benchmark, not a model, forced every
 
 **Rolinda asks:** So the list of labelled pictures mattered more than the clever maths?
 
+## The encounter
+- What changed with ImageNet?
+- Fei-Fei Li: A shared labelled set at a size nobody had tried: about fourteen million images across roughly twenty-two thousand categories, organised on the WordNet hierarchy. ([ImageNet](https://www.image-net.org))
+- So the algorithm was not the hard part?
+- Fei-Fei Li: The data was, and the fact that everyone could measure on the same set. That is what made progress visible. ([ImageNet](https://www.image-net.org))
+- And her work now?
+- Fei-Fei Li: Human-centred AI at Stanford: a framework for research, education, practice and policy that starts from human needs rather than from the model. ([Stanford HAI](https://hai.stanford.edu))
+
+## Your exercise: Label ten things yourself
+About 15 minutes, in `workspace/mentors/li/`. Status: not yet.
+
+1. Pick ten things you can see: files in a folder, emails, photos, tabs.
+2. Write workspace/mentors/li/labels.csv with the header item,label and one row each.
+3. Use only two or three labels, and keep them honest: the hard rows are the lesson.
+4. Add notes.md with ## What I learned, including which row you could not decide.
+
+Checked by `vibe check --mentor li`: labels.csv has the item,label header and ten labelled rows.
+
+The plaque on the island reads: The data is the bottleneck.
+
+
 ## Sources
 - [ImageNet](https://www.image-net.org)
 - [Stanford HAI](https://hai.stanford.edu)
