@@ -28,6 +28,11 @@ shadow_map = 2048  # drop to 1024 if a phone stutters
 [vault]
 path = "vault"
 folder = "Camp"
+mode = "full"  # full (every note from day one) | grow (notes unlock as you play)
+
+[news]  # feeds for `vibe news`; empty means the built-in six
+feeds = []
+per_feed = 8
 
 [pet]  # the terminal companion; empty means what your name rolled
 enabled = true

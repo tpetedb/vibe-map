@@ -61,6 +61,7 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
     "dotfiles": ("Terminal setup", "zsh, tmux, Ghostty, Starship, the R2-D2 themes"),
     "status": ("Campaign status", "uv run vibe status"),
+    "news": ("Pull the AI news", "vibe news, then rebuild the game with it"),
     "quit": ("Quit", ""),
 }
 
@@ -499,6 +500,9 @@ def run() -> None:
         os.execvp("just", ["just", "test"])
     elif choice == "status":
         os.execvp("uv", ["uv", "run", "--no-sync", "vibe", "status"])
+    elif choice == "news":
+        subprocess.run(["uv", "run", "--no-sync", "vibe", "news"], check=False)
+        os.execvp("uv", ["uv", "run", "--no-sync", "python", "tools/build.py"])
     else:
         print(f"unknown choice {shlex.quote(choice)}")
 

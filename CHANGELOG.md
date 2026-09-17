@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-17
+
 ### Added
 
 - Ten more artifacts, spread over the four islands, each with its own small procedural building (`src/game/17-artifact-props.js`) that the walker goes round: the factory (a data pipeline: raw, bronze, silver, gold; a failed run that reruns cleanly; batch versus stream) and the post office (queues and pub/sub: a letter delivered later, at-least-once delivery, a dead-letter shelf) on the campus; the shop (a package registry: `uv add` as buying, the lockfile as the receipt, a yanked version) and the bank (secrets and auth: a token is a key, `.env` is the safe, a leaked key revoked and rotated) in the sandbox; the data centre (an inference request's path, latency by region, a cold start, batch versus interactive), the energy grid (tokens as watts, a rate limit as a fuse, autoscaling, a budget alarm) and the library (RAG: a question becomes a vector, the nearest shelves, a citation, a stale index) in cold storage; the office (planner, worker, reviewer, `AGENTS.md` as the handbook, a review gate that rejects, subagents as departments), the households (users and privacy: data minimisation, anonymisation, a GDPR request) and the school (train and test split, overfitting caught by the test, a benchmark) in production. The roadmap card, the README and the tests count twenty; the play-through inspects the artifacts of every island.
@@ -89,7 +91,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/tpetedb/vibe-map/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/tpetedb/vibe-map/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/tpetedb/vibe-map/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/tpetedb/vibe-map/compare/v0.1.0...v0.3.0
