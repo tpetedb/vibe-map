@@ -48,6 +48,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 button.primary{background:var(--yellow);border-color:transparent;color:#000;box-shadow:var(--glow-yellow)}
 button.primary:hover{background:var(--yellow-bright)}
 button:disabled{opacity:.35;cursor:default;transform:none}
+/* Danger is the bright red as text and border, never a red fill (docs/DESIGN.md). */
+button.danger{color:var(--red-bright);border-color:var(--red-bright)}
 input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;width:100%}
 textarea{min-height:120px;resize:vertical;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.55}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
