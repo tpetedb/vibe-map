@@ -76,6 +76,17 @@ uv run vibe pet --all                 # the gallery: nineteen species
 
 It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `vibe.toml` under `[pet]`, or switch it off with `--off`.
 
+## Your terminal, Tom's way
+
+```bash
+uv run vibe dotfiles                       # six modules and whether they are in place
+uv run vibe dotfiles show zsh              # the files, the brew line, what to do after
+uv run vibe dotfiles install zsh --brew    # completion dropdown, fzf, highlighting, one line in ~/.zshrc
+uv run vibe dotfiles install --all         # tmux bar, Ghostty theme, Starship prompt, AeroSpace, the R2-D2 Obsidian theme
+```
+
+Adapted from [Tom's toolbox](https://github.com/tpetedb/toms-toolbox) (MIT). Anything that already exists and differs is backed up next to itself first. The same screen lives in `just start` under Terminal setup.
+
 ## Break things on purpose
 
 ```bash

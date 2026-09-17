@@ -71,6 +71,10 @@ media:
 cookbook:
     uv run python tools/gen_cookbook.py
 
+# terminal setup modules from Tom's toolbox: `just dotfiles` lists, `just dotfiles install zsh` writes
+dotfiles *args:
+    uv run vibe dotfiles {{args}}
+
 # what is installed and what is missing; `just toolbelt missing` installs everything missing
 toolbelt *install:
     #!/usr/bin/env bash

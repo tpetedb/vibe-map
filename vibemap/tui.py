@@ -32,7 +32,7 @@ from textual.widgets import (
     Static,
 )
 
-from vibemap import campaign, pet, project
+from vibemap import campaign, dotfiles, pet, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLOW
 from vibemap.personas import PERSONAS
@@ -59,6 +59,7 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "obsidian": ("Obsidian vault", "open vault/ as a vault"),
     "tests": ("Run the tests", "just test"),
     "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
+    "dotfiles": ("Terminal setup", "zsh, tmux, Ghostty, Starship, the R2-D2 themes"),
     "status": ("Campaign status", "uv run vibe status"),
     "quit": ("Quit", ""),
 }
@@ -304,6 +305,8 @@ class Launch(Screen[None]):
     def choose(self, event: Button.Pressed) -> None:
         if event.button.id == "act-map":
             self.app.push_screen(Map(self.state))
+        elif event.button.id == "act-dotfiles":
+            self.app.push_screen(Dotfiles(self.cfg))
         elif event.button.id and event.button.id.startswith("act-"):
             self.app.exit(event.button.id[4:])
 
@@ -353,6 +356,75 @@ class Map(Screen[None]):
         self.app.pop_screen()
 
 
+class Dotfiles(Screen[None]):
+    """Tom's terminal setup, one Install button per module."""
+
+    def __init__(self, cfg: Config) -> None:
+        super().__init__()
+        self.cfg = cfg
+        self.home = dotfiles.default_home()
+        self.vault = ROOT / cfg.vault.path
+
+    def _state(self, m: dotfiles.Module) -> str:
+        return (
+            "installed"
+            if dotfiles.is_installed(m, home=self.home, vault=self.vault)
+            else "not yet"
+        )
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=False)
+        with VerticalScroll(id="dotfiles"):
+            yield Static(
+                "Configs adapted from Tom's toolbox (MIT). Install writes the files "
+                "with a backup of anything that differs; the zsh module adds one "
+                "source line to ~/.zshrc. Homebrew deps are printed, not run.",
+                classes="lead",
+            )
+            for m in dotfiles.MODULES.values():
+                with Horizontal(classes="action"):
+                    yield Button(
+                        f"Install {m.id}",
+                        id=f"dot-{m.id}",
+                        variant="success"
+                        if self._state(m) == "installed"
+                        else "primary",
+                    )
+                    yield Static(
+                        f"{m.name}: {self._state(m)}",
+                        classes="hint",
+                    )
+            yield Log(id="dotlog")
+            with Horizontal(classes="row"):
+                yield Button("Back", id="back", variant="primary")
+        yield Footer()
+
+    @on(Button.Pressed)
+    def act(self, event: Button.Pressed) -> None:
+        bid = event.button.id or ""
+        if bid == "back":
+            self.app.pop_screen()
+            return
+        if not bid.startswith("dot-"):
+            return
+        m = dotfiles.get_module(bid[4:])
+        log = self.query_one("#dotlog", Log)
+        if m.macos_only and os.uname().sysname != "Darwin":
+            log.write_line(f"{m.id}: macOS only, skipped")
+            return
+        plan = dotfiles.install(m, home=self.home, vault=self.vault)
+        for target, backup in plan.writes:
+            log.write_line(f"wrote {target}" + ("  (backup kept)" if backup else ""))
+        for rc in plan.appends:
+            log.write_line(f"appended one line to {rc}")
+        if not plan.writes and not plan.appends:
+            log.write_line(f"{m.id}: already in place")
+        if m.brew:
+            log.write_line(f"deps: {dotfiles.brew_command(m)}")
+        log.write_line(m.after)
+        event.button.variant = "success"
+
+
 class VibeApp(App[str]):
     TITLE = "Vibe Code Camp: the onboarding terminal"
     SUB_TITLE = ""
@@ -371,7 +443,9 @@ class VibeApp(App[str]):
     .hint {{ color: {MUTED}; padding: 1 0; }}
     DataTable {{ height: 1fr; margin: 0 1; border: round {GREEN}; }}
     Log {{ height: 10; margin: 0 1; border: round {BLUE}; }}
-    #welcome, #checks, #launch, #map {{ padding: 0 1; }}
+    #welcome, #checks, #launch, #map, #dotfiles {{ padding: 0 1; }}
+    #dotfiles .action Button {{ width: 26; }}
+    #dotlog {{ height: 8; }}
     .maprow {{ margin: 0 1; }}
     PetWidget {{ height: 8; width: 60; margin: 0 1 1 1; }}
     .legend {{ color: {MUTED}; margin: 1 1 0 1; }}

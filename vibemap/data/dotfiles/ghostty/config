@@ -1,0 +1,27 @@
+# Ghostty config: Vibe Code Camp's terminal look.
+# Adapted from Tom's Toolbox (github.com/tpetedb/toms-toolbox, MIT). The
+# R2-D2 high-contrast theme (OLED black, the five hues as the ANSI palette),
+# a Nerd Font, a blinking block cursor and a little blur. Installed to
+# ~/.config/ghostty/config by `vibe dotfiles install ghostty`; the theme
+# lands in ~/.config/ghostty/themes/. Reference: https://ghostty.org/docs/config/reference
+
+theme = r2d2-high-contrast
+
+background-opacity = 0.92
+background-blur = 20
+
+# brew install --cask font-meslo-lg-nerd-font
+font-family = MesloLGS Nerd Font Mono
+font-size = 14
+font-thicken = true
+
+cursor-style = block
+cursor-style-blink = true
+shell-integration-features = no-cursor
+
+window-padding-x = 8
+window-padding-y = 8
+window-padding-balance = true
+macos-titlebar-style = transparent
+mouse-hide-while-typing = true
+macos-option-as-alt = true
