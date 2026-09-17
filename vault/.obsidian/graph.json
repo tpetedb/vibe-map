@@ -22,6 +22,83 @@
       }
     },
     {
+      "query": "tag:#shell",
+      "color": {
+        "a": 1,
+        "rgb": 26533
+      }
+    },
+    {
+      "query": "tag:#git",
+      "color": {
+        "a": 1,
+        "rgb": 16747546
+      }
+    },
+    {
+      "query": "tag:#formats",
+      "color": {
+        "a": 1,
+        "rgb": 16760576
+      }
+    },
+    {
+      "query": "tag:#code",
+      "color": {
+        "a": 1,
+        "rgb": 43115
+      }
+    },
+    {
+      "query": "tag:#data",
+      "color": {
+        "a": 1,
+        "rgb": 53380
+      }
+    },
+    {
+      "query": "tag:#net",
+      "color": {
+        "a": 1,
+        "rgb": 35020
+      }
+    },
+    {
+      "query": "tag:#ship",
+      "color": {
+        "a": 1,
+        "rgb": 15747363
+      }
+    },
+    {
+      "query": "tag:#agents",
+      "color": {
+        "a": 1,
+        "rgb": 13840175
+      }
+    },
+    {
+      "query": "tag:#docs",
+      "color": {
+        "a": 1,
+        "rgb": 12751360
+      }
+    },
+    {
+      "query": "tag:#knowledge",
+      "color": {
+        "a": 1,
+        "rgb": 16755021
+      }
+    },
+    {
+      "query": "tag:#future",
+      "color": {
+        "a": 1,
+        "rgb": 13421772
+      }
+    },
+    {
       "query": "tag:#tech",
       "color": {
         "a": 1,

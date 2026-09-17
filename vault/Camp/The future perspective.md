@@ -12,7 +12,7 @@ Every age here shortened the distance between an idea and a working thing: the t
 **Try in five minutes.** Write vault/Camp/Bets.md: three things you think will be true in two years, dated. Reread in two years.
 
 - Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [Agentic AI Foundation](https://agents.md), [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol)
-- Age: Future Age · Level: Expert
+- Shelf: What is coming · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 

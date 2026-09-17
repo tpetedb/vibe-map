@@ -1,7 +1,7 @@
 ---
 title: "Docker and containers"
 date: 2026-09-16
-tags: [tech, castle]
+tags: [tech, ship]
 ---
 # Docker and containers
 
@@ -13,10 +13,10 @@ A container is a packaged process: your code, its dependencies, and a slice of a
 
 - Docs: [Docker get started](https://docs.docker.com/get-started/), [OrbStack (lighter on Mac)](https://orbstack.dev), [Dev containers](https://containers.dev), [Source: TUHS, V7 chdir/chroot(2) manual page](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/man/man2/chdir.2), [Source: TUHS, Seventh Edition Unix (January 1979)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7), [Source: mount_namespaces(7), history](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html), [Source: cgroups(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html), [Source: Docker blog, Docker: Nine Years Young (2022)](https://www.docker.com/blog/docker-nine-years-young/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story)
 - Unlocks: [[Cloud and servers]], [[CI-CD and automation]], [[Kubernetes and platforms]]
-- Age: Castle Age · Level: Medior
+- Shelf: Ship and run · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #castle
+#tech #ship

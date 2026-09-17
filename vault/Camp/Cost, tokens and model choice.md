@@ -1,7 +1,7 @@
 ---
 title: "Cost, tokens and model choice"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Cost, tokens and model choice
 
@@ -13,10 +13,10 @@ You pay per token in and out. A big context and a strong model cost more per cal
 
 - Docs: [Claude Code costs](https://code.claude.com/docs/en/costs), [Claude pricing](https://claude.com/pricing), [Source: OpenAI API announcement (June 2020)](https://openai.com/index/openai-api/)
 - Unlocks: [[The future perspective]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

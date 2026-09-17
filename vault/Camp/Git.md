@@ -1,7 +1,7 @@
 ---
 title: "Git"
 date: 2026-09-16
-tags: [tech, dark]
+tags: [tech, git]
 ---
 # Git
 
@@ -13,10 +13,10 @@ A time machine for a folder. Commit = named snapshot, branch = parallel line of 
 
 - Docs: [Git tutorial](https://git-scm.com/docs/gittutorial), [Oh Shit, Git!?!](https://ohshitgit.com), [Claude Code common workflows](https://code.claude.com/docs/en/common-workflows), [Source: Pro Git, A Short History of Git](https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git), [Source: Linux Foundation, 10 Years of Git interview with Linus Torvalds (2015)](https://www.linuxfoundation.org/blog/blog/10-years-of-git-an-interview-with-git-creator-linus-torvalds), [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/)
 - Unlocks: [[GitHub, pull requests, Pages]], [[Hooks]], [[CI-CD and automation]], [[Semantic Versioning]]
-- Age: Dark Age · Level: Intern
+- Shelf: Git and GitHub · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #git

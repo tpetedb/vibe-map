@@ -41,6 +41,21 @@ RICH_THEME = Theme(
     }
 )
 
+# One colour per shelf of the tech tree; the game's tree view uses the same map.
+CATEGORY_COLOURS = {
+    "shell": BLUE,
+    "git": ORANGE,
+    "formats": YELLOW,
+    "code": GREEN,
+    "data": "#00D084",
+    "net": "#0088CC",
+    "ship": "#F04923",
+    "agents": RED,
+    "docs": "#C29200",
+    "knowledge": "#FFA94D",
+    "future": "#CCCCCC",
+}
+
 # Obsidian graph colour groups want the 24-bit integer of the hex colour.
 AGE_COLOURS = {
     "dark": "#94A3B8",

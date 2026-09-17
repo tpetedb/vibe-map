@@ -1,7 +1,7 @@
 ---
 title: "Security and permissions"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Security and permissions
 
@@ -13,10 +13,10 @@ Agents run commands. Give them the least they need: a folder, a permission list,
 
 - Docs: [Claude Code permissions](https://code.claude.com/docs/en/permissions), [OWASP LLM Top 10](https://owasp.org/www-project-top-10-for-large-language-model-applications/), [Source: Saltzer and Schroeder, The Protection of Information in Computer Systems (1975)](https://web.mit.edu/Saltzer/www/publications/protection/)
 - Unlocks: [[Cost, tokens and model choice]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

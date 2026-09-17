@@ -1,7 +1,7 @@
 ---
 title: "SQL and DuckDB"
 date: 2026-09-16
-tags: [tech, feudal]
+tags: [tech, data]
 ---
 # SQL and DuckDB
 
@@ -13,10 +13,10 @@ SQL asks questions of tables: select what, from where, filter, group, order. Duc
 
 - Docs: [DuckDB docs](https://duckdb.org/docs/), [SQLBolt](https://sqlbolt.com), [Mode SQL tutorial](https://mode.com/sql-tutorial/), [Source: Chamberlin and Boyce, SEQUEL (1974), university copy](https://course.khoury.northeastern.edu/cs3200f20s2/ssl/readings/boyce.pdf), [Source: The Open Group, SQL: The Standard and the Language](http://archive.opengroup.org/public/tech/datam/sql.htm), [Source: DuckDB Foundation](https://duckdb.foundation/), [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0)
 - Unlocks: [[Data - files, schemas, warehouses]], [[Building and consuming APIs]]
-- Age: Feudal Age · Level: Junior
+- Shelf: Data · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #feudal
+#tech #data

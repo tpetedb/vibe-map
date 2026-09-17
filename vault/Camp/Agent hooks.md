@@ -1,7 +1,7 @@
 ---
 title: "Agent hooks"
 date: 2026-09-17
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Agent hooks
 
@@ -13,10 +13,10 @@ The same idea inside a coding agent: shell commands (or HTTP endpoints, MCP tool
 
 - Docs: [Claude Code hooks reference](https://code.claude.com/docs/en/hooks), [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide), [This repo's hook](https://github.com/tpetedb/vibe-map/blob/main/.claude/settings.json), [Source: Claude Code hooks reference (events, scopes, exit codes)](https://code.claude.com/docs/en/hooks)
 - Unlocks: [[Security and permissions]], [[Headless agents and scheduling]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Deep
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

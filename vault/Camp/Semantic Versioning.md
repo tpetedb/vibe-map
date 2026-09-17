@@ -1,7 +1,7 @@
 ---
 title: "Semantic Versioning"
 date: 2026-09-16
-tags: [tech, castle]
+tags: [tech, docs]
 ---
 # Semantic Versioning
 
@@ -13,10 +13,10 @@ A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change b
 
 - Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html), [Source: semver.org, About (authored by Tom Preston-Werner)](https://semver.org/), [Source: semver/semver, merge of release-2.0 (18 June 2013)](https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9), [Source: semver/semver, the commit tagged v1.0.0 (September 2011)](https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27)
 - Unlocks: [[Changelogs (Keep a Changelog)]]
-- Age: Castle Age · Level: Medior
+- Shelf: Docs and versioning · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #castle
+#tech #docs

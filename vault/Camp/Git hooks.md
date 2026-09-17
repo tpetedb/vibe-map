@@ -1,7 +1,7 @@
 ---
 title: "Git hooks"
 date: 2026-09-17
-tags: [tech, dark]
+tags: [tech, git]
 ---
 # Git hooks
 
@@ -15,10 +15,10 @@ uv run ruff check vibemap tests tools
 
 - Docs: [githooks manual](https://git-scm.com/docs/githooks), [Pro Git, Customizing Git: Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks), [pre-commit framework](https://pre-commit.com/), [lefthook](https://github.com/evilmartians/lefthook), [Source: githooks manual, default hooks directory and core.hooksPath](https://git-scm.com/docs/githooks), [Source: Git 2.9.0 release notes (core.hooksPath)](https://github.com/git/git/blob/master/Documentation/RelNotes/2.9.0.txt)
 - Unlocks: [[Agent hooks]], [[CI-CD and automation]]
-- Age: Dark Age · Level: Intern
+- Shelf: Git and GitHub · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #git

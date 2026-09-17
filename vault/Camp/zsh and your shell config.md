@@ -1,7 +1,7 @@
 ---
 title: "zsh and your shell config"
 date: 2026-09-16
-tags: [tech, dark]
+tags: [tech, shell]
 ---
 # zsh and your shell config
 
@@ -13,10 +13,10 @@ tags: [tech, dark]
 
 - Docs: [zsh manual](https://zsh.sourceforge.io/Doc/), [oh-my-zsh](https://ohmyz.sh), [starship prompt](https://starship.rs), [Source: zsh FAQ, 1.1 What is it?](https://zsh.sourceforge.io/FAQ/zshfaq01.html), [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360), [Source: Apple newsroom, macOS Catalina is available today (October 2019)](https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/)
 - Unlocks: [[Dotfiles]]
-- Age: Dark Age · Level: Intern
+- Shelf: Terminal and shell · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #shell

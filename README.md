@@ -50,7 +50,7 @@ cd ~/camp && vibe status          # the CLI finds the camp from any subfolder
 | 22:30 | Go-to-Market          | the game at a public URL                             | a Pages workflow or a live Pages site |
 | 23:00 | Autonomous Operations | headless Claude on a schedule, a subagent            | a subagent file and a schedule |
 
-`uv run vibe check 3` runs the checks for a workstream and awards the XP when they pass. Levels mirror the ages of the tech tree: Intern, Junior, Medior, Senior, Expert. Four evenings, four islands, thirty-two stops, twelve mentors from the field who stand on the islands with their real ideas and sources.
+`uv run vibe check 3` runs the checks for a workstream and awards the XP when they pass. Levels are the XP ladder: Intern, Junior, Medior, Senior, Expert. Four evenings, four islands, thirty-two stops, twelve mentors from the field who stand on the islands with their real ideas and sources.
 
 ## Ten things on the island that explain one idea each
 

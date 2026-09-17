@@ -1,7 +1,7 @@
 ---
 title: "Subagents and multi-agent"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Subagents and multi-agent
 
@@ -13,10 +13,10 @@ A subagent is a second model instance with its own instructions and context, cal
 
 - Docs: [Subagents](https://code.claude.com/docs/en/sub-agents), [Source: Significant-Gravitas/AutoGPT repository (created March 2023)](https://github.com/Significant-Gravitas/AutoGPT)
 - Unlocks: [[Headless agents and scheduling]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Deep
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

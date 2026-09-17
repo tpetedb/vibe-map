@@ -1,7 +1,7 @@
 ---
 title: "Context window and prompts"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Context window and prompts
 
@@ -13,10 +13,10 @@ The context window is the model's working memory for one conversation: everythin
 
 - Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview), [Claude Code best practices](https://code.claude.com/docs/en/best-practices), [Source: GPT-3 paper, section 2 (context window of 2048 tokens)](https://arxiv.org/abs/2005.14165), [Source: Anthropic, Introducing 100K context windows (May 2023)](https://www.anthropic.com/news/100k-context-windows), [Source: Google, Gemini 1.5 (February 2024)](https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/), [Source: Claude Sonnet 4 1M token context (August 2025)](https://claude.com/blog/1m-context)
 - Unlocks: [[AGENTS.md]], [[Skills (Agent Skills standard)]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

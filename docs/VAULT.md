@@ -34,6 +34,8 @@ tags: [decision, concept]
 
 The tags double as the graph legend. The first matching group colours a node, so a note tagged `#decision #concept` is red.
 
+Every generated tech note also carries the tag of its shelf, and each shelf has a colour of its own in the graph: `#shell` blue, `#git` orange, `#formats` yellow, `#code` green, `#data` bright green, `#net` bright blue, `#ship` bright red, `#agents` red, `#docs` dim yellow, `#knowledge` bright orange, `#future` grey. The shelf groups sit before the generic `#tech` group, so the graph shows eleven shelves instead of one yellow cloud; the note itself says the shelf and the depth (basics, working knowledge, deep).
+
 | Tag | Colour | Meaning |
 |---|---|---|
 | `#workstream` | green `#00A86B` | something shipped |

@@ -54,6 +54,8 @@ class TechNode:
     try_it: str
     docs: tuple[tuple[str, str], ...]
     unlocks: tuple[str, ...]
+    category: str = "agents"
+    depth: int = 2
 
 
 @cache
@@ -110,13 +112,25 @@ def ages() -> list[tuple[str, str, str, str]]:
 
 
 @cache
+def categories() -> list[tuple[str, str, str]]:
+    """(id, name, blurb) for every shelf of the tree, in display order."""
+    return [tuple(c) for c in _tech_module().CATEGORIES]
+
+
+def depth_label(depth: int) -> str:
+    return _tech_module().DEPTHS.get(depth, str(depth))
+
+
+@cache
 def tech_nodes() -> list[TechNode]:
+    mod = _tech_module()
     return [
         TechNode(
             id=t[0], age=t[1], name=t[2], what=t[3], history=t[4], try_it=t[5],
             docs=tuple((d[0], d[1]) for d in t[6]), unlocks=tuple(t[7]),
+            category=mod.category(t[0])[0], depth=mod.category(t[0])[1],
         )
-        for t in _tech_module().T
+        for t in mod.T
     ]  # fmt: skip
 
 

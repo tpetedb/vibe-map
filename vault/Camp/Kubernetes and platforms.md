@@ -1,7 +1,7 @@
 ---
 title: "Kubernetes and platforms"
 date: 2026-09-16
-tags: [tech, future]
+tags: [tech, ship]
 ---
 # Kubernetes and platforms
 
@@ -13,10 +13,10 @@ Kubernetes runs containers across many machines: scheduling, scaling, self-heali
 
 - Docs: [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story), [Source: Kubernetes blog, Borg: the predecessor to Kubernetes (2015)](https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/)
 - Unlocks: [[The future perspective]]
-- Age: Future Age · Level: Expert
+- Shelf: Ship and run · Depth: Deep
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #future
+#tech #ship

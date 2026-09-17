@@ -1,7 +1,7 @@
 ---
 title: "Changelogs (Keep a Changelog)"
 date: 2026-09-16
-tags: [tech, castle]
+tags: [tech, docs]
 ---
 # Changelogs (Keep a Changelog)
 
@@ -13,10 +13,10 @@ A CHANGELOG.md lists what changed for the person using your thing: newest first,
 
 - Docs: [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/), [Source: keep-a-changelog, its own CHANGELOG.md (dated releases since 2014-05-31)](https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md), [Source: Keep a Changelog 2.0.0 (2026-06-07)](https://keepachangelog.com/en/2.0.0/)
 - Unlocks: [[CI-CD and automation]]
-- Age: Castle Age · Level: Medior
+- Shelf: Docs and versioning · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #castle
+#tech #docs
