@@ -13,6 +13,7 @@ def test_game_loads_without_errors(game: GamePage) -> None:
     game.goto()
     assert game.page.is_visible("#title")
     assert game.page.title() == "Vibe Code Camp"
+    game.screenshot("smoke_title", clip_height=860)
     game.assert_clean()
 
 
@@ -140,3 +141,120 @@ def test_roadmap_renders_before_the_island_starts(game: GamePage) -> None:
     page.evaluate("openSheet('s-map')")
     assert "Innovation" in (page.text_content("#plotlist") or "")
     assert game.errors == []
+
+
+def test_no_artifact_swallows_a_signpost(game: GamePage) -> None:
+    """The mountain's radius once covered the Business Continuity signpost."""
+    game.goto()
+    game.start()
+    overlaps = game.page.evaluate(
+        """() => { const d = window.__data();
+           return Object.entries(d.worlds).flatMap(([w, cfg]) =>
+             cfg.plots.flatMap((p, i) => d.artifacts
+               .filter(a => a.world === w)
+               .filter(a => Math.hypot(a.pos[0]-p[0], a.pos[1]-p[1]) < a.r)
+               .map(a => `${w} plot ${i+1} inside ${a.id}`))); }"""
+    )
+    assert overlaps == [], overlaps
+    game.assert_clean()
+
+
+def test_walking_to_the_fourth_signpost_offers_the_stop(game: GamePage) -> None:
+    """Its signpost stands inside the mountain's ring; the stop must still win."""
+    game.goto(state={"name": "Lotte", "doneW": {"campus": [1, 2, 3]}})
+    game.resume()
+    plot = game.page.evaluate("window.__data().worlds.campus.plots[3]")
+    game.walk_to(plot[0], plot[1])
+    assert game.near() == 4, game.page.evaluate("window.__debug()")
+    label = game.page.text_content("#enterbtn") or ""
+    assert "Business Continuity" in label, label
+    game.screenshot("smoke_plot4", clip_height=640)
+    game.assert_clean()
+
+
+def test_a_progress_code_of_an_unknown_version_is_refused(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    msg = game.import_code(encode_progress(done_w={"campus": [1, 2]}, version=7))
+    assert "version 7" in msg and "version 2" in msg, msg
+    assert game.state()["doneW"]["campus"] == []
+    game.assert_clean()
+
+
+def test_escape_closes_the_sheet_and_the_vault(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.open_roadmap()
+    game.page.keyboard.press("Escape")
+    game.page.wait_for_timeout(200)
+    assert not game.page.locator("#sheet").evaluate("e => e.classList.contains('on')")
+    game.open_vault()
+    game.page.keyboard.press("Escape")
+    game.page.wait_for_timeout(200)
+    assert not game.page.locator("#vault").evaluate("e => e.classList.contains('on')")
+    game.assert_clean()
+
+
+def test_full_screen_takes_the_element_that_holds_the_panels(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.open_roadmap()
+    game.page.click("#s-map button:has-text('Full screen')")
+    game.page.wait_for_timeout(400)
+    res = game.page.evaluate(
+        """() => { const fe = document.fullscreenElement;
+          if (!fe) return null;
+          const has = id => fe.contains(document.getElementById(id));
+          return {tag: fe.tagName, sheet: has('sheet'), vault: has('vault')}; }"""
+    )
+    assert res is not None, "the browser refused fullscreen"
+    assert res["sheet"] and res["vault"], res
+    game.assert_clean()
+
+
+def test_the_tech_tree_says_it_scrolls(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.page.click("#hud button:has-text('Tree')")
+    game.page.wait_for_selector("#vtree.on", state="attached")
+    game.page.wait_for_timeout(300)
+    assert game.page.locator("#vtree .treenav button").count() == 2
+    before = game.page.evaluate("document.getElementById('vtree').scrollLeft")
+    game.page.click("#vtree .treenav button:has-text('Later')")
+    game.page.wait_for_timeout(600)
+    after = game.page.evaluate("document.getElementById('vtree').scrollLeft")
+    assert after > before, (before, after)
+    game.assert_clean()
+
+
+def test_the_pairings_come_from_the_theme(game: GamePage) -> None:
+    """A coffee theme must not show the handwritten wine blocks."""
+    game.goto()
+    kind = game.page.evaluate("window.__data().config.theme.pairing")
+    texts = game.page.evaluate(
+        "() => [...document.querySelectorAll('.pairing')].map(e => e.textContent)"
+    )
+    if kind == "wine":
+        assert any("Chardonnay" in t for t in texts)
+        return
+    pairings = game.page.evaluate("window.__data().config.theme.pairings")
+    if not pairings:
+        assert texts == []
+        return
+    assert texts and all("Chardonnay" not in t for t in texts), texts
+    assert pairings[0] in texts[0], texts[0]
+    game.assert_clean()
+
+
+def test_the_vault_graph_keeps_its_labels_on_the_canvas(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.open_vault()
+    outside = game.page.evaluate(
+        """() => { const c = document.getElementById('vg');
+          const w = c.clientWidth, h = c.clientHeight;
+          return window.__debug().vault().sample
+            .filter(([x, y]) => x < 8 || x > w - 8 || y < 8 || y > h - 8); }"""
+    )
+    assert outside == [], outside
+    game.assert_clean()

@@ -98,7 +98,7 @@ const ART_DEMOS={
   ],
   office:[
     {l:"Hand out the work",o:["planner   reads AGENTS.md, the issue, the file map","planner   ->  plan: 3 steps, files: vibemap/scores.py, tests/test_scores.py","worker    ->  edits both, runs just test-one tests/test_scores.py    green","reviewer  ->  reads the diff against the plan and the handbook","One brief, three roles. The handbook is AGENTS.md; nobody has to be told twice."]},
-    {l:"The review gate says no",o:["reviewer:  REJECT   'data/scores.csv rewritten without asking; AGENTS.md says never'","worker    ->  reverts the rewrite, keeps the new column, reruns the test    green","reviewer:  APPROVE","A gate that never says no is a rubber stamp. This one had read the handbook."]},
+    {l:"The review gate says no",o:["reviewer:  REJECT   'workspace/data/scores.csv rewritten without asking; AGENTS.md says never'","worker    ->  reverts the rewrite, keeps the new column, reruns the test    green","reviewer:  APPROVE","A gate that never says no is a rubber stamp. This one had read the handbook."]},
     {l:"Departments (subagents)",o:["main  ->  spawn scorekeeper   (its own context: the scores only)","main  ->  spawn docs-sync     (its own context: the docs only)","each reports back in one paragraph; main merges and moves on","A subagent is a department: a fresh desk, a narrow brief, a written report."]}
   ],
   households:[

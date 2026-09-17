@@ -15,6 +15,9 @@ function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow"
   (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(S.artifacts.includes(a.id))a.links.forEach(t=>{if(NOTES[t])set.add(t)})});
   return set}
 let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vctxScale=1,vz=1,vtx=0,vty=0;
+// A node's label hangs under it and is centred on it, so the simulation keeps
+// half a label's width from the sides and a label's height from the bottom.
+const VMX=54,VMY=30;
 const vToWorld=(sx,sy)=>[(sx-vtx)/vz,(sy-vty)/vz];
 // The layout is a d3-force simulation: charge, links, a weak pull to the
 // centre and collision. It cools and stops on its own; a drag or a fresh
@@ -32,7 +35,7 @@ function buildGraph(){
     .force("x",d3.forceX(vW/2).strength(.045)).force("y",d3.forceY(vH/2).strength(.06))
     .force("collide",d3.forceCollide(n=>r(n)+9).iterations(2))
     .velocityDecay(.45).alphaDecay(.028)
-    .on("tick",()=>{VN.forEach(n=>{n.x=Math.max(14,Math.min(vW-14,n.x));n.y=Math.max(14,Math.min(vH-14,n.y))});vdraw()})
+    .on("tick",()=>{VN.forEach(n=>{n.x=Math.max(VMX,Math.min(vW-VMX,n.x));n.y=Math.max(16,Math.min(vH-VMY,n.y))});vdraw()})
     .stop();
   VSIM.tick(160);
 }
@@ -45,11 +48,16 @@ function vdraw(){
   // Labels: the selection and its neighbours always; the rest only when the
   // node is big enough on screen, so a phone shows hubs and a zoom shows all.
   const small=Math.min(vW,vH)<520;
+  // Zoomed out, only the hubs are labelled; everything else would overlap.
+  const minDeg=vz<.9?3:vz<1.4?2:1;
   VN.forEach((n,i)=>{const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);c.globalAlpha=dim?.3:1;
     if(i===vsel){c.fillStyle="rgba(0,136,204,.25)";c.beginPath();c.arc(n.x,n.y,r+8,0,7);c.fill()}
     c.fillStyle=col[n.t];c.beginPath();c.arc(n.x,n.y,r,0,7);c.fill();
-    const label=i===vsel||nb.has(i)||(!dim&&r*vz>=(small?9:5.5));
-    if(label){c.fillStyle="#dcddde";c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";c.fillText(n.id,n.x,n.y+r+13)}
+    const label=i===vsel||nb.has(i)||(!dim&&r*vz>=(small?9:5.5)&&n.deg>=minDeg);
+    if(label){c.fillStyle="#dcddde";c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
+      // Keep the whole label on the canvas, whatever the pan and the zoom.
+      const half=c.measureText(n.id).width/2,lo=(-vtx)/vz+half+4,hi=(vW-vtx)/vz-half-4;
+      c.fillText(n.id,Math.max(lo,Math.min(hi,n.x)),n.y+r+13)}
     c.globalAlpha=1});
 }
 function vpick(x,y){let best=null,bd=22/vz;VN.forEach((n,i)=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=i}});return best}
@@ -77,9 +85,12 @@ window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md
 let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
 window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");if(treeOn)renderTree()};
+window.treeScroll=function(d){const el=$("vtree");el.scrollBy({left:d*el.clientWidth*.8,behavior:motionOff()?"auto":"smooth"})};
 function renderTree(){const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
-  $("vtree").innerHTML='<div class="ages">'+CATS.map(([c,cn,d])=>`<div class="age"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
+  $("vtree").innerHTML='<div class="treenav"><button onclick="treeScroll(-1)" aria-label="Earlier ages">Earlier</button><button onclick="treeScroll(1)" aria-label="Later ages">Later</button><span class="small muted">Eleven ages, side by side. Scroll or use the buttons.</span></div><div class="ages">'+CATS.map(([c,cn,d])=>`<div class="age"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
   $("vtree").querySelectorAll(".tech").forEach(b=>b.onclick=()=>{vrender(b.dataset.n);renderTree();$("vnote").scrollIntoView({behavior:"smooth",block:"start"})})}
+// Only a file:// game knows where the vault folder is; over http the button
+// sends you to the same notes on GitHub, and says so.
 window.openObsidian=function(){
   if(location.protocol==="file:"){const dir=decodeURIComponent(location.pathname).replace(/\/game\/[^/]*$/,"");location.href="obsidian://open?path="+encodeURIComponent(dir+"/vault/Camp/Tonight.md");
     $("vcount").textContent="Opening Obsidian. First time: Open folder as vault, pick vault/.";return}

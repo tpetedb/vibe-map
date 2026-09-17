@@ -194,27 +194,29 @@ A browser page cannot write files to your disk on its own, so the pattern is: th
 
 1. Add persistence with an explicit schema:
    ```
-   Every time a round ends, save a record to localStorage with exactly these fields: ts (ISO timestamp), player (string), score (integer), seconds (integer). Add an "Export CSV" button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.
+   Every time a round ends, save a record to localStorage with exactly these fields: played_at (ISO timestamp), player (string), score (integer), duration_s (integer). Add an "Export CSV" button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.
    ```
-2. Play three rounds, export, and move the file into the project:
+2. Play three rounds, export, and move the file to the one place the check looks (from your camp folder):
    ```
-   mv ~/Downloads/scores.csv ~/vibe-map/scores.csv
+   mv ~/Downloads/scores.csv workspace/data/scores.csv
+   head -1 workspace/data/scores.csv
    ```
+   That header line must read `played_at,player,score,duration_s`, exactly.
 3. Now ask for analysis on top of the file, not the game:
    ```
-   Write analyze.py that reads scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.
+   Write workspace/python/analyze.py that reads workspace/data/scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.
    ```
 4. Open the chart:
    ```
    open chart.png
    ```
-5. Break the schema on purpose. Rename the score column in scores.csv to points, run analyze.py again, watch it fail. Rename it back.
+5. Break the schema on purpose. Rename the score column in `workspace/data/scores.csv` to points, run analyze.py again, watch it fail. Rename it back.
 
 ### What Lotte will notice
 
 The game is now a front end. The CSV is the thing. Any spreadsheet, script or chart can read it, and Claude can build the next one in a minute because the shape is known. This is the same idea as a table in a database: the columns are a contract.
 
-**Definition of done.** scores.csv has a header row with ts,player,score,seconds. analyze.py runs and produces chart.png. Renaming a column breaks it, restoring it fixes it.
+**Definition of done.** `workspace/data/scores.csv` has the header row `played_at,player,score,duration_s` and at least three rows. There is a query in `workspace/sql/` and a script in `workspace/python/` that read it. `uv run vibe check 3` is green.
 
 **Why it matters.** Every useful tool you build for work will be this pattern: something produces a file with a fixed shape, something else reads it. Meeting notes to action list, calendar export to weekly summary. Learn to name the columns first.
 
@@ -425,7 +427,7 @@ The goal: a note in your vault changes without you at the keyboard.
 
 1. From the project folder, once by hand:
    ```
-   claude -p "read scores.csv and append a one-paragraph summary of tonight's best runs to the vault note Vibe Code Camp/Scores.md"
+   claude -p "read workspace/data/scores.csv and append a one-paragraph summary of tonight's best runs to vault/Camp/Scores.md"
    ```
 2. In Claude Code: "create a subagent called scorekeeper that only does that job, and document it in the vault."
 3. Then: "schedule the scorekeeper to run every morning at 08:00 with launchd." Read the plist it writes; it should call `claude -p` with `--output-format text`. Load it with `launchctl load`.

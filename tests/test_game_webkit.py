@@ -121,3 +121,39 @@ def test_vault_opens_on_iphone(phone: GamePage) -> None:
     assert phone.page.locator("#vnote .wl").count() > 0
     phone.close_vault()
     phone.assert_clean()
+
+
+def test_the_title_keeps_its_primary_button_in_view(
+    game_webkit_iphone: GamePage,
+) -> None:
+    """On a phone the form is taller than the screen; Go must stay reachable."""
+    game = game_webkit_iphone.goto()
+    page = game.page
+    box = page.locator("#title .row.go").bounding_box()
+    assert box, "the go row has no box"
+    assert box["y"] + box["height"] <= page.viewport_size["height"] + 1, box
+    assert box["y"] >= 0, box
+    # The box is opaque, so the HUD behind it does not read through the text.
+    bg = page.evaluate(
+        "getComputedStyle(document.querySelector('#title .box')).backgroundColor"
+    )
+    assert "rgba" not in bg or bg.endswith(", 1)"), bg
+    game.screenshot("webkit_iphone_title")
+    assert game.errors == []
+
+
+def test_the_walker_label_carries_the_typed_name(phone: GamePage) -> None:
+    """The label is built at boot; typing a name has to rebuild the walker."""
+    assert (phone.page.evaluate("window.__debug().label") or {})["text"].startswith(
+        "Lotte"
+    )
+    phone.page.evaluate("document.getElementById('title').classList.remove('off')")
+    phone.page.fill("#name", "Bartholomew Featherstonehaugh-Smythe")
+    phone.page.dispatch_event("#name", "input")
+    phone.page.wait_for_timeout(900)
+    plate = phone.page.evaluate("window.__debug().label")
+    assert plate["text"].startswith("Bartholomew"), plate
+    # A long name shrinks to fit the plate instead of running off it.
+    assert plate["fs"] < 30, plate
+    assert plate["fs"] >= 11, plate
+    phone.assert_clean()

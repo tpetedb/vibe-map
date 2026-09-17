@@ -8,7 +8,7 @@ const LOOKS={
   frank:{label:"Frank",role:"Platform",blurb:"Platform engineer. Glasses, blue shirt, no patience for dashboards.",kind:"mentor",body:"#0067A5",legs:"#2B2B2B",arms:"#F5D7BC",look:{hair:"#3B2A1E",glasses:true}},
   max:{label:"Max",role:"Data",blurb:"Data engineer. Beard, green shirt, brings the DuckDB.",kind:"mentor",body:"#00A86B",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#1A1A1A",beard:true}},
   rolinda:{label:"Rolinda",role:"Ops",blurb:"Head of Hospitality. Plays herself; the hub keeps its own Rolinda on duty.",kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A"},
-  own:{label:"Your own name",role:"Player",blurb:"Type it in the box below, plainly, without the angle brackets. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
+  own:{label:"Your own name",role:"Player",blurb:"Type it in the box below. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
 };
 const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
@@ -21,7 +21,10 @@ const DIFFS=[
 // The walker spec for the current player. Unknown or missing looks fall back
 // to Lotte for a saved game that was played as her, else to your own look.
 function playerLook(){return LOOKS[S.look]||(S.name==="Lotte"?LOOKS.lotte:LOOKS.own)}
-function playerSpec(){const l=playerLook();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:S.name+", "+l.role}}
+// What to call the player before a name is typed: the chosen preset, else
+// nothing. Never the placeholder.
+function playerLabel(){return S.name||(LOOKS[S.look]&&S.look!=="own"?LOOKS[S.look].label:"")}
+function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:n?n+", "+l.role:l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
 // Every command block in a lesson becomes a <details>: open at beginner, easy
@@ -31,7 +34,13 @@ function wrapCommands(){document.querySelectorAll(".lesson pre").forEach(pre=>{i
 let cmdsLevel=null;
 function syncCmds(){const open=cmdsOpen();if(cmdsLevel===open)return;cmdsLevel=open;document.querySelectorAll("details.cmds").forEach(d=>d.open=open)}
 // The naming convention for a local camp: your name, vibe-map, the date.
-function slug(s){return (s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"player"}
+// Accents fold rather than disappear: Jorg and the accented spelling get the
+// same camp directory. Mirrors camp_dir_name in the CLI.
+function fold(s){return String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function slug(s){return fold(s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"player"}
+// A name goes into a shell command as one single-quoted word, so a quote or
+// a space in it cannot end the argument.
+function shq(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
@@ -41,39 +50,56 @@ function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 // whatever the difficulty: setup is not the game.
 function setupHtml(){const dir=campDir();const repo=repoUrl();return `
 <p class="small">Three windows side by side: this game, a terminal, Obsidian. The game is where you get the story and claim stops. The terminal is where the work happens and the checks run. Obsidian is where the notes land. Fifteen minutes to set up, then <code>just start</code> every session.</p>
-<h4>1. Get the repository</h4>
+<h4>1. Get the tools</h4>
 <p class="small">Open <a href="${repo}" target="_blank" rel="noopener">${repo.replace(/^https?:\/\//,"")}</a> and press <b>Use this template</b> if you want your own copy on GitHub, or skip that and clone below. Then open a terminal (on a Mac: Cmd+Space, type Terminal, or install Ghostty).</p>
 <pre><code>brew install uv git just gh
 brew install --cask obsidian</code></pre>
+<p class="small muted">You should see: a list of installed formulae, and <code>uv --version</code> printing a number.</p>
 <h4>2. Install the command and make your camp</h4>
 <p class="small">The folder name is the convention: your name, vibe-map, today's date. It sorts by date in a listing and tells you which camp a note came from.</p>
 <pre><code>uv tool install git+${repo}
 vibe new ${dir}
 cd ${dir}
 just setup</code></pre>
-<p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(S.name)}</code> (needs <code>gh auth login</code> first).</p>
+<p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>vibe.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
+<p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code> (needs <code>gh auth login</code> first).</p>
 <h4>3. Tell it who you are</h4>
-<pre><code>vibe name "${esc(S.name)}"
+<pre><code>vibe name ${esc(shq(playerLabel()||"player"))}
 vibe difficulty ${difficulty()}
 just start</code></pre>
+<p class="small muted">You should see: the camp menu, with your name at the top and 0 of 8 stops done.</p>
 <p class="small muted"><code>just start</code> is the terminal menu: checks, the pet, the launchers. It stays open in one terminal tab; open a second tab for Claude Code.</p>
 <h4>4. Open the vault in Obsidian</h4>
-<p class="small">Obsidian, <b>Open folder as vault</b>, pick <code>${dir}/vault</code>. Trust the author when asked: the vault ships its own plugins config. Press Cmd+G for the graph.</p>
+<p class="small">Obsidian, <b>Open folder as vault</b>, pick <code>${dir}/vault</code>. Obsidian asks whether to trust the vault's own plugin config; it is the folder <code>vibe</code> just wrote, so yes. Press Cmd+G for the graph.</p>
 <pre><code>vibe vault mode grow     # optional: start empty and watch the graph fill as you play
 vibe vault build</code></pre>
+<p class="small muted">You should see: <code>vault/Camp/Tonight.md</code> on disk, and a graph with notes in it in Obsidian.</p>
 <h4>5. Keep the two in sync</h4>
 <p class="small">Progress here and progress in the terminal are one code. After a session in either place, carry it across:</p>
-<pre><code>vibe status                                # in the terminal: what you have done there
-vibe export                                # prints a code; paste it in the game under World, Sync
+<pre><code>vibe export                                # prints a code; paste it in the game under World, Sync
 vibe import &lt;code from the game&gt;           # the other way round</code></pre>
+<p class="small muted">You should see: a long code on export, and a line naming the stops that were added on import.</p>
+<h4>6. Confirm the whole thing</h4>
+<pre><code>vibe status</code></pre>
+<p class="small muted">You should see: your name, your difficulty, your stops and your XP. That one line is the check that setup worked.</p>
 <p class="small muted">Two terminals help: one with <code>just start</code> or <code>claude</code>, one for the commands the lessons give you. The full walk-through with screenshots is in <a href="${repo}/blob/main/docs/LONG-GAME.md" target="_blank" rel="noopener">docs/LONG-GAME.md</a>.</p>`}
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"<your_name>";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
-window.nameTyped=function(v){S.name=v.trim()||"<your_name>";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
+// The walker carries the name on a sprite, so it is rebuilt after typing
+// stops rather than on every keystroke.
+let nameT=null;
+window.nameTyped=function(v){S.name=v.trim();if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";clearNameError();save();hud();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml();
+  clearTimeout(nameT);nameT=setTimeout(()=>{if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()},400)};
+// The name is the one thing the title screen insists on: no placeholder gets
+// saved, so an empty box sends you back to it instead of starting as nobody.
+const NAME_HINT="Type your name plainly.";
+function clearNameError(){const h=$("namehint");if(h){h.classList.remove("err");h.textContent=NAME_HINT}}
+window.refuseEmptyName=function(){const nm=$("name"),h=$("namehint");if(h){h.textContent="Type your name first, then kick off.";h.classList.add("err")}
+  if(nm){nm.classList.remove("shake");void nm.offsetWidth;nm.classList.add("shake");nm.focus()}};
 function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOOKS[S.look]?S.look:(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
@@ -82,8 +108,9 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOO
 <div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
 <div class="step"><b>3</b><span>How do you want to play?</span></div>
-<div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Terminal, this game and Obsidian, synced. The real course.</span></button></div>
-<div id="ob-setup" class="setup" style="display:${mode==="full"?"":"none"}">${mode==="full"?setupHtml():""}</div>
+<div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Everything, synced. Add a terminal and Obsidian so your work is checked and your notes are saved. You can switch to this later; nothing is lost.</span></button></div>
+<p class="small muted">The full experience needs a terminal and a Claude, Codex or Gemini plan; Pre-flight in the Roadmap walks through the install.</p>
 <div class="step"><b>4</b><span>Go</span></div>`;
-  const nm=$("name");if(nm){const v=S.name==="<your_name>"?"":S.name;if(nm.value!==v)nm.value=v}
+  const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
+  const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
