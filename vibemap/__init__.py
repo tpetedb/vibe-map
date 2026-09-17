@@ -14,4 +14,4 @@ from importlib.metadata import PackageNotFoundError, version
 try:
     __version__ = version("vibe-map")
 except PackageNotFoundError:  # reason: running from source without an install
-    __version__ = "0.4.1"
+    __version__ = "0.5.0"
