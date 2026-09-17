@@ -819,6 +819,30 @@ gh auth login</code></pre>
 (function(){
 const CONFIG={"version": "0.8.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda."}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "mode": "campaign", "vault": {"mode": "full"}};
 const NEWS={"fetched_at": "2026-09-17T01:07:07Z", "items": [{"source": "Claude Code releases", "title": "v2.1.274", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274", "date": "2026-09-17T00:12:02Z"}, {"source": "Simon Willison", "title": "datasette 1.0a40", "link": "https://simonwillison.net/2026/Sep/16/datasette/", "date": "2026-09-16T23:51:43Z"}, {"source": "Simon Willison", "title": "datasette 0.65.5", "link": "https://simonwillison.net/2026/Sep/16/datasette-2/", "date": "2026-09-16T23:51:08Z"}, {"source": "GitHub changelog", "title": "Automate SSO authorization for classic PATs and SSH keys", "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys", "date": "2026-09-16T20:20:16Z"}, {"source": "GitHub changelog", "title": "SCIM user responses now include a profileUrl attribute", "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute", "date": "2026-09-16T20:19:58Z"}, {"source": "GitHub changelog", "title": "Copilot budget increase requests are generally available", "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available", "date": "2026-09-16T20:17:18Z"}, {"source": "Simon Willison", "title": "Claude Cowork and chat are now one Claude", "link": "https://simonwillison.net/2026/Sep/16/one-claude/", "date": "2026-09-16T18:09:49Z"}, {"source": "OpenAI news", "title": "Our framework for reporting model misalignment", "link": "https://openai.com/index/model-misalignment-reporting-framework", "date": "2026-09-16T17:00:00Z"}, {"source": "Simon Willison", "title": "Quoting Mustafa Suleyman", "link": "https://simonwillison.net/2026/Sep/16/mustafa-suleyman/", "date": "2026-09-16T16:00:54Z"}, {"source": "OpenAI news", "title": "Helping older adults use AI in everyday life", "link": "https://openai.com/index/helping-older-adults-use-ai-in-everyday-life", "date": "2026-09-16T16:00:00Z"}, {"source": "GitHub changelog", "title": "Code scanning AI Scan no longer requires CodeQL default setup", "link": "https://github.blog/changelog/2026-09-16-code-scanning-ai-scan-no-longer-requires-codeql-default-setup", "date": "2026-09-16T13:26:06Z"}, {"source": "OpenAI news", "title": "Reimagining advertising with AI", "link": "https://openai.com/index/reimagining-advertising-with-ai", "date": "2026-09-16T13:00:00Z"}, {"source": "OpenAI news", "title": "How to connect AI usage to business value", "link": "https://openai.com/index/how-to-connect-ai-usage-to-business-value", "date": "2026-09-16T12:00:00Z"}, {"source": "OpenAI news", "title": "How workers are unlocking new ways of working", "link": "https://openai.com/index/unlocking-new-ways-of-working", "date": "2026-09-16T09:00:00Z"}, {"source": "arXiv cs.AI", "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search", "link": "https://arxiv.org/abs/2609.13356", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation", "link": "https://arxiv.org/abs/2609.13396", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Generalized Agent Iteration: One Formal Framework for Iterative Policy Improvement and Recursive Self-Improvement", "link": "https://arxiv.org/abs/2609.13406", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Vibe Patenting: Evaluating LLM Judges for Professional Patent-Drafting Agents", "link": "https://arxiv.org/abs/2609.13422", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Toward Self-Adaptive Physical AI: Can LLM Agents Manage Long-Horizon Physical Tasks?", "link": "https://arxiv.org/abs/2609.13436", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "LabAgent: Customize Any Research Hubs for Scientific Discoveries Using AI Agents", "link": "https://arxiv.org/abs/2609.13437", "date": "2026-09-16T04:00:00Z"}]};
+// Source configuration for the game: the numbers and colours a fork changes
+// first. The build concatenates every file in src/config/ ahead of the game
+// modules, so these names are in scope everywhere below. The journey level
+// (name, difficulty, theme) arrives separately as CONFIG, injected from
+// config/camp.toml; the theme presets themselves live in vibemap/themes.py.
+// See docs/CONFIG.md.
+
+// How large the island is around the walker. Meshes keep their size, so the
+// world grows rather than the walker shrinking; speed, camera, fog and sky
+// distances scale with it in their own modules so the feel stays the same.
+const WORLD_SCALE=1.6;
+// The island's radius in data units, before the scale.
+const R=20;
+// Each plot has an annex 6 to 8 data units outward, hidden until that stop is
+// done. Its radius, scaled with the world.
+const ANNEX_R=3.2*WORLD_SCALE;
+
+// Tom's palette: the five hues the whole product uses, on OLED black. A fork
+// that recolours the island starts here.
+const PALETTE={
+  red:"#D32F2F",orange:"#FF8C1A",yellow:"#FFBF00",green:"#00A86B",blue:"#0067A5",
+  greenBright:"#00D084",blueBright:"#0088CC",orangeBright:"#F04923",
+  black:"#000000",surface:"#0A0A0A",text:"#F1F1F8",muted:"#8B93A7",
+};
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
@@ -918,7 +942,6 @@ function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";ret
 function iconize(root){(root||document).querySelectorAll("[data-icon]").forEach(el=>{if(el.querySelector(":scope>svg.ic"))return;el.insertAdjacentHTML("afterbegin",icon(el.dataset.icon))})}
 let renderer,scene,camera,clock,island,water,wGeo,wBase,stars,sunM,moonM,dirL,hemiL,ambL;
 const plots=[],builds={},clouds=[],parts=[],chars={},props={};
-const R=20;
 let PLOT_POS=[];
 const mat=(c,o={})=>{const m=new T.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));m.color.convertSRGBToLinear();if(o.emissive)m.emissive.convertSRGBToLinear();m.userData.viaMat=1;m.userData.cs=1;return m};
 function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.userData.cs){m.userData.cs=1;if(!(m instanceof T.MeshStandardMaterial&&m.flatShading&&m.userData.viaMat)){m.color.convertSRGBToLinear();if(m.emissive)m.emissive.convertSRGBToLinear()}}})}
@@ -1122,7 +1145,7 @@ function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:
   const found=S.artifacts.includes(a.id);
   // a modelled artifact gets its ring around the walls, where the walker stops
   const rr=props.artR&&props.artR[a.id]?props.artR[a.id]+.45:1.2;
-  const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?"#00D084":"#FFBF00",transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
+  const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?PALETTE.greenBright:PALETTE.yellow,transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
   props.artifacts.push({a,ring})})}
 function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>{const d=Math.hypot(x.a.pos[0]-pos.x,x.a.pos[1]-pos.z);if(d<x.a.r&&d<bd){bd=d;best=x.a}});return best}
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;
@@ -1219,14 +1242,9 @@ const WORLDS={
 };
 // One scale for the whole map, applied once here to every coordinate the data
 // carries (WORLDS, MENTORS, ARTIFACTS); the literal positions in the world
-// builder go through P(). Meshes keep their size, so the island grows around
-// the walker rather than the walker shrinking. Speed, camera, fog and sky
-// distances scale with it in their own modules so the feel stays the same.
-const WORLD_SCALE=1.6;
+// builder go through P(). WORLD_SCALE and ANNEX_R are source configuration,
+// in src/config/00-config.js.
 const P=(x,z)=>[x*WORLD_SCALE,z*WORLD_SCALE];
-// Each plot has an annex: a small land blob 6 to 8 data units outward, reached
-// by a spur off the ring, hidden until that stop is done. Its radius, scaled.
-const ANNEX_R=3.2*WORLD_SCALE;
 function scaleWorld(w){const s=WORLD_SCALE,pt=p=>[p[0]*s,p[1]*s];
   w.land=w.land.map(b=>[b[0]*s,b[1]*s,b[2]*s]);w.plots=w.plots.map(pt);w.way=w.way.map(pt);w.annex=w.annex.map(pt);
   if(w.river)w.river=w.river.map(pt);w.lake=pt(w.lake);if(w.bridge)w.bridge=[w.bridge[0]*s,w.bridge[1]*s,w.bridge[2]]}
@@ -1863,13 +1881,13 @@ Structure tells the model which words are instructions, which are data and which
 "The symbols: slash, at, bang, hash":{t:"agents",md:`# The symbols: slash, at, bang, hash
 Every agent chat has a few characters that are not words. In Claude Code, a line that starts with \`/\` is a command or a skill (\`/help\`, \`/init\`, \`/compact\`, \`/memory\`), a line that starts with \`!\` runs a shell command and puts its output in the session, and \`@\` followed by a path mentions a file so the agent reads it (type a letter after it for completion). In CLAUDE.md, \`@path\` imports another file at launch; inside backticks it stays literal. \`#\` is a Markdown heading at the start of a line and a tag inside Obsidian (\`#tech\`); \`[[Note]]\` is an Obsidian link; \`---\` fences frontmatter; three backticks fence code; \`<tag>\` is structure for the model; \`$\` starts a shell variable and \`~\` is your home folder. Knowing which parser reads which symbol is half of not being surprised.
 **History.** Slash commands come from IRC (1988), file mentions with \`@\` from Twitter-era chat, \`!\` for shell escapes from editors like vi and ed, \`#\` for headings from Markdown (2004) and for tags from Twitter (2007), double brackets from wikis (WikiWikiWeb, 1995) and Obsidian; Claude Code documents its own set on the interactive-mode page.
-**Try in five minutes.** In Claude Code type \`/help\`, then \`!uv run vibe status\`, then \`@vibe.toml what does the pet table do\`. Open \`CLAUDE.md\` and see the \`@AGENTS.md\` import at the top. Then open the vault in Obsidian and click a \`#tech\` tag.
+**Try in five minutes.** In Claude Code type \`/help\`, then \`!uv run vibe status\`, then \`@config/camp.toml what does the pet table do\`. Open \`CLAUDE.md\` and see the \`@AGENTS.md\` import at the top. Then open the vault in Obsidian and click a \`#tech\` tag.
 - Docs: [Claude Code, interactive mode (quick commands)](https://code.claude.com/docs/en/interactive-mode), [Claude Code, memory and @path imports](https://code.claude.com/docs/en/memory), [Obsidian, internal links](https://help.obsidian.md/Linking+notes+and+files/Internal+links), [Source: Claude Code interactive mode reference, the quick commands table (/ command or skill, ! shell mode, @ file path mention)](https://code.claude.com/docs/en/interactive-mode), [Source: Claude Code memory page, import additional files with @path](https://code.claude.com/docs/en/memory)
 - Unlocks: [[Agent Skills standard]], [[Claude and Obsidian]], [[Bash and shell scripts]]
 - Shelf: Agents and the harness · Depth: Basics
 #tech #agents`},
 "Separation of concerns":{t:"code",md:`# Separation of concerns
-One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (vibe.toml, AGENTS.md, the skills, the hooks) is visible and separate; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
+One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (config/camp.toml, AGENTS.md, the skills, the hooks) is visible and separate, and it has levels: the repository's, the source's, and your journey's; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
 **History.** Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load.
 **Try in five minutes.** Open your camp. For each top-level folder and file write one line in a vault note: which of the three zones it belongs to (product, configuration, your workspace) and which decision it hides. Then find one place where a file mixes two concerns (a script that both computes and prints, a note that is also a config) and name it. Naming it is the exercise; splitting it is optional.
 - Docs: [Dijkstra, On the role of scientific thought (EWD 447), 1974](https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html), [Parnas, On the criteria to be used in decomposing systems into modules, 1972](https://web.archive.org/web/20230815003501/http://sunnyday.mit.edu/16.355/parnas-criteria.html), [Conway, How do committees invent?, 1968](https://www.melconway.com/Home/Committees_Paper.html), [Ousterhout, A Philosophy of Software Design, 2018](http://web.stanford.edu/~ouster/cgi-bin/aposd.php), [The Twelve-Factor App, III. Config](https://12factor.net/config), [Skelton and Pais, Team cognitive load, 2021](https://itrevolution.com/articles/cognitive-load/), [Source: Dijkstra, EWD 447 (the phrase and the definition); Parnas 1972 (information hiding as the criterion)](https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html)

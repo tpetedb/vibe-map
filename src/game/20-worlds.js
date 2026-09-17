@@ -38,14 +38,9 @@ const WORLDS={
 };
 // One scale for the whole map, applied once here to every coordinate the data
 // carries (WORLDS, MENTORS, ARTIFACTS); the literal positions in the world
-// builder go through P(). Meshes keep their size, so the island grows around
-// the walker rather than the walker shrinking. Speed, camera, fog and sky
-// distances scale with it in their own modules so the feel stays the same.
-const WORLD_SCALE=1.6;
+// builder go through P(). WORLD_SCALE and ANNEX_R are source configuration,
+// in src/config/00-config.js.
 const P=(x,z)=>[x*WORLD_SCALE,z*WORLD_SCALE];
-// Each plot has an annex: a small land blob 6 to 8 data units outward, reached
-// by a spur off the ring, hidden until that stop is done. Its radius, scaled.
-const ANNEX_R=3.2*WORLD_SCALE;
 function scaleWorld(w){const s=WORLD_SCALE,pt=p=>[p[0]*s,p[1]*s];
   w.land=w.land.map(b=>[b[0]*s,b[1]*s,b[2]*s]);w.plots=w.plots.map(pt);w.way=w.way.map(pt);w.annex=w.annex.map(pt);
   if(w.river)w.river=w.river.map(pt);w.lake=pt(w.lake);if(w.bridge)w.bridge=[w.bridge[0]*s,w.bridge[1]*s,w.bridge[2]]}

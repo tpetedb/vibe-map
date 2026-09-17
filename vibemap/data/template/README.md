@@ -18,7 +18,7 @@ This folder is a camp: the place where you play the course and build your own th
 |---|---|---|
 | Your work | `workspace/` | Everything you build during the course: the game from workstream 1, the scores CSV and its queries, the chart, the tool. Empty on day one apart from a README. The lessons run here and the checks look here. |
 | Your notes | `vault/` | The course notes. `vibe` writes them, you and your agent add your own. Open it in Obsidian. |
-| Settings | `vibe.toml`, `justfile`, `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/` | How the camp and your agent behave. You will be taught to change these; until then, leave them alone. |
+| Settings | `config/camp.toml`, `justfile`, `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/` | How the camp and your agent behave. You will be taught to change these; until then, leave them alone. |
 
 The state of your progress lives in `.vibe/state.json` (ignored by git) and travels to the game as a progress code (`vibe export`, `vibe import`).
 

@@ -36,7 +36,7 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
     for rel in (
         "workspace/README.md",
         "vault/Camp/Tonight.md",
-        "vibe.toml",
+        "config/camp.toml",
         "justfile",
         "AGENTS.md",
         "CLAUDE.md",
@@ -51,7 +51,7 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
     assert (camp / ".claude" / "skills" / "camp-progress").is_symlink()
     assert not (camp / "src").exists() and not (camp / "vibemap").exists()
     assert not (camp / ".agents" / "skills" / "develop-camp").exists()
-    assert 'name = "Frank"' in (camp / "vibe.toml").read_text()
+    assert 'name = "Frank"' in (camp / "config" / "camp.toml").read_text()
     # Expert in a camp asks for the learner's own tests under workspace/.
     import os
     import subprocess
