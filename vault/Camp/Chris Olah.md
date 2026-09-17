@@ -19,6 +19,27 @@ Transformer Circuits publishes the research: from toy models to finding millions
 
 **Rolinda asks:** So someone is actually reading its mind?
 
+## The encounter
+- Is the model a black box?
+- Chris Olah: Only if nobody looks. The whole thread asks whether a transformer can be reverse engineered into a program a person can read. ([Transformer Circuits](https://transformer-circuits.pub))
+- What are they reading?
+- Chris Olah: Features, the interpretable units pulled out with sparse autoencoders, and the circuits that connect them into behaviour. ([Transformer Circuits](https://transformer-circuits.pub))
+- Why so many pictures?
+- Chris Olah: Because an explanation you can see and poke at is the point. Distill was built for that, and for paying down the research debt that builds up when nobody explains. ([Distill](https://distill.pub))
+
+## Your exercise: Draw the circuit of one decision
+About 15 minutes, in `workspace/mentors/olah/`. Status: not yet.
+
+1. Pick one decision a tool makes for you: a spam filter, a recommendation, an autocomplete.
+2. Write workspace/mentors/olah/circuit.md with ## What I looked at and your best guess at the inputs, the middle and the output.
+3. Draw it as a mermaid flowchart in a fenced block that starts with three backticks and the word mermaid.
+4. Add notes.md with ## What I learned.
+
+Checked by `vibe check --mentor olah`: circuit.md holds a mermaid diagram and what you looked at.
+
+The plaque on the island reads: Look inside, and draw it.
+
+
 ## Sources
 - [Transformer Circuits](https://transformer-circuits.pub)
 - [Distill](https://distill.pub)

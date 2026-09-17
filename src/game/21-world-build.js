@@ -96,7 +96,8 @@ function buildWorld(id){
   chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:"Rolinda, Ops"});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
   // mentors (NPC scientists) for this world
   props.mentors=[];MENTORS.filter(m=>m.world===id).forEach(m=>{const c=character({kind:"mentor",body:m.look.shirt,legs:"#374151",arms:"#F5D7BC",label:m.name,look:m.look});c.g.position.set(m.pos[0],0,m.pos[1]);c.g.rotation.y=Math.PI;scene.add(c.g);c.id=m.id;props.mentors.push(c);obstacles.push([m.pos[0],m.pos[1],.6]);
-    const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.path[m.id]==="deep"?"#0088CC":S.path[m.id]==="skip"?"#F04923":"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
+    const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.mentors.includes(m.id)?"#00D084":S.path[m.id]==="deep"?"#0088CC":S.path[m.id]==="skip"?"#F04923":"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
+  props.plaques={};placePlaques(false);
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:"#000",transparent:true,opacity:.25}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.02;scene.add(props.shadow);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:"#0088CC",transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -106,6 +107,19 @@ function buildWorld(id){
 // the group is an obstacle so the walker goes round it, and the ring stays.
 function buildArtifactProps(){props.artProps=[];props.artR={};(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world&&a.model&&ART_PROPS[a.model]).forEach(a=>{const g=ART_PROPS[a.model]();const r=g.userData.r||1.4;
   const lb=label(a.name,.55);lb.position.y=g.userData.h||3;g.add(lb);g.position.set(a.pos[0],0,a.pos[1]);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);props.artProps.push(g);props.artR[a.id]=r;obstacles.push([a.pos[0],a.pos[1],r])})}
+// A mentor's plaque: the visible consequence of their exercise. It appears
+// only for an encounter the CLI verified, which reaches the game as part of
+// the progress code, so the island stays derived from state.
+function addPlaque(m){const g=new T.Group();
+  g.add(box(1.4,.8,.12,"#C9C9D2",0,.95,0));g.add(box(1.5,.1,.2,"#8A8A98",0,1.4,0));
+  [-.55,.55].forEach(x=>g.add(cyl(.07,.09,1,"#5A3C22",x,.5,0,5)));
+  const lb=label(m.encounter.plaque,.45);lb.position.y=1.75;g.add(lb);
+  g.position.set(m.pos[0]+1.7,0,m.pos[1]+1.3);g.rotation.y=-.3;g.traverse(o=>{if(o.isMesh)o.castShadow=true});
+  fixColors(g);scene.add(g);props.plaques[m.id]=g;obstacles.push([g.position.x,g.position.z,.7]);return g}
+function placePlaques(pop){MENTORS.filter(m=>m.world===(S.world||"campus")).forEach(m=>{
+  if(!S.mentors.includes(m.id)||props.plaques[m.id])return;const g=addPlaque(m);
+  const c=(props.mentors||[]).find(x=>x.id===m.id);if(c)c.ring.material.color.set("#00D084");
+  if(pop)popIn(g)})}
 // Walkable ground: the island's blobs, plus every annex that has appeared and
 // the causeway of its spur (a capsule from the plot to the annex).
 function onLandW(x,z){if(W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-.6))return true;

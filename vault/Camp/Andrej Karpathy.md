@@ -19,6 +19,29 @@ Zero to Hero goes micrograd (a 100-line autograd engine), makemore (character-le
 
 **Rolinda asks:** If the prompt is the program, who is the programmer?
 
+## The encounter
+- Where do I start with models?
+- Andrej Karpathy: With the smallest one you can write yourself. His course opens with a hundred-line autograd engine and a character-level bigram model before anything larger. ([Zero to Hero course](https://karpathy.ai/zero-to-hero.html))
+- What is a bigram model?
+- Andrej Karpathy: Count which character follows which, then pick the likely next one. Makemore part one builds exactly that from scratch, with training, sampling and a loss. ([nn-zero-to-hero on GitHub](https://github.com/karpathy/nn-zero-to-hero))
+- Why from scratch when a library exists?
+- Andrej Karpathy: Because the understanding comes from code you can run. The track goes micrograd, makemore, a WaveNet, a GPT to the 2017 paper, then the tokenizer. ([Zero to Hero course](https://karpathy.ai/zero-to-hero.html))
+- And for people who only use the models?
+- Andrej Karpathy: There is a general track next to the technical one on his page: the same ideas, without the mathematics. ([karpathy.ai](https://karpathy.ai/))
+
+## Your exercise: A bigram model in twenty lines
+About 15 minutes, in `workspace/mentors/karpathy/`. Status: not yet.
+
+1. Write workspace/mentors/karpathy/bigram.py with TEXT = 'the cat sat on the mat'.
+2. Count every pair of neighbouring characters into a dictionary of dictionaries.
+3. Find the character that most often follows 'a' and print exactly: after a: t
+4. Run it: python3 bigram.py. Then add notes.md with ## What I learned.
+
+Checked by `vibe check --mentor karpathy`: python3 bigram.py prints 'after a: t'.
+
+The plaque on the island reads: Build the small one first.
+
+
 ## Sources
 - [karpathy.ai](https://karpathy.ai/)
 - [Zero to Hero course](https://karpathy.ai/zero-to-hero.html)

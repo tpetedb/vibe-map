@@ -20,6 +20,29 @@ His team keeps Sutton's Bitter Lesson framed on the wall and builds for the mode
 
 **Rolinda asks:** How many of your parallel sessions actually finish?
 
+## The encounter
+- My agent keeps making the same mistake.
+- Boris Cherny: Then write the mistake down in CLAUDE.md the moment you see it. That is how his team uses the file: every time Claude does something wrong, a line goes in, several times a week. ([How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/))
+- How do I get better work than my first try?
+- Boris Cherny: Give it a way to check itself. He calls a feedback loop the most important thing for quality: a test suite for a backend, a browser for a frontend, a simulator for mobile. ([How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/))
+- Do I need an elaborate setup first?
+- Boris Cherny: No. His own configuration is surprisingly vanilla. The tool is meant to be useful on the day you install it. ([How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/))
+- And you really run several at once?
+- Boris Cherny: Five to ten sessions, each in its own checkout or worktree, so they never fight over the same files. ([Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny))
+
+## Your exercise: One rule, and the command that proves it
+About 10 minutes, in `workspace/mentors/cherny/`. Status: not yet.
+
+1. Think of one thing your agent got wrong today.
+2. Write workspace/mentors/cherny/CLAUDE.md with a heading ## Rules and one rule that would have prevented it.
+3. Add a heading ## How it is verified with the command that would catch it (a test, a linter, a build).
+4. Add notes.md with ## What I learned and a few sentences of your own.
+
+Checked by `vibe check --mentor cherny`: CLAUDE.md holds a Rules section and a How it is verified section.
+
+The plaque on the island reads: Write the mistake down.
+
+
 ## Sources
 - [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny)
 - [Inside the workflow of Claude Code's creator (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/)
