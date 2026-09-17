@@ -182,15 +182,30 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
 /* The artifact demos print like a terminal: mono, one line per step. */
 .term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
-.mascot{display:flex;gap:16px;align-items:center;margin-top:8px}
-.mascot svg{width:96px;height:96px;flex:0 0 96px;background:var(--panel2);border-radius:18px;border:1px solid var(--line)}
-.mascot h3{font-size:16px;text-transform:none;letter-spacing:-.01em;color:var(--ink);margin:0 0 2px;font-family:Sora,sans-serif}
+/* The workstream 2 demo component: one card, two change requests. */
+.demo{margin:10px 0}
+.demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
+.demo-card.serif{font-family:Georgia,"Times New Roman",serif}
+.demo-card h4{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.demo-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--blue);color:#fff;border-radius:999px;padding:2px 8px}
+.demo-card table{border-collapse:collapse;width:100%;font-size:14px}
+.demo-card th{text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px 4px 0}
+.demo-card td{padding:3px 12px 3px 0;color:var(--ink)}
 .stats{display:grid;grid-template-columns:auto 1fr;gap:1px 14px;font-size:14px}
 .stats b{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:3px}
 .prompt{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
-.ledger{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
-.ledger table{border-collapse:collapse;font-size:14px}.ledger td{padding:3px 12px 3px 0;color:var(--muted)}.ledger td.num{color:var(--ink);font-weight:700;font-family:Sora,sans-serif}
-.chart,.web{width:100%;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px}.chart{height:150px}.web{height:300px}
+/* The workstream 3 schema demo, and the workstream 1 prompt it writes out. */
+.schema{margin-top:10px}
+table.csv{border-collapse:collapse;width:100%;font-size:13px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+table.csv th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 10px 4px 0;white-space:nowrap}
+table.csv th.changed{color:var(--red-bright)}
+table.csv td{padding:2px 10px 2px 0;color:var(--ink);white-space:nowrap}
+.schema{overflow-x:auto}
+pre.sql,pre.out{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:var(--radius-m);padding:10px 12px;margin:10px 0;font-size:12.5px;white-space:pre-wrap;overflow-x:auto}
+pre.out{color:var(--muted)}
+pre.out.err{color:var(--red-bright);border-color:var(--red)}
+#pitch{width:100%;min-height:76px}
+.web{width:100%;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;height:300px}
 .versions{list-style:none;padding:0;margin:10px 0}.versions li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;align-items:center}.versions li button{padding:6px 12px;font-size:12px}
 .bridge{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.bridge:first-of-type{border-top:0}.bridge button{min-width:110px}.bridge span{font-size:14px}
 .bridge.on button{background:var(--green);border-color:transparent;color:#000}

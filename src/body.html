@@ -5,13 +5,13 @@
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
+  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
-  <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
-  <div class="kpi"><b id="k2">0%</b><span>Synergy</span></div>
-  <div class="kpi"><b id="k3">0</b><span>Integrations</span></div>
-  <div class="kpi"><b id="k4">0</b><span>Artifacts</span></div>
+  <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
+  <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
+  <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
+  <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
 </div>
 
 <div class="ui" id="bottom">
@@ -28,13 +28,13 @@
     <p class="kicker"><b>vibe</b> · evening 1 of 4 · eight workstreams</p>
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
-    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
     <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"></div>
     <p class="small muted" id="namehint" style="margin-top:-8px">Type your name plainly.</p>
-    <div class="row go"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+    <div class="row go"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
+    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
     <p class="small">This is Evening 1 of a four-evening campaign. The other three islands (history and how the models work, from vibes to determinism, terminal and git) are one World button away, and real people from the field stand on them: Karpathy, LeCun, Hinton, Fei-Fei Li, Sutton, Amodei, Olah, Cherny, Wu, Hashimoto, Torvalds. Talk to them or walk past; your choices become your path in the vault. Built for a MacBook with Apple silicon and Chrome.</p>
@@ -107,9 +107,12 @@ brew install jq</code></pre>
   <p>Before the first glass is empty we ship a minimum viable product to production. You articulate the north-star vision in a three-sentence elevator pitch. Tom imposes one non-negotiable guardrail: single-file architecture, no third-party dependencies, zero technical debt on day one. Then it exists. Time to value: sub ten minutes. Please update your priors accordingly.</p>
   <p>No knowledge transfer takes place this hour. This is intentional. We front-load the quick win, socialise the outcome, and backload the target operating model into subsequent workstreams.</p>
   <div class="card">
-    <h3>Proof of concept</h3>
-    <div class="row"><button class="primary" onclick="spinUp()">Spin up an AI-powered synergy agent</button><button onclick="spinUp()">Again</button></div>
-    <div id="mascot" class="mascot"></div>
+    <h3>Your three sentences</h3>
+    <p class="small muted">What is it, who plays it, how do you win. Type them here and the prompt you paste into Claude Code is written out below, with Tom's guardrail already attached.</p>
+    <textarea id="pitch" rows="3" placeholder="A one-button game about a cat crossing a road. Anyone can play it in ten seconds. You win by crossing five times without stopping." oninput="pitchTyped(this.value)"></textarea>
+    <pre class="out" id="pitch-out"></pre>
+    <p class="small muted" id="pitch-note"></p>
+    <div class="row"><button class="primary" id="pitch-copy" onclick="copyPitch()">Copy the prompt</button></div>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Ship an MVP</h3>
 <p>The goal of this hour is one thing: a playable game exists before the first glass, or cup, is empty. We explain almost nothing. That is the design.</p>
@@ -151,11 +154,13 @@ brew install jq</code></pre>
   <p>Tom asks you to make the MVP "more impactful". It regresses across every dimension of the scorecard. Then you raise one well-scoped, outcome-oriented change request with explicit in-scope and out-of-scope sections, and it lands first time, on time, on budget. Key learning for the lessons-learned log: the agent has zero line of sight into your mental model. Specificity is not a nice-to-have. Specificity is the deliverable.</p>
   <p>Anything you catch yourself repeating gets codified into a skill: a living playbook the agent ingests automatically at every touchpoint, so you stop re-onboarding it session after session. Think of it as a standing operating procedure with executive sign-off.</p>
   <div class="card">
-    <h3>Stakeholder communication</h3>
-    <div id="mascot2" class="mascot"></div>
+    <h3>The same change, asked for two ways</h3>
+    <p class="small muted">One component, two change requests. Press either and watch what the agent is free to touch.</p>
+    <div id="card-demo" class="demo"></div>
     <button class="prompt" onclick="speak(false)">"Make it more impactful."</button>
-    <button class="prompt" onclick="speak(true)">"Give it a purple badge. Keep its stats. Do not touch anything else."</button>
+    <button class="prompt" onclick="speak(true)">"Add a small badge next to the title. Keep the title, the colour, the columns and the font exactly as they are."</button>
     <p id="speak-out" class="muted small"></p>
+    <div class="row"><button onclick="resetCard()">Start over</button></div>
   </div>
   <div class="card">
     <h3>Your first playbook</h3>
@@ -169,7 +174,7 @@ brew install jq</code></pre>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Specificity, CLAUDE.md and your first skill</h3>
 <p>This is the hour that separates people who vibe code from people who got lucky once.</p>
 <h4>Concept 1: the model has no line of sight into your head</h4>
-<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Give the mascot a purple badge, keep the stats, do not touch the score&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
+<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Add a badge next to the title, keep the colour and the columns, do not touch anything else&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
 <h4>Do this: break it, then fix it</h4>
 <ol>
 <li>Ask for the vague thing and watch what happens:</li>
@@ -233,17 +238,10 @@ When adding a feature:
   <p>The MVP pivots to a data-driven, insight-led, metrics-first posture. Every session is persisted to a file, which we will refer to as the enterprise data warehouse for the remainder of the evening. Then we surface actionable insights: top performers, rolling averages, streak analytics, all visualised on a self-serve dashboard. You will observe that the file rapidly becomes the single source of truth and the game a mere presentation layer.</p>
   <p>Data requires a fixed location and a governed schema. Relocate the file, rename a column, and downstream dashboards are impacted, incidents are raised, and Tom is paged. This is the precise moment a folder graduates into a platform.</p>
   <div class="card">
-    <h3>Capture and report</h3>
-    <div class="row"><button class="primary" onclick="roll(1)">Log a run</button><button onclick="roll(10)">Log ten runs</button><button onclick="clearLedger()">Purge the data lake</button></div>
-    <div class="ledger">
-      <table><tbody>
-        <tr><td>Rolls</td><td class="num" id="l-n">0</td></tr>
-        <tr><td>Mean</td><td class="num" id="l-mean">0</td></tr>
-        <tr><td>Best</td><td class="num" id="l-best">0</td></tr>
-        <tr><td>Twenties</td><td class="num" id="l-crit">0</td></tr>
-      </tbody></table>
-      <svg class="chart" id="chart" viewBox="0 0 200 100" preserveAspectRatio="none" aria-label="Histogram of rolls"></svg>
-    </div>
+    <h3>The column names are the contract</h3>
+    <p class="small muted">The same rows and the same query. Rename one column and watch every reader of the file go red.</p>
+    <div class="row"><button class="primary" onclick="renameColumn('points')">Rename score to points</button><button onclick="renameColumn('score')">Rename it back</button></div>
+    <div id="schema" class="schema"></div>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Persisted scores and a dashboard</h3>
 <p>Time to feed the spreadsheet person. The game learns to remember, the data gets a home, and the home turns out to matter more than the game.</p>

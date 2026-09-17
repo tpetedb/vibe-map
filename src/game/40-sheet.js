@@ -31,8 +31,8 @@ function open(n){
   if((S.world||"campus")!=="campus"){if(n===9){renderEveningDone();say("fin");openSheet("s-gen");return}const w=CH[n-1];const done=S.done.includes(n);
     $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html}<div class="row"><button class="primary" onclick="claim(${n})">${done?"Back to the island":"Mark as done and unlock the OKR"}</button><button onclick="closeSheet()">Back to the island</button></div>`;
     $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, Head of Hospitality Operations";$("bub-text").textContent="Same rule as always: explain it to me in one sentence when you are done.";openSheet("s-gen");return}
-  if(n===1&&!S.mascot)spinUp();
-  if(n===2)renderMascot("mascot2");if(n===3)drawChart();if(n===4)renderVersions();if(n===5)renderBridges();if(n===9)renderFinale();
+  if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
+  if(n===5)renderBridges();if(n===6)weave();if(n===9)renderFinale();
   say(n);openSheet("s-"+n);
 }
 function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"campus"];

@@ -46,7 +46,7 @@ const SAY_PLAIN={
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
-let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[]};
+let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}

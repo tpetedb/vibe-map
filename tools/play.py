@@ -70,7 +70,7 @@ class Player:
         self.page.goto(url)
         self.page.wait_for_function("typeof window.__S === 'function'")
         self.page.fill("#name", name)
-        self.page.click("text=Kick off the engagement")
+        self.page.click("#title .row.go button.primary")
         self.page.wait_for_selector("#title.off", state="attached")
         self.page.wait_for_timeout(800)
         self.log.append("started")
@@ -128,11 +128,15 @@ class Player:
     def _minigame(self, n: int) -> None:
         p = self.page
         if n == 1:
-            p.evaluate("spinUp()")
+            p.fill(
+                "#pitch",
+                "A one-button game about a cat. Anyone can play. Cross five times.",
+            )
+            p.dispatch_event("#pitch", "input")
         elif n == 2:
             p.evaluate("speak(true)")
         elif n == 3:
-            p.evaluate("roll(5)")
+            p.evaluate("renameColumn('points'); renameColumn('score')")
         elif n == 4:
             p.fill("#release", "A scoring board ranked by coffee")
             p.evaluate("commit()")

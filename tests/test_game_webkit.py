@@ -157,3 +157,29 @@ def test_the_walker_label_carries_the_typed_name(phone: GamePage) -> None:
     assert plate["fs"] < 30, plate
     assert plate["fs"] >= 11, plate
     phone.assert_clean()
+
+
+def test_the_title_form_and_the_go_row_fit_the_phone(
+    game_webkit_iphone: GamePage,
+) -> None:
+    """At 393x852 the whole form fits the box and Go is reachable without scrolling."""
+    page = game_webkit_iphone.goto().page
+    box = page.locator("#title .box").bounding_box()
+    assert box and box["width"] <= 393 and box["height"] <= 852, box
+    assert page.evaluate("document.documentElement.scrollWidth") <= 393
+    assert page.locator("#onboard .step").count() == 4
+    assert page.locator("#name").is_visible()
+    go = page.locator("#title .row.go").bounding_box()
+    assert go and go["y"] >= 0 and go["y"] + go["height"] <= 852, go
+    game_webkit_iphone.screenshot("webkit_iphone_title", clip_height=852)
+    # The row is sticky, so it is still on screen with the setup guide open.
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_timeout(400)
+    page.locator("#title .box").evaluate("e => e.scrollTo(0, 0)")
+    page.wait_for_timeout(200)
+    go = page.locator("#title .row.go").bounding_box()
+    assert go and go["y"] >= 0 and go["y"] + go["height"] <= 852, go
+    page.fill("#name", "Lotte")
+    page.click("#title .row.go button.primary")
+    page.wait_for_selector("#title.off", state="attached")
+    game_webkit_iphone.assert_clean()
