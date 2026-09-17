@@ -141,6 +141,16 @@ class Welcome(Screen[None]):
                 id="provider",
                 allow_blank=False,
             )
+            yield Label("Vault")
+            yield Select(
+                [
+                    ("Full from day one: every note in the graph", "full"),
+                    ("Grows as you play: notes unlock stop by stop", "grow"),
+                ],
+                value=self.cfg.vault.mode,
+                id="vaultmode",
+                allow_blank=False,
+            )
             yield Label("Theme")
             yield Select(
                 [(t.label, t.id) for t in THEMES.values()],
@@ -166,6 +176,7 @@ class Welcome(Screen[None]):
         data["learner"]["difficulty"] = self.query_one("#difficulty", Select).value
         data["learner"]["provider"] = self.query_one("#provider", Select).value
         data["theme"]["preset"] = self.query_one("#theme", Select).value
+        data["vault"]["mode"] = self.query_one("#vaultmode", Select).value
         name = self.query_one("#name", Input).value.strip() or "Lotte"
         data["learner"]["name"] = name
         cfg = Config.model_validate(data)

@@ -74,7 +74,9 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
 
    `vibe done` writes a dated note into the vault and links it from `vault/Camp/Tonight.md`.
 
-6. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links. `vibe vault feature --all` adds one note per Obsidian feature, with a canvas, a base, a template and a deck to click through.
+6. Prefer to watch it grow? `vibe vault mode grow` starts the vault with its hubs only and unlocks notes as you play; `vibe vault mode full` reverses it. Nothing is deleted: the rest waits in `vault/_library`.
+
+7. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links. `vibe vault feature --all` adds one note per Obsidian feature, with a canvas, a base, a template and a deck to click through.
 
 ## Path C: the whole workshop with just
 

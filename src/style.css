@@ -186,6 +186,7 @@ details.brief p{margin-top:8px}
 #vnote li{margin:2px 0}
 #vnote .wl{color:var(--blue-bright);cursor:pointer;border-bottom:1px solid rgba(0,136,204,.4)}
 #vnote .wl:hover{color:var(--text);border-bottom-color:var(--blue-bright)}
+#vnote .wl.locked{color:var(--muted);border-bottom-style:dashed;border-bottom-color:rgba(139,147,167,.4);cursor:default}
 #vnote .tag{display:inline-block;font-size:11px;background:rgba(0,168,107,.15);color:var(--green-bright);border-radius:6px;padding:2px 7px;margin-right:4px}
 #vnote .bl{border-top:1px solid #333;margin-top:16px;padding-top:10px}
 #vnote .bl .wl{display:inline-block;margin:2px 8px 2px 0}
