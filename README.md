@@ -24,15 +24,19 @@ just start     # the onboarding screen: who you are, what the machine has, where
 
 `just start` asks for your name, your field, a difficulty from beginner to god, your model provider (Claude Code, Codex, Gemini, Copilot or OpenCode) and a theme, checks the toolbelt with one-key installs (or a YOLO button that installs everything), and launches the game, Claude Code, Claude in YOLO mode, Zed with Claude over ACP, the vault in Obsidian or the tests.
 
+The game onboards on its own too. A first visit asks who you are (Lotte, Frank, Max, Rolinda or your own name), how hard, and whether you want just the game or the full experience; the last one prints the exact terminal commands with your name and today's date filled in, folder convention included: `vibe-map-<name>-<YYYY-MM-DD>`.
+
+![The title screen on a first visit: character, difficulty, how to play](docs/media/onboarding-start.png)
+
 The three windows, one loop, over weeks: [docs/LONG-GAME.md](docs/LONG-GAME.md) spells it out command by command.
 
 ## Or install the CLI once, anywhere
 
 ```bash
 uv tool install vibe-map          # `vibe` on your PATH, no clone needed
-vibe new ~/camp                   # a fresh camp from the template
-vibe new ~/camp --github you/camp # the same, as a new GitHub repo
-cd ~/camp && vibe status          # the CLI finds the camp from any subfolder
+vibe new                          # a fresh camp: vibe-map-<you>-<today>
+vibe new ~/camp --github you/camp # a named folder, as a new GitHub repo
+cd vibe-map-* && vibe status      # the CLI finds the camp from any subfolder
 ```
 
 `vibe` carries the campaign, the tech tree and the resources inside the package. `VIBE_HOME` points it at a camp from elsewhere.

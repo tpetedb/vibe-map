@@ -1,8 +1,9 @@
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
 // vibe.toml still sets the defaults for a fresh browser; these override them.
-const SETTINGS_DEFAULTS={map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
 const SETTINGS_OPTIONS={
+  difficulty:[["config","From vibe.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
   vault:[["config","From vibe.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
   pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
@@ -10,7 +11,7 @@ const SETTINGS_OPTIONS={
   motion:[["auto","Follow the system setting"],["off","No animations"]],
   speed:[["slow","Stroll"],["normal","Walk"],["fast","Hurry"]]
 };
-const SETTINGS_LABELS={map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
+const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
 function settings(){if(!S.settings)S.settings={};return Object.assign({},SETTINGS_DEFAULTS,S.settings)}
 function speedMult(){return {slow:.7,normal:1,fast:1.5}[settings().speed]||1}
 function motionOff(){return settings().motion==="off"}
@@ -20,6 +21,7 @@ function applySettings(){const s=settings();
     const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
   const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
   document.body.classList.toggle("no-motion",s.motion==="off");
+  if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
 window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
@@ -27,7 +29,7 @@ function renderSettings(){const s=settings();
   $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
     `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button></div>`+
-    `<p class="small muted">Persona, theme and difficulty live in vibe.toml (uv run vibe persona, theme, difficulty) and need a rebuild: just build.</p>`;
+    `<p class="small muted">Persona and theme live in vibe.toml (uv run vibe persona, theme) and need a rebuild: just build. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 window.goFullscreen=function(){const st=$("stage");if(document.fullscreenElement){document.exitFullscreen()}else if(st.requestFullscreen){st.requestFullscreen().catch(()=>{})}};

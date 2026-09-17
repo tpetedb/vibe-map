@@ -91,7 +91,7 @@ function buildWorld(id){
   const sg=new T.BufferGeometry();const sv=[];for(let i=0;i<400;i++){const a=Math.random()*Math.PI*2,b=Math.random()*Math.PI*.5;sv.push(Math.cos(a)*Math.cos(b)*120*WS,Math.sin(b)*120*WS+5,Math.sin(a)*Math.cos(b)*120*WS)}sg.setAttribute("position",new T.Float32BufferAttribute(sv,3));stars=new T.Points(sg,new T.PointsMaterial({color:"#fff",size:.6,transparent:true,opacity:0}));scene.add(stars);
   // characters (keep positions if switching)
   const lp=chars.lotte?chars.lotte.g.position.clone():new T.Vector3(2.8,0,5.2);
-  chars.lotte=character({kind:"lotte",body:"#FFFFFF",legs:"#C9C1B8",arms:"#F5D7BC",label:S.name+", CoS"});chars.lotte.g.position.copy(onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
+  chars.lotte=character(playerSpec());chars.lotte.g.position.copy(onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
   chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:"Tom, SRE"});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
   chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:"Rolinda, Ops"});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
   // mentors (NPC scientists) for this world
@@ -149,3 +149,5 @@ let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}}
 
 /* ---------------- input & movement ---------------- */
+// The player's walker after a look change on the title screen: same spot, new body.
+function rebuildPlayer(){if(!chars.lotte)return;const p=chars.lotte.g.position.clone(),r=chars.lotte.g.rotation.y;scene.remove(chars.lotte.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;scene.add(chars.lotte.g)}

@@ -27,10 +27,12 @@ You should see `brew` finishing without red lines. Then the camp:
 
 ```bash
 uv tool install vibe-map
-vibe new ~/camp
-cd ~/camp
+vibe new                     # makes ~/vibe-map-<you>-<today>, the naming convention
+cd vibe-map-*
 just setup
 ```
+
+The convention is your name, vibe-map, the date you started: `vibe-map-tom-2026-09-17`. It sorts by date, and a progress code or a note always says which camp it came from. The game's own setup guide (title screen, The full experience, or Roadmap, Setup guide) prints these commands with your name filled in.
 
 You should see: a `.venv` created, Playwright browsers installed, skills linked, `vault built`. Then make the terminal yours (optional, recommended):
 
@@ -63,7 +65,7 @@ A screen opens in the terminal. Pick your name, your field, a difficulty, your m
 ### In the terminal
 
 ```bash
-cd ~/camp
+cd ~/vibe-map-*
 vibe import <paste the code>
 vibe check 1            # the CLI verifies stop 1 on your machine and awards the XP
 vibe status             # the grid, your level, the pet
@@ -81,7 +83,7 @@ That is the whole loop: game, terminal, vault. Four commands.
 ## 4. Once a week (five minutes)
 
 ```bash
-cd ~/camp
+cd ~/vibe-map-*
 vibe news && just build # pull the AI feeds into the vault note News and bake them into the game
 vibe vault lint         # orphans and dead links, if you wrote notes by hand
 vibe vault feature --all   # once: the thirty-five Obsidian feature notes, with a canvas, a base and a deck
@@ -99,7 +101,7 @@ With AeroSpace (`vibe dotfiles install aerospace`): alt-shift-a moves a window t
 ## 6. When you come back after a month
 
 ```bash
-cd ~/camp
+cd ~/vibe-map-*
 git pull --ff-only          # your own commits from another machine
 uv tool upgrade vibe-map    # the CLI
 vibe status                 # where you were
@@ -113,7 +115,7 @@ The game in the browser still has your progress (it lives in the browser's stora
 | You see | Do |
 |---|---|
 | `vibe: command not found` | `uv tool install vibe-map`, then open a new terminal |
-| `No camp in ...` | `cd ~/camp` (or `vibe new ~/camp` once) |
+| `No camp in ...` | `cd ~/vibe-map-*` (or `vibe new` once) |
 | the game shows the Roadmap list, no island | WebGL is off; Chrome on a Mac with Apple silicon is the reference; the lessons still work |
 | Obsidian shows a note with dashed links | grow mode: those notes are still in `_library`; play on, or `vibe vault unlock "<title>"` |
 | `claude -p` complains about a model | run `claude` once interactively to log in; the CLI retries with `--model sonnet` |
