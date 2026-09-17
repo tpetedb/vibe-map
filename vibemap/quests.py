@@ -461,7 +461,7 @@ def mentor_dir(mentor_id: str) -> Path:
     return MENTORS_DIR / mentor_id
 
 
-def _section_words(text: str, heading: str) -> int:
+def section_words(text: str, heading: str) -> int:
     """Words under `heading`, up to the next heading of the same or higher level."""
     lines = text.splitlines()
     level = len(heading) - len(heading.lstrip("#"))
@@ -545,7 +545,7 @@ def _mentor_note_check(m: dict) -> Check:
         p = here / MENTOR_NOTE
         if not p.exists():
             return False, f"no {MENTOR_NOTE} in {m['encounter']['exercise']['dir']}"
-        words = _section_words(p.read_text(encoding="utf-8"), MENTOR_SECTION)
+        words = section_words(p.read_text(encoding="utf-8"), MENTOR_SECTION)
         return words >= MENTOR_WORDS, (
             f"{words} of your own words under {MENTOR_SECTION} (needs {MENTOR_WORDS})"
         )
@@ -1343,6 +1343,7 @@ BADGES: dict[str, str] = {
     "linked": "Linked: twenty wikilinks in the vault",
     "shipped": "Shipped: GitHub Pages is live",
     "collector": "Collector: found every artifact on the island",
+    "builder": "Builder: every artifact built for real, not just inspected",
     "mentored": "Mentored: every mentor's exercise done for real",
 }
 
@@ -1367,6 +1368,8 @@ def new_badges(state: State, cfg: Config) -> list[str]:
         earned.append("shipped")
     if state.artifacts and len(state.artifacts) >= len(campaign.artifacts()):
         earned.append("collector")
+    if len(state.artifacts_built) >= len(campaign.artifacts()):
+        earned.append("builder")
     if len(state.mentors) >= len(campaign.mentors()):
         earned.append("mentored")
     fresh = [b for b in earned if b not in state.badges]

@@ -121,6 +121,17 @@ function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:
   const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?PALETTE.greenBright:PALETTE.yellow,transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
   props.artifacts.push({a,ring})})}
 function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>{const d=Math.hypot(x.a.pos[0]-pos.x,x.a.pos[1]-pos.z);if(d<x.a.r&&d<bd){bd=d;best=x.a}});return best}
+// The task behind the demo: a walkthrough written from the official
+// documentation of the thing, the commands that documentation gives, and the
+// one check that looks at what was built. Rendered inside .lesson so the
+// commands get the same Commands disclosure every lesson uses.
+function artifactReal(a){const r=a.real;const built=S.artifactsBuilt.includes(a.id);
+  return `<div class="lesson"><h3>${icon("milestone")}Do it for real: ${r.title}</h3>
+   <p class="small muted">About ${r.minutes} minutes, in <code>${r.dir}/</code> in your camp. Written from <a href="${r.doc.url}" target="_blank" rel="noopener">${esc(r.doc.title)}</a>.</p>
+   <ol class="small">${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
+   <pre><code>${r.commands.map(esc).join("\n")}</code></pre>
+   <p class="small"><b>Done when</b> ${esc(r.done)}, checked by <code>vibe check --artifact ${a.id}</code>.</p>
+   <p class="small ${built?"":"muted"}">${built?"Built for real, and verified in your camp.":"Not built yet. Do it in your camp, run the check, then bring the progress code back here."}</p></div>`}
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;
   if(!S.artifacts.includes(id)){S.artifacts.push(id);save();hud();(props.artifacts||[]).forEach(x=>{if(x.a.id===id)x.ring.material.color.set("#00D084")})}
   const demos=ART_DEMOS[id]||[];
@@ -128,11 +139,14 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
     `<pre class="term" id="art-term">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+
+    artifactReal(a)+
     `<p class="small muted">In the vault: ${a.links.map(n=>`<span class="wl" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(" · ")}</p>`;
+  // The sheet is built after boot, so its command block is wrapped and folded here.
+  wrapCommands();$("s-artifact").querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
   $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, "+CONFIG.theme.guideRole;typeOut($("bub-text"),a.rolinda);
   openSheet("s-artifact")};
 window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const el=$("art-term");if(!el)return;el.textContent="";
   d.o.forEach((line,k)=>setTimeout(()=>{el.textContent+=(k?"\n":"")+line;el.scrollTop=el.scrollHeight},k*320))};
-function artifactsMd(){return "# Artifacts\nThings on the island that explain one idea each. Walk up to the yellow ring and press Inspect; a found one turns green.\n"+
-  ARTIFACTS.map(a=>`- ${S.artifacts.includes(a.id)?"found":"not yet"}: **${a.name}** (${a.prop}): ${a.concept}. See ${a.links.map(l=>"[["+l+"]]").join(", ")}.`).join("\n")+"\n- Back: [[Tonight]]\n#concept"}
+function artifactsMd(){return "# Artifacts\nThings on the island that explain one idea each. Walk up to the yellow ring and press Inspect; a found one turns green. Each one also sets a task from the official documentation of the thing, checked in your camp.\n"+
+  ARTIFACTS.map(a=>`- ${S.artifactsBuilt.includes(a.id)?"built for real":S.artifacts.includes(a.id)?"found":"not yet"}: **${a.name}** (${a.prop}): ${a.concept}. Do it for real: ${a.real.title} (\`vibe check --artifact ${a.id}\`). See ${a.links.map(l=>"[["+l+"]]").join(", ")}.`).join("\n")+"\n- Back: [[Tonight]]\n#concept"}
 window.__artifacts=()=>ARTIFACTS;
