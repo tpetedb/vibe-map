@@ -13,7 +13,7 @@ import pytest
 from click.testing import CliRunner
 
 from tests.conftest import ROOT, encode_progress
-from vibemap import campaign
+from vibemap import campaign, project
 from vibemap.cli import cli
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.personas import PERSONAS, get_persona
@@ -96,7 +96,7 @@ def test_progress_code_round_trip_and_version_gate() -> None:
 
 
 def test_config_defaults_and_round_trip(tmp_path: Path) -> None:
-    p = tmp_path / "vibe.toml"
+    p = tmp_path / "config" / "camp.toml"
     cfg = Config()
     cfg.save(p)
     assert Config.load(p) == cfg
@@ -104,7 +104,7 @@ def test_config_defaults_and_round_trip(tmp_path: Path) -> None:
 
 
 def test_config_refuses_unknown_keys(tmp_path: Path) -> None:
-    p = tmp_path / "vibe.toml"
+    p = tmp_path / "camp.toml"
     p.write_text('[learner]\nname = "x"\ndifficulty = "insane"\n[typo]\nx = 1\n')
     with pytest.raises(ValueError) as e:
         Config.load(p)
@@ -112,7 +112,7 @@ def test_config_refuses_unknown_keys(tmp_path: Path) -> None:
 
 
 def test_committed_config_is_valid() -> None:
-    cfg = Config.load(ROOT / "vibe.toml")
+    cfg = Config.load(project.config_path(ROOT))
     assert cfg.learner.persona in PERSONAS
     assert cfg.theme.preset in THEMES
 
@@ -311,11 +311,11 @@ def test_a_camp_without_scores_says_so_instead_of_crashing(tmp_path: Path) -> No
         assert "Traceback" not in out.stderr
 
 
-def test_the_name_from_vibe_toml_reaches_the_state_and_the_vault(
+def test_the_name_from_camp_toml_reaches_the_state_and_the_vault(
     tmp_path: Path,
 ) -> None:
     camp = _camp(tmp_path)
-    assert 'name = "Tom"' in (camp / "vibe.toml").read_text()
+    assert 'name = "Tom"' in (camp / "config" / "camp.toml").read_text()
     out = _run(camp, "status", "--json")
     assert json.loads(out.stdout)["name"] == "Tom", out.stdout
     out = _run(camp, "name", "Lotte")

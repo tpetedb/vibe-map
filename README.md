@@ -79,11 +79,11 @@ The second wave is spread over the four islands, and each one is a small buildin
 - **Provider.** Everything that talks to a model (`explain`, `council`, custom themes) uses the CLI you chose, in print mode.
 - **Obsidian, feature by feature.** `uv run vibe vault feature --all` writes one note per Obsidian feature (links, properties, callouts, canvas, bases, templates, daily notes, bookmarks, search, hotkeys, workspaces, slides, URI, CLI, Sync, Publish and more) with the exact commands and a five-minute try from the official help, plus working example files: a canvas, a base, a template, a deck, a CSS snippet. The table: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
 - **Settings, in the game.** The Settings button on the HUD: map size (compact, big, the whole window), full screen, vault mode, pairings on or off, shadows, motion, walking speed. They apply at once and stay in the browser.
-- **News.** `just news` (or `uv run vibe news` then `just build`; in a camp the feed lands in `.vibe/news.json` and the vault note News) pulls six AI feeds (OpenAI, Hugging Face, Simon Willison, Claude Code releases, the GitHub changelog, arXiv cs.AI; change them under `[news]` in `vibe.toml`) into `data/news.json` and the vault note News; the Roadmap shows the latest items; a weekly GitHub Action keeps a forked repo and its hosted game current.
+- **News.** `just news` (or `uv run vibe news` then `just build`; in a camp the feed lands in `.vibe/news.json` and the vault note News) pulls six AI feeds (OpenAI, Hugging Face, Simon Willison, Claude Code releases, the GitHub changelog, arXiv cs.AI; change them under `[news]` in `config/camp.toml`) into `data/news.json` and the vault note News; the Roadmap shows the latest items; a weekly GitHub Action keeps a forked repo and its hosted game current.
 - **Grow mode.** `uv run vibe vault mode grow` empties the vault down to its hubs and keeps every note in `vault/_library` (hidden from Obsidian's graph and search). Notes come back as you play: a workstream's notes when its stop is done, an artifact's notes when you inspect it, a mentor when you go deep, the Obsidian feature notes when the vault stop is done, or any note by hand with `vibe vault unlock`. The in-game vault follows the same rules, so you watch the graph grow. `vibe vault mode full` brings everything back.
 - **Note-taking.** `uv run vibe vault method zettelkasten` bootstraps a method into the vault: Zettelkasten, PARA, Johnny.Decimal, LYT, Evergreen, Cornell, Bullet Journal, or daily notes with a weekly review.
 
-Every knob lives in `vibe.toml`; delete the file and everything still works.
+Every knob of your journey lives in `config/camp.toml`; delete the file and everything still works. The game's own configuration is `src/config/`, and `docs/CONFIG.md` is the table of which is which.
 
 ## A pet in the terminal
 
@@ -96,7 +96,7 @@ uv run vibe pet --species crab --name Pinch --hat crown
 uv run vibe pet --all                 # the gallery: nineteen species
 ```
 
-It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `vibe.toml` under `[pet]`, or switch it off with `--off`.
+It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, or switch it off with `--off`.
 
 ## Your terminal, Tom's way
 
@@ -126,7 +126,7 @@ Three zones, on purpose. The **product** is the engine and lives here. The **tem
 |---|---|---|
 | `game/vibe-map.html`, `src/` | product | The game, built from `src/` by `just build`. |
 | `vibemap/` | product | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
-| `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, vibe.toml, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
+| `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, `config/camp.toml`, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
 | `workspace/` | workspace | The learner's own zone: the game from workstream 1, the scores and their queries. Here it holds the worked example. |
 | `vault/` | product | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
 | `.agents/skills/` | configuration | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |

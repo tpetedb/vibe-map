@@ -28,6 +28,14 @@ camp:
 game:
     vibe play
 
+# copy the game's source into workspace/forks/vibe-map so you can change it
+fork:
+    vibe fork
+
+# your fork builds, and its configuration is no longer the product's
+check-fork:
+    vibe check --fork
+
 # where you are in the campaign, with XP and quests
 status:
     vibe status

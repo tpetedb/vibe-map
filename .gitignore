@@ -2,6 +2,8 @@
 backups/
 .vibe/
 workspace/python/out/
+# a fork made here is a scratch copy of src/; a camp commits its own
+workspace/forks/
 .DS_Store
 __pycache__/
 .pytest_cache/

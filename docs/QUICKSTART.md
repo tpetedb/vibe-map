@@ -63,7 +63,7 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    vibe theme studio            # studio is the default; wine-night is the original
    ```
 
-   Each command rewrites `vibe.toml`. Delete the file and everything falls back to defaults.
+   Each command rewrites `config/camp.toml`. Delete the file and everything falls back to defaults.
 
 5. Play, then claim.
 
@@ -142,7 +142,7 @@ This path is not a camp. It clones the product: the game's source, the CLI's cod
 | Where | You did | It landed in |
 |---|---|---|
 | camp | `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
-| camp | `vibe persona`, `vibe theme`, `vibe provider` | `vibe.toml` |
+| camp | `vibe persona`, `vibe theme`, `vibe provider` | `config/camp.toml` |
 | camp | `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
 | camp | `vibe council` | `vault/Camp/Council - <topic>.md` |
 | camp | `just setup` | `.vibe/state.json`, the vault, `.claude/skills/` symlinks |
@@ -152,7 +152,7 @@ This path is not a camp. It clones the product: the game's source, the CLI's cod
 
 ## When something is off
 
-- `vibe status` says there is no camp: you are outside a folder with a `vibe.toml`. `cd` into one, run `vibe new`, or set `VIBE_HOME=/path/to/camp`.
+- `vibe status` says there is no camp: you are outside a folder with a `config/camp.toml`. `cd` into one, run `vibe new`, or set `VIBE_HOME=/path/to/camp`.
 - `claude -p` fails with a model catalog error: the CLI retries with `--model sonnet`; run `claude` once interactively to log in.
 - The game shows the Roadmap list instead of the island: WebGL is off or blocked. Chrome on a Mac with Apple silicon is the reference; the lessons still work.
 - Tests hang on the first run (product repository only): `uv run playwright install chromium webkit` was skipped; `just setup` runs it.

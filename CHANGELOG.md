@@ -9,7 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Three configuration levels, nested, each flat inside, with `docs/CONFIG.md` as the table of "to change X, edit Y" for both a camp and the product. The repository level stays where the tools demand it; the source level is `src/config/` for the game (world scale, island radius, palette) and `vibemap/data/` for the CLI; the journey level moves from `vibe.toml` to `config/camp.toml` (name, persona, difficulty, provider, theme, vault mode, finale dates). `vibe new` writes `config/camp.toml`, and this checkout has one too so it stays a valid camp.
+- `vibe fork` copies `src/`, its vendor files, `tools/build.py` and the generated inputs into `workspace/forks/vibe-map/`, with a `justfile`, a `README.md` with three challenges and a versioned `fork.json`; `just build` there produces the learner's own game file. `vibe check --fork` verifies that the fork exists, that its `src/config/` is no longer the product's and that it builds. A fork is the learner's copy to break and repair; the course keeps living in the product.
 - Mentor encounters. Each of the twelve mentors now has a dialogue of three or four exchanges in the game, walked one question at a time, where every line is a paraphrase of something that person is on record saying, with the link it came from next to it. Each encounter sets one exercise of under fifteen minutes in `workspace/mentors/<id>/` and `vibe check --mentor <id>` (or `--all`) verifies it without a network: Karpathy's bigram model must print the likeliest character after "a", Torvalds's script must produce the same blob hash as `git hash-object`, Hinton's twenty steps of gradient descent must land on the target, Sutton's brute-force search must beat the rule you invented, and the note-shaped exercises (Cherny's CLAUDE.md rule with the command that proves it, Wu's spec-plan-todo, LeCun's what mattered against what you could throw away, Li's ten labelled rows, Amodei's falsifiable forecast, Olah's mermaid circuit, Hashimoto's one readable config file, opencode's one prompt across two providers) must hold the sections the exercise asks for. A verified encounter is worth half a workstream in XP, turns the mentor's ring green and raises a plaque on their spot with their one line on it, writes the encounter and the exercise into their vault note, and earns the `mentored` badge when all twelve are done. The progress code carries the verified mentors inside version 2, so an older game or an older `vibe` ignores the key and keeps working.
+
+### Changed
+
+- `tools/build.py` concatenates `src/config/*.js` before the game modules and resolves every input relative to the folder that holds it, or to `--root DIR`, so a fork builds on its own. `WORLD_SCALE`, the island radius and the palette moved out of the game modules into `src/config/00-config.js`.
+
+### Deprecated
+
+- `vibe.toml` at a camp root is still read, and still marks a camp, for one release. Every command says so in one line and points at `config/camp.toml`.
 
 ## [0.8.0] - 2026-09-17
 
