@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Mentor encounters. Each of the twelve mentors now has a dialogue of three or four exchanges in the game, walked one question at a time, where every line is a paraphrase of something that person is on record saying, with the link it came from next to it. Each encounter sets one exercise of under fifteen minutes in `workspace/mentors/<id>/` and `vibe check --mentor <id>` (or `--all`) verifies it without a network: Karpathy's bigram model must print the likeliest character after "a", Torvalds's script must produce the same blob hash as `git hash-object`, Hinton's twenty steps of gradient descent must land on the target, Sutton's brute-force search must beat the rule you invented, and the note-shaped exercises (Cherny's CLAUDE.md rule with the command that proves it, Wu's spec-plan-todo, LeCun's what mattered against what you could throw away, Li's ten labelled rows, Amodei's falsifiable forecast, Olah's mermaid circuit, Hashimoto's one readable config file, opencode's one prompt across two providers) must hold the sections the exercise asks for. A verified encounter is worth half a workstream in XP, turns the mentor's ring green and raises a plaque on their spot with their one line on it, writes the encounter and the exercise into their vault note, and earns the `mentored` badge when all twelve are done. The progress code carries the verified mentors inside version 2, so an older game or an older `vibe` ignores the key and keeps working.
+
 ## [0.8.0] - 2026-09-17
 
 ### Changed
