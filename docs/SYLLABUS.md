@@ -63,7 +63,7 @@ Sources: [Claude Code quickstart](https://code.claude.com/docs/en/quickstart), [
 
 ## 18:00: Ship an MVP
 
-The goal of this hour is one thing: a playable game exists before the Chardonnay warms up. We explain almost nothing. That is the design.
+The goal of this hour is one thing: a playable game exists before the first glass, or cup, is empty. We explain almost nothing. That is the design.
 
 ### Concept: the agentic loop
 
@@ -285,7 +285,7 @@ CLAUDE.md is advice. Claude reads it and tries. A hook is a shell command Claude
 4. Ask Claude to edit any file. Then look in backups/. A copy appeared without anyone asking for it.
 5. The other kind: a hook that blocks. Ask Claude to add a PreToolUse hook that refuses any Edit or Write to scores.csv, exits with code 2 and prints a reason. Then ask it to edit scores.csv and watch it get refused and explain why.
 
-### Optional, if the Barolo allows
+### Optional, if the evening allows
 
 Put the folder somewhere other than the laptop: "create a private GitHub repository for this project and push it". Claude will ask you to sign in to GitHub the first time.
 

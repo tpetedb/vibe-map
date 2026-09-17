@@ -112,7 +112,7 @@ brew install jq</code></pre>
     <div id="mascot" class="mascot"></div>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Ship an MVP</h3>
-<p>The goal of this hour is one thing: a playable game exists before the Chardonnay warms up. We explain almost nothing. That is the design.</p>
+<p>The goal of this hour is one thing: a playable game exists before the first glass, or cup, is empty. We explain almost nothing. That is the design.</p>
 <p class="small muted">You need two things: a terminal, and Claude Code signed in. Pre-flight in the Roadmap installs both in twenty minutes.</p>
 <h4>Concept: the agentic loop</h4>
 <p>Claude Code is not a chat box. You give it a goal in plain language, it reads and writes files in the folder you started it in, runs commands, looks at the result, and keeps going until the goal is met. The folder you start it in is its whole world, so start it in an empty one.</p>
@@ -327,7 +327,7 @@ head -1 workspace/data/scores.csv</code></pre>
 <li>Ask Claude to edit any file. Then look in backups/. A copy appeared without anyone asking for it.</li>
 <li>The other kind: a hook that blocks. Ask Claude to add a PreToolUse hook that refuses any Edit or Write to scores.csv, exits with code 2 and prints a reason. Then ask it to edit scores.csv and watch it get refused and explain why.</li>
 </ol>
-<h4>Optional, if the Barolo allows</h4>
+<h4>Optional, if the evening allows</h4>
 <p>Put the folder somewhere other than the laptop: &quot;create a private GitHub repository for this project and push it&quot;. Claude will ask you to sign in to GitHub the first time.</p>
 <div class="callout ok"><b>Definition of done</b>git log shows at least three commits. Ruining and restoring works. /hooks lists your PostToolUse hook and backups/ fills up when files change.</div>
 <div class="callout why"><b>Why it matters</b>Advice can be ignored, enforcement cannot. When something must happen every single time, it is a hook, not a sentence in CLAUDE.md. And with git underneath, no experiment is expensive.</div>
