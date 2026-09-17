@@ -267,7 +267,7 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
 <div class="ui" id="hud">
-  <div class="pill" id="hud-name">Lotte's Innovation Campus</div>
+  <div class="pill" id="hud-name">Your Innovation Campus</div>
   <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
@@ -294,7 +294,8 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
-    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Your name" oninput="nameTyped(this.value)"></div>
+    <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="<your_name>" oninput="nameTyped(this.value)"></div>
+    <p class="small muted" style="margin-top:-8px">Where it says <your_name>, type your name plainly: no angle brackets, no quotes.</p>
     <div class="row"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
@@ -824,7 +825,7 @@ const SAY_PLAIN={
   fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
 };
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
-let S={name:"Lotte",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[]};
+let S={name:"<your_name>",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -1459,7 +1460,7 @@ function animChar(c,walking,dt,t){
 /* ---------------- UI ---------------- */
 function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);$("hud-name").textContent=S.name+" · "+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=[1,2,3,4,5,6,7,8].map(k=>`<i class="${S.done.includes(k)?'on':''}"></i>`).join("");
   countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),Math.round(S.done.length/8*100),v=>Math.round(v)+"%");countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
-window.start=function(){S.name=$("name").value.trim()||"Lotte";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
+window.start=function(){S.name=$("name").value.trim()||"<your_name>";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
 // The News card shows NEWS, embedded at build time from data/news.json
 // (vibe news writes it; the weekly action rebuilds and commits the game).
 let newsLoaded=false;
@@ -1535,7 +1536,7 @@ Bash is the language the terminal speaks. A shell script is a text file of comma
 - Shelf: Terminal and shell · Depth: Working knowledge
 #tech #shell`},
 "Files, folders and paths":{t:"shell",md:`# Files, folders and paths
-A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 **Try in five minutes.** In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for.
 - Docs: [Unix filesystem basics](https://missing.csail.mit.edu/2020/course-shell/), [Source: Daley and Neumann, A General-Purpose File System for Secondary Storage (FJCC 1965)](https://multicians.org/fjcc4.html), [Source: Rob Pike, A lesson in shortcuts (2012, archived copy)](https://www.moldvan.com/hidden-dot-files-linux-came-rob-pike-g/)
@@ -2363,7 +2364,7 @@ const LOOKS={
   frank:{label:"Frank",role:"Platform",blurb:"Platform engineer. Glasses, blue shirt, no patience for dashboards.",kind:"mentor",body:"#0067A5",legs:"#2B2B2B",arms:"#F5D7BC",look:{hair:"#3B2A1E",glasses:true}},
   max:{label:"Max",role:"Data",blurb:"Data engineer. Beard, green shirt, brings the DuckDB.",kind:"mentor",body:"#00A86B",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#1A1A1A",beard:true}},
   rolinda:{label:"Rolinda",role:"Ops",blurb:"Head of Hospitality. Plays herself; the hub keeps its own Rolinda on duty.",kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A"},
-  own:{label:"Your own name",role:"Player",blurb:"Type it below. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
+  own:{label:"Your own name",role:"Player",blurb:"Type it in the box below, plainly, without the angle brackets. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
 };
 const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
@@ -2374,8 +2375,8 @@ const DIFFS=[
   ["god","God","Commands folded. just verify must be green to claim."]
 ];
 // The walker spec for the current player. Unknown or missing looks fall back
-// to Lotte so an old saved state still renders.
-function playerLook(){return LOOKS[S.look]||LOOKS.lotte}
+// to Lotte for a saved game that was played as her, else to your own look.
+function playerLook(){return LOOKS[S.look]||(S.name==="Lotte"?LOOKS.lotte:LOOKS.own)}
 function playerSpec(){const l=playerLook();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:S.name+", "+l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
@@ -2424,11 +2425,11 @@ vibe import &lt;code from the game&gt;           # the other way round</code></p
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"Lotte";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"<your_name>";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
-window.nameTyped=function(v){S.name=v.trim()||"Lotte";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
-function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||"lotte";const diff=difficulty();const mode=S.mode||"";
+window.nameTyped=function(v){S.name=v.trim()||"<your_name>";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
+function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>
@@ -2439,7 +2440,7 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.l
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Terminal, this game and Obsidian, synced. The real course.</span></button></div>
 <div id="ob-setup" class="setup" style="display:${mode==="full"?"":"none"}">${mode==="full"?setupHtml():""}</div>
 <div class="step"><b>4</b><span>Go</span></div>`;
-  const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
+  const nm=$("name");if(nm){const v=S.name==="<your_name>"?"":S.name;if(nm.value!==v)nm.value=v}
   document.body.dataset.mode=mode}
 if(load()){$("name").value=S.name;if(S.done.length){$("btn-continue").style.display="";$("title").classList.add("returning")}}
 // Theme, dates and repo come from vibe.toml through CONFIG. The wine-night

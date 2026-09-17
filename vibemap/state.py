@@ -48,13 +48,18 @@ class CheckRecord(BaseModel):
     failed: list[str] = Field(default_factory=list)
 
 
+# The default name is a placeholder, shown as-is until the player types a name.
+# It reads as an instruction and never as a person, which is the point.
+PLACEHOLDER = "<your_name>"
+
+
 class State(BaseModel):
     """Everything the CLI remembers about the learner."""
 
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     version: int = STATE_VERSION
-    name: str = "Lotte"
+    name: str = PLACEHOLDER
     done_w: dict[str, list[int]] = Field(
         default_factory=lambda: {w: [] for w in WORLDS}, alias="doneW"
     )
@@ -186,7 +191,7 @@ def _migrate_v1(raw: dict[str, Any]) -> dict[str, Any]:
     ]
     return {
         "version": STATE_VERSION,
-        "name": raw.get("name", "Lotte"),
+        "name": raw.get("name", PLACEHOLDER),
         "doneW": {
             w: [int(n) for n in done_w.get(w, [])] for w in set(WORLDS) | set(done_w)
         },
