@@ -137,7 +137,7 @@ def test_vibe_fork_builds_and_is_checked_end_to_end(tmp_path: Path) -> None:
     assert manifest["version"] == quests.FORK_VERSION
 
     # An untouched fork is not yet the learner's: it builds, but nothing differs.
-    first = _run(camp, "check", "--fork")
+    first = _run(camp, "check", "--fork", "config")
     assert "src/config is still the product's" in first.stdout, first.stdout
     assert first.returncode == 0
 
@@ -148,7 +148,7 @@ def test_vibe_fork_builds_and_is_checked_end_to_end(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    second = _run(camp, "check", "--fork")
+    second = _run(camp, "check", "--fork", "config")
     assert "your fork builds and is yours" in second.stdout, second.stdout
     built = (fork / "game" / "vibe-map.html").read_text(encoding="utf-8")
     assert "const WORLD_SCALE=2.4;" in built

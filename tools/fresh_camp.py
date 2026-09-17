@@ -24,6 +24,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
+# The journey configuration is what makes a folder a camp.
+CAMP_MARKER = "config/camp.toml"
+
 # Workstream 1 wants a page of the learner's own with a script and a score in
 # it; workstream 3 wants three rows of scores, one query and one script. These
 # are the smallest artefacts that satisfy vibemap/quests.py, not good work.
@@ -141,11 +144,7 @@ def _new_camp(vibe: Sequence[str], where: Path, who: str) -> Camp:
         raise CampError(
             f"vibe new exited {done.returncode}\n{done.stdout}{done.stderr}"
         )
-    camps = [
-        p
-        for p in where.iterdir()
-        if p.is_dir() and (p / "config" / "camp.toml").exists()
-    ]
+    camps = [p for p in where.iterdir() if p.is_dir() and (p / CAMP_MARKER).exists()]
     if len(camps) != 1:
         raise CampError(f"expected one camp in {where}, found {camps}")
     return Camp(vibe, camps[0])
@@ -157,7 +156,7 @@ def run_fresh_camp(vibe: Sequence[str], where: Path) -> dict[str, object]:
     Returns a summary; raises CampError on the first step that misbehaves.
     """
     camp = _new_camp(vibe, where, "Lotte")
-    for rel in ("config/camp.toml", "vault/Camp/Tonight.md", "workspace/README.md"):
+    for rel in (CAMP_MARKER, "vault/Camp/Tonight.md", "workspace/README.md"):
         if not (camp.path / rel).exists():
             raise CampError(f"a fresh camp has no {rel}")
 
