@@ -1,7 +1,7 @@
 ---
 title: "Building and consuming APIs"
 date: 2026-09-16
-tags: [tech, castle]
+tags: [tech, net]
 ---
 # Building and consuming APIs
 
@@ -13,10 +13,10 @@ Consuming: read the docs, get a key, make a request, parse JSON. Building: FastA
 
 - Docs: [FastAPI tutorial](https://fastapi.tiangolo.com/tutorial/), [httpx](https://www.python-httpx.org), [Twelve-Factor config](https://12factor.net/config), [Source: Don Box, A Brief History of SOAP (2001)](https://www.xml.com/pub/a/ws/2001/04/04/soap.html), [Source: graphql.org, GraphQL: A data query language (September 2015)](https://graphql.org/blog/2015-09-14-graphql/), [Source: gRPC 1.0 announcement (August 2016)](https://grpc.io/blog/ga-announcement/)
 - Unlocks: [[MCP (Model Context Protocol)]], [[Docker and containers]]
-- Age: Castle Age · Level: Medior
+- Shelf: Web, networks and APIs · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #castle
+#tech #net

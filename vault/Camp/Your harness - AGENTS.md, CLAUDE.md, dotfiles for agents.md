@@ -1,7 +1,7 @@
 ---
 title: "Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
 
@@ -13,10 +13,10 @@ Your standing instructions, per repo and per machine, in files the agent reads b
 
 - Docs: [agents.md](https://agents.md), [Claude Code memory](https://code.claude.com/docs/en/memory), [Settings](https://code.claude.com/docs/en/settings), [Source: Anthropic, Claude 3.7 Sonnet and Claude Code (February 2025)](https://www.anthropic.com/news/claude-3-7-sonnet), [Source: openai/agents.md repository (August 2025)](https://github.com/openai/agents.md), [Source: Linux Foundation, formation of the Agentic AI Foundation (December 2025)](https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation)
 - Unlocks: [[Skills (Agent Skills standard)]], [[Hooks]], [[MCP (Model Context Protocol)]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents

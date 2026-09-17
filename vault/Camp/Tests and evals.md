@@ -1,7 +1,7 @@
 ---
 title: "Tests and evals"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, code]
 ---
 # Tests and evals
 
@@ -13,10 +13,10 @@ A test runs code and checks the result. An eval does the same for an agent: a se
 
 - Docs: [pytest](https://docs.pytest.org), [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests), [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html), [Source: pytest history](https://docs.pytest.org/en/stable/history.html), [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/)
 - Unlocks: [[CI-CD and automation]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Languages and code · Depth: Deep
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #code

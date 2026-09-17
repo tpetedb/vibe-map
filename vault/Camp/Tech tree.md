@@ -5,13 +5,19 @@ tags: [overview]
 ---
 # Tech tree
 
-The roadmap from intern to expert, Age of Empires style.
+The whole map, shelf by shelf. Every topic has a depth: basics, working knowledge, deep.
 
-**Dark Age (Intern).** The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier. [[Unix and the terminal]], [[Bash and shell scripts]], [[zsh and your shell config]], [[Files, folders and paths]], [[Dotfiles]], [[Config formats - JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[localhost and ports]], [[Git]], [[Git hooks]], [[Interfaces - GUI, TUI, CLI, API]]
-**Feudal Age (Junior).** Languages and data. You can now make the machine do a specific thing and keep the result. [[Python]], [[TOML in practice - pyproject.toml]], [[Python libraries - what they are for]], [[SQL and DuckDB]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Markdown and Obsidian]], [[Obsidian features]], [[Data - files, schemas, warehouses]], [[README and the quickstart]]
-**Castle Age (Medior).** Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. [[HTTP and APIs]], [[Building and consuming APIs]], [[SSH and remote machines]], [[YAML in practice - CI and Compose]], [[Docker and containers]], [[GitHub, pull requests, Pages]], [[CI-CD and automation]], [[Cloud and servers]], [[Semantic Versioning]], [[Changelogs (Keep a Changelog)]]
-**Imperial Age (Senior).** The AI harness. You stop typing code and start directing agents, with guardrails you wrote. [[LLM versus harness]], [[Context window and prompts]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]], [[AGENTS.md]], [[Skills (Agent Skills standard)]], [[Hooks]], [[Agent hooks]], [[MCP (Model Context Protocol)]], [[Subagents and multi-agent]], [[Headless agents and scheduling]], [[Tests and evals]], [[Security and permissions]], [[Cost, tokens and model choice]], [[Architecture decision records]]
-**Future Age (Expert).** What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. [[Kubernetes and platforms]], [[Memory - the vault as long-term memory]], [[The future perspective]]
+**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. [[Unix and the terminal]], [[Files, folders and paths]], [[Interfaces - GUI, TUI, CLI, API]], [[Bash and shell scripts]], [[zsh and your shell config]], [[Dotfiles]], [[localhost and ports]], [[SSH and remote machines]]
+**Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. [[Git]], [[GitHub, pull requests, Pages]], [[Git hooks]], [[CI-CD and automation]]
+**Config and formats.** The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env. [[Config formats - JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[Markdown and Obsidian]], [[TOML in practice - pyproject.toml]], [[YAML in practice - CI and Compose]]
+**Languages and code.** Python first, then the web, the other languages and how to know the code works. [[Python]], [[Python libraries - what they are for]], [[HTML, CSS and JavaScript]], [[Other languages and what they are for]], [[Tests and evals]]
+**Data.** Files, schemas, warehouses and SQL over all of it. [[Data - files, schemas, warehouses]], [[SQL and DuckDB]]
+**Web, networks and APIs.** How programs talk over HTTP and how to build and consume an API. [[HTTP and APIs]], [[Building and consuming APIs]]
+**Ship and run.** Containers, the cloud, platforms and agents that run without you. [[Docker and containers]], [[Cloud and servers]], [[Headless agents and scheduling]], [[Kubernetes and platforms]]
+**Agents and the harness.** What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost. [[LLM versus harness]], [[Context window and prompts]], [[AGENTS.md]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]], [[Skills (Agent Skills standard)]], [[Hooks]], [[MCP (Model Context Protocol)]], [[Security and permissions]], [[Cost, tokens and model choice]], [[Agent hooks]], [[Subagents and multi-agent]]
+**Docs and versioning.** The README, semantic versioning, changelogs and decision records. [[README and the quickstart]], [[Semantic Versioning]], [[Changelogs (Keep a Changelog)]], [[Architecture decision records]]
+**Knowledge and Obsidian.** Obsidian feature by feature and the vault as long-term memory. [[Obsidian features]], [[Memory - the vault as long-term memory]]
+**What is coming.** What stays the same, what changes, and what to do about it. [[The future perspective]]
 
 Back to [[Tonight]] · [[Resources]]
 

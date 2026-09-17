@@ -1,7 +1,7 @@
 ---
 title: "README and the quickstart"
 date: 2026-09-16
-tags: [tech, feudal]
+tags: [tech, docs]
 ---
 # README and the quickstart
 
@@ -13,10 +13,10 @@ The README is the front page: what this is, for whom, and the commands that get 
 
 - Docs: [Make a README](https://www.makeareadme.com), [GitHub docs, About READMEs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes), [Source: TUHS, V7 /usr/doc/README (listed 1979-01-11)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/doc/README), [Source: Trailing-Edge PDP-10 archive, DECUS UCI LISP READ.ME](http://pdp-10.trailing-edge.com/decuslib10-04/01/43,50322/read.me.html), [Source: GitHub docs, About READMEs (often the first item a visitor sees)](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes)
 - Unlocks: [[GitHub, pull requests, Pages]]
-- Age: Feudal Age · Level: Junior
+- Shelf: Docs and versioning · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #feudal
+#tech #docs

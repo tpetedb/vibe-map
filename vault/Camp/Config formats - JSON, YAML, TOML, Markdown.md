@@ -1,7 +1,7 @@
 ---
 title: "Config formats: JSON, YAML, TOML, Markdown"
 date: 2026-09-16
-tags: [tech, dark]
+tags: [tech, formats]
 ---
 # Config formats: JSON, YAML, TOML, Markdown
 
@@ -13,10 +13,10 @@ Tools read settings from text files in a few formats. JSON: strict, braces, what
 
 - Docs: [JSON](https://www.json.org/json-en.html), [YAML](https://yaml.org/spec/1.2.2/), [TOML](https://toml.io), [Markdown](https://daringfireball.net/projects/markdown/), [Source: ECMA-404, The JSON data interchange syntax (2nd edition)](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf), [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/), [Source: Markdown 1.0.1 (December 2004)](https://daringfireball.net/projects/markdown/), [Source: TOML v0.1.0 release (March 2013)](https://github.com/toml-lang/toml/releases/tag/v0.1.0)
 - Unlocks: [[.env files and secrets]], [[YAML in practice - CI and Compose]], [[TOML in practice - pyproject.toml]], [[AGENTS.md]], [[Skills (Agent Skills standard)]]
-- Age: Dark Age · Level: Intern
+- Shelf: Config and formats · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #formats

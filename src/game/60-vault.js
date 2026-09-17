@@ -1,3 +1,5 @@
+// One colour per shelf of the tree; the same map drives the Obsidian graph groups.
+const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",data:"#00D084",net:"#0088CC",ship:"#F04923",agents:"#D32F2F",docs:"#C29200",knowledge:"#FFA94D",future:"#CCCCCC"};
 let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vctxScale=1,vz=1,vtx=0,vty=0;
 const vToWorld=(sx,sy)=>[(sx-vtx)/vz,(sy-vty)/vz];
 // The layout is a d3-force simulation: charge, links, a weak pull to the
@@ -25,7 +27,7 @@ function vdraw(){
   const nb=new Set();if(vsel!==null)VL.forEach(([i,j])=>{if(i===vsel)nb.add(j);if(j===vsel)nb.add(i)});
   VL.forEach(([i,j])=>{const a=VN[i],b=VN[j];const hot=vsel!==null&&(i===vsel||j===vsel);c.strokeStyle=hot?"rgba(0,136,204,.9)":"rgba(255,255,255,"+(vsel===null?.16:.06)+")";c.lineWidth=(hot?1.6:1)/vz;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()});
   // Same legend as the Obsidian graph (docs/VAULT.md): workstreams green, people blue, concepts orange, ages by tier.
-  const col={ws:"#00A86B",c:"#FF8C1A",p:"#0088CC",dark:"#94A3B8",feudal:"#00D084",castle:"#FF8C1A",imperial:"#F04923",future:"#FFBF00"};
+  const col=Object.assign({ws:"#00A86B",c:"#FF8C1A",p:"#0088CC"},CAT_COL);
   // Labels: the selection and its neighbours always; the rest only when the
   // node is big enough on screen, so a phone shows hubs and a zoom shows all.
   const small=Math.min(vW,vH)<520;
@@ -61,8 +63,8 @@ window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md
 let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
 window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");if(treeOn)renderTree()};
-function renderTree(){const col={dark:"#94A3B8",feudal:"#00D084",castle:"#FF8C1A",imperial:"#F04923",future:"#FFBF00"};const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
-  $("vtree").innerHTML='<div class="ages">'+AGES.map(([a,an,lv,d])=>`<div class="age"><div class="lvl">${lv}</div><h4>${an}</h4><p>${d}</p>${TREE[a].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${col[a]}"></i>${t.n}</button>`).join("")}</div>`).join("")+'</div>';
+function renderTree(){const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
+  $("vtree").innerHTML='<div class="ages">'+CATS.map(([c,cn,d])=>`<div class="age"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
   $("vtree").querySelectorAll(".tech").forEach(b=>b.onclick=()=>{vrender(b.dataset.n);renderTree();$("vnote").scrollIntoView({behavior:"smooth",block:"start"})})}
 window.openObsidian=function(){
   if(location.protocol==="file:"){const dir=decodeURIComponent(location.pathname).replace(/\/game\/[^/]*$/,"");location.href="obsidian://open?path="+encodeURIComponent(dir+"/vault/Camp/Tonight.md");

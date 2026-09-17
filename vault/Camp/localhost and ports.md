@@ -1,7 +1,7 @@
 ---
 title: "localhost and ports"
 date: 2026-09-16
-tags: [tech, dark]
+tags: [tech, shell]
 ---
 # localhost and ports
 
@@ -13,10 +13,10 @@ localhost (127.0.0.1) is your own machine talking to itself over the network sta
 
 - Docs: [MDN: How the web works](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works), [Source: RFC 990, Assigned Numbers (1986)](https://www.rfc-editor.org/rfc/rfc990), [Source: RFC 801, NCP/TCP Transition Plan (1981)](https://www.rfc-editor.org/rfc/rfc801)
 - Unlocks: [[HTTP and APIs]], [[Docker and containers]], [[MCP (Model Context Protocol)]]
-- Age: Dark Age · Level: Intern
+- Shelf: Terminal and shell · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #shell

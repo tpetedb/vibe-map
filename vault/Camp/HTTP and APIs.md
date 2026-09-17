@@ -1,7 +1,7 @@
 ---
 title: "HTTP and APIs"
 date: 2026-09-16
-tags: [tech, castle]
+tags: [tech, net]
 ---
 # HTTP and APIs
 
@@ -13,10 +13,10 @@ HTTP is request and response: a URL, a method (GET, POST), headers, a body, a st
 
 - Docs: [MDN HTTP overview](https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview), [curl](https://curl.se/docs/manual.html), [Postman](https://learning.postman.com), [Source: W3C, The original HTTP as defined in 1991](https://www.w3.org/Protocols/HTTP/AsImplemented.html), [Source: RFC 2068, HTTP/1.1 (January 1997)](https://www.rfc-editor.org/rfc/rfc2068), [Source: RFC 7540, HTTP/2 (May 2015)](https://www.rfc-editor.org/rfc/rfc7540), [Source: Fielding, Architectural Styles and the Design of Network-based Software Architectures (2000)](https://ics.uci.edu/~fielding/pubs/dissertation/top.htm), [Source: OpenAI API announcement (June 2020)](https://openai.com/index/openai-api/)
 - Unlocks: [[Building and consuming APIs]], [[MCP (Model Context Protocol)]], [[SSH and remote machines]]
-- Age: Castle Age · Level: Medior
+- Shelf: Web, networks and APIs · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #castle
+#tech #net

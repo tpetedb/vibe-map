@@ -1,7 +1,7 @@
 ---
 title: "Obsidian features"
 date: 2026-09-17
-tags: [tech, feudal]
+tags: [tech, knowledge]
 ---
 # Obsidian features
 
@@ -13,10 +13,10 @@ Obsidian is more than a Markdown editor: properties (typed frontmatter), callout
 
 - Docs: [Obsidian Help](https://help.obsidian.md/), [The feature table](https://github.com/tpetedb/vibe-map/blob/main/docs/OBSIDIAN.md), [Source: Obsidian 1.0.0 changelog (13 October 2022)](https://obsidian.md/changelog/2022-10-13-desktop-v1.0.0/), [Source: Obsidian 1.4 changelog, Properties (31 August 2023)](https://obsidian.md/changelog/2023-08-31-desktop-v1.4.5/), [Source: Obsidian Help, Bases views (table and cards since 1.9)](https://help.obsidian.md/Bases/Views), [Source: Obsidian Help, Obsidian CLI (requires the 1.12 installer)](https://help.obsidian.md/Extending+Obsidian/Obsidian+CLI), [Source: Wikipedia, Obsidian (software): Canvas introduced December 2022](https://en.wikipedia.org/wiki/Obsidian_(software))
 - Unlocks: [[Memory - the vault as long-term memory]]
-- Age: Feudal Age · Level: Junior
+- Shelf: Knowledge and Obsidian · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #feudal
+#tech #knowledge

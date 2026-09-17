@@ -1,7 +1,7 @@
 ---
 title: "Dotfiles"
 date: 2026-09-16
-tags: [tech, dark]
+tags: [tech, shell]
 ---
 # Dotfiles
 
@@ -13,10 +13,10 @@ Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure
 
 - Docs: [dotfiles.github.io](https://dotfiles.github.io), [Claude Code settings](https://code.claude.com/docs/en/settings), [Source: GitHub launch post (April 2008)](https://github.blog/2008-04-10-we-launched/), [Source: dotfiles.github.io repository (created April 2012)](https://github.com/dotfiles/dotfiles.github.com)
 - Unlocks: [[Config formats - JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]]
-- Age: Dark Age · Level: Intern
+- Shelf: Terminal and shell · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #dark
+#tech #shell

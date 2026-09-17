@@ -1328,3 +1328,89 @@ T = [
         ["github"],
     ),
 ]
+
+
+# The tree is grouped by category, not by age: every topic has a depth of its
+# own (1 basics, 2 working knowledge, 3 deep), and a category is a shelf you
+# come back to. AGES stay as the player's XP ladder only.
+CATEGORIES = [
+    (
+        "shell",
+        "Terminal and shell",
+        "Where every command starts: the terminal, files, the shell and its config, ports, remote machines.",
+    ),
+    (
+        "git",
+        "Git and GitHub",
+        "Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push.",
+    ),
+    (
+        "formats",
+        "Config and formats",
+        "The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env.",
+    ),
+    (
+        "code",
+        "Languages and code",
+        "Python first, then the web, the other languages and how to know the code works.",
+    ),
+    ("data", "Data", "Files, schemas, warehouses and SQL over all of it."),
+    (
+        "net",
+        "Web, networks and APIs",
+        "How programs talk over HTTP and how to build and consume an API.",
+    ),
+    (
+        "ship",
+        "Ship and run",
+        "Containers, the cloud, platforms and agents that run without you.",
+    ),
+    (
+        "agents",
+        "Agents and the harness",
+        "What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost.",
+    ),
+    (
+        "docs",
+        "Docs and versioning",
+        "The README, semantic versioning, changelogs and decision records.",
+    ),
+    (
+        "knowledge",
+        "Knowledge and Obsidian",
+        "Obsidian feature by feature and the vault as long-term memory.",
+    ),
+    (
+        "future",
+        "What is coming",
+        "What stays the same, what changes, and what to do about it.",
+    ),
+]
+DEPTHS = {1: "Basics", 2: "Working knowledge", 3: "Deep"}
+CATEGORY: dict[str, tuple[str, int]] = {
+    "unix": ("shell", 1), "files": ("shell", 1), "interfaces": ("shell", 1),
+    "bash": ("shell", 2), "zsh": ("shell", 2), "dotfiles": ("shell", 2),
+    "localhost": ("shell", 2), "ssh": ("shell", 3),
+    "git": ("git", 1), "github": ("git", 2), "githooks": ("git", 2), "ci": ("git", 3),
+    "config": ("formats", 1), "env": ("formats", 1), "markdown": ("formats", 1),
+    "toml": ("formats", 2), "yaml": ("formats", 2),
+    "python": ("code", 1), "pylibs": ("code", 2), "web": ("code", 2),
+    "languages": ("code", 3), "tests": ("code", 3),
+    "data": ("data", 1), "sql": ("data", 2),
+    "http": ("net", 1), "apis": ("net", 2),
+    "docker": ("ship", 2), "cloud": ("ship", 2), "headless": ("ship", 3),
+    "kubernetes": ("ship", 3),
+    "llm": ("agents", 1), "context": ("agents", 1), "agentsmd": ("agents", 1),
+    "harness": ("agents", 2), "skills": ("agents", 2), "hooks": ("agents", 2),
+    "mcp": ("agents", 2), "security": ("agents", 2), "cost": ("agents", 2),
+    "agenthooks": ("agents", 3), "subagents": ("agents", 3),
+    "readme": ("docs", 1), "semver": ("docs", 2), "changelog": ("docs", 2),
+    "adr": ("docs", 3),
+    "obsidian": ("knowledge", 1), "vault": ("knowledge", 2),
+    "future": ("future", 1),
+}  # fmt: skip
+
+
+def category(node_id: str) -> tuple[str, int]:
+    """(category id, depth) for a node; unknown nodes land in agents, depth 2."""
+    return CATEGORY.get(node_id, ("agents", 2))

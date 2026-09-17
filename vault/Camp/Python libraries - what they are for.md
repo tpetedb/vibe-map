@@ -1,7 +1,7 @@
 ---
 title: "Python libraries: what they are for"
 date: 2026-09-16
-tags: [tech, feudal]
+tags: [tech, code]
 ---
 # Python libraries: what they are for
 
@@ -13,10 +13,10 @@ pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (ta
 
 - Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html), [Requests](https://requests.readthedocs.io), [pytest](https://docs.pytest.org), [FastAPI](https://fastapi.tiangolo.com), [Source: numpy.org, About NumPy](https://numpy.org/about/), [Source: pandas.pydata.org, About pandas](https://pandas.pydata.org/about/), [Source: requests release history on PyPI (February 2011)](https://pypi.org/project/requests/#history), [Source: pytest history](https://docs.pytest.org/en/stable/history.html), [Source: FastAPI release history on PyPI (December 2018)](https://pypi.org/project/fastapi/#history), [Source: pydantic v0.1 release (June 2017)](https://github.com/pydantic/pydantic/releases/tag/v0.1), [Source: Playwright v1.0.0 release (May 2020)](https://github.com/microsoft/playwright/releases/tag/v1.0.0), [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0)
 - Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
-- Age: Feudal Age · Level: Junior
+- Shelf: Languages and code · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #feudal
+#tech #code

@@ -1,7 +1,7 @@
 ---
 title: "TOML in practice: pyproject.toml"
 date: 2026-09-16
-tags: [tech, feudal]
+tags: [tech, formats]
 ---
 # TOML in practice: pyproject.toml
 
@@ -13,10 +13,10 @@ TOML is INI with types. [tables] group keys; key = "value" pairs are typed (stri
 
 - Docs: [TOML 1.0.0 spec](https://toml.io/en/v1.0.0), [Python packaging: writing your pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/), [tomllib](https://docs.python.org/3/library/tomllib.html), [Source: TOML v0.1.0 release (March 2013)](https://github.com/toml-lang/toml/releases/tag/v0.1.0), [Source: TOML 1.0.0 release (January 2021)](https://github.com/toml-lang/toml/releases/tag/1.0.0), [Source: PEP 518 (created May 2016)](https://peps.python.org/pep-0518/), [Source: PEP 621 (created June 2020)](https://peps.python.org/pep-0621/), [Source: Python 3.11.0 release (October 2022, PEP 680 tomllib)](https://www.python.org/downloads/release/python-3110/)
 - Unlocks: [[Python libraries - what they are for]]
-- Age: Feudal Age · Level: Junior
+- Shelf: Config and formats · Depth: Working knowledge
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #feudal
+#tech #formats

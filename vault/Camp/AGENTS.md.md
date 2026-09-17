@@ -1,7 +1,7 @@
 ---
 title: "AGENTS.md"
 date: 2026-09-16
-tags: [tech, imperial]
+tags: [tech, agents]
 ---
 # AGENTS.md
 
@@ -13,10 +13,10 @@ None
 
 - Docs: [Source: agents.md](https://agents.md)
 - Unlocks: [[Architecture decision records]]
-- Age: Imperial Age · Level: Senior
+- Shelf: Agents and the harness · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->
 
 Back to [[Tech tree]]
 
-#tech #imperial
+#tech #agents
