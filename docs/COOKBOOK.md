@@ -99,7 +99,7 @@ Read every .md file in notes/, list the decisions made, the open decisions with 
 Workstream 3. A chart of minutes per decision by meeting.
 
 ```text
-Using data/meetings.csv, write sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to python/out/. Explain the one SQL construct I have not seen.
+Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to python/out/. Explain the one SQL construct I have not seen.
 ```
 
 **Done when:** The chart opens and the worst meeting is obvious.
@@ -179,7 +179,7 @@ Read docs/ and produce index.md grouped by the accreditation standard each docum
 Workstream 3. A line chart per programme, 2023 to 2026.
 
 ```text
-Using data/enrolments.csv, write sql/ratio.sql in DuckDB and a Python chart. One sentence on what the trend implies.
+Using workspace/data/enrolments.csv, write workspace/sql/ratio.sql in DuckDB and a Python chart. One sentence on what the trend implies.
 ```
 
 **Done when:** Chart in python/out/, sentence in the vault.
@@ -229,7 +229,7 @@ Read observations/*.md and write feedback.md per student teacher: two strengths,
 Workstream 3. Attention by subject and group from lessons.csv.
 
 ```text
-Write sql/attention.sql and a Python chart from data/lessons.csv. Explain group by in one comment.
+Write workspace/sql/attention.sql and a Python chart from data/lessons.csv. Explain group by in one comment.
 ```
 
 **Done when:** The chart matches your gut feeling, or you learned something.
@@ -299,7 +299,7 @@ Read client-email.txt and write brief.md: rooms, style words, must-haves, budget
 Workstream 3. Spent versus budget per client and style, with a chart.
 
 ```text
-Using data/projects.csv, write sql/over_budget.sql and a Python chart of spent versus budget per style. One sentence on the worst offender.
+Using workspace/data/projects.csv, write workspace/sql/over_budget.sql and a Python chart of spent versus budget per style. One sentence on the worst offender.
 ```
 
 **Done when:** The chart shows the style that overruns.
