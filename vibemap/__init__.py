@@ -7,4 +7,11 @@ a progress code with the game in game/vibe-map.html.
 
 from __future__ import annotations
 
-__version__ = "0.3.0"
+from importlib.metadata import PackageNotFoundError, version
+
+# One source for the version: pyproject.toml, through the installed metadata.
+# A checkout that is not installed (a bare `python -c`) falls back to the pin.
+try:
+    __version__ = version("vibe-map")
+except PackageNotFoundError:  # reason: running from source without an install
+    __version__ = "0.4.1"
