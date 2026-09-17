@@ -1007,7 +1007,7 @@ T = [
             ),
             (
                 "Source: Git 2.9.0 release notes (core.hooksPath)",
-                "https://github.com/git/git/blob/master/Documentation/RelNotes/2.9.0.txt",
+                "https://github.com/git/git/blob/master/Documentation/RelNotes/2.9.0.adoc",
             ),
         ],
         ["agenthooks", "ci"],
