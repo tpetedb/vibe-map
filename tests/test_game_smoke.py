@@ -98,11 +98,13 @@ def test_vault_opens_and_follows_a_wikilink(game: GamePage) -> None:
     links = game.page.locator("#vnote .wl")
     assert links.count() > 0
     links.nth(0).click()
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_function(
+        "t => (document.getElementById('vnote').textContent || '') !== t", arg=first
+    )
     assert (game.page.text_content("#vnote") or "") != first
     game.screenshot("smoke_vault")
     game.page.click("#vtop button:has-text('Tech tree')")
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_selector("#vtree.on", state="visible")
     assert game.page.locator("#vtree").is_visible()
     game.close_vault()
     game.assert_clean()
@@ -187,11 +189,11 @@ def test_escape_closes_the_sheet_and_the_vault(game: GamePage) -> None:
     game.start()
     game.open_roadmap()
     game.page.keyboard.press("Escape")
-    game.page.wait_for_timeout(200)
+    game.page.wait_for_selector("#sheet.on", state="detached")
     assert not game.page.locator("#sheet").evaluate("e => e.classList.contains('on')")
     game.open_vault()
     game.page.keyboard.press("Escape")
-    game.page.wait_for_timeout(200)
+    game.page.wait_for_selector("#vault.on", state="detached")
     assert not game.page.locator("#vault").evaluate("e => e.classList.contains('on')")
     game.assert_clean()
 
@@ -201,7 +203,9 @@ def test_full_screen_takes_the_element_that_holds_the_panels(game: GamePage) -> 
     game.start()
     game.open_roadmap()
     game.page.click("#s-map button:has-text('Full screen')")
-    game.page.wait_for_timeout(400)
+    # requestFullscreen resolves a frame or more after the click, and a browser
+    # that refuses it never resolves at all: wait for the element, not a clock.
+    game.page.wait_for_function("() => !!document.fullscreenElement")
     res = game.page.evaluate(
         """() => { const fe = document.fullscreenElement;
           if (!fe) return null;
@@ -218,11 +222,11 @@ def test_the_tech_tree_says_it_scrolls(game: GamePage) -> None:
     game.start()
     game.page.click("#hud button:has-text('Tree')")
     game.page.wait_for_selector("#vtree.on", state="attached")
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_selector("#vtree .treenav button", state="attached")
     assert game.page.locator("#vtree .treenav button").count() == 2
     before = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     game.page.click("#vtree .treenav button:has-text('Later')")
-    game.page.wait_for_timeout(600)
+    game.still("document.getElementById('vtree').scrollLeft")
     after = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     assert after > before, (before, after)
     game.assert_clean()

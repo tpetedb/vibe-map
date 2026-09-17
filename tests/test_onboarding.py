@@ -119,26 +119,25 @@ def test_commands_fold_at_hard_and_open_at_beginner(game: GamePage) -> None:
     page.click("#onboard button.choice:has-text('Beginner')")
     assert page.locator("details.cmds[open]").count() == total
     game.start("Max")
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_timeout(500)
+    game.open_roadmap()
     page.click("#s-map button:has-text('Settings')")
     page.select_option("#set-difficulty", "god")
     assert page.locator("details.cmds[open]").count() == 0
     # Folded is never hidden: one click opens the commands of a lesson.
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_timeout(500)
+    game.open_roadmap()
     page.click("#s-map button:has-text('Setup guide')")
     assert "vibe new ~/vibe-map-max-" in page.inner_text("#s-setup")
     assert game.errors == []
 
 
 def test_returning_player_sees_resume_first(game: GamePage) -> None:
+    # Stop numbers run 1 to 8; the game never writes a 0, so neither does the seed.
     page = game.goto(
         state={
             "name": "Rolinda",
             "look": "rolinda",
-            "done": [0],
-            "doneW": {"campus": [0]},
+            "done": [1],
+            "doneW": {"campus": [1]},
         }
     ).page
     assert page.is_visible("#btn-continue")
@@ -153,7 +152,8 @@ def test_an_empty_name_refuses_to_start(game: GamePage) -> None:
     page = game.goto().page
     page.click("#onboard button.choice:has-text('Your own name')")
     page.click("text=Kick off the engagement")
-    page.wait_for_timeout(300)
+    # Nothing to wait for: the hint is the only thing an empty name produces.
+    page.wait_for_selector("#namehint:has-text('Type your name first')")
     assert page.is_visible("#title")
     assert not page.locator("#title").evaluate("e => e.classList.contains('off')")
     assert "Type your name first" in (page.text_content("#namehint") or "")
@@ -197,7 +197,7 @@ def test_accents_fold_into_the_camp_directory(game: GamePage) -> None:
 def test_the_setup_guide_renders_below_the_go_row(game: GamePage) -> None:
     page = game.goto().page
     page.click("#onboard button.choice:has-text('The full experience')")
-    page.wait_for_timeout(200)
+    page.wait_for_selector("#ob-setup", state="visible")
     order = page.evaluate(
         """() => { const go = document.querySelector('#title .row.go');
           const setup = document.getElementById('ob-setup');

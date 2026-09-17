@@ -67,6 +67,10 @@ test:
 smoke:
     uv run pytest tests/test_game_smoke.py
 
+# a camp from nothing with the vibe of this checkout: new, the checks, the code
+e2e:
+    uv run python tools/fresh_camp.py --vibe="uv run --project {{justfile_directory()}} vibe"
+
 # lint (ruff check + format check)
 lint:
     uv run ruff check . && uv run ruff format --check .

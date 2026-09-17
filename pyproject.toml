@@ -72,4 +72,7 @@ pythonVersion = "3.12"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -ra"
-markers = ["integration: slow end-to-end runs (the full play-through)"]
+markers = [
+  "integration: slow end-to-end runs (the play-through, a fresh camp)",
+  "browser: needs Playwright; applied automatically to any test that takes a browser fixture",
+]

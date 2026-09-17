@@ -26,6 +26,9 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "out"
 GAME_PATH = "/game/vibe-map.html"
 STORAGE_KEY = "vibemap1"
+# One budget for every wait on a page signal. Generous, because a loaded CI
+# runner is slow, not broken; a wait that runs out is a real defect.
+WAIT_MS = 20_000
 
 # Software WebGL for headless Chromium. Without ANGLE on SwiftShader the
 # canvas has no context and the game falls back to the roadmap list, which
@@ -98,13 +101,34 @@ def encode_progress(
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
 
+# Wait until a number the page computes stops changing. A spring and a smooth
+# scroll have no completion event, so "it has not moved for 160 ms" is the
+# signal. Sampling is on a timer, not on frames: software WebGL renders at a
+# handful of frames a second and the scroll does not wait for it. The tick cap
+# keeps a value that never settles from hanging a test.
+STILL = """expr => new Promise(done => {
+  const read = new Function('return (' + expr + ')');
+  let last = null, stable = 0, ticks = 0;
+  const tick = () => {
+    const v = read();
+    stable = last !== null && Math.abs(v - last) < 0.5 ? stable + 1 : 0;
+    last = v;
+    if (stable >= 5 || ++ticks > 60) return done(true);
+    setTimeout(tick, 32);
+  };
+  tick();
+})"""
+
+
 @dataclass
 class GamePage:
     """A page with the game loaded and its console errors collected.
 
     Every helper drives the real entry point (a click on the real button)
     rather than calling the function behind it, so a dead click path fails
-    the test even when the mechanism still works.
+    the test even when the mechanism still works. Every helper waits for a
+    signal the page produces, never for a wall clock, so a slow runner is
+    slow rather than red.
     """
 
     page: Page
@@ -123,24 +147,47 @@ class GamePage:
         self.page.wait_for_function("typeof window.__S === 'function'")
         return self
 
+    def frames(self, n: int = 3) -> None:
+        """Wait for the frame loop to draw n more frames.
+
+        Proximity, the camera and the pop-in animations are sampled in the
+        loop, so a read straight after a click can be a frame stale.
+        """
+        start = int(self.page.evaluate("window.__debug().frame") or 0)
+        self.page.wait_for_function(
+            "n => window.__debug().frame >= n", arg=start + n, timeout=WAIT_MS
+        )
+
+    def still(self, expression: str) -> None:
+        """Wait until a numeric JavaScript expression stops changing."""
+        self.page.wait_for_function(STILL, arg=expression, timeout=WAIT_MS)
+
+    def _entered(self) -> None:
+        """The title is gone, the 3D scene runs and the first frames are drawn."""
+        self.page.wait_for_selector("#title.off", state="attached")
+        self.page.wait_for_function(
+            "window.__debug().started === true", timeout=WAIT_MS
+        )
+        self.frames()
+
     def start(self, name: str = "Lotte") -> None:
         self.page.fill("#name", name)
         self.page.click("text=Kick off the engagement")
-        self.page.wait_for_selector("#title.off", state="attached")
-        self.page.wait_for_timeout(600)
+        self._entered()
 
     def resume(self) -> None:
         self.page.click("text=Resume in-flight workstream")
-        self.page.wait_for_selector("#title.off", state="attached")
-        self.page.wait_for_timeout(600)
+        self._entered()
 
     def walk_to(
-        self, x: float, z: float, *, tol: float = 1.6, steps: int = 240
+        self, x: float, z: float, *, tol: float = 1.6, steps: int = 400
     ) -> None:
         """Steer the walker to a world coordinate with the arrow keys.
 
         The keyboard is one of the two documented ways to move, so this drives
-        the real input path rather than writing the walker's position.
+        the real input path rather than writing the walker's position. The
+        steering loop ticks on rendered frames, which is the unit the walker
+        actually moves in, so a slow runner takes longer and never drifts off.
         """
         kb = self.page.keyboard
         held: set[str] = set()
@@ -169,11 +216,10 @@ class GamePage:
                 elif dz < -0.5:
                     want.add("ArrowUp")
                 hold(want)
-                self.page.wait_for_timeout(160)
+                self.frames(4)
         finally:
             hold(set())
-            # Proximity is sampled in the frame loop; give a slow runner a beat.
-            self.page.wait_for_timeout(600)
+            self.frames()
 
     def near(self) -> Any:
         return self.page.evaluate("window.__debug().near")
@@ -189,11 +235,15 @@ class GamePage:
             )
         )
 
+    def sheet_in_place(self) -> None:
+        """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
+        self.still("document.getElementById('sheet').getBoundingClientRect().top")
+
     def open_roadmap(self) -> None:
         self.page.click("#hud button:has-text('Roadmap')")
         self.page.wait_for_selector("#sheet.on", state="attached")
         self.page.wait_for_selector("#plotlist button", state="attached")
-        self.page.wait_for_timeout(500)  # the sheet springs in over ~400 ms
+        self.sheet_in_place()
 
     def workstream_buttons(self):
         """The eight workstream buttons, skipping Pre-flight on the campus."""
@@ -205,29 +255,45 @@ class GamePage:
         self.open_roadmap()
         self.workstream_buttons()[n - 1].click()
         self.page.wait_for_selector("#sheet .screen.on", state="attached")
+        self.sheet_in_place()
 
     def claim(self, n: int) -> None:
         self.open_workstream(n)
         self.page.click("#sheet .screen.on button:has-text('Mark as done')")
-        self.page.wait_for_timeout(400)
+        self.page.wait_for_function(
+            "n => (window.__S().doneW[window.__S().world] || []).includes(n)",
+            arg=n,
+            timeout=WAIT_MS,
+        )
+        self.frames()
 
     def open_vault(self) -> None:
         self.page.click("#hud button:has-text('Vault')")
         self.page.wait_for_selector("#vault.on", state="attached")
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_selector("#vnote .wl", state="attached")
 
     def close_vault(self) -> None:
         self.page.click("#vtop button:has-text('Back to campus')")
 
     def next_world(self) -> None:
+        before = self.page.evaluate("window.__S().world")
         self.page.click("#hud button:has-text('World')")
-        self.page.wait_for_timeout(1200)
+        self.page.wait_for_function(
+            "w => window.__S().world !== w", arg=before, timeout=WAIT_MS
+        )
+        self.frames()
 
     def import_code(self, code: str) -> str:
         self.open_roadmap()
+        # Two imports in a row can produce the same message; clear it first so
+        # the wait is for this import's answer, not the previous one's.
+        self.page.evaluate("document.getElementById('syncmsg').textContent = ''")
         self.page.fill("#impcode", code)
         self.page.click("#s-map button:has-text('Import')")
-        self.page.wait_for_timeout(200)
+        self.page.wait_for_function(
+            "() => (document.getElementById('syncmsg').textContent || '') !== ''",
+            timeout=WAIT_MS,
+        )
         return self.page.text_content("#syncmsg") or ""
 
     def screenshot(self, name: str, *, clip_height: int | None = None) -> Path:
@@ -245,6 +311,20 @@ class GamePage:
 
     def assert_clean(self) -> None:
         assert self.errors == [], f"page errors: {self.errors}"
+
+
+# Every test that takes a browser fixture is a browser test. Marking it here
+# rather than by hand keeps the CI split honest: a new browser test lands in
+# the browser job without anyone remembering to label it.
+BROWSER_FIXTURES = frozenset(
+    {"game", "game_webkit_iphone", "phone", "chromium", "webkit"}
+)
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    for item in items:
+        if BROWSER_FIXTURES & set(getattr(item, "fixturenames", ())):
+            item.add_marker("browser")
 
 
 def _attach_error_collectors(page: Page, errors: list[str]) -> None:
