@@ -596,13 +596,13 @@ def persona(ctx: Ctx, persona_id: str | None) -> None:
     except ValueError as e:
         _fail(str(e))
     _set_learner(ctx, "persona", p.id)
-    ex = ROOT / "data" / "examples"
+    ex = ROOT / "workspace" / "data" / "examples"
     ex.mkdir(parents=True, exist_ok=True)
     (ex / p.dataset.filename).write_text(p.dataset.to_csv(), encoding="utf-8")
     ctx.vault = Vault(ctx.cfg, ctx.state)
     ctx.vault.build(p)
     console.print(
-        f"[ok]{p.label}[/]: dataset data/examples/{p.dataset.filename}, "
+        f"[ok]{p.label}[/]: dataset workspace/data/examples/{p.dataset.filename}, "
         "note vault/Camp/Your field.md"
     )
 

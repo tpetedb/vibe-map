@@ -80,7 +80,7 @@ uv run vibe theme rainforest --create --brief "a jungle expedition, plain tone, 
 
 **Your game (workstream 1).** A calendar dungeon: meetings are rooms, each room has a monster (a decision that keeps getting postponed), and you clear the week by making three decisions before Friday.
 
-**Your dataset (workstream 3).** `data/examples/meetings.csv`, columns `date, meeting, attendees, minutes, decisions`. Write it with `uv run vibe persona chief-of-staff`. Question to answer: Which meeting costs the most minutes per decision?
+**Your dataset (workstream 3).** `workspace/data/examples/meetings.csv`, columns `date, meeting, attendees, minutes, decisions`. Write it with `uv run vibe persona chief-of-staff`. Question to answer: Which meeting costs the most minutes per decision?
 
 **Rolinda asks.** Which meeting should be an email, and can you prove it with the numbers?
 
@@ -120,7 +120,7 @@ Write a script that runs the provider in print mode with the prompt in prompts/a
 
 **Your game (workstream 1).** Pressure-washer tycoon: send crews to dirty facades, dodge rain, keep the vans fuelled, and beat last month's revenue before the season ends.
 
-**Your dataset (workstream 3).** `data/examples/jobs.csv`, columns `date, client, crew, hours, revenue_eur, rain`. Write it with `uv run vibe persona cleaning-ceo`. Question to answer: Which crew earns the most per hour, and does rain change it?
+**Your dataset (workstream 3).** `workspace/data/examples/jobs.csv`, columns `date, client, crew, hours, revenue_eur, rain`. Write it with `uv run vibe persona cleaning-ceo`. Question to answer: Which crew earns the most per hour, and does rain change it?
 
 **Rolinda asks.** Which client pays you the least per hour, and why are you still going there?
 
@@ -160,7 +160,7 @@ Write a script that reads invoices.csv, prints the overdue ones sorted by amount
 
 **Your game (workstream 1).** Faculty builder: enrol students, fund labs, survive an accreditation visit, and keep the professors from leaving for industry.
 
-**Your dataset (workstream 3).** `data/examples/enrolments.csv`, columns `year, programme, students, budget_keur, staff`. Write it with `uv run vibe persona university-md`. Question to answer: Which programme grows fastest per staff member?
+**Your dataset (workstream 3).** `workspace/data/examples/enrolments.csv`, columns `year, programme, students, budget_keur, staff`. Write it with `uv run vibe persona university-md`. Question to answer: Which programme grows fastest per staff member?
 
 **Rolinda asks.** If one programme doubles next year, what breaks first, and where is that in the numbers?
 
@@ -200,7 +200,7 @@ Write memo.md for the board: three findings, each with the file and line it came
 
 **Your game (workstream 1).** Classroom quest: thirty first-graders, one lesson plan, and a fire drill at 10:15. Keep attention above zero and finish the reading circle.
 
-**Your dataset (workstream 3).** `data/examples/lessons.csv`, columns `date, group, subject, minutes, attention, rating`. Write it with `uv run vibe persona pabo-teacher`. Question to answer: Which subject holds attention longest, and in which group?
+**Your dataset (workstream 3).** `workspace/data/examples/lessons.csv`, columns `date, group, subject, minutes, attention, rating`. Write it with `uv run vibe persona pabo-teacher`. Question to answer: Which subject holds attention longest, and in which group?
 
 **Rolinda asks.** Which lesson would you drop, and what does the attention column say about why?
 
@@ -240,7 +240,7 @@ Write workspace/sql/attention.sql and a Python chart from data/lessons.csv. Expl
 
 **Your game (workstream 1).** Pipeline defense: rows flow from left to right, schema drift attacks at night, and you place tests and quarantine tables to keep the gold layer clean until the CEO's dashboard loads.
 
-**Your dataset (workstream 3).** `data/examples/pipeline_runs.csv`, columns `run_at, pipeline, layer, rows, seconds, status`. Write it with `uv run vibe persona data-engineer`. Question to answer: Which layer failed last night, and what did the row counts say before it did?
+**Your dataset (workstream 3).** `workspace/data/examples/pipeline_runs.csv`, columns `run_at, pipeline, layer, rows, seconds, status`. Write it with `uv run vibe persona data-engineer`. Question to answer: Which layer failed last night, and what did the row counts say before it did?
 
 **Rolinda asks.** If the silver run says zero rows, what did the bronze run say, and why did nobody get paged?
 
@@ -280,7 +280,7 @@ Write a script that runs the provider in print mode over data/pipeline_runs.csv 
 
 **Your game (workstream 1).** Room by room: a client hands you an empty apartment and a budget; place furniture, match a palette, and hit the reveal before the movers arrive.
 
-**Your dataset (workstream 3).** `data/examples/projects.csv`, columns `client, room, style, budget_eur, spent_eur, status`. Write it with `uv run vibe persona interior-stylist`. Question to answer: Which style goes over budget most often?
+**Your dataset (workstream 3).** `workspace/data/examples/projects.csv`, columns `client, room, style, budget_eur, spent_eur, status`. Write it with `uv run vibe persona interior-stylist`. Question to answer: Which style goes over budget most often?
 
 **Rolinda asks.** Which style makes you money and which one makes you sorry, and can the table show it?
 

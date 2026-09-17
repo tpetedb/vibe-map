@@ -362,7 +362,7 @@ class Vault:
         body = (
             f"{persona.label}: {persona.field}.\n\n"
             f"**Your game (workstream 1).** {persona.game_idea}\n\n"
-            f"**Your dataset (workstream 3).** `data/examples/{ds.filename}` "
+            f"**Your dataset (workstream 3).** `workspace/data/examples/{ds.filename}` "
             "with columns "
             f"{', '.join(ds.columns)}. The question to answer: {ds.question}\n\n"
             f"**Rolinda asks.** {persona.rolinda}\n\n"
