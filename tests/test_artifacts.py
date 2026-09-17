@@ -10,7 +10,7 @@ def test_cafe_serves_a_status_code_and_is_remembered(game: GamePage) -> None:
     game.goto()
     game.start()
     page = game.page
-    assert page.evaluate("window.__artifacts().length") == 10
+    assert page.evaluate("window.__artifacts().length") == 20
     page.evaluate("openArtifact('cafe')")
     page.wait_for_selector("#s-artifact.on", state="attached")
     page.click("#s-artifact button[data-demo='0']")
@@ -47,10 +47,10 @@ def test_every_artifact_opens_and_the_vault_note_lists_them(game: GamePage) -> N
         page.evaluate(f"openArtifact({aid!r})")
         page.wait_for_selector("#s-artifact.on", state="attached")
         assert page.locator("#s-artifact button[data-demo]").count() >= 1, aid
-    assert page.evaluate("window.__S().artifacts.length") == 10
+    assert page.evaluate("window.__S().artifacts.length") == 20
     page.click("#sheet .x")
     page.evaluate("openNote('Artifacts')")
     page.wait_for_timeout(1500)
     note = page.text_content("#vnote") or ""
-    assert note.count("found:") == 10 and "not yet" not in note
+    assert note.count("found:") == 20 and "not yet" not in note
     assert not game.errors, game.errors

@@ -34,6 +34,7 @@ GAME_ORDER = [
     "12-buildings.js",
     "@campaign",
     "16-artifacts.js",
+    "17-artifact-props.js",
     "20-worlds.js",
     "21-world-build.js",
     "30-input.js",
