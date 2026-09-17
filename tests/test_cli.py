@@ -12,12 +12,19 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from tests.conftest import ROOT
+from tests.conftest import ROOT, encode_progress
 from vibemap import campaign, project
 from vibemap.cli import cli
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.personas import PERSONAS, get_persona
-from vibemap.quests import LEVELS, level_for, quest_for, required_levels, xp_for
+from vibemap.quests import (
+    LEVELS,
+    level_for,
+    mentor_quest,
+    quest_for,
+    required_levels,
+    xp_for,
+)
 from vibemap.scores import read_scores, run_sql, summary
 from vibemap.state import State, decode_code
 from vibemap.themes import THEMES, load_theme
@@ -386,3 +393,83 @@ def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:
     assert _plain("\x1b[31m3 passed\x1b[0m\n") == "3 passed"
     assert "just verify" in DIFFICULTIES["god"].blurb
     assert "camp" in DIFFICULTIES["god"].blurb
+
+
+# ---- mentor encounters ---------------------------------------------------------
+
+
+def test_every_mentor_has_a_sourced_encounter_with_a_small_exercise() -> None:
+    for m in campaign.mentors():
+        enc = m["encounter"]
+        assert 3 <= len(enc["dialogue"]) <= 4, m["id"]
+        for line in enc["dialogue"]:
+            assert line["you"] and line["m"]
+            # Every mentor line is a paraphrase with the source it came from.
+            assert m["src"][line["src"]][1].startswith("https://"), m["id"]
+        ex = enc["exercise"]
+        assert ex["dir"] == f"workspace/mentors/{m['id']}"
+        assert ex["minutes"] <= 15 and ex["steps"] and ex["done"]
+        assert ex.get("run") or ex.get("sections") or ex.get("contains"), m["id"]
+        assert enc["plaque"]
+
+
+def test_every_mentor_quest_has_checks_with_hints() -> None:
+    cfg = Config.model_validate({"learner": {"difficulty": "god"}})
+    for m in campaign.mentors():
+        q = mentor_quest(m["id"], cfg)
+        assert len(q.checks) == 2 and all(c.hint for c in q.checks)
+
+
+def test_a_mentor_exercise_is_checked_in_the_workspace(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    out = _run(camp, "check", "--mentor", "torvalds")
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert "does not exist" in out.stdout
+    here = camp / "workspace" / "mentors" / "torvalds"
+    here.mkdir(parents=True)
+    (here / "hash.py").write_text(
+        "import hashlib\n"
+        "body = b'what is up, doc?'\n"
+        "store = b'blob ' + str(len(body)).encode() + b'\\x00' + body\n"
+        "print(hashlib.sha1(store).hexdigest())\n"
+    )
+    (here / "notes.md").write_text(
+        "## What I learned\nA commit is named by the hash of its content, "
+        "so the name and the bytes can never drift apart, which is why git "
+        "can tell in one command whether anything changed at all.\n"
+    )
+    out = _run(camp, "check", "--mentor", "torvalds")
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert "pass" in out.stdout and "+" in out.stdout
+    state = json.loads((camp / ".vibe" / "state.json").read_text())
+    assert state["mentors"] == ["torvalds"] and state["xp"] > 0
+    note = (camp / "vault" / "Camp" / "Linus Torvalds.md").read_text()
+    assert "Status: done" in note
+
+
+def test_a_wrong_exercise_fails_with_the_expected_line(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    here = camp / "workspace" / "mentors" / "karpathy"
+    here.mkdir(parents=True)
+    (here / "bigram.py").write_text("print('after a: q')\n")
+    out = _run(camp, "check", "--mentor", "karpathy")
+    assert "fail" in out.stdout and "after a: t" in out.stdout
+    assert json.loads((camp / ".vibe" / "state.json").read_text())["mentors"] == []
+
+
+def test_the_progress_code_carries_verified_mentors() -> None:
+    s = State(name="Lotte")
+    s.mentors.append("torvalds")
+    payload = decode_code(s.to_code())
+    assert payload["v"] == 2 and payload["mentors"] == ["torvalds"]
+    back = State()
+    back.merge_code(s.to_code())
+    assert back.mentors == ["torvalds"]
+    # A code from before the encounters is still a valid version 2 code.
+    old = State(name="Lotte")
+    assert old.merge_code(encode_progress(done_w={"campus": [1]})) and old.mentors == []
+
+
+def test_an_unknown_mentor_id_is_refused(tmp_path: Path) -> None:
+    out = _run(_camp(tmp_path), "check", "--mentor", "nobody")
+    assert out.returncode == 1 and "unknown mentor" in out.stdout

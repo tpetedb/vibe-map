@@ -154,6 +154,12 @@ class Player:
         for i, mid in enumerate(ids):
             self.page.evaluate(f"openMentor('{mid}')")
             self.page.wait_for_selector("#s-mentor.on", state="attached")
+            # Walk the whole dialogue, then read the exercise card.
+            while self.page.locator("#talkmore").count():
+                self.page.click("#talkmore")
+                self.page.wait_for_timeout(80)
+            text = self.page.text_content("#s-mentor") or ""
+            assert f"vibe check --mentor {mid}" in text, f"no exercise for {mid}"
             self.page.click(
                 "#s-mentor button:has-text('Tell me more')"
                 if i % 3 != 2
@@ -222,6 +228,7 @@ def play_everything(browser: Browser, url: str, *, name: str = "<your_name>") ->
         "done": state["doneW"],
         "path": state["path"],
         "mentors": mentors,
+        "met": state["met"],
         "artifacts": artifacts,
         "notes": notes,
         "links": links,
