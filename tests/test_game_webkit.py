@@ -11,7 +11,7 @@ import math
 
 import pytest
 
-from tests.conftest import GamePage
+from tests.conftest import WAIT_MS, GamePage
 
 
 def _pos(game: GamePage) -> list[float]:
@@ -22,6 +22,16 @@ def _pos(game: GamePage) -> list[float]:
 
 def _dist(a: list[float], b: list[float]) -> float:
     return math.hypot(a[0] - b[0], a[2] - b[2])
+
+
+def _wait_moved(game: GamePage, before: list[float]) -> None:
+    """Input is consumed by the frame loop: wait for the walker, not a clock."""
+    game.page.wait_for_function(
+        "p => { const q = window.__debug().pos;"
+        " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 0.5; }",
+        arg=before,
+        timeout=WAIT_MS,
+    )
 
 
 @pytest.fixture
@@ -47,7 +57,7 @@ def test_tap_on_the_ground_moves_lotte(phone: GamePage) -> None:
     phone.page.touchscreen.tap(
         box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.55
     )
-    phone.page.wait_for_timeout(1500)
+    _wait_moved(phone, before)
     after = _pos(phone)
     assert _dist(before, after) > 0.5, f"did not move: {before} -> {after}"
     phone.assert_clean()
@@ -69,7 +79,7 @@ def test_joystick_drag_moves_lotte(phone: GamePage) -> None:
         }""",
         [cx, cy],
     )
-    phone.page.wait_for_timeout(1200)
+    _wait_moved(phone, before)
     phone.page.evaluate(
         "([x, y]) => document.getElementById('joy').dispatchEvent(new PointerEvent("
         "'pointerup', {pointerId: 1, pointerType: 'touch', clientX: x, clientY: y, "
@@ -83,7 +93,6 @@ def test_joystick_drag_moves_lotte(phone: GamePage) -> None:
 
 def test_sheet_scrolls_in_normal_flow(phone: GamePage) -> None:
     phone.open_workstream(1)
-    phone.page.wait_for_timeout(500)
     metrics = phone.page.evaluate(
         """() => ({
           scrollY: window.scrollY,
@@ -150,10 +159,39 @@ def test_the_walker_label_carries_the_typed_name(phone: GamePage) -> None:
     phone.page.evaluate("document.getElementById('title').classList.remove('off')")
     phone.page.fill("#name", "Bartholomew Featherstonehaugh-Smythe")
     phone.page.dispatch_event("#name", "input")
-    phone.page.wait_for_timeout(900)
+    phone.page.wait_for_function(
+        "() => (window.__debug().label || {}).text?.startsWith('Bartholomew')",
+        timeout=WAIT_MS,
+    )
     plate = phone.page.evaluate("window.__debug().label")
     assert plate["text"].startswith("Bartholomew"), plate
     # A long name shrinks to fit the plate instead of running off it.
     assert plate["fs"] < 30, plate
     assert plate["fs"] >= 11, plate
     phone.assert_clean()
+
+
+def test_the_title_form_and_the_go_row_fit_the_phone(
+    game_webkit_iphone: GamePage,
+) -> None:
+    """At 393x852 the whole form fits the box and Go is reachable without scrolling."""
+    page = game_webkit_iphone.goto().page
+    box = page.locator("#title .box").bounding_box()
+    assert box and box["width"] <= 393 and box["height"] <= 852, box
+    assert page.evaluate("document.documentElement.scrollWidth") <= 393
+    assert page.locator("#onboard .step").count() == 4
+    assert page.locator("#name").is_visible()
+    go = page.locator("#title .row.go").bounding_box()
+    assert go and go["y"] >= 0 and go["y"] + go["height"] <= 852, go
+    game_webkit_iphone.screenshot("webkit_iphone_title", clip_height=852)
+    # The row is sticky, so it is still on screen with the setup guide open.
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_timeout(400)
+    page.locator("#title .box").evaluate("e => e.scrollTo(0, 0)")
+    page.wait_for_timeout(200)
+    go = page.locator("#title .row.go").bounding_box()
+    assert go and go["y"] >= 0 and go["y"] + go["height"] <= 852, go
+    page.fill("#name", "Lotte")
+    page.click("#title .row.go button.primary")
+    page.wait_for_selector("#title.off", state="attached")
+    game_webkit_iphone.assert_clean()

@@ -98,11 +98,13 @@ def test_vault_opens_and_follows_a_wikilink(game: GamePage) -> None:
     links = game.page.locator("#vnote .wl")
     assert links.count() > 0
     links.nth(0).click()
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_function(
+        "t => (document.getElementById('vnote').textContent || '') !== t", arg=first
+    )
     assert (game.page.text_content("#vnote") or "") != first
     game.screenshot("smoke_vault")
     game.page.click("#vtop button:has-text('Tech tree')")
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_selector("#vtree.on", state="visible")
     assert game.page.locator("#vtree").is_visible()
     game.close_vault()
     game.assert_clean()
@@ -114,13 +116,12 @@ def test_every_world_builds(game: GamePage) -> None:
         "done": [1, 2, 3, 4],
         "doneW": {"campus": [1, 2, 3, 4], "winter": [], "desert": [], "prod": []},
         "path": {},
-        "rolls": [],
+        "pitch": "",
         "versions": [],
         "bridges": {},
         "date": None,
         "wine": None,
         "world": "campus",
-        "mascot": None,
     }
     game.goto(state=seeded)
     game.resume()
@@ -187,11 +188,11 @@ def test_escape_closes_the_sheet_and_the_vault(game: GamePage) -> None:
     game.start()
     game.open_roadmap()
     game.page.keyboard.press("Escape")
-    game.page.wait_for_timeout(200)
+    game.page.wait_for_selector("#sheet.on", state="detached")
     assert not game.page.locator("#sheet").evaluate("e => e.classList.contains('on')")
     game.open_vault()
     game.page.keyboard.press("Escape")
-    game.page.wait_for_timeout(200)
+    game.page.wait_for_selector("#vault.on", state="detached")
     assert not game.page.locator("#vault").evaluate("e => e.classList.contains('on')")
     game.assert_clean()
 
@@ -201,7 +202,9 @@ def test_full_screen_takes_the_element_that_holds_the_panels(game: GamePage) -> 
     game.start()
     game.open_roadmap()
     game.page.click("#s-map button:has-text('Full screen')")
-    game.page.wait_for_timeout(400)
+    # requestFullscreen resolves a frame or more after the click, and a browser
+    # that refuses it never resolves at all: wait for the element, not a clock.
+    game.page.wait_for_function("() => !!document.fullscreenElement")
     res = game.page.evaluate(
         """() => { const fe = document.fullscreenElement;
           if (!fe) return null;
@@ -218,11 +221,11 @@ def test_the_tech_tree_says_it_scrolls(game: GamePage) -> None:
     game.start()
     game.page.click("#hud button:has-text('Tree')")
     game.page.wait_for_selector("#vtree.on", state="attached")
-    game.page.wait_for_timeout(300)
+    game.page.wait_for_selector("#vtree .treenav button", state="attached")
     assert game.page.locator("#vtree .treenav button").count() == 2
     before = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     game.page.click("#vtree .treenav button:has-text('Later')")
-    game.page.wait_for_timeout(600)
+    game.still("document.getElementById('vtree').scrollLeft")
     after = game.page.evaluate("document.getElementById('vtree').scrollLeft")
     assert after > before, (before, after)
     game.assert_clean()
@@ -258,4 +261,86 @@ def test_the_vault_graph_keeps_its_labels_on_the_canvas(game: GamePage) -> None:
             .filter(([x, y]) => x < 8 || x > w - 8 || y < 8 || y > h - 8); }"""
     )
     assert outside == [], outside
+    game.assert_clean()
+
+
+def test_the_theme_names_the_buttons_and_the_kpis(game: GamePage) -> None:
+    """Labels follow the theme: the studio preset never says OKRs or Velocity."""
+    page = game.goto().page
+    theme = page.evaluate("window.__data().config.theme")
+    assert page.text_content("#btn-go") == theme["goLabel"]
+    assert page.text_content("#btn-continue") == theme["resumeLabel"]
+    assert page.text_content("#hud-stoplabel") == theme["stopLabel"]
+    labels = [page.text_content(f"#k{i}l") for i in (1, 2, 3, 4)]
+    assert labels == theme["kpiLabels"]
+    assert theme["taglineSuffix"] in (page.text_content("#tagline") or "")
+    if theme["id"] == "studio":
+        assert labels == ["Progress", "Streak", "Connections", "Found"]
+        assert page.text_content("#btn-go") == "Start"
+        assert "OKRs" not in (page.text_content("#hud-stoplabel") or "")
+    game.assert_clean()
+
+
+def test_the_title_puts_the_form_above_the_go_button(game: GamePage) -> None:
+    """Form first, satire below: the four steps come before Go, the prose after."""
+    page = game.goto().page
+    order = page.evaluate(
+        """() => [...document.querySelectorAll('#title .box > *')]
+             .map(e => e.id || e.className)"""
+    )
+    go = order.index("row go")
+    assert order.index("onboard") < go < order.index("intro") < order.index("roles")
+    assert page.locator("#onboard .step").count() == 4
+    assert "prerequisites" in (page.text_content("#prereq") or "")
+    game.assert_clean()
+
+
+def test_the_prompt_builder_writes_the_prompt_you_paste(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.open_workstream(1)
+    page = game.page
+    page.fill(
+        "#pitch",
+        "A one-button game about a cat. Anyone can play it. Cross five times to win.",
+    )
+    page.dispatch_event("#pitch", "input")
+    out = page.text_content("#pitch-out") or ""
+    assert "A one-button game about a cat." in out
+    assert "single file called index.html" in out
+    assert "Three sentences" in (page.text_content("#pitch-note") or "")
+    assert game.state()["pitch"].startswith("A one-button game")
+    game.assert_clean()
+
+
+def test_renaming_a_column_breaks_the_query(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.claim(1)
+    game.claim(2)
+    game.open_workstream(3)
+    page = game.page
+    assert "Rolinda" in (page.text_content("#schema-out") or "")
+    page.click("#s-3 button:has-text('Rename score to points')")
+    assert "Binder Error" in (page.text_content("#schema-out") or "")
+    page.click("#s-3 button:has-text('Rename it back')")
+    assert "Binder Error" not in (page.text_content("#schema-out") or "")
+    game.assert_clean()
+
+
+def test_a_scoped_change_request_changes_one_thing(game: GamePage) -> None:
+    game.goto()
+    game.start()
+    game.claim(1)
+    game.open_workstream(2)
+    page = game.page
+    before = page.inner_html("#card-demo")
+    page.click("#s-2 button:has-text('Add a small badge')")
+    assert "demo-badge" in page.inner_html("#card-demo")
+    assert "Tonight's scores" in page.inner_html("#card-demo")
+    page.click("#s-2 button:has-text('Make it more impactful')")
+    assert "Impactful Scores Experience" in page.inner_html("#card-demo")
+    assert "<th>Score</th>" not in page.inner_html("#card-demo")
+    page.click("#s-2 button:has-text('Start over')")
+    assert page.inner_html("#card-demo") == before
     game.assert_clean()

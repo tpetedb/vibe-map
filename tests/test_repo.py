@@ -64,3 +64,46 @@ def test_version_matches_pyproject() -> None:
 
     data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert vibemap.__version__ == data["project"]["version"]
+
+
+def _workflows() -> dict[str, dict]:
+    import yaml
+
+    out = {}
+    for p in sorted((ROOT / ".github" / "workflows").glob("*.yml")):
+        # `on` is YAML 1.1 for True, so the parsed key is the boolean.
+        out[p.stem] = yaml.safe_load(p.read_text(encoding="utf-8"))
+    return out
+
+
+def test_every_workflow_parses_and_has_jobs() -> None:
+    flows = _workflows()
+    assert {"ci", "nightly", "pages", "news"} <= set(flows)
+    for name, flow in flows.items():
+        assert flow["jobs"], name
+        assert flow.get(True) or flow.get("on"), name
+
+
+def test_the_fast_ci_never_runs_the_slow_tests() -> None:
+    """ci.yml is the gate on a pull request; integration runs belong to nightly."""
+    steps = [
+        s.get("run", "")
+        for job in _workflows()["ci"]["jobs"].values()
+        for s in job["steps"]
+    ]
+    pytests = [s for s in steps if "pytest" in s]
+    assert pytests
+    for step in pytests:
+        assert "not integration" in step or "test_game_webkit.py" in step, step
+        # A second -q on the command line would hide the -ra summary.
+        assert " -q" not in step, step
+
+
+def test_nightly_runs_on_a_schedule_on_tags_and_on_demand() -> None:
+    flow = _workflows()["nightly"]
+    triggers = flow.get(True) or flow.get("on")
+    assert "schedule" in triggers and "workflow_dispatch" in triggers
+    assert triggers["push"]["tags"] == ["v*"]
+    runs = [s.get("run", "") for j in flow["jobs"].values() for s in j["steps"]]
+    assert any("tools/fresh_camp.py" in r for r in runs)
+    assert any("-m integration" in r for r in runs)

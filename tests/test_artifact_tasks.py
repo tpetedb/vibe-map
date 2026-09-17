@@ -463,9 +463,10 @@ def test_every_artifact_has_a_sourced_walkthrough_under_twenty_minutes() -> None
 
 
 def test_the_walkthroughs_keep_the_house_style() -> None:
+    dashes = (chr(0x2014), chr(0x2013))  # spelled by code point: the gate bans them
     for a in campaign.artifacts():
         text = json.dumps(a["real"], ensure_ascii=False)
-        assert "—" not in text and "–" not in text, a["id"]
+        assert not any(d in text for d in dashes), a["id"]
 
 
 def test_every_artifact_quest_has_two_checks_with_hints() -> None:

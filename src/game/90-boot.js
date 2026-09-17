@@ -11,18 +11,25 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
   const kind=th.pairing.charAt(0).toUpperCase()+th.pairing.slice(1);
   blocks.forEach((el,i)=>{if(i<th.pairings.length)el.innerHTML=`<b>${kind}, ${CH[i]?CH[i].h:"go-live"}</b>${th.pairings[i]}`;
     else el.innerHTML=`<b>${kind}, go-live</b>${th.pairings.join(", ")}.`})}
-// Theme, dates and repo come from vibe.toml through CONFIG. The wine-night
-// preset keeps the handwritten copy; any other theme swaps the framing and
-// rewrites the pairings. Difficulty and persona are exposed on <body> for CSS.
+// Theme, dates and repo come from vibe.toml through CONFIG. Labels apply to
+// every theme; the wine-night preset alone keeps the handwritten framing, and
+// any other theme swaps it and rewrites the pairings. Difficulty and persona
+// are exposed on <body> for CSS.
 function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;document.body.dataset.difficulty=CONFIG.difficulty;document.body.dataset.persona=CONFIG.persona;
   const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=CONFIG.repo;tp.textContent=CONFIG.repo.replace(/^https?:\/\//,"")}
+  // The title screen and the HUD speak the theme's language: the second line
+  // of the tagline, the two buttons, the word for a stop, the four KPIs.
+  $("tagline").textContent="From intern to expert in one evening. "+th.taglineSuffix;
+  $("btn-go").textContent=th.goLabel;
+  $("btn-continue").textContent=th.resumeLabel;
+  $("hud-stoplabel").textContent=th.stopLabel;
+  th.kpiLabels.forEach((l,i)=>{const el=$("k"+(i+1)+"l");if(el)el.textContent=l});
   themePairings();
   if(!th.showPairings)document.querySelectorAll(".pairing").forEach(el=>el.style.display="none");
   // Over http the vault folder is not on disk, so the button is honest about
   // where it goes.
   const ob=$("vobs");if(ob&&location.protocol!=="file:"){ob.textContent="Vault on GitHub";ob.dataset.icon="book-open";ob.title="The vault folder on GitHub"}
   if(th.id==="wine-night")return;
-  $("tagline").textContent="From intern to expert in one evening. ";
   $("intro").textContent=th.intro;
   $("roles").textContent=`Tom is your ${th.hostRole}. Rolinda is ${th.guideRole}, and the only one who is allowed to ask the simple question. ${th.signOff}`}
 function stamp(){$("stamp-ver").textContent=`vibe-map v${CONFIG.version} · ${CONFIG.theme.id}`;$("t-done").textContent=String(S.done.length)}

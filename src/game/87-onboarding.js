@@ -109,8 +109,8 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOO
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
 <div class="step"><b>3</b><span>How do you want to play?</span></div>
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Everything, synced. Add a terminal and Obsidian so your work is checked and your notes are saved. You can switch to this later; nothing is lost.</span></button></div>
-<p class="small muted">The full experience needs a terminal and a Claude, Codex or Gemini plan; Pre-flight in the Roadmap walks through the install.</p>
-<div class="step"><b>4</b><span>Go</span></div>`;
+<p class="small muted" id="prereq">Honest prerequisites for the full experience: a Mac or Linux terminal, about fifteen minutes to install the tools, a GitHub account, and a paid plan for Claude, Codex or Gemini. Without those, pick just the game; you can switch later and nothing is lost.</p>
+<div class="step"><b>4</b><span>Your name, then go</span></div>`;
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}

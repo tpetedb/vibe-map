@@ -47,13 +47,27 @@ def serve() -> tuple[http.server.ThreadingHTTPServer, str]:
     return httpd, f"http://{host}:{port}{GAME}"
 
 
+WAIT_MS = 20_000
+
+
 @dataclass
 class Player:
-    """Drives one page through the campaign, collecting page errors."""
+    """Drives one page through the campaign, collecting page errors.
+
+    Every step waits for a signal the page produces, never for a wall clock,
+    so the play-through is as slow as the runner and never guesses.
+    """
 
     page: Page
     errors: list[str] = field(default_factory=list)
     log: list[str] = field(default_factory=list)
+
+    def frames(self, n: int = 3) -> None:
+        """Wait for the frame loop to draw n more frames."""
+        start = int(self.page.evaluate("window.__debug().frame") or 0)
+        self.page.wait_for_function(
+            "n => window.__debug().frame >= n", arg=start + n, timeout=WAIT_MS
+        )
 
     def attach(self) -> None:
         self.page.on("pageerror", lambda e: self.errors.append(f"pageerror: {e}"))
@@ -70,9 +84,12 @@ class Player:
         self.page.goto(url)
         self.page.wait_for_function("typeof window.__S === 'function'")
         self.page.fill("#name", name)
-        self.page.click("text=Kick off the engagement")
+        self.page.click("#title .row.go button.primary")
         self.page.wait_for_selector("#title.off", state="attached")
-        self.page.wait_for_timeout(800)
+        self.page.wait_for_function(
+            "window.__debug().started === true", timeout=WAIT_MS
+        )
+        self.frames()
         self.log.append("started")
 
     def state(self) -> dict:
@@ -80,8 +97,12 @@ class Player:
 
     def world(self, world: str) -> None:
         while self.state()["world"] != world:
+            here = self.state()["world"]
             self.page.click("#hud button:has-text('World')")
-            self.page.wait_for_timeout(1000)
+            self.page.wait_for_function(
+                "w => window.__S().world !== w", arg=here, timeout=WAIT_MS
+            )
+            self.frames()
         self.log.append(f"world {world}")
 
     def _workstream_buttons(self):
@@ -93,16 +114,18 @@ class Player:
         """Open stop n from the roadmap and mark it done, the way a player does."""
         self.page.click("#hud button:has-text('Roadmap')")
         self.page.wait_for_selector("#plotlist button", state="attached")
-        self.page.wait_for_timeout(500)  # the sheet springs in over ~400 ms
+        # No settle wait: a Playwright click already waits for the element to
+        # stop moving, which is exactly what the spring and the scroll do.
         self._workstream_buttons()[n - 1].click()
         self.page.wait_for_selector("#sheet .screen.on", state="attached")
-        self.page.wait_for_timeout(150)
         # Exercise the mini-games on the campus while the sheet is open.
         world = self.state()["world"]
         if world == "campus":
             self._minigame(n)
         self.page.click("#sheet .screen.on button:has-text('Mark as done')")
-        self.page.wait_for_timeout(300)
+        self.page.wait_for_function(
+            "n => (window.__S().done || []).includes(n)", arg=n, timeout=WAIT_MS
+        )
         assert n in self.state()["done"], f"{world} stop {n} did not register"
         self.log.append(f"{world} {n} done")
 
@@ -115,12 +138,21 @@ class Player:
         for aid in ids:
             self.page.evaluate(f"openArtifact({aid!r})")
             self.page.wait_for_selector("#s-artifact.on", state="attached")
+            demos = self.page.evaluate(
+                "id => (window.__demos()[id] || []).map(d => d.o)", aid
+            )
             buttons = self.page.locator("#s-artifact button[data-demo]")
+            assert buttons.count() == len(demos), aid
             for i in range(buttons.count()):
                 buttons.nth(i).click()
-                self.page.wait_for_timeout(120)
-            self.page.wait_for_timeout(600)
-            assert (self.page.text_content("#art-term") or "").strip(), aid
+            # Each button retypes the terminal one line at a time; the last line
+            # of the last demo is the signal that the last one finished.
+            self.page.wait_for_function(
+                "t => (document.getElementById('art-term').textContent || '')"
+                ".includes(t)",
+                arg=demos[-1][-1],
+                timeout=WAIT_MS,
+            )
         self.page.click("#sheet .x")
         self.log.append(f"artifacts {len(ids)}")
         return len(ids)
@@ -128,11 +160,15 @@ class Player:
     def _minigame(self, n: int) -> None:
         p = self.page
         if n == 1:
-            p.evaluate("spinUp()")
+            p.fill(
+                "#pitch",
+                "A one-button game about a cat. Anyone can play. Cross five times.",
+            )
+            p.dispatch_event("#pitch", "input")
         elif n == 2:
             p.evaluate("speak(true)")
         elif n == 3:
-            p.evaluate("roll(5)")
+            p.evaluate("renameColumn('points'); renameColumn('score')")
         elif n == 4:
             p.fill("#release", "A scoring board ranked by coffee")
             p.evaluate("commit()")
@@ -165,7 +201,9 @@ class Player:
                 if i % 3 != 2
                 else "#s-mentor button:has-text('Not interested')"
             )
-            self.page.wait_for_timeout(150)
+            self.page.wait_for_function(
+                "id => window.__S().path[id] !== undefined", arg=mid, timeout=WAIT_MS
+            )
         self.log.append(f"{world} mentors {len(ids)}")
         return len(ids)
 
@@ -174,7 +212,7 @@ class Player:
         self.page.wait_for_selector("#s-9.on", state="attached")
         self.page.click("#dates button >> nth=0")
         self.page.click("#wines button >> nth=0")
-        self.page.wait_for_timeout(200)
+        self.page.wait_for_selector("#msg:has-text('go-live')")
         msg = self.page.text_content("#msg") or ""
         assert "go-live" in msg, "the finale message did not render"
         self.log.append("finale")
@@ -183,7 +221,7 @@ class Player:
     def vault(self) -> tuple[int, int]:
         self.page.click("#hud button:has-text('Vault')")
         self.page.wait_for_selector("#vault.on", state="attached")
-        self.page.wait_for_timeout(400)
+        self.page.wait_for_selector("#vnote .wl", state="attached")
         text = self.page.text_content("#vcount") or ""
         notes, links = (int(s.split()[0]) for s in text.split("·")[:2])
         self.page.click("#vtop button:has-text('Back to campus')")

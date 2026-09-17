@@ -8,7 +8,12 @@ window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
 window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,config:CONFIG});
+// Test seam: the demo scripts behind the artifact terminal, so a test can wait
+// for the last line a demo types instead of guessing how long typing takes.
+window.__demos=()=>ART_DEMOS;
 // Test seam: read-only view of the walker for the Playwright battery, never written to.
-window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,label:playerPlate(),near:nearK,started,world:S.world,draws:renderer?renderer.info.render.calls:0,mentors:MENTORS.map(m=>({id:m.id,world:m.world,exercise:m.encounter.exercise.file,done:S.mentors.includes(m.id),seen:S.met[m.id]||0})),vault:()=>VSIM?{alpha:VSIM.alpha(),n:VN.length,sample:VN.slice(0,4).map(n=>[Math.round(n.x),Math.round(n.y)])}:null});
+// frame is the renderer's own frame counter: proximity, the camera and the pop-ins
+// are sampled in the frame loop, so a test waits for frames, never for a wall clock.
+window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,label:playerPlate(),near:nearK,started,world:S.world,draws:renderer?renderer.info.render.calls:0,frame:renderer?renderer.info.render.frame:0,mentors:MENTORS.map(m=>({id:m.id,world:m.world,exercise:m.encounter.exercise.file,done:S.mentors.includes(m.id),seen:S.met[m.id]||0})),vault:()=>VSIM?{alpha:VSIM.alpha(),n:VN.length,sample:VN.slice(0,4).map(n=>[Math.round(n.x),Math.round(n.y)])}:null});
 window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}location.reload()};
 

@@ -33,6 +33,14 @@ class Theme:
     intro: str
     pairings: tuple[str, ...]
     sign_off: str
+    # The title screen speaks the theme's language: the second sentence of the
+    # tagline, the label on the Go and Resume buttons, the word for a stop in
+    # the HUD pill, and the four KPI labels in order.
+    tagline_suffix: str
+    go_label: str
+    resume_label: str
+    stop_label: str
+    kpi_labels: tuple[str, str, str, str]
 
     def to_toml(self) -> str:
         d = asdict(self)
@@ -80,6 +88,11 @@ THEMES: dict[str, Theme] = {
             "Still water",
         ),
         sign_off="Done is a green check and one sentence you can explain to Rolinda.",
+        tagline_suffix="Four evenings, eight stops each, at your own pace.",
+        go_label="Start",
+        resume_label="Resume",
+        stop_label="Stops",
+        kpi_labels=("Progress", "Streak", "Connections", "Found"),
     ),
     "wine-night": Theme(
         id="wine-night",
@@ -108,6 +121,11 @@ THEMES: dict[str, Theme] = {
             "Water, for the drive home",
         ),
         sign_off="Per the RACI, Rolinda has the last word.",
+        tagline_suffix="With wine. FY26 H2, confidential.",
+        go_label="Kick off the engagement",
+        resume_label="Resume in-flight workstream",
+        stop_label="OKRs",
+        kpi_labels=("Velocity", "Synergy", "Integrations", "Artifacts"),
     ),
     "boardroom": Theme(
         id="boardroom",
@@ -134,6 +152,11 @@ THEMES: dict[str, Theme] = {
             "Still water",
         ),
         sign_off="Decisions are written down before anyone leaves.",
+        tagline_suffix="Eight steps in one evening, with a decision at the end.",
+        go_label="Start",
+        resume_label="Resume",
+        stop_label="Steps",
+        kpi_labels=("Progress", "Streak", "Connections", "Found"),
     ),
     "seminar": Theme(
         id="seminar",
@@ -160,6 +183,11 @@ THEMES: dict[str, Theme] = {
             "Water",
         ),
         sign_off="Reading for next week is in the vault.",
+        tagline_suffix="Eight sessions, each with an exercise and a reading.",
+        go_label="Start",
+        resume_label="Resume",
+        stop_label="Sessions",
+        kpi_labels=("Progress", "Streak", "Connections", "Found"),
     ),
     "field-guide": Theme(
         id="field-guide",
@@ -175,6 +203,11 @@ THEMES: dict[str, Theme] = {
         ),
         pairings=(),
         sign_off="Done is when the check is green.",
+        tagline_suffix="Eight stops, one thing built at each.",
+        go_label="Start",
+        resume_label="Resume",
+        stop_label="Stops",
+        kpi_labels=("Progress", "Streak", "Connections", "Found"),
     ),
 }
 
@@ -193,6 +226,8 @@ def load_theme(name: str) -> Theme:
         )
     data = tomllib.loads(path.read_text(encoding="utf-8"))
     data["pairings"] = tuple(data.get("pairings", ()))
+    if "kpi_labels" in data:
+        data["kpi_labels"] = tuple(data["kpi_labels"])
     missing = {f for f in Theme.__dataclass_fields__} - set(data)
     if missing:
         raise ValueError(f"{path.name} is missing: {', '.join(sorted(missing))}")
@@ -215,4 +250,9 @@ def theme_for_game(theme: Theme, *, show_pairings: bool | None) -> dict[str, obj
         "intro": theme.intro,
         "pairings": list(theme.pairings),
         "signOff": theme.sign_off,
+        "taglineSuffix": theme.tagline_suffix,
+        "goLabel": theme.go_label,
+        "resumeLabel": theme.resume_label,
+        "stopLabel": theme.stop_label,
+        "kpiLabels": list(theme.kpi_labels),
     }
