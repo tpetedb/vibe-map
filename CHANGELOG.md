@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-17
+
 ### Changed
 
 - Three zones, separated: the learner's own work now lives in `workspace/` (`workspace/game/index.html`, `workspace/data/scores.csv`, `workspace/sql/`, `workspace/python/`), the checks, the scorekeeper, the backup hook, the Pages workflow, the lessons and the skills follow; `vibe new` writes a slim camp from a template shipped inside the package (README, AGENTS.md, CLAUDE.md, vibe.toml, justfile, the learner skills, the hook and subagent, a Pages workflow, an empty workspace), builds the vault and makes the first commit, instead of cloning the whole engine; `vibe play` opens the hosted game outside the product repository, `--offline` caches a copy. `docs/MAINTAINERS.md` explains the layout and how a change travels; `tools/sync_template.py` keeps the template's skills, hook and subagent equal to the product's, with a test.
@@ -112,7 +114,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/tpetedb/vibe-map/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tpetedb/vibe-map/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/tpetedb/vibe-map/compare/v0.4.0...v0.4.1
