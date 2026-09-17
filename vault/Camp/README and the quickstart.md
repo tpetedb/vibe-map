@@ -2,6 +2,7 @@
 title: "README and the quickstart"
 date: 2026-09-16
 tags: [tech, docs]
+generated: 337e5c949111
 ---
 # README and the quickstart
 

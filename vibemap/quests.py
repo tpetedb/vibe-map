@@ -20,7 +20,7 @@ from typing import Literal
 from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.state import State
-from vibemap.vault import safe_title
+from vibemap.vault import learner_sections, safe_title
 
 ROOT = project.root()
 XP_BASE = 100
@@ -97,6 +97,16 @@ def xp_for(difficulty: str) -> int:
 # ---- helpers ------------------------------------------------------------------
 
 
+# A check detail goes into a table, so the runner must not colour or wrap it.
+PYTEST_PLAIN = ("--color=no", "-p", "no:cacheprovider")
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _plain(text: str) -> str:
+    """Terminal output without escape codes, fit for one table cell."""
+    return ANSI.sub("", text).strip()
+
+
 def _git(*args: str) -> str:
     try:
         return subprocess.run(
@@ -111,9 +121,17 @@ def _count_lines(p: Path) -> int:
 
 
 def _skills() -> list[Path]:
-    return sorted(ROOT.glob(".agents/skills/*/SKILL.md")) + sorted(
-        p for p in ROOT.glob(".claude/skills/*/SKILL.md") if not p.is_symlink()
-    )
+    """Every skill once: .claude/skills usually symlinks the .agents ones."""
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for p in sorted(ROOT.glob(".agents/skills/*/SKILL.md")) + sorted(
+        ROOT.glob(".claude/skills/*/SKILL.md")
+    ):
+        key = p.resolve()
+        if key not in seen:
+            seen.add(key)
+            out.append(p)
+    return out
 
 
 def _settings() -> dict:
@@ -165,7 +183,10 @@ def _c2_skill(cfg: Config) -> tuple[bool, str]:
         head = p.read_text(encoding="utf-8")
         if head.startswith("---") and "name:" in head and "description:" in head:
             good.append(p.parent.name)
-    return bool(good), f"skills with valid frontmatter: {', '.join(good) or 'none'}"
+    if not good:
+        return False, "no skill with name and description in its frontmatter"
+    shown = ", ".join(good[:3]) + (", ..." if len(good) > 3 else "")
+    return True, f"{len(good)} skill(s) with valid frontmatter: {shown}"
 
 
 def _c2_strict(cfg: Config) -> tuple[bool, str]:
@@ -304,16 +325,16 @@ def _extra_tests(cfg: Config) -> tuple[bool, str]:
     whatever pytest finds under workspace/ (the learner's tests for their work)."""
     if _is_product():
         cmd = [
-            "uv", "run", "--no-sync", "pytest", "-q",
+            "uv", "run", "--no-sync", "pytest", "-q", *PYTEST_PLAIN,
             "tests/test_repo.py", "tests/test_build.py",
         ]  # fmt: skip
     else:
         found = sorted((ROOT / "workspace").rglob("test_*.py"))
         if not found:
             return False, "no test_*.py under workspace/ (write one for your game)"
-        cmd = ["python3", "-m", "pytest", "-q", *[str(p) for p in found]]
+        cmd = ["python3", "-m", "pytest", "-q", *PYTEST_PLAIN, *[str(p) for p in found]]
     out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600)
-    lines = (out.stdout or out.stderr).strip().splitlines()
+    lines = _plain(out.stdout or out.stderr).splitlines()
     return out.returncode == 0, lines[-1] if lines else "no output"
 
 
@@ -325,7 +346,7 @@ def _extra_verify(cfg: Config) -> tuple[bool, str]:
             ["just", "verify-quiet"],
             cwd=ROOT, capture_output=True, text=True, timeout=1200,
         )  # fmt: skip
-        lines = (out.stdout or out.stderr).strip().splitlines()
+        lines = _plain(out.stdout or out.stderr).splitlines()
         return out.returncode == 0, lines[-1] if lines else "no output"
     from vibemap.vault import Vault
 
@@ -339,24 +360,51 @@ def _extra_verify(cfg: Config) -> tuple[bool, str]:
     return ok, f"vault OK; {msg}"
 
 
+# Links every generated note already carries; they prove nothing about a note.
+def _generic_links() -> set[str]:
+    return {"Tonight", "Map"} | {ev.short for ev in campaign.evenings().values()}
+
+
+OWN_WORDS = 40  # the learner's own words a note needs before a stop counts
+
+
+def _own_content(text: str, ws: campaign.Workstream) -> tuple[int, set[str], bool]:
+    """(words, links, a dated entry of their own) for the learner's part of a note."""
+    sections = learner_sections(text, tuple(u for _, u in ws.sources))
+    own = [line for _, lines in sections for line in lines]
+    words = sum(len(line.split()) for line in own)
+    links = {m.strip() for line in own for m in re.findall(r"\[\[([^\]|#]+)", line)}
+    dated = any(
+        re.fullmatch(r"\d{4}-\d{2}-\d{2}", head) and lines for head, lines in sections
+    )
+    return words, links - _generic_links(), dated
+
+
 def _note_check(world: str, n: int) -> Check:
+    """The stop is done when the note holds the learner's own account of it.
+
+    Everything vibe writes into the note itself (the stub, the claim bullets,
+    the campaign sources) is ignored, so an untouched note never passes.
+    """
     ws = campaign.evenings()[world].workstreams[n - 1]
 
     def fn(cfg: Config) -> tuple[bool, str]:
         p = cfg.vault_dir() / f"{safe_title(ws.name)}.md"
         if not p.exists():
-            return False, f"no vault note called {ws.name}"
-        text = p.read_text(encoding="utf-8")
-        links = len(re.findall(r"\[\[[^\]]+\]\]", text))
-        dated = bool(re.search(r"^## \d{4}-\d{2}-\d{2}", text, re.M))
-        ok = links >= 2 and dated
-        return ok, f"{links} wikilinks, dated section: {'yes' if dated else 'no'}"
+            return False, f"no vault note called {safe_title(ws.name)}"
+        words, links, dated = _own_content(p.read_text(encoding="utf-8"), ws)
+        ok = dated and words >= OWN_WORDS and len(links) >= 2
+        return ok, (
+            f"{words} of your own words (needs {OWN_WORDS}), {len(links)} links "
+            f"beyond the generated ones, dated entry: {'yes' if dated else 'no'}"
+        )
 
     return Check(
         f"vault note for {ws.name}",
         fn,
-        f"Write vault/Camp/{ws.name}.md: what you learned, two [[links]], "
-        "a dated section.",
+        f"Write vault/Camp/{safe_title(ws.name)}.md in your own words: a "
+        f"## dated section with at least {OWN_WORDS} words on what you did and "
+        "learned, and two [[links]] to other notes.",
     )
 
 
@@ -367,18 +415,27 @@ def _note_strict(world: str, n: int) -> Check:
         text = (cfg.vault_dir() / f"{safe_title(ws.name)}.md").read_text(
             encoding="utf-8"
         )
-        ok = "## Sources" in text and len(re.findall(r"\[\[[^\]]+\]\]", text)) >= 3
-        return (
-            ok,
-            "sources section and three links"
+        sections = learner_sections(text, tuple(u for _, u in ws.sources))
+        own_sources = [
+            line
+            for head, lines in sections
+            if head == "Sources"
+            for line in lines
+            if "http" in line
+        ]
+        _, links, _ = _own_content(text, ws)
+        ok = bool(own_sources) and len(links) >= 3
+        return ok, (
+            f"{len(own_sources)} source(s) you added, {len(links)} links"
             if ok
-            else "needs a Sources section and 3 links",
+            else "needs a Sources line you added and three links of your own"
         )
 
     return Check(
         f"sources for {ws.name}",
         fn,
-        "Add a ## Sources section with a real URL.",
+        "Add a line under ## Sources with something you actually read, and a "
+        "third [[link]].",
         "strict",
     )
 

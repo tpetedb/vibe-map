@@ -2,6 +2,7 @@
 title: "Agent hooks"
 date: 2026-09-17
 tags: [tech, agents]
+generated: f08116dca712
 ---
 # Agent hooks
 

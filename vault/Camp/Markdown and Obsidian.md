@@ -2,6 +2,7 @@
 title: "Markdown and Obsidian"
 date: 2026-09-16
 tags: [tech, formats]
+generated: a2f6e7d86df8
 ---
 # Markdown and Obsidian
 

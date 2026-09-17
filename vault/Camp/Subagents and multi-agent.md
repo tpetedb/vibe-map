@@ -2,6 +2,7 @@
 title: "Subagents and multi-agent"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 8e09e5505ebf
 ---
 # Subagents and multi-agent
 

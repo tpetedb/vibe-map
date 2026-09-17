@@ -2,6 +2,7 @@
 title: "Other languages and what they are for"
 date: 2026-09-16
 tags: [tech, code]
+generated: 73132769da94
 ---
 # Other languages and what they are for
 

@@ -2,6 +2,7 @@
 title: "Obsidian features"
 date: 2026-09-17
 tags: [tech, knowledge]
+generated: 0ebefadbe6d1
 ---
 # Obsidian features
 

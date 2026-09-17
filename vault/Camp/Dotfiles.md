@@ -2,6 +2,7 @@
 title: "Dotfiles"
 date: 2026-09-16
 tags: [tech, shell]
+generated: 68d7742cc6c5
 ---
 # Dotfiles
 

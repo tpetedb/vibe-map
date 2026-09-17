@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import shlex
 import subprocess
+import sys
 from pathlib import Path
 
 from textual import on, work
@@ -44,6 +45,22 @@ from vibemap.toolbelt import TOOLS, Tool
 
 ROOT = project.root()
 
+
+def has_engine() -> bool:
+    """True in the product checkout, where the game can be rebuilt."""
+    return (ROOT / "tools" / "build.py").exists()
+
+
+def launchers() -> list[tuple[str, str, str, bool]]:
+    """(key, title, hint, disabled) for the launch screen, camp or product."""
+    engine = has_engine()
+    return [
+        (key, title, NO_ENGINE if key in ENGINE_ONLY and not engine else hint,
+         key in ENGINE_ONLY and not engine)
+        for key, (title, hint) in ACTIONS.items()
+    ]  # fmt: skip
+
+
 BANNER = r"""
  __   _____ ___ ___    ___ ___  ___  ___    ___   _   __  __ ___
  \ \ / /_ _| _ ) __|  / __/ _ \|   \| __|  / __| /_\ |  \/  | _ \
@@ -51,8 +68,12 @@ BANNER = r"""
    \_/ |___|___/___|  \___\___/|___/|___|  \___/_/ \_\_|  |_|_|
 """
 
+# Stops that need the engine's own repository; a camp has no tools/build.py.
+ENGINE_ONLY = ("tests",)
+NO_ENGINE = "the engine lives in the product repository; a camp has no build"
+
 ACTIONS: dict[str, tuple[str, str]] = {
-    "play": ("Play the game", "open game/vibe-map.html in the browser"),
+    "play": ("Play the game", "the local build, the cached copy, else the hosted one"),
     "claude": ("Claude Code here", "start claude in this folder"),
     "yolo": ("Claude, YOLO mode", "claude --dangerously-skip-permissions"),
     "zed": ("Zed with Claude over ACP", "zed . then the agent panel, Claude Code"),
@@ -61,7 +82,7 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
     "dotfiles": ("Terminal setup", "zsh, tmux, Ghostty, Starship, the R2-D2 themes"),
     "status": ("Campaign status", "uv run vibe status"),
-    "news": ("Pull the AI news", "vibe news, then rebuild the game with it"),
+    "news": ("Pull the AI news", "vibe news: the feeds into the vault note News"),
     "quit": ("Quit", ""),
 }
 
@@ -307,11 +328,12 @@ class Launch(Screen[None]):
             )
             if self.cfg.pet.enabled:
                 yield PetWidget(self.cfg, self.state.name)
-            for key, (title, hint) in ACTIONS.items():
+            for key, title, hint, disabled in launchers():
                 with Horizontal(classes="action"):
                     yield Button(
                         title,
                         id=f"act-{key}",
+                        disabled=disabled,
                         variant="primary" if key != "quit" else "error",
                     )
                     yield Static(hint, classes="hint")
@@ -486,7 +508,9 @@ def run() -> None:
     if choice == "quit":
         return
     if choice == "play":
-        subprocess.run(["open", str(ROOT / "game" / "vibe-map.html")])
+        from vibemap.cli import open_game  # local: the CLI owns how to open it
+
+        open_game()
     elif choice == "claude":
         os.execvp("claude", ["claude"])
     elif choice == "yolo":
@@ -505,8 +529,7 @@ def run() -> None:
     elif choice == "status":
         os.execvp("uv", ["uv", "run", "--no-sync", "vibe", "status"])
     elif choice == "news":
-        subprocess.run(["uv", "run", "--no-sync", "vibe", "news"], check=False)
-        os.execvp("uv", ["uv", "run", "--no-sync", "python", "tools/build.py"])
+        os.execvp(sys.executable, [sys.executable, "-m", "vibemap.cli", "news"])
     else:
         print(f"unknown choice {shlex.quote(choice)}")
 

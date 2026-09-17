@@ -77,3 +77,36 @@ def test_full_mode_never_touches_the_library(tmp_path: Path) -> None:
     v.build(get_persona("data-engineer"))
     assert not grow.library_dir(v).exists()
     assert v.exists("Kubernetes and platforms")
+
+
+def test_an_edited_note_survives_the_trip_to_grow_and_back(tmp_path: Path) -> None:
+    st = State(name="Tom")
+    v = _vault(tmp_path, st)
+    v.cfg.vault.mode = "full"
+    v.build(get_persona("data-engineer"))
+    note = v.path("Docker and containers")
+    mine = note.read_text(encoding="utf-8") + "\nMy own paragraph about images.\n"
+    note.write_text(mine, encoding="utf-8")
+    # full -> grow: the note is locked away, not regenerated over
+    v.cfg.vault.mode = "grow"
+    v.build(get_persona("data-engineer"))
+    assert not note.exists()
+    assert "My own paragraph" in (
+        grow.library_dir(v) / "Docker and containers.md"
+    ).read_text(encoding="utf-8")
+    # grow -> full: it comes back with the edit
+    v.cfg.vault.mode = "full"
+    grow.restore_all(v)
+    v.build(get_persona("data-engineer"))
+    assert "My own paragraph" in note.read_text(encoding="utf-8")
+
+
+def test_a_camp_note_is_never_overwritten_by_the_library(tmp_path: Path) -> None:
+    st = State(name="Tom")
+    v = _vault(tmp_path, st)
+    v.build(get_persona("data-engineer"))
+    title = "Docker and containers"
+    (v.dir / f"{title}.md").write_text("---\ntitle: mine\n---\n# x\n\nMine.\n")
+    st.unlocked.append(title)
+    grow.sync(v)
+    assert "Mine." in (v.dir / f"{title}.md").read_text(encoding="utf-8")

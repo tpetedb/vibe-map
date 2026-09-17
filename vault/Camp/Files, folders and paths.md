@@ -2,6 +2,7 @@
 title: "Files, folders and paths"
 date: 2026-09-16
 tags: [tech, shell]
+generated: c647aff07b64
 ---
 # Files, folders and paths
 

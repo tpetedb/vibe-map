@@ -56,3 +56,16 @@ def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
     thread.join(timeout=120)
     assert result.get("value") == "quit"
     assert (tmp_path / "vibe.toml").exists() and (tmp_path / "state.json").exists()
+
+
+def test_launchers_grey_out_what_a_camp_cannot_run(tmp_path: Path, monkeypatch) -> None:
+    from vibemap import tui
+
+    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers()}
+    assert rows["tests"][1] is False  # the product has tools/build.py
+    assert "hosted" in rows["play"][0] and "build" not in rows["news"][0]
+    monkeypatch.setattr(tui, "ROOT", tmp_path)
+    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers()}
+    assert rows["tests"][1] is True
+    assert rows["tests"][0] == tui.NO_ENGINE
+    assert rows["play"][1] is False and rows["news"][1] is False

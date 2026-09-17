@@ -9,6 +9,7 @@ graph colour groups key on.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import re
 from dataclasses import dataclass, field
@@ -65,6 +66,62 @@ def today() -> str:
     return dt.date.today().isoformat()
 
 
+DATED = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+# The bullet a workstream note carries until the stop is actually done.
+STUB_BULLET = "not done yet; run `vibe check` when it is"
+# Everything vibe itself writes into a workstream note. A note check ignores
+# these lines, so a stop is never green on the strength of generated text.
+GENERATED_BULLETS = (
+    STUB_BULLET,
+    "done in the game, imported with `vibe import`",
+    "verified by vibe check",
+    "built it",
+    "checked again",
+)
+GENERATED_PATTERNS = (
+    re.compile(r"^done at \d{1,2}:\d{2}$"),
+    re.compile(r"^checks: "),
+    re.compile(r"^links: "),
+    re.compile(r"^.{1,20}, \[\[[^\]]+\]\]\. Outcome: "),
+)
+
+
+def is_generated_line(line: str, generated: tuple[str, ...] = ()) -> bool:
+    """True when vibe wrote this line itself (a stub, a claim, a source)."""
+    text = line.strip().lstrip("-").strip()
+    if not text or text.startswith("#"):
+        return True
+    if text in GENERATED_BULLETS or text in generated:
+        return True
+    return any(p.match(text) for p in GENERATED_PATTERNS) or any(
+        g and g in text for g in generated
+    )
+
+
+def learner_sections(
+    text: str, generated: tuple[str, ...] = ()
+) -> list[tuple[str, list[str]]]:
+    """(heading, the lines vibe did not write) per section of a note.
+
+    The heading is "" for the text before the first `## `, and GENERATED holds
+    the note's own campaign sources, which vibe wrote and the learner did not.
+    """
+    body = text
+    if body.startswith("---\n"):
+        body = body.split("\n---\n", 1)[-1]
+    out: list[tuple[str, list[str]]] = [("", [])]
+    for raw in body.splitlines():
+        line = raw.rstrip()
+        if line.startswith("## "):
+            out.append((line[3:].strip(), []))
+            continue
+        if line.startswith("# "):
+            continue
+        if not is_generated_line(line, generated):
+            out[-1][1].append(line.strip())
+    return out
+
+
 def safe_title(title: str) -> str:
     """A note title Obsidian accepts as a file name (no / \\ : * ? " < > |)."""
     out = title.replace("/", "-").replace(":", " -").replace("|", "-")
@@ -72,10 +129,22 @@ def safe_title(title: str) -> str:
     return re.sub(r"\s+", " ", out).strip()
 
 
-def frontmatter(title: str, tags: list[str], date: str | None = None) -> str:
+def body_stamp(body: str) -> str:
+    """A short hash of a generated body, so a rebuild can tell it from an edit."""
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()[:12]
+
+
+def frontmatter(
+    title: str,
+    tags: list[str],
+    date: str | None = None,
+    generated: str | None = None,
+) -> str:
     return (
         f"---\ntitle: {json.dumps(title)}\ndate: {date or today()}\n"
-        f"tags: [{', '.join(tags)}]\n---\n"
+        f"tags: [{', '.join(tags)}]\n"
+        + (f"generated: {generated}\n" if generated else "")
+        + "---\n"
     )
 
 
@@ -112,18 +181,23 @@ class Vault:
     def exists(self, title: str) -> bool:
         return self.path(title).exists()
 
-    def write(self, title: str, body: str, *, tags: list[str]) -> Path:
+    def write(
+        self, title: str, body: str, *, tags: list[str], generated: bool = False
+    ) -> Path:
         """Write a whole note (frontmatter, H1, body). Overwrites.
 
         The frontmatter date is the day the note was first written and is
         kept on rewrite, so a rebuild changes only notes whose content moved
-        instead of stamping a hundred files with today.
+        instead of stamping a hundred files with today. GENERATED records a
+        hash of the body, which is how a later rebuild knows the note is still
+        vibe's own and not something the learner has written in.
         """
         self.dir.mkdir(parents=True, exist_ok=True)
         p = self.path(title)
         date = _existing_date(p)
+        stamp = body_stamp(body.rstrip()) if generated else None
         p.write_text(
-            frontmatter(title, tags, date) + f"# {title}\n\n{body.rstrip()}\n",
+            frontmatter(title, tags, date, stamp) + f"# {title}\n\n{body.rstrip()}\n",
             encoding="utf-8",
         )
         return p
@@ -137,7 +211,12 @@ class Vault:
         tags: list[str],
         sources: list[str] | None = None,
     ) -> Path:
-        """Create the note or insert a dated section after its summary."""
+        """Create the note, or merge a dated section into it.
+
+        The stub section a fresh note carries is replaced rather than kept, and
+        a second entry on the same day appends its bullets to that day's
+        heading, so a note never holds two contradictory entries for one date.
+        """
         entry = f"## {today()}\n" + "\n".join(f"- {b}" for b in bullets) + "\n\n"
         p = self.path(title)
         if not p.exists():
@@ -148,8 +227,70 @@ class Vault:
             return self.write(title, body, tags=tags)
         text = p.read_text(encoding="utf-8")
         head, sep, rest = text.partition("\n## ")
-        p.write_text(head.rstrip("\n") + "\n\n" + entry + (sep + rest if sep else ""))
+        if not sep:
+            p.write_text(text.rstrip("\n") + "\n\n" + entry, encoding="utf-8")
+            return p
+        sections = _sections(sep + rest)
+        # A dropped stub section may carry the note's tag line; keep that.
+        loose = [
+            ln
+            for s in sections
+            if _is_stub_section(s)
+            for ln in s[1]
+            if ln.strip().startswith("#")
+        ]
+        sections = [s for s in sections if not _is_stub_section(s)]
+        if loose and sections:
+            sections[-1][1].extend(loose)
+        merged = False
+        for i, (heading, lines) in enumerate(sections):
+            if heading != today():
+                continue
+            kept = list(lines)
+            while kept and not kept[-1].strip():
+                kept.pop()
+            fresh = [f"- {b}" for b in bullets if f"- {b}" not in kept]
+            sections[i] = (heading, kept + fresh)
+            merged = True
+            break
+        rebuilt = "".join(
+            f"## {h}\n" + "\n".join(lines).strip("\n") + "\n\n" for h, lines in sections
+        )
+        p.write_text(
+            head.rstrip("\n") + "\n\n" + ("" if merged else entry) + rebuilt,
+            encoding="utf-8",
+        )
         return p
+
+    def drop_claim(self, title: str) -> bool:
+        """Remove the lines vibe wrote when a stop was claimed (`vibe undo`)."""
+        p = self.path(title)
+        if not p.exists():
+            return False
+        text = p.read_text(encoding="utf-8")
+        head, sep, rest = text.partition("\n## ")
+        if not sep:
+            return False
+        kept = []
+        for heading, lines in _sections(sep + rest):
+            if DATED.match(heading):
+                lines = [
+                    ln
+                    for ln in lines
+                    if ln.strip().startswith("#") or not is_generated_line(ln)
+                ]
+                if not [ln for ln in lines if ln.strip()]:
+                    continue
+            kept.append((heading, lines))
+        p.write_text(
+            head.rstrip("\n")
+            + "\n\n"
+            + "".join(
+                f"## {h}\n" + "\n".join(lines).strip("\n") + "\n\n" for h, lines in kept
+            ),
+            encoding="utf-8",
+        )
+        return True
 
     def notes(self) -> list[Path]:
         return sorted(p for p in self.dir.rglob("*.md") if "_templates" not in p.parts)
@@ -397,17 +538,30 @@ class Vault:
             docs = ", ".join(f"[{t}]({u})" for t, u in n.docs)
             unlocks = ", ".join(f"[[{by_name[u]}]]" for u in n.unlocks if u in by_name)
             done = n.id in self.state.roadmap_done
-            body = (
-                f"{n.what}\n\n**History.** {n.history}\n\n"
-                f"**Try in five minutes.** {n.try_it}\n\n"
-                + (f"- Docs: {docs}\n" if docs else "")
-                + (f"- Unlocks: {unlocks}\n" if unlocks else "")
-                + f"- Shelf: {shelf} · Depth: {campaign.depth_label(n.depth)}"
-                + (" · done" if done else "")
-                + "\n\n<!-- generated from vibemap/tech.py; edit there -->\n\n"
-                f"Back to [[Tech tree]]\n\n#tech #{n.category}"
+
+            def body_for(marked: bool, n=n, docs=docs, unlocks=unlocks, shelf=shelf):
+                return (
+                    f"{n.what}\n\n**History.** {n.history}\n\n"
+                    f"**Try in five minutes.** {n.try_it}\n\n"
+                    + (f"- Docs: {docs}\n" if docs else "")
+                    + (f"- Unlocks: {unlocks}\n" if unlocks else "")
+                    + f"- Shelf: {shelf} · Depth: {campaign.depth_label(n.depth)}"
+                    + (" · done" if marked else "")
+                    + "\n\n<!-- generated from vibemap/tech.py; edit there -->\n\n"
+                    f"Back to [[Tech tree]]\n\n#tech #{n.category}"
+                )
+
+            # A note the learner edited is theirs: the roadmap marker is worth
+            # less than their words, so a rebuild leaves it alone.
+            if self.exists(n.name) and _edited(
+                self.path(n.name), (body_for(True), body_for(False))
+            ):
+                continue
+            out.append(
+                self.write(
+                    n.name, body_for(done), tags=["tech", n.category], generated=True
+                )
             )
-            out.append(self.write(n.name, body, tags=["tech", n.category]))
         return out
 
     def _write_resources(self) -> list[Path]:
@@ -561,6 +715,28 @@ def _existing_date(p: Path) -> str | None:
     return None
 
 
+def _sections(text: str) -> list[tuple[str, list[str]]]:
+    """(heading, body lines) for a note body that starts at a `## ` heading."""
+    out: list[tuple[str, list[str]]] = []
+    for line in text.splitlines():
+        if line.startswith("## "):
+            out.append((line[3:].strip(), []))
+        elif out:
+            out[-1][1].append(line)
+    return out
+
+
+def _is_stub_section(section: tuple[str, list[str]]) -> bool:
+    """A dated section that says the stop is not done, and nothing else."""
+    heading, lines = section
+    if not DATED.match(heading):
+        return False
+    body = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+    return any(STUB_BULLET in ln for ln in body) and all(
+        STUB_BULLET in ln or ln.lstrip("- ").startswith("links:") for ln in body
+    )
+
+
 def _section(p: Path, heading: str) -> str:
     text = p.read_text(encoding="utf-8")
     marker = f"## {heading}\n"
@@ -569,6 +745,41 @@ def _section(p: Path, heading: str) -> str:
     body = text.split(marker, 1)[1]
     body = body.split("\n## ", 1)[0]
     return body.replace("#overview", "").strip()
+
+
+def _edited(p: Path, generated_bodies: tuple[str, ...]) -> bool:
+    """True when a note no longer holds the body vibe wrote into it."""
+    body = _body_of(p)
+    stamp = _front_value(p, "generated")
+    if stamp:
+        return stamp != body_stamp(body)
+    # Notes written before the stamp: the body itself is the evidence.
+    return body not in generated_bodies
+
+
+def _front_value(p: Path, key: str) -> str | None:
+    """One frontmatter value of a note, if it has frontmatter and that key."""
+    with p.open(encoding="utf-8") as fh:
+        head = [next(fh, "") for _ in range(8)]
+    if not head or head[0].strip() != "---":
+        return None
+    for line in head[1:]:
+        if line.strip() == "---":
+            break
+        if line.startswith(f"{key}:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def _body_of(p: Path) -> str:
+    """A note's body: no frontmatter, no H1, as `write` would have stored it."""
+    text = p.read_text(encoding="utf-8")
+    if text.startswith("---\n"):
+        text = text.split("\n---\n", 1)[-1]
+    lines = text.lstrip("\n").splitlines()
+    if lines and lines[0].startswith("# "):
+        lines = lines[1:]
+    return "\n".join(lines).strip("\n")
 
 
 def _is_generated(p: Path) -> bool:

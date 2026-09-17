@@ -5,7 +5,7 @@ tags: [overview]
 ---
 # Tonight
 
-<your_name>, Chief of Staff, on Normal. Level Intern (dark) with 0 XP, 300 to the next level. 0 of 32 stops done.
+Tom, Chief of Staff, on Normal. Level Intern (dark) with 0 XP, 300 to the next level. 0 of 32 stops done.
 
 ## Workstreams
 - 18:00 [[Innovation Hub]]: a playable single-file game (to do)

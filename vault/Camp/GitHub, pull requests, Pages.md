@@ -2,6 +2,7 @@
 title: "GitHub, pull requests, Pages"
 date: 2026-09-16
 tags: [tech, git]
+generated: dd3a853bb5a8
 ---
 # GitHub, pull requests, Pages
 

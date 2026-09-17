@@ -2,6 +2,7 @@
 title: "AGENTS.md"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 6343bb6a7a26
 ---
 # AGENTS.md
 

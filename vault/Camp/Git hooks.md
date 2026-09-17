@@ -2,6 +2,7 @@
 title: "Git hooks"
 date: 2026-09-17
 tags: [tech, git]
+generated: b152775317db
 ---
 # Git hooks
 
