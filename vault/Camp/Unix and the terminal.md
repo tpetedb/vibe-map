@@ -2,6 +2,7 @@
 title: "Unix and the terminal"
 date: 2026-09-16
 tags: [tech, shell]
+generated: d06efe298473
 ---
 # Unix and the terminal
 

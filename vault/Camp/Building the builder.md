@@ -2,6 +2,7 @@
 title: "Building the builder"
 date: 2026-09-17
 tags: [tech, agents]
+generated: 27e6da23292d
 ---
 # Building the builder
 

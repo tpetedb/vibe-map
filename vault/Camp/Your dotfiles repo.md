@@ -12,7 +12,7 @@ Stop 8, [[Evening 4]]. Outcome: Everything you configured tonight, versioned, so
 - links: [[Tonight]], [[Map]]
 
 ## Sources
-- https://github.com/YOUR-USER/dotfiles
+- https://dotfiles.github.io
 - https://dotfiles.github.io
 - https://docs.brew.sh/Brew-Bundle-and-Brewfile
 

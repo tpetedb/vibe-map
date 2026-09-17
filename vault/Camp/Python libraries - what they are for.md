@@ -2,6 +2,7 @@
 title: "Python libraries: what they are for"
 date: 2026-09-16
 tags: [tech, code]
+generated: 908fc5e4dcc3
 ---
 # Python libraries: what they are for
 

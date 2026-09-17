@@ -2,6 +2,7 @@
 title: "Building and consuming APIs"
 date: 2026-09-16
 tags: [tech, net]
+generated: a80cd6494e7d
 ---
 # Building and consuming APIs
 

@@ -2,6 +2,7 @@
 title: "Data: files, schemas, warehouses"
 date: 2026-09-16
 tags: [tech, data]
+generated: 1a51211abed7
 ---
 # Data: files, schemas, warehouses
 

@@ -2,6 +2,7 @@
 title: "Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 68bd8901debd
 ---
 # Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
 

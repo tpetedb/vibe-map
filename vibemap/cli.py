@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -37,10 +38,10 @@ from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
 from vibemap.providers import PROVIDERS, ProviderMissing, ask
 from vibemap.quests import BADGES, level_for, new_badges, quest_for, run_quest, xp_for
-from vibemap.state import CheckRecord, LogEntry, State
+from vibemap.state import PLACEHOLDER, CheckRecord, LogEntry, State
 from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
-from vibemap.vault import Vault
+from vibemap.vault import Vault, safe_title
 
 ROOT = project.root()
 console = Console(theme=RICH_THEME, highlight=False)
@@ -53,6 +54,10 @@ class Ctx:
     def __init__(self) -> None:
         self.cfg = Config.load()
         self.state = State.load()
+        # vibe.toml is where a learner types their name, so the state follows
+        # it while the state still holds the placeholder.
+        if self.state.name == PLACEHOLDER and self.cfg.learner.name != PLACEHOLDER:
+            self.state.name = self.cfg.learner.name
         self.vault = Vault(self.cfg, self.state)
 
     @property
@@ -150,11 +155,20 @@ def status(ctx: Ctx, as_json: bool) -> None:
             f"Next: [path]{nxt_ws.hour} {nxt_ws.name}[/]. "
             f"Run [accent]vibe check {nxt_ws.n}[/] when you think it is done."
         )
-    else:
-        console.print(
-            "[ok]Evening 1 complete.[/] Pick another island: "
-            "vibe check --world winter 1"
-        )
+        return
+    for world in WORLDS:
+        ws = _next_workstream(st, world)
+        if ws:
+            console.print(
+                f"[ok]{campaign.WORLD_NAMES['campus']} complete.[/] Next island: "
+                f"[accent]vibe check --world {world} {ws.n}[/] "
+                f"({ws.hour} {ws.name})."
+            )
+            return
+    console.print(
+        "[ok]All 32 stops done. The campaign is finished.[/] "
+        "Write the last note, then keep the vault growing: vibe vault feature --all."
+    )
 
 
 def _next_workstream(st: State, world: str):
@@ -182,7 +196,7 @@ def _print_results(results, quest, cfg: Config) -> bool:
     failed = [r for r in results if not r.ok]
     if failed and hints != "none":
         for r in failed:
-            console.print(f"  [warn]hint[/] {r.hint}")
+            console.print(f"  [warn]hint[/] {escape(r.hint)}")
     return not failed
 
 
@@ -227,7 +241,7 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     age, label, _ = level_for(ctx.state.xp)
     console.print(
         f"Level {label}, {ctx.state.xp} XP. "
-        f"Note: vault/{ctx.cfg.vault.folder}/{ws.name}.md"
+        f"Note: vault/{ctx.cfg.vault.folder}/{safe_title(ws.name)}.md"
     )
 
 
@@ -285,12 +299,43 @@ def done(ctx: Ctx, n: int, note: str, world: str, force: bool) -> None:
     """Mark workstream N done, after running its checks."""
     if not 1 <= n <= 8:
         _fail("workstream is 1 to 8")
+    if force and ctx.state.is_done(world, n):
+        ws = campaign.evenings()[world].workstreams[n - 1]
+        console.print(
+            f"[muted]{ws.name} is already done; nothing to force. "
+            f"Take it back with vibe undo {n}"
+            + (f" --world {world}" if world != "campus" else "")
+            + ".[/]"
+        )
+        return
     quest = quest_for(world, n, ctx.cfg)
     results = run_quest(quest, ctx.cfg)
     ok = _print_results(results, quest, ctx.cfg)
     if not ok and not force:
         _fail("checks failed; fix them or add --force (half XP)")
     _claim(ctx, world, n, note, results, forced=not ok)
+
+
+@cli.command()
+@click.argument("n", type=int)
+@click.option("--world", "-w", default="campus", type=click.Choice(WORLDS))
+@pass_ctx
+def undo(ctx: Ctx, n: int, world: str) -> None:
+    """Un-claim workstream N: the XP goes back and the note loses the entry."""
+    if not 1 <= n <= 8:
+        _fail("workstream is 1 to 8")
+    if not ctx.state.is_done(world, n):
+        _fail(f"{world} {n} is not done; nothing to undo")
+    ws = campaign.evenings()[world].workstreams[n - 1]
+    xp = ctx.state.undo(world, n)
+    ctx.save()
+    ctx.vault.drop_claim(ws.name)
+    ctx.vault.build(ctx.persona)
+    console.print(
+        f"[ok]{ws.name} is open again[/] [xp]-{xp} XP[/]. "
+        f"Your own words in vault/{ctx.cfg.vault.folder}/{safe_title(ws.name)}.md "
+        "stay."
+    )
 
 
 # ---- vault --------------------------------------------------------------------
@@ -305,9 +350,10 @@ def vault() -> None:
 @pass_ctx
 def vault_build(ctx: Ctx) -> None:
     """Rebuild every generated note from the state."""
-    paths = ctx.vault.build(ctx.persona)
+    ctx.vault.build(ctx.persona)
     console.print(
-        f"[ok]vault built[/]: {len(paths)} notes in {ctx.vault.dir.relative_to(ROOT)}"
+        f"[ok]vault built[/]: {len(ctx.vault.notes())} notes in "
+        f"{ctx.vault.dir.relative_to(ROOT)}"
     )
 
 
@@ -543,8 +589,17 @@ def mentor(ctx: Ctx, mentor_id: str, choice: str) -> None:
 )
 def scores(sql_name: str | None) -> None:
     """Summarise workspace/data/scores.csv, or run a workspace/sql/ query."""
-    from vibemap.scores import frame_table, read_scores, run_sql, scores_table, summary
+    from vibemap.scores import (
+        SCORES,
+        frame_table,
+        read_scores,
+        run_sql,
+        scores_table,
+        summary,
+    )
 
+    if not SCORES.exists():
+        _fail("no scores yet; workstream 3 creates workspace/data/scores.csv")
     if sql_name:
         try:
             console.print(frame_table(run_sql(sql_name), f"workspace/sql/{sql_name}"))
@@ -616,9 +671,11 @@ def name(ctx: Ctx, name: str | None) -> None:
         console.print(ctx.cfg.learner.name)
         return
     _set_learner(ctx, "name", name)
-    st = ctx.state
-    st.name = name
+    ctx.state.name = name
     ctx.save()
+    ctx.vault = Vault(ctx.cfg, ctx.state)
+    ctx.vault.build(ctx.persona)
+    console.print("[ok]vault rebuilt[/] with your name in vault/Camp/Tonight.md")
 
 
 @cli.command()
@@ -697,7 +754,14 @@ def theme(ctx: Ctx, name: str | None, create: bool, brief: str) -> None:
     data = ctx.cfg.model_dump()
     data["theme"]["preset"] = name
     Config.model_validate(data).save(CONFIG_PATH)
-    console.print(f"[ok]theme[/] = {name}. Run `just build` to bake it into the game.")
+    if (ROOT / "tools" / "build.py").exists():
+        console.print(f"[ok]theme[/] = {name}. Run `just build` to bake it in.")
+    else:
+        console.print(
+            f"[ok]theme[/] = {name}. It colours the terminal and the vault; the "
+            "hosted game keeps the studio theme, because baking a theme into the "
+            "game needs the product repository."
+        )
 
 
 # ---- dotfiles ------------------------------------------------------------------
@@ -816,7 +880,11 @@ def dotfiles_install(
 @click.option("--json", "as_json", is_flag=True, help="print the items as JSON")
 @pass_ctx
 def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
-    """Pull the AI feeds into data/news.json and the vault note News."""
+    """Pull the AI feeds into the vault note News and a news.json.
+
+    The file is data/news.json in the product, where the build bakes it into
+    the game, and .vibe/news.json in a camp, which has no build.
+    """
     from vibemap import news
 
     feeds = (
@@ -842,10 +910,11 @@ def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
     # The product bakes data/news.json into the game; a camp has no build, so
     # the feed stays in its state folder and the vault note is the reader.
     target = ROOT / "data" if (ROOT / "tools" / "build.py").exists() else ROOT / ".vibe"
-    news.write_json(items, target / "news.json")
+    written = target / "news.json"
+    news.write_json(items, written)
     ctx.vault.write("News", news.note_body(items, problems), tags=["concept"])
     console.print(
-        f"[ok]news[/]: {len(items)} items in data/news.json and vault/"
+        f"[ok]news[/]: {len(items)} items in {written.relative_to(ROOT)} and vault/"
         f"{ctx.cfg.vault.folder}/News.md"
     )
 
@@ -1063,7 +1132,9 @@ def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
 def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
     """The folder name convention for a new camp: your name, vibe-map, the date."""
     raw = who or os.environ.get("VIBE_NAME") or getpass.getuser() or "player"
-    slug = re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-") or "player"
+    # Fold accents (Jorg, not j-rg) the same way the game's setup guide does.
+    folded = unicodedata.normalize("NFD", raw).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", folded.lower()).strip("-") or "player"
     return f"vibe-map-{slug}-{(day or date.today()).isoformat()}"
 
 
@@ -1182,12 +1253,8 @@ HOSTED_GAME = "https://tpetedb.github.io/vibe-map/"
 RAW_GAME = "https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html"
 
 
-@cli.command()
-@click.option(
-    "--offline", is_flag=True, help="download the game into .vibe/ and open that copy"
-)
-def play(offline: bool) -> None:
-    """Open the game: the local build, the cached copy, else the hosted one."""
+def open_game(offline: bool = False) -> str:
+    """Open the game and say what was opened: the build, the cache, the host."""
     local = ROOT / "game" / "vibe-map.html"
     cached = ROOT / ".vibe" / "vibe-map.html"
     if offline and not local.exists():
@@ -1200,9 +1267,19 @@ def play(offline: bool) -> None:
     for p in (local, cached):
         if p.exists():
             subprocess.run(["open", str(p)])
-            return
+            return str(p)
     console.print(f"[muted]opening the hosted game[/] {HOSTED_GAME}")
     subprocess.run(["open", HOSTED_GAME])
+    return HOSTED_GAME
+
+
+@cli.command()
+@click.option(
+    "--offline", is_flag=True, help="download the game into .vibe/ and open that copy"
+)
+def play(offline: bool) -> None:
+    """Open the game: the local build, the cached copy, else the hosted one."""
+    open_game(offline)
 
 
 @cli.command()

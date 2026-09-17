@@ -2,6 +2,7 @@
 title: "Separation of concerns"
 date: 2026-09-17
 tags: [tech, code]
+generated: 4f91e1f05ff8
 ---
 # Separation of concerns
 

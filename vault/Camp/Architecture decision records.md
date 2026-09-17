@@ -2,6 +2,7 @@
 title: "Architecture decision records"
 date: 2026-09-16
 tags: [tech, docs]
+generated: 600073c7297b
 ---
 # Architecture decision records
 

@@ -2,6 +2,7 @@
 title: "Tests and evals"
 date: 2026-09-16
 tags: [tech, code]
+generated: 8cb0839caa27
 ---
 # Tests and evals
 

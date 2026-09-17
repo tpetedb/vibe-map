@@ -18,6 +18,10 @@ def test_camp_dir_name_follows_the_convention() -> None:
     )
     assert camp_dir_name("", date(2026, 1, 2)).startswith("vibe-map-")
     assert camp_dir_name("!!", date(2026, 1, 2)) == "vibe-map-player-2026-01-02"
+    assert (
+        camp_dir_name("Jörg Müller", date(2026, 1, 2))
+        == "vibe-map-jorg-muller-2026-01-02"
+    )
 
 
 def test_vibe_new_makes_a_slim_camp_from_the_template(

@@ -2,6 +2,7 @@
 title: "Headless agents and scheduling"
 date: 2026-09-16
 tags: [tech, ship]
+generated: ebd5d007b104
 ---
 # Headless agents and scheduling
 

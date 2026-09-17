@@ -13,7 +13,7 @@ Stop 2, [[Evening 4]]. Outcome: Ghostty, zsh, starship, fzf, ripgrep, bat, eza, 
 
 ## Sources
 - https://ghostty.org
-- https://github.com/YOUR-USER/dotfiles
+- https://dotfiles.github.io
 - https://starship.rs
 - https://github.com/junegunn/fzf
 - https://github.com/BurntSushi/ripgrep

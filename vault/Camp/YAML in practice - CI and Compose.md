@@ -2,6 +2,7 @@
 title: "YAML in practice: CI and Compose"
 date: 2026-09-16
 tags: [tech, formats]
+generated: d57018d32b2d
 ---
 # YAML in practice: CI and Compose
 

@@ -2,6 +2,7 @@
 title: "Context window and prompts"
 date: 2026-09-16
 tags: [tech, agents]
+generated: b520b54566d9
 ---
 # Context window and prompts
 

@@ -120,11 +120,15 @@ def sync(vault: Vault) -> tuple[int, int]:
         if title in index and title not in unlocked:
             shutil.move(str(p), str(lib / p.name))
     for title, p in lib_notes.items():
-        if title in unlocked:
-            target = vault.dir / p.name
-            if target.exists():
-                target.unlink()
+        if title not in unlocked:
+            continue
+        target = vault.dir / p.name
+        if not target.exists():
             shutil.move(str(p), str(target))
+        elif target.read_bytes() == p.read_bytes():
+            p.unlink()
+        # A camp note that differs is the learner's: it stays, and the library
+        # copy waits rather than overwriting their words.
     write_index(vault, index)
     camp_count = len(
         [p for p in vault.dir.rglob("*.md") if "_templates" not in p.parts]
@@ -137,10 +141,17 @@ def restore_all(vault: Vault) -> int:
     lib = library_dir(vault)
     moved = 0
     if lib.exists():
-        for p in lib.glob("*.md"):
+        for p in sorted(lib.glob("*.md")):
             target = vault.dir / p.name
             if not target.exists():
                 shutil.move(str(p), str(target))
+                moved += 1
+            elif target.read_bytes() == p.read_bytes():
+                p.unlink()
+            elif p.stat().st_mtime > target.stat().st_mtime:
+                # Both sides have a version: the newer one comes back and the
+                # other keeps its place in the library. Nothing is deleted.
+                _swap(p, target)
                 moved += 1
         idx = _index_path(vault)
         if idx.exists():
@@ -148,6 +159,14 @@ def restore_all(vault: Vault) -> int:
         if not any(lib.iterdir()):
             lib.rmdir()
     return moved
+
+
+def _swap(library: Path, camp: Path) -> None:
+    """Exchange a library note and the camp note of the same name."""
+    holding = library.with_name(library.name + ".swap")
+    library.rename(holding)
+    camp.rename(library)
+    holding.rename(camp)
 
 
 def unlock(vault: Vault, title: str) -> Path | None:

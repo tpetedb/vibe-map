@@ -769,14 +769,14 @@ Rolinda's question: "Is this the part where it stops being a laptop and becomes 
 
 _Ghostty, zsh, starship, fzf, ripgrep, bat, eza, and Tom's configs_
 
-Claude Code lives in a terminal, so the terminal is the room you work in all day. Ghostty (Mitchell Hashimoto, who built Terraform and Vagrant) is fast, native on macOS, GPU-rendered, and configured with one text file in ~/.config/ghostty/config. Around it: zsh with a prompt from starship, fzf for fuzzy history and file search, ripgrep instead of grep, bat instead of cat, eza instead of ls, zoxide for jumping between folders. None of these are required; all of them are the difference between tolerating the terminal and preferring it. Tom keeps his configs on GitHub; installing them is the fastest way to a good setup, and reading them is a good way to learn what each tool does.
+Claude Code lives in a terminal, so the terminal is the room you work in all day. Ghostty (Mitchell Hashimoto, who built Terraform and Vagrant) is fast, native on macOS, GPU-rendered, and configured with one text file in ~/.config/ghostty/config. Around it: zsh with a prompt from starship, fzf for fuzzy history and file search, ripgrep instead of grep, bat instead of cat, eza instead of ls, zoxide for jumping between folders. None of these are required; all of them are the difference between tolerating the terminal and preferring it. Keeping your configs in a repository is the fastest way back to a good setup on a new machine, and reading them is a good way to learn what each tool does.
 
 Do this:
 1. brew install --cask ghostty, then brew install starship fzf ripgrep bat eza zoxide.
-2. Clone Tom's dotfiles (link below), read ghostty/config and .zshrc before you copy anything. Ask Claude to explain each line you do not understand.
+2. Write your own ghostty/config and .zshrc, one setting at a time, and read every line before you keep it. Ask Claude to explain each line you do not understand.
 3. Open Ghostty, run claude, and try Ctrl+R with fzf. That is the loop for the rest of your life.
 
-Sources: [Ghostty](https://ghostty.org) · [Tom's dotfiles on GitHub](https://github.com/YOUR-USER/dotfiles) · [starship](https://starship.rs) · [fzf](https://github.com/junegunn/fzf) · [ripgrep](https://github.com/BurntSushi/ripgrep)
+Sources: [Ghostty](https://ghostty.org) · [GitHub: dotfiles guide](https://dotfiles.github.io) · [starship](https://starship.rs) · [fzf](https://github.com/junegunn/fzf) · [ripgrep](https://github.com/BurntSushi/ripgrep)
 
 Rolinda's question: "Why does the terminal need to be pretty?"
 
@@ -871,7 +871,7 @@ Do this:
 2. Add the Brewfile from Stop 1. Push to GitHub, private if you prefer.
 3. Write the final vault note: what you would tell yourself before Evening 1.
 
-Sources: [Tom's dotfiles on GitHub](https://github.com/YOUR-USER/dotfiles) · [GitHub: dotfiles guide](https://dotfiles.github.io) · [Homebrew Bundle](https://docs.brew.sh/Brew-Bundle-and-Brewfile)
+Sources: [GitHub: dotfiles guide](https://dotfiles.github.io) · [Homebrew Bundle](https://docs.brew.sh/Brew-Bundle-and-Brewfile)
 
 Rolinda's question: "And then you never have to do any of this again?"
 

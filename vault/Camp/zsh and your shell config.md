@@ -2,6 +2,7 @@
 title: "zsh and your shell config"
 date: 2026-09-16
 tags: [tech, shell]
+generated: 10e571c7a992
 ---
 # zsh and your shell config
 

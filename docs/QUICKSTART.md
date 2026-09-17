@@ -29,11 +29,11 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
 1. Install the command.
 
    ```bash
-   uv tool install vibe-map
+   uv tool install git+https://github.com/tpetedb/vibe-map
    vibe --version
    ```
 
-   Prints the version, for example `vibe, version 0.3.0`. Until the package is on PyPI, install from the repository instead: `uv tool install git+https://github.com/tpetedb/vibe-map`.
+   Prints the version, for example `vibe, version 0.3.0`. The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
 
 2. Start a camp.
 
@@ -79,9 +79,9 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
 
 7. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links. `vibe vault feature --all` adds one note per Obsidian feature, with a canvas, a base, a template and a deck to click through.
 
-## Path C: the whole workshop with just
+## Path C: the product repository, for people who want the engine
 
-For a machine you intend to keep. Adds the test browsers, the skills and the onboarding screen.
+This path is not a camp. It clones the product: the game's source, the CLI's code and the course's tests. Take it when you want to change the engine itself. `just setup`, `just verify` and the Playwright browsers exist here and nowhere else; a camp from Path B has `vibe` and a much shorter `justfile`.
 
 1. Clone and enter.
 
@@ -97,6 +97,8 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
    just setup --check           # dry run: only report what is missing
    ```
 
+   You should see a `.venv`, the Playwright browsers downloading and `vault built`. In a camp, `just setup` is a different recipe with the same name: it runs `vibe init` and links the skills, prints `ready: just start`, and has no `--check`.
+
 3. Open the onboarding screen.
 
    ```bash
@@ -110,6 +112,8 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
    ```bash
    just verify                  # ruff, pytest with Playwright, build check
    ```
+
+   Product only: a camp has no test battery and no build. There the equivalent gate is `vibe check --all` for the workstreams, `vibe vault lint` for the notes and whatever tests you wrote in `workspace/`.
 
 5. Make the terminal yours, module by module.
 
@@ -135,18 +139,20 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
 
 ## Where things end up
 
-| You did | It landed in |
-|---|---|
-| `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
-| `vibe persona`, `vibe theme`, `vibe provider` | `vibe.toml` |
-| `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
-| the game | `localStorage` in the browser, exported as a progress code |
-| `vibe council` | `vault/Camp/Council: <topic>.md` |
-| `just setup` | `.venv/`, `.claude/skills/` symlinks, Playwright browsers |
+| Where | You did | It landed in |
+|---|---|---|
+| camp | `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
+| camp | `vibe persona`, `vibe theme`, `vibe provider` | `vibe.toml` |
+| camp | `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
+| camp | `vibe council` | `vault/Camp/Council - <topic>.md` |
+| camp | `just setup` | `.vibe/state.json`, the vault, `.claude/skills/` symlinks |
+| both | the game | `localStorage` in the browser, exported as a progress code |
+| product | `just setup` | `.venv/`, `.claude/skills/` symlinks, Playwright browsers |
+| product | `just verify` | nothing on disk; a green or red gate |
 
 ## When something is off
 
 - `vibe status` says there is no camp: you are outside a folder with a `vibe.toml`. `cd` into one, run `vibe new`, or set `VIBE_HOME=/path/to/camp`.
 - `claude -p` fails with a model catalog error: the CLI retries with `--model sonnet`; run `claude` once interactively to log in.
 - The game shows the Roadmap list instead of the island: WebGL is off or blocked. Chrome on a Mac with Apple silicon is the reference; the lessons still work.
-- Tests hang on the first run: `uv run playwright install chromium webkit` was skipped; `just setup` runs it.
+- Tests hang on the first run (product repository only): `uv run playwright install chromium webkit` was skipped; `just setup` runs it.

@@ -2,6 +2,7 @@
 title: "SSH and remote machines"
 date: 2026-09-16
 tags: [tech, shell]
+generated: 3d769e4176ac
 ---
 # SSH and remote machines
 

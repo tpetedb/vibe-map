@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from vibemap import campaign
 from vibemap.providers import ask
 from vibemap.themes import THEMES, THEMES_DIR, Theme, load_theme
+from vibemap.vault import safe_title
 
 if TYPE_CHECKING:
     from vibemap.cli import Ctx
@@ -118,7 +119,7 @@ def convene(
         body += [f"### {m['name']} (answer {lab})", answers[lab].strip(), ""]
     body += ["Back to [[Tonight]] · [[Your path]]", "", "#council #decision"]
     path = ctx.vault.write(title, "\n".join(body), tags=["council", "decision"])
-    ctx.vault.add_build_log(f"[[{title}]] convened on: {topic}")
+    ctx.vault.add_build_log(f"[[{safe_title(title)}]] convened on: {topic}")
     return path
 
 
