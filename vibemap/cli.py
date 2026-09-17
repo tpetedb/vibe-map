@@ -123,6 +123,8 @@ def status(ctx: Ctx, as_json: bool) -> None:
                 {
                     "name": st.name, "xp": st.xp, "level": label, "age": age,
                     "next_level_at": nxt, "done": st.done_w, "badges": st.badges,
+                    "mentors": st.mentors, "artifacts": st.artifacts,
+                    "artifacts_built": st.artifacts_built,
                     "persona": cfg.learner.persona,
                     "difficulty": cfg.learner.difficulty,
                     "mode": cfg.learner.mode, "provider": cfg.learner.provider,
@@ -146,6 +148,9 @@ def status(ctx: Ctx, as_json: bool) -> None:
         + f" · {st.total_done()}/32 stops"
         + f" · {len(st.artifacts)}/{len(campaign.artifacts())} artifacts"
         + f" ({len(st.artifacts_built)} built for real)"
+        # "Met" is the verified encounter, not a hello on the island.
+        + f"\n{len(st.mentors)}/{len(campaign.mentors())} mentors met "
+        + "(their exercise done and checked)"
     )
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:
@@ -630,15 +635,21 @@ def import_(ctx: Ctx, code: str) -> None:
     )
 
 
+def _mentor_or_fail(mentor_id: str) -> dict:
+    """The mentor with that id, or exit 1 with the list of the twelve."""
+    try:
+        return campaign.mentor(mentor_id)
+    except ValueError as e:
+        _fail(str(e))
+        raise  # unreachable: _fail exits
+
+
 def _check_mentors(ctx: Ctx, mentor_id: str, *, claim: bool) -> None:
     """Run the encounter checks for one mentor, or for all twelve."""
     if mentor_id == "all":
         ids = [m["id"] for m in campaign.mentors()]
     else:
-        try:
-            ids = [campaign.mentor(mentor_id)["id"]]
-        except ValueError as e:
-            _fail(str(e))
+        ids = [_mentor_or_fail(mentor_id)["id"]]
     for mid in ids:
         quest = mentor_quest(mid, ctx.cfg)
         results = run_quest(quest, ctx.cfg)
@@ -718,20 +729,114 @@ def _claim_artifact(ctx: Ctx, artifact_id: str, results) -> None:
         console.print(f"[title]Badge:[/] {BADGES[b]}")
 
 
+# A scaffolded folder is a starting point, never a pass: the stub says what
+# is missing and `vibe check --mentor <id>` keeps failing until the learner
+# writes the real thing.
+STUB_LINES = (
+    "TODO: {title}",
+    "Write this yourself; the check fails until you do.",
+)
+
+
+def _stub_text(mentor_id: str, ex: dict) -> str:
+    """The placeholder for the file the exercise names, commented for Python."""
+    mark = "# " if ex["file"].endswith(".py") else ""
+    lines = [mark + line.format(title=ex["title"]) for line in STUB_LINES]
+    lines.append(f"{mark}Run: vibe check --mentor {mentor_id}")
+    return "\n".join(lines) + "\n"
+
+
+def _note_stub() -> str:
+    return (
+        f"{quests.MENTOR_SECTION}\n\n"
+        "Replace this line with your own words, at least "
+        f"{quests.MENTOR_WORDS} of them.\n"
+    )
+
+
+def _scaffold_mentor(m: dict) -> tuple[list[str], list[str]]:
+    """Create the exercise folder; returns (written, kept) file names.
+
+    A file that is already there is the learner's work, so it is left alone.
+    """
+    ex = m["encounter"]["exercise"]
+    here = quests.mentor_dir(m["id"])
+    here.mkdir(parents=True, exist_ok=True)
+    written, kept = [], []
+    for name, body in (
+        (ex["file"], _stub_text(m["id"], ex)),
+        (quests.MENTOR_NOTE, _note_stub()),
+    ):
+        target = here / name
+        if target.exists():
+            kept.append(name)
+            continue
+        target.write_text(body, encoding="utf-8")
+        written.append(name)
+    return written, kept
+
+
+def _show_encounter(ctx: Ctx, m: dict) -> None:
+    """What this mentor asks of you, and the command that proves it."""
+    ex = m["encounter"]["exercise"]
+    met = "[ok]met[/]" if m["id"] in ctx.state.mentors else "[todo]not yet met[/]"
+    console.print(
+        f"[title]{m['name']}[/] · [path]{campaign.WORLD_NAMES[m['world']]}[/] · {met}"
+    )
+    console.print(f"[accent]{escape(ex['title'])}[/] · {ex['minutes']} minutes")
+    for i, step in enumerate(ex["steps"], 1):
+        console.print(f"  {i}. {escape(step)}")
+    console.print(f"Done when: {escape(ex['done'])}")
+    console.print(f"Check it: [accent]vibe check --mentor {m['id']}[/]")
+
+
+def _list_mentors(ctx: Ctx) -> None:
+    """The twelve, their island and whether the encounter is verified."""
+    t = Table(header_style="path", box=None, padding=(0, 1))
+    for col in ("id", "mentor", "island", "encounter"):
+        t.add_column(col)
+    for m in campaign.mentors():
+        done = m["id"] in ctx.state.mentors
+        t.add_row(
+            m["id"],
+            m["name"],
+            campaign.WORLD_NAMES[m["world"]],
+            "[done]verified[/]" if done else "[todo]not yet[/]",
+        )
+    console.print(t)
+    console.print(
+        "One mentor: [accent]vibe mentor <id>[/], "
+        "and [accent]vibe mentor <id> --start[/] to set the folder up."
+    )
+
+
 @cli.command()
-@click.argument("mentor_id")
-@click.argument("choice", type=click.Choice(["deep", "skip"]))
+@click.argument("mentor_id", required=False)
+@click.argument("choice", required=False, type=click.Choice(["deep", "skip"]))
+@click.option(
+    "--start", is_flag=True, help="scaffold workspace/mentors/<id>/ for the exercise"
+)
 @pass_ctx
-def mentor(ctx: Ctx, mentor_id: str, choice: str) -> None:
-    """Record a mentor choice (deep or skip)."""
-    try:
-        m = campaign.mentor(mentor_id)
-    except ValueError as e:
-        _fail(str(e))
-    ctx.state.path[mentor_id] = choice
-    ctx.save()
-    ctx.vault.build(ctx.persona)
-    console.print(f"[ok]{m['name']}[/]: {choice}")
+def mentor(ctx: Ctx, mentor_id: str | None, choice: str | None, start: bool) -> None:
+    """What a mentor asks of you, or record a choice (deep or skip)."""
+    if not mentor_id:
+        _list_mentors(ctx)
+        return
+    m = _mentor_or_fail(mentor_id)
+    if choice:
+        ctx.state.path[mentor_id] = choice
+        ctx.save()
+        ctx.vault.build(ctx.persona)
+        console.print(f"[ok]{m['name']}[/]: {choice}")
+        return
+    if start:
+        written, kept = _scaffold_mentor(m)
+        where = m["encounter"]["exercise"]["dir"]
+        if written:
+            console.print(f"[ok]{where}/[/]: wrote {', '.join(written)}")
+        for name in kept:
+            console.print(f"[warn]kept your {where}/{name}[/], it was already there")
+    _show_encounter(ctx, m)
 
 
 # ---- scores -------------------------------------------------------------------

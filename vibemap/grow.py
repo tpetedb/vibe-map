@@ -193,4 +193,19 @@ def next_hint(vault: Vault) -> str:
     total = len(campaign.artifacts())
     if found < total:
         return f"Inspect an artifact on the island ({found} of {total} found)."
-    return "Go deep with a mentor, or unlock a note by hand with vibe vault unlock."
+    built = len(st.artifacts_built)
+    if built < total:
+        return (
+            f"Build an artifact for real and run vibe check --artifact <id> "
+            f"({built} of {total} built)."
+        )
+    met = len(st.mentors)
+    mentors = len(campaign.mentors())
+    if met < mentors:
+        return (
+            f"Do a mentor's exercise and run vibe check --mentor <id> "
+            f"({met} of {mentors} met)."
+        )
+    return (
+        "Everything the campaign unlocks is here; unlock more with vibe vault unlock."
+    )

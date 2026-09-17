@@ -465,7 +465,7 @@ The data hour now runs on DuckDB (https://duckdb.org/docs/), which reads a CSV a
 
 ## The campaign: four evenings, four islands
 
-Evening 1 is the eight workstreams above. Evenings 2 to 4 are below, one island each in the game. Split them over as many nights as you like; the game, the CLI and the vault keep the state. Mentors (real people from the field) stand on the islands; talking to them and choosing "tell me more" or "not now" builds your path, which the CLI writes into the vault.
+Evening 1 is the eight workstreams above. Evenings 2 to 4 are below, one island each in the game. Split them over as many nights as you like; the game, the CLI and the vault keep the state. Two things sit beside the thirty-two stops and are worth half a workstream each: the twelve mentor encounters and the twenty artifacts. Both are described after Evening 4.
 
 ### Evening 2: History, and how these models actually work
 
@@ -927,7 +927,13 @@ Sources: [GitHub: dotfiles guide](https://dotfiles.github.io) · [Homebrew Bundl
 
 Rolinda's question: "And then you never have to do any of this again?"
 
-### The mentors
+### The mentors, and how an encounter works
+
+Twelve real people from the field stand on the islands. An encounter is a dialogue of three or four exchanges, walked one question at a time: every line the mentor speaks is a paraphrase of something that person is on record saying, with the link it came from next to it, never an invented quote. The sources are listed with each mentor below.
+
+Each encounter sets one exercise of under fifteen minutes, offline, in `workspace/mentors/<id>/`: a small script that must print a particular line, or a note that must hold the sections the exercise asks for, plus `notes.md` with a `## What I learned` section of at least twenty-five of your own words.
+
+Checked by: `vibe check --mentor <id>`, or `--mentor all` for the lot. A verified encounter is worth half a workstream in XP, turns the mentor's ring green and raises a plaque on their spot with their one line on it, writes the encounter and the exercise into their vault note, and all twelve earn the `mentored` badge. `vibe mentor <id> deep` and `vibe mentor <id> skip` still record which way you went.
 
 **Boris Cherny**, Creator and head of Claude Code, Anthropic (Innovation Campus). Built Claude Code as an internal experiment at Anthropic in 2024; it became the company's main coding tool and then a product. Previously a principal engineer at Meta and author of Programming TypeScript. Runs five Claude sessions in his terminal and five to ten on the web, each in its own checkout. Sources: [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny) · [Inside the workflow of Claude Code's creator (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/) · [His thread on X](https://x.com/bcherny/status/2007179832300581177) · [How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/)
 
@@ -952,6 +958,14 @@ Rolinda's question: "And then you never have to do any of this again?"
 **Linus Torvalds**, Creator of Linux and git (Production Environment). Wrote git in 2005 in about two weeks after the Linux kernel lost its previous version-control tool. Designed it around content-addressed snapshots and cheap branching, which is why every command at Stops 3 and 4 makes sense once you know that model. Sources: [Pro Git (free book)](https://git-scm.com/book/en/v2) · [git internals chapter](https://git-scm.com/book/en/v2/Git-Internals-Git-Objects)
 
 **The OpenCode team**, Open-source terminal coding agent (Production Environment). An open-source agent for the terminal that works with Claude, GPT, Gemini and local models, reads AGENTS.md and the Agent Skills standard. Useful as the second opinion that shows which parts of your setup are yours and which belong to the vendor. Sources: [OpenCode](https://opencode.ai) · [OpenCode on GitHub](https://github.com/sst/opencode)
+
+### The artifacts, and doing them for real
+
+Twenty artifacts stand on the four islands: the cafe, the fountain, the well, the lighthouse, the dock, the windmill, the balloon, the mountain, the market stall, the bridge, the factory, the post office, the shop, the bank, the data centre, the energy grid, the library, the office, the households and the school. Walk into the yellow ring and press **Inspect**: the sheet explains one concept and a small terminal demonstrates it.
+
+Every sheet also carries a **Do it for real** section: a task of under twenty minutes written from the official documentation of the thing the artifact stands for, with that page linked and the commands it gives behind the same Commands disclosure the lessons use. The cafe is `http.server`, the well is `sqlite3`, the dock is Docker's Writing a Dockerfile page, the windmill is the GitHub Actions events reference, the market stall is FastAPI's First Steps, the bridge is the MCP build-a-server quickstart, the factory is the DuckDB Python API, and so on. The work goes in `workspace/artifacts/<id>/`.
+
+Checked by: `vibe check --artifact <id>`, or `--artifact all`. The check reads what you wrote and runs it, offline: a Dockerfile whose instructions all parse, a SQLite file with an indexed table holding rows, an app that answers 200 to its own test client, a workflow file that parses and has a schedule and a job with steps. A check that needs a tool this machine does not have says so with the install command instead of failing, so a missing Docker never blocks you. An artifact built for real is worth half a workstream in XP, reads "built for real" on the sheet, and all twenty earn the `builder` badge.
 
 ## The tech tree: shelf by shelf
 

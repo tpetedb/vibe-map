@@ -75,9 +75,30 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
 
    `vibe done` writes a dated note into the vault and links it from `vault/Camp/Tonight.md`.
 
-6. Prefer to watch it grow? `vibe vault mode grow` starts the vault with its hubs only and unlocks notes as you play; `vibe vault mode full` reverses it. Nothing is deleted: the rest waits in `vault/_library`.
+   The islands hold two more kinds of work, and both are checked the same way. An artifact's sheet has a "Do it for real" task written from the official documentation of the thing; you build it in `workspace/artifacts/<id>/`. A mentor sets one exercise of under fifteen minutes; it goes in `workspace/mentors/<id>/` and a verified encounter raises a plaque on their spot.
 
-7. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links. `vibe vault feature --all` adds one note per Obsidian feature, with a canvas, a base, a template and a deck to click through.
+   ```bash
+   vibe check --artifact cafe   # or --artifact all
+   vibe check --mentor cherny   # or --mentor all
+   ```
+
+   The artifact checks look at what you built and run it. One that needs a tool you do not have (Docker, for instance) says so with the install command instead of failing.
+
+6. Take the game apart, on the production island.
+
+   ```bash
+   vibe fork                     # your own copy in workspace/forks/vibe-map/
+   cd workspace/forks/vibe-map
+   just build                    # your own game/vibe-map.html
+   cd -
+   vibe check --fork             # or one challenge: exists, config, topic, repair
+   ```
+
+   The fork is yours to break and repair. Its `src/config/00-config.js` is the game's own settings (world scale, island radius, palette); your camp's `config/camp.toml` stays the settings for your journey. [CONFIG.md](CONFIG.md) is the full table of which setting lives where.
+
+7. Prefer to watch it grow? `vibe vault mode grow` starts the vault with its hubs only and unlocks notes as you play; `vibe vault mode full` reverses it. Nothing is deleted: the rest waits in `vault/_library`.
+
+8. Open the vault in Obsidian: **Open folder as vault**, choose `vault/`. Graph colours, the theme and the templates are pre-configured. `vibe vault lint` reports orphans and dead links. `vibe vault feature --all` adds one note per Obsidian feature, with a canvas, a base, a template and a deck to click through.
 
 ## Path C: the product repository, for people who want the engine
 
@@ -144,6 +165,9 @@ This path is not a camp. It clones the product: the game's source, the CLI's cod
 | camp | `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
 | camp | `vibe persona`, `vibe theme`, `vibe provider` | `config/camp.toml` |
 | camp | `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
+| camp | `vibe check --artifact <id>` | `workspace/artifacts/<id>/` is read; the XP and the "built for real" line land in `.vibe/state.json` and the Artifacts note |
+| camp | `vibe check --mentor <id>` | `workspace/mentors/<id>/` is read; the plaque, the badge and the mentor's vault note follow |
+| camp | `vibe fork` | `workspace/forks/vibe-map/` with its own `src/config/`, `justfile` and `fork.json` |
 | camp | `vibe council` | `vault/Camp/Council - <topic>.md` |
 | camp | `just setup` | `.vibe/state.json`, the vault, `.claude/skills/` symlinks |
 | both | the game | `localStorage` in the browser, exported as a progress code |

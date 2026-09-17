@@ -61,8 +61,9 @@ A screen opens in the terminal. Pick your name, your field, a difficulty, your m
 
 1. Walk to a signpost, press **Enter**, read the lesson, do the thing it asks for on your machine.
 2. Press **Mark as done** when the definition of done is met.
-3. Walk into a yellow ring, press **Inspect**, press the buttons.
-4. Open **Roadmap**, press **Export progress**. The code is now in your clipboard.
+3. Walk into a yellow ring, press **Inspect**, press the buttons, then read the **Do it for real** section on the sheet and build the thing in `workspace/artifacts/<id>/`.
+4. Walk up to a mentor, press **Enter**, walk the dialogue one question at a time, and do the exercise they set in `workspace/mentors/<id>/`. It takes under fifteen minutes.
+5. Open **Roadmap**, press **Export progress**. The code is now in your clipboard.
 
 ### In the terminal
 
@@ -70,11 +71,13 @@ A screen opens in the terminal. Pick your name, your field, a difficulty, your m
 cd ~/vibe-map-*
 vibe import <paste the code>
 vibe check 1            # the CLI verifies stop 1 on your machine and awards the XP
+vibe check --artifact cafe   # what the artifact asked you to build, or --artifact all
+vibe check --mentor cherny   # the exercise the mentor set, or --mentor all
 vibe status             # the grid, your level, the pet
 vibe vault build        # the vault catches up with the state
 ```
 
-You should see `imported: N new stops`, green checks per stop, and `vault built`.
+You should see `imported: N new stops`, green checks per stop, and `vault built`. A verified mentor encounter raises a plaque on their spot the next time you open the game; an artifact you built for real reads "built for real" on its sheet.
 
 ### In Obsidian
 
@@ -82,7 +85,21 @@ Press Cmd-R (reload) or just click **Tonight** in the sidebar. The Tonight note 
 
 That is the whole loop: game, terminal, vault. Four commands.
 
-## 4. Once a week (five minutes)
+## 4. Your own copy of the game (production island, stop 6)
+
+```bash
+cd ~/vibe-map-*
+vibe fork                       # workspace/forks/vibe-map/, with its own src/config/
+cd workspace/forks/vibe-map
+just build                      # your own game/vibe-map.html
+open game/vibe-map.html
+cd ~/vibe-map-*
+vibe check --fork               # or one challenge: exists, config, topic, repair
+```
+
+Your camp's `config/camp.toml` is your journey: who you are, how hard, which theme. The fork's `src/config/00-config.js` is the game itself: world scale, island radius, palette. Change the first and your game changes; change the second and the game changes. Break the fork on purpose, run `just record`, repair it, run `just record` again: that is the repair challenge, and nothing you do in there touches the course you are playing.
+
+## 5. Once a week (five minutes)
 
 ```bash
 cd ~/vibe-map-*
@@ -94,13 +111,13 @@ git add -A && git commit -m "Week: what I learned" && git push
 
 In a camp the feed lands in `.vibe/news.json` and the vault note News, and `vibe play` opens the hosted game, which carries its own news. Baking the news into a game file (`just build`) only exists in the product repository. If you forked the product on GitHub, its `news` action does the first line for you every Monday, and Pages redeploys the hosted game with the fresh News card.
 
-## 5. Keep the three windows side by side
+## 6. Keep the three windows side by side
 
 With AeroSpace (`vibe dotfiles install aerospace`): alt-shift-a moves a window to workspace A. Put the browser and Obsidian on A, the terminal on T; alt-a and alt-t switch. Without it: three windows, Cmd-Tab.
 
 `just camp` opens all three at once: the game in the browser, the vault in Obsidian, and the terminal with `vibe status`.
 
-## 6. When you come back after a month
+## 7. When you come back after a month
 
 ```bash
 cd ~/vibe-map-*
@@ -112,7 +129,7 @@ vibe news                   # what happened meanwhile
 
 The game in the browser still has your progress (it lives in the browser's storage); the terminal has the same in `.vibe/state.json`; the vault has it as notes. If they disagree, the progress code wins: export from the game, import in the terminal, rebuild the vault.
 
-## 7. If something breaks
+## 8. If something breaks
 
 | You see | Do |
 |---|---|

@@ -473,3 +473,66 @@ def test_the_progress_code_carries_verified_mentors() -> None:
 def test_an_unknown_mentor_id_is_refused(tmp_path: Path) -> None:
     out = _run(_camp(tmp_path), "check", "--mentor", "nobody")
     assert out.returncode == 1 and "unknown mentor" in out.stdout
+
+
+def test_mentor_start_scaffolds_the_folder_without_passing_the_check(
+    tmp_path: Path,
+) -> None:
+    camp = _camp(tmp_path)
+    out = _run(camp, "mentor", "hashimoto", "--start")
+    assert out.returncode == 0, out.stdout + out.stderr
+    here = camp / "workspace" / "mentors" / "hashimoto"
+    assert (here / "config.ghostty").exists() and (here / "notes.md").exists()
+    assert "One readable config file" in out.stdout and "10 minutes" in out.stdout
+    assert "vibe check --mentor hashimoto" in out.stdout
+    # A scaffold is a starting point: the check stays red and says what is missing.
+    out = _run(camp, "check", "--mentor", "hashimoto")
+    assert "fail" in out.stdout and "config.ghostty" in out.stdout
+    assert json.loads((camp / ".vibe" / "state.json").read_text())["mentors"] == []
+    # Work already in the folder is never overwritten.
+    (here / "notes.md").write_text("## What I learned\nMine.\n")
+    out = _run(camp, "mentor", "hashimoto", "--start")
+    assert "kept your" in out.stdout
+    assert "Mine." in (here / "notes.md").read_text()
+
+
+def test_every_scaffolded_exercise_starts_red(tmp_path: Path, monkeypatch) -> None:
+    from vibemap import quests as quests_module
+    from vibemap.cli import _scaffold_mentor
+    from vibemap.quests import run_quest
+
+    monkeypatch.setattr(quests_module, "MENTORS_DIR", tmp_path)
+    cfg = Config.model_validate({"learner": {"difficulty": "god"}})
+    for m in campaign.mentors():
+        _scaffold_mentor(m)
+        results = run_quest(mentor_quest(m["id"], cfg), cfg)
+        assert not all(r.ok for r in results), m["id"]
+
+
+def test_mentor_lists_the_twelve_and_refuses_an_unknown_id(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    out = _run(camp, "mentor")
+    assert out.returncode == 0, out.stdout + out.stderr
+    for m in campaign.mentors():
+        assert m["id"] in out.stdout
+    assert "Innovation Campus" in out.stdout and "not yet" in out.stdout
+    out = _run(camp, "mentor", "nobody")
+    assert out.returncode == 1 and "unknown mentor" in out.stdout
+
+
+def test_status_counts_encounters_and_artifacts(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    state_path = camp / ".vibe" / "state.json"
+    state = json.loads(state_path.read_text())
+    state["mentors"] = ["torvalds"]
+    state["artifacts"] = ["dock"]
+    state["artifactsBuilt"] = ["dock"]
+    state_path.write_text(json.dumps(state))
+    out = _run(camp, "status")
+    assert "1/12 mentors met" in out.stdout, out.stdout
+    assert "1/20 artifacts (1 built for real)" in out.stdout
+    data = json.loads(_run(camp, "status", "--json").stdout)
+    assert data["mentors"] == ["torvalds"] and data["artifacts"] == ["dock"]
+    assert data["artifacts_built"] == ["dock"]
+    # The keys the regeneration scripts already read are still there.
+    assert set(data) >= {"name", "xp", "level", "done", "persona", "difficulty"}

@@ -29,6 +29,14 @@ jobs:
         run: |
           mkdir -p site
           cp workspace/game/index.html site/index.html
+      # Your fork of the camp game, if you built one and committed it.
+      - name: Your fork at /fork/
+        run: |
+          fork=workspace/forks/vibe-map/game/vibe-map.html
+          if [ -f "$fork" ]; then
+            mkdir -p site/fork
+            cp "$fork" site/fork/index.html
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

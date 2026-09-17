@@ -46,6 +46,16 @@ from vibemap.toolbelt import TOOLS, Tool
 ROOT = project.root()
 
 
+def progress_line(state: State) -> str:
+    """The one progress sentence both screens show, from state alone."""
+    return (
+        f"{state.total_done()}/32 stops, "
+        f"{len(state.mentors)}/{len(campaign.mentors())} mentors met, "
+        f"{len(state.artifacts_built)}/{len(campaign.artifacts())} "
+        "artifacts built for real"
+    )
+
+
 def has_engine() -> bool:
     """True in the product checkout, where the game can be rebuilt."""
     return (ROOT / "tools" / "build.py").exists()
@@ -323,7 +333,7 @@ class Launch(Screen[None]):
             yield Static(
                 f"{self.state.name}, {PERSONAS[self.cfg.learner.persona].label}, "
                 f"{DIFFICULTIES[self.cfg.learner.difficulty].label}. Level {label} "
-                f"({age} age), {self.state.xp} XP, {self.state.total_done()}/32 stops.",
+                f"({age} age), {self.state.xp} XP, {progress_line(self.state)}.",
                 classes="lead",
             )
             if self.cfg.pet.enabled:
@@ -374,7 +384,7 @@ class Map(Screen[None]):
         yield Header(show_clock=False)
         with Vertical(id="map"):
             yield Static(
-                f"{self.state.total_done()}/32 stops, {self.state.xp} XP. "
+                f"{progress_line(self.state)}, {self.state.xp} XP. "
                 "Each row is an island; each cell is a workstream.",
                 classes="lead",
             )
