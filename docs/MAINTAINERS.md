@@ -56,6 +56,18 @@ flowchart LR
 
 People who want the engine press **Use this template** on GitHub or clone this repository; then they have a product checkout that is also a valid camp (it has a `config/camp.toml` and a `workspace/`), which is how the tests and the played instance work.
 
+## Branch protection
+
+`main` is protected on GitHub, and the rules hold for admins too:
+
+- Changes reach `main` only through a pull request whose two CI jobs (lint, unit tests, generated files in sync; Playwright in Chromium and WebKit) are green and whose branch is up to date with `main`.
+- No force pushes, no deletion, review threads resolved before merge.
+- Release tags `v*` are immutable (a tag ruleset refuses updates and deletion).
+- Branches are deleted automatically after their pull request merges.
+- Secret scanning with push protection and Dependabot security updates are on. The played instance `tpetedb/vibe-map-played` refuses force pushes and deletion of `main` but takes direct pushes, because its regeneration script writes to it.
+
+An agent that hits one of these rules reports it; it never works around it.
+
 ## Where the rules live
 
 - `AGENTS.md` (this repository): the file map, ways of working, the test loop, code style. Every agent reads it through `CLAUDE.md`.
