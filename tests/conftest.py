@@ -26,6 +26,10 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "out"
 GAME_PATH = "/game/vibe-map.html"
 STORAGE_KEY = "vibemap1"
+# The two title buttons carry theme wording, so the tests address their place
+# in the form instead of their label.
+GO_BUTTON = "#title .row.go button.primary"
+RESUME_BUTTON = "#btn-continue"
 # One budget for every wait on a page signal. Generous, because a loaded CI
 # runner is slow, not broken; a wait that runs out is a real defect.
 WAIT_MS = 20_000
@@ -172,11 +176,11 @@ class GamePage:
 
     def start(self, name: str = "Lotte") -> None:
         self.page.fill("#name", name)
-        self.page.click("text=Kick off the engagement")
+        self.page.click(GO_BUTTON)
         self._entered()
 
     def resume(self) -> None:
-        self.page.click("text=Resume in-flight workstream")
+        self.page.click(RESUME_BUTTON)
         self._entered()
 
     def walk_to(

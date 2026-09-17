@@ -44,6 +44,6 @@ window.resetSettings=function(){S.settings={};save();applySettings()};
 let resetArmed=null;
 window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;const old=btn.textContent;btn.textContent="Really start over? Click again";btn.classList.add("danger");setTimeout(()=>{if(resetArmed===btn){resetArmed=null;btn.textContent=old;btn.classList.remove("danger")}},5000);return}
   const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{}};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
-  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings};save();
+  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings};save();
   location.replace(location.pathname)};
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});

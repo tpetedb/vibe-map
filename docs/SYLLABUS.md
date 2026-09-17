@@ -108,7 +108,7 @@ This is the hour that separates people who vibe code from people who got lucky o
 
 ### Concept 1: the model has no line of sight into your head
 
-It only has what is in the folder and what you typed. "Make it more impactful" is a request it will fulfil according to its own idea of impact. "Give the mascot a purple badge, keep the stats, do not touch the score" has a scope, a keep-list and a do-not-touch list. That is the entire craft.
+It only has what is in the folder and what you typed. "Make it more impactful" is a request it will fulfil according to its own idea of impact. "Add a badge next to the title, keep the colour and the columns, do not touch anything else" has a scope, a keep-list and a do-not-touch list. That is the entire craft.
 
 ### Do this: break it, then fix it
 
