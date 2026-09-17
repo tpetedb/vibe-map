@@ -55,3 +55,12 @@ def test_no_em_dashes_or_emoji_in_tracked_text() -> None:
     from tools.checks import check_style
 
     assert check_style([]) == 0
+
+
+def test_version_matches_pyproject() -> None:
+    import tomllib
+
+    import vibemap
+
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert vibemap.__version__ == data["project"]["version"]
