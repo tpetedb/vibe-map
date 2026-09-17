@@ -71,8 +71,10 @@ def test_a_fresh_camp_fails_every_note_check(tmp_path: Path) -> None:
 
 
 def test_a_note_in_the_learners_own_words_passes(tmp_path: Path) -> None:
+    # A reading-only stop, where the note is the whole deliverable; the stops
+    # that also leave a file behind are covered in tests/test_stops.py.
     camp = _camp(tmp_path)
-    ws = campaign.evenings()["winter"].workstreams[0]
+    ws = campaign.evenings()["winter"].workstreams[1]
     note = camp / "vault" / "Camp" / f"{safe_title(ws.name)}.md"
     text = note.read_text(encoding="utf-8")
     assert "not done yet" in text
@@ -83,7 +85,7 @@ def test_a_note_in_the_learners_own_words_passes(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    output = _check(camp, "winter", 1)
+    output = _check(camp, "winter", 2)
     assert "pass" in output, output
     assert "fail" not in output, output
 

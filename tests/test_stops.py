@@ -14,7 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
 from tests.conftest import encode_progress
@@ -293,7 +292,6 @@ def test_a_fresh_camp_fails_every_stop(tmp_path: Path) -> None:
         assert output.count("not yet.") == 8, output
 
 
-@pytest.mark.integration
 def test_scripted_deliverables_pass_every_stop(tmp_path: Path) -> None:
     camp = _camp(tmp_path)
     _write_notes(camp)
@@ -305,7 +303,6 @@ def test_scripted_deliverables_pass_every_stop(tmp_path: Path) -> None:
         assert "not yet." not in output, output
 
 
-@pytest.mark.integration
 def test_each_fork_challenge_is_checked_on_its_own(tmp_path: Path) -> None:
     camp = _camp(tmp_path)
     for challenge in quests.FORK_CHALLENGES:
@@ -341,14 +338,13 @@ def test_the_production_island_shows_the_forking_stop(game) -> None:
     game.start("Lotte")
     game.import_code(encode_progress(done_w={"campus": [], "prod": [1, 2, 3, 4, 5]}))
     game.page.evaluate("setWorld('prod')")
-    game.page.wait_for_timeout(1200)
+    game.page.wait_for_function("() => window.__S().world === 'prod'")
     game.open_roadmap()
     buttons = game.workstream_buttons()
     assert len(buttons) == 8
     assert "Fork the game" in (buttons[5].text_content() or "")
     buttons[5].click()
     game.page.wait_for_selector("#sheet .screen.on", state="attached")
-    game.page.wait_for_timeout(500)
     text = game.page.text_content("#sheet .screen.on") or ""
     for word in ("vibe fork", "src/config/00-config.js", "vibe check --fork"):
         assert word in text, word
