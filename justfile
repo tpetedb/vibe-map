@@ -71,6 +71,11 @@ media:
 cookbook:
     uv run python tools/gen_cookbook.py
 
+# fetch the claude-obsidian skill set (MIT) and print how to load it on this vault
+obsidian-plugin:
+    @test -d ~/.claude/plugins/claude-obsidian || git clone --depth 1 https://github.com/AgriciDaniel/claude-obsidian.git ~/.claude/plugins/claude-obsidian
+    @echo 'claude --plugin-dir ~/.claude/plugins/claude-obsidian   # then /claude-obsidian:wiki-lint on vault/'
+
 # terminal setup modules from Tom's toolbox: `just dotfiles` lists, `just dotfiles install zsh` writes
 dotfiles *args:
     uv run vibe dotfiles {{args}}

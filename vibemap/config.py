@@ -59,9 +59,13 @@ class GameConfig(_Strict):
     show_pairings: bool | None = None
 
 
+VaultMode = Literal["full", "grow"]
+
+
 class VaultConfig(_Strict):
     path: str = "vault"
     folder: str = "Camp"
+    mode: VaultMode = "full"
 
 
 class PetConfig(_Strict):
@@ -141,6 +145,8 @@ class Config(_Strict):
             "[vault]",
             f"path = {_q(self.vault.path)}",
             f"folder = {_q(self.vault.folder)}",
+            f"mode = {_q(self.vault.mode)}"
+            "  # full (every note from day one) | grow (notes unlock as you play)",
             "",
             "[pet]  # the terminal companion; empty means what your name rolled",
             f"enabled = {str(self.pet.enabled).lower()}",

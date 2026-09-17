@@ -135,3 +135,9 @@ Jesse Vincent, Matt Pocock and Seth Hobson are cited in section 1 through their 
 | Motion 12 | MIT | springs on the sheet, the roadmap and the KPI count-up; optional |
 | d3-force 3 (with d3-quadtree, d3-timer, d3-dispatch) | ISC | the vault graph: a cooled simulation with collision, pan and zoom |
 | Lucide | ISC | the icons on every button in the HUD, the sheet and the vault toolbar |
+
+## Obsidian and agents
+
+| Tool | Repo | What it adds |
+|---|---|---|
+| claude-obsidian | [AgriciDaniel/claude-obsidian](https://github.com/AgriciDaniel/claude-obsidian) (MIT) | Fifteen Claude Code skills for a wiki-style vault: `/claude-obsidian:wiki` initialises and routes, `wiki-ingest` turns sources into linked pages with provenance, `wiki-query` answers read-only from the vault, `wiki-lint` reports dead links, orphans and stale indexes, `wiki-mode` supports LYT, PARA and Zettelkasten filing. `just obsidian-plugin` clones it; then `claude --plugin-dir ~/.claude/plugins/claude-obsidian` in this repo gives Claude those skills on `vault/`. |

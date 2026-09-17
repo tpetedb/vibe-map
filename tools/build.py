@@ -98,6 +98,7 @@ def _config_js() -> str:
         "difficulty": cfg.learner.difficulty,
         "persona": cfg.learner.persona,
         "mode": cfg.learner.mode,
+        "vault": {"mode": cfg.vault.mode},
     }
     return "const CONFIG=" + json.dumps(data, ensure_ascii=False) + ";\n"
 

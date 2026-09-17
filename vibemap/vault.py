@@ -172,6 +172,12 @@ class Vault:
             self._write_tonight(persona),
         ]
         self._write_graph_config()
+        if self.cfg.vault.mode == "grow":
+            from vibemap import grow  # local import: grow imports this module's types
+
+            grow.sync(self)
+            self._write_tonight(persona)
+            grow.sync(self)
         return [p for group in written for p in group]
 
     def _write_tonight(self, persona: Persona) -> list[Path]:
@@ -201,6 +207,18 @@ class Vault:
                 f"- [[{ev.short}]] {ev.title.split(': ', 1)[1]}: "
                 f"{len(self.state.done_w.get(w, []))}/8 on the {ev.island}"
             )
+        if self.cfg.vault.mode == "grow":
+            from vibemap import grow
+
+            lib = grow.library_dir(self)
+            waiting = len(list(lib.glob("*.md"))) if lib.exists() else 0
+            here = len(self.notes())
+            lines += [
+                "",
+                "## The vault grows as you play",
+                f"{here} notes here, {waiting} waiting in `_library`. "
+                + grow.next_hint(self),
+            ]
         lines += ["", "## Hot cache"]
         recent = self.state.log[-5:][::-1]
         if recent:
@@ -444,8 +462,21 @@ class Vault:
                 )
         return out
 
+    def _write_ignore_filters(self, cfg_dir: Path) -> None:
+        """Grow mode hides the library from the graph, search and completion."""
+        app = cfg_dir / "app.json"
+        if not app.exists():
+            return
+        conf = json.loads(app.read_text(encoding="utf-8"))
+        filters = [f for f in conf.get("userIgnoreFilters", []) if f != "_library/"]
+        if self.cfg.vault.mode == "grow":
+            filters.append("_library/")
+        conf["userIgnoreFilters"] = filters
+        app.write_text(json.dumps(conf, indent=2) + "\n", encoding="utf-8")
+
     def _write_graph_config(self) -> None:
         cfg_dir = ROOT / self.cfg.vault.path / ".obsidian"
+        self._write_ignore_filters(cfg_dir)
         p = cfg_dir / "graph.json"
         if not p.exists():
             return
@@ -481,6 +512,11 @@ class Vault:
     def lint(self) -> LintReport:
         notes = self.notes()
         titles = {p.stem for p in notes}
+        # In grow mode a link into the library is a note not yet unlocked,
+        # not a dead one.
+        library = self.dir.parent / "_library"
+        if library.exists():
+            titles |= {p.stem for p in library.glob("*.md")}
         inbound: dict[str, int] = {t: 0 for t in titles}
         report = LintReport(notes=len(notes))
         links = 0

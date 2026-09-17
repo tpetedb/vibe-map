@@ -104,3 +104,17 @@ What to run:
 5. Sources: real URLs only, one per line.
 6. Tags: from the legend above, on the last line.
 7. Map: `Map.md` renders after `vibe map`.
+
+## Grow mode
+
+`vibe vault mode grow` (or the Vault choice in `just start`) turns the vault into something you earn. The camp folder starts with the hubs (Tonight, Map, Your field, Your path, Artifacts, Tech tree, Resources, the people); every other note waits in `vault/_library`, which Obsidian excludes from the graph, search and link completion (`userIgnoreFilters` in `.obsidian/app.json`). A note moves into the camp when the campaign unlocks it:
+
+| You do | What unlocks |
+|---|---|
+| finish a stop (`vibe check` or the game) | the workstream note and every note it links to |
+| inspect an artifact on the island | the notes the artifact points at |
+| go deep with a mentor | the mentor's note |
+| finish the 22:00 stop (the vault) | the thirty-five Obsidian feature notes |
+| `vibe vault unlock "Git"` | that one note, by hand |
+
+Tonight says how many notes are here and how many are waiting, and what unlocks the next ones. `vibe vault mode full` moves everything back. Notes you write yourself are never moved: only titles listed in `_library/.index` belong to the library. The game's own vault applies the same rules from its state (`?vault=grow` on the URL previews it), so the graph you see in the browser grows at the same pace.

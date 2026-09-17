@@ -1,12 +1,26 @@
 // One colour per shelf of the tree; the same map drives the Obsidian graph groups.
 const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",data:"#00D084",net:"#0088CC",ship:"#F04923",agents:"#D32F2F",docs:"#C29200",knowledge:"#FFA94D",future:"#CCCCCC"};
+// Grow mode (vibe.toml [vault] mode, or ?vault=grow for a look): the vault
+// starts with the hubs and unlocks a note when the campaign earns it, the
+// same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
+// they just do not enter the graph yet.
+const VAULT_MODE=new URLSearchParams(location.search).get("vault")||(CONFIG.vault&&CONFIG.vault.mode)||"full";
+const ALWAYS_NOTES=["Tonight","Workstreams","Your path","Artifacts","Tech tree","Resources","Template repo","Terminal companion","Tom","Rolinda","Rolinda's questions","Lotte","Beverage stack"];
+let UNLOCKED=null;
+function linksOf(md){const out=[];const re=/\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;let m;while((m=re.exec(md.replace(/```[\s\S]*?```/g,"").replace(/`[^`\n]*`/g,""))))out.push(m[1].trim());return out}
+function computeUnlocked(){const keys=Object.keys(NOTES);if(VAULT_MODE!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
+  const byLower={};keys.forEach(k=>byLower[k.toLowerCase()]=k);
+  Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;const title=ws&&byLower[ws.n.toLowerCase()];if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
+  MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
+  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(S.artifacts.includes(a.id))a.links.forEach(t=>{if(NOTES[t])set.add(t)})});
+  return set}
 let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vctxScale=1,vz=1,vtx=0,vty=0;
 const vToWorld=(sx,sy)=>[(sx-vtx)/vz,(sy-vty)/vz];
 // The layout is a d3-force simulation: charge, links, a weak pull to the
 // centre and collision. It cools and stops on its own; a drag or a fresh
 // build reheats it. Nothing moves once alpha has decayed, so the graph settles.
 function buildGraph(){
-  VN=Object.keys(NOTES).map((id,i)=>({id,t:NOTES[id].t,x:0,y:0,vx:0,vy:0,deg:0}));const idx={};VN.forEach((n,i)=>idx[n.id]=i);VL=[];
+  UNLOCKED=computeUnlocked();VN=Object.keys(NOTES).filter(id=>UNLOCKED.has(id)).map((id,i)=>({id,t:NOTES[id].t,x:0,y:0,vx:0,vy:0,deg:0}));const idx={};VN.forEach((n,i)=>idx[n.id]=i);VL=[];
   VN.forEach(n=>{const re=/\[\[([^\]]+)\]\]/g;let m;const seen={};while((m=re.exec(NOTES[n.id].md))){const to=m[1];if(idx[to]!==undefined&&to!==n.id&&!seen[to]){seen[to]=1;VL.push([idx[n.id],idx[to]]);n.deg++;VN[idx[to]].deg++}}});
   const cv=$("vg");vW=cv.clientWidth;vH=cv.clientHeight;vctxScale=Math.min(2,devicePixelRatio||1);cv.width=vW*vctxScale;cv.height=vH*vctxScale;vctx=cv.getContext("2d");
   VN.forEach((n,i)=>{const a=i/VN.length*Math.PI*2;n.x=vW/2+Math.cos(a)*Math.min(vW,vH)*.35;n.y=vH/2+Math.sin(a)*Math.min(vW,vH)*.35});
@@ -46,13 +60,13 @@ function vrender(id){
     if(l.startsWith("- "))return "<li>"+l.slice(2)+"</li>";
     if(l.startsWith("#")&&!l.includes(" "))return '<span class="tag">'+l+"</span>";
     return l?"<p>"+l+"</p>":""}).join("").replace(/<\/li><li>/g,"</li><li>").replace(/(<li>.*?<\/li>)+/g,m=>"<ul>"+m+"</ul>");
-  html=html.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,"<code>$1</code>").replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[\[([^\]]+)\]\]/g,(m,t)=>NOTES[t]?'<span class="wl" data-n="'+t+'">'+t+'</span>':t);
+  html=html.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,"<code>$1</code>").replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[\[([^\]]+)\]\]/g,(m,t)=>NOTES[t]?(UNLOCKED&&!UNLOCKED.has(t)?'<span class="wl locked" title="Not unlocked yet: finish the stop, meet the mentor or inspect the artifact that leads here">'+t+'</span>':'<span class="wl" data-n="'+t+'">'+t+'</span>'):t);
   const back=VN.filter(n=>n.id!==id&&NOTES[n.id].md.includes("[["+id+"]]")).map(n=>'<span class="wl" data-n="'+n.id+'">'+n.id+'</span>').join("");
   html+='<div class="bl"><h2>Linked from</h2>'+(back||'<span class="muted">nothing yet</span>')+'</div>';
-  $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
+  $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl:not(.locked)").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
   if(vctx)vdraw();
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=VN.length+" notes · "+VL.length+" links · tap a node, drag to arrange";
+window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(VAULT_MODE==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
   let pan=null;vz=1;vtx=0;vty=0;
   cv.onpointerdown=e=>{const [sx,sy]=pos(e);const [x,y]=vToWorld(sx,sy);const i=vpick(x,y);moved=false;cv.setPointerCapture(e.pointerId);if(i!==null){vdrag=VN[i];vdrag.fx=vdrag.x;vdrag.fy=vdrag.y}else pan={sx,sy,tx:vtx,ty:vty}};

@@ -65,6 +65,7 @@ class State(BaseModel):
     checks: dict[str, CheckRecord] = Field(default_factory=dict)
     roadmap_done: list[str] = Field(default_factory=list)
     artifacts: list[str] = Field(default_factory=list)
+    unlocked: list[str] = Field(default_factory=list)
 
     @property
     def done(self) -> list[int]:

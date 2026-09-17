@@ -307,6 +307,49 @@ def vault_build(ctx: Ctx) -> None:
     )
 
 
+@vault.command("mode")
+@click.argument("mode", required=False, type=click.Choice(["full", "grow"]))
+@pass_ctx
+def vault_mode(ctx: Ctx, mode: str | None) -> None:
+    """full: every note from day one. grow: the vault fills up as you play."""
+    from vibemap import grow
+
+    if mode is None:
+        console.print(f"vault mode = [path]{ctx.cfg.vault.mode}[/]")
+        return
+    data = ctx.cfg.model_dump()
+    data["vault"]["mode"] = mode
+    cfg = Config.model_validate(data)
+    cfg.save(CONFIG_PATH)
+    ctx.cfg = cfg
+    ctx.vault = Vault(cfg, ctx.state)
+    if mode == "full":
+        moved = grow.restore_all(ctx.vault)
+        ctx.vault.build(ctx.persona)
+        console.print(f"[ok]full[/]: {moved} notes back from the library.")
+    else:
+        ctx.vault.build(ctx.persona)
+        here, waiting = grow.sync(ctx.vault)
+        console.print(
+            f"[ok]grow[/]: {here} notes in the camp, {waiting} waiting in "
+            f"vault/_library. {grow.next_hint(ctx.vault)}"
+        )
+
+
+@vault.command("unlock")
+@click.argument("title")
+@pass_ctx
+def vault_unlock(ctx: Ctx, title: str) -> None:
+    """Unlock one note by hand in grow mode."""
+    from vibemap import grow
+
+    p = grow.unlock(ctx.vault, title)
+    if p is None:
+        _fail(f"no note called {title!r} in the camp or the library")
+    ctx.save()
+    console.print(f"[ok]unlocked[/] {p.relative_to(ROOT)}")
+
+
 @vault.command("lint")
 @pass_ctx
 def vault_lint(ctx: Ctx) -> None:
