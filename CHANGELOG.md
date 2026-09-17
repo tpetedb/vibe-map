@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A fresh-camp end-to-end run: `tools/fresh_camp.py` installs nothing, starts the `vibe` process a learner installs, makes a camp with `vibe new`, proves that workstream 1, workstream 3 and a winter note check all refuse on an empty camp, scripts the two campus deliverables, proves the checks then pass, exports the progress code and imports it into a second camp. It runs nightly against `uv tool install .`, and `tests/test_fresh_camp.py` runs the same journey against the checkout.
+- A `nightly` workflow for everything marked `integration`: the fresh-camp run and the full play-through, on a nightly schedule, on every `v*` tag and on demand. `ci` keeps the pull-request loop fast.
+- A `browser` marker, applied automatically to any test that takes a browser fixture, so CI can split the battery without anyone labelling a new test by hand. Tests that read the workflows back assert the split holds.
+
+### Changed
+
+- CI runs the whole battery. It used to run three unit files and three browser files, which left ten test files (artifacts, reset, grow, onboarding, notes, obsidian, pet, project, news, dotfiles) running nowhere but a maintainer's laptop. The WebKit file is now its own step with one rerun of what failed, which tells a lost WebGL context apart from a real defect, and the pytest command no longer passes a second `-q` that was swallowing the summary of failures.
+
+### Fixed
+
+- The browser tests wait for signals the page produces instead of for a wall clock: the walker's own frame counter (a new read-only seam next to `window.__debug()`), the demo scripts behind the artifact terminal (`window.__demos()`), a settle helper for a spring or a smooth scroll, and the state, note or message a click actually produces. Every `wait_for_timeout` is gone from `tests/` and from `tools/play.py`. The fixed waits were hiding a failure: the game falls back to the roadmap list when the 3D scene will not start, and a test that waited 600 ms carried on regardless. It now fails loudly, which is how a seeded record with an out-of-range stop number was found.
+
 ## [0.8.0] - 2026-09-17
 
 ### Changed

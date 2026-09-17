@@ -1,0 +1,64 @@
+# The slow end of the battery: everything marked `integration`. It runs once a
+# night, on every release tag, and on demand from the Actions tab, so ci.yml
+# stays a few minutes on a pull request while these two runs still gate a
+# release. A red night is a bug report, not a blocked merge.
+name: nightly
+
+on:
+  schedule:
+    # 03:00 UTC, after the news pull and well before anyone reads the result.
+    - cron: "0 3 * * *"
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.12.x"
+
+jobs:
+  fresh-camp:
+    name: a camp from nothing, with the installed command
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      # The point of this job is the package a learner installs, not the
+      # checkout: `vibe` comes from a wheel built here and put on PATH.
+      - name: Install vibe from the checkout
+        run: |
+          uv tool install .
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: vibe --version
+      # `vibe new` makes the camp's first commit, which needs an identity.
+      - name: Give git an identity for the camp's first commit
+        run: |
+          git config --global user.name "vibe ci"
+          git config --global user.email "actions@users.noreply.github.com"
+      - name: vibe new, the checks that refuse, the checks that pass, the code
+        run: python3 tools/fresh_camp.py
+
+  playthrough:
+    name: every island, every stop, every mentor, the finale
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv run playwright install chromium
+      - run: uv run pytest -m integration tests/test_game_playthrough.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playthrough-screenshots
+          path: tests/out/
+          if-no-files-found: ignore
