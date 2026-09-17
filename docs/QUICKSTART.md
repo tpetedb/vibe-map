@@ -18,7 +18,7 @@ Three ways in, from nothing installed to a full camp. Every step is a command yo
 
    You should see the island turning behind the title panel. One file, three.js embedded, no CDN, works on a phone and offline.
 
-3. Type a name, press **Kick off the engagement**, walk to the 18:00 signpost. The first workstream opens with a full lesson, a definition of done and one question from Rolinda.
+3. Type a name, press **Start**, walk to the 18:00 signpost. The first workstream opens with a full lesson, a definition of done and one question from Rolinda.
 
 Progress lives in the browser. When you later install the CLI, **Roadmap, Export progress** gives a code you paste into `vibe import`.
 

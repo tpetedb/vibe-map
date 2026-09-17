@@ -7,7 +7,7 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
-from tests.conftest import GamePage
+from tests.conftest import GO_BUTTON, GamePage
 from vibemap.cli import camp_dir_name, cli
 
 
@@ -100,7 +100,7 @@ def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(
     assert "vibe new ~/vibe-map-frank-" in guide
     assert "vibe difficulty hard" in guide
     assert "vibe name 'Frank'" in guide
-    page.click("text=Kick off the engagement")
+    page.click(GO_BUTTON)
     page.wait_for_selector("#title.off", state="attached")
     s = game.state()
     assert s["name"] == "Frank" and s["look"] == "frank"
@@ -151,7 +151,7 @@ def test_an_empty_name_refuses_to_start(game: GamePage) -> None:
     """The placeholder is a placeholder; it never becomes the player's name."""
     page = game.goto().page
     page.click("#onboard button.choice:has-text('Your own name')")
-    page.click("text=Kick off the engagement")
+    page.click(GO_BUTTON)
     # Nothing to wait for: the hint is the only thing an empty name produces.
     page.wait_for_selector("#namehint:has-text('Type your name first')")
     assert page.is_visible("#title")
@@ -162,7 +162,7 @@ def test_an_empty_name_refuses_to_start(game: GamePage) -> None:
     assert "Evening 1" in (page.text_content("#hud-name") or "")
     page.fill("#name", "Lotte")
     page.dispatch_event("#name", "input")
-    page.click("text=Kick off the engagement")
+    page.click(GO_BUTTON)
     page.wait_for_selector("#title.off", state="attached")
     assert game.state()["name"] == "Lotte"
     assert game.errors == []

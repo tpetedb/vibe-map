@@ -191,15 +191,30 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
 /* The artifact demos print like a terminal: mono, one line per step. */
 .term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
-.mascot{display:flex;gap:16px;align-items:center;margin-top:8px}
-.mascot svg{width:96px;height:96px;flex:0 0 96px;background:var(--panel2);border-radius:18px;border:1px solid var(--line)}
-.mascot h3{font-size:16px;text-transform:none;letter-spacing:-.01em;color:var(--ink);margin:0 0 2px;font-family:Sora,sans-serif}
+/* The workstream 2 demo component: one card, two change requests. */
+.demo{margin:10px 0}
+.demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
+.demo-card.serif{font-family:Georgia,"Times New Roman",serif}
+.demo-card h4{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.demo-badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:var(--blue);color:#fff;border-radius:999px;padding:2px 8px}
+.demo-card table{border-collapse:collapse;width:100%;font-size:14px}
+.demo-card th{text-align:left;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px 4px 0}
+.demo-card td{padding:3px 12px 3px 0;color:var(--ink)}
 .stats{display:grid;grid-template-columns:auto 1fr;gap:1px 14px;font-size:14px}
 .stats b{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:3px}
 .prompt{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
-.ledger{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start}
-.ledger table{border-collapse:collapse;font-size:14px}.ledger td{padding:3px 12px 3px 0;color:var(--muted)}.ledger td.num{color:var(--ink);font-weight:700;font-family:Sora,sans-serif}
-.chart,.web{width:100%;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px}.chart{height:150px}.web{height:300px}
+/* The workstream 3 schema demo, and the workstream 1 prompt it writes out. */
+.schema{margin-top:10px}
+table.csv{border-collapse:collapse;width:100%;font-size:13px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+table.csv th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 10px 4px 0;white-space:nowrap}
+table.csv th.changed{color:var(--red-bright)}
+table.csv td{padding:2px 10px 2px 0;color:var(--ink);white-space:nowrap}
+.schema{overflow-x:auto}
+pre.sql,pre.out{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:var(--radius-m);padding:10px 12px;margin:10px 0;font-size:12.5px;white-space:pre-wrap;overflow-x:auto}
+pre.out{color:var(--muted)}
+pre.out.err{color:var(--red-bright);border-color:var(--red)}
+#pitch{width:100%;min-height:76px}
+.web{width:100%;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;height:300px}
 .versions{list-style:none;padding:0;margin:10px 0}.versions li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;align-items:center}.versions li button{padding:6px 12px;font-size:12px}
 .bridge{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}.bridge:first-of-type{border-top:0}.bridge button{min-width:110px}.bridge span{font-size:14px}
 .bridge.on button{background:var(--green);border-color:transparent;color:#000}
@@ -293,13 +308,13 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
+  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
-  <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
-  <div class="kpi"><b id="k2">0%</b><span>Synergy</span></div>
-  <div class="kpi"><b id="k3">0</b><span>Integrations</span></div>
-  <div class="kpi"><b id="k4">0</b><span>Artifacts</span></div>
+  <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
+  <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
+  <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
+  <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
 </div>
 
 <div class="ui" id="bottom">
@@ -316,13 +331,13 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
     <p class="kicker"><b>vibe</b> · evening 1 of 4 · eight workstreams</p>
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
-    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
     <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"></div>
     <p class="small muted" id="namehint" style="margin-top:-8px">Type your name plainly.</p>
-    <div class="row go"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+    <div class="row go"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
+    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
     <p class="small">This is Evening 1 of a four-evening campaign. The other three islands (history and how the models work, from vibes to determinism, terminal and git) are one World button away, and real people from the field stand on them: Karpathy, LeCun, Hinton, Fei-Fei Li, Sutton, Amodei, Olah, Cherny, Wu, Hashimoto, Torvalds. Talk to them or walk past; your choices become your path in the vault. Built for a MacBook with Apple silicon and Chrome.</p>
@@ -395,9 +410,12 @@ brew install jq</code></pre>
   <p>Before the first glass is empty we ship a minimum viable product to production. You articulate the north-star vision in a three-sentence elevator pitch. Tom imposes one non-negotiable guardrail: single-file architecture, no third-party dependencies, zero technical debt on day one. Then it exists. Time to value: sub ten minutes. Please update your priors accordingly.</p>
   <p>No knowledge transfer takes place this hour. This is intentional. We front-load the quick win, socialise the outcome, and backload the target operating model into subsequent workstreams.</p>
   <div class="card">
-    <h3>Proof of concept</h3>
-    <div class="row"><button class="primary" onclick="spinUp()">Spin up an AI-powered synergy agent</button><button onclick="spinUp()">Again</button></div>
-    <div id="mascot" class="mascot"></div>
+    <h3>Your three sentences</h3>
+    <p class="small muted">What is it, who plays it, how do you win. Type them here and the prompt you paste into Claude Code is written out below, with Tom's guardrail already attached.</p>
+    <textarea id="pitch" rows="3" placeholder="A one-button game about a cat crossing a road. Anyone can play it in ten seconds. You win by crossing five times without stopping." oninput="pitchTyped(this.value)"></textarea>
+    <pre class="out" id="pitch-out"></pre>
+    <p class="small muted" id="pitch-note"></p>
+    <div class="row"><button class="primary" id="pitch-copy" onclick="copyPitch()">Copy the prompt</button></div>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Ship an MVP</h3>
 <p>The goal of this hour is one thing: a playable game exists before the first glass, or cup, is empty. We explain almost nothing. That is the design.</p>
@@ -439,11 +457,13 @@ brew install jq</code></pre>
   <p>Tom asks you to make the MVP "more impactful". It regresses across every dimension of the scorecard. Then you raise one well-scoped, outcome-oriented change request with explicit in-scope and out-of-scope sections, and it lands first time, on time, on budget. Key learning for the lessons-learned log: the agent has zero line of sight into your mental model. Specificity is not a nice-to-have. Specificity is the deliverable.</p>
   <p>Anything you catch yourself repeating gets codified into a skill: a living playbook the agent ingests automatically at every touchpoint, so you stop re-onboarding it session after session. Think of it as a standing operating procedure with executive sign-off.</p>
   <div class="card">
-    <h3>Stakeholder communication</h3>
-    <div id="mascot2" class="mascot"></div>
+    <h3>The same change, asked for two ways</h3>
+    <p class="small muted">One component, two change requests. Press either and watch what the agent is free to touch.</p>
+    <div id="card-demo" class="demo"></div>
     <button class="prompt" onclick="speak(false)">"Make it more impactful."</button>
-    <button class="prompt" onclick="speak(true)">"Give it a purple badge. Keep its stats. Do not touch anything else."</button>
+    <button class="prompt" onclick="speak(true)">"Add a small badge next to the title. Keep the title, the colour, the columns and the font exactly as they are."</button>
     <p id="speak-out" class="muted small"></p>
+    <div class="row"><button onclick="resetCard()">Start over</button></div>
   </div>
   <div class="card">
     <h3>Your first playbook</h3>
@@ -457,7 +477,7 @@ brew install jq</code></pre>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Specificity, CLAUDE.md and your first skill</h3>
 <p>This is the hour that separates people who vibe code from people who got lucky once.</p>
 <h4>Concept 1: the model has no line of sight into your head</h4>
-<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Give the mascot a purple badge, keep the stats, do not touch the score&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
+<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Add a badge next to the title, keep the colour and the columns, do not touch anything else&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
 <h4>Do this: break it, then fix it</h4>
 <ol>
 <li>Ask for the vague thing and watch what happens:</li>
@@ -521,17 +541,10 @@ When adding a feature:
   <p>The MVP pivots to a data-driven, insight-led, metrics-first posture. Every session is persisted to a file, which we will refer to as the enterprise data warehouse for the remainder of the evening. Then we surface actionable insights: top performers, rolling averages, streak analytics, all visualised on a self-serve dashboard. You will observe that the file rapidly becomes the single source of truth and the game a mere presentation layer.</p>
   <p>Data requires a fixed location and a governed schema. Relocate the file, rename a column, and downstream dashboards are impacted, incidents are raised, and Tom is paged. This is the precise moment a folder graduates into a platform.</p>
   <div class="card">
-    <h3>Capture and report</h3>
-    <div class="row"><button class="primary" onclick="roll(1)">Log a run</button><button onclick="roll(10)">Log ten runs</button><button onclick="clearLedger()">Purge the data lake</button></div>
-    <div class="ledger">
-      <table><tbody>
-        <tr><td>Rolls</td><td class="num" id="l-n">0</td></tr>
-        <tr><td>Mean</td><td class="num" id="l-mean">0</td></tr>
-        <tr><td>Best</td><td class="num" id="l-best">0</td></tr>
-        <tr><td>Twenties</td><td class="num" id="l-crit">0</td></tr>
-      </tbody></table>
-      <svg class="chart" id="chart" viewBox="0 0 200 100" preserveAspectRatio="none" aria-label="Histogram of rolls"></svg>
-    </div>
+    <h3>The column names are the contract</h3>
+    <p class="small muted">The same rows and the same query. Rename one column and watch every reader of the file go red.</p>
+    <div class="row"><button class="primary" onclick="renameColumn('points')">Rename score to points</button><button onclick="renameColumn('score')">Rename it back</button></div>
+    <div id="schema" class="schema"></div>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Persisted scores and a dashboard</h3>
 <p>Time to feed the spreadsheet person. The game learns to remember, the data gets a home, and the home turns out to matter more than the game.</p>
@@ -817,7 +830,7 @@ gh auth login</code></pre>
 </script>
 <script>
 (function(){
-const CONFIG={"version": "0.8.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda."}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "mode": "campaign", "vault": {"mode": "full"}};
+const CONFIG={"version": "0.8.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda.", "taglineSuffix": "Four evenings, eight stops each, at your own pace.", "goLabel": "Start", "resumeLabel": "Resume", "stopLabel": "Stops", "kpiLabels": ["Progress", "Streak", "Connections", "Found"]}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "mode": "campaign", "vault": {"mode": "full"}};
 const NEWS={"fetched_at": "2026-09-17T01:07:07Z", "items": [{"source": "Claude Code releases", "title": "v2.1.274", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274", "date": "2026-09-17T00:12:02Z"}, {"source": "Simon Willison", "title": "datasette 1.0a40", "link": "https://simonwillison.net/2026/Sep/16/datasette/", "date": "2026-09-16T23:51:43Z"}, {"source": "Simon Willison", "title": "datasette 0.65.5", "link": "https://simonwillison.net/2026/Sep/16/datasette-2/", "date": "2026-09-16T23:51:08Z"}, {"source": "GitHub changelog", "title": "Automate SSO authorization for classic PATs and SSH keys", "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys", "date": "2026-09-16T20:20:16Z"}, {"source": "GitHub changelog", "title": "SCIM user responses now include a profileUrl attribute", "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute", "date": "2026-09-16T20:19:58Z"}, {"source": "GitHub changelog", "title": "Copilot budget increase requests are generally available", "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available", "date": "2026-09-16T20:17:18Z"}, {"source": "Simon Willison", "title": "Claude Cowork and chat are now one Claude", "link": "https://simonwillison.net/2026/Sep/16/one-claude/", "date": "2026-09-16T18:09:49Z"}, {"source": "OpenAI news", "title": "Our framework for reporting model misalignment", "link": "https://openai.com/index/model-misalignment-reporting-framework", "date": "2026-09-16T17:00:00Z"}, {"source": "Simon Willison", "title": "Quoting Mustafa Suleyman", "link": "https://simonwillison.net/2026/Sep/16/mustafa-suleyman/", "date": "2026-09-16T16:00:54Z"}, {"source": "OpenAI news", "title": "Helping older adults use AI in everyday life", "link": "https://openai.com/index/helping-older-adults-use-ai-in-everyday-life", "date": "2026-09-16T16:00:00Z"}, {"source": "GitHub changelog", "title": "Code scanning AI Scan no longer requires CodeQL default setup", "link": "https://github.blog/changelog/2026-09-16-code-scanning-ai-scan-no-longer-requires-codeql-default-setup", "date": "2026-09-16T13:26:06Z"}, {"source": "OpenAI news", "title": "Reimagining advertising with AI", "link": "https://openai.com/index/reimagining-advertising-with-ai", "date": "2026-09-16T13:00:00Z"}, {"source": "OpenAI news", "title": "How to connect AI usage to business value", "link": "https://openai.com/index/how-to-connect-ai-usage-to-business-value", "date": "2026-09-16T12:00:00Z"}, {"source": "OpenAI news", "title": "How workers are unlocking new ways of working", "link": "https://openai.com/index/unlocking-new-ways-of-working", "date": "2026-09-16T09:00:00Z"}, {"source": "arXiv cs.AI", "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search", "link": "https://arxiv.org/abs/2609.13356", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation", "link": "https://arxiv.org/abs/2609.13396", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Generalized Agent Iteration: One Formal Framework for Iterative Policy Improvement and Recursive Self-Improvement", "link": "https://arxiv.org/abs/2609.13406", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Vibe Patenting: Evaluating LLM Judges for Professional Patent-Drafting Agents", "link": "https://arxiv.org/abs/2609.13422", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Toward Self-Adaptive Physical AI: Can LLM Agents Manage Long-Horizon Physical Tasks?", "link": "https://arxiv.org/abs/2609.13436", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "LabAgent: Customize Any Research Hubs for Scientific Discoveries Using AI Agents", "link": "https://arxiv.org/abs/2609.13437", "date": "2026-09-16T04:00:00Z"}]};
 // Source configuration for the game: the numbers and colours a fork changes
 // first. The build concatenates every file in src/config/ ahead of the game
@@ -891,7 +904,7 @@ const SAY_PLAIN={
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
-let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[]};
+let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -1591,8 +1604,8 @@ function open(n){
   if((S.world||"campus")!=="campus"){if(n===9){renderEveningDone();say("fin");openSheet("s-gen");return}const w=CH[n-1];const done=S.done.includes(n);
     $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html}<div class="row"><button class="primary" onclick="claim(${n})">${done?"Back to the island":"Mark as done and unlock the OKR"}</button><button onclick="closeSheet()">Back to the island</button></div>`;
     $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, Head of Hospitality Operations";$("bub-text").textContent="Same rule as always: explain it to me in one sentence when you are done.";openSheet("s-gen");return}
-  if(n===1&&!S.mascot)spinUp();
-  if(n===2)renderMascot("mascot2");if(n===3)drawChart();if(n===4)renderVersions();if(n===5)renderBridges();if(n===9)renderFinale();
+  if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
+  if(n===5)renderBridges();if(n===6)weave();if(n===9)renderFinale();
   say(n);openSheet("s-"+n);
 }
 function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"campus"];
@@ -2399,26 +2412,75 @@ window.openNote=function(title){openVault();vrender(title)};
 window.closeVault=function(){const was=$("vault").classList.contains("on");$("vault").classList.remove("on");if(VSIM)VSIM.stop();if(was)window.scrollTo({top:0,behavior:"smooth"})};
 
 /* ---------------- workstream logic ---------------- */
-const ADJ=["Overcaffeinated","Tabular","Nocturnal","Pivot-averse","Quarterly","Gilded","Amber","Cross-functional"];
-const NOUN=["Otter","Pipeline","Roadmap","Sprint","Dashboard","Espresso","Standup","Backlog"];
-const rnd20=()=>1+Math.floor(Math.random()*20);
-window.spinUp=function(){S.mascot={name:ADJ[rnd20()%8]+" "+NOUN[rnd20()%8],str:rnd20(),wis:rnd20(),cha:rnd20(),badge:false,hue:Math.floor(Math.random()*360)};save();renderMascot("mascot")};
-function glyph(c){const col=`hsl(${c.hue} 60% 60%)`,col2=`hsl(${c.hue} 60% 45%)`;return `<svg viewBox="0 0 100 100" aria-hidden="true">${c.badge?'<path d="M22 92 Q50 60 78 92 Z" fill="#0067A5"/>':''}<ellipse cx="50" cy="62" rx="28" ry="26" fill="${col}"/><path d="M30 42 L24 20 L40 36 Z M70 42 L76 20 L60 36 Z" fill="${col2}"/><circle cx="40" cy="58" r="5" fill="#fff"/><circle cx="60" cy="58" r="5" fill="#fff"/><circle cx="41" cy="59" r="2.5" fill="#222"/><circle cx="61" cy="59" r="2.5" fill="#222"/><path d="M42 72 Q50 78 58 72" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>${c.badge?'<path d="M28 50 Q50 40 72 50 L72 56 Q50 48 28 56 Z" fill="#0067A5"/>':''}<path d="M40 88 h6 v6 h-6 z M54 88 h6 v6 h-6 z" fill="${col2}"/></svg>`}
-function renderMascot(id){const c=S.mascot;if(!c){$(id).innerHTML="";return}$(id).innerHTML=glyph(c)+`<div><h3>${c.name}${c.badge?", cloaked":""}</h3><p class="small muted" style="margin:0 0 4px">AI-powered synergy agent</p><div class="stats"><b>Speed</b><span class="num">${c.str}</span><b>Insight</b><span class="num">${c.wis}</span><b>Charm</b><span class="num">${c.cha}</span></div></div>`}
-window.speak=function(precise){const c=S.mascot;if(precise){c.badge=true;$("speak-out").textContent='Change request delivered within SLA. Badge added, stats untouched, no regressions, one-line executive summary returned: "Added a purple badge."'}
-  else{c.name="Winged Teapot";c.str=rnd20();c.wis=rnd20();c.cha=rnd20();c.badge=false;c.hue=(c.hue+140)%360;$("speak-out").textContent="It maximised impact against its own KPIs, which were never aligned with yours. Your agent is now a teapot with new stats and no badge. Nothing was scoped out, so everything was in scope."}save();renderMascot("mascot2")};
-window.roll=function(n){for(let i=0;i<n;i++)S.rolls.push(rnd20());save();drawChart()};
-window.clearLedger=function(){S.rolls=[];save();drawChart()};
-function drawChart(){const r=S.rolls,n=r.length;$("l-n").textContent=n;$("l-mean").textContent=n?(r.reduce((a,b)=>a+b,0)/n).toFixed(1):0;$("l-best").textContent=n?Math.max(...r):0;$("l-crit").textContent=r.filter(x=>x===20).length;
-  const bins=Array(20).fill(0);r.forEach(x=>bins[x-1]++);const mx=Math.max(1,...bins);$("chart").innerHTML=bins.map((b,i)=>`<rect x="${i*10+1}" y="${100-b/mx*94}" width="8" height="${b/mx*94}" rx="1.5" fill="${i===19?'#FFBF00':'#0088CC'}"/>`).join("")}
+// The demos that survived the audit in docs/adr/0005-mini-games.md. Each one
+// leaves the player with something they keep: a prompt they can paste, the
+// difference a scoped ask makes, a schema that breaks when you rename a
+// column, a rollback, a connector, a graph. Nothing here rolls dice.
+
+/* ---- Workstream 1: the three sentences become a prompt ---- */
+// The guardrail is the one Tom imposes in the lesson, so the panel and the
+// lesson cannot drift apart.
+const GUARDRAIL = "Keep it to a single file called index.html, no external libraries, no frameworks. Keep score. When you are done, tell me how to open it.";
+window.pitchTyped=function(v){S.pitch=v;save();renderPitch()};
+window.copyPitch=function(){const t=$("pitch-out").textContent;const ok=()=>{$("pitch-copy").textContent="Copied";setTimeout(()=>$("pitch-copy").textContent="Copy the prompt",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok).catch(()=>{})};
+function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitch");if(box&&box.value!==(S.pitch||""))box.value=S.pitch||"";
+  const v=(S.pitch||"").trim();
+  out.textContent=v?`Build a small browser game. ${v}\n\n${GUARDRAIL}`:"Type your three sentences above and the prompt appears here, with the guardrail already attached.";
+  const n=v?v.split(/[.!?]+/).filter(x=>x.trim()).length:0;
+  $("pitch-note").textContent=!v?"":n<3?`That is ${n} sentence${n===1?"":"s"}. Three is the ask: what it is, who plays it, how you win.`:"Three sentences and one hard constraint. That is the whole prompt; the rest is watching it land.";}
+
+/* ---- Workstream 2: the same card, asked for two ways ---- */
+// One demo component, two change requests. The precise one changes exactly
+// what it named; the vague one is free to change everything else too.
+const CARD0={title:"Tonight's scores",accent:"#0067A5",cols:["Player","Score"],badge:false,serif:false};
+let card=Object.assign({},CARD0);
+window.speak=function(precise){
+  card=precise?Object.assign({},card,{badge:true})
+    :{title:"Impactful Scores Experience",accent:"#FF8C1A",cols:["Player"],badge:false,serif:true};
+  $("speak-out").textContent=precise
+    ?"One change, delivered as scoped: a badge. Title, colour, columns and font untouched, and a one-line summary back."
+    :"It maximised impact against its own idea of impact: new title, new colour, a decorative font, and the score column gone. Nothing was out of scope, because you put nothing out of scope.";
+  renderCard()};
+window.resetCard=function(){card=Object.assign({},CARD0);$("speak-out").textContent="Back to the version you started from.";renderCard()};
+function renderCard(){const el=$("card-demo");if(!el)return;
+  el.innerHTML=`<div class="demo-card${card.serif?" serif":""}" style="border-color:${card.accent}">
+<h4 style="color:${card.accent}">${card.title}${card.badge?'<span class="demo-badge">new</span>':""}</h4>
+<table><thead><tr>${card.cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
+<tbody>${[["Lotte",1240],["Frank",980],["Rolinda",1810]].map(r=>`<tr>${card.cols.map((c,i)=>`<td>${r[i]}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`}
+
+/* ---- Workstream 3: the column names are the contract ---- */
+// The schema demo runs the same query against the same rows; renaming one
+// column is enough to break it, with the error DuckDB actually prints.
+const SCHEMA=["played_at","player","score","duration_s"];
+const ROWS=[["2026-09-17T20:10","Lotte",1240,95],["2026-09-17T20:19","Frank",980,71],["2026-09-17T20:31","Rolinda",1810,120]];
+const QUERY="select player, max(score) as best\nfrom 'workspace/data/scores.csv'\ngroup by player order by best desc";
+let scoreCol="score";
+window.renameColumn=function(to){scoreCol=to;renderSchema()};
+function renderSchema(){const el=$("schema");if(!el)return;const broken=scoreCol!=="score";
+  const cols=SCHEMA.map(c=>c==="score"?scoreCol:c);
+  el.innerHTML=`<table class="csv"><thead><tr>${cols.map(c=>`<th${c===scoreCol&&broken?' class="changed"':""}>${c}</th>`).join("")}</tr></thead>
+<tbody>${ROWS.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join("")}</tr>`).join("")}</tbody></table>
+<pre class="sql">${QUERY}</pre>
+<pre class="out${broken?" err":""}" id="schema-out">${broken
+  ?`Binder Error: Referenced column "score" not found in FROM clause!\nCandidate bindings: "${scoreCol}"`
+  :"player    best\nRolinda   1810\nLotte     1240\nFrank      980"}</pre>
+<p class="small muted">${broken
+  ?"One rename, every query downstream red. Nothing is corrupt; the contract simply changed and nobody was told."
+  :"Four column names, in this order, are the contract. The game writes them, the queries read them."}</p>`}
+
+/* ---- Workstream 4: commits are snapshots, rollback is always on ---- */
 window.commit=function(){const t=$("release").value.trim();if(!t)return;S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
 function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${v.t.slice(0,44)}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
+
+/* ---- Workstream 5: a connector is a plug, and unplugging is the point ---- */
 const B={cal:"Integrated. It can now read Thursday and pre-populate the 10:00 agenda.",files:"Integrated. It can now surface the deck you lost in March.",mail:"Integrated. It can now distil a 40-message thread into three action items."};
 window.bridge=function(k){S.bridges[k]=!S.bridges[k];save();renderBridges();hud()};
 function renderBridges(){for(const k in B){const el=$("b-"+k),sp=el.querySelector("span");el.classList.toggle("on",!!S.bridges[k]);sp.textContent=S.bridges[k]?B[k]:"Not integrated";sp.className=S.bridges[k]?"":"muted"}}
-window.weave=function(){const nodes=[["Tonight",200,150],[S.mascot?S.mascot.name:"Agent",90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
+
+/* ---- Workstream 6: notes with links are a graph ---- */
+window.weave=function(){const nodes=[["Tonight",200,150],[playerLabel()||"You",90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
   const links=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,2],[3,4],[4,7],[2,7],[5,7],[6,2]];const svg=$("web");svg.classList.remove("woven");
   svg.innerHTML=links.map(([a,b])=>`<line x1="${nodes[a][1]}" y1="${nodes[a][2]}" x2="${nodes[b][1]}" y2="${nodes[b][2]}"/>`).join("")+nodes.map((n,i)=>`<g style="animation-delay:${i*.12}s"><circle cx="${n[1]}" cy="${n[2]}" r="${i===0?13:8}"/><text x="${n[1]}" y="${n[2]+(i===6?-16:22)}" text-anchor="middle">${n[0]}</text></g>`).join("");
   requestAnimationFrame(()=>svg.classList.add("woven"))};
@@ -2428,9 +2490,9 @@ const DATES=CONFIG.dates;
 const WINES=CONFIG.theme.id==="wine-night"?["Bourgogne Chardonnay, the arrogant one","Sancerre, chalky, unresolved finish","Barolo, decanted, bureaucratic tannins","Grower Champagne, zero dosage","Whatever Hospitality Operations decants"]:(CONFIG.theme.pairings.length?CONFIG.theme.pairings:["Water, still","Water, sparkling"]);
 function renderFinale(){$("dates").innerHTML=DATES.map(d=>`<button class="date${S.date===d?' pick':''}" onclick="pickDate('${d}')">${d}, from 18:00</button>`).join("");$("wines").innerHTML=WINES.map(w=>`<button class="wine${S.wine===w?' pick':''}" onclick="pickWine('${w}')">${w}</button>`).join("");renderMsg()}
 window.pickDate=function(d){S.date=d;save();renderFinale()};window.pickWine=function(w){S.wine=w;save();renderFinale()};
-function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";return}const c=S.mascot?S.mascot.name:"an unnamed agent";
+function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";return}
   const bev=CONFIG.theme.pairing==="wine"?`Beverage stack, per Hospitality Operations: ${S.wine}, served at the sommelier-mandated temperature.`:`Refreshments: ${S.wine}.`;
-  const m=`Hi Tom, per my last message and the ratified roadmap, confirming go-live: ${S.date}, 18:00, at the Hospitality Hub. ${bev} Current state of the campus: one ${c}, ${S.rolls.length} rows in the data warehouse, ${S.versions.length} tagged releases and ${Object.values(S.bridges).filter(Boolean).length} live integrations. Please loop in Rolinda, she will have questions, and they will be the only good ones. Please also confirm she has decanted.\n\nBest,\n${S.name}\nChief of Staff`;
+  const m=`Hi Tom, per my last message and the ratified roadmap, confirming go-live: ${S.date}, 18:00, at the Hospitality Hub. ${bev} Current state of the campus: ${S.done.length} of 8 stops delivered, ${S.versions.length} tagged releases and ${Object.values(S.bridges).filter(Boolean).length} live integrations. Please loop in Rolinda, she will have questions, and they will be the only good ones. Please also confirm she has decanted.\n\nBest,\n${S.name}\nChief of Staff`;
   $("msg").textContent=m;$("wa").href="https://wa.me/?text="+encodeURIComponent(m);$("msgcard").style.display=""}
 window.copyMsg=function(){const m=$("msg").textContent;const ok=()=>{$("copybtn").textContent="Copied";setTimeout(()=>$("copybtn").textContent="Copy to clipboard",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(m).then(ok).catch(()=>{})};
 window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;$("syncmsg").textContent="Code is in the box. Copy it, then in the repo: uv run vibe import "+code.slice(0,12)+"…";if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{})};
@@ -2498,7 +2560,7 @@ window.resetSettings=function(){S.settings={};save();applySettings()};
 let resetArmed=null;
 window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;const old=btn.textContent;btn.textContent="Really start over? Click again";btn.classList.add("danger");setTimeout(()=>{if(resetArmed===btn){resetArmed=null;btn.textContent=old;btn.classList.remove("danger")}},5000);return}
   const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{}};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
-  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings};save();
+  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings};save();
   location.replace(location.pathname)};
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
 // Onboarding: the title screen is a four-step form on a first visit. Who you
@@ -2612,8 +2674,8 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOO
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
 <div class="step"><b>3</b><span>How do you want to play?</span></div>
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Everything, synced. Add a terminal and Obsidian so your work is checked and your notes are saved. You can switch to this later; nothing is lost.</span></button></div>
-<p class="small muted">The full experience needs a terminal and a Claude, Codex or Gemini plan; Pre-flight in the Roadmap walks through the install.</p>
-<div class="step"><b>4</b><span>Go</span></div>`;
+<p class="small muted" id="prereq">Honest prerequisites for the full experience: a Mac or Linux terminal, about fifteen minutes to install the tools, a GitHub account, and a paid plan for Claude, Codex or Gemini. Without those, pick just the game; you can switch later and nothing is lost.</p>
+<div class="step"><b>4</b><span>Your name, then go</span></div>`;
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
@@ -2630,18 +2692,25 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
   const kind=th.pairing.charAt(0).toUpperCase()+th.pairing.slice(1);
   blocks.forEach((el,i)=>{if(i<th.pairings.length)el.innerHTML=`<b>${kind}, ${CH[i]?CH[i].h:"go-live"}</b>${th.pairings[i]}`;
     else el.innerHTML=`<b>${kind}, go-live</b>${th.pairings.join(", ")}.`})}
-// Theme, dates and repo come from vibe.toml through CONFIG. The wine-night
-// preset keeps the handwritten copy; any other theme swaps the framing and
-// rewrites the pairings. Difficulty and persona are exposed on <body> for CSS.
+// Theme, dates and repo come from vibe.toml through CONFIG. Labels apply to
+// every theme; the wine-night preset alone keeps the handwritten framing, and
+// any other theme swaps it and rewrites the pairings. Difficulty and persona
+// are exposed on <body> for CSS.
 function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;document.body.dataset.difficulty=CONFIG.difficulty;document.body.dataset.persona=CONFIG.persona;
   const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=CONFIG.repo;tp.textContent=CONFIG.repo.replace(/^https?:\/\//,"")}
+  // The title screen and the HUD speak the theme's language: the second line
+  // of the tagline, the two buttons, the word for a stop, the four KPIs.
+  $("tagline").textContent="From intern to expert in one evening. "+th.taglineSuffix;
+  $("btn-go").textContent=th.goLabel;
+  $("btn-continue").textContent=th.resumeLabel;
+  $("hud-stoplabel").textContent=th.stopLabel;
+  th.kpiLabels.forEach((l,i)=>{const el=$("k"+(i+1)+"l");if(el)el.textContent=l});
   themePairings();
   if(!th.showPairings)document.querySelectorAll(".pairing").forEach(el=>el.style.display="none");
   // Over http the vault folder is not on disk, so the button is honest about
   // where it goes.
   const ob=$("vobs");if(ob&&location.protocol!=="file:"){ob.textContent="Vault on GitHub";ob.dataset.icon="book-open";ob.title="The vault folder on GitHub"}
   if(th.id==="wine-night")return;
-  $("tagline").textContent="From intern to expert in one evening. ";
   $("intro").textContent=th.intro;
   $("roles").textContent=`Tom is your ${th.hostRole}. Rolinda is ${th.guideRole}, and the only one who is allowed to ask the simple question. ${th.signOff}`}
 function stamp(){$("stamp-ver").textContent=`vibe-map v${CONFIG.version} · ${CONFIG.theme.id}`;$("t-done").textContent=String(S.done.length)}

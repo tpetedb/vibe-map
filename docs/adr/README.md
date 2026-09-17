@@ -8,5 +8,6 @@ One file per decision, in Michael Nygard's form (Title, Status, Context, Decisio
 | [0002](0002-aoe-ideas-only.md) | From sokrypton/aoe we take ideas and structure, never code | Accepted, 2026-09-16 |
 | [0003](0003-python-dependencies-welcome.md) | Python dependencies are welcome, managed by uv | Accepted, 2026-09-16 |
 | [0004](0004-quests-verify-real-work.md) | Quests award XP for verified work, never for self-report alone | Accepted, 2026-09-16 |
+| [0005](0005-mini-games.md) | A mini-game earns its place by teaching something the learner keeps | Accepted, 2026-09-17 |
 
-Next number: 0005. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+Next number: 0006. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions

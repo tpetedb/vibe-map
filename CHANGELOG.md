@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The title screen puts the form first. The four steps, the name box and the Go row sit directly under the title and the campaign stats; the framing paragraph, the roles and the full brief moved below the Go button, and step 3 carries an honest prerequisites line (a terminal, about fifteen minutes, a GitHub account, a paid plan for Claude, Codex or Gemini). The Go and Resume buttons, the word for a stop in the HUD, the four KPI labels and the second line of the tagline are theme strings now: the studio preset says Start, Stops, Progress, Streak, Connections and Found, and the wine-night preset keeps Kick off the engagement, OKRs, Velocity and Synergy. A theme in `themes/<name>.toml` needs the five new keys, and an old file is refused with the missing names.
+- The mini-games were audited against what they teach; the decision and the reasoning are in `docs/adr/0005-mini-games.md`. The mascot generator and the roll ledger are gone, along with `S.mascot` and `S.rolls`. Workstream 1 now builds the prompt you paste into Claude Code from your three sentences, workstream 2 runs a vague and a precise change request against the same component without a mascot in sight, and workstream 3 renames a column and shows the binder error DuckDB really prints. The release ledger, the connectors and the note graph are kept; opening workstream 6 now draws the graph, which only the playthrough tool used to do.
+
+### Changed
+
 - `tools/build.py` concatenates `src/config/*.js` before the game modules and resolves every input relative to the folder that holds it, or to `--root DIR`, so a fork builds on its own. `WORLD_SCALE`, the island radius and the palette moved out of the game modules into `src/config/00-config.js`.
 
 ### Deprecated
