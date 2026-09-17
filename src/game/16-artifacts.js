@@ -53,11 +53,72 @@ const ART_DEMOS={
   bridge:[
     {l:"Cross the bridge",o:["agent   ->  tools/list                       (MCP)","server  <-  read_scores, write_note, run_sql","agent   ->  tools/call read_scores {player: 'Lotte'}","server  <-  3 rows","First ask what is on the other side. Then call it by name. That rulebook is MCP."]},
     {l:"Try a tool that is not there",o:["agent   ->  tools/call delete_everything","server  <-  error: unknown tool","The bridge only carries what the other side declared. Nothing else crosses."]}
+  ],
+  factory:[
+    {l:"Run the pipeline",o:["run 40   raw     ->  bronze   12 files landed as they came (CSV, 3 with odd rows)","run 40   bronze  ->  silver   3 rows quarantined, 2 columns typed, dates parsed","run 40   silver  ->  gold     one table: score per player per evening","Raw is what arrived. Bronze keeps it. Silver cleans it. Gold answers a question."]},
+    {l:"A run fails halfway",o:["run 41   raw     ->  bronze   ok","run 41   bronze  ->  silver   ERROR: scores_2026-09-25.csv, column score is 'four hundred'","run 41   failed after silver. gold untouched: it still shows last night's numbers.","A failed step must not leave half a table behind. Write to a temp table, then swap."]},
+    {l:"Rerun it",o:["fix: cast score to integer, park the odd row in quarantine","run 42   raw     ->  bronze   skipped, nothing new","run 42   bronze  ->  silver   ok      silver  ->  gold   ok","Same input, same output, no duplicates. That is idempotent: rerun without fear."]},
+    {l:"Batch or stream?",o:["batch:   every night at 02:00   120 000 rows   4 minutes","stream:  one row each time a game ends   30 ms each","Batch is cheap and late. Stream is fresh and fiddly. Choose by how old the answer may be."]}
+  ],
+  "post-office":[
+    {l:"Drop a letter",o:["you    ->  PUBLISH scores.finished {player: 'Lotte', score: 412}","queue  <-  accepted, id 8813, 2 subscribers","You are done the moment the letter is in the box. Who reads it, and when, is not your problem."]},
+    {l:"Deliver to a reader that was offline",o:["subscriber vault-writer: offline since 20:14","20:31  vault-writer is back","queue  ->  deliver 8813 to vault-writer","vault-writer  <-  ack","The letter waited on the shelf. The sender never noticed. That is decoupling."]},
+    {l:"Deliver twice",o:["queue  ->  deliver 8813 to leaderboard","leaderboard ...  no ack within 30 s","queue  ->  deliver 8813 to leaderboard   (retry 1)","leaderboard  <-  ack","At-least-once delivery: the same letter can arrive twice. The reader checks the id and does the work once."]},
+    {l:"A letter nobody can read",o:["queue  ->  deliver 8814 to leaderboard   ERROR: score is 'four hundred'","retry 1 ... retry 2 ... retry 3 ... gave up","8814   ->  dead-letter shelf   (kept for a human to look at)","A poison letter is parked, not dropped and not retried forever."]}
+  ],
+  shop:[
+    {l:"Buy a library",o:["uv add polars","Resolved 2 packages in 140 ms"," + polars==1.33.0","Installed 1 package in 210 ms","pyproject.toml:  polars>=1.33      uv.lock:  polars 1.33.0  sha256:9f2c...","The shelf is PyPI. The wish goes in pyproject.toml. The receipt is the lockfile."]},
+    {l:"Look at the shelf",o:["polars, versions on the shelf:","  1.33.0    2026-08","  1.32.3    2026-07","  1.31.0    2026-06","  0.20.31   2024-06   (old API)","Major.minor.patch. A new major may break you; a patch should not."]},
+    {l:"Install from the receipt",o:["uv sync --frozen","Resolved from uv.lock: polars 1.33.0, duckdb 1.4.0, click 8.2.1 ...","Bit for bit what you had on the evening it worked. The lockfile is why it works on CI too."]},
+    {l:"Take a yanked version",o:["uv add polars==1.32.0","warning: polars 1.32.0 was yanked (reason: broken wheel on macOS arm64)","The shop keeps it on the shelf so old receipts still resolve, and tells you not to take it. Take 1.32.3."]}
+  ],
+  bank:[
+    {l:"Show your key",o:["cat .env","ANTHROPIC_API_KEY=sk-ant-****...****7Qf","curl https://api.anthropic.com/v1/messages -H 'x-api-key: $ANTHROPIC_API_KEY'","200 OK","A token is a key. Whoever holds it is you, as far as the server can tell. .env is the safe."]},
+    {l:"Commit the safe by accident",o:["git add .env","pre-commit: .env is listed in .gitignore and .aiignore, refusing","The safe stays on your machine. The repo holds env.example: the names, never the values."]},
+    {l:"A leaked key",o:["21:02   sk-ant-...7Qf seen in a public gist","21:03   console: revoke sk-ant-...7Qf      revoked","21:04   every request with it:  401 Unauthorized","A leaked key is dead the minute you revoke it. Revoke first, then go looking for the leak."]},
+    {l:"Rotate",o:["console: create key   ->  sk-ant-****...****Lm2","edit .env: 7Qf  ->  Lm2      (or the keychain)","old key: revoked.  new key: in the safe.  vault notes: no key in any of them, ever.","Rotate on a schedule, not only after a scare."]}
+  ],
+  "data-centre":[
+    {l:"Send one request",o:["you (Amsterdam)  ->  POST /v1/messages   1 200 tokens in","edge eu-west     ->  auth ok, rate ok           2 ms","queue            ->  GPU node 14, 8 x H100     waited 40 ms","prefill  1 200 tokens                         90 ms","decode   350 tokens, one at a time         2 100 ms","you  <-  200 OK   total 2.3 s","The answer is typed out one token at a time. Most of the wait is the typing."]},
+    {l:"Same request from far away",o:["you (Sydney)  ->  edge us-east   180 ms each way","total 2.7 s. The GPUs were just as fast; the cable is longer.","Latency by region is geography, not load."]},
+    {l:"Cold start",o:["node 22: model not loaded. loading 140 GB of weights ...  38 s","first request:  40.3 s      second request:  2.3 s","A cold start is the model being carried into the room. Keep it warm, or accept the first hit."]},
+    {l:"Batch instead",o:["batch job: 10 000 requests, deadline 24 h","GPU utilisation 92 %  (interactive: 35 %)      price: half","Interactive pays for the empty seats. Batch fills the room and waits."]}
+  ],
+  "energy-grid":[
+    {l:"Read the meter",o:["evening 1:  84 requests   312 000 tokens in   41 000 tokens out","price:  3 USD per million in, 15 USD per million out   (an example; check the model's page)","bill:   0.94 + 0.62 = 1.56 USD","Tokens are the watts of this grid. Output tokens cost more: they are generated, not read."]},
+    {l:"Blow the fuse",o:["request 61 ...  429 Too Many Requests   Retry-After: 12","limit on this key: 50 requests per minute","A fuse trips before the wiring melts. Back off, wait, retry."]},
+    {l:"Add turbines (autoscale)",o:["08:00   40 req/s    2 replicas","09:00  340 req/s    scale up  ->  9 replicas   (90 s to warm)","22:00   12 req/s    scale down  ->  2","Autoscaling adds turbines when the whole town switches the kettle on."]},
+    {l:"Budget alarm",o:["budget: 20 USD per month   alert at 80 %","day 19:  16.02 USD   ALERT sent","action: the nightly job moves to a smaller model   0.40  ->  0.06 per run","Set the alarm before the first run, not after the first invoice."]}
+  ],
+  library:[
+    {l:"Ask a question",o:["q: 'why did the Monday run fail?'","embed(q)  ->  [0.021, -0.113, 0.087, ...]   1 536 numbers","A sentence becomes a point in space. Nearby points say similar things."]},
+    {l:"Fetch the nearest shelves",o:["nearest 3 of 100 notes (cosine):","  0.91   Headless agents and scheduling","  0.88   CI-CD and automation","  0.79   Git hooks","prompt = the question + those three notes. The model reads them, then answers."]},
+    {l:"Answer with a citation",o:["'The Monday 09:00 job runs vibe vault build; it failed because uv was missing on the runner.'","  source: Headless agents and scheduling, section 'Try in five minutes'","An answer with a shelf number can be checked. One without is a guess with good grammar."]},
+    {l:"A stale index",o:["note edited 20:40.   index built 18:00.","q: 'what changed tonight?'   ->   nearest: yesterday's note","Retrieval is only as fresh as the last rebuild. Re-index after every session, or on a hook."]}
+  ],
+  office:[
+    {l:"Hand out the work",o:["planner   reads AGENTS.md, the issue, the file map","planner   ->  plan: 3 steps, files: vibemap/scores.py, tests/test_scores.py","worker    ->  edits both, runs just test-one tests/test_scores.py    green","reviewer  ->  reads the diff against the plan and the handbook","One brief, three roles. The handbook is AGENTS.md; nobody has to be told twice."]},
+    {l:"The review gate says no",o:["reviewer:  REJECT   'data/scores.csv rewritten without asking; AGENTS.md says never'","worker    ->  reverts the rewrite, keeps the new column, reruns the test    green","reviewer:  APPROVE","A gate that never says no is a rubber stamp. This one had read the handbook."]},
+    {l:"Departments (subagents)",o:["main  ->  spawn scorekeeper   (its own context: the scores only)","main  ->  spawn docs-sync     (its own context: the docs only)","each reports back in one paragraph; main merges and moves on","A subagent is a department: a fresh desk, a narrow brief, a written report."]}
+  ],
+  households:[
+    {l:"Look at one house",o:["SELECT * FROM players WHERE id = 7;","id 7 | Lotte | l.***@***.nl | born 1991-**-** | last_seen 2026-09-25","Every row is a person. The columns are their belongings. You are holding them."]},
+    {l:"Ask only what you need",o:["-- the leaderboard needs a name and a score, nothing else","SELECT name, score FROM players JOIN scores USING (id);","Data minimisation: collect less, keep less, show less. What you do not hold cannot leak."]},
+    {l:"Anonymise for the chart",o:["SELECT md5(id) AS who, avg(score) FROM scores GROUP BY 1;","who 3f9a...   avg 402","Aggregates are safe to share. A hash of an id is still that person to someone determined; a count is not."]},
+    {l:"A request under the GDPR",o:["21:10   l.***@***.nl asks: what do you hold on me? delete it.","export:  1 row in players, 14 rows in scores   ->  sent (the law says within 30 days)","DELETE FROM scores WHERE id = 7;  DELETE FROM players WHERE id = 7;   backups expire in 30 days","Consent can be withdrawn. Design the delete before you design the insert."]}
+  ],
+  school:[
+    {l:"Split the data",o:["120 000 rows  ->  train 96 000    test 24 000    (at random, once)","The test set is the exam. The model never sees it while it learns."]},
+    {l:"Train",o:["epoch 1    loss 2.31   train 41 %   test 40 %","epoch 5    loss 0.92   train 78 %   test 76 %","epoch 20   loss 0.11   train 99 %   test 71 %","weights.bin written   (410 MB of numbers)","Data in, weights out. The weights are the model: a very long list of numbers."]},
+    {l:"Catch the overfit",o:["train 99 %, test 71 %: it memorised the homework and failed the exam.","keep the epoch 5 weights (test 76 %). More training made it worse.","The test set is the only honest witness. Never train on it."]},
+    {l:"Score on a benchmark",o:["benchmark scores-qa-v2:  1 000 questions nobody trained on","this model  76.4 %     last month  71.2 %     a person on a good day  92 %","One number, the same questions for everyone. That is what a benchmark is, and all it is."]}
   ]
 };
 function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world).forEach(a=>{
   const found=S.artifacts.includes(a.id);
-  const ring=new T.Mesh(new T.TorusGeometry(1.2,.06,6,24),new T.MeshBasicMaterial({color:found?"#00D084":"#FFBF00",transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
+  // a modelled artifact gets its ring around the walls, where the walker stops
+  const rr=props.artR&&props.artR[a.id]?props.artR[a.id]+.45:1.2;
+  const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?"#00D084":"#FFBF00",transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
   props.artifacts.push({a,ring})})}
 function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>{const d=Math.hypot(x.a.pos[0]-pos.x,x.a.pos[1]-pos.z);if(d<x.a.r&&d<bd){bd=d;best=x.a}});return best}
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;

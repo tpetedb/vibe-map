@@ -75,7 +75,7 @@ function buildWorld(id){
   if(ex("embers")){const g=new T.BufferGeometry();const v=[];for(let i=0;i<250;i++)v.push(-9+(Math.random()-.5)*10,Math.random()*16,-14+(Math.random()-.5)*10);g.setAttribute("position",new T.Float32BufferAttribute(v,3));const pts=new T.Points(g,new T.PointsMaterial({color:"#FF7A1A",size:.22,transparent:true,opacity:.9}));scene.add(pts);props.embers=pts}
   if(ex("aurora")){const ag=new T.PlaneGeometry(90,14,40,4);const am=new T.MeshBasicMaterial({color:"#00D084",transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending});const au=new T.Mesh(ag,am);au.position.set(0,26,-45);scene.add(au);props.aurora=au;props.auroraBase=ag.attributes.position.array.slice()}
   // plots
-  placeArtifacts();
+  buildArtifactProps();placeArtifacts();
   PLOT_POS.forEach((p,i)=>{const g=new T.Group();g.position.copy(p);const ring=new T.Mesh(new T.TorusGeometry(2,.07,6,32),new T.MeshBasicMaterial({color:"#ffffff",transparent:true,opacity:.7}));ring.rotation.x=Math.PI/2;ring.position.y=.06;g.add(ring);
     const post=box(.1,1.6,.1,"#7B5128",0,.8,0);const sign=box(1.3,.6,.1,"#FFF3C2",0,1.6,0);g.add(post,sign);const lb=label(CH[i].h,.55);lb.position.y=2.3;g.add(lb);
     [[-1.6,-1.6],[1.6,-1.6]].forEach(([x,z])=>g.add(box(.08,.6,.08,"#7B5128",x,.3,z)));g.add(box(3.3,.06,.06,"#7B5128",0,.55,-1.6));g.userData={ring,post,sign,lb};scene.add(g);plots.push(g)});
@@ -95,6 +95,10 @@ function buildWorld(id){
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:"#0088CC",transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
   S.done.forEach(k=>placeBuilding(k,false));applySky(S.done.length,true);fixColors(scene);hud();
 }
+// One building per artifact of this world that names a model in ART_PROPS;
+// the group is an obstacle so the walker goes round it, and the ring stays.
+function buildArtifactProps(){props.artProps=[];props.artR={};(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world&&a.model&&ART_PROPS[a.model]).forEach(a=>{const g=ART_PROPS[a.model]();const r=g.userData.r||1.4;
+  const lb=label(a.name,.55);lb.position.y=g.userData.h||3;g.add(lb);g.position.set(a.pos[0],0,a.pos[1]);g.traverse(o=>{if(o.isMesh)o.castShadow=true});scene.add(g);props.artProps.push(g);props.artR[a.id]=r;obstacles.push([a.pos[0],a.pos[1],r])})}
 function onLandW(x,z){return W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-.6)}
 window.nextWorld=function(){const ids=Object.keys(WORLDS);const i=(ids.indexOf(S.world||"campus")+1)%ids.length;setWorld(ids[i])};
 window.setWorld=function(id){S.world=id;save();renderWorldPicker();if(started)buildWorld(id)};

@@ -1230,6 +1230,206 @@
     "MCP (Model Context Protocol)",
     "Security and permissions"
    ]
+  },
+  {
+   "id": "factory",
+   "name": "The factory",
+   "prop": "the factory by the harbour",
+   "world": "campus",
+   "pos": [
+    8.5,
+    -5.5
+   ],
+   "r": 2.4,
+   "model": "factory",
+   "concept": "a data pipeline",
+   "what": "Raw is what arrived, bronze keeps it as it came, silver cleans and types it, gold answers one question; each step reads the one before and writes its own table. A good pipeline is idempotent: a failed run leaves nothing half-written, and a rerun on the same input gives the same output with no duplicates.",
+   "rolinda": "Run 41 fell over halfway through. Why did the gold numbers not change, and why was that the right thing?",
+   "links": [
+    "Data - files, schemas, warehouses",
+    "Repetitive tasks, reliably",
+    "CI-CD and automation"
+   ]
+  },
+  {
+   "id": "post-office",
+   "name": "The post office",
+   "prop": "the post office on the south point",
+   "world": "campus",
+   "pos": [
+    5,
+    15.5
+   ],
+   "r": 2.4,
+   "model": "postOffice",
+   "concept": "message queues and pub/sub",
+   "what": "You drop a letter and walk away; the queue keeps it until every subscriber has read it, even one that was offline. Delivery is at least once, so a reader must cope with the same letter twice, and a letter nobody can read goes to the dead-letter shelf instead of being retried forever.",
+   "rolinda": "The vault writer was offline for twenty minutes and still got the letter. Who kept it, and what if it arrives twice?",
+   "links": [
+    "HTTP and APIs",
+    "Headless agents and scheduling",
+    "Hooks"
+   ]
+  },
+  {
+   "id": "shop",
+   "name": "The shop",
+   "prop": "the shop on the main street",
+   "world": "desert",
+   "pos": [
+    9,
+    -5
+   ],
+   "r": 2.4,
+   "model": "shop",
+   "concept": "a package registry",
+   "what": "uv add polars is a purchase: the shelf is PyPI, every version sits on it with a date, and the wish goes into pyproject.toml. The receipt is uv.lock, exact versions and checksums, so uv sync --frozen rebuilds the same environment on any machine; a yanked version stays on the shelf with a warning not to take it.",
+   "rolinda": "You bought polars once and it works on CI too. Which file is the receipt, and what happens if you delete it?",
+   "links": [
+    "Python libraries - what they are for",
+    "TOML in practice - pyproject.toml",
+    "Semantic Versioning"
+   ]
+  },
+  {
+   "id": "bank",
+   "name": "The bank",
+   "prop": "the bank behind the Hub",
+   "world": "desert",
+   "pos": [
+    0,
+    -8.5
+   ],
+   "r": 2.4,
+   "model": "bank",
+   "concept": "secrets and auth",
+   "what": "A token is a key: whoever holds it is you, as far as the server can tell. It lives in .env or the keychain, never in a commit and never in a vault note; a leaked key is revoked the minute you know, and rotating keys on a schedule means a leak you did not notice dies on its own.",
+   "rolinda": "The key ended up in a public gist at nine. What did you do at one minute past, and why not go looking for the leak first?",
+   "links": [
+    "Security and permissions",
+    ".env files and secrets",
+    "Claude Code, the power settings"
+   ]
+  },
+  {
+   "id": "data-centre",
+   "name": "The data centre",
+   "prop": "the hall next to the Hub",
+   "world": "winter",
+   "pos": [
+    4.5,
+    1
+   ],
+   "r": 2.4,
+   "model": "dataCentre",
+   "concept": "where the model runs",
+   "what": "A request travels to the nearest edge, waits for a GPU node, reads your prompt in one pass and then types the answer one token at a time; most of the wait is the typing. Distance adds latency, a node that has to load the weights first adds a cold start, and batch jobs fill the GPUs cheaply because nobody is waiting.",
+   "rolinda": "The same question took two seconds from Amsterdam and forty from a node that had just woken up. Which part of the building was slow?",
+   "links": [
+    "Cloud and servers",
+    "Open weights versus closed models, on your own Mac",
+    "Kubernetes and platforms"
+   ]
+  },
+  {
+   "id": "energy-grid",
+   "name": "The energy grid",
+   "prop": "the pylon and the turbine by the harbour",
+   "world": "winter",
+   "pos": [
+    12,
+    -14.5
+   ],
+   "r": 2.4,
+   "model": "energyGrid",
+   "concept": "compute and cost",
+   "what": "Tokens are the watts: every request draws some in and some out, output costs more because it is generated, and the bill is the meter reading times the price per million. A rate limit is a fuse that trips before the wiring melts, autoscaling adds turbines when demand spikes, and a budget alarm rings before the invoice does.",
+   "rolinda": "Request sixty-one came back with a 429 and a Retry-After. Was that the grid failing you, or protecting you?",
+   "links": [
+    "Cost, tokens and model choice",
+    "Cloud and servers",
+    "Scaling laws and the Bitter Lesson"
+   ]
+  },
+  {
+   "id": "library",
+   "name": "The library",
+   "prop": "the library behind the Hub",
+   "world": "winter",
+   "pos": [
+    -0.5,
+    -8.5
+   ],
+   "r": 2.4,
+   "model": "library",
+   "concept": "RAG and embeddings",
+   "what": "A question becomes a vector, a long list of numbers, and the notes that sit nearest to it in that space come back as the shelves to read; the model answers from those pages and cites them. The index is a snapshot: a note edited after the last build is invisible until you re-index, so the rebuild belongs on a hook.",
+   "rolinda": "You asked what changed tonight and got yesterday's note with a confident citation. What was out of date, the model or the shelves?",
+   "links": [
+    "Memory - the vault as long-term memory",
+    "Context window and prompts",
+    "Markdown and Obsidian"
+   ]
+  },
+  {
+   "id": "office",
+   "name": "The office",
+   "prop": "the office tower next to the Hub",
+   "world": "prod",
+   "pos": [
+    4.5,
+    1
+   ],
+   "r": 2.4,
+   "model": "office",
+   "concept": "a team of agents",
+   "what": "One brief, three roles: a planner reads AGENTS.md and writes the steps, a worker edits and runs the tests, a reviewer reads the diff against the plan and the handbook and may say no. Subagents are departments, each with a fresh context and a narrow brief, reporting back in a paragraph so the main agent's context stays small.",
+   "rolinda": "The reviewer rejected the change because the handbook said never rewrite the scores. Who wrote that rule, and what if nobody had?",
+   "links": [
+    "Subagents and multi-agent",
+    "AGENTS.md",
+    "Hooks as gates"
+   ]
+  },
+  {
+   "id": "households",
+   "name": "The households",
+   "prop": "the row of houses on the west shore",
+   "world": "prod",
+   "pos": [
+    -14,
+    10
+   ],
+   "r": 2.4,
+   "model": "households",
+   "concept": "users and privacy",
+   "what": "Every row in a users table is a person and every column is something of theirs, held with their consent for a stated purpose. Collect only what the feature needs, share aggregates and hashes rather than rows, and design the delete before the insert, because a request to see or erase everything you hold must be answered within thirty days.",
+   "rolinda": "The leaderboard shows a name and a score. Why does it also have their birthday in the table, and who asked for it?",
+   "links": [
+    "Security and permissions",
+    "Data - files, schemas, warehouses",
+    "SQL and DuckDB"
+   ]
+  },
+  {
+   "id": "school",
+   "name": "The school",
+   "prop": "the school behind the Hub",
+   "world": "prod",
+   "pos": [
+    1,
+    -9
+   ],
+   "r": 2.4,
+   "model": "school",
+   "concept": "training a model",
+   "what": "Data goes in, weights come out: the model is a very long list of numbers adjusted a little on every example until the loss stops falling. The data is split once into train and test, the exam the model never sees while learning, so a train score far above the test score means it memorised the homework; a benchmark is that exam shared by every model, one number that can be compared.",
+   "rolinda": "Ninety-nine percent on the homework and seventy-one on the exam. Which of those two numbers would you put on a slide, and why is that the wrong instinct?",
+   "links": [
+    "From base model to assistant",
+    "Neurons and backprop (1943 to 1989)",
+    "Evals - measure the agent, not the vibe"
+   ]
   }
  ]
 }

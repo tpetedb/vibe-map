@@ -198,14 +198,15 @@ def play_everything(browser: Browser, url: str, *, name: str = "Lotte") -> dict:
     player.attach()
     player.start(url, name)
     mentors = 0
+    artifacts = 0
     try:
         for world in WORLDS:
             player.world(world)
             for n in range(1, 9):
                 player.stop(n)
             mentors += player.mentors()
+            artifacts += player.artifacts()
         player.world("campus")
-        artifacts = player.artifacts()
         msg = player.finale()
         notes, links = player.vault()
         code = player.export()

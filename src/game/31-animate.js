@@ -43,6 +43,7 @@ function animate(){
   if(P.plane2){const a=t*.25;P.plane2.position.set(Math.cos(a)*30,15+Math.sin(t*.7)*1.2,Math.sin(a)*30);P.plane2.rotation.y=-a-Math.PI/2;P.plane2.rotation.z=.25;P.plane2.userData.prop.rotation.x+=dt*40}
   if(P.plane)P.plane.userData.prop.rotation.x+=dt*6;
   if(P.windmill)P.windmill.userData.blades.rotation.z+=dt*1.2;
+  (P.artProps||[]).forEach(g=>{if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.5});
   if(P.balloon){P.balloon.position.y=7+Math.sin(t*.6)*.5;P.balloon.position.x=-15+Math.sin(t*.15)*3;P.balloon.rotation.y=t*.1}
   if(P.birds)P.birds.forEach(b=>{const o=b.userData.o,a=t*.5+o;b.position.set(Math.cos(a)*(12+o*1.5),9+o*.5+Math.sin(t*2+o)*.4,Math.sin(a)*(12+o*1.5)-4);b.rotation.y=-a;const f=Math.sin(t*10+o)*.6;b.userData.w1.rotation.z=f;b.userData.w2.rotation.z=-f});
   if(P.fountain)P.fountain.userData.drops.forEach(d=>{const u=(t*.9+d.userData.p)%1;d.position.set(Math.cos(d.userData.p*6.28)*u*1.1,1.8+Math.sin(u*Math.PI)*1.4-u*.6,Math.sin(d.userData.p*6.28)*u*1.1)});
