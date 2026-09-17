@@ -34,6 +34,12 @@ from rich.panel import Panel
 from rich.table import Table
 
 from vibemap import __version__, campaign, pet, project, quests
+from vibemap.artifact_checks import (
+    ARTIFACT_XP_SHARE,
+    artifact_ids,
+    artifact_quest,
+    get_artifact,
+)
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config, deprecation_note
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
@@ -139,6 +145,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
         + (f" · {nxt - st.xp} to the next level" if nxt else " · top level")
         + f" · {st.total_done()}/32 stops"
         + f" · {len(st.artifacts)}/{len(campaign.artifacts())} artifacts"
+        + f" ({len(st.artifacts_built)} built for real)"
     )
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:
@@ -278,6 +285,12 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     help="check a mentor encounter instead of a workstream (an id, or all)",
 )
 @click.option(
+    "--artifact",
+    "artifact_id",
+    default=None,
+    help="check an artifact you built for real (an id, or all)",
+)
+@click.option(
     "--fork", "fork_", is_flag=True, help="check your fork of the game instead"
 )
 @pass_ctx
@@ -288,11 +301,15 @@ def check(
     all_: bool,
     claim: bool,
     mentor_id: str | None,
+    artifact_id: str | None,
     fork_: bool,
 ) -> None:
     """Verify the definition of done for a workstream and award the XP."""
     if mentor_id:
         _check_mentors(ctx, mentor_id, claim=claim)
+        return
+    if artifact_id:
+        _check_artifacts(ctx, artifact_id, claim=claim)
         return
     if fork_:
         quest = fork_quest(ctx.cfg)
@@ -643,6 +660,51 @@ def _claim_mentor(ctx: Ctx, mentor_id: str, results) -> None:
     ctx.save()
     ctx.vault.build(ctx.persona)
     console.print(f"[ok]{m['name']} done[/] [xp]+{xp} XP[/]")
+    for b in badges:
+        console.print(f"[title]Badge:[/] {BADGES[b]}")
+
+
+def _check_artifacts(ctx: Ctx, artifact_id: str, *, claim: bool) -> None:
+    """Run the Do it for real checks for one artifact, or for all twenty."""
+    if artifact_id == "all":
+        ids = artifact_ids()
+    else:
+        try:
+            ids = [get_artifact(artifact_id)["id"]]
+        except ValueError as e:
+            _fail(str(e))
+    for aid in ids:
+        quest = artifact_quest(aid, ctx.cfg)
+        results = run_quest(quest, ctx.cfg)
+        ok = _print_results(results, quest, ctx.cfg)
+        if ok and claim and aid not in ctx.state.artifacts_built:
+            _claim_artifact(ctx, aid, results)
+        elif ok:
+            console.print("[ok]all checks pass[/]")
+        else:
+            console.print(
+                f"[warn]not yet.[/] The walkthrough is in the game, on the "
+                f"artifact sheet; the work goes in workspace/artifacts/{aid}/."
+            )
+
+
+def _claim_artifact(ctx: Ctx, artifact_id: str, results) -> None:
+    """Record an artifact built for real; the progress code carries it back."""
+    name = get_artifact(artifact_id)["name"]
+    xp = xp_for(ctx.cfg.learner.difficulty) // ARTIFACT_XP_SHARE
+    ctx.state.artifacts_built.append(artifact_id)
+    if artifact_id not in ctx.state.artifacts:
+        ctx.state.artifacts.append(artifact_id)
+    ctx.state.xp += xp
+    ctx.state.checks[f"artifact:{artifact_id}"] = CheckRecord(
+        ok=True,
+        passed=[r.name for r in results if r.ok],
+        failed=[r.name for r in results if not r.ok],
+    )
+    badges = new_badges(ctx.state, ctx.cfg)
+    ctx.save()
+    ctx.vault.build(ctx.persona)
+    console.print(f"[ok]{name} built for real[/] [xp]+{xp} XP[/]")
     for b in badges:
         console.print(f"[title]Badge:[/] {BADGES[b]}")
 

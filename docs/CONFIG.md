@@ -31,6 +31,7 @@ command in the last column; nothing needs a build.
 | The terminal pet | `config/camp.toml` `[pet]` | `vibe pet --species duck` writes it for you |
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |
 | Your own work | `workspace/` | `vibe check` |
+| What an artifact asked you to build | `workspace/artifacts/<id>/` | `vibe check --artifact <id>` |
 | The game itself | `workspace/forks/vibe-map/src/config/` | `vibe fork` first, then `just build` there and `vibe check --fork` |
 
 `vibe.toml` at the camp root was the old name for `config/camp.toml`. It is
@@ -46,6 +47,7 @@ and the warning goes away.
 | The load order itself | `GAME_ORDER` in `tools/build.py` | `just build` |
 | Three.js, Motion, d3-force | `src/vendor/` (never edited by hand) | `just build` |
 | The campaign: evenings, stops, mentors, artifacts | `vibemap/data/campaign.json` | `just build` |
+| An artifact's Do it for real walkthrough and its check | `vibemap/data/campaign.json` `real` block, kinds in `vibemap/artifact_checks.py` | `just build` |
 | The roadmap and the tech tree | `vibemap/tech.py` | `just tree`, then `just build` |
 | Themes, personas, difficulties | `vibemap/themes.py`, `personas.py`, `config.py` | `just verify` |
 | The camp skeleton `vibe new` writes | `vibemap/data/template/` | `just verify` |

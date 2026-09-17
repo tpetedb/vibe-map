@@ -70,6 +70,7 @@ class State(BaseModel):
     checks: dict[str, CheckRecord] = Field(default_factory=dict)
     roadmap_done: list[str] = Field(default_factory=list)
     artifacts: list[str] = Field(default_factory=list)
+    artifacts_built: list[str] = Field(default_factory=list, alias="artifactsBuilt")
     mentors: list[str] = Field(default_factory=list)
     unlocked: list[str] = Field(default_factory=list)
 
@@ -143,6 +144,7 @@ class State(BaseModel):
             # Added inside version 2: an older reader ignores the key and
             # keeps working, so the code version does not move for it.
             "mentors": list(self.mentors),
+            "artifactsBuilt": list(self.artifacts_built),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
         return base64.urlsafe_b64encode(raw).decode().rstrip("=")
@@ -176,6 +178,9 @@ class State(BaseModel):
         for m in payload.get("mentors") or []:
             if str(m) not in self.mentors:
                 self.mentors.append(str(m))
+        for a in payload.get("artifactsBuilt") or []:
+            if str(a) not in self.artifacts_built:
+                self.artifacts_built.append(str(a))
         return payload
 
 

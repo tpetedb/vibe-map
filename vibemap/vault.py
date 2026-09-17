@@ -448,18 +448,31 @@ class Vault:
     def _write_artifacts(self) -> list[Path]:
         """One note listing the island artifacts and what each teaches."""
         found = set(self.state.artifacts)
+        built = set(self.state.artifacts_built)
         body = [
             "Things on the island that explain one idea each. Walk up to the "
-            "yellow ring and press Inspect; a found one turns green. The CLI "
-            "learns about them through the progress code.",
+            "yellow ring and press Inspect; a found one turns green. Each one "
+            "also sets a task from the official documentation of the thing: "
+            "build it in its workspace folder, then run the check the sheet "
+            "names. The CLI learns about them through the progress code.",
             "",
         ]
         for a in campaign.artifacts():
-            mark = "found" if a["id"] in found else "not yet"
+            mark = (
+                "built for real"
+                if a["id"] in built
+                else "found"
+                if a["id"] in found
+                else "not yet"
+            )
             links = ", ".join(f"[[{t}]]" for t in a["links"])
+            real = a["real"]
             body.append(
                 f"- {mark}: **{a['name']}** ({a['prop']}): {a['concept']}. "
-                f"{a['what']} See {links}."
+                f"{a['what']} Do it for real: {real['title']} "
+                f"([{real['doc']['title']}]({real['doc']['url']}), "
+                f"about {real['minutes']} minutes, "
+                f"`vibe check --artifact {a['id']}`). See {links}."
             )
         body += ["", "Back to [[Tonight]]", "", "#concept"]
         return [self.write("Artifacts", "\n".join(body), tags=["concept"])]
