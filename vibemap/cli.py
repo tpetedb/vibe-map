@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -1131,7 +1132,9 @@ def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
 def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
     """The folder name convention for a new camp: your name, vibe-map, the date."""
     raw = who or os.environ.get("VIBE_NAME") or getpass.getuser() or "player"
-    slug = re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-") or "player"
+    # Fold accents (Jorg, not j-rg) the same way the game's setup guide does.
+    folded = unicodedata.normalize("NFD", raw).encode("ascii", "ignore").decode()
+    slug = re.sub(r"[^a-z0-9]+", "-", folded.lower()).strip("-") or "player"
     return f"vibe-map-{slug}-{(day or date.today()).isoformat()}"
 
 

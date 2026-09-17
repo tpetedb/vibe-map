@@ -207,8 +207,10 @@ def theme_for_game(theme: Theme, *, show_pairings: bool | None) -> dict[str, obj
         "hostRole": theme.host_role,
         "guideRole": theme.guide_role,
         "pairing": theme.pairing_kind,
+        # Only the wine theme ships the handwritten pairing blocks; every other
+        # theme renders its own line from `pairings`, and shows nothing without.
         "showPairings": (
-            theme.pairing_kind != "none" if show_pairings is None else show_pairings
+            bool(theme.pairings) if show_pairings is None else show_pairings
         ),
         "intro": theme.intro,
         "pairings": list(theme.pairings),

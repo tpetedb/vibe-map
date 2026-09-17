@@ -1,4 +1,4 @@
-window.start=function(){S.name=$("name").value.trim()||"<your_name>";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
+window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
 // The News card shows NEWS, embedded at build time from data/news.json
 // (vibe news writes it; the weekly action rebuilds and commits the game).
 let newsLoaded=false;
@@ -7,8 +7,11 @@ function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),
   if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
   msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
   list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
-window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>$("sheet").scrollIntoView({behavior:"smooth",block:"start"}),30)};
+window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>{$("sheet").scrollIntoView({behavior:"smooth",block:"start"});const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
 window.closeSheet=function(){$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
+// Both panels are role=dialog, so Escape has to close them; the vault sits on
+// top of the sheet, so it goes first.
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("vault").classList.contains("on")){closeVault();e.preventDefault()}else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
 function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}

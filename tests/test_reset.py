@@ -26,12 +26,26 @@ def test_reset_button_needs_two_clicks_and_keeps_the_name(game: GamePage) -> Non
 
 
 def test_reset_query_parameter_wipes_and_cleans_the_url(game: GamePage) -> None:
-    game.goto(state={"name": "Tom", "doneW": DONE, "path": {}})
+    """?reset has to run after load(), or it saves the defaults over the record."""
+    game.goto(
+        state={
+            "name": "Tom",
+            "look": "frank",
+            "mode": "full",
+            "doneW": DONE,
+            "path": {},
+            "settings": {"difficulty": "hard"},
+        }
+    )
     game.page.goto(game.url + "?reset")
     game.page.wait_for_function("typeof window.__S === 'function'")
     game.page.wait_for_timeout(800)
-    assert game.page.evaluate("window.__S().doneW.campus") == []
+    st = game.page.evaluate("window.__S()")
+    assert st["doneW"]["campus"] == []
+    assert st["name"] == "Tom" and st["look"] == "frank" and st["mode"] == "full"
+    assert st["settings"]["difficulty"] == "hard"
     assert "reset" not in game.page.url
+    assert game.errors == []
 
 
 def test_reset_keeps_the_chosen_look_and_mode(game: GamePage) -> None:

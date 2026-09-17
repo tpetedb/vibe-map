@@ -28,12 +28,13 @@
     <p class="kicker"><b>vibe</b> · evening 1 of 4 · eight workstreams</p>
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
-    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
+    <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
-    <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="<your_name>" oninput="nameTyped(this.value)"></div>
-    <p class="small muted" style="margin-top:-8px">Where it says <your_name>, type your name plainly: no angle brackets, no quotes.</p>
-    <div class="row"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+    <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"></div>
+    <p class="small muted" id="namehint" style="margin-top:-8px">Type your name plainly.</p>
+    <div class="row go"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
+    <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
     <p class="small">This is Evening 1 of a four-evening campaign. The other three islands (history and how the models work, from vibes to determinism, terminal and git) are one World button away, and real people from the field stand on them: Karpathy, LeCun, Hinton, Fei-Fei Li, Sutton, Amodei, Olah, Cherny, Wu, Hashimoto, Torvalds. Talk to them or walk past; your choices become your path in the vault. Built for a MacBook with Apple silicon and Chrome.</p>
@@ -44,7 +45,7 @@
 </div>
 
 <div id="vault" role="dialog" aria-label="Obsidian vault">
-  <div id="vtop"><b>Vault</b><span id="vcount"></span><button id="vmode" data-icon="git-branch" onclick="toggleTree()">Tech tree</button><button data-icon="book-open" onclick="openObsidian()" title="The real vault, in Obsidian">Open in Obsidian</button><button data-icon="compass" onclick="closeVault()">Back to campus</button></div>
+  <div id="vtop"><b>Vault</b><span id="vcount"></span><button id="vmode" data-icon="git-branch" onclick="toggleTree()">Tech tree</button><button id="vobs" data-icon="book-open" onclick="openObsidian()" title="The real vault, in Obsidian">Open in Obsidian</button><button data-icon="compass" onclick="closeVault()">Back to campus</button></div>
   <canvas id="vg"></canvas>
   <div id="vtree"></div>
   <div id="vnote"></div>
@@ -112,11 +113,12 @@ brew install jq</code></pre>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Ship an MVP</h3>
 <p>The goal of this hour is one thing: a playable game exists before the Chardonnay warms up. We explain almost nothing. That is the design.</p>
+<p class="small muted">You need two things: a terminal, and Claude Code signed in. Pre-flight in the Roadmap installs both in twenty minutes.</p>
 <h4>Concept: the agentic loop</h4>
 <p>Claude Code is not a chat box. You give it a goal in plain language, it reads and writes files in the folder you started it in, runs commands, looks at the result, and keeps going until the goal is met. The folder you start it in is its whole world, so start it in an empty one.</p>
 <h4>Do this</h4>
 <ol>
-<li>Step into your workspace, the folder that is yours in the camp (no camp yet? <code>mkdir -p ~/vibe/workspace/game</code> works too):</li>
+<li>Step into your workspace, the folder that is yours in the camp:</li>
 <pre><code>cd ~/vibe-map-*/workspace/game</code></pre>
 <li>Start Claude Code:</li>
 <pre><code>claude</code></pre>
@@ -250,20 +252,22 @@ When adding a feature:
 <h4>Do this</h4>
 <ol>
 <li>Add persistence with an explicit schema:</li>
-<pre><code>Every time a round ends, save a record to localStorage with exactly these fields: ts (ISO timestamp), player (string), score (integer), seconds (integer). Add an &quot;Export CSV&quot; button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.</code></pre>
-<li>Play three rounds, export, and move the file into the project:</li>
-<pre><code>mv ~/Downloads/scores.csv ~/vibe-map/scores.csv</code></pre>
+<pre><code>Every time a round ends, save a record to localStorage with exactly these fields: played_at (ISO timestamp), player (string), score (integer), duration_s (integer). Add an &quot;Export CSV&quot; button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.</code></pre>
+<li>Play three rounds, export, and move the file to the one place the check looks (from your camp folder):</li>
+<pre><code>mv ~/Downloads/scores.csv workspace/data/scores.csv
+head -1 workspace/data/scores.csv</code></pre>
+<p>That header line must read <code>played_at,player,score,duration_s</code>, exactly. It is the same schema the camp's queries and <code>uv run vibe check 3</code> expect.</p>
 <li>Now ask for analysis on top of the file, not the game:</li>
-<pre><code>Write analyze.py that reads scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.</code></pre>
+<pre><code>Write workspace/python/analyze.py that reads workspace/data/scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.</code></pre>
 <li>Open the chart:</li>
 <pre><code>open chart.png</code></pre>
-<li>Break the schema on purpose. Rename the score column in scores.csv to points, run analyze.py again, watch it fail. Rename it back.</li>
+<li>Break the schema on purpose. Rename the score column in <code>workspace/data/scores.csv</code> to points, run analyze.py again, watch it fail. Rename it back.</li>
 </ol>
 <h4>What Lotte will notice</h4>
 <p>The game is now a front end. The CSV is the thing. Any spreadsheet, script or chart can read it, and Claude can build the next one in a minute because the shape is known. This is the same idea as a table in a database: the columns are a contract.</p>
-<div class="callout ok"><b>Definition of done</b>scores.csv has a header row with ts,player,score,seconds. analyze.py runs and produces chart.png. Renaming a column breaks it, restoring it fixes it.</div>
+<div class="callout ok"><b>Definition of done</b>workspace/data/scores.csv has the header row played_at,player,score,duration_s and at least three rows. There is a query in workspace/sql/ and a script in workspace/python/ that read it. <code>uv run vibe check 3</code> is green.</div>
 <div class="callout why"><b>Why it matters</b>Every useful tool you build for work will be this pattern: something produces a file with a fixed shape, something else reads it. Meeting notes to action list, calendar export to weekly summary. Learn to name the columns first.</div>
-<div class="callout try"><b>Try this</b>Add a fifth column, difficulty, in both the game and the script, in one prompt. Notice you have to say both places.</div>
+<div class="callout try"><b>Try this</b>Add a fifth column, difficulty, in both the game and the script, in one prompt. Notice you have to say both places, and that the check goes red until the header matches again.</div>
 <p class="small muted">Source: <a href="https://code.claude.com/docs/en/common-workflows" target="_blank" rel="noopener">Common workflows</a></p>
 </div>
   <div class="row"><button class="primary" onclick="claim(3)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
@@ -423,16 +427,22 @@ When adding a feature:
   <div class="pairing"><b>Pairing, 22:30</b>Tokaji Aszú, 5 puttonyos, "sweet, but earned", with Roquefort. Rolinda notes that a launch without dessert wine is a soft launch.</div>
   <p>The MVP has lived on one laptop all evening. That is a single point of failure and, frankly, a governance risk. This workstream takes it public: the folder goes to GitHub, GitHub Pages serves it, and the game gets a URL you can send to anyone. Time to market: fifteen minutes, including the Roquefort.</p>
   <p><b>Concept.</b> A remote is a copy of your [[Git]] history on someone else's computer. GitHub Pages is a static host that serves the files in a repository as a website, which is exactly what a single-file game is. No server, no build step, no ops. Claude Code can do every step of this from the terminal.</p>
-  <div class="card">
-    <h3>Do this</h3>
-    <ol class="small">
-      <li>Create a free GitHub account if you do not have one, and install the GitHub CLI: <code>brew install gh</code>, then <code>gh auth login</code>.</li>
-      <li>In Claude Code: "create a public GitHub repo called vibe from this folder and push it."</li>
-      <li>Then: "enable GitHub Pages for this repo from the main branch, root folder, and tell me the URL." If Claude cannot flip the setting, do it in the repo's Settings, Pages tab.</li>
-      <li>Open the URL on your phone. Send it to someone who was not here tonight.</li>
-    </ol>
-    <p class="small muted">Definition of done: the game loads on a device that is not your laptop.</p>
-  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: A URL you can send</h3>
+<h4>Do this</h4>
+<ol>
+<li>Create a free GitHub account if you do not have one, then install and sign in to the GitHub CLI:</li>
+<pre><code>brew install gh
+gh auth login</code></pre>
+<li>In Claude Code, from your camp folder:</li>
+<pre><code>create a public GitHub repo called vibe from this folder and push it</code></pre>
+<li>Then turn the pages on:</li>
+<pre><code>enable GitHub Pages for this repo from the main branch, root folder, and tell me the URL</code></pre>
+<li>If Claude cannot flip the setting, do it yourself in the repo's Settings, Pages tab. Then check the URL answers:</li>
+<pre><code>gh browse</code></pre>
+<li>Open the URL on your phone. Send it to someone who was not here tonight.</li>
+</ol>
+<div class="callout ok"><b>Definition of done</b>The game loads on a device that is not your laptop, from a URL you did not have this morning.</div>
+</div>
   <p class="small">Docs: <a href="https://docs.github.com/en/pages/quickstart" target="_blank" rel="noopener">GitHub Pages quickstart</a> · <a href="https://cli.github.com/manual/gh_repo_create" target="_blank" rel="noopener">gh repo create</a> · <a href="https://code.claude.com/docs/en/common-workflows" target="_blank" rel="noopener">Claude Code common workflows (git)</a></p>
   <div class="row"><button class="primary" onclick="claim(7)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
 </section>
@@ -442,16 +452,21 @@ When adding a feature:
   <div class="pairing"><b>Pairing, 23:00</b>Armagnac, 1998, in the small glasses. No food. Rolinda has called last orders and is prepared to enforce it.</div>
   <p>Everything so far needed you at the keyboard. The final workstream removes you from the loop: Claude runs headless, on a schedule, does one job, and writes the result into your vault. This is the SRE hour. Tom is visibly moved.</p>
   <p><b>Concept.</b> <code>claude -p "prompt"</code> runs Claude Code without the interactive session: it takes the prompt, does the work in the folder, prints the result and exits. Put that in a scheduled job and you have an agent that runs while you sleep. A subagent is a second Claude the first one delegates to, with its own instructions, useful for a job you want done the same way every time.</p>
-  <div class="card">
-    <h3>Do this</h3>
-    <ol class="small">
-      <li>Try it once by hand from the project folder: <code>claude -p "read scores.csv and append a one-paragraph summary of tonight's best runs to the vault note Vibe Code Camp/Scores.md"</code></li>
-      <li>Ask Claude Code to "create a subagent called scorekeeper that only does that job, and document it in the vault."</li>
-      <li>Ask Claude Code to "schedule the scorekeeper to run every morning at 08:00 with launchd" (on a Mac). Check the plist it writes. It should call <code>claude -p</code> with <code>--output-format text</code>.</li>
-      <li>Tomorrow morning: open the vault. The note updated itself.</li>
-    </ol>
-    <p class="small muted">Definition of done: a note in your vault changed without you touching the keyboard.</p>
-  </div>
+  <div class="lesson"><h3 style="margin-top:6px">Lesson: Headless, on a schedule</h3>
+<h4>Do this</h4>
+<ol>
+<li>Try it once by hand, from your camp folder:</li>
+<pre><code>claude -p "read workspace/data/scores.csv and append a one-paragraph summary of tonight's best runs to vault/Camp/Scores.md"</code></pre>
+<li>Turn the job into a subagent that always does it the same way:</li>
+<pre><code>create a subagent called scorekeeper that only does that job, and document it in the vault</code></pre>
+<li>Put it on a clock (on a Mac). Read the plist it writes: it should call <code>claude -p</code> with <code>--output-format text</code>.</li>
+<pre><code>schedule the scorekeeper to run every morning at 08:00 with launchd</code></pre>
+<li>Check the job is loaded:</li>
+<pre><code>launchctl list | grep scorekeeper</code></pre>
+<li>Tomorrow morning: open the vault. The note updated itself.</li>
+</ol>
+<div class="callout ok"><b>Definition of done</b>A note in your vault changed without you touching the keyboard.</div>
+</div>
   <p class="small">Docs: <a href="https://code.claude.com/docs/en/headless" target="_blank" rel="noopener">Run Claude Code programmatically (headless)</a> · <a href="https://code.claude.com/docs/en/sub-agents" target="_blank" rel="noopener">Subagents</a> · <a href="https://code.claude.com/docs/en/cli-reference" target="_blank" rel="noopener">CLI reference</a></p>
   <div class="row"><button class="primary" onclick="claim(8)">Mark as done and unlock the OKR</button><button onclick="closeSheet()">Back to the campus</button></div>
 </section>

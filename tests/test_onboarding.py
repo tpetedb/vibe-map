@@ -18,6 +18,10 @@ def test_camp_dir_name_follows_the_convention() -> None:
     )
     assert camp_dir_name("", date(2026, 1, 2)).startswith("vibe-map-")
     assert camp_dir_name("!!", date(2026, 1, 2)) == "vibe-map-player-2026-01-02"
+    assert (
+        camp_dir_name("Jörg Müller", date(2026, 1, 2))
+        == "vibe-map-jorg-muller-2026-01-02"
+    )
 
 
 def test_vibe_new_makes_a_slim_camp_from_the_template(
@@ -95,7 +99,7 @@ def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(
     guide = page.inner_text("#ob-setup")
     assert "vibe new ~/vibe-map-frank-" in guide
     assert "vibe difficulty hard" in guide
-    assert 'vibe name "Frank"' in guide
+    assert "vibe name 'Frank'" in guide
     page.click("text=Kick off the engagement")
     page.wait_for_selector("#title.off", state="attached")
     s = game.state()
@@ -141,4 +145,92 @@ def test_returning_player_sees_resume_first(game: GamePage) -> None:
     assert not page.is_visible("#onboard")
     game.resume()
     assert game.state()["look"] == "rolinda"
+    assert game.errors == []
+
+
+def test_an_empty_name_refuses_to_start(game: GamePage) -> None:
+    """The placeholder is a placeholder; it never becomes the player's name."""
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('Your own name')")
+    page.click("text=Kick off the engagement")
+    page.wait_for_timeout(300)
+    assert page.is_visible("#title")
+    assert not page.locator("#title").evaluate("e => e.classList.contains('off')")
+    assert "Type your name first" in (page.text_content("#namehint") or "")
+    assert game.state()["name"] == ""
+    assert "your_name" not in (page.text_content("#hud-name") or "")
+    assert "Evening 1" in (page.text_content("#hud-name") or "")
+    page.fill("#name", "Lotte")
+    page.dispatch_event("#name", "input")
+    page.click("text=Kick off the engagement")
+    page.wait_for_selector("#title.off", state="attached")
+    assert game.state()["name"] == "Lotte"
+    assert game.errors == []
+
+
+def test_a_name_with_a_quote_is_shell_quoted(game: GamePage) -> None:
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('Your own name')")
+    page.fill("#name", 'Lo"tte')
+    page.dispatch_event("#name", "input")
+    page.click("#onboard button.choice:has-text('The full experience')")
+    guide = page.inner_text("#ob-setup")
+    assert """vibe name 'Lo"tte'""" in guide, guide
+    page.fill("#name", "O'Brien")
+    page.dispatch_event("#name", "input")
+    guide = page.inner_text("#ob-setup")
+    assert "vibe name 'O'\\''Brien'" in guide, guide
+    assert game.errors == []
+
+
+def test_accents_fold_into_the_camp_directory(game: GamePage) -> None:
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('Your own name')")
+    page.fill("#name", "J\u00f6rg \u00c5berg")
+    page.dispatch_event("#name", "input")
+    page.click("#onboard button.choice:has-text('The full experience')")
+    guide = page.inner_text("#ob-setup")
+    assert "vibe new ~/vibe-map-jorg-aberg-" in guide, guide
+    assert game.errors == []
+
+
+def test_the_setup_guide_renders_below_the_go_row(game: GamePage) -> None:
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_timeout(200)
+    order = page.evaluate(
+        """() => { const go = document.querySelector('#title .row.go');
+          const setup = document.getElementById('ob-setup');
+          return go.compareDocumentPosition(setup)
+            & Node.DOCUMENT_POSITION_FOLLOWING ? 'after' : 'before'; }"""
+    )
+    assert order == "after"
+    assert page.is_visible("#ob-setup")
+    assert game.errors == []
+
+
+def test_a_chosen_look_alone_offers_resume(game: GamePage) -> None:
+    page = game.goto(state={"name": "Max", "look": "max", "doneW": {"campus": []}}).page
+    assert page.is_visible("#btn-continue")
+    # Nothing is done yet, so the four steps stay on screen.
+    assert page.is_visible("#onboard")
+    game.resume()
+    assert game.state()["look"] == "max"
+    assert game.errors == []
+
+
+def test_the_title_counts_eight_workstreams(game: GamePage) -> None:
+    page = game.goto().page
+    intro = page.text_content("#intro") or ""
+    assert "six" not in intro.lower(), intro
+    assert "eight" in intro.lower(), intro
+
+
+def test_workstreams_seven_and_eight_fold_their_commands(game: GamePage) -> None:
+    page = game.goto().page
+    for sid in ("#s-7", "#s-8"):
+        assert page.locator(f"{sid} details.cmds").count() >= 3, sid
+    page.click("#onboard button.choice:has-text('Expert')")
+    assert page.locator("#s-7 details.cmds[open]").count() == 0
+    assert page.locator("#s-8 details.cmds[open]").count() == 0
     assert game.errors == []

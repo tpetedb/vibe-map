@@ -12,6 +12,7 @@ import base64
 import functools
 import http.server
 import json
+import math
 import threading
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -80,10 +81,12 @@ def encode_progress(
     name: str = "Lotte",
     done_w: dict[str, list[int]] | None = None,
     path: dict[str, str] | None = None,
+    version: int = 2,
 ) -> str:
     """Build the base64url progress code the CLI and the game exchange."""
     done_w = done_w or {"campus": []}
     payload = {
+        "v": version,
         "name": name,
         "done": done_w.get("campus", []),
         "doneW": done_w,
@@ -128,6 +131,47 @@ class GamePage:
         self.page.click("text=Resume in-flight workstream")
         self.page.wait_for_selector("#title.off", state="attached")
         self.page.wait_for_timeout(600)
+
+    def walk_to(self, x: float, z: float, *, tol: float = 1.6, steps: int = 70) -> None:
+        """Steer the walker to a world coordinate with the arrow keys.
+
+        The keyboard is one of the two documented ways to move, so this drives
+        the real input path rather than writing the walker's position.
+        """
+        kb = self.page.keyboard
+        held: set[str] = set()
+
+        def hold(want: set[str]) -> None:
+            for k in want - held:
+                kb.down(k)
+                held.add(k)
+            for k in held - want:
+                kb.up(k)
+            held.intersection_update(want)
+
+        try:
+            for _ in range(steps):
+                pos = self.page.evaluate("window.__debug().pos")
+                dx, dz = x - pos[0], z - pos[2]
+                if math.hypot(dx, dz) < tol:
+                    return
+                want: set[str] = set()
+                if dx > 0.5:
+                    want.add("ArrowRight")
+                elif dx < -0.5:
+                    want.add("ArrowLeft")
+                if dz > 0.5:
+                    want.add("ArrowDown")
+                elif dz < -0.5:
+                    want.add("ArrowUp")
+                hold(want)
+                self.page.wait_for_timeout(160)
+        finally:
+            hold(set())
+            self.page.wait_for_timeout(400)
+
+    def near(self) -> Any:
+        return self.page.evaluate("window.__debug().near")
 
     def state(self) -> dict[str, Any]:
         return self.page.evaluate("window.__S()")

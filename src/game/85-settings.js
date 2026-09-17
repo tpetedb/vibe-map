@@ -32,7 +32,10 @@ function renderSettings(){const s=settings();
     `<p class="small muted">Persona and theme live in vibe.toml (uv run vibe persona, theme) and need a rebuild: just build. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
-window.goFullscreen=function(){const st=$("stage");if(document.fullscreenElement){document.exitFullscreen()}else if(st.requestFullscreen){st.requestFullscreen().catch(()=>{})}};
+// Fullscreen takes the whole document: the sheet and the vault live outside
+// #stage, so asking for the stage alone hides every panel behind the canvas.
+window.goFullscreen=function(){const el=document.documentElement;if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}
+  else if(el.requestFullscreen){el.requestFullscreen().catch(()=>{})}else if(el.webkitRequestFullscreen){el.webkitRequestFullscreen()}};
 window.resetSettings=function(){S.settings={};save();applySettings()};
 // Back to the start of the roadmap: every stop undone, artifacts and mentor
 // choices cleared; the name, the chosen look and play mode, and the settings kept. Two clicks, no dialog,
@@ -43,5 +46,4 @@ window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;cons
   const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{}};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
   S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings};save();
   location.replace(location.pathname)};
-if(new URLSearchParams(location.search).has("reset"))resetProgress();
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
