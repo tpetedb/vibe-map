@@ -28,7 +28,7 @@ His team keeps Sutton's Bitter Lesson framed on the wall and builds for the mode
 - Do I need an elaborate setup first?
 - Boris Cherny: No. His own configuration is surprisingly vanilla. The tool is meant to be useful on the day you install it. ([How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/))
 - And you really run several at once?
-- Boris Cherny: Five to ten sessions, each in its own checkout or worktree, so they never fight over the same files. ([Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny))
+- Boris Cherny: Five to ten sessions, each in its own checkout or worktree, so they never fight over the same files. ([How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/))
 
 ## Your exercise: One rule, and the command that proves it
 About 10 minutes, in `workspace/mentors/cherny/`. Status: not yet.

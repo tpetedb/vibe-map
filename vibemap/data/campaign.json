@@ -672,7 +672,7 @@
      {
       "you": "And you really run several at once?",
       "m": "Five to ten sessions, each in its own checkout or worktree, so they never fight over the same files.",
-      "src": 0
+      "src": 3
      }
     ],
     "exercise": {
@@ -808,7 +808,7 @@
     "dialogue": [
      {
       "you": "Where do I start with models?",
-      "m": "With the smallest one you can write yourself. His course opens with a hundred-line autograd engine and a character-level bigram model before anything larger.",
+      "m": "With the smallest one you can write yourself. His course opens with a from-scratch autograd engine and a character-level bigram model before anything larger.",
       "src": 1
      },
      {

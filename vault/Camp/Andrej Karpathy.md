@@ -21,7 +21,7 @@ Zero to Hero goes micrograd (a 100-line autograd engine), makemore (character-le
 
 ## The encounter
 - Where do I start with models?
-- Andrej Karpathy: With the smallest one you can write yourself. His course opens with a hundred-line autograd engine and a character-level bigram model before anything larger. ([Zero to Hero course](https://karpathy.ai/zero-to-hero.html))
+- Andrej Karpathy: With the smallest one you can write yourself. His course opens with a from-scratch autograd engine and a character-level bigram model before anything larger. ([Zero to Hero course](https://karpathy.ai/zero-to-hero.html))
 - What is a bigram model?
 - Andrej Karpathy: Count which character follows which, then pick the likely next one. Makemore part one builds exactly that from scratch, with training, sampling and a loss. ([nn-zero-to-hero on GitHub](https://github.com/karpathy/nn-zero-to-hero))
 - Why from scratch when a library exists?
