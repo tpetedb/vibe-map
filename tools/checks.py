@@ -62,6 +62,13 @@ LINK_SOURCES = (
 # Sites that answer bots with 403 or 405 are reported, not failed: the link
 # still works for a person in a browser.
 SOFT_STATUSES = {401, 403, 405, 429, 999}
+# Copied in verbatim from elsewhere; their comments are not our prose.
+VENDORED = (
+    "src/vendor/",
+    "vibemap/data/dotfiles/",
+    ".agents/skills/webapp-testing/",
+    ".agents/skills/verification-before-completion/",
+)
 
 console = Console(highlight=False)
 RED, GREEN, YELLOW, BLUE = "#D32F2F", "#00A86B", "#FFBF00", "#0067A5"
@@ -73,6 +80,9 @@ def _tracked_text_files() -> list[Path]:
     ).stdout.split("\n")
     files = []
     for rel in filter(None, out):
+        # Vendored third-party files keep their upstream prose (docs/SKILLS.md).
+        if rel.startswith(VENDORED):
+            continue
         p = ROOT / rel
         if p.suffix in TEXT_SUFFIXES or p.name in TEXT_NAMES:
             files.append(p)

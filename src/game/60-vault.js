@@ -50,7 +50,7 @@ function vrender(id){
   $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
   if(vctx)vdraw();
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=VN.length+" notes · "+VL.length+" links · tap a node, drag to arrange";
+window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=VN.length+" notes · "+VL.length+" links · tap a node, drag to arrange";
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
   let pan=null;vz=1;vtx=0;vty=0;
   cv.onpointerdown=e=>{const [sx,sy]=pos(e);const [x,y]=vToWorld(sx,sy);const i=vpick(x,y);moved=false;cv.setPointerCapture(e.pointerId);if(i!==null){vdrag=VN[i];vdrag.fx=vdrag.x;vdrag.fy=vdrag.y}else pan={sx,sy,tx:vtx,ty:vty}};
@@ -68,6 +68,8 @@ window.openObsidian=function(){
   if(location.protocol==="file:"){const dir=decodeURIComponent(location.pathname).replace(/\/game\/[^/]*$/,"");location.href="obsidian://open?path="+encodeURIComponent(dir+"/vault/Camp/Tonight.md");
     $("vcount").textContent="Opening Obsidian. First time: Open folder as vault, pick vault/.";return}
   window.open((CONFIG.repo||"https://github.com/tpetedb/vibe-map")+"/tree/main/vault/Camp","_blank","noopener")};
+// Open the vault on a note; inline handlers and tests reach it by name.
+window.openNote=function(title){openVault();vrender(title)};
 window.closeVault=function(){const was=$("vault").classList.contains("on");$("vault").classList.remove("on");if(VSIM)VSIM.stop();if(was)window.scrollTo({top:0,behavior:"smooth"})};
 
 /* ---------------- workstream logic ---------------- */

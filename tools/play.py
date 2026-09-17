@@ -106,6 +106,25 @@ class Player:
         assert n in self.state()["done"], f"{world} stop {n} did not register"
         self.log.append(f"{world} {n} done")
 
+    def artifacts(self) -> int:
+        """Open every artifact on this island and press each of its buttons."""
+        ids = self.page.evaluate(
+            "window.__artifacts()"
+            ".filter(a => a.world === window.__S().world).map(a => a.id)"
+        )
+        for aid in ids:
+            self.page.evaluate(f"openArtifact({aid!r})")
+            self.page.wait_for_selector("#s-artifact.on", state="attached")
+            buttons = self.page.locator("#s-artifact button[data-demo]")
+            for i in range(buttons.count()):
+                buttons.nth(i).click()
+                self.page.wait_for_timeout(120)
+            self.page.wait_for_timeout(600)
+            assert (self.page.text_content("#art-term") or "").strip(), aid
+        self.page.click("#sheet .x")
+        self.log.append(f"artifacts {len(ids)}")
+        return len(ids)
+
     def _minigame(self, n: int) -> None:
         p = self.page
         if n == 1:
@@ -186,6 +205,7 @@ def play_everything(browser: Browser, url: str, *, name: str = "Lotte") -> dict:
                 player.stop(n)
             mentors += player.mentors()
         player.world("campus")
+        artifacts = player.artifacts()
         msg = player.finale()
         notes, links = player.vault()
         code = player.export()
@@ -201,6 +221,7 @@ def play_everything(browser: Browser, url: str, *, name: str = "Lotte") -> dict:
         "done": state["doneW"],
         "path": state["path"],
         "mentors": mentors,
+        "artifacts": artifacts,
         "notes": notes,
         "links": links,
         "finale": msg[:80],

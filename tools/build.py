@@ -33,6 +33,7 @@ GAME_ORDER = [
     "11-character.js",
     "12-buildings.js",
     "@campaign",
+    "16-artifacts.js",
     "20-worlds.js",
     "21-world-build.js",
     "30-input.js",
@@ -62,6 +63,7 @@ def _campaign_js() -> str:
     return (
         "const CAMPAIGN=" + dump(data["evenings"]) + ";\n"
         "const MENTORS=" + dump(data["mentors"]) + ";\n"
+        "const ARTIFACTS=" + dump(data.get("artifacts", [])) + ";\n"
     )
 
 

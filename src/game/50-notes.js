@@ -3,7 +3,7 @@ The evening, in one note. Six [[Workstreams]], one [[Playbook]], one [[Data ware
 - Guide: [[Tom]] · Apprentice: [[Lotte]] · Hospitality: [[Rolinda]]
 - The rule: every chapter ends when [[Rolinda's questions]] get a one-sentence answer.
 - This is Evening 1 of [[The campaign]]. Mentors: [[Your path]]
-- The full roadmap, intern to expert: [[Tech tree]]
+- The full roadmap, intern to expert: [[Tech tree]] · Artifacts on the island: [[Artifacts]]
 - Written version: [Syllabus](https://claude.ai/artifact/SKSiMuyZHAPQZbZGFj54fG) · Fork the [[Template repo]] · Track it with the [[Terminal companion]] · All links: [[Resources]]
 #overview`},
 "Workstreams":{t:"ws",md:`# Workstreams
