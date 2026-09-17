@@ -118,7 +118,7 @@ function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:
   const found=S.artifacts.includes(a.id);
   // a modelled artifact gets its ring around the walls, where the walker stops
   const rr=props.artR&&props.artR[a.id]?props.artR[a.id]+.45:1.2;
-  const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?"#00D084":"#FFBF00",transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
+  const ring=new T.Mesh(new T.TorusGeometry(rr,.06,6,24),new T.MeshBasicMaterial({color:found?PALETTE.greenBright:PALETTE.yellow,transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],.05,a.pos[1]);scene.add(ring);
   props.artifacts.push({a,ring})})}
 function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>{const d=Math.hypot(x.a.pos[0]-pos.x,x.a.pos[1]-pos.z);if(d<x.a.r&&d<bd){bd=d;best=x.a}});return best}
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;

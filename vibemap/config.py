@@ -1,8 +1,13 @@
-"""vibe.toml: every knob has a default, so the file is optional.
+"""config/camp.toml: every knob has a default, so the file is optional.
 
 Unknown keys are refused (pydantic ``extra="forbid"``): a typo in the config
 must fail loudly instead of silently doing nothing. Difficulty presets live
 here too because they are configuration, not game logic.
+
+This is the journey level of the three configuration levels (see
+`docs/CONFIG.md`): who you are, how hard, which theme, where the vault is.
+The retired `vibe.toml` at the camp root is still read for one release;
+`deprecation_note()` says so, and writes go back to the file that was read.
 """
 
 from __future__ import annotations
@@ -17,7 +22,19 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from vibemap import project
 
 ROOT = project.root()
-CONFIG_PATH = ROOT / "vibe.toml"
+CONFIG_PATH = project.config_path(ROOT)
+
+
+def deprecation_note() -> str | None:
+    """One line when a camp is still on vibe.toml, else nothing."""
+    legacy = project.legacy_config_in_use(ROOT)
+    if legacy is None:
+        return None
+    return (
+        f"{legacy.name} is read for one more release; "
+        f"move it to {project.CAMP_CONFIG.as_posix()}"
+    )
+
 
 Difficulty = Literal["beginner", "easy", "normal", "hard", "expert", "god"]
 Mode = Literal["campaign", "roadmap"]
@@ -86,7 +103,7 @@ class PetConfig(_Strict):
 
 
 class Config(_Strict):
-    """The whole of vibe.toml with defaults for every table."""
+    """The whole of camp.toml with defaults for every table."""
 
     learner: Learner = Field(default_factory=Learner)
     theme: ThemeConfig = Field(default_factory=ThemeConfig)
@@ -121,8 +138,10 @@ class Config(_Strict):
     def dump(self) -> str:
         """Render the config as TOML with the explanatory header."""
         lines = [
-            "# Vibe Code Camp configuration. Every key has a default; delete the",
-            "# file and `just start` still works. Unknown keys are refused.",
+            "# Vibe Code Camp, journey configuration: who you are, how hard, the",
+            "# theme, the vault. Every key has a default; delete the file and",
+            "# `just start` still works. Unknown keys are refused. The game's own",
+            "# configuration is src/config/, see docs/CONFIG.md.",
             "",
             "[learner]",
             f"name = {_q(self.learner.name)}",
@@ -180,6 +199,7 @@ class Config(_Strict):
         return "\n".join(lines)
 
     def save(self, path: Path = CONFIG_PATH) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(self.dump(), encoding="utf-8")
 
 

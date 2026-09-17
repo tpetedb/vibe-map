@@ -12,7 +12,7 @@ A Vibe Code Camp: a learner's own workspace, their notes, and the configuration 
 |---|---|---|
 | `workspace/` | The learner's own projects: `workspace/game/index.html` from workstream 1, `workspace/data/scores.csv`, `workspace/sql/`, `workspace/python/`, anything else they build. | Build here. Ask before deleting. `workspace/data/scores.csv` is a system of record: never reset or rewrite it without asking. |
 | `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hub. | One note per topic in `vault/Camp/`, frontmatter with `title`, `date`, `tags`, generous `[[wikilinks]]`. `vibe vault lint` must stay clean. The notes are tracked in git and `vibe` regenerates them, so a check leaves the tree dirty; commit them, the notes are the record. |
-| `vibe.toml` | Name, persona, difficulty, provider, theme, vault mode. | Change through `vibe name`, `vibe persona`, `vibe difficulty`, `vibe theme` or `just start`, not by hand, so the schema is enforced. |
+| `config/camp.toml` | Name, persona, difficulty, provider, theme, vault mode. | Change through `vibe name`, `vibe persona`, `vibe difficulty`, `vibe theme` or `just start`, not by hand, so the schema is enforced. |
 | `.agents/skills/`, `.claude/`, `AGENTS.md`, `justfile`, `.github/` | The agent and automation configuration of this camp. | Editing these is part of the course (workstreams 2, 4, 7, 8). Keep changes small and say why in the commit. |
 | `.vibe/` | Progress state, ignored by git. | Never edit by hand; `vibe done`, `vibe check`, `vibe import`. |
 

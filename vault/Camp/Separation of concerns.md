@@ -2,11 +2,11 @@
 title: "Separation of concerns"
 date: 2026-09-17
 tags: [tech, code]
-generated: 4f91e1f05ff8
+generated: 60e4bd8e4a6b
 ---
 # Separation of concerns
 
-One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (vibe.toml, AGENTS.md, the skills, the hooks) is visible and separate; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
+One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (config/camp.toml, AGENTS.md, the skills, the hooks) is visible and separate, and it has levels: the repository's, the source's, and your journey's; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
 
 **History.** Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load.
 

@@ -1,6 +1,5 @@
 let renderer,scene,camera,clock,island,water,wGeo,wBase,stars,sunM,moonM,dirL,hemiL,ambL;
 const plots=[],builds={},clouds=[],parts=[],chars={},props={};
-const R=20;
 let PLOT_POS=[];
 const mat=(c,o={})=>{const m=new T.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));m.color.convertSRGBToLinear();if(o.emissive)m.emissive.convertSRGBToLinear();m.userData.viaMat=1;m.userData.cs=1;return m};
 function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.userData.cs){m.userData.cs=1;if(!(m instanceof T.MeshStandardMaterial&&m.flatShading&&m.userData.viaMat)){m.color.convertSRGBToLinear();if(m.emissive)m.emissive.convertSRGBToLinear()}}})}
