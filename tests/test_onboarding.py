@@ -20,25 +20,40 @@ def test_camp_dir_name_follows_the_convention() -> None:
     assert camp_dir_name("!!", date(2026, 1, 2)) == "vibe-map-player-2026-01-02"
 
 
-def test_vibe_new_defaults_to_the_convention(tmp_path: Path, monkeypatch) -> None:
-    calls: list[list[str]] = []
-
-    def fake_run(cmd, **kw):  # noqa: ANN001
-        calls.append(cmd)
-        Path(cmd[-1]).mkdir(parents=True, exist_ok=True)
-
-        class R:
-            returncode = 0
-
-        return R()
-
-    monkeypatch.setattr("vibemap.cli.subprocess.run", fake_run)
+def test_vibe_new_makes_a_slim_camp_from_the_template(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.chdir(tmp_path)
     out = CliRunner().invoke(cli, ["new", "--name", "Frank"])
     assert out.exit_code == 0, out.output
-    expect = f"vibe-map-frank-{date.today().isoformat()}"
-    assert calls and calls[0][-1].endswith(expect)
-    assert expect in out.output
+    camp = tmp_path / f"vibe-map-frank-{date.today().isoformat()}"
+    assert camp.is_dir()
+    # The three zones and nothing of the engine.
+    for rel in (
+        "workspace/README.md",
+        "vault/Camp/Tonight.md",
+        "vibe.toml",
+        "justfile",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".gitignore",
+        ".claude/settings.json",
+        ".claude/agents/scorekeeper.md",
+        ".agents/skills/camp-progress/SKILL.md",
+        ".github/workflows/pages.yml",
+        ".git/HEAD",
+    ):
+        assert (camp / rel).exists(), rel
+    assert (camp / ".claude" / "skills" / "camp-progress").is_symlink()
+    assert not (camp / "src").exists() and not (camp / "vibemap").exists()
+    assert not (camp / ".agents" / "skills" / "develop-camp").exists()
+    assert "<your_name>" in (camp / "vibe.toml").read_text()
+
+
+def test_template_is_in_sync_with_the_product_configuration() -> None:
+    from tools.sync_template import stale
+
+    assert stale() == []
 
 
 def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(

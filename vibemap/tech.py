@@ -65,7 +65,7 @@ T = [
         "Bash and shell scripts",
         "Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in.",
         "The Bourne shell shipped with Seventh Edition Unix in January 1979; bash (the Bourne-again shell, written by Brian Fox) went into beta as the GNU replacement in June 1989. macOS switched its default login shell to zsh with macOS 10.15 Catalina in 2019; zsh is bash-compatible for everything you will meet tonight.",
-        "cat data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written).",
+        "cat workspace/data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written).",
         [
             ("Bash Guide (Greg's wiki)", "https://mywiki.wooledge.org/BashGuide"),
             ("ShellCheck, lint your scripts", "https://www.shellcheck.net"),
@@ -118,7 +118,7 @@ T = [
         "files",
         "dark",
         "Files, folders and paths",
-        "A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.",
+        "A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./workspace/data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.",
         "The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.",
         "In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for.",
         [
@@ -274,7 +274,7 @@ T = [
         "Python",
         "The general-purpose language of data, automation and AI tooling. Readable, batteries included, the language agents write most fluently. Use it for scripts, data, glue, and small services.",
         "Guido van Rossum released Python 0.9.0 in February 1991; Python 3.0 (December 2008) broke compatibility and Python 2 was only retired in January 2020. It became the language of machine learning through NumPy, pandas and PyTorch, and of AI agents through their SDKs.",
-        "python3 python/scores.py, then add one line that prints the worst run.",
+        "python3 workspace/python/scores.py, then add one line that prints the worst run.",
         [
             ("Official tutorial", "https://docs.python.org/3/tutorial/"),
             ("Exercism track", "https://exercism.org/tracks/python"),
@@ -330,7 +330,7 @@ T = [
         "Python libraries: what they are for",
         "pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (talk to APIs), duckdb (SQL on files), pydantic (validate data), fastapi (build an API), typer/click (build a CLI), playwright (drive a browser), pytest (tests). Install with uv; import only what removes real work.",
         "NumPy 2005 (1.0 in 2006), pandas 2008 (Wes McKinney, at a hedge fund), requests 2011, pytest 2004 lineage, FastAPI 2018, pydantic 2017, Playwright 2020, DuckDB 2019 (started at CWI in 2018). The stack is young; most of it postdates the iPhone.",
-        "uv pip install pandas, then python3 -c \"import pandas as pd; print(pd.read_csv('data/scores.csv').describe())\".",
+        "uv pip install pandas, then python3 -c \"import pandas as pd; print(pd.read_csv('workspace/data/scores.csv').describe())\".",
         [
             (
                 "pandas 10 minutes",
@@ -377,7 +377,7 @@ T = [
         "SQL and DuckDB",
         "SQL asks questions of tables: select what, from where, filter, group, order. DuckDB runs it on CSV and Parquet files with no server, which is why the data hour uses it. Window functions (lag, row_number) are the step from junior to medior.",
         "SQL was designed at IBM in 1974 (as SEQUEL, by Chamberlin and Boyce) and standardised by ANSI in 1986 and ISO in 1987. It has outlived every technology that promised to replace it. DuckDB (started at CWI Amsterdam in 2018, first release 2019) brought analytics SQL to a single file.",
-        "duckdb < sql/streaks.sql, then change limit 3 to limit 10 and read the lag() comment.",
+        "duckdb < workspace/sql/streaks.sql, then change limit 3 to limit 10 and read the lag() comment.",
         [
             ("DuckDB docs", "https://duckdb.org/docs/"),
             ("SQLBolt", "https://sqlbolt.com"),
@@ -404,7 +404,7 @@ T = [
         "HTML, CSS and JavaScript",
         "The three languages of a web page: structure, style, behaviour. A single HTML file can hold all three, which is why the game is one file. JavaScript is also the language of Node and most CLIs you install with npm.",
         "Tim Berners-Lee's first web software ran in 1990 and HTML was written up as an IETF draft in 1993; CSS1 became a W3C Recommendation in 1996; Brendan Eich prototyped JavaScript in ten days in May 1995. Node.js (2009) put JavaScript on servers; npm calls itself the world's largest software registry.",
-        "Open game/index.html in a text editor and in a browser side by side. Change the h1, reload.",
+        "Open workspace/game/index.html in a text editor and in a browser side by side. Change the h1, reload.",
         [
             (
                 "MDN Web Docs",
@@ -437,7 +437,7 @@ T = [
         "Other languages and what they are for",
         "TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one binary. Rust: speed and safety, the new systems language. Java/Kotlin, C#: enterprise and Android. Swift: Apple. C/C++: everything underneath. Bash: gluing them. You do not learn them all; you learn to read them, and agents write them.",
         "C 1972, C++ 1985, Java 1995, C# 2002, Go 2009, Rust 2015 (1.0), Swift 2014, TypeScript 2012. Each language is a bet on what is expensive: programmer time (Python), machine time (Rust), or organisational scale (Java).",
-        "Ask Claude: 'rewrite python/scores.py in Go, explain each line to a Python person'. Read it. Delete it.",
+        "Ask Claude: 'rewrite workspace/python/scores.py in Go, explain each line to a Python person'. Read it. Delete it.",
         [
             ("Stack Overflow developer survey", "https://survey.stackoverflow.co"),
             ("Rust book", "https://doc.rust-lang.org/book/"),
@@ -539,7 +539,7 @@ T = [
         "Data: files, schemas, warehouses",
         "Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses (Snowflake, BigQuery, DuckDB locally). A schema is the contract: column names and types. Most data pain is schema drift, which is why AGENTS.md pins the columns of scores.csv.",
         "Relational databases: Codd 1970. Postgres 1986 (Berkeley). SQLite 2000, in every phone. Cloud warehouses (BigQuery 2011, Redshift 2012, Snowflake 2015) separated storage from compute. Parquet (2013, Twitter and Cloudera) is the file format they all read.",
-        "duckdb -c \"copy 'data/scores.csv' to 'data/scores.parquet'\" then query the parquet file. Same SQL, smaller file.",
+        "duckdb -c \"copy 'workspace/data/scores.csv' to 'workspace/data/scores.parquet'\" then query the parquet file. Same SQL, smaller file.",
         [
             ("Parquet", "https://parquet.apache.org/docs/"),
             ("SQLite", "https://www.sqlite.org/docs.html"),
@@ -625,7 +625,7 @@ T = [
         "Building and consuming APIs",
         "Consuming: read the docs, get a key, make a request, parse JSON. Building: FastAPI turns a Python function into an endpoint in five lines. Keys are secrets: environment variables, never in git. This is the bridge between your data and every other system.",
         "SOAP was designed from 1998 and published in 1999; REST-with-JSON replaced it in the 2010s; GraphQL (open sourced 2015) and gRPC (announced 2015, 1.0 in 2016) added alternatives. Today the agent-facing version of an API is an MCP server.",
-        "Ask Claude: 'wrap sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL.",
+        "Ask Claude: 'wrap workspace/sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL.",
         [
             ("FastAPI tutorial", "https://fastapi.tiangolo.com/tutorial/"),
             ("httpx", "https://www.python-httpx.org"),
@@ -777,7 +777,7 @@ T = [
         "CI/CD and automation",
         "Continuous integration: every push runs the tests and checks in a clean machine. Continuous delivery: passing pushes deploy. GitHub Actions is a YAML file in .github/workflows/. This is where headless agents also live: a PR review bot is claude -p in a workflow.",
         "CruiseControl (ThoughtWorks) was registered in March 2001, Hudson was renamed Jenkins in January 2011, Travis CI started in 2011, GitHub Actions became generally available in November 2019. CI made 'it works' a machine's opinion instead of a person's.",
-        "Ask Claude: 'add a GitHub Actions workflow that runs python3 python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab.",
+        "Ask Claude: 'add a GitHub Actions workflow that runs python3 workspace/python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab.",
         [
             (
                 "GitHub Actions quickstart",
@@ -1119,6 +1119,71 @@ T = [
         ["skills", "vault", "bash"],
     ),
     (
+        "concerns",
+        "feudal",
+        "Separation of concerns",
+        "One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (vibe.toml, AGENTS.md, the skills, the hooks) is visible and separate; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.",
+        "Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load.",
+        "Open your camp. For each top-level folder and file write one line in a vault note: which of the three zones it belongs to (product, configuration, your workspace) and which decision it hides. Then find one place where a file mixes two concerns (a script that both computes and prints, a note that is also a config) and name it. Naming it is the exercise; splitting it is optional.",
+        [
+            (
+                "Dijkstra, On the role of scientific thought (EWD 447), 1974",
+                "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html",
+            ),
+            (
+                "Parnas, On the criteria to be used in decomposing systems into modules, 1972",
+                "https://web.archive.org/web/20230815003501/http://sunnyday.mit.edu/16.355/parnas-criteria.html",
+            ),
+            (
+                "Conway, How do committees invent?, 1968",
+                "https://www.melconway.com/Home/Committees_Paper.html",
+            ),
+            (
+                "Ousterhout, A Philosophy of Software Design, 2018",
+                "http://web.stanford.edu/~ouster/cgi-bin/aposd.php",
+            ),
+            ("The Twelve-Factor App, III. Config", "https://12factor.net/config"),
+            (
+                "Skelton and Pais, Team cognitive load, 2021",
+                "https://itrevolution.com/articles/cognitive-load/",
+            ),
+            (
+                "Source: Dijkstra, EWD 447 (the phrase and the definition); Parnas 1972 (information hiding as the criterion)",
+                "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html",
+            ),
+        ],
+        ["meta", "agentsmd", "toml", "files"],
+    ),
+    (
+        "meta",
+        "castle",
+        "Building the builder",
+        "Some of the most valuable work is not the feature: it is the template, the tool, the agent configuration or the maintainer note that makes the next feature, by you, a colleague or an agent, cheaper and safer to build. This is the meta step, and it is easy to skip because it produces nothing a user sees. Engelbart called it bootstrapping: use each gain in your tools to build the next tool. Grove called it leverage: judge a piece of work by how much future output it multiplies. In this repository the template that vibe new copies, the skills, the hooks, AGENTS.md and docs/MAINTAINERS.md are all of that kind; they exist so that building the course, and building your own things inside a camp, costs less next time. Brooks's warning applies: no tool removes the essential difficulty of deciding what to build; the meta work removes the accidental difficulty around it.",
+        "Engelbart's 1962 framework (Augmenting Human Intellect) set out bootstrapping: pursue the quickest gains first and spend the resulting capability on the next gain. Brooks's No Silver Bullet (1986) separated essential from accidental difficulty and argued for growing systems and reusing components over hoping for one tool. Grove's High Output Management (1983) gave the word leverage. AGENTS.md (2025) and Claude Code's memory files are the current form: instructions written once, read at the start of every future session, so the cost is paid once and the benefit compounds.",
+        "Add one line to an agent-config file in your camp (AGENTS.md or a skill) that captures something you had to explain to the agent twice this session. Next session, note what was cheaper. Then read docs/MAINTAINERS.md in the product repository and find the three places where a change in one zone reaches another; that table is the meta layer of this whole course.",
+        [
+            (
+                "Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962",
+                "https://dougengelbart.org/pubs/augment-3906.html",
+            ),
+            (
+                "Brooks, No Silver Bullet, 1986",
+                "https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf",
+            ),
+            (
+                "Grove, High Output Management (leverage), 1983",
+                "https://en.wikipedia.org/wiki/High_Output_Management",
+            ),
+            ("AGENTS.md, the open format", "https://agents.md/"),
+            ("Claude Code, memory files", "https://code.claude.com/docs/en/memory"),
+            (
+                "Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident",
+                "https://dougengelbart.org/pubs/augment-3906.html",
+            ),
+        ],
+        ["concerns", "skills", "agentsmd", "semver"],
+    ),
+    (
         "interfaces",
         "dark",
         "Interfaces: GUI, TUI, CLI, API",
@@ -1206,7 +1271,7 @@ T = [
         "Tests and evals",
         "A test runs code and checks the result. An eval does the same for an agent: a set of tasks with known good answers, run after every change to AGENTS.md or a skill. Without tests, an agent will happily make things worse faster.",
         "JUnit was written by Kent Beck and Erich Gamma on a flight to OOPSLA in 1997, pytest's lineage starts in 2004, property-based testing arrived with QuickCheck (ICFP 2000). Model evals became an engineering discipline around 2023; today teams keep an eval set next to their instruction files.",
-        "Ask Claude: 'write pytest tests for python/scores.py and run them'. Then break scores.py and watch them fail.",
+        "Ask Claude: 'write pytest tests for workspace/python/scores.py and run them'. Then break scores.py and watch them fail.",
         [
             ("pytest", "https://docs.pytest.org"),
             (
@@ -1490,6 +1555,7 @@ CATEGORY: dict[str, tuple[str, int]] = {
     "mcp": ("agents", 2), "security": ("agents", 2), "cost": ("agents", 2),
     "agenthooks": ("agents", 3), "subagents": ("agents", 3),
     "prompting": ("agents", 1), "promptstructure": ("agents", 2),
+    "concerns": ("code", 2), "meta": ("agents", 2),
     "symbols": ("agents", 1),
     "readme": ("docs", 1), "semver": ("docs", 2), "changelog": ("docs", 2),
     "adr": ("docs", 3),

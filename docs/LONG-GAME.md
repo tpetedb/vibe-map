@@ -27,9 +27,9 @@ You should see `brew` finishing without red lines. Then the camp:
 
 ```bash
 uv tool install vibe-map
-vibe new                     # makes ~/vibe-map-<you>-<today>, the naming convention
+vibe new                     # makes ~/vibe-map-<you>-<today>: workspace, vault, config; no engine
 cd vibe-map-*
-just setup
+just setup                   # links the skills for Claude Code; the vault was built by vibe new
 ```
 
 The convention is your name, vibe-map, the date you started: `vibe-map-tom-2026-09-17`. It sorts by date, and a progress code or a note always says which camp it came from. The game's own setup guide (title screen, The full experience, or Roadmap, Setup guide) prints these commands with your name filled in.

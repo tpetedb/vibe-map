@@ -1,6 +1,6 @@
-"""Scores: the same CSV through polars, DuckDB and the sql/ folder.
+"""Scores: the same CSV through polars, DuckDB and the workspace/sql/ folder.
 
-data/scores.csv is a system of record; nothing here writes to it.
+workspace/data/scores.csv is a system of record; nothing here writes to it.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from rich.table import Table
 from vibemap import project
 
 ROOT = project.root()
-SCORES = ROOT / "data" / "scores.csv"
-SQL_DIR = ROOT / "sql"
+SCORES = ROOT / "workspace" / "data" / "scores.csv"
+SQL_DIR = ROOT / "workspace" / "sql"
 COLUMNS = ("played_at", "player", "score", "duration_s")
 
 
@@ -54,11 +54,11 @@ def summary(df: pl.DataFrame) -> dict[str, Any]:
 
 
 def run_sql(name: str, *, cwd: Path = ROOT) -> pl.DataFrame:
-    """Run one of the queries in sql/ with DuckDB, relative paths as in the file."""
+    """Run one of the queries in workspace/sql/ with DuckDB, run from the camp root."""
     path = SQL_DIR / (name if name.endswith(".sql") else f"{name}.sql")
     if not path.exists():
         options = ", ".join(p.stem for p in sorted(SQL_DIR.glob("*.sql")))
-        raise FileNotFoundError(f"no {path.name} in sql/; options: {options}")
+        raise FileNotFoundError(f"no {path.name} in workspace/sql/; options: {options}")
     con = duckdb.connect()
     con.execute(f"set file_search_path = '{cwd.as_posix()}'")
     cur = con.execute(path.read_text(encoding="utf-8"))

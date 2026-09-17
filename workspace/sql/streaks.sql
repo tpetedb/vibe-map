@@ -3,7 +3,7 @@
 with ordered as (
   select player, played_at, score,
          lag(score) over (partition by player order by played_at) as prev
-  from 'data/scores.csv'
+  from 'workspace/data/scores.csv'
 ),
 flags as (
   select *, case when prev is null or score > prev then 0 else 1 end as brk

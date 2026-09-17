@@ -1,0 +1,9 @@
+.venv/
+backups/
+.vibe/
+workspace/python/out/
+.DS_Store
+__pycache__/
+.env
+# symlinks that `just setup` creates so Claude Code sees .agents/skills
+.claude/skills/

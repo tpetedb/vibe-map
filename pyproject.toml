@@ -51,7 +51,7 @@ module-name = "vibemap"
 line-length = 88
 target-version = "py312"
 # Vendored skills keep their upstream formatting; see docs/SKILLS.md.
-extend-exclude = [".agents"]
+extend-exclude = [".agents", "vibemap/data/template"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

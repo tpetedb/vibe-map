@@ -20,7 +20,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
 | `adr` | Writes an architecture decision record in Nygard's form (Title, Status, Context, Decision, Consequences) into `docs/adr/` and updates the index | "write an ADR", "record this decision", "why did we choose", "document the trade-off", "supersede ADR 3" | house |
 | `changelog` | Keeps `CHANGELOG.md` in Keep a Changelog 1.1.0 form: Unreleased on top, six kinds of change, ISO dates, compare links | "update the changelog", "add a changelog entry", "release notes", "cut a release", "what changed since" | house |
 | `develop-camp` | Develops, reviews and improves this product: game from `src/`, CLI, tech tree, syllabus, skills | "fix the game", "add a world", "add a workstream", "review it and make it better", any change touching more than one file | house |
-| `duckdb-sql` | Answers questions about `data/scores.csv` with DuckDB SQL, teaches one construct per query | "top runs", "best score", "average per player", "who is winning", "write SQL", anything about `sql/` | house |
+| `duckdb-sql` | Answers questions about `workspace/data/scores.csv` with DuckDB SQL, teaches one construct per query | "top runs", "best score", "average per player", "who is winning", "write SQL", anything about `sql/` | house |
 | `camp-progress` | Tracks the eight workstreams through `uv run vibe` (status, check, done, map, vault, export, import) | "mark 3 done", "where am I", "what is next", "check my progress", "export my progress code" | house |
 | `install-camp` | Installs and runs the course on a Mac, every dependency chosen by the user | "set up vibe", "install the course", "is my machine ready", "start the evening" | house |
 | `mermaid-diagrams` | Draws Mermaid diagrams in the house conventions: ISO 5807 shapes, palette classDefs, a legend | "draw a diagram", "flowchart", "show me how these connect", "visualise the plan" | house |
@@ -31,7 +31,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
 | `webapp-testing` | Drives a local web app with Playwright: screenshots, console logs, element discovery, a server helper | "test the game in a browser", "take a screenshot of the page", "check the console for errors", "Playwright" | vendored, https://github.com/anthropics/skills/tree/main/skills/webapp-testing, Apache-2.0 |
 | `verification-before-completion` | Refuses to claim done, fixed or passing without running the proving command first | fires on its own before "done", "fixed", "tests pass", a commit or a PR | vendored, https://github.com/obra/superpowers/tree/main/skills/verification-before-completion, MIT |
 
-Not a skill but in the same family: the `scorekeeper` subagent (`.claude/agents/scorekeeper.md`) summarises `data/scores.csv` into `vault/Camp/Scores.md`; say "summarise the scores into the vault" or `@scorekeeper`. The PostToolUse hook in `.claude/settings.json` copies `data/` into `backups/` after every Edit or Write; `/hooks` lists it.
+Not a skill but in the same family: the `scorekeeper` subagent (`.claude/agents/scorekeeper.md`) summarises `workspace/data/scores.csv` into `vault/Camp/Scores.md`; say "summarise the scores into the vault" or `@scorekeeper`. The PostToolUse hook in `.claude/settings.json` copies `data/` into `backups/` after every Edit or Write; `/hooks` lists it.
 
 ## Test that each one triggers
 
@@ -48,7 +48,7 @@ Start `claude` in this folder. Type `/` and confirm every folder in `.agents/ski
 | | "change Rolinda's line in workstream 3" | |
 | `duckdb-sql` | "what is the best score per player?" | "draw a chart of the scores" |
 | | "how many runs did Lotte play?" | |
-| | "explain sql/streaks.sql to me" | |
+| | "explain workspace/sql/streaks.sql to me" | |
 | `camp-progress` | "I finished workstream 2, mark it done" | "draw a flowchart of tonight" |
 | | "where am I in the campaign?" | |
 | | "give me the code to paste into the game" | |

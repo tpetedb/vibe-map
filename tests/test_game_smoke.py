@@ -132,3 +132,11 @@ def test_every_world_builds(game: GamePage) -> None:
     game.next_world()
     assert game.state()["world"] == "campus"
     game.assert_clean()
+
+
+def test_roadmap_renders_before_the_island_starts(game: GamePage) -> None:
+    """When WebGL fails the game falls back to the Roadmap; S.world is not set yet."""
+    page = game.goto(state={"name": "Max", "done": [], "doneW": {"campus": []}}).page
+    page.evaluate("openSheet('s-map')")
+    assert "Innovation" in (page.text_content("#plotlist") or "")
+    assert game.errors == []

@@ -32,7 +32,7 @@ Everything below is built, tested and committed on `main` after the PR from `fea
 1. **Classic view** (docs/AOE-STUDY.md, proposal A): a 2D canvas map of the campus behind a toggle, reading the same `WORLDS` config. One evening of work, the strongest visual addition left.
 2. **Persona guides on the islands**: a walker per persona (the cleaning CEO, the pabo teacher...) as extra characters, using `src/game/11-character.js`. The data is in `vibemap/personas.py`; the game does not read it yet.
 3. **Roadmap mode** (`[learner] mode = "roadmap"`): the config and the `roadmap_done` state exist, the quests do not; every tech node should become a quest whose check is a vault note with the "Try in five minutes" done.
-4. **marimo notebook** for workstream 3 (`uv add marimo`, `marimo edit python/scores.py`): the design doc recommends it; not started.
+4. **marimo notebook** for workstream 3 (`uv add marimo`, `marimo edit workspace/python/scores.py`): the design doc recommends it; not started.
 5. **Council in the game**: the CLI and the skill exist; a "Convene" button on the roadmap that shows the last minutes from the vault would close the loop.
 6. Textual onboarding: a fourth screen with the campaign grid (`docs/DESIGN.md` specifies it) is not built; `vibe status` covers it in the terminal.
 7. `tools/checks.py links` reports two pre-existing placeholders as broken (`http://localhost:8000` in the localhost lesson, `github.com/YOUR-USER/dotfiles` in the syllabus); both are intentional.

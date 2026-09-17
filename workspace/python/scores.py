@@ -1,4 +1,4 @@
-"""Summarise data/scores.csv and draw a tiny bar chart in the terminal.
+"""Summarise workspace/data/scores.csv and draw a tiny bar chart in the terminal.
 
 New concept in this file: a dictionary comprehension builds {player: [scores]}
 in one line, then max()/statistics.mean() summarise each list.
