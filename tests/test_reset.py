@@ -11,14 +11,13 @@ def test_reset_button_needs_two_clicks_and_keeps_the_name(game: GamePage) -> Non
     game.goto(state={"name": "Tom", "doneW": DONE, "path": {}})
     game.resume()
     page = game.page
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_timeout(500)
+    game.open_roadmap()
     page.click("#s-map button:has-text('Reset progress')")
     assert page.evaluate("window.__S().doneW.campus") == [1, 2, 3]
     assert "Really" in (page.text_content("#s-map button.danger") or "")
     page.click("#s-map button.danger")
-    page.wait_for_function("typeof window.__S === 'function'")
-    page.wait_for_timeout(800)
+    # The reset reloads the page; the record is read back during boot.
+    page.wait_for_function("() => window.__S && window.__S().doneW.campus.length === 0")
     st = page.evaluate("window.__S()")
     assert st["doneW"]["campus"] == [] and st["artifacts"] == [] and st["name"] == "Tom"
     assert page.is_visible("#title")
@@ -38,8 +37,9 @@ def test_reset_query_parameter_wipes_and_cleans_the_url(game: GamePage) -> None:
         }
     )
     game.page.goto(game.url + "?reset")
-    game.page.wait_for_function("typeof window.__S === 'function'")
-    game.page.wait_for_timeout(800)
+    game.page.wait_for_function(
+        "() => window.__S && window.__S().doneW.campus.length === 0"
+    )
     st = game.page.evaluate("window.__S()")
     assert st["doneW"]["campus"] == []
     assert st["name"] == "Tom" and st["look"] == "frank" and st["mode"] == "full"
@@ -52,11 +52,10 @@ def test_reset_keeps_the_chosen_look_and_mode(game: GamePage) -> None:
     game.goto(state={"name": "Frank", "look": "frank", "mode": "full", "doneW": DONE})
     game.resume()
     page = game.page
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_timeout(500)
+    game.open_roadmap()
     page.click("#s-map button:has-text('Reset progress')")
     page.click("#s-map button.danger")
-    page.wait_for_function("typeof window.__S === 'function'")
+    page.wait_for_function("() => window.__S && window.__S().doneW.campus.length === 0")
     s = game.state()
     assert s["look"] == "frank" and s["mode"] == "full" and s["name"] == "Frank"
     assert s["doneW"]["campus"] == []
