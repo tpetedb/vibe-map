@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
+from playwright.sync_api import Page
+
 from tests.conftest import GamePage
+
+
+def _open_vault(page: Page) -> None:
+    """In grow mode the vault counts unlocked notes, so wait for that count."""
+    page.click("#hud button:has-text('Vault')")
+    page.wait_for_selector("#vault.on", state="attached")
+    page.wait_for_selector("#vcount:has-text('unlocked')")
 
 
 def test_graph_grows_as_you_play(game: GamePage) -> None:
@@ -10,8 +19,7 @@ def test_graph_grows_as_you_play(game: GamePage) -> None:
     game.page.wait_for_function("typeof window.__S === 'function'")
     game.start()
     page = game.page
-    page.click("#hud button:has-text('Vault')")
-    page.wait_for_timeout(1200)
+    _open_vault(page)
     count = page.text_content("#vcount") or ""
     assert "of" in count and "unlocked" in count
     start_n = int(count.split(" of ")[0].strip())
@@ -19,18 +27,22 @@ def test_graph_grows_as_you_play(game: GamePage) -> None:
     assert 5 <= start_n < total // 3
     # a locked link renders dimmed and does not open
     page.evaluate("openNote('Tonight')")
-    page.wait_for_timeout(300)
+    page.wait_for_selector("#vnote .wl.locked", state="attached")
     assert page.locator("#vnote .wl.locked").count() >= 1
     page.click("#vtop button:has-text('Back to campus')")
     # inspect the dock: its notes unlock
     page.evaluate("openArtifact('dock')")
-    page.wait_for_timeout(300)
+    page.wait_for_selector("#s-artifact.on", state="attached")
     page.click("#sheet .x")
-    page.click("#hud button:has-text('Vault')")
-    page.wait_for_timeout(1200)
+    _open_vault(page)
+    page.wait_for_function(
+        "n => +(document.getElementById('vcount').textContent || '0 of')"
+        ".split(' of ')[0].trim() > n",
+        arg=start_n,
+    )
     after = int((page.text_content("#vcount") or "0 of").split(" of ")[0].strip())
     assert after > start_n
     page.evaluate("openNote('Docker and containers')")
-    page.wait_for_timeout(300)
+    page.wait_for_selector("#vnote h1:has-text('Docker')")
     assert "Docker" in (page.text_content("#vnote h1") or "")
     assert not game.errors, game.errors

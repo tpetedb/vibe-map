@@ -50,6 +50,8 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 3. Test the entry point, not the mechanism. The smoke test clicks the real buttons; it does not call `claim()` directly.
 4. Take a screenshot and look at it. They land in `tests/out/`.
 5. Regenerate, never hand-edit: `just tree` after editing `vibemap/tech.py`.
+6. Never sleep in a test. Wait for something the page produced: a state, a rendered frame (`window.__debug().frame`), a note, a message. A fixed wait passes on a fast machine and hides the failure it was covering.
+7. The slow runs (`-m integration`: the play-through and the fresh camp) are nightly and on tags, in `.github/workflows/nightly.yml`. `ci.yml` stays fast and runs everything else.
 
 ## Commands
 
