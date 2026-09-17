@@ -787,7 +787,44 @@ def dotfiles_install(
         console.print(f"[path]{m.id}[/] {m.after}")
 
 
-# ---- pet ----------------------------------------------------------------------
+# ---- news ---------------------------------------------------------------------
+
+
+@cli.command("news")
+@click.option("--limit", default=40, show_default=True, help="items to keep")
+@click.option("--dry-run", is_flag=True, help="print, write nothing")
+@click.option("--json", "as_json", is_flag=True, help="print the items as JSON")
+@pass_ctx
+def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
+    """Pull the AI feeds into data/news.json and the vault note News."""
+    from vibemap import news
+
+    feeds = (
+        tuple((news.source_name(u), u) for u in ctx.cfg.news.feeds)
+        or news.DEFAULT_FEEDS
+    )
+    items, problems = news.fetch(feeds, per_feed=ctx.cfg.news.per_feed)
+    items = items[:limit]
+    if as_json:
+        click.echo(json.dumps([i.__dict__ for i in items], indent=1))
+        return
+    for it in items[:12]:
+        console.print(
+            f"[muted]{it.date[:10] or '          '}[/] {escape(it.title)}  "
+            f"[path]{it.source}[/]"
+        )
+    if len(items) > 12:
+        console.print(f"[muted]... and {len(items) - 12} more[/]")
+    for p in problems:
+        console.print(f"[warn]feed[/] {escape(p)}")
+    if dry_run:
+        return
+    news.write_json(items, ROOT / "data" / "news.json")
+    ctx.vault.write("News", news.note_body(items, problems), tags=["concept"])
+    console.print(
+        f"[ok]news[/]: {len(items)} items in data/news.json and vault/"
+        f"{ctx.cfg.vault.folder}/News.md"
+    )
 
 
 def _pet(ctx: Ctx) -> pet.Pet:

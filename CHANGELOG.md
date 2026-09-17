@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Settings in the game (the HUD's Settings button): map size (compact, big, the whole window), a full-screen button, vault mode, pairings, shadows, motion, walking speed; persisted with the progress, applied at once. The map is bigger by default (84 percent of the window).
+- `vibe news`: six AI feeds (OpenAI news, Hugging Face blog, Simon Willison, Claude Code releases, the GitHub changelog, arXiv cs.AI; `[news] feeds` in `vibe.toml`) into `data/news.json` and the vault note News; the news is embedded into the game at build time and shown on the Roadmap; a weekly `news` GitHub Action pulls, rebuilds and commits so a forked repo and its hosted game stay current. Standard library only.
+- `docs/LONG-GAME.md`: the command-by-command setup for playing over weeks with the terminal, the game and Obsidian side by side, and `just camp` to open all three.
 - Grow mode for the vault: `vibe vault mode grow` keeps every note in `vault/_library` (excluded from Obsidian's graph and search) and unlocks notes into the camp as the campaign earns them (a stop's notes and their links, an artifact's notes, a mentor, the Obsidian feature notes when the vault stop is done, `vibe vault unlock` by hand). Tonight reports what is here and what is waiting; the in-game vault applies the same rules (`?vault=grow` previews it) so the graph grows as you play; `vibe vault mode full` restores everything; a Vault choice on the onboarding screen; `vibemap/grow.py`, three tests and a Playwright test.
 - `docs/ECOSYSTEM.md` lists claude-obsidian (AgriciDaniel, MIT), the Claude Code skill set for wiki-style vaults, with `just obsidian-plugin` to fetch it and the one-line `claude --plugin-dir` to use it on this vault.
 

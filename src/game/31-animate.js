@@ -7,7 +7,7 @@ function animate(){
   let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
   else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){hasTarget=false;marker.material.opacity=0;mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
-  const MAXV=4.6,ACC=22,FRIC=14;
+  const MAXV=4.6*speedMult(),ACC=22,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
