@@ -12,6 +12,7 @@ import datetime as dt
 import json
 import re
 import subprocess
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -440,6 +441,132 @@ def _note_strict(world: str, n: int) -> Check:
     )
 
 
+# ---- mentor encounters --------------------------------------------------------
+
+# The exercise a mentor sets is small and offline: a file with a marker, a
+# script that prints one expected line, or a note with a required section.
+MENTORS_DIR = ROOT / "workspace" / "mentors"
+MENTOR_XP_SHARE = 2  # a mentor exercise is worth half a workstream
+MENTOR_NOTE = "notes.md"
+MENTOR_SECTION = "## What I learned"
+MENTOR_WORDS = 25
+
+
+def mentor_dir(mentor_id: str) -> Path:
+    return MENTORS_DIR / mentor_id
+
+
+def _section_words(text: str, heading: str) -> int:
+    """Words under `heading`, up to the next heading of the same or higher level."""
+    lines = text.splitlines()
+    level = len(heading) - len(heading.lstrip("#"))
+    words = 0
+    inside = False
+    for line in lines:
+        if line.strip().startswith("#"):
+            here = len(line) - len(line.lstrip("#"))
+            if line.strip().lower() == heading.lower():
+                inside = True
+                continue
+            if inside and here <= level:
+                break
+            continue
+        if inside:
+            words += len(line.split())
+    return words
+
+
+def _run_exercise(path: Path) -> tuple[bool, str]:
+    """Run the learner's script with the interpreter running vibe. Offline by
+    design: nothing in an exercise needs the network."""
+    try:
+        out = subprocess.run(
+            [sys.executable, path.name],
+            cwd=path.parent,
+            capture_output=True,
+            text=True,
+            timeout=60,
+        )
+    except subprocess.TimeoutExpired:
+        return False, f"{path.name} did not finish in 60 seconds"
+    if out.returncode != 0:
+        first = _plain(out.stderr).splitlines()
+        return False, f"{path.name} failed: {first[-1] if first else 'no output'}"
+    return True, _plain(out.stdout)
+
+
+def _exercise_check(m: dict) -> Check:
+    ex = m["encounter"]["exercise"]
+    here = mentor_dir(m["id"])
+
+    def fn(cfg: Config) -> tuple[bool, str]:
+        p = here / ex["file"]
+        if not p.exists():
+            return False, f"{ex['dir']}/{ex['file']} does not exist"
+        text = p.read_text(encoding="utf-8")
+        missing = [s for s in ex.get("sections", ()) if s.lower() not in text.lower()]
+        missing += [s for s in ex.get("contains", ()) if s not in text]
+        if missing:
+            return False, f"{ex['file']} is missing: {', '.join(missing)}"
+        lines = [line for line in text.splitlines() if line.strip()]
+        if len(lines) < ex.get("min_lines", 1):
+            return (
+                False,
+                f"{ex['file']} has {len(lines)} lines, needs {ex['min_lines']}",
+            )
+        if not ex.get("run"):
+            return True, f"{ex['file']} holds what the exercise asks for"
+        ok, detail = _run_exercise(p)
+        if not ok:
+            return False, detail
+        want = ex["prints"]
+        return want in detail, (
+            f"it printed {want!r}"
+            if want in detail
+            else f"expected {want!r}, got: {detail[:80]!r}"
+        )
+
+    return Check(
+        ex["title"],
+        fn,
+        f"{ex['dir']}/: {ex['done']}. Steps: " + " ".join(ex["steps"]),
+    )
+
+
+def _mentor_note_check(m: dict) -> Check:
+    here = mentor_dir(m["id"])
+
+    def fn(cfg: Config) -> tuple[bool, str]:
+        p = here / MENTOR_NOTE
+        if not p.exists():
+            return False, f"no {MENTOR_NOTE} in {m['encounter']['exercise']['dir']}"
+        words = _section_words(p.read_text(encoding="utf-8"), MENTOR_SECTION)
+        return words >= MENTOR_WORDS, (
+            f"{words} of your own words under {MENTOR_SECTION} (needs {MENTOR_WORDS})"
+        )
+
+    return Check(
+        f"your note on {m['name']}",
+        fn,
+        f"Write {m['encounter']['exercise']['dir']}/{MENTOR_NOTE} with a "
+        f"{MENTOR_SECTION} section of at least {MENTOR_WORDS} words.",
+        "strict",
+    )
+
+
+def mentor_quest(mentor_id: str, cfg: Config) -> Quest:
+    """The quest for one mentor encounter: the exercise, then your own note."""
+    m = campaign.mentor(mentor_id)
+    checks = [_exercise_check(m), _mentor_note_check(m)]
+    wanted = required_levels(cfg.learner.difficulty)
+    return Quest(
+        "mentor",
+        0,
+        f"{m['name']}: {m['encounter']['exercise']['title']}",
+        tuple(c for c in checks if c.level in wanted),
+    )
+
+
 CAMPUS_CHECKS: dict[int, tuple[Check, ...]] = {
     1: (
         Check(
@@ -571,6 +698,7 @@ BADGES: dict[str, str] = {
     "linked": "Linked: twenty wikilinks in the vault",
     "shipped": "Shipped: GitHub Pages is live",
     "collector": "Collector: found every artifact on the island",
+    "mentored": "Mentored: every mentor's exercise done for real",
 }
 
 
@@ -594,6 +722,8 @@ def new_badges(state: State, cfg: Config) -> list[str]:
         earned.append("shipped")
     if state.artifacts and len(state.artifacts) >= len(campaign.artifacts()):
         earned.append("collector")
+    if len(state.mentors) >= len(campaign.mentors()):
+        earned.append("mentored")
     fresh = [b for b in earned if b not in state.badges]
     state.badges.extend(fresh)
     return fresh

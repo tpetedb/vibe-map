@@ -651,7 +651,49 @@
      "https://howborisusesclaudecode.com/"
     ]
    ],
-   "ask": "How many of your parallel sessions actually finish?"
+   "ask": "How many of your parallel sessions actually finish?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "My agent keeps making the same mistake.",
+      "m": "Then write the mistake down in CLAUDE.md the moment you see it. That is how his team uses the file: every time Claude does something wrong, a line goes in, several times a week.",
+      "src": 3
+     },
+     {
+      "you": "How do I get better work than my first try?",
+      "m": "Give it a way to check itself. He calls a feedback loop the most important thing for quality: a test suite for a backend, a browser for a frontend, a simulator for mobile.",
+      "src": 3
+     },
+     {
+      "you": "Do I need an elaborate setup first?",
+      "m": "No. His own configuration is surprisingly vanilla. The tool is meant to be useful on the day you install it.",
+      "src": 3
+     },
+     {
+      "you": "And you really run several at once?",
+      "m": "Five to ten sessions, each in its own checkout or worktree, so they never fight over the same files.",
+      "src": 0
+     }
+    ],
+    "exercise": {
+     "title": "One rule, and the command that proves it",
+     "minutes": 10,
+     "file": "CLAUDE.md",
+     "steps": [
+      "Think of one thing your agent got wrong today.",
+      "Write workspace/mentors/cherny/CLAUDE.md with a heading ## Rules and one rule that would have prevented it.",
+      "Add a heading ## How it is verified with the command that would catch it (a test, a linter, a build).",
+      "Add notes.md with ## What I learned and a few sentences of your own."
+     ],
+     "sections": [
+      "## Rules",
+      "## How it is verified"
+     ],
+     "done": "CLAUDE.md holds a Rules section and a How it is verified section",
+     "dir": "workspace/mentors/cherny"
+    },
+    "plaque": "Write the mistake down"
+   }
   },
   {
    "id": "wu",
@@ -681,7 +723,45 @@
      "https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it"
     ]
    ],
-   "ask": "What do the non-engineers at Anthropic use it for?"
+   "ask": "What do the non-engineers at Anthropic use it for?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Who reviews what the agent wrote?",
+      "m": "A slash command does the first pass on every pull request inside Anthropic. A person still approves the merge.",
+      "src": 0
+     },
+     {
+      "you": "Where do I start when I do not know the code?",
+      "m": "With the sequence the team's feature command forces: ask what is actually wanted, build the specification, then a detailed plan, then a to-do list.",
+      "src": 0
+     },
+     {
+      "you": "I am not an engineer.",
+      "m": "That is the design goal. They work to lower the barrier for people who are not: it should be intuitive enough that you drop in and it works, with point-and-click surfaces next to the terminal.",
+      "src": 0
+     }
+    ],
+    "exercise": {
+     "title": "Spec, plan, to-do, in that order",
+     "minutes": 12,
+     "file": "spec.md",
+     "steps": [
+      "Pick one small thing you want built this week.",
+      "Write workspace/mentors/wu/spec.md with three headings: ## Spec, ## Plan, ## To-do.",
+      "Under Spec say what done looks like; under Plan the steps; under To-do the list you would hand an agent.",
+      "Add notes.md with ## What I learned."
+     ],
+     "sections": [
+      "## Spec",
+      "## Plan",
+      "## To-do"
+     ],
+     "done": "spec.md has a Spec, a Plan and a To-do section",
+     "dir": "workspace/mentors/wu"
+    },
+    "plaque": "Spec, plan, to-do"
+   }
   },
   {
    "id": "karpathy",
@@ -723,7 +803,47 @@
      "https://x.com/karpathy/status/1886192184808149383"
     ]
    ],
-   "ask": "If the prompt is the program, who is the programmer?"
+   "ask": "If the prompt is the program, who is the programmer?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Where do I start with models?",
+      "m": "With the smallest one you can write yourself. His course opens with a hundred-line autograd engine and a character-level bigram model before anything larger.",
+      "src": 1
+     },
+     {
+      "you": "What is a bigram model?",
+      "m": "Count which character follows which, then pick the likely next one. Makemore part one builds exactly that from scratch, with training, sampling and a loss.",
+      "src": 2
+     },
+     {
+      "you": "Why from scratch when a library exists?",
+      "m": "Because the understanding comes from code you can run. The track goes micrograd, makemore, a WaveNet, a GPT to the 2017 paper, then the tokenizer.",
+      "src": 1
+     },
+     {
+      "you": "And for people who only use the models?",
+      "m": "There is a general track next to the technical one on his page: the same ideas, without the mathematics.",
+      "src": 0
+     }
+    ],
+    "exercise": {
+     "title": "A bigram model in twenty lines",
+     "minutes": 15,
+     "file": "bigram.py",
+     "steps": [
+      "Write workspace/mentors/karpathy/bigram.py with TEXT = 'the cat sat on the mat'.",
+      "Count every pair of neighbouring characters into a dictionary of dictionaries.",
+      "Find the character that most often follows 'a' and print exactly: after a: t",
+      "Run it: python3 bigram.py. Then add notes.md with ## What I learned."
+     ],
+     "run": true,
+     "prints": "after a: t",
+     "done": "python3 bigram.py prints 'after a: t'",
+     "dir": "workspace/mentors/karpathy"
+    },
+    "plaque": "Build the small one first"
+   }
   },
   {
    "id": "lecun",
@@ -759,9 +879,59 @@
     [
      "Karpathy's reproduction",
      "https://github.com/karpathy/lecun1989-repro"
+    ],
+    [
+     "V-JEPA (Meta AI)",
+     "https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/"
+    ],
+    [
+     "Interview with TIME",
+     "https://time.com/6694432/yann-lecun-meta-ai-interview/"
     ]
    ],
-   "ask": "He does not think the thing I am using is the future?"
+   "ask": "He does not think the thing I am using is the future?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Why is he not impressed by the thing I am using?",
+      "m": "He argues that predicting the next token does not give a system a model of the world: it can sound right, hallucinate, and neither reason nor plan.",
+      "src": 4
+     },
+     {
+      "you": "What would, then?",
+      "m": "Predicting in an abstract representation space instead of predicting every pixel. V-JEPA drops the detail nobody can predict, such as each leaf moving, and keeps what the scene is about.",
+      "src": 3
+     },
+     {
+      "you": "And why open weights?",
+      "m": "Because these assistants will sit between people and their knowledge, and he does not think one company should own that layer.",
+      "src": 4
+     },
+     {
+      "you": "Should I be frightened?",
+      "m": "He calls the doom case overstated: intelligence on its own does not produce a will to dominate. Hold that next to what Hinton says and keep both.",
+      "src": 4
+     }
+    ],
+    "exercise": {
+     "title": "What mattered, and what you could throw away",
+     "minutes": 12,
+     "file": "abstraction.md",
+     "steps": [
+      "Take one task you gave an agent recently.",
+      "Write workspace/mentors/lecun/abstraction.md with ## What mattered and ## What I could throw away.",
+      "Under the first, the few facts the answer depended on. Under the second, everything you fed it that turned out to be noise.",
+      "Add notes.md with ## What I learned."
+     ],
+     "sections": [
+      "## What mattered",
+      "## What I could throw away"
+     ],
+     "done": "abstraction.md separates what mattered from what you could throw away",
+     "dir": "workspace/mentors/lecun"
+    },
+    "plaque": "Predict the idea, not the pixel"
+   }
   },
   {
    "id": "hinton",
@@ -793,9 +963,52 @@
     [
      "Nobel Prize 2024, Hinton facts",
      "https://www.nobelprize.org/prizes/physics/2024/hinton/facts/"
+    ],
+    [
+     "His page at Toronto",
+     "https://www.cs.toronto.edu/~hinton/"
+    ],
+    [
+     "Cambridge on the 2024 Nobel Prize",
+     "https://www.cam.ac.uk/research/news/university-of-cambridge-alumnus-awarded-2024-nobel-prize-in-physics"
     ]
    ],
-   "ask": "He won a physics prize for this?"
+   "ask": "He won a physics prize for this?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "What did he actually invent?",
+      "m": "He was one of the researchers who introduced back-propagation, and distributed representations come from that line of work: a concept is a pattern across many units, never one unit.",
+      "src": 2
+     },
+     {
+      "you": "And a Nobel Prize in physics?",
+      "m": "Shared with John Hopfield in 2024, for the discoveries that make machine learning with neural networks possible. His Boltzmann machine learns to recognise characteristic elements in data.",
+      "src": 3
+     },
+     {
+      "you": "Why does he warn about it now?",
+      "m": "He argued in Cambridge that large scale digital computation is probably far better at acquiring knowledge than biological computation, and may soon be much more intelligent than us.",
+      "src": 3
+     }
+    ],
+    "exercise": {
+     "title": "Twenty steps of learning from error",
+     "minutes": 12,
+     "file": "descent.py",
+     "steps": [
+      "Write workspace/mentors/hinton/descent.py with w = 0.0 and the target function f(w) = (w - 3) ** 2.",
+      "Twenty times: compute the gradient 2 * (w - 3) and take a step of 0.1 against it.",
+      "Print each step, and at the end print exactly: w = 3.0 (use round(w, 1)).",
+      "Run it: python3 descent.py. Then add notes.md with ## What I learned."
+     ],
+     "run": true,
+     "prints": "w = 3.0",
+     "done": "python3 descent.py ends at 'w = 3.0'",
+     "dir": "workspace/mentors/hinton"
+    },
+    "plaque": "A concept is a pattern"
+   }
   },
   {
    "id": "li",
@@ -829,7 +1042,44 @@
      "https://hai.stanford.edu"
     ]
    ],
-   "ask": "So the list of labelled pictures mattered more than the clever maths?"
+   "ask": "So the list of labelled pictures mattered more than the clever maths?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "What changed with ImageNet?",
+      "m": "A shared labelled set at a size nobody had tried: about fourteen million images across roughly twenty-two thousand categories, organised on the WordNet hierarchy.",
+      "src": 0
+     },
+     {
+      "you": "So the algorithm was not the hard part?",
+      "m": "The data was, and the fact that everyone could measure on the same set. That is what made progress visible.",
+      "src": 0
+     },
+     {
+      "you": "And her work now?",
+      "m": "Human-centred AI at Stanford: a framework for research, education, practice and policy that starts from human needs rather than from the model.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "Label ten things yourself",
+     "minutes": 15,
+     "file": "labels.csv",
+     "steps": [
+      "Pick ten things you can see: files in a folder, emails, photos, tabs.",
+      "Write workspace/mentors/li/labels.csv with the header item,label and one row each.",
+      "Use only two or three labels, and keep them honest: the hard rows are the lesson.",
+      "Add notes.md with ## What I learned, including which row you could not decide."
+     ],
+     "contains": [
+      "item,label"
+     ],
+     "min_lines": 11,
+     "done": "labels.csv has the item,label header and ten labelled rows",
+     "dir": "workspace/mentors/li"
+    },
+    "plaque": "The data is the bottleneck"
+   }
   },
   {
    "id": "sutton",
@@ -861,9 +1111,57 @@
     [
      "Reinforcement Learning: An Introduction (free)",
      "http://incompleteideas.net/book/the-book.html"
+    ],
+    [
+     "The bitter lesson, summarised",
+     "https://en.wikipedia.org/wiki/Bitter_lesson"
+    ],
+    [
+     "Turing Award 2024 (Amii)",
+     "https://www.amii.ca/updates-insights/rich-sutton-awarded-a-m-turing-award-for-reinforcement-learning-research"
     ]
    ],
-   "ask": "Bitter for whom?"
+   "ask": "Bitter for whom?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "What is the bitter lesson?",
+      "m": "That general methods which ride on more computation keep beating methods built around what we happen to know, over decades and across fields.",
+      "src": 2
+     },
+     {
+      "you": "Which general methods?",
+      "m": "Two: search and learning. Deep Blue searched, AlphaGo Zero learned without the expert knowledge, and vision gave up its hand-made features.",
+      "src": 2
+     },
+     {
+      "you": "Why bitter?",
+      "m": "Because it is less flattering to us than researchers expected, so they have been slow to accept it, and keep relearning it.",
+      "src": 2
+     },
+     {
+      "you": "And the prize?",
+      "m": "The 2024 Turing Award with Andrew Barto, for the foundations of reinforcement learning: a machine that learns from experience, which is what Turing asked for in 1947.",
+      "src": 3
+     }
+    ],
+    "exercise": {
+     "title": "The rule you wrote against plain search",
+     "minutes": 12,
+     "file": "search.py",
+     "steps": [
+      "Write workspace/mentors/sutton/search.py with NUMS = [2, 17, 30, 41, 55, 70, 88].",
+      "First try a rule you invent for finding the two numbers that add up to 100, and print what it gives.",
+      "Then try every pair. Print exactly: search found: 30 70",
+      "Run it: python3 search.py. Then add notes.md with ## What I learned."
+     ],
+     "run": true,
+     "prints": "search found: 30 70",
+     "done": "python3 search.py prints 'search found: 30 70'",
+     "dir": "workspace/mentors/sutton"
+    },
+    "plaque": "Search and learning scale"
+   }
   },
   {
    "id": "amodei",
@@ -901,7 +1199,49 @@
      "https://darioamodei.com/machines-of-loving-grace"
     ]
    ],
-   "ask": "Does the man who runs the company think it is dangerous?"
+   "ask": "Does the man who runs the company think it is dangerous?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Why does everyone expect more every year?",
+      "m": "Because the loss follows a power law in model size, dataset size and compute, measured over more than seven orders of magnitude. He is one of the authors of that paper.",
+      "src": 0
+     },
+     {
+      "you": "Predictable enough to plan on?",
+      "m": "Predictable enough that the plan is the easy part, which is exactly why the care is needed.",
+      "src": 0
+     },
+     {
+      "you": "And the risk?",
+      "m": "His company publishes three worlds rather than one: the optimistic, the intermediate where the problem is real but tractable, and the pessimistic. Safety work has to happen at the frontier because large models differ from small ones.",
+      "src": 1
+     },
+     {
+      "you": "Is that not hedging?",
+      "m": "It is stating the uncertainty in both directions instead of picking the convenient end of it.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "A forecast you can be wrong about",
+     "minutes": 10,
+     "file": "forecast.md",
+     "steps": [
+      "Write workspace/mentors/amodei/forecast.md with ## What I expect in a year and ## What would change my mind.",
+      "Make the first specific enough to be wrong: a number, a date, a task you think will or will not work.",
+      "Make the second an observation you could actually make.",
+      "Add notes.md with ## What I learned."
+     ],
+     "sections": [
+      "## What I expect in a year",
+      "## What would change my mind"
+     ],
+     "done": "forecast.md carries a falsifiable expectation and what would change your mind",
+     "dir": "workspace/mentors/amodei"
+    },
+    "plaque": "Say the uncertainty out loud"
+   }
   },
   {
    "id": "olah",
@@ -935,7 +1275,46 @@
      "https://distill.pub"
     ]
    ],
-   "ask": "So someone is actually reading its mind?"
+   "ask": "So someone is actually reading its mind?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Is the model a black box?",
+      "m": "Only if nobody looks. The whole thread asks whether a transformer can be reverse engineered into a program a person can read.",
+      "src": 0
+     },
+     {
+      "you": "What are they reading?",
+      "m": "Features, the interpretable units pulled out with sparse autoencoders, and the circuits that connect them into behaviour.",
+      "src": 0
+     },
+     {
+      "you": "Why so many pictures?",
+      "m": "Because an explanation you can see and poke at is the point. Distill was built for that, and for paying down the research debt that builds up when nobody explains.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "Draw the circuit of one decision",
+     "minutes": 15,
+     "file": "circuit.md",
+     "steps": [
+      "Pick one decision a tool makes for you: a spam filter, a recommendation, an autocomplete.",
+      "Write workspace/mentors/olah/circuit.md with ## What I looked at and your best guess at the inputs, the middle and the output.",
+      "Draw it as a mermaid flowchart in a fenced block that starts with three backticks and the word mermaid.",
+      "Add notes.md with ## What I learned."
+     ],
+     "sections": [
+      "## What I looked at"
+     ],
+     "contains": [
+      "```mermaid"
+     ],
+     "done": "circuit.md holds a mermaid diagram and what you looked at",
+     "dir": "workspace/mentors/olah"
+    },
+    "plaque": "Look inside, and draw it"
+   }
   },
   {
    "id": "hashimoto",
@@ -973,7 +1352,45 @@
      "https://mitchellh.com"
     ]
    ],
-   "ask": "Why did the Terraform man build a terminal?"
+   "ask": "Why did the Terraform man build a terminal?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Why build another terminal?",
+      "m": "Because you are in it all day. He started Ghostty and libghostty after HashiCorp, where he was on the first engineering team behind Terraform and Vault.",
+      "src": 2
+     },
+     {
+      "you": "Where do its settings live?",
+      "m": "In one file called config.ghostty in your config folder. Plain key = value lines, and a comment is a line that starts with a hash.",
+      "src": 1
+     },
+     {
+      "you": "How much do I have to configure?",
+      "m": "Almost nothing. The defaults are meant to be sensible, and every key also works as a command-line flag.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "One readable config file",
+     "minutes": 10,
+     "file": "config.ghostty",
+     "steps": [
+      "Write workspace/mentors/hashimoto/config.ghostty with at least three key = value lines for a terminal you would actually want.",
+      "Above each one, a comment line starting with a hash that says why, not what.",
+      "Keys are lowercase; a value can be quoted or bare. Read the docs first.",
+      "Add notes.md with ## What I learned."
+     ],
+     "contains": [
+      "#",
+      "="
+     ],
+     "min_lines": 6,
+     "done": "config.ghostty has three settings and a reason above each",
+     "dir": "workspace/mentors/hashimoto"
+    },
+    "plaque": "One readable config file"
+   }
   },
   {
    "id": "torvalds",
@@ -1007,7 +1424,42 @@
      "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects"
     ]
    ],
-   "ask": "Two weeks? For the thing everyone uses?"
+   "ask": "Two weeks? For the thing everyone uses?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "What is a commit, really?",
+      "m": "A snapshot with a name. Git stores content as objects and names each one by the SHA-1 of a small header plus the content itself.",
+      "src": 1
+     },
+     {
+      "you": "The hash of the file?",
+      "m": "Of the word blob, a space, the byte count, a zero byte, then the content. The book hashes 'what is up, doc?' and gets bd9dbf5 and the rest.",
+      "src": 1
+     },
+     {
+      "you": "Why should that matter to me?",
+      "m": "Because once the name is the content, losing work gets hard. Branches are cheap for the same reason: they are only a name pointing at one of those objects.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "Hash a blob the way git does",
+     "minutes": 12,
+     "file": "hash.py",
+     "steps": [
+      "Write workspace/mentors/torvalds/hash.py using hashlib.",
+      "Build the bytes b'blob ' + the length + b'\\x00' + b'what is up, doc?' and take the SHA-1 hexdigest.",
+      "Print exactly: bd9dbf5aae1a3862dd1526723246b20206e5fc37",
+      "Check yourself: echo -n 'what is up, doc?' | git hash-object --stdin. Then add notes.md with ## What I learned."
+     ],
+     "run": true,
+     "prints": "bd9dbf5aae1a3862dd1526723246b20206e5fc37",
+     "done": "python3 hash.py prints the same hash as git hash-object",
+     "dir": "workspace/mentors/torvalds"
+    },
+    "plaque": "The name is the content"
+   }
   },
   {
    "id": "opencode",
@@ -1039,9 +1491,55 @@
     [
      "OpenCode on GitHub",
      "https://github.com/sst/opencode"
+    ],
+    [
+     "Rules and AGENTS.md",
+     "https://opencode.ai/docs/rules/"
     ]
    ],
-   "ask": "So this one is free and it reads my rules too?"
+   "ask": "So this one is free and it reads my rules too?",
+   "encounter": {
+    "dialogue": [
+     {
+      "you": "Is there an open alternative?",
+      "m": "opencode is an open source coding agent that runs in your terminal, your editor or on the desktop.",
+      "src": 0
+     },
+     {
+      "you": "Am I tied to one model?",
+      "m": "No. It reaches more than seventy-five providers through Models.dev, local models included.",
+      "src": 0
+     },
+     {
+      "you": "Do I have to rewrite my rules for it?",
+      "m": "It reads AGENTS.md, walking up from the folder you are in, then a global file, and it can fall back to a CLAUDE.md.",
+      "src": 2
+     },
+     {
+      "you": "And the licence?",
+      "m": "MIT, in the open on GitHub, so you can read how the agent decides instead of guessing.",
+      "src": 1
+     }
+    ],
+    "exercise": {
+     "title": "The same prompt, two providers",
+     "minutes": 12,
+     "file": "providers.md",
+     "steps": [
+      "Write workspace/mentors/opencode/providers.md with ## The same prompt and ## What I would keep.",
+      "Under the first, one prompt you use often, written out in full.",
+      "Under the second, what stays the same whichever model runs it: your rules file, your checks, your review step.",
+      "Add notes.md with ## What I learned."
+     ],
+     "sections": [
+      "## The same prompt",
+      "## What I would keep"
+     ],
+     "done": "providers.md holds one prompt and what survives a change of model",
+     "dir": "workspace/mentors/opencode"
+    },
+    "plaque": "Swap the model, keep the rules"
+   }
   }
  ],
  "artifacts": [
