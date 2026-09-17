@@ -278,7 +278,13 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     help="check a mentor encounter instead of a workstream (an id, or all)",
 )
 @click.option(
-    "--fork", "fork_", is_flag=True, help="check your fork of the game instead"
+    "--fork",
+    "fork_",
+    is_flag=False,
+    flag_value="all",
+    default=None,
+    help="check the fork challenges: all, or one of "
+    + ", ".join(quests.FORK_CHALLENGES),
 )
 @pass_ctx
 def check(
@@ -288,14 +294,17 @@ def check(
     all_: bool,
     claim: bool,
     mentor_id: str | None,
-    fork_: bool,
+    fork_: str | None,
 ) -> None:
     """Verify the definition of done for a workstream and award the XP."""
     if mentor_id:
         _check_mentors(ctx, mentor_id, claim=claim)
         return
     if fork_:
-        quest = fork_quest(ctx.cfg)
+        try:
+            quest = fork_quest(ctx.cfg, fork_)
+        except ValueError as e:
+            _fail(str(e))
         if _print_results(run_quest(quest, ctx.cfg), quest, ctx.cfg):
             console.print("[ok]your fork builds and is yours[/]")
         else:
@@ -1366,7 +1375,9 @@ def fork(ctx: Ctx, source: str | None, force: bool) -> None:
         f"  cd {dest}\n"
         "  edit src/config/00-config.js   # the world scale, the palette\n"
         "  just build                     # your own game/vibe-map.html\n"
-        "  vibe check --fork              # it builds and it is yours"
+        "  vibe check --fork config       # the challenge that checks\n"
+        "The four challenges are in the fork's README.md; "
+        "vibe check --world prod 6 runs them all."
     )
 
 
@@ -1385,7 +1396,63 @@ build:
 # open your build
 game: build
     open game/vibe-map.html
+
+# record whether the build passes right now (the repair challenge)
+record:
+    python3 tools/record_build.py
 """
+
+FORK_RECORD = '''"""Record one build result in repair.json.
+
+Run it while the build is broken, repair the build, run it again: the file
+then holds a failing run followed by a passing one, which is the evidence
+`vibe check --fork repair` looks for. Nothing else writes this file.
+
+    python3 tools/record_build.py
+"""
+
+from __future__ import annotations
+
+import datetime as dt
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+MARKER = ROOT / "repair.json"
+VERSION = 1
+
+
+def main() -> int:
+    out = subprocess.run(
+        [sys.executable, "tools/build.py"], cwd=ROOT, capture_output=True, text=True
+    )
+    ok = out.returncode == 0
+    data = {"version": VERSION, "runs": []}
+    if MARKER.exists():
+        data = json.loads(MARKER.read_text(encoding="utf-8"))
+        if data.get("version") != VERSION:
+            raise SystemExit(
+                f"repair.json version {data.get('version')} is not {VERSION}"
+            )
+    error = (out.stderr or out.stdout).strip().splitlines()
+    data["runs"].append(
+        {
+            "at": dt.datetime.now().isoformat(timespec="seconds"),
+            "ok": ok,
+            "error": "" if ok else error[-1][:200] if error else "no output",
+        }
+    )
+    MARKER.write_text(json.dumps(data, indent=2) + "\\n", encoding="utf-8")
+    said = "build passed" if ok else "build failed"
+    print(f"{said}, {len(data['runs'])} run(s) recorded")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
 
 FORK_README = """# Your fork of Vibe Map
 
@@ -1407,11 +1474,18 @@ and that your configuration is no longer the product's.
 
 ## Challenges
 
-1. Change one value in `src/config/00-config.js` (the world scale, or a
-   palette colour) and rebuild. Look at the result.
-2. Pick a topic from `vibe news` or an article you found, and have your agent
-   add it to the game: a note, a sign, a stop of your own.
-3. Break the build on purpose, read the error, and repair it.
+Each one is checked; `vibe check --fork <challenge>` runs one of them, and
+`vibe check --world prod 6` runs the stop they belong to.
+
+1. `exists`: fork tpetedb/vibe-map on GitHub, then `vibe fork` here.
+2. `config`: change one value in `src/config/00-config.js` (the world scale,
+   or a palette colour) and rebuild. Look at the result.
+3. `topic`: pick a topic from `vibe news` or an article you found, and have
+   your agent add it to `tools/generated/campaign.json` (a stop of your own)
+   or to `tools/generated/tree.js` (a node of your own), then rebuild.
+4. `repair`: break the build on purpose, run `just record`, read the error,
+   repair it, and run `just record` again. The two runs in `repair.json` are
+   the evidence.
 """
 
 
@@ -1421,7 +1495,8 @@ def _copy_fork(src_root: Path, dest: Path) -> int:
     n = _copy_tree(src_root / "src", dest / "src")
     (dest / "tools").mkdir(exist_ok=True)
     shutil.copyfile(src_root / "tools" / "build.py", dest / "tools" / "build.py")
-    n += 1
+    (dest / "tools" / "record_build.py").write_text(FORK_RECORD, encoding="utf-8")
+    n += 2
     generated = dest / "tools" / "generated"
     generated.mkdir(exist_ok=True)
     for name in ("notes.js", "tree.js"):

@@ -19,6 +19,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+import yaml
+
 from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.state import State
@@ -382,7 +384,7 @@ def _own_content(text: str, ws: campaign.Workstream) -> tuple[int, set[str], boo
     return words, links - _generic_links(), dated
 
 
-def _note_check(world: str, n: int) -> Check:
+def _note_check(world: str, n: int, reading_only: bool = False) -> Check:
     """The stop is done when the note holds the learner's own account of it.
 
     Everything vibe writes into the note itself (the stub, the claim bullets,
@@ -402,7 +404,9 @@ def _note_check(world: str, n: int) -> Check:
         )
 
     return Check(
-        f"vault note for {ws.name}",
+        f"reading only: your note on {ws.name}"
+        if reading_only
+        else f"vault note for {ws.name}",
         fn,
         f"Write vault/Camp/{safe_title(ws.name)}.md in your own words: a "
         f"## dated section with at least {OWN_WORDS} words on what you did and "
@@ -671,11 +675,278 @@ GOD: tuple[Check, ...] = (
 )
 
 
+# ---- the deliverable behind each stop -----------------------------------------
+
+# Winter, desert and production stops leave something on the machine, and the
+# check looks at it. Every hint names the path exactly: a check the learner
+# cannot locate is a puzzle, not a gate.
+
+# Stops whose only deliverable is the note: papers to read, history to follow.
+READING_ONLY: frozenset[tuple[str, int]] = frozenset(
+    {("winter", 2), ("winter", 4), ("winter", 5), ("winter", 7)}
+)
+
+# Terminal agents that read the same AGENTS.md; production stop 7 compares two.
+OTHER_AGENTS = ("opencode", "codex", "gemini", "copilot", "cursor", "aider")
+
+
+def _at(rel: str) -> Path:
+    """A workspace path, resolved against this camp."""
+    return ROOT / rel
+
+
+def _body(p: Path) -> list[str]:
+    """The non-empty lines of a file; an empty deliverable is not a deliverable."""
+    text = p.read_text(encoding="utf-8", errors="ignore")
+    return [line for line in text.splitlines() if line.strip()]
+
+
+def _file_check(
+    name: str,
+    rel: str,
+    hint: str,
+    *,
+    contains: tuple[str, ...] = (),
+    any_of: tuple[str, ...] = (),
+    min_lines: int = 1,
+) -> Check:
+    """One file is the deliverable: it exists, it says these things, it has body."""
+
+    def fn(_: Config) -> tuple[bool, str]:
+        p = _at(rel)
+        if not p.is_file():
+            return False, f"{rel} does not exist"
+        lines = _body(p)
+        text = "\n".join(lines).lower()
+        missing = [w for w in contains if w.lower() not in text]
+        if missing:
+            return False, f"{rel} does not mention: {', '.join(missing)}"
+        if any_of and not any(w.lower() in text for w in any_of):
+            return False, f"{rel} mentions none of: {', '.join(any_of)}"
+        if len(lines) < min_lines:
+            return False, f"{rel} has {len(lines)} lines, needs {min_lines}"
+        return True, f"{rel}: {len(lines)} lines"
+
+    return Check(name, fn, hint)
+
+
+def _dir_check(
+    name: str, rel: str, suffixes: tuple[str, ...], hint: str, min_files: int = 1
+) -> Check:
+    """A folder is the deliverable: it holds files of the kinds the stop asked for."""
+
+    def fn(_: Config) -> tuple[bool, str]:
+        d = _at(rel)
+        if not d.is_dir():
+            return False, f"{rel}/ does not exist"
+        found = [p for p in sorted(d.rglob("*")) if p.suffix in suffixes]
+        return len(found) >= min_files, (
+            f"{len(found)} {' or '.join(suffixes)} file(s) in {rel}/ "
+            f"(needs {min_files})"
+        )
+
+    return Check(name, fn, hint)
+
+
+def _w8_makemore(_: Config) -> tuple[bool, str]:
+    d = _at("workspace/winter/makemore")
+    code = [p for p in sorted(d.glob("*")) if p.suffix in (".py", ".ipynb")]
+    if not code:
+        return False, "no .py or .ipynb in workspace/winter/makemore/"
+    samples = d / "samples.txt"
+    if not samples.is_file():
+        return False, "no workspace/winter/makemore/samples.txt"
+    n = len(_body(samples))
+    return n >= 10, f"{len(code)} script(s) and {n} sampled names (needs 10)"
+
+
+def _d1_dial(_: Config) -> tuple[bool, str]:
+    p = _at("AGENTS.md")
+    if not p.is_file():
+        return False, "AGENTS.md is missing"
+    text = p.read_text(encoding="utf-8").lower()
+    loose = any(w in text for w in ("scratch", "vibe-only", "vibe only"))
+    tight = "test" in text
+    if loose and tight:
+        return True, "AGENTS.md names the loose end and the tested end"
+    return False, (
+        "AGENTS.md needs both ends of the dial: a vibe-only folder "
+        f"({'named' if loose else 'missing'}) and where tests are required "
+        f"({'named' if tight else 'missing'})"
+    )
+
+
+def _d2_dotfolders(_: Config) -> tuple[bool, str]:
+    p = _at("workspace/desert/dotfiles.md")
+    if not p.is_file():
+        return False, "workspace/desert/dotfiles.md does not exist"
+    entries = {
+        m.group(0)
+        for m in re.finditer(r"(?<![\w.])\.[a-z][a-z0-9_-]{1,20}", p.read_text("utf-8"))
+    }
+    return len(entries) >= 6, f"{len(entries)} dot entries explained (needs 6)"
+
+
+def _d3_tests(_: Config) -> tuple[bool, str]:
+    """The learner's own tests, run the way they will run them: pytest, green."""
+    found = sorted(_at("workspace").rglob("test_*.py"))
+    if not found:
+        return False, "no test_*.py under workspace/"
+    out = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", *PYTEST_PLAIN, *map(str, found)],
+        cwd=ROOT, capture_output=True, text=True, timeout=600,
+    )  # fmt: skip
+    lines = _plain(out.stdout or out.stderr).splitlines()
+    return out.returncode == 0, lines[-1] if lines else "no output"
+
+
+def _d4_gate(_: Config) -> tuple[bool, str]:
+    """A gate, not a bookkeeping hook: it runs a check, or it stands before one."""
+    hooks = _settings().get("hooks", {})
+    checkers = ("ruff", "pytest", "lint", "format", "test")
+    gates = {k for k in ("PreToolUse", "Stop", "SubagentStop") if hooks.get(k)}
+    for event, blocks in hooks.items():
+        for b in blocks:
+            for h in b.get("hooks", []):
+                if any(w in h.get("command", "") for w in checkers):
+                    gates.add(event)
+    if gates:
+        return True, f"gates: {', '.join(sorted(gates))}"
+    return False, f"hooks configured ({', '.join(hooks) or 'none'}) but none is a gate"
+
+
+def _d5_spec(_: Config) -> tuple[bool, str]:
+    d = _at("workspace/specs")
+    if not d.is_dir():
+        return False, "workspace/specs/ does not exist"
+    good = [
+        p
+        for p in sorted(d.glob("*.md"))
+        if len(_body(p)) >= 12 and any(ln.startswith("## ") for ln in _body(p))
+    ]
+    return bool(good), (
+        f"{good[0].name}: a spec with sections"
+        if good
+        else f"{len(list(d.glob('*.md')))} file(s), none with sections and 12 lines"
+    )
+
+
+def _d6_ci(_: Config) -> tuple[bool, str]:
+    d = _at(".github/workflows")
+    files = sorted(d.glob("*.yml")) + sorted(d.glob("*.yaml"))
+    if not files:
+        return False, "no workflow under .github/workflows/"
+    for p in files:
+        try:
+            wf = yaml.safe_load(p.read_text(encoding="utf-8"))
+        except yaml.YAMLError as e:
+            return False, f"{p.name} is not valid YAML: {_plain(str(e))[:80]}"
+        body = json.dumps(wf)
+        if "pytest" in body or "ruff" in body:
+            return True, f"{p.name} parses and runs the checks"
+    return False, f"{len(files)} workflow(s) parse, none runs pytest or ruff"
+
+
+def _d7_job(_: Config) -> tuple[bool, str]:
+    d = _at("workspace/jobs")
+    scripts = [p for p in sorted(d.glob("*")) if p.suffix in (".sh", ".py")]
+    if not scripts:
+        return False, "no .sh or .py in workspace/jobs/"
+    log = d / "log.csv"
+    if not log.is_file():
+        return False, "no workspace/jobs/log.csv; the job records every run"
+    runs = max(len(_body(log)) - 1, 0)
+    return runs >= 2, f"{scripts[0].name} and {runs} recorded run(s) (needs 2)"
+
+
+def _d8_evals(_: Config) -> tuple[bool, str]:
+    cases, runner = _at("workspace/evals/cases.csv"), _at("workspace/evals/run.py")
+    if not cases.is_file():
+        return False, "no workspace/evals/cases.csv"
+    if not runner.is_file():
+        return False, "no workspace/evals/run.py"
+    rows = max(len(_body(cases)) - 1, 0)
+    return rows >= 5, f"{rows} eval case(s) (needs 5)"
+
+
+def _p1_brewfile(_: Config) -> tuple[bool, str]:
+    p = _at("workspace/dotfiles/Brewfile")
+    if not p.is_file():
+        return False, "no workspace/dotfiles/Brewfile"
+    entries = [ln for ln in _body(p) if ln.split(" ")[0] in ("brew", "cask", "tap")]
+    return len(entries) >= 5, f"{len(entries)} Brewfile entries (needs 5)"
+
+
+def _p2_terminal(_: Config) -> tuple[bool, str]:
+    want = ("workspace/dotfiles/ghostty/config", "workspace/dotfiles/zshrc")
+    missing = [rel for rel in want if not _at(rel).is_file() or not _body(_at(rel))]
+    return not missing, (
+        "your ghostty config and your zshrc, both written"
+        if not missing
+        else f"missing or empty: {', '.join(missing)}"
+    )
+
+
+def _p3_github(_: Config) -> tuple[bool, str]:
+    url = _git("remote", "get-url", "origin")
+    if "github.com" not in url:
+        return False, "no origin remote on github.com"
+    names = [b for b in _git("branch", "--format=%(refname:short)").splitlines() if b]
+    return len(names) >= 2, (
+        f"{url} with {len(names)} branch(es): {', '.join(names[:4]) or 'none'} "
+        "(needs a second branch)"
+    )
+
+
+def _p4_history(_: Config) -> tuple[bool, str]:
+    log = _git("reflog", "-n", "300")
+    found = sorted(w for w in ("rebase", "revert", "cherry-pick", "reset") if w in log)
+    return bool(found), (
+        f"the reflog remembers: {', '.join(found)}"
+        if found
+        else "no rebase, revert, cherry-pick or reset in the reflog"
+    )
+
+
+def _p5_permissions(_: Config) -> tuple[bool, str]:
+    allow = _settings().get("permissions", {}).get("allow", [])
+    return len(allow) >= 3, f"{len(allow)} allowed tool pattern(s) (needs 3)"
+
+
+def _p7_other_agents(_: Config) -> tuple[bool, str]:
+    p = _at("workspace/agents/comparison.md")
+    if not p.is_file():
+        return False, "no workspace/agents/comparison.md"
+    text = p.read_text(encoding="utf-8").lower()
+    named = [a for a in OTHER_AGENTS if a in text]
+    if len(named) < 2:
+        return False, f"names {len(named)} agent(s); compare two, side by side"
+    n = len(_body(p))
+    return n >= 8, f"{', '.join(named)} over {n} lines (needs 8)"
+
+
+def _p8_dotfiles_repo(_: Config) -> tuple[bool, str]:
+    d = _at("workspace/dotfiles")
+    if not (d / ".git").exists():
+        return False, "workspace/dotfiles is not a git repository"
+    install = d / "install.sh"
+    if not install.is_file():
+        return False, "no workspace/dotfiles/install.sh"
+    if "ln -s" not in install.read_text(encoding="utf-8"):
+        return False, "install.sh does not symlink anything (ln -s)"
+    if not (d / "README.md").is_file():
+        return False, "no workspace/dotfiles/README.md"
+    return True, "a git repo with install.sh and a README"
+
+
 # ---- the fork -----------------------------------------------------------------
 
 FORK_DIR = Path("workspace") / "forks" / "vibe-map"
 FORK_MANIFEST = "fork.json"
 FORK_VERSION = 1
+# The production stop the fork challenges belong to; `vibe check --fork` prints
+# under its heading and claims it like any other stop.
+FORK_STOP = 6
 
 
 def fork_dir(base: Path | None = None) -> Path:
@@ -743,33 +1014,301 @@ def _fork_builds(_: Config) -> tuple[bool, str]:
     return True, f"{out.stat().st_size // 1024} KB from your own src/"
 
 
-FORK_CHECKS: tuple[Check, ...] = (
-    Check(
-        "fork exists",
-        _fork_exists,
-        f"make it: vibe fork (writes {FORK_DIR.as_posix()})",
+FORK_REPAIR = "repair.json"
+FORK_REPAIR_VERSION = 1
+# Commit messages that count as the two halves of a repair, when the fork is a
+# git repository and the marker file was never written.
+BROKE = ("break", "broke", "broken")
+FIXED = ("repair", "fix", "fixed", "green")
+
+
+def _fork_topic(_: Config) -> tuple[bool, str]:
+    """A topic of the learner's own: a stop or a tree node the product lacks."""
+    d = fork_dir()
+    generated = d / "tools" / "generated"
+    if not generated.is_dir():
+        return False, "no fork yet"
+    mine: set[str] = set()
+    theirs = {ws.name for ev in campaign.evenings().values() for ws in ev.workstreams}
+    local = generated / "campaign.json"
+    if local.is_file():
+        data = json.loads(local.read_text(encoding="utf-8"))
+        mine |= {
+            x["n"] for ev in data.get("evenings", {}).values() for x in ev.get("ws", [])
+        }
+    tree = generated / "tree.js"
+    if tree.is_file():
+        mine |= set(re.findall(r'"id":\s*"([^"]+)"', tree.read_text(encoding="utf-8")))
+        theirs |= {t.id for t in campaign.tech_nodes()}
+    new = sorted(mine - theirs)
+    return bool(new), (
+        f"your own topic: {', '.join(new[:3])}"
+        if new
+        else "the fork's campaign and tree still hold only the product's topics"
+    )
+
+
+def _fork_repaired(_: Config) -> tuple[bool, str]:
+    """Evidence of a build that failed and then passed: the marker, else git."""
+    d = fork_dir()
+    marker = d / FORK_REPAIR
+    if marker.is_file():
+        data = json.loads(marker.read_text(encoding="utf-8"))
+        if data.get("version") != FORK_REPAIR_VERSION:
+            raise ValueError(
+                f"{FORK_REPAIR} version {data.get('version')} is not "
+                f"{FORK_REPAIR_VERSION}; delete it and record the runs again"
+            )
+        runs = data.get("runs", [])
+        broke = next((i for i, r in enumerate(runs) if not r.get("ok")), None)
+        if broke is not None and any(r.get("ok") for r in runs[broke + 1 :]):
+            return True, f"{FORK_REPAIR}: a broken build, then a green one"
+        return False, (
+            f"{len(runs)} recorded run(s); needs a broken one, then a green one"
+        )
+    if not (d / ".git").exists():
+        return False, f"no {FORK_DIR.as_posix()}/{FORK_REPAIR} and no git history"
+    log = subprocess.run(
+        ["git", "log", "--format=%s", "-n", "50"],
+        cwd=d, capture_output=True, text=True, timeout=20,
+    ).stdout.lower()  # fmt: skip
+    subjects = list(reversed(log.splitlines()))
+    broke = next(
+        (i for i, s in enumerate(subjects) if any(w in s for w in BROKE)), None
+    )
+    later = subjects[broke + 1 :] if broke is not None else []
+    if any(any(w in s for w in FIXED) for s in later):
+        return True, "the fork's git history breaks the build and then repairs it"
+    return False, "the fork's history shows no break followed by a repair"
+
+
+# The four challenges of the forking stop, in the order they are meant to be
+# done. `vibe check --fork <challenge>` runs one of them.
+FORK_CHALLENGES: dict[str, tuple[Check, ...]] = {
+    "exists": (
+        Check(
+            "fork exists",
+            _fork_exists,
+            f"fork tpetedb/vibe-map on GitHub, then: vibe fork "
+            f"(writes {FORK_DIR.as_posix()})",
+        ),
     ),
-    Check(
-        "your configuration",
-        _fork_changed,
-        "edit workspace/forks/vibe-map/src/config/00-config.js, "
-        "the world scale or a palette colour",
+    "config": (
+        Check(
+            "your configuration",
+            _fork_changed,
+            "edit workspace/forks/vibe-map/src/config/00-config.js, "
+            "the world scale or a palette colour",
+        ),
+        Check(
+            "it builds",
+            _fork_builds,
+            "in the fork: just build (or python tools/build.py) and read the error",
+        ),
     ),
-    Check(
-        "it builds",
-        _fork_builds,
-        "in the fork: just build (or python tools/build.py) and read the error",
+    "topic": (
+        Check(
+            "a topic of your own",
+            _fork_topic,
+            "pick one from vibe news or an article you read, then ask your agent "
+            "to add it to workspace/forks/vibe-map/tools/generated/campaign.json "
+            "(a ws entry) or tree.js (a node id), and rebuild",
+        ),
     ),
+    "repair": (
+        Check(
+            "broken and repaired",
+            _fork_repaired,
+            "in the fork: break the build on purpose, run just record, fix it, "
+            f"run just record again (it writes {FORK_REPAIR})",
+        ),
+    ),
+}
+
+FORK_CHECKS: tuple[Check, ...] = tuple(
+    c for checks in FORK_CHALLENGES.values() for c in checks
 )
 
 
-def fork_quest(cfg: Config) -> Quest:
-    """The checks behind `vibe check --fork`: it exists, it differs, it builds."""
+def fork_quest(cfg: Config, challenge: str = "all") -> Quest:
+    """The checks behind `vibe check --fork`, all of them or one challenge."""
+    if challenge != "all" and challenge not in FORK_CHALLENGES:
+        raise ValueError(
+            f"unknown fork challenge {challenge!r}; one of: all, "
+            + ", ".join(FORK_CHALLENGES)
+        )
+    checks = FORK_CHECKS if challenge == "all" else FORK_CHALLENGES[challenge]
     wanted = required_levels(cfg.learner.difficulty)
+    ws = campaign.evenings()["prod"].workstreams[FORK_STOP - 1]
     return Quest(
-        "production", 0, "Your fork of the game",
-        tuple(c for c in FORK_CHECKS if c.level in wanted),
+        "prod", FORK_STOP, ws.name,
+        tuple(c for c in checks if c.level in wanted),
     )  # fmt: skip
+
+
+# The deliverable of every stop that has one. The note check is the floor
+# underneath all of them; the fork challenges are the production forking stop.
+STOP_CHECKS: dict[tuple[str, int], tuple[Check, ...]] = {
+    ("winter", 1): (
+        _dir_check(
+            "a backprop reproduction",
+            "workspace/winter/backprop",
+            (".py", ".ipynb"),
+            "workspace/winter/backprop/: the notebook or script the agent wrote "
+            "with you, following karpathy/lecun1989-repro.",
+        ),
+    ),
+    ("winter", 3): (
+        _file_check(
+            "your transformer diagram",
+            "workspace/winter/transformer.md",
+            "workspace/winter/transformer.md: a ```mermaid block of the "
+            "transformer block, and your own lines on tokens and attention.",
+            contains=("```mermaid", "token", "attention"),
+            min_lines=8,
+        ),
+    ),
+    ("winter", 6): (
+        _file_check(
+            "a local model run recorded",
+            "workspace/winter/local-model.md",
+            "workspace/winter/local-model.md: the model you pulled with ollama, "
+            "the three questions you asked it, and how the answers differed.",
+            contains=("ollama",),
+            any_of=("llama", "qwen", "mistral", "gemma", "phi"),
+            min_lines=8,
+        ),
+    ),
+    ("winter", 8): (
+        Check(
+            "a tiny model of your own",
+            _w8_makemore,
+            "workspace/winter/makemore/: the notebook or script, and "
+            "samples.txt with the ten names it invented.",
+        ),
+    ),
+    ("desert", 1): (
+        Check(
+            "the dial is written down",
+            _d1_dial,
+            "AGENTS.md: name the vibe-only folder (scratch/) and the folders "
+            "that need tests before a merge.",
+        ),
+    ),
+    ("desert", 2): (
+        Check(
+            "every dot entry explained",
+            _d2_dotfolders,
+            "workspace/desert/dotfiles.md: one line each for at least six dot "
+            "entries you found with ls -la (.git, .gitignore, .env, .venv, "
+            ".claude, .agents, .github).",
+        ),
+    ),
+    ("desert", 3): (
+        Check(
+            "your tests run green",
+            _d3_tests,
+            "workspace/: a test_*.py next to the code it tests, and pytest green.",
+        ),
+    ),
+    ("desert", 4): (
+        Check(
+            "a hook that gates",
+            _d4_gate,
+            ".claude/settings.json: a PostToolUse hook that runs ruff or a Stop "
+            "hook that runs pytest, not only a bookkeeping hook.",
+        ),
+    ),
+    ("desert", 5): (
+        Check(
+            "a spec you wrote first",
+            _d5_spec,
+            "workspace/specs/<feature>.md: twelve lines with ## sections, "
+            "written before the code.",
+        ),
+    ),
+    ("desert", 6): (
+        Check(
+            "CI runs your checks",
+            _d6_ci,
+            ".github/workflows/<name>.yml: valid YAML that runs ruff and pytest "
+            "on push and pull request.",
+        ),
+    ),
+    ("desert", 7): (
+        Check(
+            "a job that ran twice",
+            _d7_job,
+            "workspace/jobs/: the script, and log.csv with a row per run "
+            "(start, end, exit code). Run it twice.",
+        ),
+    ),
+    ("desert", 8): (
+        Check(
+            "an eval with cases",
+            _d8_evals,
+            "workspace/evals/cases.csv with five cases and "
+            "workspace/evals/run.py that scores them.",
+        ),
+    ),
+    ("prod", 1): (
+        Check(
+            "a Brewfile",
+            _p1_brewfile,
+            "workspace/dotfiles/Brewfile: brew bundle dump --file=- writes it; "
+            "five entries at least.",
+        ),
+    ),
+    ("prod", 2): (
+        Check(
+            "your terminal, configured",
+            _p2_terminal,
+            "workspace/dotfiles/ghostty/config and workspace/dotfiles/zshrc: "
+            "your own, line by line.",
+        ),
+    ),
+    ("prod", 3): (
+        Check(
+            "a GitHub remote and a branch",
+            _p3_github,
+            "gh repo create, git remote add origin, then git switch -c "
+            "feature/<something> and push it.",
+        ),
+    ),
+    ("prod", 4): (
+        Check(
+            "history you rewrote",
+            _p4_history,
+            "on a throwaway branch: git rebase -i HEAD~3, or git revert <hash>. "
+            "git reflog is the evidence.",
+        ),
+    ),
+    ("prod", 5): (
+        Check(
+            "permissions set once",
+            _p5_permissions,
+            '.claude/settings.json: "permissions": {"allow": [...]} with at '
+            "least three patterns, for example Bash(pytest*).",
+        ),
+    ),
+    ("prod", 7): (
+        Check(
+            "two agents compared",
+            _p7_other_agents,
+            "workspace/agents/comparison.md: the same task in two agents "
+            "(opencode, codex, gemini), eight lines on what differed.",
+        ),
+    ),
+    ("prod", 8): (
+        Check(
+            "a dotfiles repository",
+            _p8_dotfiles_repo,
+            "workspace/dotfiles/: git init, install.sh that symlinks with ln -s, "
+            "and a README.md.",
+        ),
+    ),
+}
+STOP_CHECKS[("prod", FORK_STOP)] = FORK_CHECKS
 
 
 def quest_for(world: str, n: int, cfg: Config) -> Quest:
@@ -778,7 +1317,11 @@ def quest_for(world: str, n: int, cfg: Config) -> Quest:
     if world == "campus":
         checks = list(CAMPUS_CHECKS[n])
     else:
-        checks = [_note_check(world, n), _note_strict(world, n)]
+        checks = [
+            _note_check(world, n, (world, n) in READING_ONLY),
+            *STOP_CHECKS.get((world, n), ()),
+            _note_strict(world, n),
+        ]
     checks += list(EXTRA)
     if cfg.learner.difficulty == "god":
         checks += list(GOD)

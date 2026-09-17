@@ -525,8 +525,8 @@
     {
      "h": "Stop 5",
      "n": "Claude Code, the power settings",
-     "d": "Plan mode, --continue, /compact, /rewind, permissions, memory, teleport between terminal, web and phone",
-     "html": "<p>You have used Claude Code for three evenings; tonight you configure it. Personal memory in <code>~/.claude/CLAUDE.md</code> applies to every project. Project memory in the repo's CLAUDE.md is versioned with the code. <code>claude --continue</code> resumes; <code>/compact</code> summarises a long session; <code>/rewind</code> goes back a step; plan mode keeps it from editing. Sessions can move between the terminal, the web and the iOS app (Cherny starts sessions from his phone in the morning). Set your permissions once so the routine commands never ask, and keep the dangerous ones asking.</p><div class=\"card\"><h3>Do this</h3><ol class=\"small\"><li>Write your personal <code>~/.claude/CLAUDE.md</code>: how you like explanations, which commands are fine, what to never do. Ten lines.</li><li>Configure allowed tools in settings for <code>Bash(pytest*)</code>, <code>Bash(ruff*)</code>, <code>Bash(git status*)</code>.</li><li>Try the desktop app and the web session once, so you know they exist when you need them.</li></ol></div><p class=\"small\"><b>Sources:</b> <a href=\"https://code.claude.com/docs/en/memory\" target=\"_blank\" rel=\"noopener\">Memory (CLAUDE.md, imports, precedence)</a> · <a href=\"https://code.claude.com/docs/en/settings\" target=\"_blank\" rel=\"noopener\">Settings</a> · <a href=\"https://code.claude.com/docs/en/cli-reference\" target=\"_blank\" rel=\"noopener\">CLI reference</a> · <a href=\"https://howborisusesclaudecode.com/\" target=\"_blank\" rel=\"noopener\">How Boris uses Claude Code (curated tips)</a></p><div class=\"rolinda\"><b>Rolinda asks</b>So it has a memory now, but only if you write it down for it?</div>",
+     "d": "Plan mode, --continue, /compact, /rewind, permissions, memory, and the surfaces: terminal, web, phone and Chrome",
+     "html": "<p>You have used Claude Code for three evenings; tonight you configure it. Personal memory in <code>~/.claude/CLAUDE.md</code> applies to every project. Project memory in the repo's CLAUDE.md is versioned with the code. <code>claude --continue</code> resumes; <code>/compact</code> summarises a long session; <code>/rewind</code> goes back a step; plan mode keeps it from editing. Sessions can move between the terminal, the web and the iOS app (Cherny starts sessions from his phone in the morning). Set your permissions once so the routine commands never ask, and keep the dangerous ones asking.</p><p><b>The browser is a surface too.</b> Claude in Chrome is the official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome, so the agent in your terminal can open your own game, take a screenshot and read the console. An agent in your logged-in browser acts as you: use it on tabs you would let a colleague touch, and read the permission prompt every time.</p><div class=\"card\"><h3>Do this</h3><ol class=\"small\"><li>Write your personal <code>~/.claude/CLAUDE.md</code>: how you like explanations, which commands are fine, what to never do. Ten lines.</li><li>Configure allowed tools in settings for <code>Bash(pytest*)</code>, <code>Bash(ruff*)</code>, <code>Bash(git status*)</code>.</li><li>Try the desktop app and the web session once, so you know they exist when you need them.</li><li>Install Claude in Chrome, give it one repetitive task you did last week, and note in the vault what it got wrong.</li></ol></div><p class=\"small\"><b>Sources:</b> <a href=\"https://code.claude.com/docs/en/memory\" target=\"_blank\" rel=\"noopener\">Memory (CLAUDE.md, imports, precedence)</a> · <a href=\"https://code.claude.com/docs/en/settings\" target=\"_blank\" rel=\"noopener\">Settings</a> · <a href=\"https://code.claude.com/docs/en/cli-reference\" target=\"_blank\" rel=\"noopener\">CLI reference</a> · <a href=\"https://howborisusesclaudecode.com/\" target=\"_blank\" rel=\"noopener\">How Boris uses Claude Code (curated tips)</a> · <a href=\"https://claude.com/chrome\" target=\"_blank\" rel=\"noopener\">Claude in Chrome</a> · <a href=\"https://code.claude.com/docs/en/chrome\" target=\"_blank\" rel=\"noopener\">Claude Code and Chrome</a></p><div class=\"rolinda\"><b>Rolinda asks</b>So it has a memory now, but only if you write it down for it?</div>",
      "src": [
       [
        "Memory (CLAUDE.md, imports, precedence)",
@@ -543,26 +543,38 @@
       [
        "How Boris uses Claude Code (curated tips)",
        "https://howborisusesclaudecode.com/"
-      ]
-     ]
-    },
-    {
-     "h": "Stop 6",
-     "n": "Claude in Chrome",
-     "d": "A browser agent for the repetitive web tasks, and Claude Code driving Chrome",
-     "html": "<p>Two different things share a name. Claude in Chrome is Anthropic's official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome so the agent in your terminal can open pages, take screenshots and debug your own web app in a real browser. For a chief of staff the first one is the daily tool: expense portals, calendar juggling, form filling, research across tabs. For the game you built, the second one lets Claude see what it made.</p><p><b>Safety habit:</b> an agent in your logged-in browser acts as you. Use it on tabs you would let a colleague touch, and read the permission prompt every time.</p><div class=\"card\"><h3>Do this</h3><ol class=\"small\"><li>Install Claude in Chrome from the Chrome Web Store (official listing linked below) and sign in.</li><li>Give it one repetitive task you did last week and watch it. Note in the vault what it got wrong.</li><li>In Claude Code, connect Chrome (docs below) and ask it to open <code>workspace/game/index.html</code>, play one round, and report the score it saw.</li></ol></div><p class=\"small\"><b>Sources:</b> <a href=\"https://chromewebstore.google.com/detail/fcoeoabgfenejglbffodgkkbkcdhcgfn\" target=\"_blank\" rel=\"noopener\">Claude in Chrome (Chrome Web Store, official)</a> · <a href=\"https://claude.com/chrome\" target=\"_blank\" rel=\"noopener\">Claude in Chrome (product page)</a> · <a href=\"https://code.claude.com/docs/en/chrome\" target=\"_blank\" rel=\"noopener\">Claude Code and Chrome</a></p><div class=\"rolinda\"><b>Rolinda asks</b>It can click things in my browser? As me?</div>",
-     "src": [
-      [
-       "Claude in Chrome (Chrome Web Store, official)",
-       "https://chromewebstore.google.com/detail/fcoeoabgfenejglbffodgkkbkcdhcgfn"
       ],
       [
-       "Claude in Chrome (product page)",
+       "Claude in Chrome",
        "https://claude.com/chrome"
       ],
       [
        "Claude Code and Chrome",
        "https://code.claude.com/docs/en/chrome"
+      ]
+     ]
+    },
+    {
+     "h": "Stop 6",
+     "n": "Fork the game",
+     "d": "Fork it on GitHub and with vibe fork, then four challenges: make it, configure it, add a topic, break it and repair it",
+     "html": "<p>Three evenings you used the tools. Tonight you take one of them apart. A fork is your own copy of somebody else's repository: on GitHub it is a button, on your machine it is a folder. <code>vibe fork</code> writes one into <code>workspace/forks/vibe-map/</code> with the game's source, its vendor files and <code>tools/build.py</code>, so <code>just build</code> there produces your own <code>game/vibe-map.html</code>. Nothing you do in the fork touches the course you are playing, which is the point: it is the copy you are allowed to break.</p><p><b>Where the settings live.</b> Your camp's <code>config/camp.toml</code> is the journey level: who you are, how hard, which theme. The fork's <code>src/config/</code> is the source level: world scale, island radius, palette. Changing the first changes your game; changing the second changes the game. Knowing which one you are holding is most of what separation of concerns means.</p><div class=\"card\"><h3>Do this</h3><ol class=\"small\"><li><b>exists</b>: fork <code>tpetedb/vibe-map</code> on GitHub (or <code>gh repo fork</code>), then run <code>vibe fork</code> in your camp. <code>vibe check --fork exists</code>.</li><li><b>config</b>: change one value in <code>workspace/forks/vibe-map/src/config/00-config.js</code>, the world scale or a palette colour, then <code>just build</code> and open the result. <code>vibe check --fork config</code>.</li><li><b>topic</b>: take a topic from <code>vibe news</code> or an article you read and have your agent add it to the fork: a stop in <code>tools/generated/campaign.json</code> or a node in <code>tools/generated/tree.js</code>, then rebuild. <code>vibe check --fork topic</code>.</li><li><b>repair</b>: break the build on purpose, run <code>just record</code>, read the error, fix it, and run <code>just record</code> again. The two runs in <code>repair.json</code> are the evidence. <code>vibe check --fork repair</code>.</li></ol></div><p class=\"small\"><b>Sources:</b> <a href=\"https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo\" target=\"_blank\" rel=\"noopener\">Fork a repository (GitHub Docs)</a> · <a href=\"https://cli.github.com/manual/gh_repo_fork\" target=\"_blank\" rel=\"noopener\">gh repo fork</a> · <a href=\"https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork\" target=\"_blank\" rel=\"noopener\">Syncing a fork (GitHub Docs)</a> · <a href=\"https://github.com/tpetedb/vibe-map\" target=\"_blank\" rel=\"noopener\">tpetedb/vibe-map, the repository you are forking</a></p><div class=\"rolinda\"><b>Rolinda asks</b>If I break my copy, does the real one notice?</div>",
+     "src": [
+      [
+       "Fork a repository (GitHub Docs)",
+       "https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo"
+      ],
+      [
+       "gh repo fork",
+       "https://cli.github.com/manual/gh_repo_fork"
+      ],
+      [
+       "Syncing a fork (GitHub Docs)",
+       "https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork"
+      ],
+      [
+       "tpetedb/vibe-map, the repository you are forking",
+       "https://github.com/tpetedb/vibe-map"
       ]
      ]
     },

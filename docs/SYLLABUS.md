@@ -485,6 +485,8 @@ Do this:
 3. Write one vault note: what a weight is, what a loss is, what a gradient is. Three sentences.
 4. Talk to Hinton and LeCun on this island.
 
+Checked by: `vibe check --world winter 1` looks for a notebook or script in workspace/winter/backprop/.
+
 Sources: [Rumelhart, Hinton, Williams 1986 (Nature)](https://www.nature.com/articles/323533a0) · [Karpathy's lecun1989 reproduction](https://github.com/karpathy/lecun1989-repro) · [micrograd lecture, Zero to Hero](https://karpathy.ai/zero-to-hero.html)
 
 Rolinda's question: "So it is just numbers being adjusted until they stop being wrong?"
@@ -501,6 +503,8 @@ Do this:
 1. Read the AlexNet abstract and the first figure. Ask Claude: "explain the two-GPU split in this figure as if I run a hotel".
 2. Open Apple's Activity Monitor, GPU tab, then run a small local model (Stop 6) and watch the GPU light up. That is the same idea, 14 years later.
 3. Talk to Fei-Fei Li here.
+
+Checked by: `vibe check --world winter 2` is reading only: your vault note is the deliverable.
 
 Sources: [AlexNet paper (NeurIPS 2012)](https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html) · [ImageNet](https://www.image-net.org) · [Karpathy on being the ImageNet reference human](https://karpathy.ai/)
 
@@ -519,6 +523,8 @@ Do this:
 2. Paste a paragraph into a tokenizer and count: ask Claude "how many tokens is this and why does 'Rolinda' split into pieces".
 3. Ask Claude to draw the transformer block as a Mermaid diagram in your vault (the mermaid skill will do it).
 
+Checked by: `vibe check --world winter 3` looks for workspace/winter/transformer.md with a mermaid block and your own lines on tokens and attention.
+
 Sources: [Attention Is All You Need (arXiv)](https://arxiv.org/abs/1706.03762) · [Let's build GPT, Zero to Hero](https://karpathy.ai/zero-to-hero.html) · [Karpathy's channel (general audience track)](https://www.youtube.com/@AndrejKarpathy)
 
 Rolinda's question: "So it never knows what it is going to say, only what is likely next?"
@@ -536,6 +542,8 @@ Do this:
 2. Skim the scaling-laws paper's figure 1. Ask Claude: "what is a power law, and why does a straight line on a log-log plot matter".
 3. Talk to Sutton and Amodei on this island.
 
+Checked by: `vibe check --world winter 4` is reading only: your vault note is the deliverable.
+
 Sources: [The Bitter Lesson (Sutton, 2019)](http://www.incompleteideas.net/IncIdeas/BitterLesson.html) · [Scaling Laws for Neural Language Models (Kaplan et al. 2020)](https://arxiv.org/abs/2001.08361) · [How the Claude Code team works (Cherny interview notes)](https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works)
 
 Rolinda's question: "If bigger always wins, why do you keep telling me to write rules for it?"
@@ -552,6 +560,8 @@ Do this:
 1. Read the Constitutional AI abstract and the Core Views page.
 2. Ask Claude: "show me a prompt where a base model and an assistant model would diverge", then reflect on which one you would want in a hook.
 3. Talk to Dario Amodei here.
+
+Checked by: `vibe check --world winter 5` is reading only: your vault note is the deliverable.
 
 Sources: [Constitutional AI (Bai et al. 2022)](https://arxiv.org/abs/2212.08073) · [Core Views on AI Safety (Anthropic)](https://www.anthropic.com/news/core-views-on-ai-safety) · [Training language models to follow instructions (InstructGPT, 2022)](https://arxiv.org/abs/2203.02155)
 
@@ -571,6 +581,8 @@ Do this:
 3. Ask Claude: "steelman the open-weights position, then steelman the controlled-release position, 150 words each".
 4. Talk to LeCun here.
 
+Checked by: `vibe check --world winter 6` looks for workspace/winter/local-model.md naming ollama and the model you ran.
+
 Sources: [Ollama](https://ollama.com) · [Ollama model library](https://ollama.com/library) · [Open Source AI Definition (OSI)](https://opensource.org/ai/open-source-ai-definition) · [Apple silicon and unified memory (Apple)](https://developer.apple.com/documentation/apple-silicon)
 
 Rolinda's question: "Is the one on your laptop the same thing as Claude, just smaller?"
@@ -587,6 +599,8 @@ Do this:
 1. Ask Claude for a citation on an obscure topic, then verify it. Write in the vault what happened.
 2. Ask Claude to count the letter r in "strawberry" and then to explain why the answer might have been wrong in older models.
 3. Skim one Transformer Circuits article (the one on features in a real model). Ask Claude to summarise the method in five lines.
+
+Checked by: `vibe check --world winter 7` is reading only: your vault note is the deliverable.
 
 Sources: [Transformer Circuits (Anthropic interpretability)](https://transformer-circuits.pub) · [Distill (2016 to 2021 archive)](https://distill.pub) · [Karpathy on tokenisation (Zero to Hero)](https://karpathy.ai/zero-to-hero.html)
 
@@ -605,6 +619,8 @@ Do this:
 2. In Claude Code: "swap the dataset for Dutch first names and add a cell that samples ten new names".
 3. Write the five-word vault note. Link it to every stop on this island.
 4. Talk to Karpathy here before you leave.
+
+Checked by: `vibe check --world winter 8` looks for workspace/winter/makemore/ with your notebook and samples.txt holding ten names.
 
 Sources: [makemore](https://github.com/karpathy/makemore) · [nn-zero-to-hero repo](https://github.com/karpathy/nn-zero-to-hero) · [Zero to Hero course page](https://karpathy.ai/zero-to-hero.html)
 
@@ -627,6 +643,8 @@ Do this:
 2. Read Karpathy's original post and Cherny's thread. Note in the vault the one sentence from each you disagree with.
 3. Talk to Karpathy and Cherny on this island.
 
+Checked by: `vibe check --world desert 1` reads AGENTS.md for both ends of the dial: a vibe-only folder and where tests are required.
+
 Sources: [Karpathy's vibe coding post](https://x.com/karpathy/status/1886192184808149383) · [How Boris uses Claude Code (thread)](https://x.com/bcherny/status/2007179832300581177) · [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny)
 
 Rolinda's question: "So the fun version is allowed, as long as I know it is the fun version?"
@@ -643,6 +661,8 @@ Do this:
 1. Run ls -la in the template repo and in your home folder. Ask Claude to explain every dot entry in one line each; put the list in the vault.
 2. Check that .env and .venv/ are in .gitignore. Commit a change to .gitignore and read the diff.
 3. Open ~/.claude/settings.json and the project's .claude/settings.json. Ask Claude which wins when they disagree, then verify in the docs.
+
+Checked by: `vibe check --world desert 2` looks for workspace/desert/dotfiles.md explaining at least six dot entries.
 
 Sources: [Claude Code settings and precedence](https://code.claude.com/docs/en/settings) · [gitignore documentation](https://git-scm.com/docs/gitignore) · [XDG base directory spec (why ~/.config)](https://specifications.freedesktop.org/basedir-spec/latest/)
 
@@ -661,6 +681,8 @@ Do this:
 2. Ask Claude to introduce a bug on purpose and show the failing test. Then ask it to fix it. Watch the loop.
 3. Add to AGENTS.md: "Before finishing, run: ruff check && ruff format && pytest". Start a new session and see it obey.
 
+Checked by: `vibe check --world desert 3` runs pytest over every test_*.py under workspace/ and wants it green.
+
 Sources: [pytest getting started](https://docs.pytest.org/en/stable/getting-started.html) · [ruff](https://docs.astral.sh/ruff/) · [Claude Code best practices (verification)](https://code.claude.com/docs/en/best-practices)
 
 Rolinda's question: "So the test is the thing that does not have opinions?"
@@ -677,6 +699,8 @@ Do this:
 1. Add a PostToolUse hook on Edit|Write that runs ruff format on the changed file (the hooks guide has the exact shape).
 2. Add a Stop hook that runs pytest -q and returns a non-zero exit with a message when tests fail. Ask Claude to break a test and watch it get sent back.
 3. Read the permissions page and add Bash(pytest*) to the allow list so it never asks for that.
+
+Checked by: `vibe check --world desert 4` reads .claude/settings.json for a hook that gates: one that runs ruff or pytest, or a PreToolUse or Stop hook.
 
 Sources: [Hooks guide](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Permissions](https://code.claude.com/docs/en/permissions)
 
@@ -695,6 +719,8 @@ Do this:
 2. Ask Claude to write a spec for "players can have a nickname" in docs/specs/, then implement from the spec in a fresh session.
 3. Open a PR with the GitHub CLI and ask Claude to review it before you merge: gh pr create, then "review PR #1 for correctness and missing tests".
 
+Checked by: `vibe check --world desert 5` looks for workspace/specs/<feature>.md with ## sections and twelve lines.
+
 Sources: [Common workflows (plan mode, resume, images)](https://code.claude.com/docs/en/common-workflows) · [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing) · [How to use Claude Code like the people who built it (Every)](https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it)
 
 Rolinda's question: "So you make it explain the plan first, like a contractor?"
@@ -710,6 +736,8 @@ Do this:
 2. Break a test, push, see red. Fix, push, see green. Take a screenshot for the vault.
 3. Add branch protection so main cannot be merged to while red (Settings, Branches).
 
+Checked by: `vibe check --world desert 6` parses .github/workflows/*.yml and wants one that runs ruff or pytest.
+
 Sources: [GitHub Actions quickstart](https://docs.github.com/en/actions/quickstart) · [uv in GitHub Actions](https://docs.astral.sh/uv/guides/integration/github/) · [Protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
 
 Rolinda's question: "So the computer checks the computer's work before you look at it?"
@@ -724,6 +752,8 @@ Do this:
 1. Rewrite the scorekeeper job so it writes to Scores.md.tmp and renames at the end. Run it twice; diff the vault.
 2. Ask Claude to add a logs/ line per run with start time, end time, and exit code. Check it after tomorrow's 08:00 run.
 3. Try one batch: for f in data/*.csv; do claude -p "summarise $f in one line" --output-format text; done.
+
+Checked by: `vibe check --world desert 7` looks for workspace/jobs/ with your script and log.csv holding two recorded runs.
 
 Sources: [Headless / programmatic use](https://code.claude.com/docs/en/headless) · [Subagents](https://code.claude.com/docs/en/sub-agents) · [launchd (Apple)](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html)
 
@@ -741,6 +771,8 @@ Do this:
 1. Write evals/cases.csv with five prompts and the answer you expect (yes/no or a short string).
 2. Ask Claude to write evals/run.py that calls claude -p per case and prints a score. Run it before and after changing one rule.
 3. Record both scores in the vault. That number is your first eval.
+
+Checked by: `vibe check --world desert 8` looks for workspace/evals/cases.csv with five cases and workspace/evals/run.py.
 
 Sources: [Building evals (Anthropic docs)](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Claude Code best practices](https://code.claude.com/docs/en/best-practices) · [Anthropic cookbook (evals examples)](https://github.com/anthropics/anthropic-cookbook)
 
@@ -761,6 +793,8 @@ Do this:
 2. Set Chrome as default. In Chrome, sign in to Claude and pin the tab.
 3. Ask Claude: "what is in /opt/homebrew/bin and why is it on my PATH", and put the answer in the vault.
 
+Checked by: `vibe check --world prod 1` looks for workspace/dotfiles/Brewfile with at least five entries.
+
 Sources: [Homebrew](https://brew.sh) · [Homebrew Bundle (Brewfile)](https://docs.brew.sh/Brew-Bundle-and-Brewfile) · [Apple silicon developer docs](https://developer.apple.com/documentation/apple-silicon)
 
 Rolinda's question: "Is this the part where it stops being a laptop and becomes a workstation?"
@@ -775,6 +809,8 @@ Do this:
 1. brew install --cask ghostty, then brew install starship fzf ripgrep bat eza zoxide.
 2. Write your own ghostty/config and .zshrc, one setting at a time, and read every line before you keep it. Ask Claude to explain each line you do not understand.
 3. Open Ghostty, run claude, and try Ctrl+R with fzf. That is the loop for the rest of your life.
+
+Checked by: `vibe check --world prod 2` looks for workspace/dotfiles/ghostty/config and workspace/dotfiles/zshrc, both written.
 
 Sources: [Ghostty](https://ghostty.org) · [GitHub: dotfiles guide](https://dotfiles.github.io) · [starship](https://starship.rs) · [fzf](https://github.com/junegunn/fzf) · [ripgrep](https://github.com/BurntSushi/ripgrep)
 
@@ -792,6 +828,8 @@ Do this:
 3. Ask Claude to do the same for a second change and read git log --oneline --graph afterwards.
 4. Talk to Torvalds on this island.
 
+Checked by: `vibe check --world prod 3` reads git: an origin remote on github.com and a second branch.
+
 Sources: [Git tutorial (official)](https://git-scm.com/docs/gittutorial) · [GitHub: fork a repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) · [GitHub CLI manual](https://cli.github.com/manual/)
 
 Rolinda's question: "So a branch is just a bookmark that moves?"
@@ -807,41 +845,51 @@ Do this:
 2. git worktree add ../vibe-2 feature/second, open a second Ghostty tab, run a second Claude there. Give each a different task.
 3. Ask Claude to revert a commit by hash and explain the difference from reset in the commit message.
 
+Checked by: `vibe check --world prod 4` reads the reflog for a rebase, revert, cherry-pick or reset.
+
 Sources: [git rebase](https://git-scm.com/docs/git-rebase) · [git worktree](https://git-scm.com/docs/git-worktree) · [Cherny on parallel checkouts (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/)
 
 Rolinda's question: "If you can rewrite history, how do you know what actually happened?"
 
 #### Stop 5: Claude Code, the power settings
 
-_Plan mode, --continue, /compact, /rewind, permissions, memory, teleport between terminal, web and phone_
+_Plan mode, --continue, /compact, /rewind, permissions, memory, and the surfaces: terminal, web, phone and Chrome_
 
 You have used Claude Code for three evenings; tonight you configure it. Personal memory in ~/.claude/CLAUDE.md applies to every project. Project memory in the repo's CLAUDE.md is versioned with the code. claude --continue resumes; /compact summarises a long session; /rewind goes back a step; plan mode keeps it from editing. Sessions can move between the terminal, the web and the iOS app (Cherny starts sessions from his phone in the morning). Set your permissions once so the routine commands never ask, and keep the dangerous ones asking.
 
+The browser is a surface too. Claude in Chrome is the official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome, so the agent in your terminal can open your own game, take a screenshot and read the console. An agent in your logged-in browser acts as you: use it on tabs you would let a colleague touch, and read the permission prompt every time.
+
 Do this:
 1. Write your personal ~/.claude/CLAUDE.md: how you like explanations, which commands are fine, what to never do. Ten lines.
-2. Configure allowed tools in settings for Bash(pytest*), Bash(ruff*), Bash(git status*).
+2. Configure allowed tools in settings for Bash(pytest*), Bash(ruff*), Bash(git status*). The check wants at least three patterns in .claude/settings.json.
 3. Try the desktop app and the web session once, so you know they exist when you need them.
+4. Install Claude in Chrome, give it one repetitive task you did last week, and note in the vault what it got wrong.
 
-Sources: [Memory (CLAUDE.md, imports, precedence)](https://code.claude.com/docs/en/memory) · [Settings](https://code.claude.com/docs/en/settings) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [How Boris uses Claude Code (curated tips)](https://howborisusesclaudecode.com/)
+Checked by: `vibe check --world prod 5` reads .claude/settings.json for a permissions allow list.
+
+Sources: [Memory (CLAUDE.md, imports, precedence)](https://code.claude.com/docs/en/memory) · [Settings](https://code.claude.com/docs/en/settings) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [How Boris uses Claude Code (curated tips)](https://howborisusesclaudecode.com/) · [Claude in Chrome](https://claude.com/chrome) · [Claude Code and Chrome](https://code.claude.com/docs/en/chrome)
 
 Rolinda's question: "So it has a memory now, but only if you write it down for it?"
 
-#### Stop 6: Claude in Chrome
+#### Stop 6: Fork the game
 
-_A browser agent for the repetitive web tasks, and Claude Code driving Chrome_
+_Fork it on GitHub and with vibe fork, then four challenges: make it, configure it, add a topic, break it and repair it_
 
-Two different things share a name. Claude in Chrome is Anthropic's official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome so the agent in your terminal can open pages, take screenshots and debug your own web app in a real browser. For a chief of staff the first one is the daily tool: expense portals, calendar juggling, form filling, research across tabs. For the game you built, the second one lets Claude see what it made.
+Three evenings you used the tools. Tonight you take one of them apart. A fork is your own copy of somebody else's repository: on GitHub it is a button, on your machine it is a folder. `vibe fork` writes one into `workspace/forks/vibe-map/` with the game's source, its vendor files and `tools/build.py`, so `just build` there produces your own `game/vibe-map.html`. Nothing you do in the fork touches the course you are playing, which is the point: it is the copy you are allowed to break.
 
-Safety habit: an agent in your logged-in browser acts as you. Use it on tabs you would let a colleague touch, and read the permission prompt every time.
+Where the settings live. Your camp's `config/camp.toml` is the journey level: who you are, how hard, which theme. The fork's `src/config/` is the source level: world scale, island radius, palette. Changing the first changes your game; changing the second changes the game. Knowing which one you are holding is most of what separation of concerns means. `docs/CONFIG.md` is the full table.
 
 Do this:
-1. Install Claude in Chrome from the Chrome Web Store (official listing linked below) and sign in.
-2. Give it one repetitive task you did last week and watch it. Note in the vault what it got wrong.
-3. In Claude Code, connect Chrome (docs below) and ask it to open workspace/game/index.html, play one round, and report the score it saw.
+1. exists: fork tpetedb/vibe-map on GitHub (or `gh repo fork tpetedb/vibe-map`), then run `vibe fork` in your camp. Check it with `vibe check --fork exists`.
+2. config: change one value in `workspace/forks/vibe-map/src/config/00-config.js`, the world scale or a palette colour, then `just build` in the fork and open the result. Check it with `vibe check --fork config`.
+3. topic: take a topic from `vibe news` or an article you read and have your agent add it to the fork, a stop in `tools/generated/campaign.json` or a node in `tools/generated/tree.js`, then rebuild. Check it with `vibe check --fork topic`.
+4. repair: break the build on purpose (rename a file in `src/game/`), run `just record`, read the error, fix it, and run `just record` again. The failing run followed by the passing one in `repair.json` is the evidence. Check it with `vibe check --fork repair`.
 
-Sources: [Claude in Chrome (Chrome Web Store, official)](https://chromewebstore.google.com/detail/fcoeoabgfenejglbffodgkkbkcdhcgfn) · [Claude in Chrome (product page)](https://claude.com/chrome) · [Claude Code and Chrome](https://code.claude.com/docs/en/chrome)
+Checked by: `vibe check --world prod 6` runs all four challenges plus the note; `vibe check --fork <challenge>` runs one of them.
 
-Rolinda's question: "It can click things in my browser? As me?"
+Sources: [Fork a repository (GitHub Docs)](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) · [gh repo fork](https://cli.github.com/manual/gh_repo_fork) · [Syncing a fork (GitHub Docs)](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) · [tpetedb/vibe-map, the repository you are forking](https://github.com/tpetedb/vibe-map)
+
+Rolinda's question: "If I break my copy, does the real one notice?"
 
 #### Stop 7: The other agents
 
@@ -853,6 +901,8 @@ Do this:
 1. brew install opencode (or the install script on opencode.ai). Run it in the template repo; confirm it picked up AGENTS.md and the skills.
 2. Point it at your local Ollama model from Evening 2 and ask for the same test you asked Claude for in Evening 3. Compare.
 3. Write the comparison in the vault: speed, correctness, what needed hand-holding.
+
+Checked by: `vibe check --world prod 7` looks for workspace/agents/comparison.md naming two agents over eight lines.
 
 Sources: [OpenCode](https://opencode.ai) · [AGENTS.md](https://agents.md) · [Agent Skills standard](https://agentskills.io) · [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 
@@ -870,6 +920,8 @@ Do this:
 1. mkdir ~/dotfiles && cd ~/dotfiles && git init. Move the config files in and symlink them back (ask Claude to write install.sh using ln -sf).
 2. Add the Brewfile from Stop 1. Push to GitHub, private if you prefer.
 3. Write the final vault note: what you would tell yourself before Evening 1.
+
+Checked by: `vibe check --world prod 8` looks for workspace/dotfiles/ as a git repo with install.sh (ln -s) and a README.md.
 
 Sources: [GitHub: dotfiles guide](https://dotfiles.github.io) · [Homebrew Bundle](https://docs.brew.sh/Brew-Bundle-and-Brewfile)
 

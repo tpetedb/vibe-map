@@ -48,7 +48,7 @@ flowchart TD
     p2["Stop 3 Git, part one"]
     p3["Stop 4 Git, part two"]
     p4["Stop 5 Claude Code, the power settings"]
-    p5["Stop 6 Claude in Chrome"]
+    p5["Stop 6 Fork the game"]
     p6["Stop 7 The other agents"]
     p7["Stop 8 Your dotfiles repo"]
     p0 --> p1 --> p2 --> p3 --> p4 --> p5 --> p6 --> p7
