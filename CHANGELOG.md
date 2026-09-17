@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-17
+
 ### Added
 
 - A much bigger map. One constant, `WORLD_SCALE` (1.6), is applied once at load to every coordinate the game uses (land, plots, path, river, lake, bridge, prop positions, mentors, artifacts), while buildings and walkers keep their size; walking speed, the camera, the fog and the sky distances scale with it so the feel stays the same, and the inn stays at the origin. Every stop now has its own path: a spur leaves the ring at the plot and runs outward over a causeway to an annex, a small land blob with a flag that carries the stop's hour. An annex is hidden until its stop is done and pops in with the building's confetti when the stop is claimed (or imported), so the level grows as you play; annexes of done stops are there on load. Two new pictures, `docs/media/island-campus-start.png` and `island-campus-expanded.png`, come from `tools/campus_shots.py`.
@@ -101,7 +103,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tpetedb/vibe-map/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/tpetedb/vibe-map/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/tpetedb/vibe-map/compare/v0.3.0...v0.4.0
