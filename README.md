@@ -33,7 +33,7 @@ The three windows, one loop, over weeks: [docs/LONG-GAME.md](docs/LONG-GAME.md) 
 ## Or install the CLI once, anywhere
 
 ```bash
-uv tool install vibe-map          # `vibe` on your PATH, no clone needed
+uv tool install git+https://github.com/tpetedb/vibe-map   # `vibe` on your PATH, no clone needed
 vibe new                          # a slim camp, no engine: vibe-map-<you>-<today>
 vibe new ~/camp --github you/camp # a named folder, pushed to a new GitHub repo
 cd vibe-map-* && vibe status      # the CLI finds the camp from any subfolder
@@ -41,6 +41,8 @@ vibe play                         # the hosted game; --offline caches a copy
 ```
 
 `vibe` carries the campaign, the tech tree and the resources inside the package. `VIBE_HOME` points it at a camp from elsewhere.
+
+The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
 
 ## What one evening leaves behind
 
@@ -134,7 +136,7 @@ Three zones, on purpose. The **product** is the engine and lives here. The **tem
 
 ## Use it as a template
 
-Most people should not: `uv tool install vibe-map` and `vibe new` give you a camp without the engine. Press **Use this template** on GitHub when you want the engine itself (to change the game, the checks or the course); then clone, `just setup`, `just start`, and the checkout is also a valid camp. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repo practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, versions in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
+Most people should not: `uv tool install git+https://github.com/tpetedb/vibe-map` and `vibe new` give you a camp without the engine. Press **Use this template** on GitHub when you want the engine itself (to change the game, the checks or the course); then clone, `just setup`, `just start`, and the checkout is also a valid camp. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repo practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, versions in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
 
 ## For agents
 

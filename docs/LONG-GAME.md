@@ -26,15 +26,17 @@ brew install --cask obsidian ghostty
 You should see `brew` finishing without red lines. Then the camp:
 
 ```bash
-uv tool install vibe-map
+uv tool install git+https://github.com/tpetedb/vibe-map
 vibe new                     # makes ~/vibe-map-<you>-<today>: workspace, vault, config; no engine
 cd vibe-map-*
 just setup                   # links the skills for Claude Code; the vault was built by vibe new
 ```
 
+The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing. `just` is not on a Mac by default: `brew install just` puts it there, and every recipe in a camp also runs as `vibe <thing>`, so `just check 1` and `vibe check 1` are the same command.
+
 The convention is your name, vibe-map, the date you started: `vibe-map-tom-2026-09-17`. It sorts by date, and a progress code or a note always says which camp it came from. The game's own setup guide (title screen, The full experience, or Roadmap, Setup guide) prints these commands with your name filled in.
 
-You should see: the skills linked and `vault ready`. (A camp has no Python environment and no browsers of its own; `.venv` and Playwright belong to the product repository, where the game is built and tested.) Then make the terminal yours (optional, recommended):
+You should see `ready: just start`, with the skills linked and the vault already built by `vibe new`. A camp has no Python environment of its own and no test browsers: the engine lives inside the installed `vibe` command. (`just setup` in the product repository is a different recipe with the same name; that one makes a `.venv` and installs Playwright.) Then make the terminal yours (optional, recommended):
 
 ```bash
 vibe dotfiles install zsh --brew
@@ -84,13 +86,13 @@ That is the whole loop: game, terminal, vault. Four commands.
 
 ```bash
 cd ~/vibe-map-*
-vibe news              # pull the AI feeds into the vault note News (.vibe/news.json)
+vibe news               # pull the AI feeds into the vault note News and the Roadmap card
 vibe vault lint         # orphans and dead links, if you wrote notes by hand
 vibe vault feature --all   # once: the thirty-five Obsidian feature notes, with a canvas, a base and a deck
 git add -A && git commit -m "Week: what I learned" && git push
 ```
 
-If you forked the template on GitHub, the `news` action does the first line for you every Monday, and Pages redeploys the hosted game with the fresh News card.
+In a camp the feed lands in `.vibe/news.json` and the vault note News, and `vibe play` opens the hosted game, which carries its own news. Baking the news into a game file (`just build`) only exists in the product repository. If you forked the product on GitHub, its `news` action does the first line for you every Monday, and Pages redeploys the hosted game with the fresh News card.
 
 ## 5. Keep the three windows side by side
 
@@ -114,12 +116,14 @@ The game in the browser still has your progress (it lives in the browser's stora
 
 | You see | Do |
 |---|---|
-| `vibe: command not found` | `uv tool install vibe-map`, then open a new terminal |
+| `vibe: command not found` | `uv tool install git+https://github.com/tpetedb/vibe-map`, then open a new terminal |
 | `No camp in ...` | `cd ~/vibe-map-*` (or `vibe new` once) |
 | the game shows the Roadmap list, no island | WebGL is off; Chrome on a Mac with Apple silicon is the reference; the lessons still work |
 | Obsidian shows a note with dashed links | grow mode: those notes are still in `_library`; play on, or `vibe vault unlock "<title>"` |
 | `claude -p` complains about a model | run `claude` once interactively to log in; the CLI retries with `--model sonnet` |
 | you want to start the game over | Roadmap, Reset progress, click it twice; or open the hosted game with `?reset` at the end of the URL. Stops, artifacts and mentor choices go; your name and settings stay. The terminal's state is separate: `rm .vibe/state.json` starts that over too |
-| the News card says no news yet | `vibe news` fills the vault note News; the card in the hosted game is baked in the product repository by `just build`, and a forked repo's Monday action does both |
+| `just: command not found` | `brew install just`; or skip it, every recipe also runs as `vibe <thing>` |
+| `just verify` or `just build` is not a recipe here | they belong to the product repository; a camp checks with `vibe check`, `vibe vault lint` and your own tests in `workspace/` |
+| the News card says no news yet | `vibe news`, then reopen the game with `vibe play`; a forked product repo's Monday action refreshes the hosted game |
 
 Nothing you do in the game or the terminal can delete the vault. `git log` shows every change; `just rescue` brings you back to main.
