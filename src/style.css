@@ -132,6 +132,26 @@ details.brief p{margin-top:8px}
 .stamp{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .stamp i{font-style:normal;color:var(--green-bright)}
 #title.off{display:none}
+/* Onboarding steps on the title screen. A returning player sees the resume
+   button first; the steps fold under a summary. */
+.step{display:flex;align-items:center;gap:10px;margin:14px 0 6px;font-family:var(--font-display);font-size:15px;letter-spacing:-.01em}
+.step b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--yellow);color:#000;font-size:12px;font-family:var(--font-mono)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;border-radius:var(--radius-pill)}
+.choice i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}
+.choice.on{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
+.choices.modes{flex-direction:column}.choices.modes .choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border-radius:var(--radius-m);width:100%;text-align:left}
+.choices.modes .choice span{font-weight:400;color:var(--muted);font-size:12.5px}
+.setup{margin:8px 0 4px;padding:4px 12px 8px;border:1px solid var(--line);border-radius:var(--radius-m)}
+.setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
+.setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
+#title.returning #onboard{display:none}
+#title.returning details.brief{margin-top:10px}
+/* Lesson commands fold at hard and above; the summary is the only thing
+   that changes with the difficulty, the commands are always one click away. */
+details.cmds{margin:8px 0 12px}details.cmds summary{cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--blue-bright);list-style:none}
+details.cmds summary::-webkit-details-marker{display:none}details.cmds summary::before{content:"> "}details.cmds[open] summary::before{content:"v "}
+details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 
 .pairing{border:1px solid rgba(255,213,0,.35);background:rgba(255,213,0,.08);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:13.5px;line-height:1.5}
 .pairing b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}

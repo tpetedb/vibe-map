@@ -13,9 +13,13 @@
 
 from __future__ import annotations
 
+import getpass
 import json
+import os
+import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 if __package__ in (None, ""):  # run as a script: put the repo root on the path
@@ -602,6 +606,20 @@ def persona(ctx: Ctx, persona_id: str | None) -> None:
 
 
 @cli.command()
+@click.argument("name", required=False)
+@pass_ctx
+def name(ctx: Ctx, name: str | None) -> None:
+    """Show or set your name (the game and the vault use it)."""
+    if name is None:
+        console.print(ctx.cfg.learner.name)
+        return
+    _set_learner(ctx, "name", name)
+    st = ctx.state
+    st.name = name
+    ctx.save()
+
+
+@cli.command()
 @click.argument("level", required=False, type=click.Choice(list(DIFFICULTIES)))
 @pass_ctx
 def difficulty(ctx: Ctx, level: str | None) -> None:
@@ -1035,13 +1053,28 @@ def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
     console.print(t)
 
 
+# One camp per person and start date: vibe-map-<name>-<YYYY-MM-DD>. Sorts by
+# date in a listing and tells you which camp a note or a code came from.
+def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
+    """The folder name convention for a new camp: your name, vibe-map, the date."""
+    raw = who or os.environ.get("VIBE_NAME") or getpass.getuser() or "player"
+    slug = re.sub(r"[^a-z0-9]+", "-", raw.lower()).strip("-") or "player"
+    return f"vibe-map-{slug}-{(day or date.today()).isoformat()}"
+
+
 @cli.command()
-@click.argument("directory", default="vibe-map")
+@click.argument("directory", required=False)
 @click.option(
     "--github", default=None, help="also create OWNER/NAME on GitHub from the template"
 )
-def new(directory: str, github: str | None) -> None:
-    """Start a new camp: clone the template into DIRECTORY, or generate it on GitHub."""
+@click.option(
+    "--name", "who", default=None, help="your name for the folder (default: the login)"
+)
+def new(directory: str | None, github: str | None, who: str | None) -> None:
+    """Start a new camp in DIRECTORY (default vibe-map-<name>-<date>), or on GitHub."""
+    if directory is None:
+        directory = camp_dir_name(who)
+        console.print(f"[muted]no directory given; the convention says[/] {directory}")
     target = Path(directory).expanduser().resolve()
     if target.exists() and any(target.iterdir()):
         _fail(f"{target} exists and is not empty")

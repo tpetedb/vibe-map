@@ -30,7 +30,8 @@
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
-    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Preferred name (per HR system of record)"></div>
+    <div id="onboard"></div>
+    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Your name" oninput="nameTyped(this.value)"></div>
     <div class="row"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
@@ -52,7 +53,7 @@
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
-      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
+      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
       <div class="card" id="newscard">
@@ -457,6 +458,7 @@ When adding a feature:
 <section class="screen" id="s-mentor"></section>
 <section class="screen" id="s-artifact"></section>
 <section class="screen" id="s-settings"></section>
+<section class="screen" id="s-setup"></section>
 <section class="screen" id="s-9">
   <div class="hour">Final slide</div>
   <h2>Calendar alignment</h2>

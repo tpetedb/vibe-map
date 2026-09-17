@@ -141,6 +141,26 @@ details.brief p{margin-top:8px}
 .stamp{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .stamp i{font-style:normal;color:var(--green-bright)}
 #title.off{display:none}
+/* Onboarding steps on the title screen. A returning player sees the resume
+   button first; the steps fold under a summary. */
+.step{display:flex;align-items:center;gap:10px;margin:14px 0 6px;font-family:var(--font-display);font-size:15px;letter-spacing:-.01em}
+.step b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--yellow);color:#000;font-size:12px;font-family:var(--font-mono)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;border-radius:var(--radius-pill)}
+.choice i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}
+.choice.on{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
+.choices.modes{flex-direction:column}.choices.modes .choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border-radius:var(--radius-m);width:100%;text-align:left}
+.choices.modes .choice span{font-weight:400;color:var(--muted);font-size:12.5px}
+.setup{margin:8px 0 4px;padding:4px 12px 8px;border:1px solid var(--line);border-radius:var(--radius-m)}
+.setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
+.setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
+#title.returning #onboard{display:none}
+#title.returning details.brief{margin-top:10px}
+/* Lesson commands fold at hard and above; the summary is the only thing
+   that changes with the difficulty, the commands are always one click away. */
+details.cmds{margin:8px 0 12px}details.cmds summary{cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--blue-bright);list-style:none}
+details.cmds summary::-webkit-details-marker{display:none}details.cmds summary::before{content:"> "}details.cmds[open] summary::before{content:"v "}
+details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 
 .pairing{border:1px solid rgba(255,213,0,.35);background:rgba(255,213,0,.08);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:13.5px;line-height:1.5}
 .pairing b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
@@ -273,7 +293,8 @@ details.brief p{margin-top:8px}
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up six strategic capabilities, unlock six OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
-    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Preferred name (per HR system of record)"></div>
+    <div id="onboard"></div>
+    <div class="row"><input type="text" id="name" value="Lotte" aria-label="Your name" placeholder="Your name" oninput="nameTyped(this.value)"></div>
     <div class="row"><button class="primary" data-icon="rocket" onclick="start()">Kick off the engagement</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume in-flight workstream</button></div>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
     <details class="brief"><summary>The full brief</summary>
@@ -295,7 +316,7 @@ details.brief p{margin-top:8px}
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
-      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
+      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
       <div class="card" id="newscard">
@@ -700,6 +721,7 @@ When adding a feature:
 <section class="screen" id="s-mentor"></section>
 <section class="screen" id="s-artifact"></section>
 <section class="screen" id="s-settings"></section>
+<section class="screen" id="s-setup"></section>
 <section class="screen" id="s-9">
   <div class="hour">Final slide</div>
   <h2>Calendar alignment</h2>
@@ -1233,7 +1255,7 @@ function buildWorld(id){
   const sg=new T.BufferGeometry();const sv=[];for(let i=0;i<400;i++){const a=Math.random()*Math.PI*2,b=Math.random()*Math.PI*.5;sv.push(Math.cos(a)*Math.cos(b)*120,Math.sin(b)*120+5,Math.sin(a)*Math.cos(b)*120)}sg.setAttribute("position",new T.Float32BufferAttribute(sv,3));stars=new T.Points(sg,new T.PointsMaterial({color:"#fff",size:.6,transparent:true,opacity:0}));scene.add(stars);
   // characters (keep positions if switching)
   const lp=chars.lotte?chars.lotte.g.position.clone():new T.Vector3(2.8,0,5.2);
-  chars.lotte=character({kind:"lotte",body:"#FFFFFF",legs:"#C9C1B8",arms:"#F5D7BC",label:S.name+", CoS"});chars.lotte.g.position.copy(onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
+  chars.lotte=character(playerSpec());chars.lotte.g.position.copy(onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
   chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:"Tom, SRE"});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
   chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:"Rolinda, Ops"});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
   // mentors (NPC scientists) for this world
@@ -1263,6 +1285,8 @@ let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}}
 
 /* ---------------- input & movement ---------------- */
+// The player's walker after a look change on the title screen: same spot, new body.
+function rebuildPlayer(){if(!chars.lotte)return;const p=chars.lotte.g.position.clone(),r=chars.lotte.g.rotation.y;scene.remove(chars.lotte.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;scene.add(chars.lotte.g)}
 const ray=new T.Raycaster(),ndc=new T.Vector2(),target=new T.Vector3(),keys={};let hasTarget=false,downPos=null,marker=null;
 let joy={x:0,y:0,on:false},wantJump=false;
 function setupInput(){
@@ -2226,8 +2250,9 @@ window.reset=function(){if(!confirm("Decommission the campus and reset to greenf
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
 // vibe.toml still sets the defaults for a fresh browser; these override them.
-const SETTINGS_DEFAULTS={map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
 const SETTINGS_OPTIONS={
+  difficulty:[["config","From vibe.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
   vault:[["config","From vibe.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
   pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
@@ -2235,7 +2260,7 @@ const SETTINGS_OPTIONS={
   motion:[["auto","Follow the system setting"],["off","No animations"]],
   speed:[["slow","Stroll"],["normal","Walk"],["fast","Hurry"]]
 };
-const SETTINGS_LABELS={map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
+const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
 function settings(){if(!S.settings)S.settings={};return Object.assign({},SETTINGS_DEFAULTS,S.settings)}
 function speedMult(){return {slow:.7,normal:1,fast:1.5}[settings().speed]||1}
 function motionOff(){return settings().motion==="off"}
@@ -2245,6 +2270,7 @@ function applySettings(){const s=settings();
     const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
   const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
   document.body.classList.toggle("no-motion",s.motion==="off");
+  if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
 window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
@@ -2252,7 +2278,7 @@ function renderSettings(){const s=settings();
   $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
     `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button></div>`+
-    `<p class="small muted">Persona, theme and difficulty live in vibe.toml (uv run vibe persona, theme, difficulty) and need a rebuild: just build.</p>`;
+    `<p class="small muted">Persona and theme live in vibe.toml (uv run vibe persona, theme) and need a rebuild: just build. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 window.goFullscreen=function(){const st=$("stage");if(document.fullscreenElement){document.exitFullscreen()}else if(st.requestFullscreen){st.requestFullscreen().catch(()=>{})}};
@@ -2268,7 +2294,95 @@ window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;cons
   location.replace(location.pathname)};
 if(new URLSearchParams(location.search).has("reset"))resetProgress();
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
-if(load()){$("name").value=S.name;if(S.done.length)$("btn-continue").style.display=""}
+// Onboarding: the title screen is a four-step form on a first visit. Who you
+// are (a preset walker or your own name), how hard, how you want to play
+// (browser only, or the full experience with the terminal and Obsidian), go.
+// Everything it decides lives in S: S.name, S.look, S.settings.difficulty.
+// Returning players get the resume button first; the steps fold away.
+const LOOKS={
+  lotte:{label:"Lotte",role:"CoS",blurb:"Chief of Staff. The default; the copy is written to her.",kind:"lotte",body:"#FFFFFF",legs:"#C9C1B8",arms:"#F5D7BC"},
+  frank:{label:"Frank",role:"Platform",blurb:"Platform engineer. Glasses, blue shirt, no patience for dashboards.",kind:"mentor",body:"#0067A5",legs:"#2B2B2B",arms:"#F5D7BC",look:{hair:"#3B2A1E",glasses:true}},
+  max:{label:"Max",role:"Data",blurb:"Data engineer. Beard, green shirt, brings the DuckDB.",kind:"mentor",body:"#00A86B",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#1A1A1A",beard:true}},
+  rolinda:{label:"Rolinda",role:"Ops",blurb:"Head of Hospitality. Plays herself; the hub keeps its own Rolinda on duty.",kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A"},
+  own:{label:"Your own name",role:"Player",blurb:"Type it below. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
+};
+const DIFFS=[
+  ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
+  ["easy","Easy","Commands open, a little less hand-holding."],
+  ["normal","Normal","Commands open. Checks look at what you built."],
+  ["hard","Hard","Commands folded (one click opens them). Strict checks."],
+  ["expert","Expert","Commands folded. Tests must exist and pass."],
+  ["god","God","Commands folded. just verify must be green to claim."]
+];
+// The walker spec for the current player. Unknown or missing looks fall back
+// to Lotte so an old saved state still renders.
+function playerLook(){return LOOKS[S.look]||LOOKS.lotte}
+function playerSpec(){const l=playerLook();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:S.name+", "+l.role}}
+function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
+function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
+// Every command block in a lesson becomes a <details>: open at beginner, easy
+// and normal, folded at hard and up, always one click away. Runs once at boot;
+// syncCmds re-applies the fold whenever the difficulty changes.
+function wrapCommands(){document.querySelectorAll(".lesson pre").forEach(pre=>{if(pre.parentElement.classList.contains("cmds"))return;const d=document.createElement("details");d.className="cmds";d.innerHTML="<summary>Commands</summary>";pre.replaceWith(d);d.appendChild(pre)})}
+let cmdsLevel=null;
+function syncCmds(){const open=cmdsOpen();if(cmdsLevel===open)return;cmdsLevel=open;document.querySelectorAll("details.cmds").forEach(d=>d.open=open)}
+// The naming convention for a local camp: your name, vibe-map, the date.
+function slug(s){return (s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"player"}
+function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
+function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
+// The setup guide: the exact commands for the full experience. Rendered on the
+// title screen (step 3) and on its own screen from the Roadmap, from one
+// template so the two never drift. The commands are always open here,
+// whatever the difficulty: setup is not the game.
+function setupHtml(){const dir=campDir();const repo=repoUrl();return `
+<p class="small">Three windows side by side: this game, a terminal, Obsidian. The game is where you get the story and claim stops. The terminal is where the work happens and the checks run. Obsidian is where the notes land. Fifteen minutes to set up, then <code>just start</code> every session.</p>
+<h4>1. Get the repository</h4>
+<p class="small">Open <a href="${repo}" target="_blank" rel="noopener">${repo.replace(/^https?:\/\//,"")}</a> and press <b>Use this template</b> if you want your own copy on GitHub, or skip that and clone below. Then open a terminal (on a Mac: Cmd+Space, type Terminal, or install Ghostty).</p>
+<pre><code>brew install uv git just gh
+brew install --cask obsidian</code></pre>
+<h4>2. Install the command and make your camp</h4>
+<p class="small">The folder name is the convention: your name, vibe-map, today's date. It sorts by date in a listing and tells you which camp a note came from.</p>
+<pre><code>uv tool install git+${repo}
+vibe new ${dir}
+cd ${dir}
+just setup</code></pre>
+<p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(S.name)}</code> (needs <code>gh auth login</code> first).</p>
+<h4>3. Tell it who you are</h4>
+<pre><code>vibe name "${S.name}"
+vibe difficulty ${difficulty()}
+just start</code></pre>
+<p class="small muted"><code>just start</code> is the terminal menu: checks, the pet, the launchers. It stays open in one terminal tab; open a second tab for Claude Code.</p>
+<h4>4. Open the vault in Obsidian</h4>
+<p class="small">Obsidian, <b>Open folder as vault</b>, pick <code>${dir}/vault</code>. Trust the author when asked: the vault ships its own plugins config. Press Cmd+G for the graph.</p>
+<pre><code>vibe vault mode grow     # optional: start empty and watch the graph fill as you play
+vibe vault build</code></pre>
+<h4>5. Keep the two in sync</h4>
+<p class="small">Progress here and progress in the terminal are one code. After a session in either place, carry it across:</p>
+<pre><code>vibe status                                # in the terminal: what you have done there
+vibe export                                # prints a code; paste it in the game under World, Sync
+vibe import &lt;code from the game&gt;           # the other way round</code></pre>
+<p class="small muted">Two terminals help: one with <code>just start</code> or <code>claude</code>, one for the commands the lessons give you. The full walk-through with screenshots is in <a href="${repo}/blob/main/docs/LONG-GAME.md" target="_blank" rel="noopener">docs/LONG-GAME.md</a>.</p>`}
+window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
+// The title form. Re-rendered on every choice so the highlighted buttons and
+// the setup commands (which carry the name and the difficulty) stay current.
+window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"Lotte";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
+window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
+window.nameTyped=function(v){S.name=v.trim()||"Lotte";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
+function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||"lotte";const diff=difficulty();const mode=S.mode||"";
+  box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
+<div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
+<p class="small muted">${LOOKS[look].blurb}</p>
+<div class="step"><b>2</b><span>How hard?</span></div>
+<div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
+<p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
+<div class="step"><b>3</b><span>How do you want to play?</span></div>
+<div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Terminal, this game and Obsidian, synced. The real course.</span></button></div>
+<div id="ob-setup" class="setup" style="display:${mode==="full"?"":"none"}">${mode==="full"?setupHtml():""}</div>
+<div class="step"><b>4</b><span>Go</span></div>`;
+  const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
+  document.body.dataset.mode=mode}
+if(load()){$("name").value=S.name;if(S.done.length){$("btn-continue").style.display="";$("title").classList.add("returning")}}
 // Theme, dates and repo come from vibe.toml through CONFIG. The wine-night
 // preset keeps the handwritten copy; any other theme swaps the framing and
 // hides the pairings. Difficulty and persona are exposed on <body> for CSS.
@@ -2280,7 +2394,7 @@ function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;do
   $("intro").textContent=th.intro;
   $("roles").textContent=`Tom is your ${th.hostRole}. Rolinda is ${th.guideRole}, and the only one who is allowed to ask the simple question. ${th.signOff}`}
 function stamp(){$("stamp-ver").textContent=`vibe-map v${CONFIG.version} · ${CONFIG.theme.id}`;$("t-done").textContent=String(S.done.length)}
-applyTheme();stamp();iconize();say("title");hud();renderWorldPicker();applySettings();
+applyTheme();stamp();wrapCommands();renderOnboarding();iconize();say("title");hud();renderWorldPicker();applySettings();
 // The island is the backdrop of the title, so the scene builds at once;
 // start() only flips the flag. A failure here is reported again by start().
 try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){}
