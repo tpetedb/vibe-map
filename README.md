@@ -54,6 +54,8 @@ cd ~/camp && vibe status          # the CLI finds the camp from any subfolder
 
 ## Ten things on the island that explain one idea each
 
+![The cafe artifact: order a coffee, get a 200; order five, get a 429](docs/media/artifact-cafe.png)
+
 Walk up to a yellow ring and press **Inspect**. The cafe serves a coffee the way a server answers a client (200, 404, 429, 503, with the latency); the fountain is a cache (miss, hit, stale, invalidate); the well is a database (a scan, an index, a transaction); the lighthouse is DNS; the dock packs, ships and unloads a container; the windmill is cron; the balloon is the cloud with its meter running; the mountain is the stack, six layers from the chip to the agent; the market stall is an API with a menu; the bridge is MCP. Each one prints its demo like a terminal, ends with a question from Rolinda, and links the vault note that goes deeper. Found ones turn green, travel in the progress code, and earn the Collector badge.
 
 ## Make it yours
