@@ -117,6 +117,7 @@ The game in the browser still has your progress (it lives in the browser's stora
 | the game shows the Roadmap list, no island | WebGL is off; Chrome on a Mac with Apple silicon is the reference; the lessons still work |
 | Obsidian shows a note with dashed links | grow mode: those notes are still in `_library`; play on, or `vibe vault unlock "<title>"` |
 | `claude -p` complains about a model | run `claude` once interactively to log in; the CLI retries with `--model sonnet` |
+| you want to start the game over | Roadmap, Reset progress, click it twice; or open the hosted game with `?reset` at the end of the URL. Stops, artifacts and mentor choices go; your name and settings stay. The terminal's state is separate: `rm .vibe/state.json` starts that over too |
 | the News card says no news yet | `vibe news`, then `just build` (the news is baked into the game); a forked repo's Monday action does both |
 
 Nothing you do in the game or the terminal can delete the vault. `git log` shows every change; `just rescue` brings you back to main.

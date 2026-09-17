@@ -26,10 +26,20 @@ window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[ke
 function renderSettings(){const s=settings();
   $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
-    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button></div>`+
+    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button></div>`+
     `<p class="small muted">Persona, theme and difficulty live in vibe.toml (uv run vibe persona, theme, difficulty) and need a rebuild: just build.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 window.goFullscreen=function(){const st=$("stage");if(document.fullscreenElement){document.exitFullscreen()}else if(st.requestFullscreen){st.requestFullscreen().catch(()=>{})}};
 window.resetSettings=function(){S.settings={};save();applySettings()};
+// Back to the start of the roadmap: every stop undone, artifacts and mentor
+// choices cleared, the name and the settings kept. Two clicks, no dialog,
+// then a reload so the island rebuilds from the empty state. The hosted
+// game does the same from ?reset in the URL.
+let resetArmed=null;
+window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;const old=btn.textContent;btn.textContent="Really start over? Click again";btn.classList.add("danger");setTimeout(()=>{if(resetArmed===btn){resetArmed=null;btn.textContent=old;btn.classList.remove("danger")}},5000);return}
+  const keep={name:S.name,settings:S.settings||{}};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
+  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},rolls:[],versions:[],bridges:{},date:null,wine:null,mascot:null,artifacts:[],settings:keep.settings};save();
+  location.replace(location.pathname)};
+if(new URLSearchParams(location.search).has("reset"))resetProgress();
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
