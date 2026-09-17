@@ -1,0 +1,44 @@
+# ═══════════════════════════════════════════════════════════════════════
+# R2-D2 high-contrast theme voor Ghostty
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Matches de R2-D2 high-contrast Zed theme zodat de losse Ghostty terminal
+# en de embedded Zed terminal er identiek uitzien. Zelfde 6-color palette:
+#
+#   rood-oranje  #E04E3E
+#   groen        #00D084
+#   blauw        #0088CC
+#   yellow       #FFD500
+#   oranje       #FF8C1A
+#   wit          #FFFFFF
+#
+# Background opacity + blur worden in de main config gezet, niet hier.
+# ═══════════════════════════════════════════════════════════════════════
+
+# ── Core colors ─────────────────────────────────────────────────────────
+background = 000000
+foreground = FFFFFF
+cursor-color = FFD500
+cursor-text = 000000
+selection-background = FF8C1A
+selection-foreground = 000000
+
+# ── ANSI palette (0-7) ──────────────────────────────────────────────────
+palette = 0=#000000
+palette = 1=#E04E3E
+palette = 2=#00D084
+palette = 3=#FFD500
+palette = 4=#0088CC
+palette = 5=#D1477D
+palette = 6=#0088CC
+palette = 7=#FFFFFF
+
+# ── Bright ANSI palette (8-15) ──────────────────────────────────────────
+palette = 8=#777799
+palette = 9=#E04E3E
+palette = 10=#00D084
+palette = 11=#FFD500
+palette = 12=#0088CC
+palette = 13=#E05F8F
+palette = 14=#0088CC
+palette = 15=#FFFFFF

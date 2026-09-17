@@ -1,0 +1,37 @@
+# ── Starship prompt — FALLBACK only (p10k is the active prompt) ──────────────
+# Matches the reference: (venv) · full ~path · ◉ branch · right-aligned time · $
+# Colours use ANSI names → they track the terminal's r2d2 palette (coherent with
+# the Zed/Ghostty theme). p10k renders the prompt; .zshrc inits starship ONLY
+# when the p10k theme dir is missing (partial bootstrap), so a half-set-up box
+# still gets a usable look. Edit here; `toolbox link` syncs it to ~/.config/starship.toml.
+"$schema" = 'https://starship.rs/config-schema.json'
+add_newline = true
+format = '$python$directory$git_branch$git_status$fill$time$line_break$character'
+
+[python]
+format = '[\($virtualenv\) ](green)'   # the (.venv) prefix, only when a venv is active
+
+[directory]
+format = '[$path ](blue)'
+truncation_length = 0                    # full path
+truncate_to_repo = false
+home_symbol = '~'
+
+[git_branch]
+format = '[$symbol$branch ](yellow)'
+symbol = '◉ '
+
+[git_status]
+disabled = true                          # keep it clean (the ◉ already flags a repo)
+
+[fill]
+symbol = ' '                             # pushes the time to the right edge
+
+[time]
+disabled = false
+format = '[$time](red)'
+time_format = '%H:%M'
+
+[character]
+success_symbol = '[\$](green)'
+error_symbol = '[\$](red)'

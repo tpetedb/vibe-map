@@ -108,7 +108,17 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
    just verify                  # ruff, pytest with Playwright, build check
    ```
 
-5. Break something on purpose, then come back.
+5. Make the terminal yours, module by module.
+
+   ```bash
+   vibe dotfiles                 # what is in place
+   vibe dotfiles install zsh --brew
+   vibe dotfiles install tmux
+   ```
+
+   Each module is a few files from Tom's toolbox; anything that differs is backed up next to itself.
+
+6. Break something on purpose, then come back.
 
    ```bash
    just break sandbox           # a play/sandbox branch

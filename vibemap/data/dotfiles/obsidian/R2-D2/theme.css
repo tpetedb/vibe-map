@@ -1,0 +1,569 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   R2-D2 — Obsidian theme matching the ACTIVE Zed variant
+   ("R2-D2 - dark modern syntax", config/zed/themes/r2d2.json)
+   ──────────────────────────────────────────────────────────────────────
+   Palette — the [palette] in toms-toolbox.toml, r2d2-high-contrast
+   scheme (bright variants), same hexes the Zed theme + Ghostty use:
+     red    #E04E3E  (theme-family ANSI red; brand bright is #F04923)
+     green  #00D084  (green.bright)      orange  #FF8C1A  (orange.base)
+     blue   #0088CC  (blue.bright)       yellow  #FFD500  (yellow.bright)
+     white  #FFFFFF                      surface #1a1a1a
+
+   Hue semantics (same as the tmux bar + Zed status colours):
+     green = good/active · yellow = attention/config · red = danger/time
+     blue = info/code · orange = accent/focus/active
+
+   Layout aesthetic (matches the desktop):
+     - OLED black #000000; window chrome at ~95% alpha — Zed's
+       "#000000F2" surfaces; Ghostty runs background-opacity 0.92
+       + background-blur 20 for the same frosted look
+     - Side panels fully transparent (00), letting the macOS blur show
+       the wallpaper through
+     - Orange UI accent (selected, focused, links)
+     - Yellow cursor and active text accent
+     - MesloLGS Nerd Font Mono for code, system font for UI
+
+   Requires Settings -> Appearance -> Translucent window: ON for the
+   frosted-glass effect on macOS ("translucency": true in
+   appearance.json — toolbox sets it). Without translucency the theme
+   still reads as solid OLED black, but you lose the
+   wallpaper-through-panels feel.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.theme-dark {
+  /* ── Palette tokens ──────────────────────────────────────────────── */
+  --r2d2-red:           #E04E3E;
+  --r2d2-green:         #00D084;
+  --r2d2-blue:          #0088CC;
+  --r2d2-yellow:        #FFD500;
+  --r2d2-orange:        #FF8C1A;
+  --r2d2-white:         #FFFFFF;
+  --r2d2-grey:          #AAAAC0;
+  --r2d2-grey-dim:      #777799;
+  --r2d2-grey-deep:     #555577;
+  --r2d2-bg-deep:       #000000;
+  --r2d2-bg-soft:       #0a0a0a;
+  --r2d2-bg-element:    #141414;
+  --r2d2-bg-hover:      #1a1a1a;
+  --r2d2-bg-border:     #222228;
+
+  /* ── Backgrounds ─────────────────────────────────────────────────── */
+  /* Primary (editor pane): solid OLED black, code stays sharp */
+  --background-primary:        rgba(0, 0, 0, 1);
+  --background-primary-alt:    rgba(10, 10, 10, 1);
+  /* Secondary (file explorer, search, sidebars): fully transparent
+     so the macOS wallpaper shows through */
+  --background-secondary:      rgba(0, 0, 0, 0);
+  --background-secondary-alt:  rgba(0, 0, 0, 0);
+
+  --background-modifier-border:        var(--r2d2-bg-border);
+  --background-modifier-border-hover:  var(--r2d2-grey-deep);
+  --background-modifier-border-focus:  var(--r2d2-orange);
+  --background-modifier-hover:         var(--r2d2-bg-hover);
+  --background-modifier-active-hover:  rgba(255, 140, 26, 0.15);
+  --background-modifier-form-field:    rgba(0, 0, 0, 0.55);
+  --background-modifier-cover:         rgba(0, 0, 0, 0.85);
+  --background-modifier-success:       rgba(0, 208, 132, 0.15);
+  --background-modifier-error:         rgba(224, 78, 62, 0.15);
+
+  /* ── Text colors ─────────────────────────────────────────────────── */
+  --text-normal:      var(--r2d2-white);
+  --text-muted:       var(--r2d2-grey);
+  --text-faint:       var(--r2d2-grey-dim);
+  --text-error:       var(--r2d2-red);
+  --text-warning:     var(--r2d2-yellow);
+  --text-success:     var(--r2d2-green);
+  --text-accent:      var(--r2d2-orange);
+  --text-accent-hover: var(--r2d2-yellow);
+  --text-on-accent:   var(--r2d2-bg-deep);
+  --text-selection:   rgba(255, 140, 26, 0.3);
+  --text-highlight-bg: rgba(255, 213, 0, 0.35);
+
+  /* ── Interactive (buttons, links, focus rings) ───────────────────── */
+  --interactive-normal:        var(--r2d2-bg-element);
+  --interactive-hover:         var(--r2d2-bg-hover);
+  --interactive-accent:        var(--r2d2-orange);
+  --interactive-accent-hover:  var(--r2d2-yellow);
+
+  /* ── Headings (markdown preview + Live Preview) ──────────────────── */
+  --h1-color: var(--r2d2-orange);
+  --h2-color: var(--r2d2-yellow);
+  --h3-color: var(--r2d2-blue);
+  --h4-color: var(--r2d2-green);
+  --h5-color: var(--r2d2-grey);
+  --h6-color: var(--r2d2-grey-dim);
+  --h1-weight: 700;
+  --h2-weight: 700;
+  --h3-weight: 600;
+  --h4-weight: 600;
+
+  /* ── Code ────────────────────────────────────────────────────────── */
+  --code-background: rgba(10, 10, 10, 0.9);
+  --code-normal:     var(--r2d2-white);
+  --code-comment:    var(--r2d2-grey-deep);
+  --code-string:     var(--r2d2-green);
+  --code-keyword:    var(--r2d2-red);
+  --code-function:   var(--r2d2-orange);
+  --code-tag:        var(--r2d2-red);
+  --code-property:   var(--r2d2-blue);
+  --code-value:      var(--r2d2-yellow);
+  --code-operator:   var(--r2d2-white);
+  --code-important:  var(--r2d2-red);
+
+  /* ── Links and wikilinks ─────────────────────────────────────────── */
+  --link-color:           var(--r2d2-orange);
+  --link-color-hover:     var(--r2d2-yellow);
+  --link-decoration:      none;
+  --link-decoration-hover: underline;
+  --link-unresolved-color: var(--r2d2-grey-dim);
+  --link-unresolved-decoration-style: dashed;
+  --tag-color:            var(--r2d2-yellow);
+  --tag-background:       rgba(255, 213, 0, 0.15);
+  --tag-color-hover:      var(--r2d2-orange);
+
+  /* ── Blockquote ──────────────────────────────────────────────────── */
+  --blockquote-background-color: rgba(0, 136, 204, 0.06);
+  --blockquote-border-color:     var(--r2d2-blue);
+  --blockquote-color:            var(--r2d2-grey);
+
+  /* ── Tables ──────────────────────────────────────────────────────── */
+  --table-border-color:    var(--r2d2-bg-border);
+  --table-header-background: rgba(10, 10, 10, 0.9);
+  --table-row-background-hover: rgba(255, 140, 26, 0.05);
+  --table-row-alt-background: rgba(255, 255, 255, 0.015);
+
+  /* ── Lists ───────────────────────────────────────────────────────── */
+  --list-marker-color: var(--r2d2-orange);
+
+  /* ── Status bar and titlebar ─────────────────────────────────────── */
+  /* ~95% black = Zed's #000000F2 chrome (status/title/tab bars). */
+  --titlebar-background: rgba(0, 0, 0, 0.95);
+  --titlebar-background-focused: rgba(0, 0, 0, 0.95);
+  --status-bar-background: rgba(0, 0, 0, 0.95);
+
+  /* ── Selection, caret, search ────────────────────────────────────── */
+  --caret-color:               var(--r2d2-yellow);
+  --selection-background:      rgba(255, 140, 26, 0.3);
+  --search-result-background:  rgba(255, 140, 26, 0.25);
+
+  /* ── Workspace tabs ──────────────────────────────────────────────── */
+  --tab-background-active:     var(--r2d2-bg-soft);
+  --tab-background:            rgba(0, 0, 0, 0);
+  --tab-text-color:            var(--r2d2-grey);
+  --tab-text-color-active:     var(--r2d2-white);
+  --tab-text-color-focused-active: var(--r2d2-orange);
+  --tab-outline-color:         var(--r2d2-bg-border);
+
+  /* ── Scrollbars ──────────────────────────────────────────────────── */
+  --scrollbar-bg:           rgba(0, 0, 0, 0);
+  --scrollbar-thumb-bg:     rgba(85, 85, 119, 0.4);
+  --scrollbar-active-thumb-bg: rgba(255, 140, 26, 0.7);
+
+  /* ── Graph view ──────────────────────────────────────────────────── */
+  --graph-line:        var(--r2d2-bg-border);
+  --graph-node:        var(--r2d2-grey);
+  --graph-node-focused: var(--r2d2-orange);
+  --graph-node-tag:    var(--r2d2-yellow);
+  --graph-node-attachment: var(--r2d2-blue);
+  --graph-node-unresolved: var(--r2d2-grey-dim);
+  --graph-text:        var(--r2d2-white);
+
+  /* ── Canvas ──────────────────────────────────────────────────────── */
+  --canvas-background: rgba(0, 0, 0, 0.95);
+  --canvas-color-1:    var(--r2d2-red);
+  --canvas-color-2:    var(--r2d2-orange);
+  --canvas-color-3:    var(--r2d2-yellow);
+  --canvas-color-4:    var(--r2d2-green);
+  --canvas-color-5:    var(--r2d2-blue);
+  --canvas-color-6:    var(--r2d2-grey);
+
+  /* ── Fonts ───────────────────────────────────────────────────────── */
+  /* "MesloLGS Nerd Font Mono" is the Nerd Fonts v3 family the
+     font-meslo-lg-nerd-font cask installs (same as Ghostty + Zed);
+     'MesloLGS NF' is the v2-era name, kept as a fallback. */
+  --font-monospace-theme: 'MesloLGS Nerd Font Mono', 'MesloLGS NF', Menlo, monospace;
+  --font-text-theme:      -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+  --font-interface-theme: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+}
+
+/* ── Specific overrides voor het frosted-glass effect ──────────────── */
+/* De file explorer, search panel, en outline moeten zichtbaar transparant
+   zijn zodat de macOS blurred backdrop doorschemert. Obsidian's default
+   stylesheet zet hier soms een solid background, die overrulen we. */
+
+.theme-dark .workspace-split.mod-left-split,
+.theme-dark .workspace-split.mod-right-split,
+.theme-dark .workspace-tab-header-container,
+.theme-dark .workspace-ribbon,
+.theme-dark .nav-files-container,
+.theme-dark .nav-folder,
+.theme-dark .nav-file {
+  background-color: transparent !important;
+}
+
+/* Active pane krijgt een subtiele orange highlight rond de border, zoals
+   de Zed active_pane_modifiers.border_color. */
+.theme-dark .workspace-leaf.mod-active .workspace-leaf-content {
+  box-shadow: inset 0 0 0 1px rgba(255, 140, 26, 0.4);
+}
+
+/* Status bar transparant met dunne border. */
+.theme-dark .status-bar {
+  border-top: 1px solid var(--background-modifier-border);
+  backdrop-filter: blur(20px);
+}
+
+/* Raised overlays — command palette, menus, modals. Near-black slab with
+   blur, mirrors Zed's panel.overlay_background (#000000E3 ≈ 89%). The
+   selected row sits on the palette surface #1a1a1a, the same hex fzf's
+   bg+ uses, so every picker on the machine highlights the same way. */
+.theme-dark .menu,
+.theme-dark .modal,
+.theme-dark .prompt,
+.theme-dark .suggestion-container {
+  background-color: rgba(0, 0, 0, 0.89);
+  backdrop-filter: blur(20px);
+}
+.theme-dark .suggestion-item.is-selected,
+.theme-dark .menu-item.selected {
+  background-color: var(--r2d2-bg-hover);
+}
+
+/* Headings krijgen iets meer breathing room, mirrors de wrap_guides feel
+   van Zed. */
+.theme-dark .markdown-rendered h1,
+.theme-dark .markdown-rendered h2 {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 0.25em;
+}
+
+/* Inline code in markdown moet eruit springen zonder lui te zijn. */
+.theme-dark .markdown-rendered code {
+  font-family: var(--font-monospace-theme);
+  color: var(--r2d2-orange);
+  background-color: rgba(255, 140, 26, 0.08);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  font-size: 0.92em;
+}
+
+/* Code blocks krijgen de Zed editor look. */
+.theme-dark .markdown-rendered pre,
+.theme-dark .HyperMD-codeblock {
+  font-family: var(--font-monospace-theme);
+  background-color: rgba(10, 10, 10, 0.85) !important;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+/* Internal links: orange, no underline tot hover. */
+.theme-dark a.internal-link,
+.theme-dark .cm-hmd-internal-link {
+  color: var(--r2d2-orange) !important;
+  text-decoration: none;
+}
+.theme-dark a.internal-link:hover,
+.theme-dark .cm-hmd-internal-link:hover {
+  color: var(--r2d2-yellow) !important;
+  text-decoration: underline;
+}
+.theme-dark a.internal-link.is-unresolved {
+  color: var(--r2d2-grey-dim) !important;
+  text-decoration: underline dashed;
+}
+
+/* Tags: yellow pill zoals Zed accent. */
+.theme-dark .tag {
+  background-color: rgba(255, 213, 0, 0.12);
+  color: var(--r2d2-yellow);
+  border: 1px solid rgba(255, 213, 0, 0.25);
+}
+
+/* Active line / cursor highlight matches editor.active_line.background. */
+.theme-dark .cm-active.cm-line {
+  background-color: rgba(10, 10, 10, 0.89);
+}
+
+/* Caret in block style om Zed cursor_shape=block te matchen. */
+.theme-dark .cm-cursor,
+.theme-dark .cm-cursor-primary {
+  border-left: none;
+  background-color: var(--r2d2-yellow);
+  width: 0.5em !important;
+  opacity: 0.6;
+}
+
+/* Selection: oranje tint zoals Zed selection. */
+.theme-dark .cm-selectionBackground,
+.theme-dark ::selection {
+  background-color: rgba(255, 140, 26, 0.28) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LEGEND --- semantic color meaning used consistently in this theme
+   ───────────────────────────────────────────────────────────────────────
+   ROOD     #E04E3E    danger, error, deprecated, failure, breaking, PDF
+                       and office documents (high-attention static refs)
+   GROEN    #00D084    success, completed, data files (csv, sql, jsonl),
+                       media files (png, jpg, svg)
+   BLAUW    #0088CC    code (py, ts, js, go, rs), styling (css, scss),
+                       info callouts, external references
+   YELLOW   #FFD500    highlights, warnings, configuration files
+                       (yaml, toml, json, ini, env), tags, cursor
+   ORANJE   #FF8C1A    focus / active / accent: folders, links,
+                       executables (sh, bash), Obsidian-native
+                       (.canvas, .base), todo callouts
+   WIT      #FFFFFF    regular markdown notes (default), text content
+   GRIJS    dim        muted: hidden files, ignored, archived, unresolved
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── File explorer: folder en file naming color codes ────────────────── */
+
+/* Folders: orange accent. Matches "actief / focus" rol uit Zed UI. */
+.theme-dark .nav-folder-title .nav-folder-title-content {
+  color: var(--r2d2-orange);
+  font-weight: 500;
+}
+
+/* Hidden folders (starting with dot like .obsidian, .git, .yaasl) krijgen
+   muted grey + lichte italic, blijven leesbaar maar onopvallend. */
+.theme-dark .nav-folder-title[data-path^="."]
+  .nav-folder-title-content,
+.theme-dark .nav-folder-title[data-path*="/."]
+  .nav-folder-title-content {
+  color: var(--r2d2-grey-dim);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Default file color: wit voor markdown (de bulk van een Obsidian vault). */
+.theme-dark .nav-file-title .nav-file-title-content {
+  color: var(--r2d2-white);
+}
+
+/* ── Code files: blauw ─────────────────────────────────────────────── */
+.theme-dark .nav-file-title[data-path$=".py"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".ts"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".tsx"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".js"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".jsx"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".go"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".rs"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".rb"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".java"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".swift"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".kt"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".c"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".cpp"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".h"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".css"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".scss"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".html"] .nav-file-title-content {
+  color: var(--r2d2-blue);
+}
+
+/* ── Configuration files: yellow ────────────────────────────────────── */
+.theme-dark .nav-file-title[data-path$=".yaml"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".yml"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".toml"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".json"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".jsonc"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".ini"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".cfg"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".env"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".conf"] .nav-file-title-content {
+  color: var(--r2d2-yellow);
+}
+
+/* ── Data en media: green ──────────────────────────────────────────── */
+.theme-dark .nav-file-title[data-path$=".sql"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".csv"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".tsv"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".jsonl"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".parquet"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".png"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".jpg"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".jpeg"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".gif"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".svg"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".webp"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".mp4"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".mov"] .nav-file-title-content {
+  color: var(--r2d2-green);
+}
+
+/* ── Executables: orange ──────────────────────────────────────────── */
+.theme-dark .nav-file-title[data-path$=".sh"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".bash"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".zsh"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".fish"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".ps1"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".canvas"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".base"] .nav-file-title-content {
+  color: var(--r2d2-orange);
+}
+
+/* ── Documents en heavy refs: red ─────────────────────────────────── */
+.theme-dark .nav-file-title[data-path$=".pdf"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".docx"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".xlsx"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".pptx"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".doc"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path$=".xls"] .nav-file-title-content {
+  color: var(--r2d2-red);
+}
+
+/* ── Active file in explorer: subtiele oranje background + bold ─── */
+.theme-dark .nav-file-title.is-active {
+  background-color: rgba(255, 140, 26, 0.12) !important;
+  font-weight: 600;
+}
+.theme-dark .nav-file-title.is-active .nav-file-title-content {
+  text-shadow: 0 0 1px currentColor;
+}
+
+/* Hover op file en folder: heel subtiele tint zodat de palette
+   leesbaar blijft maar je wel ziet waar je muis hangt. */
+.theme-dark .nav-file-title:hover,
+.theme-dark .nav-folder-title:hover {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* ── Callouts: legend-consistent colors ──────────────────────────── */
+/* Obsidian callouts gebruiken een --callout-color CSS variable per type.
+   Hier zetten we ze gelijk aan onze palette zodat een [!warning] geel is,
+   [!danger] rood, [!success] groen, etc. Consistentie tussen note styling
+   en file explorer is de hele point. */
+
+.theme-dark .callout[data-callout="note"],
+.theme-dark .callout[data-callout="abstract"],
+.theme-dark .callout[data-callout="summary"],
+.theme-dark .callout[data-callout="info"] {
+  --callout-color: 0, 136, 204; /* blue */
+}
+.theme-dark .callout[data-callout="todo"],
+.theme-dark .callout[data-callout="example"] {
+  --callout-color: 255, 140, 26; /* orange */
+}
+.theme-dark .callout[data-callout="tip"],
+.theme-dark .callout[data-callout="hint"],
+.theme-dark .callout[data-callout="important"],
+.theme-dark .callout[data-callout="warning"],
+.theme-dark .callout[data-callout="caution"],
+.theme-dark .callout[data-callout="attention"],
+.theme-dark .callout[data-callout="question"],
+.theme-dark .callout[data-callout="help"],
+.theme-dark .callout[data-callout="faq"] {
+  --callout-color: 255, 213, 0; /* yellow */
+}
+.theme-dark .callout[data-callout="success"],
+.theme-dark .callout[data-callout="check"],
+.theme-dark .callout[data-callout="done"] {
+  --callout-color: 0, 208, 132; /* green */
+}
+.theme-dark .callout[data-callout="failure"],
+.theme-dark .callout[data-callout="fail"],
+.theme-dark .callout[data-callout="missing"],
+.theme-dark .callout[data-callout="danger"],
+.theme-dark .callout[data-callout="error"],
+.theme-dark .callout[data-callout="bug"] {
+  --callout-color: 224, 78, 62; /* red */
+}
+.theme-dark .callout[data-callout="quote"],
+.theme-dark .callout[data-callout="cite"] {
+  --callout-color: 170, 170, 192; /* muted grey */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   YAASL legend --- folder + file overrides for atlas-style vaults
+   ───────────────────────────────────────────────────────────────────────
+   Mirrors the layer colours from yaasl's palette.py / LEGEND.md, but
+   shifted to the R2-D2 high-contrast variants so the file explorer stays
+   coherent with the rest of the theme and the Zed editor:
+
+     Workspace.md   yellow   #FFD500   hub / mental-map entry point
+     sources/       red      #E04E3E   per-source understanding notes
+     domains/       green    #00D084   clustered groups of sources
+     concepts/      blue     #0088CC   cross-cutting topics
+     analysis/      orange   #FF8C1A   reports / cuts across the vault
+
+   These rules override the generic folder = orange / file = white rules
+   above for vaults that follow the yaasl layout. In a non-yaasl vault
+   the selectors simply do not match and the generic rules apply.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Layer folders: tinted by role ──────────────────────────────────── */
+.theme-dark .nav-folder-title[data-path="sources"] .nav-folder-title-content,
+.theme-dark .nav-folder-title[data-path^="sources/"] .nav-folder-title-content {
+  color: var(--r2d2-red);
+  font-weight: 600;
+}
+.theme-dark .nav-folder-title[data-path="domains"] .nav-folder-title-content,
+.theme-dark .nav-folder-title[data-path^="domains/"] .nav-folder-title-content {
+  color: var(--r2d2-green);
+  font-weight: 600;
+}
+.theme-dark .nav-folder-title[data-path="concepts"] .nav-folder-title-content,
+.theme-dark .nav-folder-title[data-path^="concepts/"] .nav-folder-title-content {
+  color: var(--r2d2-blue);
+  font-weight: 600;
+}
+.theme-dark .nav-folder-title[data-path="analysis"] .nav-folder-title-content,
+.theme-dark .nav-folder-title[data-path^="analysis/"] .nav-folder-title-content {
+  color: var(--r2d2-orange);
+  font-weight: 600;
+}
+
+/* ── Files inside layer folders inherit the layer tint by default ──── */
+.theme-dark .nav-file-title[data-path^="sources/"] .nav-file-title-content {
+  color: var(--r2d2-red);
+}
+.theme-dark .nav-file-title[data-path^="domains/"] .nav-file-title-content {
+  color: var(--r2d2-green);
+}
+.theme-dark .nav-file-title[data-path^="concepts/"] .nav-file-title-content {
+  color: var(--r2d2-blue);
+}
+.theme-dark .nav-file-title[data-path^="analysis/"] .nav-file-title-content {
+  color: var(--r2d2-orange);
+}
+
+/* ── Hub files at the vault root: yellow ────────────────────────────── */
+.theme-dark .nav-file-title[data-path="Workspace.md"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path="Atlas.canvas"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path="Atlas.base"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path="LEGEND.md"] .nav-file-title-content,
+.theme-dark .nav-file-title[data-path="README.md"] .nav-file-title-content {
+  color: var(--r2d2-yellow);
+  font-weight: 600;
+}
+
+/* ── Inline-title accent inside notes, scoped by yaasl cssclass ─────── */
+/* Mirrors the yaasl-tags snippet but with the high-contrast palette, so
+   a note loaded with the cssclass shows its layer colour even without
+   the snippet being enabled separately. If the snippet IS enabled, it
+   loads after the theme and wins via load order (same specificity), so
+   you'll see the muted palette there. To shift those to high-contrast,
+   either edit yaasl's palette.py upstream and re-emit, or override the
+   snippet's hex values in-place. */
+.theme-dark .yaasl-workspace .inline-title {
+  color: var(--r2d2-yellow);
+  border-bottom: 2px solid rgba(255, 213, 0, 0.33);
+}
+.theme-dark .yaasl-source .inline-title,
+.theme-dark .yaasl-file .inline-title {
+  color: var(--r2d2-red);
+  border-bottom: 2px solid rgba(224, 78, 62, 0.33);
+}
+.theme-dark .yaasl-domain .inline-title {
+  color: var(--r2d2-green);
+  border-bottom: 2px solid rgba(0, 208, 132, 0.33);
+}
+.theme-dark .yaasl-concept .inline-title {
+  color: var(--r2d2-blue);
+  border-bottom: 2px solid rgba(0, 136, 204, 0.33);
+}
+.theme-dark .yaasl-analysis .inline-title {
+  color: var(--r2d2-orange);
+  border-bottom: 2px solid rgba(255, 140, 26, 0.33);
+}
