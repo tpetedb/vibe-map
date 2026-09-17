@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-09-17
+
 ### Added
 
 - Three configuration levels, nested, each flat inside, with `docs/CONFIG.md` as the table of "to change X, edit Y" for both a camp and the product. The repository level stays where the tools demand it; the source level is `src/config/` for the game (world scale, island radius, palette) and `vibemap/data/` for the CLI; the journey level moves from `vibe.toml` to `config/camp.toml` (name, persona, difficulty, provider, theme, vault mode, finale dates). `vibe new` writes `config/camp.toml`, and this checkout has one too so it stays a valid camp.
@@ -188,7 +190,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/tpetedb/vibe-map/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/tpetedb/vibe-map/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/tpetedb/vibe-map/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...v0.6.0
