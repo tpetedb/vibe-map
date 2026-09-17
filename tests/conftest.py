@@ -85,6 +85,7 @@ def encode_progress(
     name: str = "Lotte",
     done_w: dict[str, list[int]] | None = None,
     path: dict[str, str] | None = None,
+    mentors: list[str] | None = None,
     version: int = 2,
 ) -> str:
     """Build the base64url progress code the CLI and the game exchange."""
@@ -95,6 +96,7 @@ def encode_progress(
         "done": done_w.get("campus", []),
         "doneW": done_w,
         "path": path or {},
+        "mentors": mentors or [],
     }
     raw = json.dumps(payload).encode()
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")

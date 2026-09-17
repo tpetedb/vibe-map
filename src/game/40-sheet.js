@@ -15,16 +15,34 @@ addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("vault").classLis
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
 function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
+// The encounter: the dialogue the learner walks through one exchange at a
+// time, then the exercise. Every mentor line paraphrases a recorded idea and
+// carries the link it came from; nothing here is a quote.
+function mentorTalk(m){const d=m.encounter.dialogue;const seen=Math.min(d.length,S.met[m.id]||1);
+  return d.slice(0,seen).map(x=>`<div class="mturn"><p class="you">${x.you}</p><p class="them"><b>${m.name}:</b> ${x.m} <a class="cite" href="${m.src[x.src][1]}" target="_blank" rel="noopener">${m.src[x.src][0]}</a></p></div>`).join("")}
+function mentorExercise(m){const ex=m.encounter.exercise;const done=S.mentors.includes(m.id);
+  return `<div class="card"><h3>${icon("compass")}Your exercise: ${ex.title}</h3>
+   <p class="small muted">About ${ex.minutes} minutes, in <code>${ex.dir}/</code> in your camp.</p>
+   <ol class="small">${ex.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
+   <p class="small"><b>Checked by</b> <code>vibe check --mentor ${m.id}</code>: ${ex.done}.</p>
+   <p class="small ${done?"":"muted"}">${done?"Verified. The plaque on their spot reads: "+m.encounter.plaque:"Not verified yet. Run the check in your camp, then bring the progress code back here."}</p></div>`}
+window.talkMore=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const d=m.encounter.dialogue;
+  S.met[id]=Math.min(d.length,(S.met[id]||1)+1);save();$("mtalk").innerHTML=mentorTalk(m);
+  const b=$("talkmore");if(b&&S.met[id]>=d.length)b.remove()};
 window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const st=S.path[id];
+  if(!S.met[id]){S.met[id]=1;save()}
   const ideas=m.ideas.map(i=>`<li>${i}</li>`).join("");const src=m.src.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join(" · ");
   $("s-mentor").innerHTML=`<div class="mentor-head">${mentorFace(m.look)}<div><h2 style="margin:0">${m.name}</h2><div class="role">${m.role}</div></div></div>
-   <p>${m.bio}</p><h3>What they would tell you tonight</h3><ul class="ideas small">${ideas}</ul>
+   <p>${m.bio}</p><h3>The encounter</h3><div class="mtalk" id="mtalk">${mentorTalk(m)}</div>
+   ${S.met[id]>=m.encounter.dialogue.length?"":`<button id="talkmore" onclick="talkMore('${id}')">Ask the next question</button>`}
+   ${mentorExercise(m)}
+   <h3>What they would tell you tonight</h3><ul class="ideas small">${ideas}</ul>
    <div class="deep${st==="deep"?" on":""}" id="deep"><h3>Going deeper</h3><p class="small">${m.deep}</p><p class="small"><b>Sources:</b> ${src}</p></div>
    <div class="rolinda"><b>Rolinda asks</b>${m.ask}</div>
    <div class="row"><button class="primary" onclick="choosePath('${id}','deep')">${st==="deep"?"Keep on my path":"Tell me more"}</button><button onclick="choosePath('${id}','skip')">${st==="skip"?"Still not now":"Not interested for now"}</button><button onclick="closeSheet()">Back</button></div>
    <p class="small muted">Your choice is saved to your path (Roadmap) and to the vault. You can come back and change it.</p>`;
   $("bub-face").innerHTML=FACE.tom;$("bub-who").textContent="Tom, Site Reliability Engineer";$("bub-text").textContent=m.name+" is on the island. Ask, or walk on. Either is a valid product decision.";openSheet("s-mentor")};
-window.choosePath=function(id,v){S.path[id]=v;save();if(props.mentors){const c=props.mentors.find(x=>x.id===id);if(c)c.ring.material.color.set(v==="deep"?"#0088CC":"#F04923")}if(v==="deep"){$("deep").classList.add("on");$("deep").scrollIntoView({behavior:"smooth",block:"nearest"})}else closeSheet();hud()};
+window.choosePath=function(id,v){S.path[id]=v;save();if(props.mentors&&!S.mentors.includes(id)){const c=props.mentors.find(x=>x.id===id);if(c)c.ring.material.color.set(v==="deep"?"#0088CC":"#F04923")}if(v==="deep"){$("deep").classList.add("on");$("deep").scrollIntoView({behavior:"smooth",block:"nearest"})}else closeSheet();hud()};
 function mentorFace(lk){return `<svg viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="28" rx="6" fill="#F5D7BC"/><rect x="4" y="4" width="32" height="10" rx="4" fill="${lk.hair}"/>${lk.glasses?'<rect x="9" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/><rect x="22" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/>':'<circle cx="14" cy="21" r="2" fill="#333"/><circle cx="26" cy="21" r="2" fill="#333"/>'}${lk.beard?'<rect x="10" y="27" width="20" height="8" rx="3" fill="'+lk.hair+'"/>':'<path d="M15 29 Q20 33 25 29" stroke="#B0534B" stroke-width="2" fill="none"/>'}</svg>`}
 function open(n){
   if(n===0){openSheet("s-0");return}

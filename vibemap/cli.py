@@ -37,7 +37,16 @@ from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
 from vibemap.providers import PROVIDERS, ProviderMissing, ask
-from vibemap.quests import BADGES, level_for, new_badges, quest_for, run_quest, xp_for
+from vibemap.quests import (
+    BADGES,
+    MENTOR_XP_SHARE,
+    level_for,
+    mentor_quest,
+    new_badges,
+    quest_for,
+    run_quest,
+    xp_for,
+)
 from vibemap.state import PLACEHOLDER, CheckRecord, LogEntry, State
 from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
@@ -182,9 +191,8 @@ def _next_workstream(st: State, world: str):
 
 
 def _print_results(results, quest, cfg: Config) -> bool:
-    t = Table(
-        title=f"{quest.title} ({quest.world} {quest.n})", title_style="title", box=None
-    )
+    where = f"{quest.world} {quest.n}" if quest.n else quest.world
+    t = Table(title=f"{quest.title} ({where})", title_style="title", box=None)
     t.add_column("check")
     t.add_column("result")
     t.add_column("detail", style="muted")
@@ -258,9 +266,25 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     "--all", "all_", is_flag=True, help="check every workstream of the island"
 )
 @click.option("--claim/--no-claim", default=True, help="mark done when the checks pass")
+@click.option(
+    "--mentor",
+    "mentor_id",
+    default=None,
+    help="check a mentor encounter instead of a workstream (an id, or all)",
+)
 @pass_ctx
-def check(ctx: Ctx, n: int | None, world: str | None, all_: bool, claim: bool) -> None:
+def check(
+    ctx: Ctx,
+    n: int | None,
+    world: str | None,
+    all_: bool,
+    claim: bool,
+    mentor_id: str | None,
+) -> None:
     """Verify the definition of done for a workstream and award the XP."""
+    if mentor_id:
+        _check_mentors(ctx, mentor_id, claim=claim)
+        return
     world = world or "campus"
     if all_:
         targets = list(range(1, 9))
@@ -562,6 +586,49 @@ def import_(ctx: Ctx, code: str) -> None:
         f"[ok]imported[/]: {len(fresh)} new stops, {ctx.state.total_done()}/32 "
         f"in total, {ctx.state.xp} XP"
     )
+
+
+def _check_mentors(ctx: Ctx, mentor_id: str, *, claim: bool) -> None:
+    """Run the encounter checks for one mentor, or for all twelve."""
+    if mentor_id == "all":
+        ids = [m["id"] for m in campaign.mentors()]
+    else:
+        try:
+            ids = [campaign.mentor(mentor_id)["id"]]
+        except ValueError as e:
+            _fail(str(e))
+    for mid in ids:
+        quest = mentor_quest(mid, ctx.cfg)
+        results = run_quest(quest, ctx.cfg)
+        ok = _print_results(results, quest, ctx.cfg)
+        if ok and claim and mid not in ctx.state.mentors:
+            _claim_mentor(ctx, mid, results)
+        elif ok:
+            console.print("[ok]all checks pass[/]")
+        else:
+            console.print(
+                f"[warn]not yet.[/] The exercise lives in workspace/mentors/{mid}/."
+            )
+
+
+def _claim_mentor(ctx: Ctx, mentor_id: str, results) -> None:
+    """Record a verified encounter: the badge on the island comes from this."""
+    m = campaign.mentor(mentor_id)
+    xp = xp_for(ctx.cfg.learner.difficulty) // MENTOR_XP_SHARE
+    ctx.state.mentors.append(mentor_id)
+    ctx.state.path.setdefault(mentor_id, "deep")
+    ctx.state.xp += xp
+    ctx.state.checks[f"mentor:{mentor_id}"] = CheckRecord(
+        ok=True,
+        passed=[r.name for r in results if r.ok],
+        failed=[r.name for r in results if not r.ok],
+    )
+    badges = new_badges(ctx.state, ctx.cfg)
+    ctx.save()
+    ctx.vault.build(ctx.persona)
+    console.print(f"[ok]{m['name']} done[/] [xp]+{xp} XP[/]")
+    for b in badges:
+        console.print(f"[title]Badge:[/] {BADGES[b]}")
 
 
 @cli.command()

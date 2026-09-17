@@ -22,6 +22,8 @@ def test_every_path_plays_without_errors(chromium: Browser, server: str) -> None
     assert result["errors"] == [], result["errors"]
     assert all(sorted(v) == list(range(1, 9)) for v in result["done"].values())
     assert result["mentors"] == 12 and len(result["path"]) == 12
+    # Every encounter was read to the end, not clicked past.
+    assert len(result["met"]) == 12 and all(v >= 3 for v in result["met"].values())
     assert result["notes"] >= 100 and result["links"] >= 300
     assert "go-live" in result["finale"]
     state = State(name="x")
