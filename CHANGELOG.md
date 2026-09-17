@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Three roadmap topics on the agents shelf: Prompting (task, goal, hard constraints, context, definition of done), Structure (XML tags for the model, Markdown blocks for the reader, fenced code for anything copied) and The symbols (what `/`, `!`, `@`, `#`, `[[ ]]`, `---` and backticks mean to Claude Code, CLAUDE.md, Markdown and Obsidian), all sourced to the Anthropic and Claude Code docs.
 - Reset progress: a two-click button on the Roadmap and in Settings takes the game back to the start of the roadmap (every stop undone, artifacts and mentor choices cleared, name and settings kept), and `?reset` on the URL does the same for the hosted game: https://tpetedb.github.io/vibe-map/?reset
 
 ## [0.5.0] - 2026-09-17
