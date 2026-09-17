@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-17
+
 ### Changed
 
 - The docs separate a camp from the product repository. `docs/LONG-GAME.md` and `docs/QUICKSTART.md` no longer promise `just setup --check`, a `.venv`, Playwright browsers, `just verify` or `just build` to a learner in a camp, the "Where things end up" table labels every row camp or product, and the troubleshooting tables say what a camp does instead. The camp README leads with the next command and what you get, then a zones table written for the learner (your work in `workspace/`, notes in `vault/`, the rest is settings), says `just` needs `brew install just` and that every recipe also runs as `vibe <thing>`, moves `just scores` out of the day-one list, and tells the learner that the regenerated `vault/Camp` notes belong in git; the camp AGENTS.md says the same. Every code block now installs with `uv tool install git+https://github.com/tpetedb/vibe-map`, with the PyPI form as a footnote. Two dead sources are fixed: the Git 2.9.0 release notes (`.adoc`) and the dotfiles placeholder, now the GitHub dotfiles guide.
@@ -124,7 +126,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/tpetedb/vibe-map/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/tpetedb/vibe-map/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/tpetedb/vibe-map/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/tpetedb/vibe-map/compare/v0.4.1...v0.5.0
