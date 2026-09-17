@@ -34,7 +34,7 @@ just setup                   # links the skills for Claude Code; the vault was b
 
 The convention is your name, vibe-map, the date you started: `vibe-map-tom-2026-09-17`. It sorts by date, and a progress code or a note always says which camp it came from. The game's own setup guide (title screen, The full experience, or Roadmap, Setup guide) prints these commands with your name filled in.
 
-You should see: a `.venv` created, Playwright browsers installed, skills linked, `vault built`. Then make the terminal yours (optional, recommended):
+You should see: the skills linked and `vault ready`. (A camp has no Python environment and no browsers of its own; `.venv` and Playwright belong to the product repository, where the game is built and tested.) Then make the terminal yours (optional, recommended):
 
 ```bash
 vibe dotfiles install zsh --brew
@@ -84,7 +84,7 @@ That is the whole loop: game, terminal, vault. Four commands.
 
 ```bash
 cd ~/vibe-map-*
-vibe news && just build # pull the AI feeds into the vault note News and bake them into the game
+vibe news              # pull the AI feeds into the vault note News (.vibe/news.json)
 vibe vault lint         # orphans and dead links, if you wrote notes by hand
 vibe vault feature --all   # once: the thirty-five Obsidian feature notes, with a canvas, a base and a deck
 git add -A && git commit -m "Week: what I learned" && git push
@@ -120,6 +120,6 @@ The game in the browser still has your progress (it lives in the browser's stora
 | Obsidian shows a note with dashed links | grow mode: those notes are still in `_library`; play on, or `vibe vault unlock "<title>"` |
 | `claude -p` complains about a model | run `claude` once interactively to log in; the CLI retries with `--model sonnet` |
 | you want to start the game over | Roadmap, Reset progress, click it twice; or open the hosted game with `?reset` at the end of the URL. Stops, artifacts and mentor choices go; your name and settings stay. The terminal's state is separate: `rm .vibe/state.json` starts that over too |
-| the News card says no news yet | `vibe news`, then `just build` (the news is baked into the game); a forked repo's Monday action does both |
+| the News card says no news yet | `vibe news` fills the vault note News; the card in the hosted game is baked in the product repository by `just build`, and a forked repo's Monday action does both |
 
 Nothing you do in the game or the terminal can delete the vault. `git log` shows every change; `just rescue` brings you back to main.

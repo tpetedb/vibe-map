@@ -2,6 +2,7 @@
 title: "Skills (Agent Skills standard)"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 9f74d989d266
 ---
 # Skills (Agent Skills standard)
 

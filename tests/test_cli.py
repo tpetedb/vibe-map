@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -189,7 +193,9 @@ def test_vault_build_log_and_upsert(tmp_path: Path) -> None:
     v.upsert_dated("Innovation Hub", summary="s", bullets=["one"], tags=["workstream"])
     v.upsert_dated("Innovation Hub", summary="s", bullets=["two"], tags=["workstream"])
     note = v.path("Innovation Hub").read_text()
-    assert note.index("- two") < note.index("- one")
+    # One heading per day: the second entry joins the first instead of racing it.
+    assert note.count(f"## {date.today().isoformat()}") == 1
+    assert note.index("- one") < note.index("- two")
 
 
 # ---- scores, personas, themes, toolbelt -----------------------------------------
@@ -267,3 +273,116 @@ def test_cli_lists_personas_and_themes() -> None:
     assert "field-guide" in runner.invoke(cli, ["theme"]).output
     assert "god" in runner.invoke(cli, ["difficulty"]).output
     assert runner.invoke(cli, ["check", "42"]).exit_code != 0
+
+
+# ---- a camp on the command line ---------------------------------------------
+
+
+def _camp(tmp_path: Path) -> Path:
+    camp = tmp_path / "camp"
+    out = CliRunner().invoke(cli, ["new", str(camp), "--name", "Tom"])
+    assert out.exit_code == 0, out.output
+    return camp
+
+
+def _run(camp: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "vibemap.cli", *args],
+        cwd=camp,
+        env=dict(os.environ, VIBE_HOME=str(camp), COLUMNS="200"),
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_a_camp_without_scores_says_so_instead_of_crashing(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    for args in (("scores",), ("scores", "--sql", "top_runs")):
+        out = _run(camp, *args)
+        assert out.returncode == 1, out.stdout
+        assert "no scores yet" in out.stdout
+        assert "Traceback" not in out.stderr
+
+
+def test_the_name_from_vibe_toml_reaches_the_state_and_the_vault(
+    tmp_path: Path,
+) -> None:
+    camp = _camp(tmp_path)
+    assert 'name = "Tom"' in (camp / "vibe.toml").read_text()
+    out = _run(camp, "status", "--json")
+    assert json.loads(out.stdout)["name"] == "Tom", out.stdout
+    out = _run(camp, "name", "Lotte")
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert "vault rebuilt" in out.stdout
+    assert "Lotte" in (camp / "vault" / "Camp" / "Tonight.md").read_text()
+    assert json.loads(_run(camp, "status", "--json").stdout)["name"] == "Lotte"
+
+
+def test_status_congratulates_a_finished_campaign(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    state = json.loads((camp / ".vibe" / "state.json").read_text())
+    state["doneW"] = {w: list(range(1, 9)) for w in ("campus", "winter")}
+    (camp / ".vibe" / "state.json").write_text(json.dumps(state))
+    assert "Next island" in _run(camp, "status").stdout
+    state["doneW"] = {
+        w: list(range(1, 9)) for w in ("campus", "winter", "desert", "prod")
+    }
+    (camp / ".vibe" / "state.json").write_text(json.dumps(state))
+    out = _run(camp, "status").stdout
+    assert "All 32 stops done" in out and "winter 1" not in out
+
+
+def test_undo_gives_the_stop_and_the_xp_back(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    assert _run(camp, "done", "1", "I built it", "--force").returncode == 0
+    before = json.loads(_run(camp, "status", "--json").stdout)
+    assert before["done"]["campus"] == [1] and before["xp"] > 0
+    # Forcing a stop that is already done changes nothing.
+    again = _run(camp, "done", "1", "--force")
+    assert "already done" in again.stdout
+    assert json.loads(_run(camp, "status", "--json").stdout)["xp"] == before["xp"]
+    out = _run(camp, "undo", "1")
+    assert "is open again" in out.stdout, out.stdout + out.stderr
+    after = json.loads(_run(camp, "status", "--json").stdout)
+    assert after["done"]["campus"] == [] and after["xp"] == 0
+    assert "not done" in _run(camp, "undo", "1").stdout + _run(camp, "undo", "1").stderr
+
+
+def test_vault_build_counts_the_folder_and_theme_knows_it_is_a_camp(
+    tmp_path: Path,
+) -> None:
+    camp = _camp(tmp_path)
+    out = _run(camp, "vault", "build").stdout
+    count = int(out.split(":")[1].strip().split(" ")[0])
+    on_disk = len(list((camp / "vault" / "Camp").rglob("*.md")))
+    assert count == on_disk
+    theme = _run(camp, "theme", "seminar").stdout
+    assert "just build" not in theme and "product repository" in theme
+
+
+def test_news_help_names_both_files() -> None:
+    out = CliRunner().invoke(cli, ["news", "--help"]).output
+    assert "data/news.json" in out and ".vibe/news.json" in out
+
+
+def test_skills_are_counted_once() -> None:
+    from vibemap.quests import _c2_skill, _skills
+
+    paths = _skills()
+    assert len(paths) == len({p.resolve() for p in paths})
+    ok, detail = _c2_skill(Config())
+    assert ok and detail.startswith(f"{len(paths)} skill")
+
+
+def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:
+    from vibemap.quests import _plain
+    from vibemap.toolbelt import TOOLS_BY_ID, Tool
+
+    assert TOOLS_BY_ID["obsidian"].version_args == ("version",)
+    # `false` exists and exits 1: the binary is the proof, not its output.
+    assert Tool("f", "f", "w", "false", "i", "https://x.test", "core").version() == (
+        "installed"
+    )
+    assert _plain("\x1b[31m3 passed\x1b[0m\n") == "3 passed"
+    assert "just verify" in DIFFICULTIES["god"].blurb
+    assert "camp" in DIFFICULTIES["god"].blurb

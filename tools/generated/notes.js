@@ -236,7 +236,7 @@ Scripts git runs at moments in its own lifecycle: pre-commit before a commit is 
 **Try in five minutes.** In this repo: \`mkdir -p .githooks && printf '#!/bin/sh
 uv run ruff check vibemap tests tools
 ' > .githooks/pre-commit && chmod +x .githooks/pre-commit && git config core.hooksPath .githooks\`. Then commit something with a lint error and watch it refuse.
-- Docs: [githooks manual](https://git-scm.com/docs/githooks), [Pro Git, Customizing Git: Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks), [pre-commit framework](https://pre-commit.com/), [lefthook](https://github.com/evilmartians/lefthook), [Source: githooks manual, default hooks directory and core.hooksPath](https://git-scm.com/docs/githooks), [Source: Git 2.9.0 release notes (core.hooksPath)](https://github.com/git/git/blob/master/Documentation/RelNotes/2.9.0.txt)
+- Docs: [githooks manual](https://git-scm.com/docs/githooks), [Pro Git, Customizing Git: Git Hooks](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks), [pre-commit framework](https://pre-commit.com/), [lefthook](https://github.com/evilmartians/lefthook), [Source: githooks manual, default hooks directory and core.hooksPath](https://git-scm.com/docs/githooks), [Source: Git 2.9.0 release notes (core.hooksPath)](https://github.com/git/git/blob/master/Documentation/RelNotes/2.9.0.adoc)
 - Unlocks: [[Agent hooks]], [[CI/CD and automation]]
 - Shelf: Git and GitHub · Depth: Working knowledge
 #tech #git`},

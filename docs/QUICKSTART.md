@@ -90,7 +90,8 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
    brew install just
    ```
 
-2. Install what the evening needs.
+2. Install what the evening needs. These recipes exist in the product
+   repository only; a camp's justfile wraps the `vibe` commands instead.
 
    ```bash
    just setup                   # uv sync, Playwright browsers, skill links, the vault
@@ -105,7 +106,8 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
 
    A terminal UI: your name, your field, difficulty, provider and theme; a toolbelt check with one-key installs; launchers for the game, the vault, the docs and Claude Code. The YOLO button installs everything at once.
 
-4. Verify like CI does, before you commit anything.
+4. Verify like CI does, before you commit anything (product only; in a camp
+   the gate is `vibe vault lint` and your own tests under `workspace/`).
 
    ```bash
    just verify                  # ruff, pytest with Playwright, build check
@@ -141,8 +143,8 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
 | `vibe persona`, `vibe theme`, `vibe provider` | `vibe.toml` |
 | `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
 | the game | `localStorage` in the browser, exported as a progress code |
-| `vibe council` | `vault/Camp/Council: <topic>.md` |
-| `just setup` | `.venv/`, `.claude/skills/` symlinks, Playwright browsers |
+| `vibe council` | `vault/Camp/Council - <topic>.md` |
+| `just setup` (product only) | `.venv/`, `.claude/skills/` symlinks, Playwright browsers |
 
 ## When something is off
 

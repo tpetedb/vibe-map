@@ -2,6 +2,7 @@
 title: "Security and permissions"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 42bceccf3983
 ---
 # Security and permissions
 

@@ -2,6 +2,7 @@
 title: "LLM versus harness"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 20e37a83bcd1
 ---
 # LLM versus harness
 

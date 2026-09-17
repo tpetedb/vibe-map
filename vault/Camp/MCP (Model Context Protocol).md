@@ -2,6 +2,7 @@
 title: "MCP (Model Context Protocol)"
 date: 2026-09-16
 tags: [tech, agents]
+generated: 3c0c20f8fb88
 ---
 # MCP (Model Context Protocol)
 

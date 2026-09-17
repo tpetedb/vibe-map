@@ -2,6 +2,7 @@
 title: "localhost and ports"
 date: 2026-09-16
 tags: [tech, shell]
+generated: f0924e41ea5a
 ---
 # localhost and ports
 

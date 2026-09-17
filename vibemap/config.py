@@ -222,6 +222,7 @@ DIFFICULTIES: dict[str, DifficultyPreset] = {
     ),
     "god": DifficultyPreset(
         "God", 3.0, "none", True, True,
-        "No hints, every check strict, and `just verify` must be green to claim.",
+        "No hints, every check strict, and the whole gate green: `just verify` "
+        "in the product, the vault lint and your tests in a camp.",
     ),
 }  # fmt: skip

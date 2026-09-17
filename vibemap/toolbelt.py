@@ -44,6 +44,9 @@ class Tool:
             )
         except (OSError, subprocess.TimeoutExpired):
             return "installed"
+        if out.returncode != 0:
+            # Some apps ship a CLI without a version flag; the binary is proof.
+            return "installed"
         line = (out.stdout or out.stderr).strip().split("\n")[0]
         return line[:60] or "installed"
 
@@ -87,7 +90,7 @@ TOOLS: tuple[Tool, ...] = (
     Tool(
         "obsidian", "Obsidian", "the vault, workstream 6",
         "obsidian", "brew install --cask obsidian", "https://obsidian.md", "evening",
-        size="GB", app="/Applications/Obsidian.app",
+        size="GB", app="/Applications/Obsidian.app", version_args=("version",),
     ),
     Tool(
         "playwright", "Playwright browsers", "Chromium and WebKit for `just test`",

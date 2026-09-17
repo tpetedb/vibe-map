@@ -89,6 +89,18 @@ class State(BaseModel):
         self.xp += xp
         return True
 
+    def undo(self, world: str, n: int) -> int:
+        """Un-claim a workstream; return the XP handed back."""
+        lst = self.done_w.get(world, [])
+        if n not in lst:
+            return 0
+        lst.remove(n)
+        xp = sum(e.xp for e in self.log if e.world == world and e.n == n)
+        self.log = [e for e in self.log if not (e.world == world and e.n == n)]
+        self.xp = max(0, self.xp - xp)
+        self.checks.pop(f"{world}:{n}", None)
+        return xp
+
     def total_done(self) -> int:
         return sum(len(v) for v in self.done_w.values())
 

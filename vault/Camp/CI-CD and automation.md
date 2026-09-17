@@ -2,6 +2,7 @@
 title: "CI/CD and automation"
 date: 2026-09-16
 tags: [tech, git]
+generated: 51f18132e88a
 ---
 # CI/CD and automation
 

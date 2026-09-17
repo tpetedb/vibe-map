@@ -2,6 +2,7 @@
 title: "Structure: XML tags and Markdown blocks"
 date: 2026-09-17
 tags: [tech, agents]
+generated: 18f4f1731a31
 ---
 # Structure: XML tags and Markdown blocks
 

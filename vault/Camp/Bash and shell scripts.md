@@ -2,6 +2,7 @@
 title: "Bash and shell scripts"
 date: 2026-09-16
 tags: [tech, shell]
+generated: 207f584a05cd
 ---
 # Bash and shell scripts
 

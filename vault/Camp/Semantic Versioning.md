@@ -2,6 +2,7 @@
 title: "Semantic Versioning"
 date: 2026-09-16
 tags: [tech, docs]
+generated: 058e1a671c1e
 ---
 # Semantic Versioning
 

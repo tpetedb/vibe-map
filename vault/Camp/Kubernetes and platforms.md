@@ -2,6 +2,7 @@
 title: "Kubernetes and platforms"
 date: 2026-09-16
 tags: [tech, ship]
+generated: 9d1970e7dbf1
 ---
 # Kubernetes and platforms
 
