@@ -8,7 +8,7 @@ A gamified course and a template: a single-file 3D browser game (`game/vibe-map.
 
 ## File map
 
-Three zones, explained in `docs/MAINTAINERS.md`: the **product** (the engine: `src/`, `vibemap/`, `tools/`, `tests/`), the **template** a camp starts from (`vibemap/data/template/`, kept in sync by `tools/sync_template.py`), and the learner's **workspace** (`workspace/`; here it holds the worked example). The rest of the top level is this repository's own configuration for agents and CI.
+Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the plan with its dependency order. Three zones, explained in `docs/MAINTAINERS.md`: the **product** (the engine: `src/`, `vibemap/`, `tools/`, `tests/`), the **template** a camp starts from (`vibemap/data/template/`, kept in sync by `tools/sync_template.py`), and the learner's **workspace** (`workspace/`; here it holds the worked example). The rest of the top level is this repository's own configuration for agents and CI.
 
 | Path | Owns |
 |---|---|
