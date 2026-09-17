@@ -38,12 +38,13 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
 2. Start a camp.
 
    ```bash
-   vibe new ~/camp              # a clone of the template
-   cd ~/camp
+   vibe new                     # a clone of the template in vibe-map-<you>-<today>
+   cd vibe-map-*
+   vibe name "Your Name"
    vibe status
    ```
 
-   `vibe status` prints your name, level, XP and the four-by-eight grid of workstreams. Add `--github you/camp` to `vibe new` to create a GitHub repository from the template instead of a clone (needs `gh auth login`).
+   The folder name is the convention: your name, vibe-map, the date you started (`vibe new ~/vibe-map-tom-2026-09-17` spells it out; `--name tom` changes the person part). One camp per person and start date sorts by date in a listing and tells you which camp a note or a progress code came from. `vibe status` prints your name, level, XP and the four-by-eight grid of workstreams. Add `--github you/camp` to `vibe new` to create a GitHub repository from the template instead of a clone (needs `gh auth login`).
 
 3. Pick a provider. Everything that talks to a model runs the CLI you already pay for, in print mode.
 

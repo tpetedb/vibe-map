@@ -1,0 +1,103 @@
+"""Onboarding: the title form, the difficulty fold, the setup guide, vibe new."""
+
+from __future__ import annotations
+
+from datetime import date
+from pathlib import Path
+
+from click.testing import CliRunner
+
+from tests.conftest import GamePage
+from vibemap.cli import camp_dir_name, cli
+
+
+def test_camp_dir_name_follows_the_convention() -> None:
+    assert (
+        camp_dir_name("Tom Peters", date(2026, 9, 17))
+        == "vibe-map-tom-peters-2026-09-17"
+    )
+    assert camp_dir_name("", date(2026, 1, 2)).startswith("vibe-map-")
+    assert camp_dir_name("!!", date(2026, 1, 2)) == "vibe-map-player-2026-01-02"
+
+
+def test_vibe_new_defaults_to_the_convention(tmp_path: Path, monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **kw):  # noqa: ANN001
+        calls.append(cmd)
+        Path(cmd[-1]).mkdir(parents=True, exist_ok=True)
+
+        class R:
+            returncode = 0
+
+        return R()
+
+    monkeypatch.setattr("vibemap.cli.subprocess.run", fake_run)
+    monkeypatch.chdir(tmp_path)
+    out = CliRunner().invoke(cli, ["new", "--name", "Frank"])
+    assert out.exit_code == 0, out.output
+    expect = f"vibe-map-frank-{date.today().isoformat()}"
+    assert calls and calls[0][-1].endswith(expect)
+    assert expect in out.output
+
+
+def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(
+    game: GamePage,
+) -> None:
+    page = game.goto().page
+    steps = page.locator("#onboard .step")
+    assert steps.count() == 4
+    page.click("#onboard button.choice:has-text('Frank')")
+    assert page.input_value("#name") == "Frank"
+    page.click("#onboard button.choice:has-text('Hard')")
+    page.click("#onboard button.choice:has-text('The full experience')")
+    guide = page.inner_text("#ob-setup")
+    assert "vibe new ~/vibe-map-frank-" in guide
+    assert "vibe difficulty hard" in guide
+    assert 'vibe name "Frank"' in guide
+    page.click("text=Kick off the engagement")
+    page.wait_for_selector("#title.off", state="attached")
+    s = game.state()
+    assert s["name"] == "Frank" and s["look"] == "frank"
+    assert s["settings"]["difficulty"] == "hard" and s["mode"] == "full"
+    assert page.evaluate("document.body.dataset.difficulty") == "hard"
+    assert game.errors == []
+
+
+def test_commands_fold_at_hard_and_open_at_beginner(game: GamePage) -> None:
+    page = game.goto().page
+    total = page.locator("details.cmds").count()
+    assert total >= 30
+    assert page.locator("details.cmds[open]").count() == total
+    page.click("#onboard button.choice:has-text('Expert')")
+    assert page.locator("details.cmds[open]").count() == 0
+    page.click("#onboard button.choice:has-text('Beginner')")
+    assert page.locator("details.cmds[open]").count() == total
+    game.start("Max")
+    page.click("#hud button:has-text('Roadmap')")
+    page.wait_for_timeout(500)
+    page.click("#s-map button:has-text('Settings')")
+    page.select_option("#set-difficulty", "god")
+    assert page.locator("details.cmds[open]").count() == 0
+    # Folded is never hidden: one click opens the commands of a lesson.
+    page.click("#hud button:has-text('Roadmap')")
+    page.wait_for_timeout(500)
+    page.click("#s-map button:has-text('Setup guide')")
+    assert "vibe new ~/vibe-map-max-" in page.inner_text("#s-setup")
+    assert game.errors == []
+
+
+def test_returning_player_sees_resume_first(game: GamePage) -> None:
+    page = game.goto(
+        state={
+            "name": "Rolinda",
+            "look": "rolinda",
+            "done": [0],
+            "doneW": {"campus": [0]},
+        }
+    ).page
+    assert page.is_visible("#btn-continue")
+    assert not page.is_visible("#onboard")
+    game.resume()
+    assert game.state()["look"] == "rolinda"
+    assert game.errors == []
