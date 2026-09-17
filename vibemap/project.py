@@ -44,5 +44,10 @@ def data_path(name: str) -> Path:
         return Path(p)
 
 
+def data_dir(name: str):
+    """A folder shipped inside the package, as a context manager (see data_path)."""
+    return resources.as_file(resources.files("vibemap").joinpath("data", name))
+
+
 def data_text(name: str) -> str:
     return resources.files("vibemap").joinpath("data", name).read_text(encoding="utf-8")

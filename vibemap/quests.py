@@ -294,26 +294,49 @@ def _c8_schedule(cfg: Config) -> tuple[bool, str]:
     )
 
 
+def _is_product() -> bool:
+    """The product checkout has the engine's tests; a camp has only its workspace."""
+    return (ROOT / "tests" / "test_repo.py").exists()
+
+
 def _extra_tests(cfg: Config) -> tuple[bool, str]:
-    if not (ROOT / "tests").exists():
-        return False, "no tests/ folder"
-    out = subprocess.run(
-        [
+    """Expert: tests exist and pass. The product runs its own gates; a camp runs
+    whatever pytest finds under workspace/ (the learner's tests for their work)."""
+    if _is_product():
+        cmd = [
             "uv", "run", "--no-sync", "pytest", "-q",
             "tests/test_repo.py", "tests/test_build.py",
-        ],  # fmt: skip
-        cwd=ROOT, capture_output=True, text=True, timeout=600,
-    )  # fmt: skip
-    return out.returncode == 0, out.stdout.strip().splitlines()[
-        -1
-    ] if out.stdout else "no output"
+        ]  # fmt: skip
+    else:
+        found = sorted((ROOT / "workspace").rglob("test_*.py"))
+        if not found:
+            return False, "no test_*.py under workspace/ (write one for your game)"
+        cmd = ["python3", "-m", "pytest", "-q", *[str(p) for p in found]]
+    out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600)
+    lines = (out.stdout or out.stderr).strip().splitlines()
+    return out.returncode == 0, lines[-1] if lines else "no output"
 
 
 def _extra_verify(cfg: Config) -> tuple[bool, str]:
-    out = subprocess.run(
-        ["just", "verify-quiet"], cwd=ROOT, capture_output=True, text=True, timeout=1200
-    )
-    return out.returncode == 0, (out.stdout or out.stderr).strip().splitlines()[-1]
+    """God: the whole gate is green. The product runs just verify; a camp runs the
+    vault lint and its workspace tests."""
+    if _is_product():
+        out = subprocess.run(
+            ["just", "verify-quiet"],
+            cwd=ROOT, capture_output=True, text=True, timeout=1200,
+        )  # fmt: skip
+        lines = (out.stdout or out.stderr).strip().splitlines()
+        return out.returncode == 0, lines[-1] if lines else "no output"
+    from vibemap.vault import Vault
+
+    report = Vault(cfg, State.load()).lint()
+    if not report.ok:
+        return False, (
+            f"vault lint: {len(report.orphans)} orphans, "
+            f"{len(report.dead_links)} dead links"
+        )
+    ok, msg = _extra_tests(cfg)
+    return ok, f"vault OK; {msg}"
 
 
 def _note_check(world: str, n: int) -> Check:
@@ -449,12 +472,17 @@ EXTRA: tuple[Check, ...] = (
     Check(
         "repo tests pass",
         _extra_tests,
-        "uv run pytest tests/test_repo.py tests/test_build.py",
+        "tests that pass (the product's, or yours under workspace/)",
         "extra",
     ),
 )
 GOD: tuple[Check, ...] = (
-    Check("just verify is green", _extra_verify, "just verify", "extra"),
+    Check(
+        "the whole gate is green",
+        _extra_verify,
+        "just verify (product) or vault lint plus your tests (camp)",
+        "extra",
+    ),
 )
 
 

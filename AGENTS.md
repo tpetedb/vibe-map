@@ -4,7 +4,7 @@ Instructions for any AI coding agent working in this repository. Format: https:/
 
 ## Project overview
 
-A gamified course and a template: a single-file 3D browser game (`game/vibe-map.html`), a terminal companion with quests and XP (`vibemap/`), a small data pipeline (`data/`, `sql/`, `python/`), and an Obsidian vault (`vault/`) that grows as the learner progresses. Keep it small and readable. One file per concern; a dependency only when it removes real work.
+A gamified course and a template: a single-file 3D browser game (`game/vibe-map.html`), a terminal companion with quests and XP (`vibemap/`), a small data pipeline in the learner's workspace (`workspace/data/`, `workspace/sql/`, `workspace/python/`), and an Obsidian vault (`vault/`) that grows as the learner progresses. Keep it small and readable. One file per concern; a dependency only when it removes real work.
 
 ## File map
 
@@ -19,7 +19,7 @@ Three zones, explained in `docs/MAINTAINERS.md`: the **product** (the engine: `s
 | `vibemap/data/template/` | The camp skeleton `vibe new` copies (README, AGENTS, CLAUDE, vibe.toml, justfile, workspace, `_claude/`, `_agents/skills/`, `_github/`). Underscore folders become dot-folders in the camp. Skills, hook and subagent are synced from `.agents/` and `.claude/`; a test fails when they drift. |
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`vibe.toml`), `pet.py` (the companion), `obsidian.py` (feature notes), `dotfiles.py` (terminal setup modules from `data/dotfiles/`). |
 | `vibemap/project.py` | Where a camp is: `VIBE_HOME`, else the nearest ancestor with a `vibe.toml`. The CLI installs globally (`uv tool install vibe-map`) and runs in any camp; `vibe new` writes a slim camp from the template, without the engine. |
-| `tools/regen_tree.py` | Emits the vault notes, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
+| `tools/regen_tree.py` | Emits the tree notes JS, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
 | `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us). |
@@ -35,7 +35,7 @@ Three zones, explained in `docs/MAINTAINERS.md`: the **product** (the engine: `s
 - One helper per concept (`mat()`, `fixColors()`, `onLandW()`, `Vault.write()`). Never re-spell the raw check at a call site.
 - Comments state constraints and why, in one or two lines. Never narrate changes ("replaced the old X"), never date a comment, never reference line numbers in other files.
 - Versioned formats fail loudly. The progress code and `state.json` carry a version; an unknown version is refused with a clear message, not patched around.
-- Scores are a system of record. Never reset or rewrite `data/scores.csv` without asking.
+- Scores are a system of record. Never reset or rewrite `workspace/data/scores.csv` without asking.
 - Python dependencies are welcome when they remove real work. Declare them in `pyproject.toml`, install with `uv`, never bare pip.
 - After every change, end with one line: what changed.
 
@@ -54,7 +54,7 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 - `just` lists everything. `just start` is the onboarding menu. `just setup` installs what is missing.
 - Run the game: `just game`. Build it: `just build`.
 - Progress and quests: `uv run vibe status`, `uv run vibe check`, `uv run vibe done <n>`.
-- Scores: `uv run vibe scores`, `duckdb -c "$(cat sql/top_runs.sql)"`, `python3 python/scores.py`.
+- Scores: `uv run vibe scores`, `duckdb -c "$(cat workspace/sql/top_runs.sql)"`, `python3 workspace/python/scores.py`.
 - Tests: `just test`. Full gate: `just verify`.
 
 ## Code style
@@ -76,5 +76,5 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 
 ## Security
 
-- No secrets in the repo. Tokens go in `.env` (gitignored, see `.env.example`) or the OS keychain.
+- No secrets in the repo. Tokens go in `.env` (gitignored, see `env.example`) or the OS keychain.
 - Do not run commands that delete outside this folder.

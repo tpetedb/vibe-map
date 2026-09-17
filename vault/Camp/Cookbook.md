@@ -20,7 +20,7 @@ Read every .md file in notes/, list the decisions made, the open decisions with 
 Workstream 3. A chart of minutes per decision by meeting.
 
 ```text
-Using data/meetings.csv, write sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to python/out/. Explain the one SQL construct I have not seen.
+Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to workspace/python/out/. Explain the one SQL construct I have not seen.
 ```
 
 **Done when:** The chart opens and the worst meeting is obvious.

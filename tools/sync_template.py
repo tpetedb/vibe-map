@@ -25,6 +25,7 @@ TEMPLATE = ROOT / "vibemap" / "data" / "template"
 PRODUCT_ONLY_SKILLS = {"develop-camp"}
 
 PAIRS: list[tuple[Path, Path]] = [
+    (ROOT / "env.example", TEMPLATE / "env.example"),
     (ROOT / ".claude" / "settings.json", TEMPLATE / "_claude" / "settings.json"),
     (
         ROOT / ".claude" / "agents" / "scorekeeper.md",

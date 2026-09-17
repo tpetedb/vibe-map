@@ -839,7 +839,10 @@ def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
         console.print(f"[warn]feed[/] {escape(p)}")
     if dry_run:
         return
-    news.write_json(items, ROOT / "data" / "news.json")
+    # The product bakes data/news.json into the game; a camp has no build, so
+    # the feed stays in its state folder and the vault note is the reader.
+    target = ROOT / "data" if (ROOT / "tools" / "build.py").exists() else ROOT / ".vibe"
+    news.write_json(items, target / "news.json")
     ctx.vault.write("News", news.note_body(items, problems), tags=["concept"])
     console.print(
         f"[ok]news[/]: {len(items)} items in data/news.json and vault/"
@@ -1076,7 +1079,12 @@ TEMPLATE_NAMES = {
 
 def copy_template(target: Path) -> int:
     """Write the camp skeleton from the package into TARGET; returns the file count."""
-    src = project.data_path("template")
+    # Inside the context: from a wheel this is a real folder, from a zip a temp one.
+    with project.data_dir("template") as src:
+        return _copy_tree(src, target)
+
+
+def _copy_tree(src: Path, target: Path) -> int:
     n = 0
     for f in sorted(src.rglob("*")):
         if not f.is_file() or "__pycache__" in f.parts:
@@ -1088,7 +1096,8 @@ def copy_template(target: Path) -> int:
         n += 1
     skills = target / ".claude" / "skills"
     skills.mkdir(parents=True, exist_ok=True)
-    for skill in sorted((target / ".agents" / "skills").iterdir()):
+    src_skills = target / ".agents" / "skills"
+    for skill in sorted(src_skills.iterdir()) if src_skills.is_dir() else []:
         link = skills / skill.name
         if skill.is_dir() and not link.exists():
             link.symlink_to(Path("..") / ".." / ".agents" / "skills" / skill.name)
@@ -1116,34 +1125,54 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     your vault, the configuration. The engine stays in the vibe command."""
     if directory is None:
         directory = camp_dir_name(who)
-        console.print(f"[muted]no directory given; the convention says[/] {directory}")
+        console.print(f"[muted]folder from the convention:[/] {directory}")
     target = Path(directory).expanduser().resolve()
     if target.exists() and any(target.iterdir()):
         _fail(f"{target} exists and is not empty")
     target.mkdir(parents=True, exist_ok=True)
     n = copy_template(target)
     console.print(f"[ok]{n} files[/] from the template into {target}")
+    if who:
+        toml = target / "vibe.toml"
+        toml.write_text(
+            toml.read_text(encoding="utf-8").replace(
+                'name = "<your_name>"', f'name = "{who}"', 1
+            ),
+            encoding="utf-8",
+        )
     env = dict(os.environ, VIBE_HOME=str(target))
     if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
         console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")
     else:
         console.print("[warn]vault not built[/]; run: vibe init")
+    committed = False
     if _quiet(["git", "init", "-q"], target) == 0:
         _quiet(["git", "add", "-A"], target)
-        _quiet(
-            ["git", "commit", "-q", "-m", "Start the camp from the vibe template"],
-            target,
+        committed = (
+            _quiet(
+                ["git", "commit", "-q", "-m", "Start the camp from the vibe template"],
+                target,
+            )
+            == 0
         )
-        console.print("[ok]git repository[/] with the first commit")
+        if committed:
+            console.print("[ok]git repository[/] with the first commit")
+        else:
+            console.print(
+                "[warn]git could not commit[/] (set user.name and user.email); "
+                "commit by hand, then push"
+            )
     else:
         console.print("[warn]git not found[/]; the camp is not under version control")
+    if github and not committed:
+        _fail("no first commit to push; fix git, commit, then: gh repo create")
     if github:
         cmd = ["gh", "repo", "create", github, "--source", ".", "--public", "--push"]
         console.print(f"[muted]$ {' '.join(cmd)}[/]")
         if subprocess.run(cmd, cwd=target).returncode != 0:
             _fail("gh could not create the repository; is gh installed and logged in?")
     console.print(
-        f"[ok]camp ready[/] at {target}\nNext:\n  cd {target.name}\n"
+        f"[ok]camp ready[/] at {target}\nNext:\n  cd {target}\n"
         "  just start          # or: vibe start\n"
         "  vibe play           # the game, hosted; vibe play --offline caches it"
     )

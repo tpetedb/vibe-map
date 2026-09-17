@@ -47,7 +47,33 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
     assert (camp / ".claude" / "skills" / "camp-progress").is_symlink()
     assert not (camp / "src").exists() and not (camp / "vibemap").exists()
     assert not (camp / ".agents" / "skills" / "develop-camp").exists()
-    assert "<your_name>" in (camp / "vibe.toml").read_text()
+    assert 'name = "Frank"' in (camp / "vibe.toml").read_text()
+    # Expert in a camp asks for the learner's own tests under workspace/.
+    import os
+    import subprocess
+    import sys
+
+    env = dict(os.environ, VIBE_HOME=str(camp))
+    (camp / "workspace" / "game").mkdir(parents=True, exist_ok=True)
+    (camp / "workspace" / "game" / "index.html").write_text(
+        "<script>let score=0</script>" + "x" * 900
+    )
+    (camp / "workspace" / "game" / "test_game.py").write_text(
+        "def test_ok():\n    assert True\n"
+    )
+    run = subprocess.run(
+        [sys.executable, "-m", "vibemap.cli", "difficulty", "expert"], cwd=camp, env=env
+    )
+    assert run.returncode == 0
+    out = subprocess.run(
+        [sys.executable, "-m", "vibemap.cli", "check", "1"],
+        cwd=camp,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert "no test_*.py" not in out.stdout, out.stdout
+    assert "Innovation Hub done" in out.stdout, out.stdout
 
 
 def test_template_is_in_sync_with_the_product_configuration() -> None:
