@@ -64,6 +64,11 @@ def test_scripted_deliverables_pass_every_stop(tmp_path: Path) -> None:
         output = _island(camp, world)
         assert output.count("all checks pass") == 8, output
         assert "not yet." not in output, output
+    # Hard adds the strict note check; the scripted notes satisfy it too.
+    _vibe(camp, "difficulty", "hard")
+    for world in WORLDS:
+        output = _vibe(camp, "check", "--world", world, "--all", "--no-claim")
+        assert "not yet." not in output, output
 
 
 def test_each_fork_challenge_is_checked_on_its_own(tmp_path: Path) -> None:

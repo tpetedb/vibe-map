@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -105,8 +106,17 @@ still fresh. The agent drafted, I rewrote the half that made no sense, and the
 check told me what was still missing before I could claim the stop. What I
 learned is that the deliverable is the point: the file on disk is what the
 check reads, and the note is what I will read again. See [[Git]] and
-[[Docker and containers]] for the parts I had to look up twice.
+[[Docker and containers]] for the parts I had to look up twice, and
+[[Prompting - task, goal, hard constraints]] for the way I asked.
 """
+
+# Hard and god add the strict note check: a source the learner added under
+# Sources and a third link of their own. The third link is in OWN_NOTE; this
+# bullet joins the note's Sources section.
+OWN_SOURCE = (
+    "- I read around it afterwards to get the history straight: "
+    "https://en.wikipedia.org/wiki/History_of_artificial_intelligence"
+)
 
 
 STUB = "- not done yet; run `vibe check` when it is"
@@ -127,13 +137,15 @@ def _write_notes(camp: Path) -> int:
             text = note.read_text(encoding="utf-8")
             if STUB not in text:
                 continue
-            note.write_text(
-                text.replace(
-                    STUB,
-                    "\n".join(f"- {line}" for line in OWN_NOTE.strip().splitlines()),
-                ),
-                encoding="utf-8",
+            text = text.replace(
+                STUB,
+                "\n".join(f"- {line}" for line in OWN_NOTE.strip().splitlines()),
             )
+            if OWN_SOURCE not in text:
+                text = re.sub(
+                    r"\n(#\w+\s*)$", "\n" + OWN_SOURCE + r"\n\n\1", text, count=1
+                )
+            note.write_text(text, encoding="utf-8")
             filled += 1
     return filled
 
