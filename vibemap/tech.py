@@ -1034,6 +1034,91 @@ T = [
         ["security", "headless"],
     ),
     (
+        "prompting",
+        "imperial",
+        "Prompting: task, goal, hard constraints",
+        "A prompt an agent can act on has five parts: the task (what to do), the goal (why, so it can make the small decisions), the hard constraints (what must never change: files, APIs, style rules, budgets), the context it cannot infer (which repo, which conventions, what already exists) and the definition of done (what output, checked how). Anthropic's own rule: show the prompt to a colleague with no context; if they would be confused, the model will be too. Say what to do rather than what not to do, put the steps in order when order matters, and explain the why behind a constraint so the model generalises instead of guessing.",
+        "Prompt engineering became a discipline with the instruction-tuned models of 2022; Anthropic's prompting guide (2024, kept current for every model since) codified the same advice for Claude: be clear and direct, add context and motivation, give three to five examples, structure with tags, give a role; OpenAI's guide says the same in other words. The best practices page for the current models keeps the golden rule and adds guidance for agentic work: autonomy versus safety, long-horizon state, not over-thinking.",
+        "Rewrite one prompt you sent today in five labelled lines: Task, Goal, Hard constraints, Context, Done when. Send both versions to `claude -p` and compare. Then put the five lines in a skill so you never type them again.",
+        [
+            (
+                "Anthropic, prompting best practices",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+            ),
+            (
+                "Anthropic, be clear and direct",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct",
+            ),
+            (
+                "OpenAI, prompt engineering guide",
+                "https://platform.openai.com/docs/guides/prompt-engineering",
+            ),
+            (
+                "Source: Anthropic, prompting best practices (the golden rule, sequential steps, examples, context)",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+            ),
+        ],
+        ["promptstructure", "symbols", "context", "skills"],
+    ),
+    (
+        "promptstructure",
+        "imperial",
+        "Structure: XML tags and Markdown blocks",
+        'Structure tells the model which words are instructions, which are data and which are examples. XML tags do that unambiguously: wrap each kind of content in its own tag (`<instructions>`, `<context>`, `<input>`, `<example>`), keep the names consistent, nest when the content nests (`<documents>` holding `<document index="1">`), and ask for output in a tag when you need to find it. Markdown does the human side: headings for sections, bullets for parallel items, numbered lists for order, fenced code blocks (three backticks with a language) for anything that must be copied exactly, tables for config. A good agent prompt mixes them: Markdown to read, XML to parse.',
+        "XML tags for prompts are Anthropic's recommendation since the first Claude prompting guide; the current best-practices page keeps them for mixing instructions, context, examples and variable input, and for formatting output. Markdown (2004) became the writing format of READMEs, AGENTS.md and Obsidian, so both the agent and the human read it; fenced code blocks come from GitHub Flavored Markdown (2009) and every agent honours the language tag.",
+        "Take the five-line prompt from the previous topic and wrap it: `<task>`, `<goal>`, `<constraints>`, `<context>`, `<done>`. Put the file you want changed inside `<input>` and the shape of the answer inside `<output>`. Ask for the answer as a Markdown table with a fenced diff. Notice how much less the model has to guess.",
+        [
+            (
+                "Anthropic, structure prompts with XML tags",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags",
+            ),
+            (
+                "Anthropic, control the format of responses",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#control-the-format-of-responses",
+            ),
+            (
+                "GitHub Flavored Markdown spec, fenced code blocks",
+                "https://github.github.com/gfm/#fenced-code-blocks",
+            ),
+            (
+                "Source: Anthropic, prompting best practices, XML tags and output format sections",
+                "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices",
+            ),
+        ],
+        ["markdown", "agentsmd"],
+    ),
+    (
+        "symbols",
+        "imperial",
+        "The symbols: slash, at, bang, hash",
+        "Every agent chat has a few characters that are not words. In Claude Code, a line that starts with `/` is a command or a skill (`/help`, `/init`, `/compact`, `/memory`), a line that starts with `!` runs a shell command and puts its output in the session, and `@` followed by a path mentions a file so the agent reads it (type a letter after it for completion). In CLAUDE.md, `@path` imports another file at launch; inside backticks it stays literal. `#` is a Markdown heading at the start of a line and a tag inside Obsidian (`#tech`); `[[Note]]` is an Obsidian link; `---` fences frontmatter; three backticks fence code; `<tag>` is structure for the model; `$` starts a shell variable and `~` is your home folder. Knowing which parser reads which symbol is half of not being surprised.",
+        "Slash commands come from IRC (1988), file mentions with `@` from Twitter-era chat, `!` for shell escapes from editors like vi and ed, `#` for headings from Markdown (2004) and for tags from Twitter (2007), double brackets from wikis (WikiWikiWeb, 1995) and Obsidian; Claude Code documents its own set on the interactive-mode page.",
+        "In Claude Code type `/help`, then `!uv run vibe status`, then `@vibe.toml what does the pet table do`. Open `CLAUDE.md` and see the `@AGENTS.md` import at the top. Then open the vault in Obsidian and click a `#tech` tag.",
+        [
+            (
+                "Claude Code, interactive mode (quick commands)",
+                "https://code.claude.com/docs/en/interactive-mode",
+            ),
+            (
+                "Claude Code, memory and @path imports",
+                "https://code.claude.com/docs/en/memory",
+            ),
+            (
+                "Obsidian, internal links",
+                "https://help.obsidian.md/Linking+notes+and+files/Internal+links",
+            ),
+            (
+                "Source: Claude Code interactive mode reference, the quick commands table (/ command or skill, ! shell mode, @ file path mention)",
+                "https://code.claude.com/docs/en/interactive-mode",
+            ),
+            (
+                "Source: Claude Code memory page, import additional files with @path",
+                "https://code.claude.com/docs/en/memory",
+            ),
+        ],
+        ["skills", "vault", "bash"],
+    ),
+    (
         "interfaces",
         "dark",
         "Interfaces: GUI, TUI, CLI, API",
@@ -1404,6 +1489,8 @@ CATEGORY: dict[str, tuple[str, int]] = {
     "harness": ("agents", 2), "skills": ("agents", 2), "hooks": ("agents", 2),
     "mcp": ("agents", 2), "security": ("agents", 2), "cost": ("agents", 2),
     "agenthooks": ("agents", 3), "subagents": ("agents", 3),
+    "prompting": ("agents", 1), "promptstructure": ("agents", 2),
+    "symbols": ("agents", 1),
     "readme": ("docs", 1), "semver": ("docs", 2), "changelog": ("docs", 2),
     "adr": ("docs", 3),
     "obsidian": ("knowledge", 1), "vault": ("knowledge", 2),
