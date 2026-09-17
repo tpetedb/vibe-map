@@ -110,3 +110,22 @@ def test_a_camp_note_is_never_overwritten_by_the_library(tmp_path: Path) -> None
     st.unlocked.append(title)
     grow.sync(v)
     assert "Mine." in (v.dir / f"{title}.md").read_text(encoding="utf-8")
+
+
+def test_the_next_hint_follows_the_state(tmp_path: Path) -> None:
+    from vibemap import campaign
+
+    st = State(name="Tom")
+    v = _vault(tmp_path, st)
+    assert "Finish" in grow.next_hint(v)
+    st.done_w["campus"] = list(range(1, 9))
+    assert "Inspect an artifact" in grow.next_hint(v)
+    ids = [a["id"] for a in campaign.artifacts()]
+    st.artifacts.extend(ids)
+    hint = grow.next_hint(v)
+    assert "vibe check --artifact" in hint and hint.count(".") == 1
+    st.artifacts_built.extend(ids)
+    hint = grow.next_hint(v)
+    assert "vibe check --mentor" in hint and "0 of 12 met" in hint
+    st.mentors.extend(m["id"] for m in campaign.mentors())
+    assert "vibe vault unlock" in grow.next_hint(v)

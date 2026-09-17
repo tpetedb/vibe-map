@@ -32,7 +32,10 @@ command in the last column; nothing needs a build.
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |
 | Your own work | `workspace/` | `vibe check` |
 | What an artifact asked you to build | `workspace/artifacts/<id>/` | `vibe check --artifact <id>` |
-| The game itself | `workspace/forks/vibe-map/src/config/` | `vibe fork` first, then `just build` there and `vibe check --fork` |
+| The game itself | `workspace/forks/vibe-map/src/config/00-config.js` | `vibe fork` first, then `just build` there and `vibe check --fork config` |
+| A stop or a tree node of your own | `workspace/forks/vibe-map/tools/generated/campaign.json` or `tree.js` | `just build` there, then `vibe check --fork topic` |
+| The record of a build you broke and repaired | `workspace/forks/vibe-map/repair.json` | `just record` in the fork writes it; `vibe check --fork repair` reads it |
+| What an exercise a mentor set asked you to do | `workspace/mentors/<id>/` | `vibe check --mentor <id>` |
 
 `vibe.toml` at the camp root was the old name for `config/camp.toml`. It is
 still read for one release and the CLI says so on every command; move the file
@@ -61,16 +64,37 @@ where they expect them.
 
 ## The fork
 
-`vibe fork` copies `src/`, `tools/build.py` and the generated inputs into
-`workspace/forks/vibe-map/`, with its own `src/config/`. Your fork is yours to
-break and repair; the course keeps living in the product. Work on the product
-happens in the product, never through a fork.
+`vibe fork` copies `src/`, `tools/build.py`, `tools/record_build.py` and the
+generated inputs into `workspace/forks/vibe-map/`, with its own `src/config/`,
+a `justfile`, a `README.md` with the four challenges and a versioned
+`fork.json`. Your fork is yours to break and repair; the course keeps living
+in the product. A fork is a learner feature and never our development
+workflow: work on the product happens in the product, in a worktree and a
+branch, never through a fork.
 
     vibe fork                 # copy it
     cd workspace/forks/vibe-map
     just build                # your own game/vibe-map.html
-    vibe check --fork         # it builds, and its configuration is yours
+    just record               # run the build and record whether it passed
+    vibe check --fork         # all four challenges at once
 
 The fork keeps the journey level of the camp it sits in: only `src/config/`
 is yours to diverge. `fork.json` records the configuration it started from,
 which is how the check knows you changed something.
+
+The four challenges of the production island's stop 6 are checked one at a
+time. Each one reads something that is on your disk.
+
+| Challenge | It reads | Command |
+|---|---|---|
+| `exists` | `workspace/forks/vibe-map/` with `fork.json` and its own `src/config/` | `vibe check --fork exists` |
+| `config` | `src/config/00-config.js` differs from the product's, and the fork still builds | `vibe check --fork config` |
+| `topic` | a stop id in `tools/generated/campaign.json` or a node id in `tools/generated/tree.js` that the product does not have | `vibe check --fork topic` |
+| `repair` | `repair.json`, a failed build followed by a green one, else the fork's git history | `vibe check --fork repair` |
+
+`repair.json` is written by `just record` in the fork, which runs
+`tools/record_build.py`: it builds, appends the run with its result, and keeps
+the file at its own version. An unknown version is refused with the line that
+tells you to delete it and record the runs again. Without the file the check
+falls back to the fork's git history, where a commit that breaks the build
+followed by one that fixes it counts as the same evidence.

@@ -17,7 +17,8 @@ window.openCh=open;
 function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
 // The encounter: the dialogue the learner walks through one exchange at a
 // time, then the exercise. Every mentor line paraphrases a recorded idea and
-// carries the link it came from; nothing here is a quote.
+// carries the link it came from; nothing here is a quote. The summary list of
+// ideas stays in the vault note, so the screen says each thing once.
 function mentorTalk(m){const d=m.encounter.dialogue;const seen=Math.min(d.length,S.met[m.id]||1);
   return d.slice(0,seen).map(x=>`<div class="mturn"><p class="you">${x.you}</p><p class="them"><b>${m.name}:</b> ${x.m} <a class="cite" href="${m.src[x.src][1]}" target="_blank" rel="noopener">${m.src[x.src][0]}</a></p></div>`).join("")}
 function mentorExercise(m){const ex=m.encounter.exercise;const done=S.mentors.includes(m.id);
@@ -31,12 +32,11 @@ window.talkMore=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;con
   const b=$("talkmore");if(b&&S.met[id]>=d.length)b.remove()};
 window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const st=S.path[id];
   if(!S.met[id]){S.met[id]=1;save()}
-  const ideas=m.ideas.map(i=>`<li>${i}</li>`).join("");const src=m.src.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join(" · ");
+  const src=m.src.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join(" · ");
   $("s-mentor").innerHTML=`<div class="mentor-head">${mentorFace(m.look)}<div><h2 style="margin:0">${m.name}</h2><div class="role">${m.role}</div></div></div>
    <p>${m.bio}</p><h3>The encounter</h3><div class="mtalk" id="mtalk">${mentorTalk(m)}</div>
    ${S.met[id]>=m.encounter.dialogue.length?"":`<button id="talkmore" onclick="talkMore('${id}')">Ask the next question</button>`}
    ${mentorExercise(m)}
-   <h3>What they would tell you tonight</h3><ul class="ideas small">${ideas}</ul>
    <div class="deep${st==="deep"?" on":""}" id="deep"><h3>Going deeper</h3><p class="small">${m.deep}</p><p class="small"><b>Sources:</b> ${src}</p></div>
    <div class="rolinda"><b>Rolinda asks</b>${m.ask}</div>
    <div class="row"><button class="primary" onclick="choosePath('${id}','deep')">${st==="deep"?"Keep on my path":"Tell me more"}</button><button onclick="choosePath('${id}','skip')">${st==="skip"?"Still not now":"Not interested for now"}</button><button onclick="closeSheet()">Back</button></div>

@@ -49,7 +49,7 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 | Vault graph fixed, real Obsidian where possible | v0.4.0 (d3-force graph, Open in Obsidian) | done; in-game graph is dense (see gaps) |
 | Obsidian feature modules from the official docs | v0.4.0 (35 features) | done |
 | Toolbox terminal configs installable, hooks (git and agent), interfaces topic | v0.4.0 | done |
-| Artifacts that do something (cafe = client and server, then factories, post offices, shops, companies, households, energy grid, data centre) | v0.4.0, v0.5.0 (20 artifacts with demos) | done as demos; not yet real tasks (gap) |
+| Artifacts that do something (cafe = client and server, then factories, post offices, shops, companies, households, energy grid, data centre) | v0.4.0, v0.5.0 (20 artifacts with demos), v0.9.0 (tasks with checks) | done; see the professionalize cycle below |
 | Heartbeat for handover to Opus if limits run out | HANDOVER.md, memory | done (launchd blocked by permissions) |
 | Tree grouped by category with depth, not ranks | v0.5.0 | done |
 | Grow mode: empty vault that fills as you play, claude-obsidian where fitting | v0.5.0 | done |
@@ -59,19 +59,35 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 | Roadmap topics: prompting, XML and Markdown, the symbols | v0.5.0 | done |
 | In-game onboarding (character, difficulty, full experience with exact commands), commands foldable, bigger map with a path per module, naming convention | v0.6.0 | done |
 | `<your_name>` as the default everywhere, explain to type it plainly | v0.7.0, hardened in v0.8.0 | done |
-| Separation of concerns: config, source, workspace; a slim camp; maintainer doc; roadmap topics on separation of concerns and building the builder with real sources | v0.7.0 (three zones, `vibe new` writes a camp, MAINTAINERS.md) | done at one level; nested config levels and the fork are not yet (gap) |
+| Separation of concerns: config, source, workspace; a slim camp; maintainer doc; roadmap topics on separation of concerns and building the builder with real sources | v0.7.0 (three zones, `vibe new` writes a camp, MAINTAINERS.md), v0.9.0 (three config levels, `vibe fork`) | done |
 | Review all branches, merge so nothing is lost, test with Opus in ephemeral envs | v0.7.0 review pass (PR #28) | done |
 | New test repo, play the whole game, find bugs, Opus agents fix them | v0.8.0 (PRs #29 to #31, test camp `tpetedb/test-20260917-1404`) | done |
+| **Professionalize cycle** (one issue and one worktree per workstream) | | |
+| W1: config levels and the vibe fork | PR #44 | done |
+| W2: artifacts become tasks | PR #46 | done |
+| W3: mentor encounters | PR #41 | done |
+| W4: title screen and mini-games | PR #43 | done |
+| W5: real checks on every island, and the Fork the game stop on production | PR #45 | done |
+| W6: CI and test hardening (the whole battery in CI, a nightly workflow, a fresh-camp end-to-end run) | PR #42 | done |
+| W7: docs and ADRs | issue #40, this PR | done |
 
 ## 3. Gaps, honestly
 
-- Artifacts are demos, not tasks. Twenty fake terminals teach one idea each, well, but the learner builds nothing and nothing is checked.
-- Mentor encounters are two clicks. The choice ("Tell me more" or "Not interested") stores a path and shows a paragraph; there is no exercise, no check, no visible consequence beyond a vault note.
-- Winter, desert and production stops are checked only through the vault note (the learner's own words and links since v0.8.0). Where a stop has a real deliverable (a test file, a CI workflow, an eval, a dotfiles repo) the check should look for it.
-- Configuration has one level. `vibe.toml` mixes the journey (name, difficulty) with the product (repo URL, shadow map). There is no place for the learner to fork the game and change its source configuration, and no map of where each kind of setting lives.
-- The title screen leads with 120 words of satire above the form; KPI labels read literally on the studio theme; the mini-games (mascot, prompt, rolls, versions, bridges) were designed in the first chat and feel thin next to the artifacts.
-- The in-game vault graph is decoration at 130 nodes; the tech tree has arrows now but no search.
+What the professionalize cycle closed:
+
+- Artifacts are tasks. Each of the twenty keeps its demo and carries a "Do it for real" walkthrough written from the official documentation of the thing, a home in `workspace/artifacts/<id>/` and a deterministic offline check (`vibe check --artifact <id>`). A check that needs a tool this machine does not have says so with the install command instead of failing.
+- Mentors are encounters. Each of the twelve has a dialogue of three or four exchanges, every line a paraphrase with its source next to it, one exercise of under fifteen minutes in `workspace/mentors/<id>/`, a check (`vibe check --mentor <id>`), a plaque on the island and a line in their vault note.
+- Every winter, desert and production stop with a deliverable is checked on disk, with the note as the floor underneath. Four winter stops are genuinely reading only and say so in the check name: stops 2, 4, 5 and 7 (`quests.READING_ONLY`).
+- Configuration has three nested levels with `docs/CONFIG.md` as the table. The journey level is `config/camp.toml`; `vibe.toml` is read for one release and says so on every command. `vibe fork` puts the source level in the learner's hands, and the production island's stop 6 is Fork the game with four challenges.
+- The title screen leads with the form; the KPI labels, the button words and the second tagline line follow the theme. The mini-games were audited against what they teach, two were cut and three rebuilt, with the reasoning in `docs/adr/0005-mini-games.md`.
+
+Still open:
+
 - PyPI publication is pending; every install block uses the git URL.
+- The in-game vault graph is decoration, and the tech tree has arrows but no search.
+- The camp's `pages.yml` copies a built fork to `/fork/` when `workspace/forks/vibe-map/game/vibe-map.html` is committed, so a learner's own game is hosted only if they commit the build. Nothing tells them to, and the forking stop does not mention the URL.
+- Palette literals remain in several game modules (`12-buildings.js`, `17-artifact-props.js`, `21-world-build.js`, `60-vault.js`, `70-minigames.js`, `87-onboarding.js`) rather than reading `src/config/00-config.js`.
+- The product checkout is a valid camp but does not satisfy the new winter, desert and production checks: its `workspace/` holds the campus deliverables only. The played instance has to script those deliverables before it plays, or the played camp will show red where the course expects green.
 
 ## 4. The next cycle: professionalize
 
@@ -82,7 +98,7 @@ Decisions taken here so that agents do not re-litigate them:
   - Source configuration: `src/config/` for the game (load order, palette, theme presets, world scale, the defaults the build injects) and `vibemap/data/` for the CLI (campaign, tech tree, personas, templates). A learner who forks the game edits `src/config/` in their fork.
   - Journey configuration: `config/camp.toml` in a camp (name, persona, difficulty, provider, theme, vault mode, finale dates). `vibe.toml` at the camp root stays as the marker and is read for one release, then retired. The product repository keeps a `config/camp.toml` too so the checkout remains a valid camp.
   - `docs/CONFIG.md`: one table, "to change X, edit Y".
-- **The fork.** `vibe fork` copies the game's source, its vendor files and the build tool into `workspace/forks/vibe-map/` with its own `src/config/`, and `just build` there produces the learner's own game file. A new stop on the production island teaches forking on GitHub and locally, and its check verifies the fork builds and differs from the original in configuration.
+- **The fork.** `vibe fork` copies the game's source, its vendor files and the build tool into `workspace/forks/vibe-map/` with its own `src/config/`, and `just build` there produces the learner's own game file. A new stop on the production island teaches forking on GitHub and locally, and its check verifies the fork builds and differs from the original in configuration. A fork is a learner feature and never our development workflow: work on the product happens in the product, in a worktree and a branch, never through a fork.
 - **Artifacts become tasks.** Every artifact keeps its demo and gains a "Do it for real" section written from the official documentation of the thing (Docker, DuckDB, FastAPI, GitHub Actions, MCP, SQLite, Redis or a Python queue, and so on), a workspace path (`workspace/artifacts/<id>/`) and a deterministic check (`vibe check --artifact <id>`) that looks at what was built: an image that builds, a container that answers, a query that returns rows, an endpoint that responds, a workflow file that is valid. The progress code carries which artifacts were built for real.
 - **Mentors become encounters.** Each mentor has a short dialogue (three to four exchanges, sourced, never invented quotes), one exercise in the learner's workspace with a check (`vibe check --mentor <id>`), and a visible consequence on the island (a plaque on the annex, a line in the vault, a badge).
 - **Every stop has a real check** where a deliverable exists; the note check stays as the floor.
