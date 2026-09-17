@@ -1,6 +1,7 @@
 # Your camp's tasks. Run `just` to list them. Everything delegates to the
-# `vibe` command (uv tool install vibe-map); nothing here needs the engine's
-# source. Install just with `brew install just`.
+# `vibe` command (uv tool install git+https://github.com/tpetedb/vibe-map);
+# nothing here needs the engine's source, and every recipe also runs as
+# `vibe <thing>`. Install just with `brew install just`.
 
 # show the task list
 default:

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The docs separate a camp from the product repository. `docs/LONG-GAME.md` and `docs/QUICKSTART.md` no longer promise `just setup --check`, a `.venv`, Playwright browsers, `just verify` or `just build` to a learner in a camp, the "Where things end up" table labels every row camp or product, and the troubleshooting tables say what a camp does instead. The camp README leads with the next command and what you get, then a zones table written for the learner (your work in `workspace/`, notes in `vault/`, the rest is settings), says `just` needs `brew install just` and that every recipe also runs as `vibe <thing>`, moves `just scores` out of the day-one list, and tells the learner that the regenerated `vault/Camp` notes belong in git; the camp AGENTS.md says the same. Every code block now installs with `uv tool install git+https://github.com/tpetedb/vibe-map`, with the PyPI form as a footnote. Two dead sources are fixed: the Git 2.9.0 release notes (`.adoc`) and the dotfiles placeholder, now the GitHub dotfiles guide.
+
 ### Fixed
 
 - The game no longer crashes on the Roadmap, a stop or the inn prompt when WebGL failed before the island set a world; a progress reset keeps the chosen character and play mode; the setup guide escapes the name. Expert and god difficulty work in a camp: expert runs the learner's `workspace/**/test_*.py`, god adds the vault lint (the product keeps its own gates). `vibe news` in a camp writes `.vibe/news.json` instead of a fourth top-level folder. `vibe new --name` also sets the learner's name in `vibe.toml`. `vibe new` reports when git could not commit (and refuses `--github` without a commit), survives a package without the skills tree, prints the real path, and copies the template inside the package-resources context. Remaining `data/`, `sql/` and `python/` mentions moved to `workspace/` in AGENTS.md, CLAUDE.md, two skills, the personas, the cookbook, two game notes and the vault; `env.example` names `VIBE_NAME` and is synced into the template.

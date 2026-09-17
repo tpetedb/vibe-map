@@ -11,7 +11,7 @@ A Vibe Code Camp: a learner's own workspace, their notes, and the configuration 
 | Path | Owns | Rule |
 |---|---|---|
 | `workspace/` | The learner's own projects: `workspace/game/index.html` from workstream 1, `workspace/data/scores.csv`, `workspace/sql/`, `workspace/python/`, anything else they build. | Build here. Ask before deleting. `workspace/data/scores.csv` is a system of record: never reset or rewrite it without asking. |
-| `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hub. | One note per topic in `vault/Camp/`, frontmatter with `title`, `date`, `tags`, generous `[[wikilinks]]`. `vibe vault lint` must stay clean. |
+| `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hub. | One note per topic in `vault/Camp/`, frontmatter with `title`, `date`, `tags`, generous `[[wikilinks]]`. `vibe vault lint` must stay clean. The notes are tracked in git and `vibe` regenerates them, so a check leaves the tree dirty; commit them, the notes are the record. |
 | `vibe.toml` | Name, persona, difficulty, provider, theme, vault mode. | Change through `vibe name`, `vibe persona`, `vibe difficulty`, `vibe theme` or `just start`, not by hand, so the schema is enforced. |
 | `.agents/skills/`, `.claude/`, `AGENTS.md`, `justfile`, `.github/` | The agent and automation configuration of this camp. | Editing these is part of the course (workstreams 2, 4, 7, 8). Keep changes small and say why in the commit. |
 | `.vibe/` | Progress state, ignored by git. | Never edit by hand; `vibe done`, `vibe check`, `vibe import`. |
@@ -27,6 +27,6 @@ A Vibe Code Camp: a learner's own workspace, their notes, and the configuration 
 
 - Say what you are about to do before you touch more than one file.
 - Tests before claims: a workstream is done when `vibe check <n>` says so, not when the code looks right.
-- Commit after every change you would be sad to lose. Message: what and why, one line.
+- Commit after every change you would be sad to lose. Message: what and why, one line. `git add -A` includes the regenerated `vault/Camp` notes; that is intended, not noise.
 - No secrets in the repo. Tokens go in `.env` (ignored) or the OS keychain.
 - After every change, end with one line: what changed.
