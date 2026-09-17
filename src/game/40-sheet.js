@@ -1,5 +1,13 @@
 window.start=function(){S.name=$("name").value.trim()||"Lotte";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
-window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map")renderMap();setTimeout(()=>$("sheet").scrollIntoView({behavior:"smooth",block:"start"}),30)};
+// The News card shows NEWS, embedded at build time from data/news.json
+// (vibe news writes it; the weekly action rebuilds and commits the game).
+let newsLoaded=false;
+function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),list=$("newslist");if(!msg)return;
+  const items=(NEWS.items||[]).slice(0,12);
+  if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
+  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
+  list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
+window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>$("sheet").scrollIntoView({behavior:"smooth",block:"start"}),30)};
 window.closeSheet=function(){$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;

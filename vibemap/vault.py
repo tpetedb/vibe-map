@@ -234,6 +234,8 @@ class Vault:
         # Bootstrapped hubs (features, methods) stay reachable across rebuilds.
         if self.path("Obsidian features").exists():
             hubs += " · Obsidian: [[Obsidian features]]"
+        if self.path("News").exists():
+            hubs += " · News: [[News]]"
         lines += [
             "",
             "Map: [[Map]] · Mentors: [[Your path]] · Artifacts: [[Artifacts]] · "

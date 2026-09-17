@@ -4,11 +4,11 @@ const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",da
 // starts with the hubs and unlocks a note when the campaign earns it, the
 // same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
 // they just do not enter the graph yet.
-const VAULT_MODE=new URLSearchParams(location.search).get("vault")||(CONFIG.vault&&CONFIG.vault.mode)||"full";
+function vaultMode(){const q=new URLSearchParams(location.search).get("vault");if(q)return q;const s=(S.settings&&S.settings.vault)||"config";return s!=="config"?s:((CONFIG.vault&&CONFIG.vault.mode)||"full")}
 const ALWAYS_NOTES=["Tonight","Workstreams","Your path","Artifacts","Tech tree","Resources","Template repo","Terminal companion","Tom","Rolinda","Rolinda's questions","Lotte","Beverage stack"];
 let UNLOCKED=null;
 function linksOf(md){const out=[];const re=/\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;let m;while((m=re.exec(md.replace(/```[\s\S]*?```/g,"").replace(/`[^`\n]*`/g,""))))out.push(m[1].trim());return out}
-function computeUnlocked(){const keys=Object.keys(NOTES);if(VAULT_MODE!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
+function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
   const byLower={};keys.forEach(k=>byLower[k.toLowerCase()]=k);
   Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;const title=ws&&byLower[ws.n.toLowerCase()];if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
   MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
@@ -66,7 +66,7 @@ function vrender(id){
   $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl:not(.locked)").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
   if(vctx)vdraw();
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(VAULT_MODE==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
+window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(vaultMode()==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
   let pan=null;vz=1;vtx=0;vty=0;
   cv.onpointerdown=e=>{const [sx,sy]=pos(e);const [x,y]=vToWorld(sx,sy);const i=vpick(x,y);moved=false;cv.setPointerCapture(e.pointerId);if(i!==null){vdrag=VN[i];vdrag.fx=vdrag.x;vdrag.fy=vdrag.y}else pan={sx,sy,tx:vtx,ty:vty}};

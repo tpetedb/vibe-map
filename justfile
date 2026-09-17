@@ -22,6 +22,12 @@ start:
 setup *args:
     ./scripts/setup.sh {{args}}
 
+# the long game: the game in the browser, the vault in Obsidian, the status in this terminal (docs/LONG-GAME.md)
+camp:
+    open game/vibe-map.html
+    -open -a Obsidian vault
+    uv run vibe status
+
 # open the game in the default browser
 game:
     open game/vibe-map.html

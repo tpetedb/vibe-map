@@ -26,7 +26,7 @@ Lotte, Chief of Staff, on Normal. Level Intern (dark) with 0 XP, 300 to the next
 ## Hot cache
 - Nothing yet. Walk to the 18:00 signpost.
 
-Map: [[Map]] · Mentors: [[Your path]] · Artifacts: [[Artifacts]] · Your field: [[Your field]] · Resources: [[Resources]] · Tree: [[Tech tree]] · Obsidian: [[Obsidian features]]
+Map: [[Map]] · Mentors: [[Your path]] · Artifacts: [[Artifacts]] · Your field: [[Your field]] · Resources: [[Resources]] · Tree: [[Tech tree]] · Obsidian: [[Obsidian features]] · News: [[News]]
 
 ## Build log
 - 2026-09-16 The game split into src/, two bugs fixed by the play-through, Motion embedded, the design tokens applied; see docs/DESIGN.md

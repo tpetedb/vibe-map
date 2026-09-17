@@ -128,6 +128,10 @@ For a machine you intend to keep. Adds the test browsers, the skills and the onb
    just rescue                  # back on main, nothing lost
    ```
 
+## Playing over weeks
+
+[LONG-GAME.md](LONG-GAME.md): the three windows (terminal, game, Obsidian), the four-command loop, the weekly ritual with `vibe news`, and what to do when you come back after a month.
+
 ## Where things end up
 
 | You did | It landed in |

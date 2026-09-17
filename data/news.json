@@ -1,0 +1,245 @@
+{
+ "fetched_at": "2026-09-17T01:07:07Z",
+ "items": [
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.274",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274",
+   "date": "2026-09-17T00:12:02Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "datasette 1.0a40",
+   "link": "https://simonwillison.net/2026/Sep/16/datasette/",
+   "date": "2026-09-16T23:51:43Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "datasette 0.65.5",
+   "link": "https://simonwillison.net/2026/Sep/16/datasette-2/",
+   "date": "2026-09-16T23:51:08Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "Automate SSO authorization for classic PATs and SSH keys",
+   "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys",
+   "date": "2026-09-16T20:20:16Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "SCIM user responses now include a profileUrl attribute",
+   "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute",
+   "date": "2026-09-16T20:19:58Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "Copilot budget increase requests are generally available",
+   "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available",
+   "date": "2026-09-16T20:17:18Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "Claude Cowork and chat are now one Claude",
+   "link": "https://simonwillison.net/2026/Sep/16/one-claude/",
+   "date": "2026-09-16T18:09:49Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "Our framework for reporting model misalignment",
+   "link": "https://openai.com/index/model-misalignment-reporting-framework",
+   "date": "2026-09-16T17:00:00Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "Quoting Mustafa Suleyman",
+   "link": "https://simonwillison.net/2026/Sep/16/mustafa-suleyman/",
+   "date": "2026-09-16T16:00:54Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "Helping older adults use AI in everyday life",
+   "link": "https://openai.com/index/helping-older-adults-use-ai-in-everyday-life",
+   "date": "2026-09-16T16:00:00Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "Code scanning AI Scan no longer requires CodeQL default setup",
+   "link": "https://github.blog/changelog/2026-09-16-code-scanning-ai-scan-no-longer-requires-codeql-default-setup",
+   "date": "2026-09-16T13:26:06Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "Reimagining advertising with AI",
+   "link": "https://openai.com/index/reimagining-advertising-with-ai",
+   "date": "2026-09-16T13:00:00Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "How to connect AI usage to business value",
+   "link": "https://openai.com/index/how-to-connect-ai-usage-to-business-value",
+   "date": "2026-09-16T12:00:00Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "How workers are unlocking new ways of working",
+   "link": "https://openai.com/index/unlocking-new-ways-of-working",
+   "date": "2026-09-16T09:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search",
+   "link": "https://arxiv.org/abs/2609.13356",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation",
+   "link": "https://arxiv.org/abs/2609.13396",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "Generalized Agent Iteration: One Formal Framework for Iterative Policy Improvement and Recursive Self-Improvement",
+   "link": "https://arxiv.org/abs/2609.13406",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "Vibe Patenting: Evaluating LLM Judges for Professional Patent-Drafting Agents",
+   "link": "https://arxiv.org/abs/2609.13422",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "Toward Self-Adaptive Physical AI: Can LLM Agents Manage Long-Horizon Physical Tasks?",
+   "link": "https://arxiv.org/abs/2609.13436",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "LabAgent: Customize Any Research Hubs for Scientific Discoveries Using AI Agents",
+   "link": "https://arxiv.org/abs/2609.13437",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "TimeThink: Eliciting Compositional Reasoning in Timeseries Large Language Models",
+   "link": "https://arxiv.org/abs/2609.13457",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "arXiv cs.AI",
+   "title": "Root-Cause Attribution Is a Search Problem: Continual Search for Long-Horizon Agent Failures",
+   "link": "https://arxiv.org/abs/2609.13463",
+   "date": "2026-09-16T04:00:00Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "Gemini Live audio",
+   "link": "https://simonwillison.net/2026/Sep/15/gemini-live/",
+   "date": "2026-09-15T22:47:07Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.273",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.273",
+   "date": "2026-09-15T20:23:03Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "Enforce GitHub Advanced Security configurations",
+   "link": "https://github.blog/changelog/2026-09-15-enforce-github-advanced-security-configurations",
+   "date": "2026-09-15T19:31:58Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "GitHub Copilot suggests custom properties definitions",
+   "link": "https://github.blog/changelog/2026-09-15-github-copilot-suggests-custom-properties-definitions",
+   "date": "2026-09-15T19:07:47Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "SHA-1 in HTTPS on GitHub sunset",
+   "link": "https://github.blog/changelog/2026-09-15-sha-1-in-https-on-github-sunset",
+   "date": "2026-09-15T16:47:20Z"
+  },
+  {
+   "source": "Hugging Face blog",
+   "title": "Your Agent Aced the Task. Will It Do It Again?",
+   "link": "https://huggingface.co/blog/ibm-research/altk-evolve-consistency",
+   "date": "2026-09-15T16:00:44Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.272",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.272",
+   "date": "2026-09-15T00:42:25Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.271",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.271",
+   "date": "2026-09-14T22:12:54Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "The contagion of fear",
+   "link": "https://simonwillison.net/2026/Sep/14/the-contagion-of-fear/",
+   "date": "2026-09-14T21:18:13Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "What blog posts influenced your thinking the most?",
+   "link": "https://simonwillison.net/2026/Sep/14/influences/",
+   "date": "2026-09-14T20:21:48Z"
+  },
+  {
+   "source": "GitHub changelog",
+   "title": "Configure cost and quality in Copilot auto model selection",
+   "link": "https://github.blog/changelog/2026-09-14-configure-cost-and-quality-in-copilot-auto-model-selection",
+   "date": "2026-09-14T16:05:27Z"
+  },
+  {
+   "source": "Simon Willison",
+   "title": "Quoting Laurie Voss",
+   "link": "https://simonwillison.net/2026/Sep/14/laurie-voss/",
+   "date": "2026-09-14T14:34:29Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "How Fyxer built an AI executive assistant people trust",
+   "link": "https://openai.com/index/fyxer",
+   "date": "2026-09-14T12:00:00Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "Perplexity trusts GPT-6 Astra with end-to-end systems",
+   "link": "https://openai.com/index/perplexity-improving-accuracy-with-astra",
+   "date": "2026-09-14T00:00:00Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.270",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.270",
+   "date": "2026-09-12T19:45:44Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.269",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.269",
+   "date": "2026-09-11T19:17:55Z"
+  },
+  {
+   "source": "OpenAI news",
+   "title": "Rapidly scaling online storage to serve over 1 billion ChatGPT users",
+   "link": "https://openai.com/index/scaling-storage-one-billion-users-part-one",
+   "date": "2026-09-11T10:00:00Z"
+  },
+  {
+   "source": "Claude Code releases",
+   "title": "v2.1.268",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.268",
+   "date": "2026-09-10T20:30:54Z"
+  }
+ ]
+}

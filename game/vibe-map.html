@@ -35,7 +35,16 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-#stage{position:relative;height:min(72vh,640px);min-height:440px;overflow:hidden;background:#9BD3F5}
+/* The map: big by default; Settings offers compact and the whole window. */
+#stage{position:relative;height:min(84vh,860px);min-height:440px;overflow:hidden;background:#9BD3F5}
+#stage.map-compact{height:min(56vh,520px)}
+#stage.map-tall{height:100vh;height:100dvh}
+#stage:fullscreen{height:100vh;width:100vw}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.setting:first-of-type{border-top:0}
+.setting label{font-size:14px}
+.setting select{font:inherit;font-size:13px;color:var(--text);background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px;padding:8px 10px;max-width:60%}
+body.no-motion *{animation:none!important;transition:none!important}
 #c{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:pan-y}
 h1,h2,h3{font-family:Sora,"Segoe UI",system-ui,sans-serif;font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
 h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
@@ -226,6 +235,8 @@ details.brief p{margin-top:8px}
 @media (prefers-reduced-motion:reduce){#enter,#sheet{transition:none;animation:none}}
 /* Phones: the HUD pill is already at its width limit, so the icons go. */
 @media (max-width:480px){.pill button .ic{display:none}}
+/* Phones: the pill is full; Settings lives on the Roadmap sheet instead. */
+@media (max-width:480px){.pill button[aria-label="Settings"]{display:none}}
 </style>
 </head>
 <body>
@@ -235,7 +246,7 @@ details.brief p{margin-top:8px}
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Lotte's Innovation Campus</div>
-  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div>
+  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
@@ -282,8 +293,14 @@ details.brief p{margin-top:8px}
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
+      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
+      <div class="card" id="newscard">
+        <h3 data-icon="rss">What happened in AI lately</h3>
+        <p class="small muted" id="newsmsg">Loading the feeds...</p>
+        <div id="newslist"></div>
+      </div>
       <div class="card">
         <h3>Sync with the template repo</h3>
         <p class="small">The game and the terminal companion share one progress code. In the repo: <code>uv run vibe export</code> prints a code to paste here; <code>uv run vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
@@ -680,6 +697,7 @@ When adding a feature:
 <section class="screen" id="s-gen"></section>
 <section class="screen" id="s-mentor"></section>
 <section class="screen" id="s-artifact"></section>
+<section class="screen" id="s-settings"></section>
 <section class="screen" id="s-9">
   <div class="hour">Final slide</div>
   <h2>Calendar alignment</h2>
@@ -735,6 +753,7 @@ When adding a feature:
 <script>
 (function(){
 const CONFIG={"version": "0.4.1", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda."}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "mode": "campaign", "vault": {"mode": "full"}};
+const NEWS={"fetched_at": "2026-09-17T01:07:07Z", "items": [{"source": "Claude Code releases", "title": "v2.1.274", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274", "date": "2026-09-17T00:12:02Z"}, {"source": "Simon Willison", "title": "datasette 1.0a40", "link": "https://simonwillison.net/2026/Sep/16/datasette/", "date": "2026-09-16T23:51:43Z"}, {"source": "Simon Willison", "title": "datasette 0.65.5", "link": "https://simonwillison.net/2026/Sep/16/datasette-2/", "date": "2026-09-16T23:51:08Z"}, {"source": "GitHub changelog", "title": "Automate SSO authorization for classic PATs and SSH keys", "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys", "date": "2026-09-16T20:20:16Z"}, {"source": "GitHub changelog", "title": "SCIM user responses now include a profileUrl attribute", "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute", "date": "2026-09-16T20:19:58Z"}, {"source": "GitHub changelog", "title": "Copilot budget increase requests are generally available", "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available", "date": "2026-09-16T20:17:18Z"}, {"source": "Simon Willison", "title": "Claude Cowork and chat are now one Claude", "link": "https://simonwillison.net/2026/Sep/16/one-claude/", "date": "2026-09-16T18:09:49Z"}, {"source": "OpenAI news", "title": "Our framework for reporting model misalignment", "link": "https://openai.com/index/model-misalignment-reporting-framework", "date": "2026-09-16T17:00:00Z"}, {"source": "Simon Willison", "title": "Quoting Mustafa Suleyman", "link": "https://simonwillison.net/2026/Sep/16/mustafa-suleyman/", "date": "2026-09-16T16:00:54Z"}, {"source": "OpenAI news", "title": "Helping older adults use AI in everyday life", "link": "https://openai.com/index/helping-older-adults-use-ai-in-everyday-life", "date": "2026-09-16T16:00:00Z"}, {"source": "GitHub changelog", "title": "Code scanning AI Scan no longer requires CodeQL default setup", "link": "https://github.blog/changelog/2026-09-16-code-scanning-ai-scan-no-longer-requires-codeql-default-setup", "date": "2026-09-16T13:26:06Z"}, {"source": "OpenAI news", "title": "Reimagining advertising with AI", "link": "https://openai.com/index/reimagining-advertising-with-ai", "date": "2026-09-16T13:00:00Z"}, {"source": "OpenAI news", "title": "How to connect AI usage to business value", "link": "https://openai.com/index/how-to-connect-ai-usage-to-business-value", "date": "2026-09-16T12:00:00Z"}, {"source": "OpenAI news", "title": "How workers are unlocking new ways of working", "link": "https://openai.com/index/unlocking-new-ways-of-working", "date": "2026-09-16T09:00:00Z"}, {"source": "arXiv cs.AI", "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search", "link": "https://arxiv.org/abs/2609.13356", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation", "link": "https://arxiv.org/abs/2609.13396", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Generalized Agent Iteration: One Formal Framework for Iterative Policy Improvement and Recursive Self-Improvement", "link": "https://arxiv.org/abs/2609.13406", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Vibe Patenting: Evaluating LLM Judges for Professional Patent-Drafting Agents", "link": "https://arxiv.org/abs/2609.13422", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Toward Self-Adaptive Physical AI: Can LLM Agents Manage Long-Horizon Physical Tasks?", "link": "https://arxiv.org/abs/2609.13436", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "LabAgent: Customize Any Research Hubs for Scientific Discoveries Using AI Agents", "link": "https://arxiv.org/abs/2609.13437", "date": "2026-09-16T04:00:00Z"}]};
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
@@ -790,7 +809,7 @@ const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just
 // appear. Springs are stiff so nothing takes longer than about 400 ms.
-const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches||(typeof motionOff==="function"&&motionOff());
 function fx(el){if(!window.Motion||reducedMotion())return;Motion.animate(el,{opacity:[0,1],transform:["translateY(16px)","translateY(0px)"]},{type:"spring",stiffness:420,damping:34,mass:.8})}
 function countUp(el,to,fmt){if(!window.Motion||reducedMotion()){el.textContent=fmt(to);return}const from=parseFloat(el.textContent)||0;if(from===to){el.textContent=fmt(to);return}Motion.animate(from,to,{duration:.4,ease:"easeOut",onUpdate:v=>{el.textContent=fmt(v)}})}
 
@@ -823,7 +842,10 @@ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a
 trophy:'<path d="M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2" /><path d="M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2" /><path d="M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3" /><path d="M4 22h16" /><path d="M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z" /><path d="M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3" />',
 rocket:'<path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" /><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09" /><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z" /><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05" />',
 flag:'<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528" />',
-milestone:'<path d="M12 13v8" /><path d="M12 3v3" /><path d="M18.172 6a2 2 0 0 1 1.414.586l2.06 2.06a1.207 1.207 0 0 1 0 1.708l-2.06 2.06a2 2 0 0 1-1.414.586H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" />'};
+milestone:'<path d="M12 13v8" /><path d="M12 3v3" /><path d="M18.172 6a2 2 0 0 1 1.414.586l2.06 2.06a1.207 1.207 0 0 1 0 1.708l-2.06 2.06a2 2 0 0 1-1.414.586H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" />',
+settings:'<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" />',
+rss:'<path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" />',
+maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />'};
 function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";return `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`}
 // Static markup declares data-icon; boot fills them in.
 function iconize(root){(root||document).querySelectorAll("[data-icon]").forEach(el=>{if(el.querySelector(":scope>svg.ic"))return;el.insertAdjacentHTML("afterbegin",icon(el.dataset.icon))})}
@@ -1269,7 +1291,7 @@ function animate(){
   let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
   else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){hasTarget=false;marker.material.opacity=0;mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
-  const MAXV=4.6,ACC=22,FRIC=14;
+  const MAXV=4.6*speedMult(),ACC=22,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
@@ -1353,7 +1375,15 @@ function animChar(c,walking,dt,t){
 function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);$("hud-name").textContent=S.name+" · "+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=[1,2,3,4,5,6,7,8].map(k=>`<i class="${S.done.includes(k)?'on':''}"></i>`).join("");
   countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),Math.round(S.done.length/8*100),v=>Math.round(v)+"%");countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
 window.start=function(){S.name=$("name").value.trim()||"Lotte";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
-window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map")renderMap();setTimeout(()=>$("sheet").scrollIntoView({behavior:"smooth",block:"start"}),30)};
+// The News card shows NEWS, embedded at build time from data/news.json
+// (vibe news writes it; the weekly action rebuilds and commits the game).
+let newsLoaded=false;
+function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),list=$("newslist");if(!msg)return;
+  const items=(NEWS.items||[]).slice(0,12);
+  if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
+  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
+  list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
+window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>$("sheet").scrollIntoView({behavior:"smooth",block:"start"}),30)};
 window.closeSheet=function(){$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
@@ -2041,11 +2071,11 @@ const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",da
 // starts with the hubs and unlocks a note when the campaign earns it, the
 // same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
 // they just do not enter the graph yet.
-const VAULT_MODE=new URLSearchParams(location.search).get("vault")||(CONFIG.vault&&CONFIG.vault.mode)||"full";
+function vaultMode(){const q=new URLSearchParams(location.search).get("vault");if(q)return q;const s=(S.settings&&S.settings.vault)||"config";return s!=="config"?s:((CONFIG.vault&&CONFIG.vault.mode)||"full")}
 const ALWAYS_NOTES=["Tonight","Workstreams","Your path","Artifacts","Tech tree","Resources","Template repo","Terminal companion","Tom","Rolinda","Rolinda's questions","Lotte","Beverage stack"];
 let UNLOCKED=null;
 function linksOf(md){const out=[];const re=/\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;let m;while((m=re.exec(md.replace(/```[\s\S]*?```/g,"").replace(/`[^`\n]*`/g,""))))out.push(m[1].trim());return out}
-function computeUnlocked(){const keys=Object.keys(NOTES);if(VAULT_MODE!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
+function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
   const byLower={};keys.forEach(k=>byLower[k.toLowerCase()]=k);
   Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;const title=ws&&byLower[ws.n.toLowerCase()];if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
   MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
@@ -2103,7 +2133,7 @@ function vrender(id){
   $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl:not(.locked)").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
   if(vctx)vdraw();
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(VAULT_MODE==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
+window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(vaultMode()==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
   let pan=null;vz=1;vtx=0;vty=0;
   cv.onpointerdown=e=>{const [sx,sy]=pos(e);const [x,y]=vToWorld(sx,sy);const i=vpick(x,y);moved=false;cv.setPointerCapture(e.pointerId);if(i!==null){vdrag=VN[i];vdrag.fx=vdrag.x;vdrag.fy=vdrag.y}else pan={sx,sy,tx:vtx,ty:vty}};
@@ -2167,6 +2197,41 @@ window.__S=()=>S;
 window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,near:nearK,started,world:S.world,draws:renderer?renderer.info.render.calls:0,mentors:MENTORS.map(m=>({id:m.id,world:m.world})),vault:()=>VSIM?{alpha:VSIM.alpha(),n:VN.length,sample:VN.slice(0,4).map(n=>[Math.round(n.x),Math.round(n.y)])}:null});
 window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}location.reload()};
 
+// Settings: dropdowns that change the game without a rebuild. They persist
+// in S.settings (the same localStorage record as progress) and apply at once.
+// vibe.toml still sets the defaults for a fresh browser; these override them.
+const SETTINGS_DEFAULTS={map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_OPTIONS={
+  map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
+  vault:[["config","From vibe.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
+  pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
+  shadows:[["high","Soft shadows"],["low","Cheap shadows"],["off","No shadows (fastest)"]],
+  motion:[["auto","Follow the system setting"],["off","No animations"]],
+  speed:[["slow","Stroll"],["normal","Walk"],["fast","Hurry"]]
+};
+const SETTINGS_LABELS={map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
+function settings(){if(!S.settings)S.settings={};return Object.assign({},SETTINGS_DEFAULTS,S.settings)}
+function speedMult(){return {slow:.7,normal:1,fast:1.5}[settings().speed]||1}
+function motionOff(){return settings().motion==="off"}
+function applySettings(){const s=settings();
+  const st=$("stage");st.classList.remove("map-compact","map-big","map-tall");st.classList.add("map-"+s.map);
+  if(typeof renderer!=="undefined"&&renderer){renderer.shadowMap.enabled=s.shadows!=="off";if(typeof dirL!=="undefined"&&dirL){dirL.castShadow=s.shadows!=="off";dirL.shadow.mapSize.set(s.shadows==="high"?CONFIG.shadowMap:1024,s.shadows==="high"?CONFIG.shadowMap:1024);if(dirL.shadow.map){dirL.shadow.map.dispose();dirL.shadow.map=null}}
+    const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
+  const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
+  document.body.classList.toggle("no-motion",s.motion==="off");
+  const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
+}
+window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
+function renderSettings(){const s=settings();
+  $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
+    Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
+    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button></div>`+
+    `<p class="small muted">Persona, theme and difficulty live in vibe.toml (uv run vibe persona, theme, difficulty) and need a rebuild: just build.</p>`;
+  iconize($("s-settings"))}
+window.openSettings=function(){renderSettings();openSheet("s-settings")};
+window.goFullscreen=function(){const st=$("stage");if(document.fullscreenElement){document.exitFullscreen()}else if(st.requestFullscreen){st.requestFullscreen().catch(()=>{})}};
+window.resetSettings=function(){S.settings={};save();applySettings()};
+document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
 if(load()){$("name").value=S.name;if(S.done.length)$("btn-continue").style.display=""}
 // Theme, dates and repo come from vibe.toml through CONFIG. The wine-night
 // preset keeps the handwritten copy; any other theme swaps the framing and
@@ -2179,10 +2244,10 @@ function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;do
   $("intro").textContent=th.intro;
   $("roles").textContent=`Tom is your ${th.hostRole}. Rolinda is ${th.guideRole}, and the only one who is allowed to ask the simple question. ${th.signOff}`}
 function stamp(){$("stamp-ver").textContent=`vibe-map v${CONFIG.version} · ${CONFIG.theme.id}`;$("t-done").textContent=String(S.done.length)}
-applyTheme();stamp();iconize();say("title");hud();renderWorldPicker();
+applyTheme();stamp();iconize();say("title");hud();renderWorldPicker();applySettings();
 // The island is the backdrop of the title, so the scene builds at once;
 // start() only flips the flag. A failure here is reported again by start().
-try{if(typeof THREE!=="undefined")init3d()}catch(e){}
+try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){}
 })();
 </script>
 </body>
