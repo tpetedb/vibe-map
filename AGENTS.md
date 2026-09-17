@@ -76,7 +76,7 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 ## Git
 
 - Commit after every change you would be sad to lose. Message: what and why, one line.
-- Never force-push. Never rewrite history on `main`. Push feature branches and open a draft PR; Tom merges.
+- Never force-push. Never rewrite history on `main`. Push feature branches and open a PR; `main` only takes green, up-to-date pull requests (branch protection, see `docs/MAINTAINERS.md`). A green PR may be merged by the agent that opened it when Tom has said so for that work.
 
 ## Security
 
