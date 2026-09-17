@@ -68,6 +68,13 @@ class VaultConfig(_Strict):
     mode: VaultMode = "full"
 
 
+class NewsConfig(_Strict):
+    """Feeds `vibe news` pulls; an empty list means the built-in six."""
+
+    feeds: list[str] = Field(default_factory=list)
+    per_feed: int = 8
+
+
 class PetConfig(_Strict):
     """The terminal companion. Empty strings mean: keep what the name rolled."""
 
@@ -87,6 +94,7 @@ class Config(_Strict):
     game: GameConfig = Field(default_factory=GameConfig)
     vault: VaultConfig = Field(default_factory=VaultConfig)
     pet: PetConfig = Field(default_factory=PetConfig)
+    news: NewsConfig = Field(default_factory=NewsConfig)
 
     @classmethod
     def load(cls, path: Path = CONFIG_PATH) -> Config:
@@ -147,6 +155,10 @@ class Config(_Strict):
             f"folder = {_q(self.vault.folder)}",
             f"mode = {_q(self.vault.mode)}"
             "  # full (every note from day one) | grow (notes unlock as you play)",
+            "",
+            "[news]  # feeds for `vibe news`; empty means the built-in six",
+            "feeds = [" + ", ".join(_q(f) for f in self.news.feeds) + "]",
+            f"per_feed = {self.news.per_feed}",
             "",
             "[pet]  # the terminal companion; empty means what your name rolled",
             f"enabled = {str(self.pet.enabled).lower()}",

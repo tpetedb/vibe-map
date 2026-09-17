@@ -53,7 +53,7 @@ const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just
 // appear. Springs are stiff so nothing takes longer than about 400 ms.
-const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches||(typeof motionOff==="function"&&motionOff());
 function fx(el){if(!window.Motion||reducedMotion())return;Motion.animate(el,{opacity:[0,1],transform:["translateY(16px)","translateY(0px)"]},{type:"spring",stiffness:420,damping:34,mass:.8})}
 function countUp(el,to,fmt){if(!window.Motion||reducedMotion()){el.textContent=fmt(to);return}const from=parseFloat(el.textContent)||0;if(from===to){el.textContent=fmt(to);return}Motion.animate(from,to,{duration:.4,ease:"easeOut",onUpdate:v=>{el.textContent=fmt(v)}})}
 

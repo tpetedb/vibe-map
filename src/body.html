@@ -5,7 +5,7 @@
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Lotte's Innovation Campus</div>
-  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div>
+  <div class="pill">OKRs <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span>Velocity</span></div>
@@ -52,8 +52,14 @@
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
+      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
+      <div class="card" id="newscard">
+        <h3 data-icon="rss">What happened in AI lately</h3>
+        <p class="small muted" id="newsmsg">Loading the feeds...</p>
+        <div id="newslist"></div>
+      </div>
       <div class="card">
         <h3>Sync with the template repo</h3>
         <p class="small">The game and the terminal companion share one progress code. In the repo: <code>uv run vibe export</code> prints a code to paste here; <code>uv run vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
@@ -450,6 +456,7 @@ When adding a feature:
 <section class="screen" id="s-gen"></section>
 <section class="screen" id="s-mentor"></section>
 <section class="screen" id="s-artifact"></section>
+<section class="screen" id="s-settings"></section>
 <section class="screen" id="s-9">
   <div class="hour">Final slide</div>
   <h2>Calendar alignment</h2>
