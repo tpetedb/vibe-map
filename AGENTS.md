@@ -76,5 +76,5 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 
 ## Security
 
-- No secrets in the repo. Tokens go in `.env` (gitignored, see `.env.example`) or the OS keychain.
+- No secrets in the repo. Tokens go in `.env` (gitignored, see `env.example`) or the OS keychain.
 - Do not run commands that delete outside this folder.

@@ -839,7 +839,10 @@ def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
         console.print(f"[warn]feed[/] {escape(p)}")
     if dry_run:
         return
-    news.write_json(items, ROOT / "data" / "news.json")
+    # The product bakes data/news.json into the game; a camp has no build, so
+    # the feed stays in its state folder and the vault note is the reader.
+    target = ROOT / "data" if (ROOT / "tools" / "build.py").exists() else ROOT / ".vibe"
+    news.write_json(items, target / "news.json")
     ctx.vault.write("News", news.note_body(items, problems), tags=["concept"])
     console.print(
         f"[ok]news[/]: {len(items)} items in data/news.json and vault/"
@@ -1122,13 +1125,21 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     your vault, the configuration. The engine stays in the vibe command."""
     if directory is None:
         directory = camp_dir_name(who)
-        console.print(f"[muted]no directory given; the convention says[/] {directory}")
+        console.print(f"[muted]folder from the convention:[/] {directory}")
     target = Path(directory).expanduser().resolve()
     if target.exists() and any(target.iterdir()):
         _fail(f"{target} exists and is not empty")
     target.mkdir(parents=True, exist_ok=True)
     n = copy_template(target)
     console.print(f"[ok]{n} files[/] from the template into {target}")
+    if who:
+        toml = target / "vibe.toml"
+        toml.write_text(
+            toml.read_text(encoding="utf-8").replace(
+                'name = "<your_name>"', f'name = "{who}"', 1
+            ),
+            encoding="utf-8",
+        )
     env = dict(os.environ, VIBE_HOME=str(target))
     if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
         console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")

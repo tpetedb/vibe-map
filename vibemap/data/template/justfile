@@ -31,7 +31,7 @@ game:
 status:
     vibe status
 
-# verify the definition of done for a workstream, award the XP (all if omitted)
+# verify the definition of done for workstream n (the next one if omitted; --all for every one), award the XP
 check *n:
     vibe check {{n}}
 
