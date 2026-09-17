@@ -38,7 +38,7 @@ class _Strict(BaseModel):
 
 
 class Learner(_Strict):
-    name: str = "Lotte"
+    name: str = "<your_name>"  # a placeholder until vibe name or just start sets it
     persona: str = "chief-of-staff"
     difficulty: Difficulty = "normal"
     mode: Mode = "campaign"

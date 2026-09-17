@@ -7,7 +7,7 @@ code the game exports, so the CLI can import a fully played campaign.
     uv run python tools/play.py                 play everything, print the code
     uv run python tools/play.py campus 3        play one stop, print the state
     uv run python tools/play.py --json          machine-readable summary
-    uv run python tools/play.py --name=Tom      play as Tom (default Lotte)
+    uv run python tools/play.py --name=Tom      play as Tom (default <your_name>)
 """
 
 from __future__ import annotations
@@ -191,7 +191,7 @@ class Player:
         return self.page.input_value("#impcode")
 
 
-def play_everything(browser: Browser, url: str, *, name: str = "Lotte") -> dict:
+def play_everything(browser: Browser, url: str, *, name: str = "<your_name>") -> dict:
     ctx = browser.new_context(viewport={"width": 1280, "height": 800})
     page = ctx.new_page()
     player = Player(page)
@@ -234,7 +234,8 @@ def play_everything(browser: Browser, url: str, *, name: str = "Lotte") -> dict:
 def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     name = next(
-        (a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--name=")), "Lotte"
+        (a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--name=")),
+        "<your_name>",
     )
     httpd, url = serve()
     with sync_playwright() as p:

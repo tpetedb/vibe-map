@@ -8,7 +8,7 @@ const LOOKS={
   frank:{label:"Frank",role:"Platform",blurb:"Platform engineer. Glasses, blue shirt, no patience for dashboards.",kind:"mentor",body:"#0067A5",legs:"#2B2B2B",arms:"#F5D7BC",look:{hair:"#3B2A1E",glasses:true}},
   max:{label:"Max",role:"Data",blurb:"Data engineer. Beard, green shirt, brings the DuckDB.",kind:"mentor",body:"#00A86B",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#1A1A1A",beard:true}},
   rolinda:{label:"Rolinda",role:"Ops",blurb:"Head of Hospitality. Plays herself; the hub keeps its own Rolinda on duty.",kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A"},
-  own:{label:"Your own name",role:"Player",blurb:"Type it below. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
+  own:{label:"Your own name",role:"Player",blurb:"Type it in the box below, plainly, without the angle brackets. Orange shirt, brown hair.",kind:"mentor",body:"#FF8C1A",legs:"#3A3A3A",arms:"#F5D7BC",look:{hair:"#6B4A2B"}}
 };
 const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
@@ -19,8 +19,8 @@ const DIFFS=[
   ["god","God","Commands folded. just verify must be green to claim."]
 ];
 // The walker spec for the current player. Unknown or missing looks fall back
-// to Lotte so an old saved state still renders.
-function playerLook(){return LOOKS[S.look]||LOOKS.lotte}
+// to Lotte for a saved game that was played as her, else to your own look.
+function playerLook(){return LOOKS[S.look]||(S.name==="Lotte"?LOOKS.lotte:LOOKS.own)}
 function playerSpec(){const l=playerLook();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:S.name+", "+l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
@@ -69,11 +69,11 @@ vibe import &lt;code from the game&gt;           # the other way round</code></p
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"Lotte";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim()||"<your_name>";save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
-window.nameTyped=function(v){S.name=v.trim()||"Lotte";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
-function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||"lotte";const diff=difficulty();const mode=S.mode||"";
+window.nameTyped=function(v){S.name=v.trim()||"<your_name>";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
+function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>
@@ -84,5 +84,5 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.l
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Terminal, this game and Obsidian, synced. The real course.</span></button></div>
 <div id="ob-setup" class="setup" style="display:${mode==="full"?"":"none"}">${mode==="full"?setupHtml():""}</div>
 <div class="step"><b>4</b><span>Go</span></div>`;
-  const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
+  const nm=$("name");if(nm){const v=S.name==="<your_name>"?"":S.name;if(nm.value!==v)nm.value=v}
   document.body.dataset.mode=mode}

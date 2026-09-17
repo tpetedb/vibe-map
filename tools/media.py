@@ -30,7 +30,7 @@ CHROMIUM_ARGS = [
     "--enable-webgl",
 ]
 PLAYED = {
-    "name": "Lotte",
+    "name": "<your_name>",
     "done": [1, 2, 3, 4, 5],
     "doneW": {"campus": [1, 2, 3, 4, 5], "winter": [1, 2], "desert": [], "prod": []},
     "path": {"cherny": "deep", "karpathy": "deep", "lecun": "skip"},

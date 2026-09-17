@@ -38,7 +38,7 @@ from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLO
 from vibemap.personas import PERSONAS
 from vibemap.providers import PROVIDERS
 from vibemap.quests import level_for
-from vibemap.state import STATE_PATH, State
+from vibemap.state import PLACEHOLDER, STATE_PATH, State
 from vibemap.themes import THEMES
 from vibemap.toolbelt import TOOLS, Tool
 
@@ -113,8 +113,12 @@ class Welcome(Screen[None]):
                 "and can change later.",
                 classes="lead",
             )
-            yield Label("Your name")
-            yield Input(value=self.state.name, id="name", placeholder="Lotte")
+            yield Label("Your name (type it plainly, no angle brackets)")
+            yield Input(
+                value="" if self.state.name == PLACEHOLDER else self.state.name,
+                id="name",
+                placeholder=PLACEHOLDER,
+            )
             yield Label("Your field (persona)")
             yield Select(
                 [(f"{p.label}: {p.field}", p.id) for p in PERSONAS.values()],
@@ -178,7 +182,7 @@ class Welcome(Screen[None]):
         data["learner"]["provider"] = self.query_one("#provider", Select).value
         data["theme"]["preset"] = self.query_one("#theme", Select).value
         data["vault"]["mode"] = self.query_one("#vaultmode", Select).value
-        name = self.query_one("#name", Input).value.strip() or "Lotte"
+        name = self.query_one("#name", Input).value.strip() or PLACEHOLDER
         data["learner"]["name"] = name
         cfg = Config.model_validate(data)
         app = self.app

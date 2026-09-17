@@ -1,4 +1,4 @@
-window.start=function(){S.name=$("name").value.trim()||"Lotte";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
+window.start=function(){S.name=$("name").value.trim()||"<your_name>";save();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
 // The News card shows NEWS, embedded at build time from data/news.json
 // (vibe news writes it; the weekly action rebuilds and commits the game).
 let newsLoaded=false;

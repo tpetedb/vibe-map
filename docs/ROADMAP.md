@@ -20,7 +20,7 @@ Unlocks: Bash and shell scripts, Files, folders and paths, Git
 
 *Basics.* ### Files, folders and paths
 
-A project is a folder. A path is an address inside it: absolute (/Users/lotte/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 
