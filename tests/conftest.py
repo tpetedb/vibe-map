@@ -132,7 +132,9 @@ class GamePage:
         self.page.wait_for_selector("#title.off", state="attached")
         self.page.wait_for_timeout(600)
 
-    def walk_to(self, x: float, z: float, *, tol: float = 1.6, steps: int = 70) -> None:
+    def walk_to(
+        self, x: float, z: float, *, tol: float = 1.6, steps: int = 240
+    ) -> None:
         """Steer the walker to a world coordinate with the arrow keys.
 
         The keyboard is one of the two documented ways to move, so this drives
@@ -168,7 +170,8 @@ class GamePage:
                 self.page.wait_for_timeout(160)
         finally:
             hold(set())
-            self.page.wait_for_timeout(400)
+            # Proximity is sampled in the frame loop; give a slow runner a beat.
+            self.page.wait_for_timeout(600)
 
     def near(self) -> Any:
         return self.page.evaluate("window.__debug().near")

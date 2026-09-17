@@ -165,6 +165,7 @@ def test_walking_to_the_fourth_signpost_offers_the_stop(game: GamePage) -> None:
     game.resume()
     plot = game.page.evaluate("window.__data().worlds.campus.plots[3]")
     game.walk_to(plot[0], plot[1])
+    game.page.wait_for_function("window.__debug().near === 4", timeout=5000)
     assert game.near() == 4, game.page.evaluate("window.__debug()")
     label = game.page.text_content("#enterbtn") or ""
     assert "Business Continuity" in label, label
