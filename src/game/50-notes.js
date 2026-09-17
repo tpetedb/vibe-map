@@ -110,12 +110,12 @@ Docs: [agentskills.io](https://agentskills.io) · [Claude Code skills](https://c
 #concept`},
 "DuckDB":{t:"c",md:`# DuckDB
 An in-process SQL engine that reads CSV and Parquet files as tables. No server, one binary. The [[Data warehouse]] hour runs on it.
-- \`duckdb -c "select * from 'data/scores.csv' limit 5"\`
+- \`duckdb -c "select * from 'workspace/data/scores.csv' limit 5"\`
 - group by for per-player numbers, window functions (\`lag\`, \`row_number\`) for streaks and rankings
 Learn SQL: [SQLBolt](https://sqlbolt.com), [Mode](https://mode.com/sql-tutorial/). Docs: [duckdb.org](https://duckdb.org/docs/)
 #concept`},
 "Python":{t:"c",md:`# Python
-Used for the parts SQL is bad at: a script, a chart, a loop over files. The [[Template repo]] has \`python/scores.py\`, standard library only, one new concept per file.
+Used for the parts SQL is bad at: a script, a chart, a loop over files. The [[Template repo]] has \`workspace/python/scores.py\`, standard library only, one new concept per file.
 - The official tutorial: [docs.python.org](https://docs.python.org/3/tutorial/)
 - Practice: [Exercism](https://exercism.org/tracks/python), [Kaggle Learn](https://www.kaggle.com/learn)
 - Environments and packages: [uv](https://docs.astral.sh/uv/)

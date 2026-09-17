@@ -9,7 +9,7 @@ Chief of Staff: running the leadership team's week.
 
 **Your game (workstream 1).** A calendar dungeon: meetings are rooms, each room has a monster (a decision that keeps getting postponed), and you clear the week by making three decisions before Friday.
 
-**Your dataset (workstream 3).** `data/examples/meetings.csv` with columns date, meeting, attendees, minutes, decisions. The question to answer: Which meeting costs the most minutes per decision?
+**Your dataset (workstream 3).** `workspace/data/examples/meetings.csv` with columns date, meeting, attendees, minutes, decisions. The question to answer: Which meeting costs the most minutes per decision?
 
 **Rolinda asks.** Which meeting should be an email, and can you prove it with the numbers?
 

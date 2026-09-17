@@ -32,3 +32,17 @@ def test_reset_query_parameter_wipes_and_cleans_the_url(game: GamePage) -> None:
     game.page.wait_for_timeout(800)
     assert game.page.evaluate("window.__S().doneW.campus") == []
     assert "reset" not in game.page.url
+
+
+def test_reset_keeps_the_chosen_look_and_mode(game: GamePage) -> None:
+    game.goto(state={"name": "Frank", "look": "frank", "mode": "full", "doneW": DONE})
+    game.resume()
+    page = game.page
+    page.click("#hud button:has-text('Roadmap')")
+    page.wait_for_timeout(500)
+    page.click("#s-map button:has-text('Reset progress')")
+    page.click("#s-map button.danger")
+    page.wait_for_function("typeof window.__S === 'function'")
+    s = game.state()
+    assert s["look"] == "frank" and s["mode"] == "full" and s["name"] == "Frank"
+    assert s["doneW"]["campus"] == []

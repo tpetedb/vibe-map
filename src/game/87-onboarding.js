@@ -33,6 +33,7 @@ function syncCmds(){const open=cmdsOpen();if(cmdsLevel===open)return;cmdsLevel=o
 // The naming convention for a local camp: your name, vibe-map, the date.
 function slug(s){return (s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"player"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 // The setup guide: the exact commands for the full experience. Rendered on the
 // title screen (step 3) and on its own screen from the Roadmap, from one
@@ -52,7 +53,7 @@ cd ${dir}
 just setup</code></pre>
 <p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(S.name)}</code> (needs <code>gh auth login</code> first).</p>
 <h4>3. Tell it who you are</h4>
-<pre><code>vibe name "${S.name}"
+<pre><code>vibe name "${esc(S.name)}"
 vibe difficulty ${difficulty()}
 just start</code></pre>
 <p class="small muted"><code>just start</code> is the terminal menu: checks, the pet, the launchers. It stays open in one terminal tab; open a second tab for Claude Code.</p>
@@ -73,7 +74,7 @@ window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].l
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
 window.nameTyped=function(v){S.name=v.trim()||"<your_name>";if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";save();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml()};
-function renderOnboarding(){const box=$("onboard");if(!box)return;const look=S.look||(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
+function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOOKS[S.look]?S.look:(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>

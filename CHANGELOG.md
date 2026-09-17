@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The game no longer crashes on the Roadmap, a stop or the inn prompt when WebGL failed before the island set a world; a progress reset keeps the chosen character and play mode; the setup guide escapes the name. `vibe new` reports when git could not commit (and refuses `--github` without a commit), survives a package without the skills tree, prints the real path, and copies the template inside the package-resources context. Remaining `data/`, `sql/` and `python/` mentions moved to `workspace/` in AGENTS.md, CLAUDE.md, two skills, the personas, the cookbook, two game notes and the vault; `env.example` names `VIBE_NAME` and is synced into the template.
+
 ## [0.7.0] - 2026-09-17
 
 ### Changed

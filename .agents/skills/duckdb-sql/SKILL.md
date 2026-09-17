@@ -13,7 +13,7 @@ Run (the `duckdb` CLI comes from `brew install duckdb`; the Python package is a 
 - in Python: `uv run python -c "import duckdb; duckdb.sql(\"select * from 'workspace/data/scores.csv' limit 5\").show()"`
 - the standard summary: `uv run vibe scores`
 
-Tested queries in `sql/`: `top_runs.sql` (five best runs), `per_player.sql` (runs, best, mean per player), `streaks.sql` (longest improving streak, with `lag()` over a window). Start from these.
+Tested queries in `workspace/sql/`: `top_runs.sql` (five best runs), `per_player.sql` (runs, best, mean per player), `streaks.sql` (longest improving streak, with `lag()` over a window). Start from these.
 
 Conventions:
 - lowercase keywords, one clause per line, a comment above each query saying which question it answers

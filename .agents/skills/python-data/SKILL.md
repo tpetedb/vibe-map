@@ -10,7 +10,7 @@ Rules:
 - Standard library first (`csv`, `statistics`, `datetime`, `pathlib`, `argparse`). `polars` and `duckdb` are already project dependencies; add anything else with `uv add <package>` only when it removes real work, and say why.
 - One file, `from __future__ import annotations`, a `main()` function, `if __name__ == "__main__": main()`.
 - Read `workspace/data/scores.csv` with `csv.DictReader` (or `polars.read_csv`). Never mutate it.
-- Print a small table to the terminal; write charts to `python/out/` (gitignored).
+- Print a small table to the terminal; write charts to `workspace/python/out/` (gitignored).
 - Explain one new concept per script in the module docstring at the top.
 - Format with `just fmt` (ruff). If the Python grows beyond one file, add tests in `tests/` and run `uv run pytest`.
 
