@@ -35,7 +35,7 @@ jobs:
           mkdir -p site
           cp game/vibe-map.html site/index.html
           cp game/vibe-map.html site/vibe-map.html
-          cp game/index.html site/your-game.html
+          cp workspace/game/index.html site/your-game.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,7 +1,7 @@
 .venv/
 backups/
 .vibe/
-python/out/
+workspace/python/out/
 .DS_Store
 __pycache__/
 .pytest_cache/

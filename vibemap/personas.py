@@ -91,7 +91,7 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Meeting cost dashboard",
                 "A chart of minutes per decision by meeting.",
-                "Using data/meetings.csv, write sql/cost_per_decision.sql in "
+                "Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in "
                 "DuckDB and a Python script that draws a bar chart to "
                 "python/out/. Explain the one SQL construct I have not seen.",
                 "The chart opens and the worst meeting is obvious.",
@@ -200,7 +200,7 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Students per staff trend",
                 "A line chart per programme, 2023 to 2026.",
-                "Using data/enrolments.csv, write sql/ratio.sql in DuckDB and a "
+                "Using workspace/data/enrolments.csv, write workspace/sql/ratio.sql in DuckDB and a "
                 "Python chart. One sentence on what the trend implies.",
                 "Chart in python/out/, sentence in the vault.",
                 3,
@@ -263,7 +263,7 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Attention chart",
                 "Attention by subject and group from lessons.csv.",
-                "Write sql/attention.sql and a Python chart from "
+                "Write workspace/sql/attention.sql and a Python chart from "
                 "data/lessons.csv. Explain group by in one comment.",
                 "The chart matches your gut feeling, or you learned something.",
                 3,
@@ -363,7 +363,7 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Budget tracker",
                 "Spent versus budget per client and style, with a chart.",
-                "Using data/projects.csv, write sql/over_budget.sql and a Python "
+                "Using workspace/data/projects.csv, write workspace/sql/over_budget.sql and a Python "
                 "chart of spent versus budget per style. One sentence on the "
                 "worst offender.",
                 "The chart shows the style that overruns.",

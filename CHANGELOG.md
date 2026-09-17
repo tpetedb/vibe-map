@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Three zones, separated: the learner's own work now lives in `workspace/` (`workspace/game/index.html`, `workspace/data/scores.csv`, `workspace/sql/`, `workspace/python/`), the checks, the scorekeeper, the backup hook, the Pages workflow, the lessons and the skills follow; `vibe new` writes a slim camp from a template shipped inside the package (README, AGENTS.md, CLAUDE.md, vibe.toml, justfile, the learner skills, the hook and subagent, a Pages workflow, an empty workspace), builds the vault and makes the first commit, instead of cloning the whole engine; `vibe play` opens the hosted game outside the product repository, `--offline` caches a copy. `docs/MAINTAINERS.md` explains the layout and how a change travels; `tools/sync_template.py` keeps the template's skills, hook and subagent equal to the product's, with a test.
 - `<your_name>` is the default name everywhere Lotte used to be one: the state file, vibe.toml, the game's title screen and the terminal onboarding show the placeholder and say to type your name plainly, without the angle brackets. Lotte remains a character you can pick.
+
+### Added
+
+- Two roadmap topics with sources: Separation of concerns (Dijkstra's EWD 447, Parnas 1972, Conway 1968, Ousterhout, Twelve-Factor config, Team Topologies) and Building the builder (Engelbart's bootstrapping, Brooks's No Silver Bullet, Grove's leverage, AGENTS.md, Claude Code memory), both pointing at the camp's own layout as the worked example.
 
 ## [0.6.0] - 2026-09-17
 

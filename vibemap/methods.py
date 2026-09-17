@@ -264,7 +264,7 @@ the templates are in `_templates/para/`.
 ```markdown
 # Ship the game to a public URL
 
-Outcome: game/index.html at a GitHub Pages URL a friend can open on a phone.
+Outcome: workspace/game/index.html at a GitHub Pages URL a friend can open on a phone.
 Deadline: 2026-09-23
 Area: [[Area - Vibe Code Camp]]
 

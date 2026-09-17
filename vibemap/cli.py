@@ -538,14 +538,16 @@ def mentor(ctx: Ctx, mentor_id: str, choice: str) -> None:
 
 
 @cli.command()
-@click.option("--sql", "sql_name", default=None, help="run a query from sql/ instead")
+@click.option(
+    "--sql", "sql_name", default=None, help="run a query from workspace/sql/ instead"
+)
 def scores(sql_name: str | None) -> None:
-    """Summarise data/scores.csv with polars, or run a sql/ query with DuckDB."""
+    """Summarise workspace/data/scores.csv, or run a workspace/sql/ query."""
     from vibemap.scores import frame_table, read_scores, run_sql, scores_table, summary
 
     if sql_name:
         try:
-            console.print(frame_table(run_sql(sql_name), f"sql/{sql_name}"))
+            console.print(frame_table(run_sql(sql_name), f"workspace/sql/{sql_name}"))
         except FileNotFoundError as e:
             _fail(str(e))
         return
@@ -1062,61 +1064,116 @@ def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
     return f"vibe-map-{slug}-{(day or date.today()).isoformat()}"
 
 
+# The template is stored with underscores where a camp has dots, so packaging
+# and git never skip the folders; the camp gets the real names.
+TEMPLATE_NAMES = {
+    "_gitignore": ".gitignore",
+    "_agents": ".agents",
+    "_claude": ".claude",
+    "_github": ".github",
+}
+
+
+def copy_template(target: Path) -> int:
+    """Write the camp skeleton from the package into TARGET; returns the file count."""
+    src = project.data_path("template")
+    n = 0
+    for f in sorted(src.rglob("*")):
+        if not f.is_file() or "__pycache__" in f.parts:
+            continue
+        parts = [TEMPLATE_NAMES.get(p, p) for p in f.relative_to(src).parts]
+        dst = target.joinpath(*parts)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_bytes(f.read_bytes())
+        n += 1
+    skills = target / ".claude" / "skills"
+    skills.mkdir(parents=True, exist_ok=True)
+    for skill in sorted((target / ".agents" / "skills").iterdir()):
+        link = skills / skill.name
+        if skill.is_dir() and not link.exists():
+            link.symlink_to(Path("..") / ".." / ".agents" / "skills" / skill.name)
+    return n
+
+
+def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
+    return subprocess.run(
+        cmd, cwd=cwd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    ).returncode
+
+
 @cli.command()
 @click.argument("directory", required=False)
 @click.option(
-    "--github", default=None, help="also create OWNER/NAME on GitHub from the template"
+    "--github",
+    default=None,
+    help="also create OWNER/NAME on GitHub and push the camp there (needs gh)",
 )
 @click.option(
     "--name", "who", default=None, help="your name for the folder (default: the login)"
 )
 def new(directory: str | None, github: str | None, who: str | None) -> None:
-    """Start a new camp in DIRECTORY (default vibe-map-<name>-<date>), or on GitHub."""
+    """Start a camp in DIRECTORY (default vibe-map-<name>-<date>): your workspace,
+    your vault, the configuration. The engine stays in the vibe command."""
     if directory is None:
         directory = camp_dir_name(who)
         console.print(f"[muted]no directory given; the convention says[/] {directory}")
     target = Path(directory).expanduser().resolve()
     if target.exists() and any(target.iterdir()):
         _fail(f"{target} exists and is not empty")
-    if github:
-        cmd = [
-            "gh",
-            "repo",
-            "create",
-            github,
-            "--template",
-            "tpetedb/vibe-map",
-            "--public",
-            "--clone",
-        ]
-        console.print(f"[muted]$ {' '.join(cmd)}[/]")
-        rc = subprocess.run(cmd, cwd=target.parent).returncode
-        cloned = target.parent / github.split("/")[-1]
-        if rc == 0 and cloned != target and cloned.exists():
-            cloned.rename(target)
+    target.mkdir(parents=True, exist_ok=True)
+    n = copy_template(target)
+    console.print(f"[ok]{n} files[/] from the template into {target}")
+    env = dict(os.environ, VIBE_HOME=str(target))
+    if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
+        console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")
     else:
-        cmd = [
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "https://github.com/tpetedb/vibe-map.git",
-            str(target),
-        ]
+        console.print("[warn]vault not built[/]; run: vibe init")
+    if _quiet(["git", "init", "-q"], target) == 0:
+        _quiet(["git", "add", "-A"], target)
+        _quiet(
+            ["git", "commit", "-q", "-m", "Start the camp from the vibe template"],
+            target,
+        )
+        console.print("[ok]git repository[/] with the first commit")
+    else:
+        console.print("[warn]git not found[/]; the camp is not under version control")
+    if github:
+        cmd = ["gh", "repo", "create", github, "--source", ".", "--public", "--push"]
         console.print(f"[muted]$ {' '.join(cmd)}[/]")
-        rc = subprocess.run(cmd).returncode
-    if rc != 0:
-        _fail("clone failed; is git (or gh, with --github) installed and logged in?")
+        if subprocess.run(cmd, cwd=target).returncode != 0:
+            _fail("gh could not create the repository; is gh installed and logged in?")
     console.print(
         f"[ok]camp ready[/] at {target}\nNext:\n  cd {target.name}\n"
-        "  just setup\n  just start"
+        "  just start          # or: vibe start\n"
+        "  vibe play           # the game, hosted; vibe play --offline caches it"
     )
 
 
+HOSTED_GAME = "https://tpetedb.github.io/vibe-map/"
+RAW_GAME = "https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html"
+
+
 @cli.command()
-def play() -> None:
-    """Open the game in the default browser."""
-    subprocess.run(["open", str(ROOT / "game" / "vibe-map.html")])
+@click.option(
+    "--offline", is_flag=True, help="download the game into .vibe/ and open that copy"
+)
+def play(offline: bool) -> None:
+    """Open the game: the local build, the cached copy, else the hosted one."""
+    local = ROOT / "game" / "vibe-map.html"
+    cached = ROOT / ".vibe" / "vibe-map.html"
+    if offline and not local.exists():
+        import urllib.request
+
+        cached.parent.mkdir(parents=True, exist_ok=True)
+        console.print(f"[muted]fetching {RAW_GAME}[/]")
+        urllib.request.urlretrieve(RAW_GAME, cached)
+        console.print(f"[ok]cached[/] {cached.relative_to(ROOT)}")
+    for p in (local, cached):
+        if p.exists():
+            subprocess.run(["open", str(p)])
+            return
+    console.print(f"[muted]opening the hosted game[/] {HOSTED_GAME}")
+    subprocess.run(["open", HOSTED_GAME])
 
 
 @cli.command()

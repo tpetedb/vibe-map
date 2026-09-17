@@ -8,18 +8,21 @@ A gamified course and a template: a single-file 3D browser game (`game/vibe-map.
 
 ## File map
 
+Three zones, explained in `docs/MAINTAINERS.md`: the **product** (the engine: `src/`, `vibemap/`, `tools/`, `tests/`), the **template** a camp starts from (`vibemap/data/template/`, kept in sync by `tools/sync_template.py`), and the learner's **workspace** (`workspace/`; here it holds the worked example). The rest of the top level is this repository's own configuration for agents and CI.
+
 | Path | Owns |
 |---|---|
 | `game/vibe-map.html` | The built game, one file, three.js embedded, no CDN. Produced by `just build` from `src/`; never hand-edit once `src/` exists. |
 | `src/` | The game's source parts in load order; `tools/build.py` concatenates them and injects the campaign, the tech notes and `CONFIG` from `vibe.toml`. `src/vendor/` holds three.js r128, Motion 12, d3-force 3 and the Lucide licence, never edited; `src/game/05-icons.js` is generated from Lucide SVGs. |
 | `vibemap/data/` | Package data the game and the CLI share: `campaign.json` (four evenings, twelve mentors), `resources.md` (the curated links; `docs/RESOURCES.md` is generated from it), `obsidian.json` (thirty-five Obsidian features extracted from the official help; `docs/OBSIDIAN.md` and the feature notes are generated from it). `vibemap/tech.py` is the tech tree. Installed copies of the CLI carry all three. |
-| `game/index.html` | Lotte's own game from workstream 1. Nothing may depend on its contents. |
+| `workspace/` | The learner's zone: `game/index.html` from workstream 1, `data/scores.csv`, `sql/`, `python/`. Nothing may depend on its contents; `vibemap/quests.py` only reads it. |
+| `vibemap/data/template/` | The camp skeleton `vibe new` copies (README, AGENTS, CLAUDE, vibe.toml, justfile, workspace, `_claude/`, `_agents/skills/`, `_github/`). Underscore folders become dot-folders in the camp. Skills, hook and subagent are synced from `.agents/` and `.claude/`; a test fails when they drift. |
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`vibe.toml`), `pet.py` (the companion), `obsidian.py` (feature notes), `dotfiles.py` (terminal setup modules from `data/dotfiles/`). |
-| `vibemap/project.py` | Where a camp is: `VIBE_HOME`, else the nearest ancestor with a `vibe.toml`. The CLI installs globally (`uv tool install vibe-map`) and runs in any camp; `vibe new` clones the template. |
+| `vibemap/project.py` | Where a camp is: `VIBE_HOME`, else the nearest ancestor with a `vibe.toml`. The CLI installs globally (`uv tool install vibe-map`) and runs in any camp; `vibe new` writes a slim camp from the template, without the engine. |
 | `tools/regen_tree.py` | Emits the vault notes, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
-| `data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `sql/` and `python/`. |
-| `docs/` | `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us). |
+| `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
+| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us). |
 | `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hot cache; every note is reachable from it. `.obsidian/` is pre-configured. |
 | `.agents/skills/` | Skills in the Agent Skills standard. `.claude/skills/` holds symlinks to them. |
 | `justfile`, `agents.just` | Every task a human or an agent runs. `just` lists them; `just start` onboards. |

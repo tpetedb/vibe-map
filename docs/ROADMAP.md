@@ -20,7 +20,7 @@ Unlocks: Bash and shell scripts, Files, folders and paths, Git
 
 *Basics.* ### Files, folders and paths
 
-A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./workspace/data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 
@@ -48,7 +48,7 @@ Bash is the language the terminal speaks. A shell script is a text file of comma
 
 **History.** The Bourne shell shipped with Seventh Edition Unix in January 1979; bash (the Bourne-again shell, written by Brian Fox) went into beta as the GNU replacement in June 1989. macOS switched its default login shell to zsh with macOS 10.15 Catalina in 2019; zsh is bash-compatible for everything you will meet tonight.
 
-**Try in five minutes.** cat data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written).
+**Try in five minutes.** cat workspace/data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written).
 
 Docs: [Bash Guide (Greg's wiki)](https://mywiki.wooledge.org/BashGuide) · [ShellCheck, lint your scripts](https://www.shellcheck.net) · [Source: GNU Bash manual, What is Bash?](https://www.gnu.org/software/bash/manual/html_node/What-is-Bash_003f.html) · [Source: TUHS, Seventh Edition Unix (January 1979)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7) · [Source: GNU's Bulletin, June 1989](https://www.gnu.org/bulletins/bull7.html) · [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360)
 
@@ -150,7 +150,7 @@ Continuous integration: every push runs the tests and checks in a clean machine.
 
 **History.** CruiseControl (ThoughtWorks) was registered in March 2001, Hudson was renamed Jenkins in January 2011, Travis CI started in 2011, GitHub Actions became generally available in November 2019. CI made 'it works' a machine's opinion instead of a person's.
 
-**Try in five minutes.** Ask Claude: 'add a GitHub Actions workflow that runs python3 python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab.
+**Try in five minutes.** Ask Claude: 'add a GitHub Actions workflow that runs python3 workspace/python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab.
 
 Docs: [GitHub Actions quickstart](https://docs.github.com/en/actions/quickstart) · [Claude Code GitHub Actions](https://code.claude.com/docs/en/github-actions) · [Source: SourceForge, CruiseControl project (registered 2001-03-23)](https://sourceforge.net/projects/cruisecontrol/) · [Source: Jenkins blog, Jenkins! (January 2011)](https://www.jenkins.io/blog/2011/01/29/jenkins/) · [Source: travis-ci/travis-ci repository (February 2011)](https://github.com/travis-ci/travis-ci) · [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
 
@@ -230,7 +230,7 @@ The general-purpose language of data, automation and AI tooling. Readable, batte
 
 **History.** Guido van Rossum released Python 0.9.0 in February 1991; Python 3.0 (December 2008) broke compatibility and Python 2 was only retired in January 2020. It became the language of machine learning through NumPy, pandas and PyTorch, and of AI agents through their SDKs.
 
-**Try in five minutes.** python3 python/scores.py, then add one line that prints the worst run.
+**Try in five minutes.** python3 workspace/python/scores.py, then add one line that prints the worst run.
 
 Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism track](https://exercism.org/tracks/python) · [uv](https://docs.astral.sh/uv/) · [Source: Guido van Rossum, A Brief Timeline of Python](https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html) · [Source: python.org, Sunsetting Python 2](https://www.python.org/doc/sunset-python-2/)
 
@@ -242,7 +242,7 @@ pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (ta
 
 **History.** NumPy 2005 (1.0 in 2006), pandas 2008 (Wes McKinney, at a hedge fund), requests 2011, pytest 2004 lineage, FastAPI 2018, pydantic 2017, Playwright 2020, DuckDB 2019 (started at CWI in 2018). The stack is young; most of it postdates the iPhone.
 
-**Try in five minutes.** uv pip install pandas, then python3 -c "import pandas as pd; print(pd.read_csv('data/scores.csv').describe())".
+**Try in five minutes.** uv pip install pandas, then python3 -c "import pandas as pd; print(pd.read_csv('workspace/data/scores.csv').describe())".
 
 Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html) · [Requests](https://requests.readthedocs.io) · [pytest](https://docs.pytest.org) · [FastAPI](https://fastapi.tiangolo.com) · [Source: numpy.org, About NumPy](https://numpy.org/about/) · [Source: pandas.pydata.org, About pandas](https://pandas.pydata.org/about/) · [Source: requests release history on PyPI (February 2011)](https://pypi.org/project/requests/#history) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: FastAPI release history on PyPI (December 2018)](https://pypi.org/project/fastapi/#history) · [Source: pydantic v0.1 release (June 2017)](https://github.com/pydantic/pydantic/releases/tag/v0.1) · [Source: Playwright v1.0.0 release (May 2020)](https://github.com/microsoft/playwright/releases/tag/v1.0.0) · [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0)
 
@@ -254,11 +254,23 @@ The three languages of a web page: structure, style, behaviour. A single HTML fi
 
 **History.** Tim Berners-Lee's first web software ran in 1990 and HTML was written up as an IETF draft in 1993; CSS1 became a W3C Recommendation in 1996; Brendan Eich prototyped JavaScript in ten days in May 1995. Node.js (2009) put JavaScript on servers; npm calls itself the world's largest software registry.
 
-**Try in five minutes.** Open game/index.html in a text editor and in a browser side by side. Change the h1, reload.
+**Try in five minutes.** Open workspace/game/index.html in a text editor and in a browser side by side. Change the h1, reload.
 
 Docs: [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Learn_web_development) · [three.js (what the game uses)](https://threejs.org/docs/) · [Source: Berners-Lee and Connolly, HTML Internet-Draft (June 1993)](https://www.w3.org/MarkUp/draft-ietf-iiir-html-01.txt) · [Source: W3C, Cascading Style Sheets level 1 (December 1996)](https://www.w3.org/TR/REC-CSS1-961217) · [Source: Brendan Eich, New JavaScript Engine Module Owner (2011)](https://brendaneich.com/2011/06/new-javascript-engine-module-owner/) · [Source: Node.js v0.x source archive (2009)](https://github.com/nodejs/node-v0.x-archive) · [Source: npm docs, About npm](https://docs.npmjs.com/about-npm)
 
 Unlocks: HTTP and APIs, localhost and ports
+
+*Working knowledge.* ### Separation of concerns
+
+One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (vibe.toml, AGENTS.md, the skills, the hooks) is visible and separate; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
+
+**History.** Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load.
+
+**Try in five minutes.** Open your camp. For each top-level folder and file write one line in a vault note: which of the three zones it belongs to (product, configuration, your workspace) and which decision it hides. Then find one place where a file mixes two concerns (a script that both computes and prints, a note that is also a config) and name it. Naming it is the exercise; splitting it is optional.
+
+Docs: [Dijkstra, On the role of scientific thought (EWD 447), 1974](https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html) · [Parnas, On the criteria to be used in decomposing systems into modules, 1972](https://web.archive.org/web/20230815003501/http://sunnyday.mit.edu/16.355/parnas-criteria.html) · [Conway, How do committees invent?, 1968](https://www.melconway.com/Home/Committees_Paper.html) · [Ousterhout, A Philosophy of Software Design, 2018](http://web.stanford.edu/~ouster/cgi-bin/aposd.php) · [The Twelve-Factor App, III. Config](https://12factor.net/config) · [Skelton and Pais, Team cognitive load, 2021](https://itrevolution.com/articles/cognitive-load/) · [Source: Dijkstra, EWD 447 (the phrase and the definition); Parnas 1972 (information hiding as the criterion)](https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html)
+
+Unlocks: Building the builder, AGENTS.md, TOML in practice: pyproject.toml, Files, folders and paths
 
 *Deep.* ### Other languages and what they are for
 
@@ -266,7 +278,7 @@ TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one bina
 
 **History.** C 1972, C++ 1985, Java 1995, C# 2002, Go 2009, Rust 2015 (1.0), Swift 2014, TypeScript 2012. Each language is a bet on what is expensive: programmer time (Python), machine time (Rust), or organisational scale (Java).
 
-**Try in five minutes.** Ask Claude: 'rewrite python/scores.py in Go, explain each line to a Python person'. Read it. Delete it.
+**Try in five minutes.** Ask Claude: 'rewrite workspace/python/scores.py in Go, explain each line to a Python person'. Read it. Delete it.
 
 Docs: [Stack Overflow developer survey](https://survey.stackoverflow.co) · [Rust book](https://doc.rust-lang.org/book/) · [Go tour](https://go.dev/tour/) · [Source: Ritchie, The Development of the C Language (Harvard copy)](https://cscie26.dce.harvard.edu/~dce-lib113/reference/c/c_history.html) · [Source: Bjarne Stroustrup's FAQ](https://www.stroustrup.com/bs_faq.html) · [Source: java.com, What is Java?](https://www.java.com/en/download/help/whatis_java.html) · [Source: Microsoft Learn, The history of C#](https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-version-history) · [Source: Go FAQ, history](https://go.dev/doc/faq) · [Source: Announcing Rust 1.0 (May 2015)](https://blog.rust-lang.org/2015/05/15/Rust-1.0/) · [Source: Apple newsroom, iOS 8 SDK and Swift (June 2014)](https://www.apple.com/newsroom/2014/06/02Apple-Releases-iOS-8-SDK-With-Over-4-000-New-APIs/) · [Source: Announcing TypeScript 1.0 (first release October 2012)](https://devblogs.microsoft.com/typescript/announcing-typescript-1-0/)
 
@@ -278,7 +290,7 @@ A test runs code and checks the result. An eval does the same for an agent: a se
 
 **History.** JUnit was written by Kent Beck and Erich Gamma on a flight to OOPSLA in 1997, pytest's lineage starts in 2004, property-based testing arrived with QuickCheck (ICFP 2000). Model evals became an engineering discipline around 2023; today teams keep an eval set next to their instruction files.
 
-**Try in five minutes.** Ask Claude: 'write pytest tests for python/scores.py and run them'. Then break scores.py and watch them fail.
+**Try in five minutes.** Ask Claude: 'write pytest tests for workspace/python/scores.py and run them'. Then break scores.py and watch them fail.
 
 Docs: [pytest](https://docs.pytest.org) · [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/)
 
@@ -294,7 +306,7 @@ Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses
 
 **History.** Relational databases: Codd 1970. Postgres 1986 (Berkeley). SQLite 2000, in every phone. Cloud warehouses (BigQuery 2011, Redshift 2012, Snowflake 2015) separated storage from compute. Parquet (2013, Twitter and Cloudera) is the file format they all read.
 
-**Try in five minutes.** duckdb -c "copy 'data/scores.csv' to 'data/scores.parquet'" then query the parquet file. Same SQL, smaller file.
+**Try in five minutes.** duckdb -c "copy 'workspace/data/scores.csv' to 'workspace/data/scores.parquet'" then query the parquet file. Same SQL, smaller file.
 
 Docs: [Parquet](https://parquet.apache.org/docs/) · [SQLite](https://www.sqlite.org/docs.html) · [Postgres tutorial](https://www.postgresql.org/docs/current/tutorial.html) · [Source: IBM, The relational database (Codd, 1970)](https://www.ibm.com/history/relational-database) · [Source: PostgreSQL docs, A Brief History of PostgreSQL](https://www.postgresql.org/docs/current/history.html) · [Source: SQLite release history (2000-05-29)](https://www.sqlite.org/changes.html) · [Source: SQLite, Most Widely Deployed Database](https://www.sqlite.org/mostdeployed.html) · [Source: Google Cloud blog, Google BigQuery Service (November 2011)](https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-data.html) · [Source: AWS, Announcing Amazon Redshift (November 2012)](https://aws.amazon.com/about-aws/whats-new/2012/11/28/announcing-amazon-redshift/) · [Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)](https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf) · [Source: Twitter Engineering, Announcing Parquet 1.0 (2013)](https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop)
 
@@ -306,7 +318,7 @@ SQL asks questions of tables: select what, from where, filter, group, order. Duc
 
 **History.** SQL was designed at IBM in 1974 (as SEQUEL, by Chamberlin and Boyce) and standardised by ANSI in 1986 and ISO in 1987. It has outlived every technology that promised to replace it. DuckDB (started at CWI Amsterdam in 2018, first release 2019) brought analytics SQL to a single file.
 
-**Try in five minutes.** duckdb < sql/streaks.sql, then change limit 3 to limit 10 and read the lag() comment.
+**Try in five minutes.** duckdb < workspace/sql/streaks.sql, then change limit 3 to limit 10 and read the lag() comment.
 
 Docs: [DuckDB docs](https://duckdb.org/docs/) · [SQLBolt](https://sqlbolt.com) · [Mode SQL tutorial](https://mode.com/sql-tutorial/) · [Source: Chamberlin and Boyce, SEQUEL (1974), university copy](https://course.khoury.northeastern.edu/cs3200f20s2/ssl/readings/boyce.pdf) · [Source: The Open Group, SQL: The Standard and the Language](http://archive.opengroup.org/public/tech/datam/sql.htm) · [Source: DuckDB Foundation](https://duckdb.foundation/) · [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0)
 
@@ -334,7 +346,7 @@ Consuming: read the docs, get a key, make a request, parse JSON. Building: FastA
 
 **History.** SOAP was designed from 1998 and published in 1999; REST-with-JSON replaced it in the 2010s; GraphQL (open sourced 2015) and gRPC (announced 2015, 1.0 in 2016) added alternatives. Today the agent-facing version of an API is an MCP server.
 
-**Try in five minutes.** Ask Claude: 'wrap sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL.
+**Try in five minutes.** Ask Claude: 'wrap workspace/sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL.
 
 Docs: [FastAPI tutorial](https://fastapi.tiangolo.com/tutorial/) · [httpx](https://www.python-httpx.org) · [Twelve-Factor config](https://12factor.net/config) · [Source: Don Box, A Brief History of SOAP (2001)](https://www.xml.com/pub/a/ws/2001/04/04/soap.html) · [Source: graphql.org, GraphQL: A data query language (September 2015)](https://graphql.org/blog/2015-09-14-graphql/) · [Source: gRPC 1.0 announcement (August 2016)](https://grpc.io/blog/ga-announcement/)
 
@@ -479,6 +491,18 @@ Structure tells the model which words are instructions, which are data and which
 Docs: [Anthropic, structure prompts with XML tags](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#structure-prompts-with-xml-tags) · [Anthropic, control the format of responses](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices#control-the-format-of-responses) · [GitHub Flavored Markdown spec, fenced code blocks](https://github.github.com/gfm/#fenced-code-blocks) · [Source: Anthropic, prompting best practices, XML tags and output format sections](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices)
 
 Unlocks: Markdown and Obsidian, AGENTS.md
+
+*Working knowledge.* ### Building the builder
+
+Some of the most valuable work is not the feature: it is the template, the tool, the agent configuration or the maintainer note that makes the next feature, by you, a colleague or an agent, cheaper and safer to build. This is the meta step, and it is easy to skip because it produces nothing a user sees. Engelbart called it bootstrapping: use each gain in your tools to build the next tool. Grove called it leverage: judge a piece of work by how much future output it multiplies. In this repository the template that vibe new copies, the skills, the hooks, AGENTS.md and docs/MAINTAINERS.md are all of that kind; they exist so that building the course, and building your own things inside a camp, costs less next time. Brooks's warning applies: no tool removes the essential difficulty of deciding what to build; the meta work removes the accidental difficulty around it.
+
+**History.** Engelbart's 1962 framework (Augmenting Human Intellect) set out bootstrapping: pursue the quickest gains first and spend the resulting capability on the next gain. Brooks's No Silver Bullet (1986) separated essential from accidental difficulty and argued for growing systems and reusing components over hoping for one tool. Grove's High Output Management (1983) gave the word leverage. AGENTS.md (2025) and Claude Code's memory files are the current form: instructions written once, read at the start of every future session, so the cost is paid once and the benefit compounds.
+
+**Try in five minutes.** Add one line to an agent-config file in your camp (AGENTS.md or a skill) that captures something you had to explain to the agent twice this session. Next session, note what was cheaper. Then read docs/MAINTAINERS.md in the product repository and find the three places where a change in one zone reaches another; that table is the meta layer of this whole course.
+
+Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](https://dougengelbart.org/pubs/augment-3906.html) · [Brooks, No Silver Bullet, 1986](https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf) · [Grove, High Output Management (leverage), 1983](https://en.wikipedia.org/wiki/High_Output_Management) · [AGENTS.md, the open format](https://agents.md/) · [Claude Code, memory files](https://code.claude.com/docs/en/memory) · [Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident](https://dougengelbart.org/pubs/augment-3906.html)
+
+Unlocks: Separation of concerns, Agent Skills standard, AGENTS.md, Semantic Versioning
 
 *Working knowledge.* ### MCP (Model Context Protocol)
 

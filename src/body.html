@@ -116,8 +116,8 @@ brew install jq</code></pre>
 <p>Claude Code is not a chat box. You give it a goal in plain language, it reads and writes files in the folder you started it in, runs commands, looks at the result, and keeps going until the goal is met. The folder you start it in is its whole world, so start it in an empty one.</p>
 <h4>Do this</h4>
 <ol>
-<li>Make a folder and step into it:</li>
-<pre><code>mkdir -p ~/vibe &amp;&amp; cd ~/vibe</code></pre>
+<li>Step into your workspace, the folder that is yours in the camp (no camp yet? <code>mkdir -p ~/vibe/workspace/game</code> works too):</li>
+<pre><code>cd ~/vibe-map-*/workspace/game</code></pre>
 <li>Start Claude Code:</li>
 <pre><code>claude</code></pre>
 <li>On Pro and Max plans the session starts in auto mode: Claude edits files and runs most commands without asking each time, and a classifier reviews risky actions. Press Shift+Tab at any time to cycle to a mode that asks first. Tonight, auto is fine.</li>
@@ -129,7 +129,7 @@ brew install jq</code></pre>
 </ol>
 <h4>One more thing, then stop</h4>
 <p>Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.</p>
-<div class="callout ok"><b>Definition of done</b>index.html exists in ~/vibe, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</div>
+<div class="callout ok"><b>Definition of done</b>workspace/game/index.html exists in your camp, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</div>
 <div class="callout why"><b>Why it matters</b>You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.</div>
 <div class="callout try"><b>Try this</b>If the first result is broken, do not fix it yourself. Paste the error, or describe what you see, and let it iterate. Say what is wrong, not how to fix it.</div>
 <p class="small muted">Source: <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Quickstart</a>, <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">How Claude Code works</a></p>
@@ -224,8 +224,8 @@ When adding a feature:
   <h2>The Data Warehouse</h2>
   <div class="card" style="margin-top:6px">
     <h3>Real tools: DuckDB SQL and a little Python</h3>
-    <p class="small">The template ships <code>data/scores.csv</code>, three DuckDB queries and one Python script, all tested. DuckDB reads a CSV as a table with no server: <code>duckdb -c "select * from 'data/scores.csv' order by score desc limit 5"</code>. Docs: <a href="https://duckdb.org/docs/" target="_blank" rel="noopener">duckdb.org/docs</a>. Zero-to-SQL in an evening: <a href="https://sqlbolt.com" target="_blank" rel="noopener">SQLBolt</a>; analytics-flavoured: <a href="https://mode.com/sql-tutorial/" target="_blank" rel="noopener">Mode SQL tutorial</a>.</p>
-    <p class="small">Do this, in order: <code>duckdb &lt; sql/top_runs.sql</code>, then <code>sql/per_player.sql</code> (group by), then <code>sql/streaks.sql</code> (window functions, <code>lag()</code>). Then <code>python3 python/scores.py</code> and read the one new concept explained at the top of the file (a dict comprehension). Then ask Claude: "add a column to scores.csv and update every query that breaks". Python reference: <a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">the official tutorial</a>; practice: <a href="https://exercism.org/tracks/python" target="_blank" rel="noopener">Exercism</a>, <a href="https://www.kaggle.com/learn" target="_blank" rel="noopener">Kaggle Learn</a>.</p>
+    <p class="small">The template ships <code>workspace/data/scores.csv</code>, three DuckDB queries and one Python script, all tested. DuckDB reads a CSV as a table with no server: <code>duckdb -c "select * from 'workspace/data/scores.csv' order by score desc limit 5"</code>. Docs: <a href="https://duckdb.org/docs/" target="_blank" rel="noopener">duckdb.org/docs</a>. Zero-to-SQL in an evening: <a href="https://sqlbolt.com" target="_blank" rel="noopener">SQLBolt</a>; analytics-flavoured: <a href="https://mode.com/sql-tutorial/" target="_blank" rel="noopener">Mode SQL tutorial</a>.</p>
+    <p class="small">Do this, in order: <code>duckdb &lt; workspace/sql/top_runs.sql</code>, then <code>workspace/sql/per_player.sql</code> (group by), then <code>workspace/sql/streaks.sql</code> (window functions, <code>lag()</code>). Then <code>python3 workspace/python/scores.py</code> and read the one new concept explained at the top of the file (a dict comprehension). Then ask Claude: "add a column to scores.csv and update every query that breaks". Python reference: <a href="https://docs.python.org/3/tutorial/" target="_blank" rel="noopener">the official tutorial</a>; practice: <a href="https://exercism.org/tracks/python" target="_blank" rel="noopener">Exercism</a>, <a href="https://www.kaggle.com/learn" target="_blank" rel="noopener">Kaggle Learn</a>.</p>
   </div>
   <div class="pairing"><b>Pairing, 20:00</b>Sancerre, Loire, mineral, "a chalky finish that lingers like an unresolved action item". Served with a chèvre plate arranged by ash content, ascending. Data has a schema; so does the cheese board.</div>
   <p>The MVP pivots to a data-driven, insight-led, metrics-first posture. Every session is persisted to a file, which we will refer to as the enterprise data warehouse for the remainder of the evening. Then we surface actionable insights: top performers, rolling averages, streak analytics, all visualised on a self-serve dashboard. You will observe that the file rapidly becomes the single source of truth and the game a mere presentation layer.</p>

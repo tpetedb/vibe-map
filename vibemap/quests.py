@@ -131,17 +131,17 @@ def _vault_report(cfg: Config):
 
 
 def _c1_game(cfg: Config) -> tuple[bool, str]:
-    p = ROOT / "game" / "index.html"
+    p = ROOT / "workspace" / "game" / "index.html"
     if not p.exists():
-        return False, "game/index.html does not exist"
+        return False, "workspace/game/index.html does not exist"
     text = p.read_text(encoding="utf-8")
     if "Workstream 1 starts here" in text:
-        return False, "game/index.html is still the placeholder"
-    return len(text) > 800, f"game/index.html has {len(text)} bytes"
+        return False, "workspace/game/index.html is still the placeholder"
+    return len(text) > 800, f"workspace/game/index.html has {len(text)} bytes"
 
 
 def _c1_game_strict(cfg: Config) -> tuple[bool, str]:
-    text = (ROOT / "game" / "index.html").read_text(encoding="utf-8")
+    text = (ROOT / "workspace" / "game" / "index.html").read_text(encoding="utf-8")
     has = "<script" in text and ("score" in text.lower() or "<canvas" in text)
     return (
         has,
@@ -180,17 +180,17 @@ def _c2_strict(cfg: Config) -> tuple[bool, str]:
 
 
 def _c3_csv(cfg: Config) -> tuple[bool, str]:
-    p = ROOT / "data" / "scores.csv"
+    p = ROOT / "workspace" / "data" / "scores.csv"
     if not p.exists():
-        return False, "data/scores.csv is missing"
+        return False, "workspace/data/scores.csv is missing"
     lines = p.read_text(encoding="utf-8").splitlines()
     ok = lines and lines[0] == "played_at,player,score,duration_s" and len(lines) >= 4
     return bool(ok), f"{max(len(lines) - 1, 0)} score rows"
 
 
 def _c3_sql_py(cfg: Config) -> tuple[bool, str]:
-    sqls = list((ROOT / "sql").glob("*.sql"))
-    pys = list((ROOT / "python").glob("*.py"))
+    sqls = list((ROOT / "workspace" / "sql").glob("*.sql"))
+    pys = list((ROOT / "workspace" / "python").glob("*.py"))
     return bool(sqls and pys), f"{len(sqls)} sql, {len(pys)} python files"
 
 
@@ -365,7 +365,7 @@ CAMPUS_CHECKS: dict[int, tuple[Check, ...]] = {
         Check(
             "your game exists",
             _c1_game,
-            "Ask the agent for one file, game/index.html, no libraries.",
+            "Ask the agent for one file, workspace/game/index.html, no libraries.",
         ),
         Check(
             "it is a game",
@@ -399,7 +399,7 @@ CAMPUS_CHECKS: dict[int, tuple[Check, ...]] = {
         Check(
             "sql and python exist",
             _c3_sql_py,
-            "One query in sql/, one script in python/.",
+            "One query in workspace/sql/, one script in workspace/python/.",
         ),
         Check(
             "DuckDB runs top_runs.sql",

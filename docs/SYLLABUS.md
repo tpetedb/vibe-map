@@ -459,7 +459,7 @@ uv run vibe export        # code to paste into the game (Roadmap, Import)
 
 ## SQL and Python, in the 20:00 hour
 
-The data hour now runs on DuckDB (https://duckdb.org/docs/), which reads a CSV as a table with no server. Run `sql/top_runs.sql`, then `sql/per_player.sql` (group by), then `sql/streaks.sql` (window functions, `lag()`), then `python3 python/scores.py`. Zero-to-SQL: https://sqlbolt.com. Analytics SQL: https://mode.com/sql-tutorial/. Python: https://docs.python.org/3/tutorial/ and https://exercism.org/tracks/python.
+The data hour now runs on DuckDB (https://duckdb.org/docs/), which reads a CSV as a table with no server. Run `workspace/sql/top_runs.sql`, then `workspace/sql/per_player.sql` (group by), then `workspace/sql/streaks.sql` (window functions, `lag()`), then `python3 workspace/python/scores.py`. Zero-to-SQL: https://sqlbolt.com. Analytics SQL: https://mode.com/sql-tutorial/. Python: https://docs.python.org/3/tutorial/ and https://exercism.org/tracks/python.
 
 ## The campaign: four evenings, four islands
 
@@ -650,12 +650,12 @@ Rolinda's question: "Why is it all hidden if it is important?"
 
 _Tests, linters and formatters: the cheapest way to make an agent behave_
 
-A model cannot be made deterministic; the checks around it can. Three tools do most of the work. A test runner (pytest) asserts that a function returns what you expect; if the agent breaks it, the test says so, not you. A linter (ruff check) catches unused imports, undefined names, and style drift; a formatter (ruff format) removes every argument about whitespace. Run all three before every commit and the agent's freedom is bounded exactly where you want it. In the template, python/scores.py gets its first test tonight.
+A model cannot be made deterministic; the checks around it can. Three tools do most of the work. A test runner (pytest) asserts that a function returns what you expect; if the agent breaks it, the test says so, not you. A linter (ruff check) catches unused imports, undefined names, and style drift; a formatter (ruff format) removes every argument about whitespace. Run all three before every commit and the agent's freedom is bounded exactly where you want it. In the template, workspace/python/scores.py gets its first test tonight.
 
 The habit Cherny recommends: give the agent the command that verifies its work and tell it to run it. Put that command in AGENTS.md under Commands. It will run it without being asked.
 
 Do this:
-1. uv pip install pytest ruff. Ask Claude: "write tests for python/scores.py that cover the mean and the best score, then run them".
+1. uv pip install pytest ruff. Ask Claude: "write tests for workspace/python/scores.py that cover the mean and the best score, then run them".
 2. Ask Claude to introduce a bug on purpose and show the failing test. Then ask it to fix it. Watch the loop.
 3. Add to AGENTS.md: "Before finishing, run: ruff check && ruff format && pytest". Start a new session and see it obey.
 
@@ -835,7 +835,7 @@ Safety habit: an agent in your logged-in browser acts as you. Use it on tabs you
 Do this:
 1. Install Claude in Chrome from the Chrome Web Store (official listing linked below) and sign in.
 2. Give it one repetitive task you did last week and watch it. Note in the vault what it got wrong.
-3. In Claude Code, connect Chrome (docs below) and ask it to open game/index.html, play one round, and report the score it saw.
+3. In Claude Code, connect Chrome (docs below) and ask it to open workspace/game/index.html, play one round, and report the score it saw.
 
 Sources: [Claude in Chrome (Chrome Web Store, official)](https://chromewebstore.google.com/detail/fcoeoabgfenejglbffodgkkbkcdhcgfn) · [Claude in Chrome (product page)](https://claude.com/chrome) · [Claude Code and Chrome](https://code.claude.com/docs/en/chrome)
 

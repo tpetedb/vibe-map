@@ -37,13 +37,13 @@ def test_template_link_in_game_matches_the_git_remote() -> None:
 
 
 def test_nothing_loads_the_learners_index_html() -> None:
-    """game/index.html is replaced on the night; only prose may mention it."""
+    """workspace/game/index.html is replaced on the night; only prose may mention it."""
     html = GAME.read_text()
     assert not re.search(r'(src|href)="[^"]*index\.html"', html)
     # quests.py may look at the file to verify workstream 1; nothing else may
     # read it (prose mentions in notes and recipes are fine).
     readers = ("read_text", "open(", 'Path("', '/ "index.html"')
-    for py in (ROOT / "vibe").glob("*.py"):
+    for py in (ROOT / "vibemap").glob("*.py"):
         if py.name == "quests.py":
             continue
         for line in py.read_text().splitlines():

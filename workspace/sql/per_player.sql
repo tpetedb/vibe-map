@@ -4,6 +4,6 @@ select player,
        count(*)        as runs,
        max(score)      as best,
        round(avg(score), 1) as mean
-from 'data/scores.csv'
+from 'workspace/data/scores.csv'
 group by player
 order by best desc;

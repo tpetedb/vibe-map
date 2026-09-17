@@ -34,9 +34,10 @@ The three windows, one loop, over weeks: [docs/LONG-GAME.md](docs/LONG-GAME.md) 
 
 ```bash
 uv tool install vibe-map          # `vibe` on your PATH, no clone needed
-vibe new                          # a fresh camp: vibe-map-<you>-<today>
-vibe new ~/camp --github you/camp # a named folder, as a new GitHub repo
+vibe new                          # a slim camp, no engine: vibe-map-<you>-<today>
+vibe new ~/camp --github you/camp # a named folder, pushed to a new GitHub repo
 cd vibe-map-* && vibe status      # the CLI finds the camp from any subfolder
+vibe play                         # the hosted game; --offline caches a copy
 ```
 
 `vibe` carries the campaign, the tech tree and the resources inside the package. `VIBE_HOME` points it at a camp from elsewhere.
@@ -47,7 +48,7 @@ cd vibe-map-* && vibe status      # the CLI finds the camp from any subfolder
 
 | Time  | Workstream            | You end up with                                      | The check |
 |-------|-----------------------|------------------------------------------------------|-----------|
-| 18:00 | Innovation Hub        | a playable single-file game                          | `game/index.html` is no longer the placeholder |
+| 18:00 | Innovation Hub        | a playable single-file game                          | `workspace/game/index.html` is no longer the placeholder |
 | 19:00 | Centre of Excellence  | AGENTS.md rules and a first skill                    | eight lines of rules, one valid SKILL.md |
 | 20:00 | Data Warehouse        | scores.csv, DuckDB queries, a Python chart           | rows in the CSV, a query, a script |
 | 21:00 | Business Continuity   | git history, a rollback, one hook                    | three commits and a hooks block |
@@ -117,19 +118,23 @@ uv run vibe council "Should I learn git before Python?"   # four mentors answer,
 
 ## What is in the box
 
-| Path | What |
-|---|---|
-| `game/vibe-map.html` | The game, built from `src/` by `just build`. |
-| `vibemap/` | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
-| `vault/` | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
-| `.agents/skills/` | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
-| `docs/` | [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
-| `tests/` | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
-| `justfile` | Every task, for people and for agents. `just` lists them. |
+Three zones, on purpose. The **product** is the engine and lives here. The **template** is what a camp starts from and ships inside the `vibe` command. Your **workspace** is the folder that is yours. A learner never needs the first one: `vibe new` writes a slim camp (about twenty files, no engine), the game is hosted, the command is installed. [docs/MAINTAINERS.md](docs/MAINTAINERS.md) has the map and how a change in one zone reaches the others.
+
+| Path | Zone | What |
+|---|---|---|
+| `game/vibe-map.html`, `src/` | product | The game, built from `src/` by `just build`. |
+| `vibemap/` | product | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
+| `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, vibe.toml, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
+| `workspace/` | workspace | The learner's own zone: the game from workstream 1, the scores and their queries. Here it holds the worked example. |
+| `vault/` | product | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
+| `.agents/skills/` | configuration | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
+| `docs/` | product | [Maintainers](docs/MAINTAINERS.md), [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
+| `tests/` | product | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
+| `justfile` | configuration | Every task, for people and for agents. `just` lists them. |
 
 ## Use it as a template
 
-Press **Use this template** on GitHub, clone, `just setup`, `just start`. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repo practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, versions in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
+Most people should not: `uv tool install vibe-map` and `vibe new` give you a camp without the engine. Press **Use this template** on GitHub when you want the engine itself (to change the game, the checks or the course); then clone, `just setup`, `just start`, and the checkout is also a valid camp. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repo practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, versions in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
 
 ## For agents
 
