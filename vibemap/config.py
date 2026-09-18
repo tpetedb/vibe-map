@@ -19,7 +19,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from vibemap import project
+from vibemap import pet, project, sprites
 
 ROOT = project.root()
 CONFIG_PATH = project.config_path(ROOT)
@@ -195,16 +195,13 @@ class Config(_Strict):
             "",
             "[pet]  # the terminal companion; empty means what your name rolled",
             f"enabled = {str(self.pet.enabled).lower()}",
-            f"species = {_q(self.pet.species)}"
-            "  # duck | goose | blob | cat | dragon | octopus | owl | penguin"
-            " | turtle | snail | ghost | axolotl | capybara | cactus | robot"
-            " | rabbit | mushroom | chonk | crab",
+            f"species = {_q(self.pet.species)}  # {' | '.join(pet.SPECIES)}",
             f"name = {_q(self.pet.name)}",
             f"eye = {_q(self.pet.eye)}  # one of: · * × ◉ @ °",
             f"hat = {_q(self.pet.hat)}"
             "  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck",
-            f"style = {_q(self.pet.style)}"
-            "  # auto | pixel | ascii; pixel sprites for crab, duck, turtle and snail",
+            f"style = {_q(self.pet.style)}  # auto | pixel | ascii; pixel sprites"
+            f" for {', '.join(sprites.available())}",
             "",
         ]
         if self.game.show_pairings is not None:
