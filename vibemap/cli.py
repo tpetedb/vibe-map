@@ -36,6 +36,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from vibemap import __version__, campaign, pet, project, quests
+from vibemap import chat as chat_bridge
 from vibemap.artifact_checks import (
     ARTIFACT_NOTE,
     ARTIFACT_SECTION,
@@ -1566,6 +1567,135 @@ def council(ctx: Ctx, topic: str, mentors: str, dry_run: bool) -> None:
         _fail(str(e))
     if path:
         console.print(f"[ok]council minutes[/]: {path.relative_to(ROOT)}")
+
+
+@cli.group()
+def chat() -> None:
+    """Answer questions about the game with your own Claude or Codex subscription."""
+
+
+@chat.command("serve")
+@click.option(
+    "--pair",
+    "pair_code",
+    default=None,
+    help="the pairing code the game's chat panel shows",
+)
+@click.option(
+    "--port",
+    default=chat_bridge.DEFAULT_PORT,
+    show_default=True,
+    help="0 takes a free port; type it into the panel",
+)
+@click.option(
+    "--provider",
+    "provider_id",
+    default=None,
+    type=click.Choice(list(PROVIDERS)),
+    help="default: the provider in config/camp.toml",
+)
+@click.option(
+    "--origin",
+    "origins",
+    multiple=True,
+    help="one more allowed Origin (your own hosted copy)",
+)
+@click.option(
+    "--timeout",
+    default=chat_bridge.DEFAULT_TIMEOUT,
+    show_default=True,
+    help="seconds before an answer is given up on",
+)
+@pass_ctx
+def chat_serve(
+    ctx: Ctx,
+    pair_code: str | None,
+    port: int,
+    provider_id: str | None,
+    origins: tuple[str, ...],
+    timeout: int,
+) -> None:
+    """Run the loopback bridge the game's chat panel talks to."""
+    code = pair_code or chat_bridge.new_code()
+    try:
+        bridge = chat_bridge.Bridge(
+            ctx.cfg,
+            code=code,
+            provider_id=provider_id,
+            origins=frozenset(origins),
+            timeout=timeout,
+        )
+    except ValueError as e:
+        _fail(str(e))
+    health = bridge.health()
+    server = chat_bridge.serve(bridge, port=port)
+    bound = server.server_address[1]
+    console.print(
+        Panel(
+            f"[title]pairing code[/] {bridge.code}\n"
+            f"[title]bridge[/] http://{chat_bridge.HOST}:{bound}\n"
+            f"[title]provider[/] {health['label']}"
+            + (
+                ""
+                if health["available"]
+                else f" [warn]not installed[/] ({health['install']})"
+            )
+            + "\n[muted]Loopback only. It answers questions; it never runs a command "
+            "for the page. Ctrl-C to stop.[/]",
+            title="vibe chat",
+            border_style="accent",
+        )
+    )
+    if not pair_code:
+        console.print(
+            "[muted]Type this code into the game's chat panel, or start the "
+            "bridge with[/] vibe chat serve --pair <code from the panel>"
+        )
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        console.print("[muted]bridge stopped[/]")
+    finally:
+        server.server_close()
+
+
+@chat.command("ask")
+@click.argument("question")
+@click.option("--world", "-w", default="campus", type=click.Choice(WORLDS))
+@click.option("--stop", "-s", type=int, default=None, help="the stop it is about")
+@click.option("--mentor", "-m", "mentor_id", default=None, help="the mentor in view")
+@click.option(
+    "--artifact", "-a", "artifact_id", default=None, help="the artifact in view"
+)
+@pass_ctx
+def chat_ask(
+    ctx: Ctx,
+    question: str,
+    world: str,
+    stop: int | None,
+    mentor_id: str | None,
+    artifact_id: str | None,
+) -> None:
+    """The same question and the same prompt, answered in the terminal."""
+    try:
+        ask = chat_bridge.Ask.from_payload(
+            {
+                "question": question,
+                "world": world,
+                "stop": stop,
+                "mentor": mentor_id,
+                "artifact": artifact_id,
+            }
+        )
+    except ValueError as e:
+        _fail(str(e))
+    bridge = chat_bridge.Bridge(ctx.cfg, code=chat_bridge.new_code())
+    console.print(f"[muted]{chat_bridge.context_line(ask)}[/]")
+    try:
+        answer = "".join(bridge.answer(ask))
+    except (ProviderMissing, RuntimeError) as e:
+        _fail(str(e))
+    console.print(Panel(escape(answer.strip()), title="chat", border_style="accent"))
 
 
 @cli.command()

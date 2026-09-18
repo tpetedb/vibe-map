@@ -70,6 +70,7 @@ GAME_ORDER = [
     "80-sync.js",
     "85-settings.js",
     "87-onboarding.js",
+    "88-chat.js",
     "89-dashboard.js",
     "90-boot.js",
 ]
@@ -170,6 +171,7 @@ def _config_js() -> str:
         "shadowMap": cfg.game.shadow_map,
         "difficulty": cfg.learner.difficulty,
         "persona": cfg.learner.persona,
+        "provider": cfg.learner.provider,
         "mode": cfg.learner.mode,
         "vault": {"mode": cfg.vault.mode},
     }
