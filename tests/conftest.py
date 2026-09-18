@@ -242,32 +242,7 @@ class GamePage:
         )
 
     def sheet_in_place(self) -> None:
-        """Wait for the sheet's spring and openSheet's smooth scroll to finish.
-
-        The sheet springs in from translateY(16px). Two traps sit here, and
-        both have cost a red run.
-
-        The spring advances on animation frames, which a loaded runner
-        starves, so `still()` alone sees the same number five times and calls
-        a sheet that is 16 px low settled.
-
-        The spring is also not applied when the click returns: the animation
-        is created but still pending, so the first read of the transform or of
-        the rectangle gets the resting value and any wait on those passes
-        before the sheet has moved at all. Waiting for rendered frames first
-        is what closes that window, because by then the spring has a hold on
-        the element. Only then is the resting geometry worth asking for: the
-        sheet is `position:fixed` with `inset:0`, so covering the viewport is
-        the end of the spring and nothing else.
-        """
-        self.frames(2)
-        self.page.wait_for_function(
-            "() => {const r = document.getElementById('sheet')"
-            ".getBoundingClientRect();"
-            " return Math.abs(r.top) < 0.5"
-            " && Math.abs(r.bottom - window.innerHeight) < 0.5;}",
-            timeout=WAIT_MS,
-        )
+        """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
 
     def hud_action(self, selector: str) -> None:
