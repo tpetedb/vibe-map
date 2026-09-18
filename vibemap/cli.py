@@ -76,6 +76,9 @@ from vibemap.vault import Vault, safe_title
 ROOT = project.root()
 console = Console(theme=RICH_THEME, highlight=False)
 WORLDS = list(campaign.WORLD_NAMES)
+# The rate the vendored sprites were drawn at; the ASCII art idles at half a
+# second a frame instead.
+PET_FPS = 8
 
 
 class Ctx:
@@ -318,6 +321,7 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
         f"Level {label}, {ctx.state.xp} XP. "
         f"Note: vault/{ctx.cfg.vault.folder}/{safe_title(ws.name)}.md"
     )
+    _pet_cheer(ctx)
 
 
 @cli.command()
@@ -1455,11 +1459,12 @@ def pet_cmd(
     """Your terminal companion: show it, watch it, or configure it.
 
     The creature, its rarity and its stats are rolled from your name, the
-    same roll as claude-buddy (MIT, Romesh Niriella). The crab, duck, turtle
-    and snail are real pixel sprites from vscode-pets (MIT, Anthony Shaw),
-    drawn by Marc Duiker, enkeefe and Kennet Shin and credited in
-    vibemap/data/pets/CREDITS.md; every other species keeps the ASCII art.
-    Overrides live in config/camp.toml under [pet].
+    same roll as claude-buddy (MIT, Romesh Niriella). Six species are real
+    pixel sprites: the crab, duck, turtle and snail from vscode-pets (MIT,
+    Anthony Shaw), the cat and the dog from two CC0 packs by Shepardskin on
+    OpenGameArt, all credited in vibemap/data/pets/CREDITS.md. Every other
+    species keeps the ASCII art. Overrides live in config/camp.toml under
+    [pet]; --species picks one and writes it there.
     """
     if gallery:
         for name, rows in pet.gallery():
@@ -1493,7 +1498,8 @@ def pet_cmd(
             _fail(str(e))
         cfg.save(CONFIG_PATH)
         ctx.cfg = cfg
-        console.print(f"[ok]{CONFIG_PATH.name} [pet] updated[/]")
+        # The table name is square-bracketed, so it has to be escaped for rich.
+        console.print(f"[ok]{CONFIG_PATH.name} \\[pet] updated[/]")
     p = _pet(ctx)
     how = ctx.cfg.pet.style
     if not animate:
@@ -1507,7 +1513,7 @@ def pet_cmd(
     sprite = pet.columns(p, how)
     width = max(sprite, console.width - 4)
     # Eight frames a second for the sprites, half a second for the art.
-    period = 0.125 if sprite > pet.WIDTH else 0.5
+    period = 1 / PET_FPS if sprite > pet.WIDTH else 0.5
     tick = 0
     try:
         with Live(console=console, refresh_per_second=8) as live:
@@ -1528,6 +1534,32 @@ def pet_cmd(
     except KeyboardInterrupt:
         _pet_credit(p, how)
         console.print(f"{p.face}  bye")
+
+
+def _pet_cheer(ctx: Ctx) -> None:
+    """The happy state, once, whenever a stop is claimed.
+
+    On a real terminal it plays the state through at the sprite's own rate; a
+    pipe or a test gets the single frame, so nothing depends on the clock.
+    """
+    if not ctx.cfg.pet.enabled:
+        return
+    p = _pet(ctx)
+    how = ctx.cfg.pet.style
+    frames = pet.happy_frames(p, how)
+    first = pet.body(p, 0, style=how, state="happy")
+    if frames == 1 or not console.is_terminal:
+        console.print(first, end="")
+    else:
+        import time
+
+        from rich.live import Live
+
+        with Live(first, console=console, refresh_per_second=PET_FPS) as live:
+            for tick in range(1, frames):
+                time.sleep(1 / PET_FPS)
+                live.update(pet.body(p, tick, style=how, state="happy"))
+    console.print(f"[muted]{p.name} is pleased.[/]")
 
 
 def _pet_credit(p: pet.Pet, style: str) -> None:

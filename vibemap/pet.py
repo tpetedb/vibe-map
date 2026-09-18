@@ -7,9 +7,10 @@ itself extracted from the short-lived /buddy feature of Claude Code (April
 roll is a seeded PRNG over the learner's name, and every field can be
 overridden in vibe.toml under [pet].
 
-Four species also have real pixel sprites, vendored from vscode-pets and
-credited in data/pets/CREDITS.md; vibemap/sprites.py paints them in half
-blocks. Everything else, and every terminal without truecolor, keeps the art.
+Six species also have real pixel sprites, vendored from vscode-pets and from
+two CC0 packs on OpenGameArt and credited in data/pets/CREDITS.md;
+vibemap/sprites.py paints them in half blocks. Everything else, and every
+terminal without truecolor, keeps the art.
 """
 
 from __future__ import annotations
@@ -31,14 +32,15 @@ RARITY_COLOURS = {
     "epic": ORANGE,
     "legendary": YELLOW,
 }
-SPECIES = (
+# The upstream list; the roll indexes into it so a name gives the same species
+# here as in claude-buddy. Nothing may be added to it or the roll moves.
+_ROLLABLE = (
     "duck", "goose", "blob", "cat", "dragon", "octopus", "owl", "penguin",
     "turtle", "snail", "ghost", "axolotl", "capybara", "cactus", "robot",
-    "rabbit", "mushroom", "chonk", "crab",
+    "rabbit", "mushroom", "chonk",
 )  # fmt: skip
-# The upstream list; the roll indexes into it so a name gives the same species
-# here as in claude-buddy. The crab is only ever chosen on purpose.
-_ROLLABLE = SPECIES[:-1]
+# Ours, never rolled and only ever chosen on purpose.
+SPECIES = _ROLLABLE + ("crab", "dog")
 EYES = ("·", "*", "×", "◉", "@", "°")
 HATS = ("none", "crown", "tophat", "propeller", "halo", "wizard", "beanie", "tinyduck")
 STAT_NAMES = ("DEBUGGING", "PATIENCE", "CHAOS", "WISDOM", "SNARK")
@@ -144,6 +146,12 @@ BODIES: dict[str, tuple[tuple[str, ...], ...]] = {
         ("            ", " \\_      _/ ", "  ({E}    {E})  ", "  (______)  ", " /\\/\\  /\\/\\ "),
         ("            ", " \\/      \\/ ", "  ({E}    {E})  ", "  (______)  ", "  /\\/\\/\\/\\  "),
     ),
+    # Ours too: floppy ears down the sides, a nose, a tail that wags.
+    "dog": (
+        ("            ", "   .----.   ", "  |({E}  {E})|  ", "  | (..) |  ", "   `----´   "),
+        ("            ", "   .----.   ", "  |({E}  {E})|  ", "  | (..) |  ", "   `----´~  "),
+        ("            ", "   .----.   ", "  |({E}  {E})|  ", "  | (--) |  ", "   `----´   "),
+    ),
 }  # fmt: skip
 
 HAT_LINES = {
@@ -164,6 +172,7 @@ FACES = {
     "ghost": "/{E}{E}\\", "axolotl": "}{E}.{E}{", "capybara": "({E}oo{E})",
     "cactus": "|{E}  {E}|", "robot": "[{E}{E}]", "rabbit": "({E}..{E})",
     "mushroom": "|{E}  {E}|", "chonk": "({E}.{E})", "crab": "\\({E}  {E})/",
+    "dog": "|({E}{E})|",
 }  # fmt: skip
 
 ADJECTIVES = (
@@ -393,6 +402,13 @@ def render(
             out.append(chr(0x2588) * filled, style=pet.colour)
             out.append(chr(0x2591) * (20 - filled) + f" {value}\n", style=MUTED)
     return out
+
+
+def happy_frames(pet: Pet, style: str = "auto") -> int:
+    """How long a cheer lasts: the frames of the happy state, one for the art."""
+    if sprites.style_for(style, pet.species) != "pixel":
+        return 1
+    return len(sprites.sheet(pet.species).frames("happy"))
 
 
 def credit(pet: Pet, style: str = "auto") -> str:

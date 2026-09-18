@@ -93,14 +93,27 @@ Every knob of your journey lives in `config/camp.toml`; delete the file and ever
 ```bash
 uv run vibe pet                       # the creature your name rolled, with its stats
 uv run vibe pet --watch               # it walks and fidgets until Ctrl-C
-uv run vibe pet --species crab --name Pinch --hat crown
+uv run vibe pet --species cat --name Pinch --hat crown
 uv run vibe pet --style ascii         # the art instead of the pixels
-uv run vibe pet --all                 # the gallery: nineteen species
+uv run vibe pet --all                 # the gallery: twenty species
 ```
 
-The crab, the duck, the turtle and the snail are real pixel sprites, painted two pixels to a cell with half blocks and animated at eight frames a second. They come from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw), drawn by [Marc Duiker](https://github.com/marcduiker), enkeefe and [Kennet Shin](https://github.com/WoofWoof0); the licence and the per-set credit sit next to the frames in `vibemap/data/pets/`. Every other species keeps the ASCII art, and so does any terminal without truecolor or with `NO_COLOR` set.
+### The six with pixels
 
-It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, including `style = "pixel" | "ascii"`, or switch it off with `--off`.
+![Every pixel species side by side: cat, crab, dog, duck, snail, turtle](docs/media/pets.png)
+
+| | | |
+|---|---|---|
+| ![cat](docs/media/pets/cat.gif) | ![crab](docs/media/pets/crab.gif) | ![dog](docs/media/pets/dog.gif) |
+| `--species cat` · [Shepardskin](https://opengameart.org/content/cat-sprites), CC0 | `--species crab` · [Marc Duiker](https://github.com/marcduiker), MIT | `--species dog` · [Shepardskin](https://opengameart.org/content/dog-sprites), CC0 |
+| ![duck](docs/media/pets/duck.gif) | ![snail](docs/media/pets/snail.gif) | ![turtle](docs/media/pets/turtle.gif) |
+| `--species duck` · [Marc Duiker](https://github.com/marcduiker), MIT | `--species snail` · [Kennet Shin](https://github.com/WoofWoof0), MIT | `--species turtle` · enkeefe, MIT |
+
+These six are real pixel sprites, painted two pixels to a cell with half blocks and animated at eight frames a second, with four states: idle, walk, happy and sleep. The crab, duck, turtle and snail come from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw); the cat and the dog are two CC0 packs by [Shepardskin](https://opengameart.org/users/shepardskin) on OpenGameArt. The licence and the per-set credit sit next to the frames in `vibemap/data/pets/`, and every picture above is real terminal output, rendered by `tools/tui_media.py`.
+
+The other fourteen species (goose, blob, dragon, octopus, owl, penguin, ghost, axolotl, capybara, cactus, robot, rabbit, mushroom, chonk) keep the ASCII art, and so does any terminal without truecolor or with `NO_COLOR` set: `style = "ascii"` in `[pet]` makes that the rule everywhere.
+
+It also strolls across the launch screen of `just start`, sits next to `vibe status`, and does a happy little turn whenever `vibe check` or `vibe done` claims a stop. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, including `style = "pixel" | "ascii"`, or switch it off with `--off`.
 
 ## Your terminal, Tom's way
 
@@ -148,4 +161,4 @@ Read [HANDOVER.md](HANDOVER.md), then [AGENTS.md](AGENTS.md). `just verify` is t
 
 ## Credits and licences
 
-MIT. three.js (MIT), [Motion](https://motion.dev) (MIT), [d3-force](https://d3js.org/d3-force) (ISC, the vault graph) and [Lucide](https://lucide.dev) icons (ISC) are embedded in the game. The terminal pet's ASCII art, idle animation and name roll are ported from [claude-buddy](https://github.com/btcromesh/claude-buddy) by Romesh Niriella (MIT), itself extracted from the /buddy feature Claude Code shipped for a week in April 2026; the ASCII crab is ours. The pixel sprites for the crab, duck, turtle and snail are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) by Anthony Shaw (MIT) and drawn by [Marc Duiker](https://github.com/marcduiker), enkeefe and [Kennet Shin](https://github.com/WoofWoof0); what was taken, what was left behind and why is in `vibemap/data/pets/CREDITS.md`. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.
+MIT. three.js (MIT), [Motion](https://motion.dev) (MIT), [d3-force](https://d3js.org/d3-force) (ISC, the vault graph) and [Lucide](https://lucide.dev) icons (ISC) are embedded in the game. The terminal pet's ASCII art, idle animation and name roll are ported from [claude-buddy](https://github.com/btcromesh/claude-buddy) by Romesh Niriella (MIT), itself extracted from the /buddy feature Claude Code shipped for a week in April 2026; the ASCII crab is ours. The pixel sprites for the crab, duck, turtle and snail are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) by Anthony Shaw (MIT) and drawn by [Marc Duiker](https://github.com/marcduiker), enkeefe and [Kennet Shin](https://github.com/WoofWoof0); the cat and the dog are [Cat Sprites](https://opengameart.org/content/cat-sprites) and [Dog Sprites](https://opengameart.org/content/dog-sprites) by [Shepardskin](https://opengameart.org/users/shepardskin), both CC0. What was taken, what was left behind and why is in `vibemap/data/pets/CREDITS.md`. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.
