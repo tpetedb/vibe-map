@@ -108,18 +108,28 @@ def encode_progress(
 
 
 # Wait until a number the page computes stops changing. A spring and a smooth
-# scroll have no completion event, so "it has not moved for 160 ms" is the
-# signal. Sampling is on a timer, not on frames: software WebGL renders at a
-# handful of frames a second and the scroll does not wait for it. The tick cap
-# keeps a value that never settles from hanging a test.
+# scroll have no completion event, so "it has not moved over five painted
+# frames" is the signal. The timer paces the sampling, because software WebGL
+# renders at a handful of frames a second and the scroll does not wait for it,
+# but a sample only counts once the page has painted again: on a loaded runner
+# the timer outruns the frames a spring advances on, and a value that has not
+# moved because nothing was drawn is not stillness, it is a stale read. The
+# deadline keeps a value that never settles from hanging a test.
 STILL = """expr => new Promise(done => {
   const read = new Function('return (' + expr + ')');
-  let last = null, stable = 0, ticks = 0;
+  let last = null, stable = 0, painted = 0, sampled = -1, running = true;
+  const frame = () => { painted++; if (running) requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+  const deadline = performance.now() + 4000;
+  const stop = () => { running = false; done(true); };
   const tick = () => {
-    const v = read();
-    stable = last !== null && Math.abs(v - last) < 0.5 ? stable + 1 : 0;
-    last = v;
-    if (stable >= 5 || ++ticks > 60) return done(true);
+    if (painted > sampled) {
+      const v = read();
+      stable = last !== null && Math.abs(v - last) < 0.5 ? stable + 1 : 0;
+      sampled = painted;
+      last = v;
+    }
+    if (stable >= 5 || performance.now() > deadline) return stop();
     setTimeout(tick, 32);
   };
   tick();
@@ -167,6 +177,15 @@ class GamePage:
     def still(self, expression: str) -> None:
         """Wait until a numeric JavaScript expression stops changing."""
         self.page.wait_for_function(STILL, arg=expression, timeout=WAIT_MS)
+
+    def until(self, expression: str) -> None:
+        """Wait for a condition the page makes true.
+
+        The counterpart to still() for a fact that has a shape rather than a
+        value: it is the assertion's own condition, so a layout that never
+        reaches it runs out of the budget and fails as the defect it is.
+        """
+        self.page.wait_for_function(f"() => ({expression})", timeout=WAIT_MS)
 
     def _entered(self) -> None:
         """The title is gone, the 3D scene runs and the first frames are drawn."""
@@ -242,7 +261,20 @@ class GamePage:
         )
 
     def sheet_in_place(self) -> None:
-        """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
+        """Wait for the sheet's spring and openSheet's smooth scroll to finish.
+
+        The spring is driven by animation frames. A loaded runner starves
+        those, so a sampler reading every 32 ms sees the same number twice and
+        calls a sheet that is still 16 px low settled. The transform reaching
+        identity is the page's own end of the spring, so that is waited for
+        first and the scroll is sampled after.
+        """
+        self.page.wait_for_function(
+            "() => {const t = getComputedStyle("
+            "document.getElementById('sheet')).transform;"
+            " return t === 'none' || Math.abs(new DOMMatrix(t).m42) < 0.5;}",
+            timeout=WAIT_MS,
+        )
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
 
     def hud_action(self, selector: str) -> None:
