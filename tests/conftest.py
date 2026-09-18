@@ -261,7 +261,20 @@ class GamePage:
         )
 
     def sheet_in_place(self) -> None:
-        """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
+        """Wait for the sheet's spring and openSheet's smooth scroll to finish.
+
+        The spring is driven by animation frames. A loaded runner starves
+        those, so a sampler reading every 32 ms sees the same number twice and
+        calls a sheet that is still 16 px low settled. The transform reaching
+        identity is the page's own end of the spring, so that is waited for
+        first and the scroll is sampled after.
+        """
+        self.page.wait_for_function(
+            "() => {const t = getComputedStyle("
+            "document.getElementById('sheet')).transform;"
+            " return t === 'none' || Math.abs(new DOMMatrix(t).m42) < 0.5;}",
+            timeout=WAIT_MS,
+        )
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
 
     def hud_action(self, selector: str) -> None:
