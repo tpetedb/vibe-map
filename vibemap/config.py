@@ -96,8 +96,14 @@ class VaultConfig(_Strict):
 
 
 class NewsConfig(_Strict):
-    """Feeds `vibe news` pulls; an empty list means the built-in six."""
+    """The live world feed: what `vibe news` pulls and whether the game shows it.
 
+    An empty feed list means the registry in `vibemap/data/sources.json`.
+    `live = false` is the off switch: nothing from the feed appears anywhere
+    in the game and the hosted game does not refresh at runtime.
+    """
+
+    live: bool = True
     feeds: list[str] = Field(default_factory=list)
     per_feed: int = 8
 
@@ -189,7 +195,9 @@ class Config(_Strict):
             f"mode = {_q(self.vault.mode)}"
             "  # full (every note from day one) | grow (notes unlock as you play)",
             "",
-            "[news]  # feeds for `vibe news`; empty means the built-in six",
+            "[news]  # the live world feed; empty feeds means the source registry",
+            f"live = {str(self.news.live).lower()}"
+            "  # false hides every feed-driven element in the game",
             "feeds = [" + ", ".join(_q(f) for f in self.news.feeds) + "]",
             f"per_feed = {self.news.per_feed}",
             "",
