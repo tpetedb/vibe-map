@@ -161,6 +161,51 @@ def test_a_broken_file_fails_its_kind(
     assert "hyphens" in run_quest(artifact_quest("office", GOD), GOD)[0].detail
 
 
+def test_the_justfile_check_reads_it_with_just_or_by_line(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both layers read the same file and must agree on what is in it."""
+    here = _build(tmp_path, "switchboard", monkeypatch)
+    detail = run_quest(artifact_quest("switchboard", GOD), GOD)[0].detail
+    assert "3 documented recipes" in detail
+
+    # A machine without just still gets a verdict, with the install command.
+    monkeypatch.setattr("vibemap.artifact_checks._tool", lambda name: False)
+    detail = run_quest(artifact_quest("switchboard", GOD), GOD)[0].detail
+    assert "3 documented recipes" in detail and "brew install just" in detail
+
+    # A recipe with no comment above it is the one thing --list cannot show.
+    (here / "justfile").write_text(
+        "# greet someone\ngreet name='camp':\n    @echo {{name}}\n\n"
+        "count:\n    @ls | wc -l\n\n# both\nround: greet\n    @just count\n",
+        encoding="utf-8",
+    )
+    detail = run_quest(artifact_quest("switchboard", GOD), GOD)[0].detail
+    assert "no comment above: count" in detail
+
+
+def test_the_justfile_check_wants_a_parameter_and_a_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    here = _build(tmp_path, "switchboard", monkeypatch)
+    monkeypatch.setattr("vibemap.artifact_checks._tool", lambda name: False)
+    (here / "justfile").write_text(
+        "# one\na:\n    @echo a\n\n# two\nb:\n    @echo b\n\n"
+        "# three\nc:\n    @echo c\n",
+        encoding="utf-8",
+    )
+    detail = run_quest(artifact_quest("switchboard", GOD), GOD)[0].detail
+    assert "no recipe takes a parameter" in detail
+
+    (here / "justfile").write_text(
+        "# one\na name='x':\n    @echo {{name}}\n\n# two\nb:\n    @echo b\n\n"
+        "# three\nc:\n    @echo c\n",
+        encoding="utf-8",
+    )
+    detail = run_quest(artifact_quest("switchboard", GOD), GOD)[0].detail
+    assert "no recipe depends on another" in detail
+
+
 def test_a_secret_in_the_example_file_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
