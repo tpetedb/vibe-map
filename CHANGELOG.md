@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The avatar can do things. The walker sits down on the x key, on a bench or a chair where one is in reach and on the spot where it is not, and an original low-poly clamshell laptop in aluminium grey with a lit screen opens on the lap while the hands type; walking, jumping or pressing x again stands the walker back up. The twelve mentors work at their spot on their own chair, Rolinda serves, and Tom and the walker cheer when a stop is claimed. Forty collectibles, ten to an island, sit along the paths and on the annexes that appear: walking over one picks it up with a small burst and a line that explains one concept in a sentence and links to its topic in the tech tree. Twelve achievements, six of them the badges `vibe status` hands out, unlock with a toast and open six wearables (two hats, glasses, a jacket, a backpack and a lanyard) that show on the walker, in the look picker on the title screen and in the terminal. A Backpack panel in the HUD holds the inventory, the achievements and the wardrobe. Seats and collectibles come from `vibemap/data/items.json`, positioned against a plot, an annex or the path of their island rather than as world coordinates, so a new island layout carries them along; the new `src/game/18-avatar.js` and `src/game/19-items.js` hold the logic and the island builder, the frame loop and the character builder only call into them. The progress code carries `items`, `ach` and `wear` additively inside version 2, so an older game or an older `vibe` ignores the keys and keeps working.
+
 ### Changed
 
 - `main` is protected on GitHub: pull requests only, both CI jobs green and up to date, no force pushes or deletion, enforced for admins; release tags are immutable; merged branches are deleted automatically; secret scanning with push protection and Dependabot security updates are on. `docs/MAINTAINERS.md` and `AGENTS.md` say so.
