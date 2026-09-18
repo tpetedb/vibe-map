@@ -63,6 +63,18 @@ vault:
     uv run vibe vault build
     uv run vibe vault lint
 
+# catch up with main: merge it, regenerate what conflicted, run the fast gates
+sync-main *args:
+    uv run python tools/sync_main.py {{args}}
+
+# the Unreleased view assembled from the fragments in changelog.d/
+changelog:
+    @uv run python tools/changelog.py draft
+
+# cut changelog.d into a dated section in CHANGELOG.md (example: just release 1.0.0)
+release version:
+    uv run python tools/changelog.py release {{version}}
+
 # run the whole pytest battery (CLI, build, Playwright in Chromium and WebKit)
 test:
     uv run pytest

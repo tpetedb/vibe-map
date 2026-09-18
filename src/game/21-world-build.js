@@ -352,7 +352,10 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     sea:!!(water&&water.material.userData.u),
     blobs:props.blobs?props.blobs.count:0,
     plates:{total:plates.length,shown:plates.filter(p=>p.visible).length},
-    cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov},
+    // off is how far the camera still is from the height the fit asks for, so
+    // a test can ask whether the frame has landed instead of counting frames.
+    cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov,
+      off:Math.abs(camera.position.y-Math.sin(CAM.pitch)*camFitDist())},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 

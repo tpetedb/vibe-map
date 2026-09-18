@@ -1,0 +1,1 @@
+- `vibe new --github OWNER/NAME --private` creates the camp's repository private instead of public. The camp README, the Pages workflow and `docs/MAINTAINERS.md` say what a private repository costs: Pages, protected branches and code owners need GitHub Pro or above, and on GitHub Free the repository has to be public.

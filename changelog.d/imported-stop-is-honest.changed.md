@@ -1,0 +1,1 @@
+- A stop imported from the game is honest about what it is: `vibe import` still awards half the XP and now says so in plain words and names the `vibe check` that pays the rest, `vibe status` marks it `i` instead of `x`, and the first passing check tops it up to full, the same way it tops up a `--force` claim. ADR 0004 records the decision.

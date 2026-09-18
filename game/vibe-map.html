@@ -2377,7 +2377,10 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     sea:!!(water&&water.material.userData.u),
     blobs:props.blobs?props.blobs.count:0,
     plates:{total:plates.length,shown:plates.filter(p=>p.visible).length},
-    cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov},
+    // off is how far the camera still is from the height the fit asks for, so
+    // a test can ask whether the frame has landed instead of counting frames.
+    cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov,
+      off:Math.abs(camera.position.y-Math.sin(CAM.pitch)*camFitDist())},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 
@@ -2528,7 +2531,7 @@ let nearK=0,started=false,inited=false,lastSay="";
 function camCentre(v){const c=Math.max(-CAM.drift,Math.min(CAM.drift,v*CAM.follow));
   const over=Math.abs(v)-W.land[0][2];
   return over<=0?c:c+Math.sign(v)*over}
-const camLook=new T.Vector3(),camAim=new T.Vector3();
+const camLook=new T.Vector3(),camAim=new T.Vector3();let camFitLast=0;
 function animate(){
   requestAnimationFrame(animate);if(!scene)return;const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
   // Fast travel owns the camera and the frame while it lasts; the walker and
@@ -2574,11 +2577,15 @@ function animate(){
   // (camFitDist), the follow takes only part of the walker's position and is
   // capped, so the island never leaves the frame, and the look-ahead runs a
   // little in front of the walk. The easing is in time, not in frames.
-  const fit=camFitDist();
+  // A new fit is a new window, not movement in the world: resizing, going full
+  // screen, changing the map size or arriving on a wider island reframes at
+  // once. Only the walk is eased, so the frame never drifts for a second after
+  // the window has stopped changing.
+  const fit=camFitDist(),reframed=Math.abs(fit-camFitLast)>.01;camFitLast=fit;
   if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*fit*.86,fit*.52,Math.cos(oa)*fit*.86),.04);camera.lookAt(0,-1,0)}
   else{const lv=chars.lotte.vel||new T.Vector3();
     const fx=camCentre(pos.x)+lv.x*CAM.ahead,fz=camCentre(pos.z)+lv.z*CAM.ahead;
-    const k=reducedMotion()?1:Math.min(1,1-Math.exp(-CAM.ease*dt));
+    const k=reframed||reducedMotion()?1:Math.min(1,1-Math.exp(-CAM.ease*dt));
     camera.position.lerp(camAim.set(fx,Math.sin(CAM.pitch)*fit,fz+Math.cos(CAM.pitch)*fit),k);
     camLook.lerp(camAim.set(fx,.8,fz-WS),k);camera.lookAt(camLook)}
   // water: the surface moves on the GPU, so the frame only advances its clock

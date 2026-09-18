@@ -1,0 +1,1 @@
+- Strict checks no longer print a Python exception at the learner. The workstream 1 game check, the workstream 2 `AGENTS.md` check, the DuckDB `top_runs.sql` check and the strict vault-note check all guard their reads and answer with the same plain sentence as the lenient row above them.

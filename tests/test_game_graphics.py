@@ -46,10 +46,21 @@ def test_the_camera_keeps_the_island_in_frame_at_every_aspect(game: GamePage) ->
     worst = {}
     for width, height in ASPECTS:
         game.page.set_viewport_size({"width": width, "height": height})
-        # The camera eases toward the new fit, so the reading waits for frames
-        # the page drew and then for the distance to stop changing.
-        game.frames(40)
-        game.still("window.__gfx().cam.dist")
+        # Two things the page produces, and no count of frames: the resize
+        # handler has taken the new aspect, and the camera has landed on the
+        # fit for it. A reframe is not eased, so this is one drawn frame on a
+        # fast machine and one drawn frame on a slow one.
+        game.page.wait_for_function(
+            """([w, h]) => {
+              const s = document.getElementById('stage');
+              const g = window.__gfx();
+              return Math.abs(g.cam.aspect - s.clientWidth / s.clientHeight) < 0.01
+                && s.clientWidth === w && g.cam.off < 0.5;
+            }""",
+            arg=[width, height],
+            timeout=WAIT_MS,
+        )
+        game.frames(1)
         gfx = _gfx(game)
         worst[f"{width}x{height}"] = round(gfx["rim"], 3)
         shape = f"{width}x{height}"
