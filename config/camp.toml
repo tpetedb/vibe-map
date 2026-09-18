@@ -38,8 +38,8 @@ per_feed = 8
 
 [pet]  # the terminal companion; empty means what your name rolled
 enabled = true
-species = ""  # duck | goose | blob | cat | dragon | octopus | owl | penguin | turtle | snail | ghost | axolotl | capybara | cactus | robot | rabbit | mushroom | chonk | crab
+species = ""  # duck | goose | blob | cat | dragon | octopus | owl | penguin | turtle | snail | ghost | axolotl | capybara | cactus | robot | rabbit | mushroom | chonk | crab | dog
 name = ""
 eye = ""  # one of: · * × ◉ @ °
 hat = ""  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck
-style = "auto"  # auto | pixel | ascii; pixel sprites for crab, duck, turtle and snail
+style = "auto"  # auto | pixel | ascii; pixel sprites for cat, crab, dog, duck, snail, turtle
