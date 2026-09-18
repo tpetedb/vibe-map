@@ -93,10 +93,20 @@ done = "just greet prints your name"
 check = { kind = "justfile", file = "justfile", recipes = 2, parameter = true }
 ```
 
-`kind` is one of the kinds in `vibemap/artifact_checks.py` (`script`, `justfile`,
-`dockerfile`, `duckdb`, `fastapi`, `workflow`, `mcp`, `sqlite`, `sklearn`,
-`frontmatter`, `files`); the rest of the keys are that kind's spec, exactly as an
-artifact writes it. A topic and an artifact are verified by the same code.
+`kind` is one of the kinds in `vibemap/artifact_checks.py` (`script`, `module`,
+`justfile`, `dockerfile`, `duckdb`, `fastapi`, `workflow`, `mcp`, `sqlite`,
+`sklearn`, `frontmatter`, `files`); the rest of the keys are that kind's spec,
+exactly as an artifact writes it. A topic and an artifact are verified by the
+same code.
+
+`module` is `script` for an exercise whose library nobody here depends on. It
+names the imports it needs and the command that installs them, runs the script
+when they are present, and says what to install when they are not, rather than
+marking a learner wrong for not having `dbt` on this machine:
+
+```toml
+check = { kind = "module", file = "run_dbt.py", modules = ["dbt"], install = "uv add dbt-duckdb", prints = ["ok: True"] }
+```
 
 For the learner:
 

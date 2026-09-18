@@ -1,0 +1,54 @@
+# Polars. Written from the official docs, nothing from memory.
+id = "polars"
+title = "Polars"
+age = "feudal"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''Polars is a DataFrame library whose best trick is that it does not run your query when you write it. Reach for it when the work is a transformation rather than a question: reshaping, joining and cleaning in Python, where SQL would need a temporary table for every step. Writing scan_csv instead of read_csv gives you a plan rather than a table, and Polars then rewrites that plan before it touches the file. It is the same pushdown idea as Parquet and DuckDB, applied to code you wrote in Python, and it is why the camp's own scores helper is written in Polars.'''
+for_agents = '''And for an agent: build the whole chain first and collect once at the end; a collect in the middle throws the optimiser's work away.'''
+
+history = '''The user guide draws the line in one sentence: "in the lazy API, the query is only evaluated once it is collected", against an eager mode where "the query is executed immediately". The optimisations it names are the two familiar ones. Predicate pushdown: "Apply filters as early as possible while reading the dataset, thus only reading rows with sepal length greater than 5." Projection pushdown: "Select only the columns that are needed while reading the dataset, thus removing the need to load additional columns." The payoff is stated in the same place: they "will significantly lower the load on memory & CPU thus allowing you to fit bigger datasets in memory and process them faster." The guide's own advice is not subtle: "the lazy API should be preferred unless you are either interested in the intermediate results or are doing exploratory work." Underneath it is Arrow, and Polars "can move data in and out of arrow zero copy".'''
+
+try_it = '''uv run python -c "import polars as pl; print(pl.scan_csv('workspace/data/scores.csv').filter(pl.col('score') > 100).explain())" and read the plan.'''
+
+unlocks = ["dbt", "medallion"]
+prerequisites = ["csv", "arrow"]
+
+[[sources]]
+label = "Polars user guide, the lazy API"
+url = "https://docs.pola.rs/user-guide/concepts/lazy-api/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Polars user guide, query plan and optimisations"
+url = "https://docs.pola.rs/user-guide/lazy/optimizations/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Polars user guide, Polars and Apache Arrow"
+url = "https://docs.pola.rs/user-guide/misc/arrow/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Polars, the Python API reference"
+url = "https://docs.pola.rs/api/python/stable/reference/index.html"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A plan you can read, then one collect at the end"
+minutes = 15
+done = "polars_lazy.py prints a LazyFrame, a plan with the filter pushed down, and two rows"
+check = { kind = "script", file = "polars_lazy.py", contains = [
+  "scan_csv",
+  "explain",
+], prints = [
+  "lazy: LazyFrame",
+  "pushdown: yes",
+  "players: ['ada', 'tom']",
+  "best: [340, 180]",
+] }
