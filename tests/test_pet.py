@@ -62,10 +62,15 @@ def test_config_round_trips_the_pet_table(tmp_path) -> None:
     cfg = Config()
     cfg.pet.species = "crab"
     cfg.pet.name = "Pinch"
+    cfg.pet.style = "pixel"
     cfg.save(tmp_path / "vibe.toml")
     back = Config.load(tmp_path / "vibe.toml")
     assert back.pet.species == "crab" and back.pet.name == "Pinch"
     assert back.pet.enabled is True
+    assert back.pet.style == "pixel" and Config().pet.style == "auto"
+    (tmp_path / "bad.toml").write_text('[pet]\nstyle = "crayon"\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="pet.style"):
+        Config.load(tmp_path / "bad.toml")
 
 
 def test_vibe_pet_prints_the_creature_and_the_gallery() -> None:

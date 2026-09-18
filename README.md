@@ -92,12 +92,15 @@ Every knob of your journey lives in `config/camp.toml`; delete the file and ever
 
 ```bash
 uv run vibe pet                       # the creature your name rolled, with its stats
-uv run vibe pet --animate             # it fidgets and blinks until Ctrl-C
+uv run vibe pet --watch               # it walks and fidgets until Ctrl-C
 uv run vibe pet --species crab --name Pinch --hat crown
+uv run vibe pet --style ascii         # the art instead of the pixels
 uv run vibe pet --all                 # the gallery: nineteen species
 ```
 
-It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, or switch it off with `--off`.
+The crab, the duck, the turtle and the snail are real pixel sprites, painted two pixels to a cell with half blocks and animated at eight frames a second. They come from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw), drawn by [Marc Duiker](https://github.com/marcduiker), enkeefe and [Kennet Shin](https://github.com/WoofWoof0); the licence and the per-set credit sit next to the frames in `vibemap/data/pets/`. Every other species keeps the ASCII art, and so does any terminal without truecolor or with `NO_COLOR` set.
+
+It also strolls across the launch screen of `just start` and sits next to `vibe status`. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, including `style = "pixel" | "ascii"`, or switch it off with `--off`.
 
 ## Your terminal, Tom's way
 
@@ -145,4 +148,4 @@ Read [HANDOVER.md](HANDOVER.md), then [AGENTS.md](AGENTS.md). `just verify` is t
 
 ## Credits and licences
 
-MIT. three.js (MIT), [Motion](https://motion.dev) (MIT), [d3-force](https://d3js.org/d3-force) (ISC, the vault graph) and [Lucide](https://lucide.dev) icons (ISC) are embedded in the game. The terminal pet's sprites, idle animation and name roll are ported from [claude-buddy](https://github.com/btcromesh/claude-buddy) by Romesh Niriella (MIT), itself extracted from the /buddy feature Claude Code shipped for a week in April 2026; the crab is ours. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.
+MIT. three.js (MIT), [Motion](https://motion.dev) (MIT), [d3-force](https://d3js.org/d3-force) (ISC, the vault graph) and [Lucide](https://lucide.dev) icons (ISC) are embedded in the game. The terminal pet's ASCII art, idle animation and name roll are ported from [claude-buddy](https://github.com/btcromesh/claude-buddy) by Romesh Niriella (MIT), itself extracted from the /buddy feature Claude Code shipped for a week in April 2026; the ASCII crab is ours. The pixel sprites for the crab, duck, turtle and snail are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) by Anthony Shaw (MIT) and drawn by [Marc Duiker](https://github.com/marcduiker), enkeefe and [Kennet Shin](https://github.com/WoofWoof0); what was taken, what was left behind and why is in `vibemap/data/pets/CREDITS.md`. Two vendored skills keep their licences next to them (Anthropic's webapp-testing, Apache-2.0; obra's verification-before-completion, MIT). The idea for the tech tree is Age of Empires; the study of a real browser AoE, sokrypton/aoe, is in the docs, ideas only.

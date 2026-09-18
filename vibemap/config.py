@@ -100,6 +100,8 @@ class PetConfig(_Strict):
     name: str = ""
     eye: str = ""
     hat: str = ""
+    # auto: pixels where a species has them and the terminal has truecolor.
+    style: Literal["auto", "pixel", "ascii"] = "auto"
 
 
 class Config(_Strict):
@@ -189,6 +191,8 @@ class Config(_Strict):
             f"eye = {_q(self.pet.eye)}  # one of: · * × ◉ @ °",
             f"hat = {_q(self.pet.hat)}"
             "  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck",
+            f"style = {_q(self.pet.style)}"
+            "  # auto | pixel | ascii; pixel sprites for crab, duck, turtle and snail",
             "",
         ]
         if self.game.show_pairings is not None:

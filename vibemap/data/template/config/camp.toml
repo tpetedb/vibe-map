@@ -42,3 +42,4 @@ species = ""  # duck | goose | blob | cat | dragon | octopus | owl | penguin | t
 name = ""
 eye = ""  # one of: · * × ◉ @ °
 hat = ""  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck
+style = "auto"  # auto | pixel | ascii; pixel sprites for crab, duck, turtle and snail

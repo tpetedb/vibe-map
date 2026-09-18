@@ -29,6 +29,7 @@ command in the last column; nothing needs a build.
 | Where the vault is, and whether it grows | `config/camp.toml` `[vault]` | `vibe vault mode grow`, then `vibe vault build` |
 | The news feeds | `config/camp.toml` `[news] feeds` | `vibe news` |
 | The terminal pet | `config/camp.toml` `[pet]` | `vibe pet --species duck` writes it for you |
+| How the pet is drawn | `config/camp.toml` `[pet] style` | `vibe pet --style pixel` (`auto`, `pixel`, `ascii`); `auto` uses the vendored sprites where a species has them and the terminal has truecolor |
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |
 | Your own work | `workspace/` | `vibe check` |
 | What an artifact asked you to build | `workspace/artifacts/<id>/` | `vibe check --artifact <id>` |
