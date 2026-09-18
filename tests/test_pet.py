@@ -2,12 +2,37 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import pytest
 from click.testing import CliRunner
 
-from vibemap import pet
+from tools.script_camp import script_stops
+from vibemap import pet, sprites
 from vibemap.cli import cli
 from vibemap.config import Config
+
+
+def _camp(tmp_path: Path) -> Path:
+    camp = tmp_path / "camp"
+    out = CliRunner().invoke(cli, ["new", str(camp), "--name", "T"])
+    assert out.exit_code == 0, out.output
+    return camp
+
+
+def _vibe(camp: Path, *args: str) -> str:
+    """The CLI as a learner runs it, in a camp of its own."""
+    out = subprocess.run(
+        [sys.executable, "-m", "vibemap.cli", *args],
+        cwd=camp,
+        env=dict(os.environ, VIBE_HOME=str(camp), NO_COLOR="1", COLUMNS="100"),
+        capture_output=True,
+        text=True,
+    )
+    return out.stdout + out.stderr
 
 
 def test_roll_matches_upstream_for_known_names() -> None:
@@ -77,7 +102,42 @@ def test_vibe_pet_prints_the_creature_and_the_gallery() -> None:
     runner = CliRunner()
     out = runner.invoke(cli, ["pet", "--all"]).output
     assert out.count("\n\n") >= len(pet.SPECIES) - 1
-    assert "crab" in out
+    assert "crab" in out and "dog" in out
     one = runner.invoke(cli, ["pet"])
     assert one.exit_code == 0, one.output
     assert "face:" in one.output
+
+
+def test_the_cat_and_the_dog_are_chosen_never_rolled() -> None:
+    # The roll indexes into the upstream list, so ours must stay out of it.
+    assert "crab" not in pet._ROLLABLE and "dog" not in pet._ROLLABLE
+    assert "cat" in pet._ROLLABLE
+    assert set(pet.SPECIES) - set(pet._ROLLABLE) == {"crab", "dog"}
+    for name in ("cat", "dog"):
+        p = pet.resolve("tom", species=name)
+        assert p.species == name
+        assert pet.columns(p, "pixel") == sprites.sheet(name).width
+        assert pet.happy_frames(p, "pixel") > 1
+        assert "Shepardskin" in pet.credit(p, "pixel")
+        # Pixels where the terminal allows them, the ASCII art everywhere else.
+        assert "▀" in pet.render(p, 0, stats=False, style="pixel").plain
+        assert "▀" not in pet.render(p, 0, stats=False, style="ascii").plain
+
+
+def test_vibe_pet_species_writes_the_choice_into_the_camp(tmp_path) -> None:
+    camp = _camp(tmp_path)
+    out = _vibe(camp, "pet", "--species", "dog")
+    assert "camp.toml [pet] updated" in out, out
+    assert 'species = "dog"' in (camp / "config" / "camp.toml").read_text()
+    assert "dog ·" in _vibe(camp, "pet")
+    assert "unknown species" in _vibe(camp, "pet", "--species", "wyvern")
+
+
+def test_a_claimed_stop_flashes_the_happy_state(tmp_path) -> None:
+    camp = _camp(tmp_path)
+    assert "is pleased" in _vibe(camp, "done", "1", "did it", "--force")
+    script_stops(camp)
+    assert "is pleased" in _vibe(camp, "check", "1", "-w", "winter")
+    # Switched off in camp.toml, the claim says nothing about the creature.
+    _vibe(camp, "pet", "--off")
+    assert "is pleased" not in _vibe(camp, "done", "2", "did it", "--force")
