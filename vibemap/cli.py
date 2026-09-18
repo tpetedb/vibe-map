@@ -869,6 +869,37 @@ def scores(sql_name: str | None) -> None:
     console.print(scores_table(summary(read_scores())))
 
 
+# ---- dashboard ------------------------------------------------------------------
+
+
+@cli.command()
+@click.option("--json", "as_json", is_flag=True, help="print the numbers instead")
+@click.option("--open/--no-open", "open_it", default=True, help="open the report")
+@click.option(
+    "--out",
+    "out",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="where to write it (default workspace/dashboard.html)",
+)
+@pass_ctx
+def dashboard(ctx: Ctx, as_json: bool, open_it: bool, out: Path | None) -> None:
+    """Write workspace/dashboard.html from the state, the vault and the scores."""
+    from vibemap import dashboard as dash  # noqa: PLC0415
+
+    data = dash.numbers(ctx.state, ROOT)
+    if as_json:
+        click.echo(dash.as_json(data))
+        return
+    path = dash.write(data, out or ROOT / "workspace" / "dashboard.html")
+    console.print(
+        f"[ok]Wrote[/] [path]{path}[/]: {data['stops']}/{data['stops_total']} stops, "
+        f"[xp]{data['xp']} XP[/], {data['notes']} notes, {data['scores']['runs']} runs."
+    )
+    if open_it:
+        click.launch(str(path))
+
+
 # ---- configuration --------------------------------------------------------------
 
 
