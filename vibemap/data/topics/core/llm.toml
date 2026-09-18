@@ -1,0 +1,57 @@
+# LLM versus harness. Regenerate the tree after editing: just tree
+id = "llm"
+title = "LLM versus harness"
+age = "imperial"
+shelf = "agents"
+depth = 1
+
+summary = "The LLM is the model: text in, text out, no memory, no hands. The harness is everything around it: the loop that calls it repeatedly, the tools it can run (bash, edit file), the files it reads first (AGENTS.md), permissions, hooks, memory. Claude Code, Codex CLI, Cursor are harnesses. Most of the difference in results comes from the harness and what you put in it, not from the model."
+
+history = "Transformer 2017 (Google, 'Attention is all you need'). GPT-3 2020. ChatGPT November 2022. Claude March 2023. MCP November 2024. Agentic coding harnesses: Cursor's agent mode November 2024, Claude Code February 2025, Codex CLI April 2025. AGENTS.md August 2025."
+try_it = "Run claude in the template folder and ask 'what files did you read before answering?'. That list is the harness."
+
+unlocks = ["context", "harness"]
+
+[[sources]]
+label = "Anthropic: building effective agents"
+url = "https://www.anthropic.com/research/building-effective-agents"
+
+[[sources]]
+label = "How Claude Code works"
+url = "https://code.claude.com/docs/en/how-claude-code-works"
+
+[[sources]]
+label = "Source: Attention Is All You Need (arXiv, June 2017)"
+url = "https://arxiv.org/abs/1706.03762"
+
+[[sources]]
+label = "Source: Language Models are Few-Shot Learners (arXiv, May 2020)"
+url = "https://arxiv.org/abs/2005.14165"
+
+[[sources]]
+label = "Source: OpenAI, Introducing ChatGPT (November 2022)"
+url = "https://openai.com/index/chatgpt/"
+
+[[sources]]
+label = "Source: Anthropic, Introducing Claude (March 2023)"
+url = "https://www.anthropic.com/news/introducing-claude"
+
+[[sources]]
+label = "Source: Anthropic, Introducing the Model Context Protocol (November 2024)"
+url = "https://www.anthropic.com/news/model-context-protocol"
+
+[[sources]]
+label = "Source: Cursor changelog 0.43 (November 2024)"
+url = "https://cursor.com/changelog/0-43-x"
+
+[[sources]]
+label = "Source: Anthropic, Claude 3.7 Sonnet and Claude Code (February 2025)"
+url = "https://www.anthropic.com/news/claude-3-7-sonnet"
+
+[[sources]]
+label = "Source: openai/codex repository (April 2025)"
+url = "https://github.com/openai/codex"
+
+[[sources]]
+label = "Source: openai/agents.md repository (August 2025)"
+url = "https://github.com/openai/agents.md"

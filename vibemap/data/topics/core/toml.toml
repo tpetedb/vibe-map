@@ -1,0 +1,45 @@
+# TOML in practice: pyproject.toml. Regenerate the tree after editing: just tree
+id = "toml"
+title = "TOML in practice: pyproject.toml"
+age = "feudal"
+shelf = "formats"
+depth = 2
+
+summary = '''TOML is INI with types. [tables] group keys; key = "value" pairs are typed (strings, numbers, booleans, dates, arrays); `[[arrays.of.tables]]` repeat asection, one block per item. Python packaging chose it because it is unambiguous, has a small spec, and stays readable when hand-edited: pyproject.toml declares the package, its dependencies and the tool settings (ruff, pytest) in one file.'''
+
+history = "TOML was started by Tom Preston-Werner in 2013 and reached 1.0.0 in January 2021. PEP 518 (2016) introduced pyproject.toml for build requirements, PEP 621 (2020) added the [project] table, and tomllib joined the standard library with Python 3.11 in October 2022."
+try_it = "Read pyproject.toml in this repo and add a dependency, then uv sync."
+
+unlocks = ["pylibs"]
+
+[[sources]]
+label = "TOML 1.0.0 spec"
+url = "https://toml.io/en/v1.0.0"
+
+[[sources]]
+label = "Python packaging: writing your pyproject.toml"
+url = "https://packaging.python.org/en/latest/guides/writing-pyproject-toml/"
+
+[[sources]]
+label = "tomllib"
+url = "https://docs.python.org/3/library/tomllib.html"
+
+[[sources]]
+label = "Source: TOML v0.1.0 release (March 2013)"
+url = "https://github.com/toml-lang/toml/releases/tag/v0.1.0"
+
+[[sources]]
+label = "Source: TOML 1.0.0 release (January 2021)"
+url = "https://github.com/toml-lang/toml/releases/tag/1.0.0"
+
+[[sources]]
+label = "Source: PEP 518 (created May 2016)"
+url = "https://peps.python.org/pep-0518/"
+
+[[sources]]
+label = "Source: PEP 621 (created June 2020)"
+url = "https://peps.python.org/pep-0621/"
+
+[[sources]]
+label = "Source: Python 3.11.0 release (October 2022, PEP 680 tomllib)"
+url = "https://www.python.org/downloads/release/python-3110/"

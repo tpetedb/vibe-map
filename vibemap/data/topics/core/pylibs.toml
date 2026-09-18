@@ -1,0 +1,61 @@
+# Python libraries: what they are for. Regenerate the tree after editing: just tree
+id = "pylibs"
+title = "Python libraries: what they are for"
+age = "feudal"
+shelf = "code"
+depth = 2
+
+summary = "pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (talk to APIs), duckdb (SQL on files), pydantic (validate data), fastapi (build an API), typer/click (build a CLI), playwright (drive a browser), pytest (tests). Install with uv; import only what removes real work."
+
+history = "NumPy 2005 (1.0 in 2006), pandas 2008 (Wes McKinney, at a hedge fund), requests 2011, pytest 2004 lineage, FastAPI 2018, pydantic 2017, Playwright 2020, DuckDB 2019 (started at CWI in 2018). The stack is young; most of it postdates the iPhone."
+try_it = '''uv pip install pandas, then python3 -c "import pandas as pd; print(pd.read_csv('workspace/data/scores.csv').describe())".'''
+
+unlocks = ["apis", "tests"]
+
+[[sources]]
+label = "pandas 10 minutes"
+url = "https://pandas.pydata.org/docs/user_guide/10min.html"
+
+[[sources]]
+label = "Requests"
+url = "https://requests.readthedocs.io"
+
+[[sources]]
+label = "pytest"
+url = "https://docs.pytest.org"
+
+[[sources]]
+label = "FastAPI"
+url = "https://fastapi.tiangolo.com"
+
+[[sources]]
+label = "Source: numpy.org, About NumPy"
+url = "https://numpy.org/about/"
+
+[[sources]]
+label = "Source: pandas.pydata.org, About pandas"
+url = "https://pandas.pydata.org/about/"
+
+[[sources]]
+label = "Source: requests release history on PyPI (February 2011)"
+url = "https://pypi.org/project/requests/#history"
+
+[[sources]]
+label = "Source: pytest history"
+url = "https://docs.pytest.org/en/stable/history.html"
+
+[[sources]]
+label = "Source: FastAPI release history on PyPI (December 2018)"
+url = "https://pypi.org/project/fastapi/#history"
+
+[[sources]]
+label = "Source: pydantic v0.1 release (June 2017)"
+url = "https://github.com/pydantic/pydantic/releases/tag/v0.1"
+
+[[sources]]
+label = "Source: Playwright v1.0.0 release (May 2020)"
+url = "https://github.com/microsoft/playwright/releases/tag/v1.0.0"
+
+[[sources]]
+label = "Source: DuckDB v0.1.0 release (June 2019)"
+url = "https://github.com/duckdb/duckdb/releases/tag/v0.1.0"

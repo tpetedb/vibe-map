@@ -1,0 +1,45 @@
+# Cloud and servers. Regenerate the tree after editing: just tree
+id = "cloud"
+title = "Cloud and servers"
+age = "castle"
+shelf = "ship"
+depth = 2
+
+summary = "A server is a computer that is always on. The cloud rents you one by the hour (AWS 2006, Azure 2010, GCP 2008) or runs your code without one (serverless: Lambda 2014, Vercel, Cloudflare Workers). For most people's first project, a static host (GitHub Pages) or a small VPS (Hetzner, Fly.io) is enough."
+
+history = "AWS launched S3 in March and EC2 in August 2006; renting compute by the hour changed who could start a company. Google App Engine followed in April 2008 and Windows Azure went live in February 2010. Serverless (AWS Lambda, November 2014) removed the server from view; today agents can provision all of it with one prompt, which is why understanding the bill matters."
+try_it = "Deploy the game to GitHub Pages (free). Later: fly launch on the FastAPI endpoint."
+
+unlocks = ["kubernetes", "cost"]
+
+[[sources]]
+label = "AWS getting started"
+url = "https://aws.amazon.com/getting-started/"
+
+[[sources]]
+label = "Fly.io docs"
+url = "https://fly.io/docs/"
+
+[[sources]]
+label = "Cloudflare Pages"
+url = "https://developers.cloudflare.com/pages/"
+
+[[sources]]
+label = "Source: AWS, Announcing Amazon S3 (March 2006)"
+url = "https://aws.amazon.com/about-aws/whats-new/2006/03/announcing-amazon-s3---simple-storage-service"
+
+[[sources]]
+label = "Source: AWS, Announcing Amazon EC2 beta (August 2006)"
+url = "https://aws.amazon.com/about-aws/whats-new/2006/08/24/announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/"
+
+[[sources]]
+label = "Source: Google blog, Developers, start your engines (April 2008)"
+url = "https://googleblog.blogspot.com/2008/04/developers-start-your-engines.html"
+
+[[sources]]
+label = "Source: Microsoft, Windows Azure general availability (February 2010)"
+url = "https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availability/"
+
+[[sources]]
+label = "Source: AWS, Introducing AWS Lambda (November 2014)"
+url = "https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/"

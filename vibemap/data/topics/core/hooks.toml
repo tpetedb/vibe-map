@@ -1,0 +1,14 @@
+# The prose for this topic lives in a handwritten vault note of the
+# same title; only its place in the tree and its sources are data.
+id = "hooks"
+title = "Hooks"
+age = "imperial"
+shelf = "agents"
+depth = 2
+covered_elsewhere = true
+
+unlocks = []
+
+[[sources]]
+label = "Source: Claude Code hooks"
+url = "https://code.claude.com/docs/en/hooks"

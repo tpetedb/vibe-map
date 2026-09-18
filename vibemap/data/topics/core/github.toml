@@ -1,0 +1,49 @@
+# GitHub, pull requests, Pages. Regenerate the tree after editing: just tree
+id = "github"
+title = "GitHub, pull requests, Pages"
+age = "castle"
+shelf = "git"
+depth = 2
+
+summary = "GitHub hosts git repositories and adds the social layer: issues, pull requests (proposed changes with review), Actions (CI), Pages (free static hosting). A PR is how professionals let others check work before it lands; it is also how you check an agent's work."
+
+history = "GitHub launched in 2008 (pull requests arrived in February 2008), was acquired by Microsoft in 2018, and passed 100 million developers in January 2023. Pull requests turned code review into a habit; Copilot (technical preview June 2021) put a model in the editor; Copilot's coding agent and OpenAI's Codex (2025) now open PRs themselves."
+try_it = "gh repo create, gh pr create after a branch, then enable Pages. The 22:30 workstream."
+
+unlocks = ["ci", "cloud"]
+
+[[sources]]
+label = "GitHub docs"
+url = "https://docs.github.com/en"
+
+[[sources]]
+label = "GitHub CLI"
+url = "https://cli.github.com/manual/"
+
+[[sources]]
+label = "Pages quickstart"
+url = "https://docs.github.com/en/pages/quickstart"
+
+[[sources]]
+label = "Source: GitHub blog, pull requests (February 2008)"
+url = "https://github.blog/2008-02-23-oh-yeah-there-s-pull-requests-now/"
+
+[[sources]]
+label = "Source: Microsoft to acquire GitHub (June 2018)"
+url = "https://news.microsoft.com/2018/06/04/microsoft-to-acquire-github-for-7-5-billion/"
+
+[[sources]]
+label = "Source: GitHub, 100 million developers and counting (January 2023)"
+url = "https://github.blog/news-insights/company-news/100-million-developers-and-counting/"
+
+[[sources]]
+label = "Source: Introducing GitHub Copilot (June 2021)"
+url = "https://github.blog/2021-06-29-introducing-github-copilot-ai-pair-programmer/"
+
+[[sources]]
+label = "Source: GitHub Copilot coding agent (May 2025)"
+url = "https://github.blog/news-insights/product-news/github-copilot-meet-the-new-coding-agent/"
+
+[[sources]]
+label = "Source: openai/codex repository (April 2025)"
+url = "https://github.com/openai/codex"

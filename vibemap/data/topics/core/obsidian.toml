@@ -1,0 +1,41 @@
+# Obsidian features. Regenerate the tree after editing: just tree
+id = "obsidian"
+title = "Obsidian features"
+age = "feudal"
+shelf = "knowledge"
+depth = 1
+
+summary = "Obsidian is more than a Markdown editor: properties (typed frontmatter), callouts, embeds, a canvas, bases (database views over your notes), templates, daily notes, bookmarks, a graph, a URI scheme, a CLI, Sync and Publish. The vault carries one note per feature, each with the exact commands, the syntax and a five-minute try taken from the official help; `vibe vault feature --all` writes them."
+
+history = "Obsidian left beta with 1.0.0 on 13 October 2022, added Canvas in December 2022, Properties with 1.4 on 31 August 2023, Bases (table and cards views) in the 1.9 line, and a command line interface that needs the 1.12 installer; kanban views arrived in 1.14 early access."
+try_it = "Run `uv run vibe vault feature --all`, open the vault in Obsidian, open `Camp map.canvas`, then `Tech notes.base`, then run Slides: Start presentation on Camp deck."
+
+unlocks = ["vault"]
+
+[[sources]]
+label = "Obsidian Help"
+url = "https://help.obsidian.md/"
+
+[[sources]]
+label = "The feature table"
+url = "https://github.com/tpetedb/vibe-map/blob/main/docs/OBSIDIAN.md"
+
+[[sources]]
+label = "Source: Obsidian 1.0.0 changelog (13 October 2022)"
+url = "https://obsidian.md/changelog/2022-10-13-desktop-v1.0.0/"
+
+[[sources]]
+label = "Source: Obsidian 1.4 changelog, Properties (31 August 2023)"
+url = "https://obsidian.md/changelog/2023-08-31-desktop-v1.4.5/"
+
+[[sources]]
+label = "Source: Obsidian Help, Bases views (table and cards since 1.9)"
+url = "https://help.obsidian.md/Bases/Views"
+
+[[sources]]
+label = "Source: Obsidian Help, Obsidian CLI (requires the 1.12 installer)"
+url = "https://help.obsidian.md/Extending+Obsidian/Obsidian+CLI"
+
+[[sources]]
+label = "Source: Wikipedia, Obsidian (software): Canvas introduced December 2022"
+url = "https://en.wikipedia.org/wiki/Obsidian_(software)"

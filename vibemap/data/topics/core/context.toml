@@ -1,0 +1,37 @@
+# Context window and prompts. Regenerate the tree after editing: just tree
+id = "context"
+title = "Context window and prompts"
+age = "imperial"
+shelf = "agents"
+depth = 1
+
+summary = "The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file."
+
+history = "GPT-3 had a 2,048-token window (2020); Claude went to 100k in May 2023; Gemini 1.5 ran a million tokens in February 2024 and Claude Sonnet 4 in August 2025. Bigger windows did not remove the need for good instructions; they moved it to what you load."
+try_it = "Give the same task twice: 'make it cooler' and 'add a purple badge, keep stats, touch nothing else'. Compare the diff."
+
+unlocks = ["agentsmd", "skills"]
+
+[[sources]]
+label = "Claude prompt engineering"
+url = "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/overview"
+
+[[sources]]
+label = "Claude Code best practices"
+url = "https://code.claude.com/docs/en/best-practices"
+
+[[sources]]
+label = "Source: GPT-3 paper, section 2 (context window of 2048 tokens)"
+url = "https://arxiv.org/abs/2005.14165"
+
+[[sources]]
+label = "Source: Anthropic, Introducing 100K context windows (May 2023)"
+url = "https://www.anthropic.com/news/100k-context-windows"
+
+[[sources]]
+label = "Source: Google, Gemini 1.5 (February 2024)"
+url = "https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/"
+
+[[sources]]
+label = "Source: Claude Sonnet 4 1M token context (August 2025)"
+url = "https://claude.com/blog/1m-context"

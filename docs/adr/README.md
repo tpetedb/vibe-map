@@ -13,5 +13,6 @@ One file per decision, in Michael Nygard's form (Title, Status, Context, Decisio
 | [0007](0007-artifacts-as-tasks.md) | Every artifact is a task with a deterministic check, not only a demo | Accepted, 2026-09-17 |
 | [0008](0008-mentor-encounters.md) | A mentor encounter is a sourced dialogue plus one exercise that is checked | Accepted, 2026-09-17 |
 | [0009](0009-local-chat-bridge.md) | In-game chat is answered by a loopback bridge the player starts, never by a key in the page | Accepted, 2026-09-18 |
+| [0013](0013-topics-as-data.md) | A topic of the tech tree is one TOML file in a pack, not a row in a Python list | Accepted, 2026-09-18 |
 
-Next number: 0010. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+Next number: 0014 (0010 to 0012 are taken by the changes landing beside this one). The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions

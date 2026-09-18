@@ -1,0 +1,45 @@
+# HTTP and APIs. Regenerate the tree after editing: just tree
+id = "http"
+title = "HTTP and APIs"
+age = "castle"
+shelf = "net"
+depth = 1
+
+summary = "HTTP is request and response: a URL, a method (GET, POST), headers, a body, a status code (200, 404, 500). An API is an HTTP endpoint that returns data instead of a page, usually JSON. Every AI model you call is an HTTP API; MCP is a layer on top of the same idea."
+
+history = "HTTP 0.9 in 1991, HTTP/1.1 in 1997 (RFC 2068), HTTP/2 in 2015 (RFC 7540). REST was named in Roy Fielding's 2000 dissertation. The OpenAI API (June 2020) made calling a model one POST request."
+try_it = "curl -s https://api.github.com/repos/duckdb/duckdb | head -20. You just used an API."
+
+unlocks = ["apis", "mcp", "ssh"]
+
+[[sources]]
+label = "MDN HTTP overview"
+url = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview"
+
+[[sources]]
+label = "curl"
+url = "https://curl.se/docs/manual.html"
+
+[[sources]]
+label = "Postman"
+url = "https://learning.postman.com"
+
+[[sources]]
+label = "Source: W3C, The original HTTP as defined in 1991"
+url = "https://www.w3.org/Protocols/HTTP/AsImplemented.html"
+
+[[sources]]
+label = "Source: RFC 2068, HTTP/1.1 (January 1997)"
+url = "https://www.rfc-editor.org/rfc/rfc2068"
+
+[[sources]]
+label = "Source: RFC 7540, HTTP/2 (May 2015)"
+url = "https://www.rfc-editor.org/rfc/rfc7540"
+
+[[sources]]
+label = "Source: Fielding, Architectural Styles and the Design of Network-based Software Architectures (2000)"
+url = "https://ics.uci.edu/~fielding/pubs/dissertation/top.htm"
+
+[[sources]]
+label = "Source: OpenAI API announcement (June 2020)"
+url = "https://openai.com/index/openai-api/"

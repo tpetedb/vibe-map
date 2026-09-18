@@ -1,0 +1,37 @@
+# Git. Regenerate the tree after editing: just tree
+id = "git"
+title = "Git"
+age = "dark"
+shelf = "git"
+depth = 1
+
+summary = "A time machine for a folder. Commit = named snapshot, branch = parallel line of work, merge = bring them together, revert = undo safely. Agents can produce a lot of change fast; git is what makes that safe."
+
+history = "Linus Torvalds wrote git in April 2005, in about ten days, after the Linux kernel lost its previous tool (BitKeeper). GitHub launched in 2008 and made it social; today git is the default version control system almost everywhere."
+try_it = "git log --oneline | head, then change one line, git diff, git commit -am 'why', git revert HEAD."
+
+unlocks = ["github", "hooks", "ci", "semver"]
+
+[[sources]]
+label = "Git tutorial"
+url = "https://git-scm.com/docs/gittutorial"
+
+[[sources]]
+label = "Oh Shit, Git!?!"
+url = "https://ohshitgit.com"
+
+[[sources]]
+label = "Claude Code common workflows"
+url = "https://code.claude.com/docs/en/common-workflows"
+
+[[sources]]
+label = "Source: Pro Git, A Short History of Git"
+url = "https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git"
+
+[[sources]]
+label = "Source: Linux Foundation, 10 Years of Git interview with Linus Torvalds (2015)"
+url = "https://www.linuxfoundation.org/blog/blog/10-years-of-git-an-interview-with-git-creator-linus-torvalds"
+
+[[sources]]
+label = "Source: GitHub launch post (April 2008)"
+url = "https://github.blog/2008-04-10-we-launched/"
