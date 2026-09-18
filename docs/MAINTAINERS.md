@@ -72,6 +72,14 @@ People who want the engine press **Use this template** on GitHub or clone this r
 
 An agent that hits one of these rules reports it; it never works around it.
 
+## CI: where the jobs run and why
+
+Both required jobs run on `ubuntu-latest`. GitHub's limit for a Pro account is forty concurrent standard jobs but at most five of them on macOS ([Actions limits](https://docs.github.com/en/actions/reference/limits)), and that macOS pool is shared with larger runners. Two macOS jobs per push meant three pushes filled it while the Linux pool stayed almost empty, so with several agents landing pull requests through strict up-to-date checks the queue, not the tests, set the pace. The strict checks make this worse on purpose: every rebase reruns both jobs.
+
+Three things keep it fast. A `concurrency` group per ref cancels a superseded pull-request run and hands its runner back, and never cancels `main` or a tag, whose result is the record of that commit. `push` is limited to `main` and to tags so a commit on a branch with a pull request is tested once, not twice. `astral-sh/setup-uv` caches the resolved environment and `actions/cache` keeps `~/.cache/ms-playwright` under a key that is the resolved Playwright version, so a browser download happens on a lock-file bump and not otherwise; `playwright install --with-deps` still runs on a cache hit, because the system libraries WebKit needs on Linux live outside that folder.
+
+The product targets a MacBook, so macOS is still tested, on release tags only: `macos-smoke` in `nightly.yml` installs the wheel, runs `vibe new` and `tools/fresh_camp.py`, and runs anything carrying the `macos` marker. A test that is genuinely macOS-only takes that marker and a skip reason; everything else belongs on Linux.
+
 ## Where the rules live
 
 - `AGENTS.md` (this repository): the file map, ways of working, the test loop, code style. Every agent reads it through `CLAUDE.md`.

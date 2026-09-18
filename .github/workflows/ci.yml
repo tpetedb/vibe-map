@@ -1,10 +1,17 @@
 # YAML in practice: a GitHub Actions workflow. Indentation is structure,
 # `-` starts a list item, `key: value` is a map. Three jobs run on every push
-# and pull request: lint and the tests that need no browser, the browser tests,
-# and the checks that generated files are in sync with their sources.
+# to main and every pull request: lint and the tests that need no browser, the
+# browser tests, and the checks that generated files are in sync with their
+# sources.
 #
 # This workflow stays fast, so it never runs anything marked `integration`.
 # The play-through and the fresh-camp run live in nightly.yml.
+#
+# Everything here runs on Linux. GitHub's concurrency limit for a Pro account
+# is 40 standard jobs at once but only 5 of them may be macOS, so two macOS
+# jobs per push means three pushes fill the whole macOS pool while the Linux
+# pool is still nearly empty. The product targets Macs, so a macOS smoke job
+# still runs, on tags, in nightly.yml.
 name: ci
 
 on:
@@ -16,6 +23,14 @@ on:
     # robot before a learner finds it.
     - cron: "0 7 * * 1"
 
+# One run per ref. A new commit on a pull request cancels the run of the
+# commit it replaces, which hands the runner back immediately; a run on main
+# or on a tag is never cancelled, because its result is the record of that
+# commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -26,13 +41,15 @@ env:
 jobs:
   lint-and-unit:
     name: lint, unit tests, generated files in sync
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
@@ -46,15 +63,35 @@ jobs:
 
   browser:
     name: Playwright tests (Chromium and WebKit)
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
-      - run: uv run playwright install chromium webkit
+      # The browser build is tied to the Playwright release, so the resolved
+      # version is the cache key: a lock file bump downloads once and every
+      # run after it restores.
+      - id: pw
+        name: The resolved Playwright version
+        run: >-
+          echo "version=$(uv run python -c
+          'import importlib.metadata as m; print(m.version(\"playwright\"))')"
+          >> "$GITHUB_OUTPUT"
+      - id: pwcache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      # --with-deps installs the system libraries WebKit and Chromium need on
+      # Linux; they live outside the cached browser folder, so this runs even
+      # on a cache hit, and then only the apt half does work.
+      - name: Browsers and their system libraries
+        run: uv run playwright install --with-deps chromium webkit
       - name: Chromium
         run: >-
           uv run pytest -m "browser and not integration"
@@ -84,5 +121,7 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
       - run: uv run python tools/checks.py links

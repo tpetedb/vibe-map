@@ -12,6 +12,12 @@ on:
     tags: ["v*"]
   workflow_dispatch:
 
+# A night and a tag are both a record, so nothing here is ever cancelled; the
+# group only stops two runs of the same ref from overlapping.
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -29,6 +35,8 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       # The point of this job is the package a learner installs, not the
       # checkout: `vibe` comes from a wheel built here and put on PATH.
       - name: Install vibe from the checkout
@@ -44,8 +52,13 @@ jobs:
       - name: vibe new, the checks that refuse, the checks that pass, the code
         run: python3 tools/fresh_camp.py
 
-  playthrough:
-    name: every island, every stop, every mentor, the finale
+  # The one job left on macOS, and it runs on a release tag only. The product
+  # is written for a MacBook, so a tag says the installed command still makes a
+  # camp on the machine a learner actually has. Five macOS jobs at once is the
+  # whole pool for a Pro account, which is why this is not on every push.
+  macos-smoke:
+    name: the installed command on a Mac (tags only)
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,8 +66,48 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: Install vibe from the checkout
+        run: |
+          uv tool install .
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: vibe --version
+      - name: Give git an identity for the camp's first commit
+        run: |
+          git config --global user.name "vibe ci"
+          git config --global user.email "actions@users.noreply.github.com"
+      - name: vibe new, the checks that refuse, the checks that pass, the code
+        run: python3 tools/fresh_camp.py
+      # A test that is genuinely macOS-only carries the `macos` marker and
+      # skips itself everywhere else, so this job is the only place it runs.
+      # There are none today; the step stays so the next one has a home.
       - run: uv sync --frozen
-      - run: uv run playwright install chromium
+      - run: uv run pytest -m macos || test $? -eq 5
+
+  playthrough:
+    name: every island, every stop, every mentor, the finale
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - run: uv sync --frozen
+      - id: pw
+        name: The resolved Playwright version
+        run: >-
+          echo "version=$(uv run python -c
+          'import importlib.metadata as m; print(m.version(\"playwright\"))')"
+          >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - run: uv run playwright install --with-deps chromium
       - run: uv run pytest -m integration tests/test_game_playthrough.py
       - uses: actions/upload-artifact@v4
         if: always()

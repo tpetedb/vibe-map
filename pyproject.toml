@@ -75,4 +75,5 @@ addopts = "-q -ra"
 markers = [
   "integration: slow end-to-end runs (the play-through, a fresh camp)",
   "browser: needs Playwright; applied automatically to any test that takes a browser fixture",
+  "macos: only meaningful on macOS; skipped elsewhere and run by the tag-only smoke job",
 ]
