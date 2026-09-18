@@ -1,0 +1,49 @@
+# DuckDB beyond the basics. Written from the official docs, nothing from memory.
+id = "duckdblab"
+title = "DuckDB beyond the basics"
+age = "castle"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''The core topic on SQL and DuckDB gets you selecting from a CSV; this one is the rest of the tool. Reach for it when the query is the program: a persistent .duckdb file instead of a re-read of the files, views that name a step, window functions that answer per-group questions, and the friendly syntax that removes the boilerplate. The two habits that change the most are QUALIFY, which filters on a window function without a wrapping subquery, and GROUP BY ALL, which stops you restating the grouping columns. Keep reading the files directly while you explore, and load them into a database file once the same data is queried again and again.'''
+for_agents = '''And for an agent: a .duckdb file is a whole analytics database you can commit to a scratch folder and delete, with no server to start.'''
+
+history = '''DuckDB documents a list it calls Friendly SQL, and most of it exists to delete typing. FROM-first: "DuckDB allows queries in the form of FROM tbl which selects all columns". GROUP BY ALL lets you "omit the group-by columns by inferring them from the list of attributes", and ORDER BY ALL is "shorthand to order on all columns (e.g., to ensure deterministic results)". SELECT * EXCLUDE "allows excluding specific columns from the * expression" and SELECT * REPLACE "allows replacing specific columns with different expressions". Column aliases are usable in WHERE, GROUP BY and HAVING, which no other dialect lets you do. When to stop reading files and load them is a documented answer too: "If you have the storage space available, and have a join-heavy workload and/or plan to run many queries on the same dataset, load the Parquet files into the database first", because a DuckDB database carries "hyperloglog statistics that Parquet files do not have".'''
+
+try_it = '''duckdb camp.duckdb -c "create table runs as from read_csv('workspace/data/scores.csv'); from runs limit 3" and note that the file persists.'''
+
+unlocks = ["dbt", "medallion"]
+prerequisites = ["sql", "parquet"]
+
+[[sources]]
+label = "DuckDB, Friendly SQL"
+url = "https://duckdb.org/docs/stable/sql/dialect/friendly_sql"
+checked = 2026-09-18
+
+[[sources]]
+label = "DuckDB, the QUALIFY clause"
+url = "https://duckdb.org/docs/stable/sql/query_syntax/qualify"
+checked = 2026-09-18
+
+[[sources]]
+label = "DuckDB, window functions"
+url = "https://duckdb.org/docs/stable/sql/functions/window_functions"
+checked = 2026-09-18
+
+[[sources]]
+label = "DuckDB performance guide, file formats and when to load"
+url = "https://duckdb.org/docs/stable/guides/performance/file_formats"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A database file with a view and a window function in it"
+minutes = 18
+done = "duckdb_lab.py writes camp.duckdb with a per_player view and a best_run table"
+check = { kind = "duckdb", file = "duckdb_lab.py", db = "camp.duckdb", query = "select count(*) from best_run", contains = [
+  "qualify",
+  "group by all",
+] }

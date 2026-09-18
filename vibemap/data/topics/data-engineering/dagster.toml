@@ -1,0 +1,55 @@
+# Dagster and Prefect. Written from the official docs, nothing from memory.
+id = "dagster"
+title = "Dagster and Prefect"
+age = "castle"
+shelf = "data"
+depth = 3
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 15
+
+summary = '''Dagster and Prefect are the two orchestrators people reach for when Airflow feels like too much ceremony, and they disagree with it in different directions. Dagster changes the unit: you declare the table you want to exist rather than the step that makes it, and the graph is the lineage of your data. Prefect keeps the unit a function: a decorator turns ordinary Python into a flow, and the flow runs locally the moment you call it. Read this topic when you already know what a DAG is and want to know what the alternatives thought was wrong with it.'''
+for_agents = '''And for an agent: ask what the nodes of the graph are named after. Tasks name the work; assets name the result, and only one of those is what a stakeholder asks about.'''
+
+history = '''Dagster puts the asset first: "An asset represents a logical unit of data such as a table, dataset, or machine learning model", and "Assets can have dependencies on other assets, forming the data lineage for your pipelines". It calls assets "the core abstraction in Dagster", and a definition written with the @dg.asset decorator "is automatically added to a top-level Definitions object". The project describes itself as "a data orchestrator built for data engineers, with integrated lineage, observability, a declarative programming model, and best-in-class testability". Prefect states its aim differently: it "is an open-source orchestration engine that turns your Python functions into production-grade data pipelines with minimal friction", built on "simple Python decorators for tasks and flows", and its quickstart runs a flow with plain python 01_getting_started.py, with a server needed only for scheduled remote deployments. Airflow's own answer to the same question is the TaskFlow API, so the three have converged on decorators while still disagreeing about what a node is.'''
+
+try_it = '''uv run --with dagster python -c "import dagster as dg; print(dg.__version__)" then compare it with uv run --with prefect prefect version.'''
+
+unlocks = ["datamap"]
+prerequisites = ["airflow"]
+
+[[sources]]
+label = "Dagster, getting started concepts: assets"
+url = "https://docs.dagster.io/getting-started/concepts"
+checked = 2026-09-18
+
+[[sources]]
+label = "Dagster, the documentation home"
+url = "https://docs.dagster.io/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Prefect, the quickstart with flows and tasks"
+url = "https://docs.prefect.io/v3/get-started/quickstart"
+checked = 2026-09-18
+
+[[sources]]
+label = "Prefect, what Prefect is"
+url = "https://docs.prefect.io/v3/get-started/index"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Two assets and one materialisation, with no server running"
+minutes = 15
+done = "dagster_assets.py materialises runs and best_run in process and reports both"
+check = { kind = "module", file = "dagster_assets.py", modules = [
+  "dagster",
+], install = "uv add dagster", contains = [
+  "@dg.asset",
+  "materialize",
+], prints = [
+  "ok: True",
+  "assets: ['best_run', 'runs']",
+  "best: 340",
+] }

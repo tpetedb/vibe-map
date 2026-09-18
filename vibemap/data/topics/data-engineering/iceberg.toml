@@ -1,0 +1,63 @@
+# Apache Iceberg. Written from the official docs, nothing from memory.
+id = "iceberg"
+title = "Apache Iceberg"
+age = "castle"
+shelf = "data"
+depth = 3
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''Iceberg is a table format: a pile of Parquet files plus metadata that says which of them are the table right now. Reach for it when several writers share one dataset, when you need to read the table as it was last Tuesday, or when a column has to change without rewriting terabytes. The unit that makes it work is the snapshot, and a commit is an atomic swap of one metadata pointer for another, so a reader either sees the old table or the new one and never a half-written mixture. Delta Lake solves the same problem with the same ingredients (Parquet files plus a log, ACID transactions, time travel, schema enforcement) and the choice between them is usually made by which engines your employer already runs, not by the formats.'''
+for_agents = '''And for an agent: Iceberg is the version control of tables, and "which snapshot" is the question to ask when two runs disagree.'''
+
+history = '''The specification states the goal first: "Serializable isolation: Reads will be isolated from concurrent writes and always use a committed snapshot of a table's data. Writes will support removing and adding files in a single operation and are never partially visible. Readers will not acquire locks." The mechanism is one file: "All changes to table state create a new metadata file and replace the old metadata with an atomic swap. The table metadata file tracks the table schema, partitioning config, custom properties, and snapshots of the table contents. A snapshot represents the state of a table at some time". Under a snapshot sit manifests: "Data files in snapshots are tracked by one or more manifest files that contain a row for each data file in the table, the file's partition data, and its metrics", and "The manifests that make up a snapshot are stored in a manifest list file", whose stats "are used to avoid reading manifests that are not required for an operation". Concurrency is optimistic: a writer "commits by swapping the table's metadata file pointer from the base version to the new version". Evolution falls out of the same design, because "Iceberg schema updates are metadata changes, so no data files need to be rewritten" and "Iceberg uses unique IDs to track each column".'''
+
+try_it = '''uv run --with "pyiceberg[sql-sqlite,pyarrow]" python -c "from pyiceberg.catalog.sql import SqlCatalog; print(SqlCatalog)" and you have a catalog with no server.'''
+
+unlocks = ["medallion", "dataquality"]
+prerequisites = ["parquet", "schemas"]
+
+[[sources]]
+label = "Apache Iceberg, the table specification"
+url = "https://iceberg.apache.org/spec/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Apache Iceberg, evolution"
+url = "https://iceberg.apache.org/docs/latest/evolution/"
+checked = 2026-09-18
+
+[[sources]]
+label = "PyIceberg, the Python implementation and its SQL catalog"
+url = "https://py.iceberg.apache.org/"
+checked = 2026-09-18
+
+[[sources]]
+label = "Delta Lake, what it is"
+url = "https://docs.delta.io/latest/delta-intro.html"
+checked = 2026-09-18
+
+[[sources]]
+label = "Source: Apache Iceberg, format/spec.md in the project repository"
+url = "https://github.com/apache/iceberg/blob/main/format/spec.md"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A catalog in SQLite, two snapshots, and a read of the older one"
+minutes = 18
+done = "iceberg_timetravel.py appends twice, then reads the table as it was after the first append"
+check = { kind = "module", file = "iceberg_timetravel.py", modules = [
+  "pyiceberg",
+  "pyarrow",
+], install = "uv add 'pyiceberg[sql-sqlite,pyarrow]'", contains = [
+  "SqlCatalog",
+  "snapshot_id",
+], prints = [
+  "snapshots: 2",
+  "now: 2",
+  "then: 1",
+  "columns: 3",
+  "still: 2",
+] }

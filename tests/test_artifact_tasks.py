@@ -120,6 +120,31 @@ def test_a_missing_tool_is_reported_rather_than_failed(
     assert "scikit-learn is not installed" in detail
 
 
+def test_the_module_kind_runs_the_script_or_names_what_to_install(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A topic may lean on a library nobody here depends on; both ways answer."""
+    from vibemap.artifact_checks import run_spec
+
+    (tmp_path / "count.py").write_text("print('rows: 3')\n", encoding="utf-8")
+    spec = {
+        "kind": "module",
+        "file": "count.py",
+        "modules": ["json"],
+        "prints": ["rows: 3"],
+    }
+    assert run_spec(tmp_path, spec) == (True, "count.py printed all 1 expected lines")
+
+    absent = dict(spec, modules=["nothing_like_this"], install="uv add nothing")
+    ok, detail = run_spec(tmp_path, absent)
+    assert ok and "nothing_like_this is not installed" in detail
+    assert "uv add nothing" in detail
+
+    (tmp_path / "count.py").write_text("print('rows: 0')\n", encoding="utf-8")
+    ok, detail = run_spec(tmp_path, spec)
+    assert not ok and "rows: 3" in detail
+
+
 def test_a_half_finished_artifact_says_what_is_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

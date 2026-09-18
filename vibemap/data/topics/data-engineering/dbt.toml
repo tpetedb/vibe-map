@@ -1,0 +1,55 @@
+# dbt. Written from the official docs, nothing from memory.
+id = "dbt"
+title = "dbt"
+age = "castle"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''dbt turns a folder of SELECT statements into a build system: each file is a model, each model is a table or a view, and one function call says which model depends on which. Reach for it when the transformations have outgrown a single script and somebody other than you has to understand the order they run in. The whole idea rests on ref, because writing ref('runs') instead of the table name is what lets dbt work out the graph and build the pieces in the right order. It is transformation only, and it runs where the data already is: no rows leave the warehouse, which on a laptop means the warehouse is a DuckDB file.'''
+for_agents = '''And for an agent: never hardcode a table name a model already produces; ref is the edge of the graph, and a hardcoded name is an edge nobody can see.'''
+
+history = '''The documentation keeps the definition small: "Models are primarily written as a select statement and saved as a .sql file", and "A project is a directory of a .yml file (the project configuration) and either .sql or .py files (the models)". A model is "a single file containing a final select statement, and a project can have multiple models, and models can even reference each other". The execution model is the second half: "When you execute dbt run, you are running a model that will transform your data without that data ever leaving your warehouse." The DuckDB adapter is configured with a profile, and the documented local target is four lines: type: duckdb, path: './my_project.duckdb', schema: main and threads. What installs on a laptop today is the open-source dbt Core plus that adapter, which this topic was checked against at dbt Core 1.12.5 with dbt-duckdb 1.11.0; the documentation site also now describes a dbt v2 in which the DuckDB adapter is bundled, so read the install page before you pin anything.'''
+
+try_it = '''uv run --with dbt-duckdb dbt --version and read which adapter you got, then dbt init to see the folder it wants.'''
+
+unlocks = ["dataquality", "medallion", "airflow"]
+prerequisites = ["duckdblab", "sql"]
+
+[[sources]]
+label = "dbt, building models"
+url = "https://docs.getdbt.com/docs/build/models"
+checked = 2026-09-18
+
+[[sources]]
+label = "dbt, the DuckDB connection profile"
+url = "https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup"
+checked = 2026-09-18
+
+[[sources]]
+label = "dbt, installation overview"
+url = "https://docs.getdbt.com/docs/core/installation-overview"
+checked = 2026-09-18
+
+[[sources]]
+label = "dbt, the ref function"
+url = "https://docs.getdbt.com/reference/dbt-jinja-functions/ref"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Two models, one ref, one build"
+minutes = 18
+done = "run_dbt.py builds a table model and a view model that reads it, and both tests pass"
+check = { kind = "module", file = "run_dbt.py", modules = [
+  "dbt",
+], install = "uv add dbt-duckdb", contains = [
+  "dbtRunner",
+  "build",
+], prints = [
+  "ok: True",
+  "players: 3",
+  "best: 340",
+] }

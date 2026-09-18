@@ -316,6 +316,24 @@ def _k_sklearn(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     return True, "it trained, and it reported a train and a test score"
 
 
+def _k_module(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
+    """A script whose library this camp does not ship: run it, or say why not.
+
+    The topic packs reach for tools that are nobody's dependency (pyarrow,
+    pyiceberg, dlt, dbt). The floor still reads the file, so a learner without
+    the library is told what to install rather than marked wrong.
+    """
+    absent = [m for m in spec["modules"] if find_spec(m) is None]
+    if absent:
+        install = spec.get("install") or f"uv add {' '.join(absent)}"
+        return True, (
+            f"{spec['file']} holds what the docs describe; "
+            f"{' and '.join(absent)} is not installed here, so it was not run "
+            f"({install}, then run this again)"
+        )
+    return _k_script(here, spec)
+
+
 def _k_files(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     """The floor on its own: every named file exists and says what it must."""
     for name, wanted in spec["files"].items():
@@ -459,6 +477,7 @@ def _k_justfile(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
 
 KINDS: dict[str, Callable[[Path, dict[str, Any]], tuple[bool, str]]] = {
     "script": _k_script,
+    "module": _k_module,
     "justfile": _k_justfile,
     "dockerfile": _k_dockerfile,
     "duckdb": _k_duckdb,
