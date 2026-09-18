@@ -2,6 +2,7 @@
 title: "Tech tree"
 date: 2026-09-16
 tags: [overview]
+generated: 1bbe0dd064ed
 ---
 # Tech tree
 

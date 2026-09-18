@@ -423,7 +423,7 @@ def test_every_mentor_quest_has_checks_with_hints() -> None:
 def test_a_mentor_exercise_is_checked_in_the_workspace(tmp_path: Path) -> None:
     camp = _camp(tmp_path)
     out = _run(camp, "check", "--mentor", "torvalds")
-    assert out.returncode == 0, out.stdout + out.stderr
+    assert out.returncode == 1, out.stdout + out.stderr
     assert "does not exist" in out.stdout
     here = camp / "workspace" / "mentors" / "torvalds"
     here.mkdir(parents=True)
@@ -536,3 +536,67 @@ def test_status_counts_encounters_and_artifacts(tmp_path: Path) -> None:
     assert data["artifacts_built"] == ["dock"]
     # The keys the regeneration scripts already read are still there.
     assert set(data) >= {"name", "xp", "level", "done", "persona", "difficulty"}
+
+
+# ---- exit codes, crashes and imported progress (the X0 hunt) --------------------
+
+
+def test_vibe_check_exits_1_when_a_check_fails_and_0_when_they_pass(
+    tmp_path: Path,
+) -> None:
+    """A course that teaches CI lets its own checks be a step in a pipeline."""
+    camp = _camp(tmp_path)
+    red = _run(camp, "check", "-w", "campus", "1")
+    assert red.returncode == 1, red.stdout
+    # --no-claim changes what is recorded, never the code.
+    assert _run(camp, "check", "-w", "campus", "1", "--no-claim").returncode == 1
+
+    (camp / "workspace" / "game").mkdir(parents=True, exist_ok=True)
+    (camp / "workspace" / "game" / "index.html").write_text(
+        "<canvas></canvas><script>let score=0</script>" + "x" * 900, encoding="utf-8"
+    )
+    green = _run(camp, "check", "-w", "campus", "1", "--no-claim")
+    assert green.returncode == 0, green.stdout
+
+
+def test_a_strict_check_on_an_empty_camp_never_prints_a_traceback(
+    tmp_path: Path,
+) -> None:
+    camp = _camp(tmp_path)
+    assert _run(camp, "difficulty", "god").returncode == 0
+    for args in (("check", "-w", "campus", "1"), ("check", "-w", "campus", "3")):
+        out = _run(camp, *args)
+        assert "check crashed" not in out.stdout, out.stdout
+        assert "Error" not in out.stdout, out.stdout
+    first = _run(camp, "check", "-w", "campus", "1").stdout
+    assert "workspace/game/index.html does not exist" in first, first
+
+
+def test_imported_progress_is_half_and_a_passing_check_pays_the_rest(
+    tmp_path: Path,
+) -> None:
+    camp = _camp(tmp_path)
+    code = encode_progress(name="Tom", done_w={"campus": [1]})
+    out = _run(camp, "import", code)
+    assert out.returncode == 0, out.stdout + out.stderr
+    assert "imported, not verified" in out.stdout, out.stdout
+    assert "vibe check 1" in out.stdout
+    state = json.loads((camp / ".vibe" / "state.json").read_text())
+    full = xp_for(Config().learner.difficulty)
+    assert state["xp"] == full // 2
+
+    # The status grid says which stops are claims and which are verified.
+    assert "claimed in the game, not verified here" in _run(camp, "status").stdout
+
+    (camp / "workspace" / "game").mkdir(parents=True, exist_ok=True)
+    (camp / "workspace" / "game" / "index.html").write_text(
+        "<canvas></canvas><script>let score=0</script>" + "x" * 900, encoding="utf-8"
+    )
+    paid = _run(camp, "check", "-w", "campus", "1")
+    assert paid.returncode == 0, paid.stdout
+    assert "verified" in paid.stdout, paid.stdout
+    state = json.loads((camp / ".vibe" / "state.json").read_text())
+    assert state["xp"] == full
+    # Verified now, so the check does not pay twice.
+    assert _run(camp, "check", "-w", "campus", "1").returncode == 0
+    assert json.loads((camp / ".vibe" / "state.json").read_text())["xp"] == full

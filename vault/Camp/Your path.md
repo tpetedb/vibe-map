@@ -2,6 +2,7 @@
 title: "Your path"
 date: 2026-09-16
 tags: [people]
+generated: c62e753c2d4a
 ---
 # Your path
 

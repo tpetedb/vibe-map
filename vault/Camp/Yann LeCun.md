@@ -2,6 +2,7 @@
 title: "Yann LeCun"
 date: 2026-09-16
 tags: [people]
+generated: da0bf1351a79
 ---
 # Yann LeCun
 

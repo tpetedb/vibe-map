@@ -2,6 +2,7 @@
 title: "Cookbook"
 date: 2026-09-16
 tags: [recipe]
+generated: 0a2ab50f3510
 ---
 # Cookbook
 

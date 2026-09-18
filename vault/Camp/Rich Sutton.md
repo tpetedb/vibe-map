@@ -2,6 +2,7 @@
 title: "Rich Sutton"
 date: 2026-09-16
 tags: [people]
+generated: 7f63a4e5450e
 ---
 # Rich Sutton
 

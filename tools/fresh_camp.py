@@ -100,8 +100,12 @@ class Camp:
     path: Path
     log: list[str] = field(default_factory=list)
 
-    def run(self, *args: str) -> str:
-        """Run vibe in this camp and return its output, failing loudly."""
+    def run(self, *args: str, refuses: bool = False) -> str:
+        """Run vibe in this camp and return its output, failing loudly.
+
+        A check that refuses exits 1, so REFUSES says which code this step
+        expects; any other code is a broken run rather than an undone task.
+        """
         env = dict(os.environ, VIBE_HOME=str(self.path), NO_COLOR="1", COLUMNS="200")
         done = subprocess.run(
             [*self.vibe, *args],
@@ -112,10 +116,11 @@ class Camp:
             timeout=300,
         )
         self.log.append(" ".join(args))
-        if done.returncode != 0:
+        want = 1 if refuses else 0
+        if done.returncode != want:
             raise CampError(
-                f"vibe {' '.join(args)} exited {done.returncode}\n{done.stdout}"
-                f"\n{done.stderr}"
+                f"vibe {' '.join(args)} exited {done.returncode}, expected {want}"
+                f"\n{done.stdout}\n{done.stderr}"
             )
         return done.stdout
 
@@ -162,9 +167,9 @@ def run_fresh_camp(vibe: Sequence[str], where: Path) -> dict[str, object]:
 
     # An empty camp is not done. Every one of these checks looks at something
     # the learner has not built yet, so none of them may claim a stop.
-    camp.run("check", "1")
-    camp.run("check", "3")
-    camp.run("check", "--world", "winter", "1")
+    camp.run("check", "1", refuses=True)
+    camp.run("check", "3", refuses=True)
+    camp.run("check", "--world", "winter", "1", refuses=True)
     empty = camp.done()
     if any(empty.values()):
         raise CampError(f"an empty camp claimed stops: {empty}")
@@ -181,9 +186,16 @@ def run_fresh_camp(vibe: Sequence[str], where: Path) -> dict[str, object]:
         raise CampError(f"workstreams 1 and 3 did not pass: {played}")
 
     # The note check still refuses: nothing was written in the learner's words.
-    camp.run("check", "--world", "winter", "1")
+    camp.run("check", "--world", "winter", "1", refuses=True)
     if camp.done().get("winter"):
         raise CampError("the winter note check passed without a note")
+
+    # A camp has no checkout, so this is where a fork source left out of the
+    # wheel would show up and nowhere else.
+    camp.run("fork")
+    if not (camp.path / "workspace/forks/vibe-map/src/config/00-config.js").exists():
+        raise CampError("vibe fork wrote no src/config")
+    camp.run("check", "--fork", "exists")
 
     code = camp.run("export").strip().splitlines()[-1].strip()
     if not code:

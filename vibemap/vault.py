@@ -162,7 +162,12 @@ class LintReport:
     def link_count(self) -> int:
         return self._links
 
+    def own_link_count(self) -> int:
+        """Wikilinks the learner wrote: a generated note contributes none."""
+        return self._own_links
+
     _links: int = 0
+    _own_links: int = 0
 
 
 class Vault:
@@ -387,7 +392,9 @@ class Vault:
             "",
             "#overview",
         ]
-        return [self.write("Tonight", "\n".join(lines), tags=["overview"])]
+        return [
+            self.write("Tonight", "\n".join(lines), tags=["overview"], generated=True)
+        ]
 
     def _write_evenings(self) -> list[Path]:
         out = []
@@ -405,7 +412,7 @@ class Vault:
                 + "\n".join(rows)
                 + "\n\nBack to [[Tonight]] · [[Map]]\n\n#overview"
             )
-            out.append(self.write(ev.short, body, tags=["overview"]))
+            out.append(self.write(ev.short, body, tags=["overview"], generated=True))
         return out
 
     def _write_map(self) -> list[Path]:
@@ -443,7 +450,7 @@ class Vault:
             f"```mermaid\n{mer}\n```\n\n### Legend\n\n{MERMAID_LEGEND}\n"
             "Back to [[Tonight]] · [[Your path]]\n\n#overview"
         )
-        return [self.write("Map", body, tags=["overview"])]
+        return [self.write("Map", body, tags=["overview"], generated=True)]
 
     def _write_artifacts(self) -> list[Path]:
         """One note listing the island artifacts and what each teaches."""
@@ -475,7 +482,9 @@ class Vault:
                 f"`vibe check --artifact {a['id']}`). See {links}."
             )
         body += ["", "Back to [[Tonight]]", "", "#concept"]
-        return [self.write("Artifacts", "\n".join(body), tags=["concept"])]
+        return [
+            self.write("Artifacts", "\n".join(body), tags=["concept"], generated=True)
+        ]
 
     def _write_path(self) -> list[Path]:
         out = []
@@ -496,7 +505,9 @@ class Vault:
             )
             out.append(self._write_mentor(m))
         body += ["", "Back to [[Tonight]] · [[Map]]", "", "#people"]
-        out.append(self.write("Your path", "\n".join(body), tags=["people"]))
+        out.append(
+            self.write("Your path", "\n".join(body), tags=["people"], generated=True)
+        )
         return out
 
     def _write_mentor(self, m: dict) -> Path:
@@ -508,7 +519,7 @@ class Vault:
             f"{self._encounter_md(m)}\n"
             f"## Sources\n{srcs}\n\nBack to [[Your path]]\n\n#people"
         )
-        return self.write(m["name"], body, tags=["people"])
+        return self.write(m["name"], body, tags=["people"], generated=True)
 
     def _encounter_md(self, m: dict) -> str:
         """The exercise this mentor sets, and whether vibe check has seen it."""
@@ -545,7 +556,7 @@ class Vault:
             f"**Rolinda asks.** {persona.rolinda}\n\n"
             f"## Recipes\n{recipes}\n\nBack to [[Tonight]]\n\n#persona"
         )
-        return [self.write("Your field", body, tags=["persona"])]
+        return [self.write("Your field", body, tags=["persona"], generated=True)]
 
     def _write_tech_tree(self) -> list[Path]:
         out = []
@@ -566,7 +577,11 @@ class Vault:
                 + ", ".join(f"[[{safe_title(n.name)}]]" for n in names)
             )
         overview += ["", "Back to [[Tonight]] · [[Resources]]", "", "#overview"]
-        out.append(self.write("Tech tree", "\n".join(overview), tags=["overview"]))
+        out.append(
+            self.write(
+                "Tech tree", "\n".join(overview), tags=["overview"], generated=True
+            )
+        )
         for n in campaign.tech_nodes():
             if self.exists(n.name) and not _is_generated(self.path(n.name)):
                 continue
@@ -603,7 +618,7 @@ class Vault:
     def _write_resources(self) -> list[Path]:
         src = project.data_text("resources.md")
         body = src.split("\n", 1)[1].strip() + "\n\nBack to [[Tonight]]\n\n#overview"
-        return [self.write("Resources", body, tags=["overview"])]
+        return [self.write("Resources", body, tags=["overview"], generated=True)]
 
     def _write_cookbook(self, persona: Persona) -> list[Path]:
         parts = [
@@ -625,7 +640,9 @@ class Vault:
                 "",
             ]
         parts += ["Back to [[Your field]] · [[Tonight]]", "", "#recipe"]
-        return [self.write("Cookbook", "\n".join(parts), tags=["recipe"])]
+        return [
+            self.write("Cookbook", "\n".join(parts), tags=["recipe"], generated=True)
+        ]
 
     def _write_done_workstreams(self) -> list[Path]:
         """One note per workstream: a stub until it is done, then dated entries."""
@@ -712,6 +729,7 @@ class Vault:
         inbound: dict[str, int] = {t: 0 for t in titles}
         report = LintReport(notes=len(notes))
         links = 0
+        own_links = 0
         for p in notes:
             text = p.read_text(encoding="utf-8")
             if not text.startswith("---\n"):
@@ -719,6 +737,7 @@ class Vault:
             # Links inside code are examples, not links (Obsidian agrees).
             prose = re.sub(r"```.*?```", "", text, flags=re.S)
             prose = re.sub(r"`[^`\n]*`", "", prose)
+            own_links += _own_links_in(p, prose)
             for target in WIKILINK.findall(prose):
                 target = target.strip()
                 if not target:
@@ -730,10 +749,28 @@ class Vault:
                 else:
                     report.dead_links.append((p.stem, target))
         report._links = links
+        report._own_links = own_links
         report.orphans = sorted(
             t for t, n in inbound.items() if n == 0 and t != "Tonight"
         )
         return report
+
+
+def _own_links_in(p: Path, prose: str) -> int:
+    """How many wikilinks in this note the learner wrote.
+
+    A note vibe generates carries the hash of the body it was given, and it
+    stays vibe's note however it is edited afterwards, so none of its links
+    count. Everywhere else the generated lines (the claim bullets, the campaign
+    sources) are skipped and what is left is the learner's.
+    """
+    if _front_value(p, "generated") is not None:
+        return 0
+    return sum(
+        len(WIKILINK.findall(line))
+        for _, lines in learner_sections(prose)
+        for line in lines
+    )
 
 
 def _existing_date(p: Path) -> str | None:
