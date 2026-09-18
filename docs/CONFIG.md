@@ -28,7 +28,8 @@ command in the last column; nothing needs a build.
 | The theme (the voice, the pairings) | `config/camp.toml` `[theme] preset` | `vibe theme <name>`; custom themes live in `themes/` |
 | The finale dates | `config/camp.toml` `[finale] dates` | nothing; the game reads them at the next build or from the host |
 | Where the vault is, and whether it grows | `config/camp.toml` `[vault]` | `vibe vault mode grow`, then `vibe vault build` |
-| The news feeds | `config/camp.toml` `[news] feeds` | `vibe news` |
+| The live world feed, on or off | `config/camp.toml` `[news] live` | a rebuild, or the Settings dropdown Live world |
+| The news feeds | `config/camp.toml` `[news] feeds`, empty means `vibemap/data/sources.json` | `vibe news` |
 | The terminal pet | `config/camp.toml` `[pet]` | `vibe pet --species dog` writes it for you; twenty species, six with pixel sprites (cat, crab, dog, duck, snail, turtle) |
 | How the pet is drawn | `config/camp.toml` `[pet] style` | `vibe pet --style pixel` (`auto`, `pixel`, `ascii`); `auto` uses the vendored sprites where a species has them and the terminal has truecolor |
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |

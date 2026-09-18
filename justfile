@@ -32,7 +32,7 @@ camp:
 game:
     open game/vibe-map.html
 
-# pull the AI feeds into the vault note News and bake them into the game
+# pull the world feed into the vault note News and bake it into the game
 news:
     uv run vibe news
     uv run python tools/build.py

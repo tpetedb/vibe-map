@@ -92,7 +92,7 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
     "dotfiles": ("Terminal setup", "zsh, tmux, Ghostty, Starship, the R2-D2 themes"),
     "status": ("Campaign status", "uv run vibe status"),
-    "news": ("Pull the AI news", "vibe news: the feeds into the vault note News"),
+    "news": ("Pull the world feed", "vibe news: the sources into the vault note News"),
     "quit": ("Quit", ""),
 }
 
