@@ -281,6 +281,13 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tech em.d{float:right;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:6px}
 .tech em.d2{color:var(--yellow)}.tech em.d3{color:var(--orange-bright)}
 .tech i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+/* Interests: a shelf you did not choose is dimmed, never hidden or disabled. */
+.age.faded{opacity:.45}
+.age.faded:hover,.age.faded:focus-within{opacity:1}
+.idot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.setting.wide{display:block}
+.setting.wide label{display:block;margin-bottom:8px}
+button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-bright);font:inherit;font-size:inherit;text-decoration:underline;cursor:pointer}
 #vnote{padding:16px 18px 60px;font-size:15px;line-height:1.6;max-width:640px;margin:0 auto}
 #vnote h1{font-size:22px;color:#fff;margin:0 0 8px;letter-spacing:-.01em}
 #vnote h2{font-size:14px;color:var(--blue-bright);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 6px}
