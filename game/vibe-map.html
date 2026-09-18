@@ -2861,6 +2861,8 @@ window.chatSend=function(){const el=$("chatq");const q=(el&&el.value||"").trim()
 let chatBusy=false;
 window.chatAsk=async function(q){if(chatBusy)return;chatBusy=true;
   const c=chatState(),entry=chatPush({q:q,a:"",ctx:chatChip(chatWhere),at:Date.now(),src:"bridge",links:[]});
+  // The dashboard counts questions per context, never the question itself.
+  if(window.track)track("chat",chatWhere.stop?"stop "+chatWhere.stop:chatWhere.mentor||chatWhere.artifact||chatWhere.world);
   $("chatmsg").textContent="Asking your "+(CONFIG.provider||"provider")+"...";renderChatLog();
   try{
     const r=await fetch(chatBase()+"/ask",{method:"POST",headers:{"Content-Type":"application/json","X-Vibe-Code":c.code},body:JSON.stringify({question:q,world:chatWhere.world,stop:chatWhere.stop,mentor:chatWhere.mentor,artifact:chatWhere.artifact})});

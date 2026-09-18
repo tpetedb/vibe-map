@@ -280,6 +280,16 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .pathrow .st{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--panel2);color:var(--muted)}
 .pathrow .st.deep{background:rgba(0,136,204,.15);color:var(--a1)}
 .pathrow .st.skip{background:rgba(240,73,35,.12);color:var(--red-bright)}
+/* The chat panel. The log is a fixed window so the question box stays in view
+   on a phone; every turn says where its answer came from. */
+.chip{display:inline-block;font-size:12px;color:var(--blue-bright);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:3px 10px;margin:0 0 10px}
+.chatlog{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface-1)}
+.chatlog .cturn{border-top:1px solid var(--line);padding:8px 0}
+.chatlog .cturn:first-child{border-top:0;padding-top:0}
+.chatlog .you{margin:0 0 4px;font-size:13px;color:var(--muted)}
+.chatlog .them{margin:0;font-size:14px;white-space:pre-wrap}
+.chatlog .src{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.chatlog .wl{display:inline-block;margin:4px 8px 0 0;font-size:13px;color:var(--blue-bright);cursor:pointer;border-bottom:1px solid rgba(0,136,204,.4)}
 .evening{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a2);margin-bottom:4px}
 .worlds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}
 .world{border-radius:14px;padding:10px 12px;text-align:left;font-size:13px;line-height:1.35}
