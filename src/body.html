@@ -72,9 +72,9 @@
       <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
-      <div class="card" id="newscard">
-        <h3 data-icon="rss">What happened in AI lately</h3>
-        <p class="small muted" id="newsmsg">Loading the feeds...</p>
+      <div class="card live-feed" id="newscard">
+        <h3 data-icon="rss">What the world published lately</h3>
+        <p class="small muted" id="newsmsg">Loading the sources...</p>
         <div id="newslist"></div>
       </div>
       <div class="card">

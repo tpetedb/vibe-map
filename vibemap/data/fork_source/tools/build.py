@@ -38,6 +38,8 @@ def _root(argv: list[str] | None = None) -> Path:
 ROOT = _root()
 SRC = ROOT / "src"
 OUT = ROOT / "game" / "vibe-map.html"
+# The runtime feed, published next to the game by the Pages workflow.
+NEWS_OUT = ROOT / "game" / "news.json"
 GENERATED = ROOT / "tools" / "generated"
 CONFIG_DIR = SRC / "config"
 
@@ -132,16 +134,40 @@ def _tree_js() -> str:
     return (GENERATED / "tree.js").read_text(encoding="utf-8").rstrip("\n") + "\n"
 
 
-def _news_js() -> str:
-    """data/news.json, embedded so a file:// game shows it without a fetch."""
+# The feed the game carries. NEWS_FIELDS is the whole contract between
+# vibemap/news.py and the News card; a version travels with it so a game built
+# by an older release refuses a newer file instead of half reading it.
+NEWS_FIELDS = ("id", "source", "name", "kind", "title", "link", "date", "summary")
+NEWS_ITEMS = 24
+
+
+def _news_payload() -> dict[str, object]:
+    """data/news.json, trimmed to what the game reads."""
     p = ROOT / "data" / "news.json"
     data = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
     items = [
-        {k: it.get(k, "") for k in ("source", "title", "link", "date")}
-        for it in data.get("items", [])[:20]
+        {**{k: it.get(k, "") for k in NEWS_FIELDS}, "tags": it.get("tags", [])}
+        for it in data.get("items", [])[:NEWS_ITEMS]
     ]
-    payload = {"fetched_at": data.get("fetched_at", ""), "items": items}
-    return "const NEWS=" + json.dumps(payload, ensure_ascii=False) + ";\n"
+    return {
+        "version": data.get("version", 0),
+        "fetched_at": data.get("fetched_at", ""),
+        "items": items,
+    }
+
+
+def news_json() -> str:
+    """The same payload as a file next to the game, for the runtime refresh.
+
+    The hosted game fetches ./news.json from its own origin, so the copy that
+    ships beside the page is what a browser with no live update reads.
+    """
+    return json.dumps(_news_payload(), ensure_ascii=False, indent=1) + "\n"
+
+
+def _news_js() -> str:
+    """The baked copy, so a file:// game shows the feed without a fetch."""
+    return "const NEWS=" + json.dumps(_news_payload(), ensure_ascii=False) + ";\n"
 
 
 def _version() -> str:
@@ -191,6 +217,7 @@ def _config_js() -> str:
         "interests": cfg.learner.interests,
         "personaInterests": _persona_interests(cfg.learner.persona),
         "vault": {"mode": cfg.vault.mode},
+        "news": {"live": cfg.news.live},
     }
     return "const CONFIG=" + json.dumps(data, ensure_ascii=False) + ";\n"
 
@@ -287,16 +314,18 @@ def _hand_over_to_vibe() -> None:
 def main() -> None:
     _hand_over_to_vibe()
     html = build()
+    feed = news_json()
     if "--check" in sys.argv:
-        current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
-        if current != html:
-            print(
-                "game/vibe-map.html differs from a fresh build of src/; run: just build"
-            )
-            sys.exit(1)
+        for path, fresh in ((OUT, html), (NEWS_OUT, feed)):
+            current = path.read_text(encoding="utf-8") if path.exists() else ""
+            if current != fresh:
+                name = path.relative_to(ROOT)
+                print(f"{name} differs from a fresh build of src/; run: just build")
+                sys.exit(1)
         print("build OK: game/vibe-map.html matches src/")
         return
     OUT.write_text(html, encoding="utf-8")
+    NEWS_OUT.write_text(feed, encoding="utf-8")
     print(f"wrote {OUT.relative_to(ROOT)} ({len(html.encode()) // 1024} KB)")
 
 

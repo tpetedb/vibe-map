@@ -33,7 +33,8 @@ path = "vault"
 folder = "Camp"
 mode = "full"  # full (every note from day one) | grow (notes unlock as you play)
 
-[news]  # feeds for `vibe news`; empty means the built-in six
+[news]  # the live world feed; empty feeds means the source registry
+live = true  # false hides every feed-driven element in the game
 feeds = []
 per_feed = 8
 
