@@ -163,7 +163,10 @@ def _c1_game(cfg: Config) -> tuple[bool, str]:
 
 
 def _c1_game_strict(cfg: Config) -> tuple[bool, str]:
-    text = (ROOT / "workspace" / "game" / "index.html").read_text(encoding="utf-8")
+    p = ROOT / "workspace" / "game" / "index.html"
+    if not p.exists():
+        return False, "workspace/game/index.html does not exist"
+    text = p.read_text(encoding="utf-8")
     has = "<script" in text and ("score" in text.lower() or "<canvas" in text)
     return (
         has,
@@ -194,7 +197,10 @@ def _c2_skill(cfg: Config) -> tuple[bool, str]:
 
 
 def _c2_strict(cfg: Config) -> tuple[bool, str]:
-    text = (ROOT / "AGENTS.md").read_text(encoding="utf-8").lower()
+    p = ROOT / "AGENTS.md"
+    if not p.exists():
+        return False, "AGENTS.md is missing"
+    text = p.read_text(encoding="utf-8").lower()
     ok = "## commands" in text and "test" in text
     return (
         ok,
@@ -222,7 +228,10 @@ def _c3_sql_py(cfg: Config) -> tuple[bool, str]:
 def _c3_strict(cfg: Config) -> tuple[bool, str]:
     from vibemap.scores import run_sql
 
-    df = run_sql("top_runs")
+    try:
+        df = run_sql("top_runs")
+    except FileNotFoundError:
+        return False, "workspace/sql/top_runs.sql does not exist"
     return df.height > 0, f"top_runs.sql returns {df.height} rows through DuckDB"
 
 
@@ -418,9 +427,10 @@ def _note_strict(world: str, n: int) -> Check:
     ws = campaign.evenings()[world].workstreams[n - 1]
 
     def fn(cfg: Config) -> tuple[bool, str]:
-        text = (cfg.vault_dir() / f"{safe_title(ws.name)}.md").read_text(
-            encoding="utf-8"
-        )
+        note = cfg.vault_dir() / f"{safe_title(ws.name)}.md"
+        if not note.exists():
+            return False, f"{note.name} does not exist in the vault yet"
+        text = note.read_text(encoding="utf-8")
         sections = learner_sections(text, tuple(u for _, u in ws.sources))
         own_sources = [
             line
@@ -1335,12 +1345,15 @@ def run_quest(quest: Quest, cfg: Config) -> list[CheckResult]:
 
 # ---- badges -------------------------------------------------------------------
 
+# Twenty links the learner wrote themselves, not the ones vibe generates.
+OWN_LINKS_BADGE = 20
+
 BADGES: dict[str, str] = {
     "first-light": "First light: the first workstream done",
     "full-evening": "Full evening: eight of eight on one island",
     "campaign": "Campaign: all thirty-two stops",
     "streak-3": "Streak: three stops in one day",
-    "linked": "Linked: twenty wikilinks in the vault",
+    "linked": "Linked: twenty wikilinks of your own in the vault",
     "shipped": "Shipped: GitHub Pages is live",
     "collector": "Collector: found every artifact on the island",
     "builder": "Builder: every artifact built for real, not just inspected",
@@ -1359,7 +1372,9 @@ def new_badges(state: State, cfg: Config) -> list[str]:
     if state.today_count() >= 3:
         earned.append("streak-3")
     try:
-        if _vault_report(cfg).link_count() >= 20:
+        # The generated vault is full of links from day one; the badge is for
+        # the learner's own linking, so only their lines count.
+        if _vault_report(cfg).own_link_count() >= OWN_LINKS_BADGE:
             earned.append("linked")
     except OSError:
         pass

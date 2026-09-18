@@ -158,3 +158,28 @@ def test_undo_takes_the_xp_and_the_claim_back(tmp_path: Path) -> None:
     text = v.path(ws.name).read_text(encoding="utf-8")
     assert "done at 19:10" not in text
     assert "my own line about the evening" in text
+
+
+def test_the_linked_badge_counts_only_the_learners_own_links(tmp_path: Path) -> None:
+    """The generated vault is full of wikilinks; the badge is for your own."""
+    from vibemap.quests import OWN_LINKS_BADGE, new_badges
+
+    camp = tmp_path / "camp"
+    assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Tom"]).exit_code == 0
+    cfg = Config.model_validate(
+        {"vault": {"path": str(camp / "vault"), "folder": "Camp"}}
+    )
+    st = State(name="Tom")
+    report = Vault(cfg, st).lint()
+    assert report.link_count() >= OWN_LINKS_BADGE
+    assert report.own_link_count() == 0
+    assert "linked" not in new_badges(st, cfg)
+
+    mine = "\n".join(f"- a line of mine about [[Map]] number {i}" for i in range(25))
+    (camp / "vault" / "Camp" / "Mine.md").write_text(
+        "---\ntitle: Mine\ndate: 2026-09-18\ntags: [note]\n---\n\n# Mine\n\n"
+        f"## 2026-09-18\n\n{mine}\n",
+        encoding="utf-8",
+    )
+    assert Vault(cfg, st).lint().own_link_count() >= OWN_LINKS_BADGE
+    assert "linked" in new_badges(st, cfg)

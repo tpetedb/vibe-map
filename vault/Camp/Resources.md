@@ -2,6 +2,7 @@
 title: "Resources"
 date: 2026-09-16
 tags: [overview]
+generated: 90129a8bcd7b
 ---
 # Resources
 

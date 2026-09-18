@@ -2,6 +2,7 @@
 title: "The OpenCode team"
 date: 2026-09-16
 tags: [people]
+generated: 0b4ad1e4b14e
 ---
 # The OpenCode team
 

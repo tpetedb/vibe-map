@@ -2,6 +2,7 @@
 title: "Andrej Karpathy"
 date: 2026-09-16
 tags: [people]
+generated: 94c685298079
 ---
 # Andrej Karpathy
 
