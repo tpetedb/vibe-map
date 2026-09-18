@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='utf-8'?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:ns1="http://search.yahoo.com/mrss/" xml:lang="en-US">
+  <id>tag:github.com,2008:https://github.com/astral-sh/uv/releases</id>
+  <link type="text/html" rel="alternate" href="https://github.com/astral-sh/uv/releases" />
+  <link type="application/atom+xml" rel="self" href="https://github.com/astral-sh/uv/releases.atom" />
+  <title>Release notes from uv</title>
+  <updated>2026-09-17T23:27:49Z</updated>
+  <entry>
+    <id>tag:github.com,2008:Repository/699532645/0.12.16</id>
+    <updated>2026-09-18T01:01:42Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/astral-sh/uv/releases/tag/0.12.16" />
+    <title>0.12.16</title>
+    <content type="html">&lt;h2&gt;Release Notes&lt;/h2&gt;
+&lt;p&gt;Released on 2026-09-17.&lt;/p&gt;
+&lt;h3&gt;Python&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Add Pyodide 314.0.7, 0.29.5, and 0.27.8 (&lt;a href="https://github.com/astral-sh/uv/pull/21741" data-hovercard-type="pull_request" data-hovercard-url="/astral-sh/uv/pull/21741/hovercard"&gt;#21741&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Enhancements&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Verify downloaded wheels and source distributions against hashes supplied by package indexes (&lt;a href="https://github.com/astral-sh/uv/pull/21562" data-hovercard-type="pull_request" data-hovercard-url="/astral-sh/uv/pull/21562/hovercard"&gt;#21562&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Allow &lt;code&gt;build-const</content>
+    <author>
+      <name>astral-releases-bot[bot]</name>
+    </author>
+    <ns1:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/in/4910330?s=60&amp;v=4" />
+  </entry>
+  <entry>
+    <id>tag:github.com,2008:Repository/699532645/0.12.15</id>
+    <updated>2026-09-18T02:36:52Z</updated>
+    <link rel="alternate" type="text/html" href="https://github.com/astral-sh/uv/releases/tag/0.12.15" />
+    <title>0.12.15</title>
+    <content type="html">&lt;h2&gt;Release Notes&lt;/h2&gt;
+&lt;p&gt;Released on 2026-09-15.&lt;/p&gt;
+&lt;h3&gt;Performance&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Speed up cold-cache resolution and HTTP cache revalidation by batching cache writes (&lt;a href="https://github.com/astral-sh/uv/pull/21675" data-hovercard-type="pull_request" data-hovercard-url="/astral-sh/uv/pull/21675/hovercard"&gt;#21675&lt;/a&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Bug fixes&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fix regressions in &lt;code&gt;0.12.14&lt;/code&gt; when installing to symlinked destinations or using &lt;code&gt;uv pip install --target .&lt;/code&gt; (&lt;a href="https://github.com/astral-sh/uv/pull/21699" data-hovercard-type="pull_request" data-hovercard-ur</content>
+    <author>
+      <name>astral-releases-bot[bot]</name>
+    </author>
+    <ns1:thumbnail height="30" width="30" url="https://avatars.githubusercontent.com/in/4910330?s=60&amp;v=4" />
+  </entry>
+  </feed>

@@ -104,13 +104,13 @@ Your camp's `config/camp.toml` is your journey: who you are, how hard, which the
 
 ```bash
 cd ~/vibe-map-*
-vibe news               # pull the AI feeds into the vault note News and the Roadmap card
+vibe news               # pull the world feed into the vault note News and the Roadmap card
 vibe vault lint         # orphans and dead links, if you wrote notes by hand
 vibe vault feature --all   # once: the thirty-five Obsidian feature notes, with a canvas, a base and a deck
 git add -A && git commit -m "Week: what I learned" && git push
 ```
 
-In a camp the feed lands in `.vibe/news.json` and the vault note News, and `vibe play` opens the hosted game, which carries its own news. Baking the news into a game file (`just build`) only exists in the product repository. If you forked the product on GitHub, its `news` action does the first line for you every Monday, and Pages redeploys the hosted game with the fresh News card.
+In a camp the feed lands in `.vibe/news.json` and the vault note News, and `vibe play` opens the hosted game, which carries its own news. Baking the news into a game file (`just build`) only exists in the product repository. If you forked the product on GitHub, its `news` action does the first line for you every day, and Pages redeploys the hosted game with the fresh News card. A hosted game also refreshes itself from the `news.json` published next to it, so a browser left open catches up on a reload.
 
 ## 6. Keep the three windows side by side
 
@@ -142,6 +142,6 @@ The game in the browser still has your progress (it lives in the browser's stora
 | you want to start the game over | Roadmap, Reset progress, click it twice; or open the hosted game with `?reset` at the end of the URL. Stops, artifacts and mentor choices go; your name and settings stay. The terminal's state is separate: `rm .vibe/state.json` starts that over too |
 | `just: command not found` | `brew install just`; or skip it, every recipe also runs as `vibe <thing>` |
 | `just verify` or `just build` is not a recipe here | they belong to the product repository; a camp checks with `vibe check`, `vibe vault lint` and your own tests in `workspace/` |
-| the News card says no news yet | `vibe news`, then reopen the game with `vibe play`; a forked product repo's Monday action refreshes the hosted game |
+| the News card says no news yet | `vibe news`, then reopen the game with `vibe play`; a forked product repo's daily action refreshes the hosted game |
 
 Nothing you do in the game or the terminal can delete the vault. `git log` shows every change; `just rescue` brings you back to main.

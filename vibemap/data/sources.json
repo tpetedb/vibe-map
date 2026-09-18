@@ -1,0 +1,218 @@
+{
+ "version": 1,
+ "note": "Every feed was opened and parsed before it was added. First-party means the organisation, the person or the project publishes it themselves; an outlet is here only when it is recognised in its field. Nothing in this file authorises a logo, a wordmark or a quote: see docs/adr/0010-real-names-and-live-content.md.",
+ "sources": [
+  {
+   "id": "apple-developer-news",
+   "kind": "organisation",
+   "name": "Apple Developer News",
+   "url": "https://developer.apple.com/news/rss/news.rss",
+   "publisher": "Apple Inc.",
+   "trust": "First-party: Apple publishes this feed on developer.apple.com.",
+   "building": "apple",
+   "tags": ["code", "ship"]
+  },
+  {
+   "id": "microsoft-devblogs",
+   "kind": "organisation",
+   "name": "Microsoft Developer Blogs",
+   "url": "https://devblogs.microsoft.com/feed/",
+   "publisher": "Microsoft Corporation",
+   "trust": "First-party: the combined feed of Microsoft's own developer blogs.",
+   "building": "microsoft",
+   "tags": ["code", "ship"]
+  },
+  {
+   "id": "microsoft-python-devblog",
+   "kind": "organisation",
+   "name": "Microsoft Python Developer Blog",
+   "url": "https://devblogs.microsoft.com/python/feed/",
+   "publisher": "Microsoft Corporation",
+   "trust": "First-party: Microsoft's Python tooling team writes it.",
+   "building": "microsoft",
+   "tags": ["code"]
+  },
+  {
+   "id": "kernel-org-releases",
+   "kind": "project",
+   "name": "Linux kernel releases",
+   "url": "https://www.kernel.org/feeds/kdist.xml",
+   "publisher": "kernel.org (Linux Kernel Organization)",
+   "trust": "First-party: the release feed kernel.org publishes for itself.",
+   "building": "linux",
+   "tags": ["shell", "ship"]
+  },
+  {
+   "id": "lwn-headlines",
+   "kind": "organisation",
+   "name": "LWN.net",
+   "url": "https://lwn.net/headlines/rss",
+   "publisher": "Eklektix, Inc. (LWN.net)",
+   "trust": "Recognised outlet: LWN has reported on the Linux kernel since 1998 and is cited by the kernel community itself.",
+   "building": "linux",
+   "tags": ["shell", "ship"],
+   "cap": 4
+  },
+  {
+   "id": "python-insider",
+   "kind": "organisation",
+   "name": "Python Insider",
+   "url": "https://pythoninsider.blogspot.com/feeds/posts/default?alt=rss",
+   "publisher": "Python Software Foundation",
+   "trust": "First-party: the release blog of the CPython core developers.",
+   "building": "python",
+   "tags": ["code"]
+  },
+  {
+   "id": "cpython-releases",
+   "kind": "project",
+   "name": "CPython releases",
+   "url": "https://github.com/python/cpython/releases.atom",
+   "publisher": "Python Software Foundation",
+   "trust": "First-party: the release feed of the python/cpython repository.",
+   "building": "python",
+   "tags": ["code"]
+  },
+  {
+   "id": "markus-winand-modern-sql",
+   "kind": "person",
+   "name": "Markus Winand, Modern SQL",
+   "url": "https://modern-sql.com/feed",
+   "publisher": "Markus Winand",
+   "trust": "First-party: Winand writes modern-sql.com himself.",
+   "building": "sql-house",
+   "tags": ["data"]
+  },
+  {
+   "id": "markus-winand-use-the-index-luke",
+   "kind": "person",
+   "name": "Markus Winand, Use The Index, Luke!",
+   "url": "https://use-the-index-luke.com/blog/feed",
+   "publisher": "Markus Winand",
+   "trust": "First-party: the blog of Winand's own SQL indexing site.",
+   "building": "sql-house",
+   "tags": ["data"]
+  },
+  {
+   "id": "duckdb-releases",
+   "kind": "project",
+   "name": "DuckDB releases",
+   "url": "https://github.com/duckdb/duckdb/releases.atom",
+   "publisher": "DuckDB Labs and the DuckDB Foundation",
+   "trust": "First-party: the release feed of the duckdb/duckdb repository.",
+   "building": "sql-house",
+   "tags": ["data"]
+  },
+  {
+   "id": "github-changelog",
+   "kind": "organisation",
+   "name": "GitHub Changelog",
+   "url": "https://github.blog/changelog/feed/",
+   "publisher": "GitHub, Inc.",
+   "trust": "First-party: GitHub's own record of what shipped.",
+   "building": "github",
+   "tags": ["git"]
+  },
+  {
+   "id": "just-releases",
+   "kind": "project",
+   "name": "just releases",
+   "url": "https://github.com/casey/just/releases.atom",
+   "publisher": "Casey Rodarmor and the just contributors",
+   "trust": "First-party: the release feed of the casey/just repository.",
+   "building": "toolshed",
+   "tags": ["shell"]
+  },
+  {
+   "id": "uv-releases",
+   "kind": "project",
+   "name": "uv releases",
+   "url": "https://github.com/astral-sh/uv/releases.atom",
+   "publisher": "Astral Software Inc.",
+   "trust": "First-party: the release feed of the astral-sh/uv repository.",
+   "building": "toolshed",
+   "tags": ["code"]
+  },
+  {
+   "id": "ruff-releases",
+   "kind": "project",
+   "name": "ruff releases",
+   "url": "https://github.com/astral-sh/ruff/releases.atom",
+   "publisher": "Astral Software Inc.",
+   "trust": "First-party: the release feed of the astral-sh/ruff repository.",
+   "building": "toolshed",
+   "tags": ["code"]
+  },
+  {
+   "id": "threejs-releases",
+   "kind": "project",
+   "name": "three.js releases",
+   "url": "https://github.com/mrdoob/three.js/releases.atom",
+   "publisher": "Ricardo Cabello and the three.js contributors",
+   "trust": "First-party: the release feed of the mrdoob/three.js repository, the library this game is built on.",
+   "building": "toolshed",
+   "tags": ["code"]
+  },
+  {
+   "id": "claude-code-releases",
+   "kind": "project",
+   "name": "Claude Code releases",
+   "url": "https://github.com/anthropics/claude-code/releases.atom",
+   "publisher": "Anthropic PBC",
+   "trust": "First-party: the release feed of the anthropics/claude-code repository.",
+   "building": "ai-lab",
+   "tags": ["agents"]
+  },
+  {
+   "id": "codex-releases",
+   "kind": "project",
+   "name": "Codex releases",
+   "url": "https://github.com/openai/codex/releases.atom",
+   "publisher": "OpenAI",
+   "trust": "First-party: the release feed of the openai/codex repository.",
+   "building": "ai-lab",
+   "tags": ["agents"]
+  },
+  {
+   "id": "openai-news",
+   "kind": "organisation",
+   "name": "OpenAI news",
+   "url": "https://openai.com/news/rss.xml",
+   "publisher": "OpenAI",
+   "trust": "First-party: OpenAI's own news feed.",
+   "building": "ai-lab",
+   "tags": ["agents"]
+  },
+  {
+   "id": "huggingface-blog",
+   "kind": "organisation",
+   "name": "Hugging Face blog",
+   "url": "https://huggingface.co/blog/feed.xml",
+   "publisher": "Hugging Face, Inc.",
+   "trust": "First-party: the blog feed of huggingface.co.",
+   "building": "ai-lab",
+   "tags": ["agents"]
+  },
+  {
+   "id": "simon-willison",
+   "kind": "person",
+   "name": "Simon Willison",
+   "url": "https://simonwillison.net/atom/everything/",
+   "publisher": "Simon Willison",
+   "trust": "First-party: Willison's own weblog, the source the course already cites for agent practice.",
+   "building": "ai-lab",
+   "tags": ["agents", "code"]
+  },
+  {
+   "id": "arxiv-cs-ai",
+   "kind": "organisation",
+   "name": "arXiv cs.AI",
+   "url": "https://rss.arxiv.org/rss/cs.AI",
+   "publisher": "arXiv, Cornell University",
+   "trust": "Recognised outlet: the preprint server the field posts to, operated by Cornell University.",
+   "building": "ai-lab",
+   "tags": ["agents"],
+   "cap": 3
+  }
+ ]
+}
