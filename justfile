@@ -86,6 +86,14 @@ verify: lint test
 media:
     uv run python tools/media.py
 
+# render the TUI screenshots and docs/media/tui-pet.gif from the onboarding screens
+tui-media:
+    uv run python tools/tui_media.py
+
+# repack the vendored pixel pet sprites from a vscode-pets checkout
+pets source:
+    uv run python tools/sync_pets.py --source {{source}}
+
 # regenerate docs/COOKBOOK.md from the personas
 cookbook:
     uv run python tools/gen_cookbook.py

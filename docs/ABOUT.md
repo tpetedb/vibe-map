@@ -38,6 +38,7 @@ Twelve mentors stand on the four islands, each grounded in their recorded ideas 
 - The tech tree is Age of Empires by shape and fact-checked by hand: every history claim cites a primary source.
 - The design borrows from Palantir Blueprint (intent colours, dense but calm), Powerlevel10k (state at a glance) and marimo (one file, reactive).
 - Motion (MIT) provides the spring physics for the few animations that exist; without it the game degrades to instant.
+- The terminal pet keeps the roll and the ASCII art of claude-buddy (MIT, Romesh Niriella). Its pixel sprites are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw): the crab and the duck by [Marc Duiker](https://github.com/marcduiker), the turtle by enkeefe, the snail by [Kennet Shin](https://github.com/WoofWoof0). Only art that vscode-pets licenses as MIT was taken; the sets that carry their own itch.io terms were left where they are. The licence and the full credit travel with the frames in `vibemap/data/pets/`.
 
 ## Who made it
 
