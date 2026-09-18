@@ -49,5 +49,36 @@ MENTORS.forEach(m=>{m.pos=P(m.pos[0],m.pos[1])});
 // The cafe is the inn's terrace, and the inn stays unscaled at the origin.
 (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(a.id==="cafe")return;a.pos=P(a.pos[0],a.pos[1]);a.r*=WORLD_SCALE});
 let W=WORLDS.campus,obstacles=[],annexes=[];
+/* ---------------- the archipelago ---------------- */
+// Four islands in one scene. Every coordinate in WORLDS stays local to its
+// island; ISLANDS says only where each island's origin sits, on the corners
+// of a square. The scene is always built with the active island at the
+// origin, so the camera, onLandW, the items and every literal position keep
+// working unchanged, and the other three islands are what moves.
+const ISLANDS={campus:[-.5,-.5],winter:[.5,-.5],desert:[.5,.5],prod:[-.5,.5]};
+const WORLD_IDS=Object.keys(WORLDS);
+const islandOrigin=id=>{const o=ISLANDS[id]||[0,0];return new T.Vector3(o[0]*ISLAND_GAP,0,o[1]*ISLAND_GAP)};
+// Where island id sits while `from` is the active island.
+function worldOffset(id,from){return islandOrigin(id).sub(islandOrigin(from||S.world||"campus"))}
+// The chain a walker can cross, in campaign order, with the angle of the
+// shore each end leaves from (atan2(z,x), in degrees). The angles are chosen
+// so the deck misses the plots and the annexes of both islands. There is no
+// loop back from production on purpose: the campaign ends there.
+const BRIDGE_CHAIN=[["campus",33,"winter",192],["winter",63,"desert",253],["desert",154,"prod",33]];
+// A bridge opens once the island before it has its first stop done, and is
+// always open on beginner, where nothing is gated. Either end counts, so an
+// imported campaign that starts on winter can walk back to the campus.
+function bridgeOpen(a,b){return CONFIG.difficulty==="beginner"||(S.doneW[a]||[]).length>0||(S.doneW[b]||[]).length>0}
+// The three bridges in the active island's coordinates: each a straight deck
+// between two shore points, with a rest platform at the middle. `near` is the
+// two that touch the active island and are built in full.
+function bridgesFor(from){
+  const shore=(id,deg)=>worldOffset(id,from).add(
+    new T.Vector3(Math.cos(deg*Math.PI/180),0,Math.sin(deg*Math.PI/180)).multiplyScalar(WORLDS[id].land[0][2]-1.5));
+  return BRIDGE_CHAIN.map(([a,aa,b,ba])=>{
+    const pa=shore(a,aa),pb=shore(b,ba),dir=new T.Vector3().subVectors(pb,pa),len=dir.length();dir.normalize();
+    return {a,b,pa,pb,dir,len,mid:pa.clone().addScaledVector(dir,len/2),
+      near:a===from||b===from,open:bridgeOpen(a,b)}})}
+let bridges=[];
 CAMPAIGN.campus.ws=CH.map(c=>({h:c.h,n:c.n,d:c.d}));
 let CHW=CH;
