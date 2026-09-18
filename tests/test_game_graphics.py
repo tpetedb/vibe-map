@@ -17,7 +17,7 @@ from tests.conftest import WAIT_MS, GamePage
 ALL_DONE = [1, 2, 3, 4, 5, 6, 7, 8]
 # The three shapes the report caught the camera cropping the island in: a wide
 # desktop window, a near-square one, and a phone held upright.
-ASPECTS = [(1440, 900), (1100, 1000), (393, 852)]
+ASPECTS = [(1440, 900), (1280, 720), (1100, 1000), (393, 852)]
 
 
 def _gfx(game: GamePage) -> dict[str, Any]:
@@ -46,7 +46,9 @@ def test_the_camera_keeps_the_island_in_frame_at_every_aspect(game: GamePage) ->
     worst = {}
     for width, height in ASPECTS:
         game.page.set_viewport_size({"width": width, "height": height})
-        # The camera eases, so wait for the distance to settle before reading.
+        # The camera eases toward the new fit, so the reading waits for frames
+        # the page drew and then for the distance to stop changing.
+        game.frames(40)
         game.still("window.__gfx().cam.dist")
         gfx = _gfx(game)
         worst[f"{width}x{height}"] = round(gfx["rim"], 3)
