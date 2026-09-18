@@ -181,9 +181,7 @@ def test_the_walker_keeps_his_seat_when_the_name_rebuilds_him(
     # rebuild it schedules; the new plate over the walker is the page's own
     # signal that the new body is in the scene.
     island.page.evaluate("window.nameTyped('Rolinda')")
-    island.until(
-        "((window.__debug().label || {}).text || '').startsWith('Rolinda')"
-    )
+    island.until("((window.__debug().label || {}).text || '').startsWith('Rolinda')")
     state = _avatar(island)
     assert state["pose"] == "sit"
     assert state["laptop"], "the laptop did not come back to the lap"
