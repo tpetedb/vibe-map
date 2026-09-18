@@ -2,6 +2,8 @@
 backups/
 .vibe/
 workspace/python/out/
+# the dashboard report: regenerate with `vibe dashboard`
+workspace/dashboard.html
 # a fork made here is a scratch copy of src/; a camp commits its own
 workspace/forks/
 .DS_Store
