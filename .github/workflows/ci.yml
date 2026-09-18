@@ -1,10 +1,16 @@
 # YAML in practice: a GitHub Actions workflow. Indentation is structure,
-# `-` starts a list item, `key: value` is a map. Three jobs run on every push
-# and pull request: lint and the tests that need no browser, the browser tests,
-# and the checks that generated files are in sync with their sources.
+# `-` starts a list item, `key: value` is a map. On every push to main and
+# every pull request: lint and the tests that need no browser, the browser
+# tests in shards, and the checks that generated files are in sync.
 #
 # This workflow stays fast, so it never runs anything marked `integration`.
 # The play-through and the fresh-camp run live in nightly.yml.
+#
+# Everything here runs on Linux. GitHub's concurrency limit for a Pro account
+# is 40 standard jobs at once but only 5 of them may be macOS, so two macOS
+# jobs per push means three pushes fill the whole macOS pool while the Linux
+# pool is still nearly empty. The product targets Macs, so a macOS smoke job
+# still runs, on tags, in nightly.yml.
 name: ci
 
 on:
@@ -16,6 +22,14 @@ on:
     # robot before a learner finds it.
     - cron: "0 7 * * 1"
 
+# One run per ref. A new commit on a pull request cancels the run of the
+# commit it replaces, which hands the runners back immediately; a run on main
+# or on a tag is never cancelled, because its result is the record of that
+# commit.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -26,13 +40,15 @@ env:
 jobs:
   lint-and-unit:
     name: lint, unit tests, generated files in sync
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
       - run: uv run ruff check .
       - run: uv run ruff format --check .
@@ -44,35 +60,130 @@ jobs:
       # second -q would swallow the summary of what failed.
       - run: uv run pytest -m "not browser and not integration"
 
-  browser:
-    name: Playwright tests (Chromium and WebKit)
-    runs-on: macos-latest
+  # The browser battery is the long pole, so four runners share it instead of
+  # one carrying it end to end. The split is by file and this list is the only
+  # place it lives; `test_every_browser_test_file_is_in_exactly_one_shard` in
+  # tests/test_repo.py fails when a file is in no shard or in two, so a new
+  # browser test cannot go unrun. This job must never carry the name branch
+  # protection requires: that belongs to the aggregator below.
+  browser-shard:
+    name: browser shard, ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    strategy:
+      # One red shard should not hide the state of the other three.
+      fail-fast: false
+      matrix:
+        include:
+          - shard: smoke
+            files: >-
+              tests/test_game_smoke.py tests/test_stops.py
+              tests/test_grow_game.py
+          - shard: ui
+            files: >-
+              tests/test_game_ui.py tests/test_interests.py
+              tests/test_artifacts.py
+          - shard: bridges
+            files: >-
+              tests/test_game_bridges.py tests/test_game_news.py
+              tests/test_dashboard.py
+          - shard: panels
+            files: >-
+              tests/test_game_chat.py tests/test_game_avatar.py
+              tests/test_game_mentors.py tests/test_game_dashboard.py
+              tests/test_onboarding.py tests/test_reset.py
+          - shard: webkit
+            files: tests/test_game_webkit.py
+            retry: true
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
-      - run: uv run playwright install chromium webkit
-      - name: Chromium
+      # The browser build is tied to the Playwright release, so the resolved
+      # version is the cache key: a lock file bump downloads once and every
+      # run after it restores.
+      - id: pw
+        name: The resolved Playwright version
         run: >-
-          uv run pytest -m "browser and not integration"
-          --ignore=tests/test_game_webkit.py
+          echo "version=$(uv run python -c
+          'import importlib.metadata as m; print(m.version(\"playwright\"))')"
+          >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      # --with-deps installs the system libraries WebKit and Chromium need on
+      # Linux; they live outside the cached browser folder, so this runs even
+      # on a cache hit, and then only the apt half does work.
+      - name: Browsers and their system libraries
+        run: uv run playwright install --with-deps chromium webkit
+      # --durations prints the slowest tests of the shard, which is how the
+      # split above is rebalanced when it drifts.
+      - name: The shard
+        if: ${{ !matrix.retry }}
+        run: >-
+          uv run pytest --durations=10 -m "browser and not integration"
+          ${{ matrix.files }}
       # Headless WebKit drops the WebGL context on a loaded runner often enough
       # to redden a green branch, and it is the one browser we cannot debug
       # here. One rerun of only the tests that failed tells the two apart: a
       # real defect fails twice, a lost context passes on the retry.
-      - name: WebKit, with one retry of what failed
+      - name: The shard, with one retry of what failed
+        if: ${{ matrix.retry }}
         run: >-
-          uv run pytest tests/test_game_webkit.py
-          || uv run pytest --last-failed tests/test_game_webkit.py
+          uv run pytest --durations=10 -m "browser and not integration"
+          ${{ matrix.files }}
+          || uv run pytest --last-failed -m "browser and not integration"
+          ${{ matrix.files }}
+      # The receipt the aggregator counts. It is written only when the tests
+      # above passed, so a shard cannot claim a pass it did not earn.
+      - name: Leave a receipt for the aggregator
+        run: |
+          mkdir -p receipts
+          echo ok > "receipts/${{ matrix.shard }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shard-ok-${{ matrix.shard }}
+          path: receipts/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: screenshots
+          name: screenshots-${{ matrix.shard }}
           path: tests/out/
           if-no-files-found: ignore
+
+  # The context branch protection requires, byte for byte. It is a job of its
+  # own because a matrix job's name carries the leg in it and the required name
+  # may never change. `always()` makes it report on a failed or cancelled shard
+  # instead of being skipped, which would leave the required check pending for
+  # ever. It asserts twice: the aggregate result of the matrix job, and a
+  # receipt from every shard the matrix defines, so a shard that never ran
+  # cannot pass unnoticed.
+  browser:
+    name: Playwright tests (Chromium and WebKit)
+    needs: [browser-shard]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: shard-ok-*
+          merge-multiple: true
+          path: receipts
+        continue-on-error: true
+      - name: Every shard ran and passed
+        env:
+          SHARDS_RESULT: ${{ needs.browser-shard.result }}
+        run: uv run --no-project --with pyyaml python tools/ci_shards.py --verify
 
   links:
     name: every link answers (weekly)
@@ -84,5 +195,7 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - run: uv sync --frozen
       - run: uv run python tools/checks.py links
