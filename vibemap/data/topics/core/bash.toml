@@ -1,0 +1,37 @@
+# Bash and shell scripts. Regenerate the tree after editing: just tree
+id = "bash"
+title = "Bash and shell scripts"
+age = "dark"
+shelf = "shell"
+depth = 2
+
+summary = "Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in."
+
+history = "The Bourne shell shipped with Seventh Edition Unix in January 1979; bash (the Bourne-again shell, written by Brian Fox) went into beta as the GNU replacement in June 1989. macOS switched its default login shell to zsh with macOS 10.15 Catalina in 2019; zsh is bash-compatible for everything you will meet tonight."
+try_it = "cat workspace/data/scores.csv | sort -t, -k3 -n | tail -3 (the three highest scores, no code written)."
+
+unlocks = ["zsh", "dotfiles", "justfile", "docker", "hooks"]
+
+[[sources]]
+label = "Bash Guide (Greg's wiki)"
+url = "https://mywiki.wooledge.org/BashGuide"
+
+[[sources]]
+label = "ShellCheck, lint your scripts"
+url = "https://www.shellcheck.net"
+
+[[sources]]
+label = "Source: GNU Bash manual, What is Bash?"
+url = "https://www.gnu.org/software/bash/manual/html_node/What-is-Bash_003f.html"
+
+[[sources]]
+label = "Source: TUHS, Seventh Edition Unix (January 1979)"
+url = "https://www.tuhs.org/cgi-bin/utree.pl?file=V7"
+
+[[sources]]
+label = "Source: GNU's Bulletin, June 1989"
+url = "https://www.gnu.org/bulletins/bull7.html"
+
+[[sources]]
+label = "Source: Apple, Use zsh as the default shell on your Mac"
+url = "https://support.apple.com/en-us/102360"

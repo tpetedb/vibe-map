@@ -1,0 +1,14 @@
+# The prose for this topic lives in a handwritten vault note of the
+# same title; only its place in the tree and its sources are data.
+id = "mcp"
+title = "MCP (Model Context Protocol)"
+age = "imperial"
+shelf = "agents"
+depth = 2
+covered_elsewhere = true
+
+unlocks = []
+
+[[sources]]
+label = "Source: Model Context Protocol"
+url = "https://modelcontextprotocol.io"

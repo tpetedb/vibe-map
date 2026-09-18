@@ -1,0 +1,25 @@
+# Files, folders and paths. Regenerate the tree after editing: just tree
+id = "files"
+title = "Files, folders and paths"
+age = "dark"
+shelf = "shell"
+depth = 1
+
+summary = "A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./workspace/data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI."
+
+history = "The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose."
+try_it = "In the template: find . -type f -not -path './.venv/*' | head -30 and read what each path is for."
+
+unlocks = ["dotfiles", "config", "git"]
+
+[[sources]]
+label = "Unix filesystem basics"
+url = "https://missing.csail.mit.edu/2020/course-shell/"
+
+[[sources]]
+label = "Source: Daley and Neumann, A General-Purpose File System for Secondary Storage (FJCC 1965)"
+url = "https://multicians.org/fjcc4.html"
+
+[[sources]]
+label = "Source: Rob Pike, A lesson in shortcuts (2012, archived copy)"
+url = "https://www.moldvan.com/hidden-dot-files-linux-came-rob-pike-g/"

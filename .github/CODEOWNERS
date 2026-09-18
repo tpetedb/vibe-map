@@ -1,0 +1,27 @@
+# Who is asked to review what. GitHub reads the first CODEOWNERS it finds in
+# .github/, the repository root or docs/; this is the one. Patterns follow
+# gitignore rules and the LAST matching line wins, so the general owner comes
+# first and the folders that need a second look come after it.
+#
+# Code owners work in a private repository only on GitHub Pro or above; in a
+# public one they work on every plan. docs/MAINTAINERS.md has the rest.
+
+*                           @tpetedb
+
+# Generated, never hand-edited. A review request that names one of these means
+# the generator was skipped: tools/build.py, tools/regen_tree.py,
+# tools/gen_cookbook.py, tools/sync_template.py, tools/sync_fork_source.py.
+/game/vibe-map.html         @tpetedb
+/tools/generated/           @tpetedb
+/vibemap/data/fork_source/  @tpetedb
+/vibemap/data/template/_agents/ @tpetedb
+/vibemap/data/template/_claude/ @tpetedb
+/docs/ROADMAP.md            @tpetedb
+/docs/RESOURCES.md          @tpetedb
+/docs/OBSIDIAN.md           @tpetedb
+/docs/COOKBOOK.md           @tpetedb
+/vault/                     @tpetedb
+
+# The learner's zone. Nothing in the product may depend on it, and
+# workspace/data/scores.csv is a system of record.
+/workspace/                 @tpetedb

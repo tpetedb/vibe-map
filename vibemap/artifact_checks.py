@@ -69,7 +69,11 @@ def _missing(here: Path, name: str) -> str | None:
 
 
 def _where(here: Path) -> str:
-    return f"workspace/artifacts/{here.name}"
+    """The folder as the camp names it, so a message reads like the task did."""
+    try:
+        return here.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return here.name
 
 
 def _floor(here: Path, spec: dict[str, Any]) -> tuple[bool, str] | None:
@@ -466,6 +470,21 @@ KINDS: dict[str, Callable[[Path, dict[str, Any]], tuple[bool, str]]] = {
     "frontmatter": _k_frontmatter,
     "files": _k_files,
 }
+
+
+def run_spec(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
+    """One check spec against one folder: the floor first, then its kind.
+
+    The topic hands-on (vibemap/topic_checks.py) runs the same specs as an
+    artifact, so the kinds have one caller and one meaning.
+    """
+    kind = spec.get("kind")
+    if kind not in KINDS:
+        raise ValueError(
+            f"unknown check kind {kind!r}; one of: {', '.join(sorted(KINDS))}"
+        )
+    floor = _floor(here, spec)
+    return floor if floor is not None else KINDS[kind](here, spec)
 
 
 # ---- the quest ----------------------------------------------------------------

@@ -1,0 +1,38 @@
+{
+  "name": "Vibe Code Camp",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "remoteEnv": {
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+  },
+  "onCreateCommand": "bash .devcontainer/setup.sh",
+  "waitFor": "onCreateCommand",
+  "postCreateCommand": "vibe status",
+  "forwardPorts": [8000, 7717],
+  "portsAttributes": {
+    "8000": {
+      "label": "Your game",
+      "onAutoForward": "openBrowser"
+    },
+    "7717": {
+      "label": "Chat bridge",
+      "onAutoForward": "silent"
+    }
+  },
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml",
+        "nefrob.vscode-just-syntax"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}

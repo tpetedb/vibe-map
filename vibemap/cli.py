@@ -35,7 +35,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign, pet, project, quests
+from vibemap import __version__, campaign, pet, project, quests, topics
 from vibemap import chat as chat_bridge
 from vibemap.artifact_checks import (
     ARTIFACT_NOTE,
@@ -81,6 +81,8 @@ from vibemap.state import (
 )
 from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
+from vibemap.topic_checks import hands_on_dir, topic_quest
+from vibemap.topics import Topic
 from vibemap.vault import Vault, safe_title
 
 ROOT = project.root()
@@ -369,6 +371,12 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     help="check an artifact you built for real (an id, or all)",
 )
 @click.option(
+    "--topic",
+    "topic_id",
+    default=None,
+    help="check the hands-on of one topic of the tech tree (an id)",
+)
+@click.option(
     "--fork",
     "fork_",
     is_flag=False,
@@ -386,6 +394,7 @@ def check(
     claim: bool,
     mentor_id: str | None,
     artifact_id: str | None,
+    topic_id: str | None,
     fork_: str | None,
 ) -> None:
     """Verify the definition of done for a workstream and award the XP.
@@ -397,6 +406,8 @@ def check(
         _exit_code(_check_mentors(ctx, mentor_id, claim=claim))
     if artifact_id:
         _exit_code(_check_artifacts(ctx, artifact_id, claim=claim))
+    if topic_id:
+        _exit_code(_check_topic(ctx, topic_id, claim=claim))
     if fork_:
         try:
             quest = fork_quest(ctx.cfg, fork_)
@@ -1056,6 +1067,166 @@ def artifact(ctx: Ctx, artifact_id: str | None, start: bool) -> None:
                 "commands below, so vibe writes none of them.[/]"
             )
     _show_artifact(ctx, a)
+
+
+# ---- topics -------------------------------------------------------------------
+
+
+def _topic_or_fail(topic_id: str) -> Topic:
+    try:
+        return topics.get(topic_id)
+    except ValueError as e:
+        _fail(str(e))
+    raise AssertionError  # _fail exits; this keeps the type checker honest
+
+
+def _list_topics(ctx: Ctx, pack_id: str | None) -> None:
+    """Every pack and what is in it, with the topics already read marked."""
+    shelf_of = {s.id: s.name for s in topics.tree().shelves}
+    wanted = [p for p in topics.packs() if pack_id in (None, p.id)]
+    if not wanted:
+        _fail(
+            f"unknown pack {pack_id!r}; one of: "
+            + ", ".join(p.id for p in topics.packs())
+        )
+    for pack in wanted:
+        console.print(f"[title]{pack.title}[/] [muted]({pack.id})[/] {pack.blurb}")
+        t = Table(header_style="path", box=None, padding=(0, 1))
+        for col in ("id", "topic", "shelf", "depth", "hands-on", "read"):
+            t.add_column(col)
+        for topic in topics.in_pack(pack.id):
+            t.add_row(
+                topic.id,
+                topic.title,
+                shelf_of[topic.shelf],
+                campaign.depth_label(topic.depth),
+                topic.hands_on.title if topic.hands_on else "[muted]none[/]",
+                "[done]read[/]"
+                if topic.id in ctx.state.roadmap_done
+                else "[todo]not yet[/]",
+            )
+        console.print(t)
+    console.print(
+        "One topic: [accent]vibe topic <id>[/], "
+        "and [accent]vibe topic <id> --start[/] to set its hands-on up."
+    )
+
+
+def _show_topic(ctx: Ctx, topic: Topic) -> None:
+    """One topic in the terminal: the same words the vault note carries."""
+    shelf_of = {s.id: s.name for s in topics.tree().shelves}
+    read = "[done]read[/]" if topic.id in ctx.state.roadmap_done else "[todo]not yet[/]"
+    console.print(
+        f"[title]{topic.title}[/] · [path]{shelf_of[topic.shelf]}[/] · "
+        f"{campaign.depth_label(topic.depth)} · {read}"
+    )
+    if topic.summary:
+        console.print(escape(topic.summary))
+    if topic.for_agents:
+        console.print(f"[muted]{escape(topic.for_agents)}[/]")
+    if topic.history:
+        console.print(f"[accent]History.[/] {escape(topic.history)}")
+    if topic.try_it:
+        console.print(f"[accent]Try it.[/] {escape(topic.try_it)}")
+    if topic.prerequisites:
+        console.print("First: " + ", ".join(topic.prerequisites))
+    if topic.unlocks:
+        console.print("Unlocks: " + ", ".join(topic.unlocks))
+    for source in topic.sources:
+        stamp = f" (checked {source.checked})" if source.checked else ""
+        console.print(f"  [muted]{escape(source.label)}[/] {source.url}{stamp}")
+    hands_on = topic.hands_on
+    if hands_on:
+        console.print(
+            f"[accent]{escape(hands_on.title)}[/] · {hands_on.minutes} minutes"
+        )
+        console.print(f"Work in: [path]{hands_on.folder(topic.id)}/[/]")
+        console.print(f"Done when: {escape(hands_on.done)}")
+        console.print(f"Check it: [accent]vibe check --topic {topic.id}[/]")
+
+
+def _scaffold_topic(topic: Topic) -> tuple[list[str], list[str]]:
+    """Create the hands-on folder; returns (written, kept) file names."""
+    hands_on = topic.hands_on
+    if hands_on is None:
+        return [], []
+    here = hands_on_dir(topic)
+    here.mkdir(parents=True, exist_ok=True)
+    spec = hands_on.check
+    # A kind names its file as `file`, or several as the keys of `files`.
+    names = [spec["file"]] if spec.get("file") else list(spec.get("files", {}))
+    written, kept = [], []
+    for name in names:
+        target = here / name
+        if target.exists():
+            kept.append(name)
+            continue
+        mark = ARTIFACT_COMMENT.get(Path(name).suffix, "# ")
+        body = [
+            f"{mark}TODO: {hands_on.title}",
+            f"{mark}{STUB_LINES[1]}",
+            f"{mark}Run: vibe check --topic {topic.id}",
+        ]
+        target.write_text("\n".join(body) + "\n", encoding="utf-8")
+        written.append(name)
+    return written, kept
+
+
+def _check_topic(ctx: Ctx, topic_id: str, *, claim: bool) -> bool:
+    """Run one topic's hands-on and record that the topic is read."""
+    topic = _topic_or_fail(topic_id)
+    try:
+        quest = topic_quest(topic.id, ctx.cfg)
+    except ValueError as e:
+        _fail(str(e))
+    results = run_quest(quest, ctx.cfg)
+    ok = _print_results(results, quest, ctx.cfg)
+    if not ok:
+        console.print(
+            f"[warn]not yet.[/] The topic: [accent]vibe topic {topic.id}[/], "
+            f"and [accent]vibe topic {topic.id} --start[/] for the folder."
+        )
+        return ok
+    if claim and topic.id not in ctx.state.roadmap_done:
+        ctx.state.roadmap_done.append(topic.id)
+        ctx.save()
+        ctx.vault.build(ctx.persona)
+        console.print(f"[ok]{topic.title} done[/], and the vault note says so")
+    else:
+        console.print("[ok]all checks pass[/]")
+    return ok
+
+
+@cli.command("topics")
+@click.argument("pack_id", required=False)
+@pass_ctx
+def topics_cmd(ctx: Ctx, pack_id: str | None) -> None:
+    """The packs of the tech tree and the topics in them."""
+    _list_topics(ctx, pack_id)
+
+
+@cli.command("topic")
+@click.argument("topic_id")
+@click.option("--start", is_flag=True, help="scaffold the hands-on folder")
+@pass_ctx
+def topic_cmd(ctx: Ctx, topic_id: str, start: bool) -> None:
+    """One topic: what it is, its sources, and the hands-on behind it."""
+    topic = _topic_or_fail(topic_id)
+    if start:
+        if topic.hands_on is None:
+            _fail(f"{topic.id} has no hands-on yet, so there is no folder to make")
+        written, kept = _scaffold_topic(topic)
+        where = topic.hands_on.folder(topic.id)
+        if written:
+            console.print(f"[ok]{where}/[/]: wrote {', '.join(written)}")
+        for name in kept:
+            console.print(f"[warn]kept your {where}/{name}[/], it was already there")
+        if not written and not kept:
+            console.print(
+                f"[muted]{where}/ is ready; this hands-on names no file of its "
+                "own, so vibe writes none.[/]"
+            )
+    _show_topic(ctx, topic)
 
 
 # ---- scores -------------------------------------------------------------------
@@ -1919,6 +2090,7 @@ TEMPLATE_NAMES = {
     "_agents": ".agents",
     "_claude": ".claude",
     "_github": ".github",
+    "_devcontainer": ".devcontainer",
 }
 
 
@@ -1963,11 +2135,21 @@ def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
     help="also create OWNER/NAME on GitHub and push the camp there (needs gh)",
 )
 @click.option(
+    "--private",
+    is_flag=True,
+    help="with --github: create the repository private (Pages and protected "
+    "branches on a private repository need GitHub Pro)",
+)
+@click.option(
     "--name", "who", default=None, help="your name for the folder (default: the login)"
 )
-def new(directory: str | None, github: str | None, who: str | None) -> None:
+def new(
+    directory: str | None, github: str | None, private: bool, who: str | None
+) -> None:
     """Start a camp in DIRECTORY (default vibe-map-<name>-<date>): your workspace,
     your vault, the configuration. The engine stays in the vibe command."""
+    if private and not github:
+        _fail("--private only says something with --github OWNER/NAME")
     if directory is None:
         directory = camp_dir_name(who)
         console.print(f"[muted]folder from the convention:[/] {directory}")
@@ -2012,10 +2194,17 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     if github and not committed:
         _fail("no first commit to push; fix git, commit, then: gh repo create")
     if github:
-        cmd = ["gh", "repo", "create", github, "--source", ".", "--public", "--push"]
+        # gh wants exactly one visibility flag, so the choice is one or the other.
+        visibility = "--private" if private else "--public"
+        cmd = ["gh", "repo", "create", github, "--source", ".", visibility, "--push"]
         console.print(f"[muted]$ {' '.join(cmd)}[/]")
         if subprocess.run(cmd, cwd=target).returncode != 0:
             _fail("gh could not create the repository; is gh installed and logged in?")
+        if private:
+            console.print(
+                "[muted]private camp:[/] Pages, protected branches and code "
+                "owners on a private repository need GitHub Pro"
+            )
     console.print(
         f"[ok]camp ready[/] at {target}\nNext:\n  cd {target}\n"
         "  just start          # or: vibe start\n"
