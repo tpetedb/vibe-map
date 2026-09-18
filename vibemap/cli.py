@@ -48,6 +48,16 @@ from vibemap.artifact_checks import (
     get_artifact,
 )
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config, deprecation_note
+from vibemap.interests import (
+    label as shelf_label,
+)
+from vibemap.interests import (
+    parse as parse_interests,
+)
+from vibemap.interests import (
+    shelves,
+    suggestions,
+)
 from vibemap.palette import RICH_THEME
 from vibemap.personas import PERSONAS, get_persona
 from vibemap.providers import PROVIDERS, ProviderMissing, ask
@@ -160,6 +170,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
                     "persona": cfg.learner.persona,
                     "difficulty": cfg.learner.difficulty,
                     "mode": cfg.learner.mode, "provider": cfg.learner.provider,
+                    "interests": cfg.learner.interests,
                     "items": st.items, "ach": st.ach, "wear": st.wear,
                 },
                 indent=2,
@@ -189,6 +200,13 @@ def status(ctx: Ctx, as_json: bool) -> None:
         + f"\n{len(st.items)}/{len(campaign.collectibles())} things collected"
         + f" · {len(st.ach)} achievements"
         + (f" · wearing {', '.join(st.wear)}" if st.wear else " · wearing nothing yet")
+        + "\nLearning: "
+        + (
+            ", ".join(shelf_label(c) for c in cfg.learner.interests)
+            if cfg.learner.interests
+            else "everything"
+        )
+        + " (vibe interests)"
     )
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:
@@ -216,6 +234,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
             "Badges: "
             + ", ".join(f"[ok]{BADGES.get(b, b).split(':')[0]}[/]" for b in st.badges)
         )
+    _print_next_topic(ctx)
     nxt_ws = _next_workstream(st, "campus")
     if nxt_ws:
         console.print(
@@ -759,7 +778,7 @@ def _claim_mentor(ctx: Ctx, mentor_id: str, results) -> None:
 
 
 def _check_artifacts(ctx: Ctx, artifact_id: str, *, claim: bool) -> bool:
-    """Run the Do it for real checks for one artifact, or for all twenty."""
+    """Run the Do it for real checks for one artifact, or for all of them."""
     if artifact_id == "all":
         ids = artifact_ids()
     else:
@@ -989,7 +1008,7 @@ def _show_artifact(ctx: Ctx, a: dict) -> None:
 
 
 def _list_artifacts(ctx: Ctx) -> None:
-    """The twenty, their island and whether they were built for real."""
+    """Every artifact, its island and whether it was built for real."""
     t = Table(header_style="path", box=None, padding=(0, 1))
     for col in ("id", "artifact", "island", "task", "built"):
         t.add_column(col)
@@ -1179,6 +1198,70 @@ def difficulty(ctx: Ctx, level: str | None) -> None:
             console.print(f"{mark} [path]{k:9}[/] x{d.xp_multiplier} XP · {d.blurb}")
         return
     _set_learner(ctx, "difficulty", level)
+
+
+def _set_interests(ctx: Ctx, chosen: list[str]) -> None:
+    """One writer for the choice: camp.toml is the truth, state is the copy."""
+    data = ctx.cfg.model_dump()
+    data["learner"]["interests"] = chosen
+    ctx.cfg = Config.model_validate(data)
+    ctx.cfg.save(CONFIG_PATH)
+    ctx.state.interests = list(chosen)
+    ctx.save()
+
+
+def _interest_lines(ctx: Ctx) -> None:
+    chosen = ctx.cfg.learner.interests
+    for c, name, blurb in shelves():
+        mark = "[ok]*[/]" if (not chosen or c in chosen) else " "
+        console.print(f"{mark} [path]{c:10}[/] {name:24} [muted]{blurb}[/]")
+    if chosen:
+        console.print(
+            f"Chosen: [ok]{', '.join(shelf_label(c) for c in chosen)}[/]. "
+            "Nothing is hidden by a choice; these come first."
+        )
+    else:
+        console.print(
+            "[ok]Everything[/], the default. Narrow it with "
+            "[accent]vibe interests set data,shell,agents[/]."
+        )
+
+
+@cli.command()
+@click.argument("action", required=False, type=click.Choice(["list", "set", "all"]))
+@click.argument("names", required=False)
+@pass_ctx
+def interests(ctx: Ctx, action: str | None, names: str | None) -> None:
+    """What you want to learn: which shelves of the tree come first."""
+    if action in (None, "list"):
+        _interest_lines(ctx)
+        _print_next_topic(ctx)
+        return
+    if action == "all":
+        _set_interests(ctx, [])
+        console.print("[ok]interests[/] = everything (config/camp.toml)")
+        return
+    if not names:
+        _fail("vibe interests set data,shell,agents (or: vibe interests all)")
+    try:
+        chosen = parse_interests(names)
+    except ValueError as e:
+        _fail(str(e))
+    _set_interests(ctx, chosen)
+    console.print(
+        f"[ok]interests[/] = {', '.join(chosen) or 'everything'} ({CONFIG_PATH.name})"
+    )
+    _print_next_topic(ctx)
+
+
+def _print_next_topic(ctx: Ctx) -> None:
+    nxt = suggestions(ctx.cfg.learner.interests, ctx.state.roadmap_done, limit=1)
+    if nxt:
+        s = nxt[0]
+        console.print(
+            f"Next topic: [accent]{s.name}[/] "
+            f"([path]{shelf_label(s.shelf)}[/], {campaign.depth_label(s.depth)})"
+        )
 
 
 @cli.command()

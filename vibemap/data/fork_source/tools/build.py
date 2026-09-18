@@ -55,6 +55,7 @@ GAME_ORDER = [
     "@campaign",
     "16-artifacts.js",
     "17-artifact-props.js",
+    "17b-switchboard.js",
     "@items",
     "18-avatar.js",
     "19-items.js",
@@ -74,6 +75,7 @@ GAME_ORDER = [
     "71-finale.js",
     "80-sync.js",
     "85-settings.js",
+    "86-interests.js",
     "87-onboarding.js",
     "88-chat.js",
     "89-dashboard.js",
@@ -180,6 +182,14 @@ def _version() -> str:
     return __version__
 
 
+def _persona_interests(persona_id: str) -> list[str]:
+    """The shelves this persona leans on; personas.py stays the one source."""
+    from vibemap.personas import PERSONAS  # noqa: PLC0415
+
+    p = PERSONAS.get(persona_id)
+    return list(p.interests) if p else []
+
+
 def _config_js() -> str:
     """The journey values (config/camp.toml) the game exposes as a constant."""
     sys.path.insert(0, str(ROOT))
@@ -202,6 +212,10 @@ def _config_js() -> str:
         "persona": cfg.learner.persona,
         "provider": cfg.learner.provider,
         "mode": cfg.learner.mode,
+        # What the camp chose to learn, and what this persona would choose:
+        # the game offers the preset and stores the answer in S.interests.
+        "interests": cfg.learner.interests,
+        "personaInterests": _persona_interests(cfg.learner.persona),
         "vault": {"mode": cfg.vault.mode},
         "news": {"live": cfg.news.live},
     }

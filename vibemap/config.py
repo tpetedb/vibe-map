@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from vibemap import pet, project, sprites
 
@@ -60,6 +60,16 @@ class Learner(_Strict):
     difficulty: Difficulty = "normal"
     mode: Mode = "campaign"
     provider: Provider = "claude"
+    # Shelves of the tech tree to be offered first; empty means everything.
+    # Nothing is hidden by a choice, so an empty list is a complete course.
+    interests: list[str] = Field(default_factory=list)
+
+    @field_validator("interests")
+    @classmethod
+    def _known_shelves(cls, value: list[str]) -> list[str]:
+        from vibemap.interests import normalise  # noqa: PLC0415
+
+        return normalise(value)
 
 
 class ThemeConfig(_Strict):
@@ -162,6 +172,8 @@ class Config(_Strict):
             "  # campaign (four evenings) | roadmap (the tech tree as quests)",
             f"provider = {_q(self.learner.provider)}"
             "  # claude | codex | gemini | copilot | opencode",
+            "interests = [" + ", ".join(_q(i) for i in self.learner.interests) + "]"
+            "  # shelves to offer first; empty = everything (vibe interests)",
             "",
             "[theme]",
             f"preset = {_q(self.theme.preset)}"
