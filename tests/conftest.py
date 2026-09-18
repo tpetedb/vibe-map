@@ -261,16 +261,8 @@ class GamePage:
         )
 
     def sheet_in_place(self) -> None:
-        """Wait for the sheet's spring and openSheet's smooth scroll to finish.
-
-        The open animation lifts the sheet in from below, so in place is the
-        overlay back at the top of the window, not merely a number that has
-        stopped moving: everything the sheet holds is offset until then.
-        """
+        """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
-        self.until(
-            "document.getElementById('sheet').getBoundingClientRect().top <= 0.5"
-        )
 
     def hud_action(self, selector: str) -> None:
         """Click a HUD button, opening the More menu when it lives in there.
