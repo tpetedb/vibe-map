@@ -298,3 +298,12 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}
 .packtabs button.pick{border-color:var(--a1);color:var(--text)}
+/* Phones: the pill has room for the icon but not the word, and the Backpack
+   has no second door, so here it keeps the icon the other buttons lose and
+   the row tightens by the width the sixth button needs. */
+@media (max-width:480px){
+  .pill{gap:6px;padding:8px 10px}
+  .pill button{padding:4px 6px}
+  .pill button[aria-label="Backpack"] span{display:none}
+  .pill button[aria-label="Backpack"] .ic{display:inline-block;margin-right:0}
+}

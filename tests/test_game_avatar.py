@@ -125,7 +125,7 @@ def test_walking_over_a_collectible_picks_it_up(island: GamePage) -> None:
 def test_the_backpack_lists_the_inventory_and_the_achievements(
     island: GamePage,
 ) -> None:
-    island.page.click("#hud button:has-text('Backpack')")
+    island.page.click("#hud button[aria-label='Backpack']")
     island.page.wait_for_selector("#s-pack.on", state="attached")
     island.sheet_in_place()
     assert "Backpack" in (island.page.text_content("#s-pack h2") or "")
@@ -140,7 +140,7 @@ def test_an_achievement_unlocks_a_hat_you_can_wear(island: GamePage) -> None:
     _sit(island)
     island.page.keyboard.press("x")
     island.page.wait_for_function("() => window.__avatar().pose === 'stand'")
-    island.page.click("#hud button:has-text('Backpack')")
+    island.page.click("#hud button[aria-label='Backpack']")
     island.page.wait_for_selector("#s-pack.on", state="attached")
     island.page.click("#s-pack .packtabs button:has-text('Wardrobe')")
     island.page.click("#s-pack button:has-text('Wear')")
@@ -159,9 +159,7 @@ def test_an_imported_code_brings_the_avatar_across(island: GamePage) -> None:
     )
     padded.update({"items": ["campus-commit"], "ach": ["first-light"], "wear": ["cap"]})
     raw = json.dumps(padded).encode()
-    with_avatar = (
-        __import__("base64").urlsafe_b64encode(raw).decode().rstrip("=")
-    )
+    with_avatar = __import__("base64").urlsafe_b64encode(raw).decode().rstrip("=")
     island.import_code(with_avatar)
     island.frames()
     state = _avatar(island)

@@ -307,6 +307,15 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}
 .packtabs button.pick{border-color:var(--a1);color:var(--text)}
+/* Phones: the pill has room for the icon but not the word, and the Backpack
+   has no second door, so here it keeps the icon the other buttons lose and
+   the row tightens by the width the sixth button needs. */
+@media (max-width:480px){
+  .pill{gap:6px;padding:8px 10px}
+  .pill button{padding:4px 6px}
+  .pill button[aria-label="Backpack"] span{display:none}
+  .pill button[aria-label="Backpack"] .ic{display:inline-block;margin-right:0}
+}
 </style>
 </head>
 <body>
@@ -316,7 +325,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="trophy" onclick="openPack()">Backpack</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
+  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="trophy" onclick="openPack()" aria-label="Backpack"><span>Backpack</span></button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
@@ -1262,7 +1271,10 @@ const POSE_MS={wave:1.6,cheer:2.2};
 // Sitting on the ground, and on a seat; the walker's hips are at .7 standing.
 const GROUND_SEAT=.34,HIP=.7;
 function setPose(c,p,seat){if(!c)return;c.pose=p;c.poseT=0;c.seatH=seat===undefined?c.seatH:seat;
-  if(p!=="sit"){c.poseY=0;if(c.lap)c.lap.visible=false}}
+  if(p==="sit")return;
+  // Standing again clears what only a pose ever touches, so the walk cycle
+  // starts from the same body every time.
+  c.poseY=0;c.head.rotation.x=0;c.rArm.rotation.z=0;if(c.lap)c.lap.visible=false}
 function isSitting(c){return !!c&&c.pose==="sit"}
 function poseChar(c,dt,t){
   const p=c.pose;
@@ -1402,10 +1414,10 @@ function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"
   if(packTab==="inventory"){
     body=`<p class="small muted">${got.length} of ${ITEMS.items.length} picked up. Walk over one to collect it; each explains one idea and opens its topic in the tech tree.</p>`+
       Object.keys(WORLDS).map(w=>{const list=ITEMS.items.filter(i=>i.world===w);
-        return `<div class="card"><h3>${WORLDS[w].name}</h3><p class="small muted">${list.filter(i=>got.includes(i.id)).length} of ${list.length}</p>`+
-          list.map(i=>got.includes(i.id)
-            ?`<div class="pathrow"><span><b>${i.name}</b><br><span class="muted small">${i.concept}</span></span><button onclick="openTopic('${i.topic}')" style="padding:4px 10px;font-size:12px">Topic</button></div>`
-            :`<div class="pathrow"><span class="muted">Not found yet</span><span class="st">${i.kind}</span></div>`).join("")+`</div>`}).join("")}
+        const mine=list.filter(i=>got.includes(i.id));
+        return `<div class="card"><h3>${WORLDS[w].name}</h3><p class="small muted">${mine.length} of ${list.length}</p>`+
+          mine.map(i=>`<div class="pathrow"><span><b>${i.name}</b><br><span class="muted small">${i.concept}</span></span><button onclick="openTopic('${i.topic}')" style="padding:4px 10px;font-size:12px">Topic</button></div>`).join("")+
+          (mine.length<list.length?`<div class="pathrow"><span class="muted small">${list.length-mine.length} still out there, along the paths and on the annexes.</span></div>`:"")+`</div>`}).join("")}
   else if(packTab==="achievements"){
     body=`<p class="small muted">${ach.length} of ${ACH.length} unlocked. Six of them are the badges the terminal hands out, so a progress code keeps the two in step.</p>`+
       ACH.map(a=>`<div class="pathrow"><span><b>${a.name}</b><br><span class="muted small">${a.what}</span></span><span class="st ${ach.includes(a.id)?"deep":""}">${ach.includes(a.id)?"unlocked":"locked"}</span></div>`).join("")}
@@ -1421,7 +1433,7 @@ function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"
 /* ---------------- the frame ---------------- */
 // One call a frame from the animation loop: sitting, picking things up and the
 // achievements that follow. Everything it needs is already computed there.
-let wantSit=false,avatarWired=false;
+let wantSit=false,avatarWired=false,achT=0;
 function wireAvatar(){if(avatarWired)return;avatarWired=true;
   // The key is caught on its own event rather than sampled in the loop: a tap
   // can start and end between two frames on a slow machine.
@@ -1441,6 +1453,9 @@ function wireAvatar(){if(avatarWired)return;avatarWired=true;
 }
 function toggleSit(){const L=chars.lotte;if(!L)return;
   if(isSitting(L)){setPose(L,"stand");return}
+  // Sitting is a full stop: with no speed left the frame loop skips the
+  // collision push, so a walker on a bench stays on it.
+  if(L.vel)L.vel.set(0,0,0);hasTarget=false;if(marker)marker.material.opacity=0;
   const s=nearestSeat(L.g.position);
   if(s){L.g.position.set(s.x,0,s.z);L.g.rotation.y=s.face;setPose(L,"sit",s.h)}
   else setPose(L,"sit",GROUND_SEAT);
@@ -1454,7 +1469,10 @@ function tickAvatar(dt,t,sp){
   // is applied here, where the loop has not yet touched them this frame.
   (props.mentors||[]).forEach(c=>{if(isSitting(c))poseChar(c,dt,t)});
   tickItems(dt,t);
-  achCheck();
+  // The derived achievements read the whole state, so they are answered about
+  // once a second rather than every frame; the earned-by-a-moment ones unlock
+  // where they happen.
+  achT+=dt;if(achT>1){achT=0;achCheck()}
 }
 // Collectibles and seats, placed from vibemap/data/items.json (ITEMS).
 // Every spot in that file is relative to a plot, an annex or the path of its
