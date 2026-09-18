@@ -1,0 +1,1 @@
+- Committing an empty release note in workstream 4 answers with a reason instead of doing nothing.

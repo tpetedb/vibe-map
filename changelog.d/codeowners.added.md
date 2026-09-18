@@ -1,0 +1,1 @@
+- `.github/CODEOWNERS` in the product, naming the generated folders so a review request that points at one means a generator was skipped, and a commented teaching example in the camp template.

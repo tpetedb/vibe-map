@@ -1,0 +1,1 @@
+- `vibe check` exits 1 when any check failed and 0 when they all passed, for workstreams, mentors, artifacts and the fork challenges; `--no-claim` changes what is recorded, never the exit code. The course's own gate can now be a step in a hook or a workflow, which is what it teaches.

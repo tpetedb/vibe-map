@@ -1,0 +1,1 @@
+- An off switch for all of it: `config/camp.toml` `[news] live` sets the default and a **Live world** dropdown in Settings (on, off, or from the config) overrides it. Off hides every element marked `live-feed`, the News card first, and stops the fetch.
