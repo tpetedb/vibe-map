@@ -106,10 +106,15 @@ def main(argv: list[str] | None = None) -> int:
             for path in real:
                 print(f"  {path}")
             return 2
-        print(f"{len(generated)} generated file(s) conflicted; regenerating")
-        # Either side is as good as the other: the generators overwrite both.
-        run(("git", "checkout", "--ours", "--", *generated))
-        run(("git", "add", "--", *generated))
+        if generated:
+            print(f"{len(generated)} generated file(s) conflicted; regenerating")
+            # Either side is as good as the other: the generators overwrite both.
+            run(("git", "checkout", "--ours", "--", *generated))
+            run(("git", "add", "--", *generated))
+        else:
+            # Nothing is conflicted, so the merge was already in progress: this
+            # is the second run, after a real conflict was resolved by hand.
+            print("nothing conflicted; finishing the merge that was in progress")
 
     print("regenerating")
     for cmd in REGENERATE:
