@@ -1,13 +1,15 @@
-# Keep the game current: pull the AI feeds every Monday, commit the result.
-# data/news.json is embedded into the game at build time, so the game is
+# Keep the game current: pull the world feed every day, commit the result.
+# data/news.json is embedded into the game at build time and copied to
+# game/news.json, which the hosted game fetches at runtime, so the game is
 # rebuilt and committed too (Pages redeploys on that); vault/Camp/News.md is
-# the same list as a note. Run by hand from the Actions
-# tab when you want it now.
+# the same list as a note. Run by hand from the Actions tab when you want it
+# now. The sources are vibemap/data/sources.json; a source that stops
+# answering shows up in the note under "Feeds that did not answer".
 name: news
 
 on:
   schedule:
-    - cron: "0 6 * * 1"
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -26,7 +28,7 @@ jobs:
         run: |
           git config user.name "vibe news"
           git config user.email "actions@users.noreply.github.com"
-          git add data/news.json vault/Camp/News.md game/vibe-map.html
+          git add data/news.json game/news.json vault/Camp/News.md game/vibe-map.html
           git diff --cached --quiet && exit 0
-          git commit -m "News: weekly pull of the AI feeds"
+          git commit -m "News: daily pull of the world feed"
           git push

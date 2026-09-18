@@ -1,17 +1,18 @@
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
 // config/camp.toml still sets the defaults for a fresh browser; these override them.
-const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
 const SETTINGS_OPTIONS={
   difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
   vault:[["config","From config/camp.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
+  live:[["config","From config/camp.toml ("+((CONFIG.news&&CONFIG.news.live===false)?"off":"on")+")"],["on","On: what the sources published lately"],["off","Off: nothing from the feeds"]],
   pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
   shadows:[["high","Soft shadows"],["low","Cheap shadows"],["off","No shadows (fastest)"]],
   motion:[["auto","Follow the system setting"],["off","No animations"]],
   speed:[["slow","Stroll"],["normal","Walk"],["fast","Hurry"]]
 };
-const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
+const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",live:"Live world",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed"};
 function settings(){if(!S.settings)S.settings={};return Object.assign({},SETTINGS_DEFAULTS,S.settings)}
 function speedMult(){return {slow:.7,normal:1,fast:1.5}[settings().speed]||1}
 function motionOff(){return settings().motion==="off"}
@@ -21,6 +22,9 @@ function applySettings(){const s=settings();
     const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
   const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
   document.body.classList.toggle("no-motion",s.motion==="off");
+  // Off means nothing from the feeds appears and nothing is fetched: the
+  // stylesheet hides every element marked live-feed, loadNews checks the same.
+  if(typeof liveNews==="function"){document.body.classList.toggle("no-live",!liveNews());if(liveNews())renderNews()}
   if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }

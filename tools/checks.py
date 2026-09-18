@@ -32,6 +32,10 @@ TEXT_SUFFIXES = {
 TEXT_NAMES = {"justfile", "agents.just", ".gitignore", ".env.example"}
 MAX_LINE = 1000
 EM_DASH = chr(0x2014)
+# The house rules are about the copy we write. These two files are other
+# people's published words, pulled verbatim by `vibe news`; editing an em dash
+# out of a headline would be editing the headline (docs/adr/0010).
+QUOTED_VERBATIM = frozenset({"data/news.json", "game/news.json", "vault/Camp/News.md"})
 
 
 def _emoji_pattern() -> re.Pattern[str]:
@@ -104,6 +108,8 @@ def check_style(paths: list[str]) -> int:
     findings = 0
     for path in files:
         if path.name == "checks.py" or not path.is_file():
+            continue
+        if path.relative_to(ROOT).as_posix() in QUOTED_VERBATIM:
             continue
         try:
             lines = path.read_text(encoding="utf-8").split("\n")
