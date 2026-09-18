@@ -1,0 +1,55 @@
+# dlt, ingestion as code. Written from the official docs, nothing from memory.
+id = "dlt"
+title = "dlt, ingestion as code"
+age = "castle"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''dlt is a Python library that takes whatever a source hands you and lands it in a destination as a proper table. Reach for it when the shape of the incoming data is not your decision: an API that nests three levels deep, a paginated endpoint, a vendor export whose columns move. You write a function that yields records and name a destination; dlt works out the schema, flattens the nesting into columns, creates the tables and loads them. The part that saves the most work is the second run, because a primary key and a merge write disposition turn "load it again" into "update what changed" instead of doubling the table.'''
+for_agents = '''And for an agent: dlt is the piece that lets you point at a messy source without writing the CREATE TABLE by hand first.'''
+
+history = '''The project describes itself plainly: "dlt is an open-source Python library that loads data from various, often messy data sources into well-structured datasets". The work it removes is named in the same place: it "infers schemas and data types, normalizes the data, and handles nested data structures", and it "automates pipeline maintenance with incremental loading, schema evolution, and schema and data contracts". Installing it is one line, pip install dlt, and a pipeline is three arguments plus a run: dlt.pipeline(pipeline_name=..., destination="duckdb", dataset_name=...) then pipeline.run(source). The version read for this topic was 1.30.0, and it is the version the hands-on was run against. Because the destination is DuckDB, none of this needs a warehouse, an account or a network.'''
+
+try_it = '''uv run --with "dlt[duckdb]" python -c "import dlt; p = dlt.pipeline(destination='duckdb'); print(p.pipeline_name)" and you have a pipeline.'''
+
+unlocks = ["dbt", "medallion", "dataquality"]
+prerequisites = ["jsonl", "schemas"]
+
+[[sources]]
+label = "dlt, the introduction"
+url = "https://dlthub.com/docs/intro"
+checked = 2026-09-18
+
+[[sources]]
+label = "dlt, creating a pipeline"
+url = "https://dlthub.com/docs/walkthroughs/create-a-pipeline"
+checked = 2026-09-18
+
+[[sources]]
+label = "dlt, incremental loading and write dispositions"
+url = "https://dlthub.com/docs/general-usage/incremental-loading"
+checked = 2026-09-18
+
+[[sources]]
+label = "DuckDB, the destination this hands-on uses"
+url = "https://duckdb.org/docs/stable/"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A nested source into DuckDB, then the same run again"
+minutes = 18
+done = "dlt_pipeline.py flattens run.score into run__score and the rerun still has three rows"
+check = { kind = "module", file = "dlt_pipeline.py", modules = [
+  "dlt",
+], install = "uv add 'dlt[duckdb]'", contains = [
+  "dlt.resource",
+  "write_disposition",
+], prints = [
+  "rows: 3",
+  "columns: ['id', 'player', 'run__duration_s', 'run__score']",
+  "after rerun: 3",
+] }
