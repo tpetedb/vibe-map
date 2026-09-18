@@ -9,8 +9,8 @@ const DAY_MS=864e5;
 // The same worth the terminal gives a claim (vibemap/quests.py): a workstream
 // is 100, a mentor or an artifact built for real is half of one.
 const DASH_XP={claim:100,verified:50,built:50,artifact:10};
-const DASH_LABEL={session:"Session started",open:"Stop opened",claim:"Stop delivered",dwell:"Time in a stop",play:"Time on the island",artifact:"Artifact inspected",built:"Artifact built for real",mentor:"Mentor met",verified:"Mentor verified",chat:"Question asked",item:"Item collected",achievement:"Achievement unlocked"};
-const DASH_HUE={claim:"var(--green-bright)",built:"var(--green-bright)",verified:"var(--green-bright)",open:"var(--yellow)",dwell:"var(--yellow)",achievement:"var(--yellow)",play:"var(--blue-bright)",session:"var(--blue-bright)",chat:"var(--blue-bright)",artifact:"var(--orange)",mentor:"var(--orange)",item:"var(--orange)"};
+const DASH_LABEL={session:"Session started",open:"Stop opened",claim:"Stop delivered",dwell:"Time in a stop",play:"Time on the island",artifact:"Artifact inspected",built:"Artifact built for real",mentor:"Mentor met",verified:"Mentor verified",chat:"Question asked",item:"Item collected",achievement:"Achievement unlocked",interests:"Shelves chosen"};
+const DASH_HUE={claim:"var(--green-bright)",built:"var(--green-bright)",verified:"var(--green-bright)",open:"var(--yellow)",dwell:"var(--yellow)",achievement:"var(--yellow)",play:"var(--blue-bright)",session:"var(--blue-bright)",chat:"var(--blue-bright)",artifact:"var(--orange)",mentor:"var(--orange)",item:"var(--orange)",interests:"var(--blue)"};
 function dashEvents(){return Array.isArray(S.events)?S.events:[]}
 function dayStart(ts){const d=new Date(ts);return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime()}
 function fmtDur(s){s=Math.round(s||0);if(s<60)return s+"s";const m=Math.round(s/60);return m<60?m+"m":Math.floor(m/60)+"h "+(m%60)+"m"}

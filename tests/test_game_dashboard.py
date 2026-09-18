@@ -123,9 +123,9 @@ def test_dashboard_panel_draws_every_chart(game: GamePage) -> None:
     open_dashboard(game)
     assert game.page.locator("#s-dash .tile").count() == 6
     assert game.page.locator("#s-dash .ring").count() == 4
-    # Four rings, the XP line, the heatmap and the bars, plus a sparkline on
-    # every tile whose seven days are not all zero.
-    assert game.page.locator("#s-dash .card svg.ch").count() == 7
+    # Four rings, the shelves, the XP line, the heatmap and the bars, plus a
+    # sparkline on every tile whose seven days are not all zero.
+    assert game.page.locator("#s-dash .card svg.ch").count() == 8
     assert game.page.locator("#s-dash .tile svg.ch").count() >= 4
     assert game.page.locator("#s-dash .feed li").count() > 0
     assert game.page.locator("#s-dash .path .step").count() == 3

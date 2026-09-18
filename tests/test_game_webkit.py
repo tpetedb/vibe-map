@@ -186,7 +186,7 @@ def test_the_title_form_and_the_go_row_fit_the_phone(
     box = page.locator("#title .box").bounding_box()
     assert box and box["width"] <= 393 and box["height"] <= 852, box
     assert page.evaluate("document.documentElement.scrollWidth") <= 393
-    assert page.locator("#onboard .step").count() == 4
+    assert page.locator("#onboard .step").count() == 5
     assert page.locator("#name").is_visible()
     go = page.locator("#title .row.go").bounding_box()
     assert go and go["y"] >= 0 and go["y"] + go["height"] <= 852, go
