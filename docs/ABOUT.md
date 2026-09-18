@@ -38,7 +38,24 @@ Twelve mentors stand on the four islands, each grounded in their recorded ideas 
 - The tech tree is Age of Empires by shape and fact-checked by hand: every history claim cites a primary source.
 - The design borrows from Palantir Blueprint (intent colours, dense but calm), Powerlevel10k (state at a glance) and marimo (one file, reactive).
 - Motion (MIT) provides the spring physics for the few animations that exist; without it the game degrades to instant.
-- The terminal pet keeps the roll and the ASCII art of claude-buddy (MIT, Romesh Niriella). Its pixel sprites are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw): the crab and the duck by [Marc Duiker](https://github.com/marcduiker), the turtle by enkeefe, the snail by [Kennet Shin](https://github.com/WoofWoof0). Only art that vscode-pets licenses as MIT was taken; the sets that carry their own itch.io terms were left where they are. The licence and the full credit travel with the frames in `vibemap/data/pets/`.
+- The terminal pet keeps the roll and the ASCII art of claude-buddy (MIT, Romesh Niriella). Its pixel sprites are vendored: see Pets below.
+
+## Pets
+
+![Every pixel species side by side: cat, crab, dog, duck, snail, turtle](media/pets.png)
+
+Twenty species, six of them real pixel art with four states each (idle, walk, happy, sleep), painted two pixels to a cell with half blocks. `vibe pet --species <name>` picks one and writes it to `config/camp.toml`; the other fourteen keep the ASCII art, and so does any terminal without truecolor.
+
+| Species | Clip | Author | Source | Licence |
+|---|---|---|---|---|
+| cat | [cat.gif](media/pets/cat.gif) | [Shepardskin](https://opengameart.org/users/shepardskin) | [Cat Sprites](https://opengameart.org/content/cat-sprites) | CC0-1.0 |
+| crab | [crab.gif](media/pets/crab.gif) | [Marc Duiker](https://github.com/marcduiker) | [vscode-pets](https://github.com/tonybaloney/vscode-pets) | MIT |
+| dog | [dog.gif](media/pets/dog.gif) | [Shepardskin](https://opengameart.org/users/shepardskin) | [Dog Sprites](https://opengameart.org/content/dog-sprites) | CC0-1.0 |
+| duck | [duck.gif](media/pets/duck.gif) | [Marc Duiker](https://github.com/marcduiker) | [vscode-pets](https://github.com/tonybaloney/vscode-pets) | MIT |
+| snail | [snail.gif](media/pets/snail.gif) | [Kennet Shin](https://github.com/WoofWoof0) | [vscode-pets](https://github.com/tonybaloney/vscode-pets) | MIT |
+| turtle | [turtle.gif](media/pets/turtle.gif) | enkeefe | [vscode-pets](https://github.com/tonybaloney/vscode-pets) | MIT |
+
+Only art whose licence is stated on its own page was taken: what vscode-pets licenses as MIT, and two packs whose OpenGameArt pages state CC0. The sets that carry their own itch.io terms, the cat that its author asked not be redistributed and the CC BY-ND dog were all left where they are; the reasoning is in `vibemap/data/pets/CREDITS.md`, and the licence text travels with the frames. Every picture here is real terminal output, rendered by `tools/tui_media.py --pets`.
 
 ## Who made it
 

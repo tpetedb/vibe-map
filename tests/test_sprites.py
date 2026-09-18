@@ -23,14 +23,26 @@ SWATCH: sprites.Frame = [
 ]
 
 
+# Every set, with the licence it is vendored under and how its LICENSE opens.
+VENDORED = {
+    "crab": ("MIT", "MIT License"),
+    "duck": ("MIT", "MIT License"),
+    "snail": ("MIT", "MIT License"),
+    "turtle": ("MIT", "MIT License"),
+    "cat": ("CC0-1.0", "Creative Commons Legal Code"),
+    "dog": ("CC0-1.0", "Creative Commons Legal Code"),
+}
+
+
 def test_every_vendored_set_decodes_and_is_credited() -> None:
-    assert sprites.available() == ("crab", "duck", "snail", "turtle")
+    assert sprites.available() == ("cat", "crab", "dog", "duck", "snail", "turtle")
     credits = (sprites.PETS / "CREDITS.md").read_text()
     for name in sprites.available():
+        licence, opening = VENDORED[name]
         sheet = sprites.sheet(name)
-        assert sheet.licence == "MIT"
+        assert sheet.licence == licence
         assert sheet.author in credits
-        assert (sprites.PETS / name / "LICENSE").read_text().startswith("MIT License")
+        assert (sprites.PETS / name / "LICENSE").read_text().startswith(opening)
         for state in sprites.STATES:
             frames = sheet.frames(state)
             assert frames, (name, state)
