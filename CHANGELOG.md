@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A command palette over everything the game holds. **Cmd K** or **Ctrl K**, and the Search button in the HUD, open one box that searches the stops of the island you are on, every vault note, every tech-tree topic, the twelve mentors, the twenty artifacts and the forty collectibles; the arrow keys move, Enter opens the stop, the note, the topic, the mentor or the artifact, Escape closes. The index is derived from the same data the panels render, so a new note or a new artifact is in it without a second list to maintain (`src/game/41-search.js`).
+
 - In-game chat, answered by the learner's own Claude, Codex, Gemini, Copilot or OpenCode subscription. The **Ask** button in the HUD and the **C** key open a panel with a context chip (the island, the stop whose sheet is open, the mentor or artifact in view), suggested questions for that context, a streamed answer and a history kept in the saved state. `vibe chat serve --pair <code>` runs the bridge that answers it: `127.0.0.1` only, one `POST /ask` endpoint that takes a question and never a command, the pairing code the panel shows as the shared secret, an Origin allowlist, a 16 KiB body cap, a queue of one and a timeout that kills the provider process. The prompt is built on the Python side from the course data, so the page sends identifiers rather than text to run, and the question is an argument, never a shell string. `vibe chat ask "..."` asks the same question with the same prompt in the terminal. With no bridge the panel explains how to start one in three lines, with the exact command and code in it, and answers by searching the notes and stops embedded in the game file. `docs/CHAT.md` and `docs/adr/0009-local-chat-bridge.md`.
 
 - A real pixel pet in the terminal. The crab, the duck, the turtle and the snail are animated sprites, painted two pixels to a cell with half blocks (U+2580, foreground over background) so a transparent pixel shows the terminal's own background: eight frames a second in the `just start` launch screen and under `vibe pet --watch`, a still frame next to `vibe status`, and four states (idle, walk, happy, sleep) with the walk chosen by the stroll rather than stored. The frames are vendored from [vscode-pets](https://github.com/tonybaloney/vscode-pets) (MIT, Anthony Shaw), drawn by Marc Duiker, enkeefe and Kennet Shin; only art that project licenses as MIT was taken, the sets with their own itch.io terms were left behind, and the licence, the author, the source URL and the commit travel with the pixels in `vibemap/data/pets/`. `tools/sync_pets.py` packs the GIFs into a palette with run-length rows and has a `--check` mode a test runs, so Pillow stays a dev dependency and an installed `vibe` needs nothing new. Every other species keeps the claude-buddy ASCII art, and so does any terminal without truecolor or with `NO_COLOR` set; `[pet] style` in `config/camp.toml` (`auto`, `pixel`, `ascii`, also `vibe pet --style`) decides for good. `tools/tui_media.py` renders `docs/media/tui-pet.png` and `tui-pet.gif` from the real onboarding screens.
@@ -23,6 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The HUD has a hierarchy and an overflow menu. Roadmap and Search stay in the pill; Backpack, Ask, Stats, Vault, Tree and World are the secondary row, which sits in the pill on a wide screen and drops into the **More** menu on a phone; Settings is tertiary and lives in the menu at every width. It is one set of buttons in one place in the markup, so a new button is one more line in `#hud-sec` and needs no layout work. The KPI row is the HUD's own last line instead of a hand-measured offset, so it follows however the pills wrap. The HUD stays above the sheet, which is what keeps Ask and Search working while a stop is open, and the name pill and the stop dots step aside while it is.
+
+- The sheet is a real overlay: one panel, its own scroll container, the page behind it never moves, and the row that closes a lesson (Mark as done, and the way back) sticks to the bottom of that container. The reading column is framed rather than floating on black, and the Close button sits with the text instead of eight hundred pixels away from it.
+
+- The scene and the speech bubble fill the window: the stage takes the height the talk band does not, so the black letterbox under the island at 1440x900 is gone. The hint line carries its own backing pill instead of light grey on bright grass, and the joystick and the jump button are hidden on a fine pointer, where the ground, the arrow keys and WASD already do the work.
+
+- On the title screen the name field travels with the Start button in the sticky row, so the field the copy points at cannot be below the fold while the button that needs it is on screen.
+
+- The in-game Settings screen names `config/camp.toml`, which is the file a camp really has, and no longer tells a slim camp to run `just build`; the same stale reference is gone from the news line, the setup guide, the vault and the finale.
+
+- The vault graph labels the hubs first and drops a label that would land on one already drawn, so a dense patch reads instead of turning into a smear.
+
+- Workstream 2's demo asks both change requests of the same card, which is what makes them comparable: the precise one changes the badge it named and nothing else, the vague one changes everything it was not told to leave alone.
+
 - `vibe check` exits 1 when any check failed and 0 when they all passed, for workstreams, mentors, artifacts and the fork challenges; `--no-claim` changes what is recorded, never the exit code. The course's own gate can now be a step in a hook or a workflow, which is what it teaches.
 
 - A stop imported from the game is honest about what it is: `vibe import` still awards half the XP and now says so in plain words and names the `vibe check` that pays the rest, `vibe status` marks it `i` instead of `x`, and the first passing check tops it up to full, the same way it tops up a `--force` claim. ADR 0004 records the decision.
@@ -30,6 +46,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `linked` badge counts only wikilinks the learner wrote. The generated vault satisfied it from day one, so it fired on whatever the learner happened to do next. Every note vibe generates whole now carries the hash of the body it was given, and the lint report counts own links separately.
 
 ### Fixed
+
+- The Copy buttons say what happened. A refused or missing clipboard now selects the text and says "Selected, press Cmd C" instead of failing silently, in the workstream 1 prompt and in the finale message.
+
+- Committing an empty release note in workstream 4 answers with a reason instead of doing nothing.
+
+- The artifact sheet says what its number counts ("3 of 20 artifacts found") instead of reading as an index.
+
+- The go-live pairing block is a sentence. The items carry commas of their own, so they are separated by semicolons with an "and" before the last, instead of being joined into an unparseable list.
+
+- The export message names the camp, not the repo, and no longer cuts the command with an ellipsis; it says the code is on the clipboard when it is.
+
+- The thirty-two "Open" buttons in the Roadmap and the "Go" buttons under the campaign carry an `aria-label` naming their row, so a screen reader hears the mentor or the artifact rather than "Open" thirty-two times.
 
 - Strict checks no longer print a Python exception at the learner. The workstream 1 game check, the workstream 2 `AGENTS.md` check, the DuckDB `top_runs.sql` check and the strict vault-note check all guard their reads and answer with the same plain sentence as the lenient row above them.
 

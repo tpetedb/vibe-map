@@ -91,22 +91,29 @@ def test_joystick_drag_moves_lotte(phone: GamePage) -> None:
     phone.assert_clean()
 
 
-def test_sheet_scrolls_in_normal_flow(phone: GamePage) -> None:
+def test_the_sheet_is_an_overlay_with_its_own_scroll(phone: GamePage) -> None:
+    """The sheet covers the phone, scrolls inside itself, and the page does not."""
     phone.open_workstream(1)
     metrics = phone.page.evaluate(
-        """() => ({
-          scrollY: window.scrollY,
-          docH: document.documentElement.scrollHeight,
-          winH: window.innerHeight,
-          sheetPos: getComputedStyle(document.getElementById('sheet')).position,
-          fixed: [...document.querySelectorAll('body *')].filter(e =>
-            getComputedStyle(e).position === 'fixed' && e.offsetParent !== null
-          ).map(e => e.id || e.className).slice(0, 10),
-        })"""
+        """() => {
+          const sheet = document.getElementById('sheet');
+          const inner = sheet.querySelector('.inner');
+          const r = sheet.getBoundingClientRect();
+          return {
+            scrollY: window.scrollY,
+            winH: window.innerHeight,
+            pos: getComputedStyle(sheet).position,
+            top: r.top, height: r.height,
+            scrollable: inner.scrollHeight > inner.clientHeight + 1,
+            innerTop: inner.scrollTop,
+          };
+        }"""
     )
-    assert metrics["docH"] > metrics["winH"], metrics
-    assert metrics["sheetPos"] != "fixed", metrics
-    assert metrics["scrollY"] > 0, "openSheet should scroll the sheet into view"
+    assert metrics["pos"] == "fixed", metrics
+    assert metrics["top"] == 0 and metrics["height"] == metrics["winH"], metrics
+    assert metrics["scrollY"] == 0, "the page behind the overlay must not move"
+    assert metrics["scrollable"], "the lesson must scroll inside the sheet"
+    assert metrics["innerTop"] == 0, "a screen opens at the top of its own scroll"
     phone.screenshot("webkit_iphone_sheet")
     phone.assert_clean()
 
