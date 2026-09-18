@@ -530,7 +530,7 @@ def test_status_counts_encounters_and_artifacts(tmp_path: Path) -> None:
     state_path.write_text(json.dumps(state))
     out = _run(camp, "status")
     assert "1/12 mentors met" in out.stdout, out.stdout
-    assert "1/20 artifacts (1 built for real)" in out.stdout
+    assert "1/21 artifacts (1 built for real)" in out.stdout
     data = json.loads(_run(camp, "status", "--json").stdout)
     assert data["mentors"] == ["torvalds"] and data["artifacts"] == ["dock"]
     assert data["artifacts_built"] == ["dock"]

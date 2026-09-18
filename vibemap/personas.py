@@ -50,6 +50,9 @@ class Persona:
     dataset: Dataset
     rolinda: str
     recipes: tuple[Recipe, ...] = field(default_factory=tuple)
+    # Shelves of the tech tree this field leans on, offered as a preset when
+    # the learner picks what to learn. Empty means no preset, so: everything.
+    interests: tuple[str, ...] = field(default_factory=tuple)
 
 
 PERSONAS: dict[str, Persona] = {
@@ -107,6 +110,7 @@ PERSONAS: dict[str, Persona] = {
                 8,
             ),
         ),
+        interests=("agents", "docs", "knowledge"),
     ),
     "cleaning-ceo": Persona(
         id="cleaning-ceo",
@@ -161,6 +165,7 @@ PERSONAS: dict[str, Persona] = {
                 8,
             ),
         ),
+        interests=("shell", "data", "agents"),
     ),
     "university-md": Persona(
         id="university-md",
@@ -215,6 +220,7 @@ PERSONAS: dict[str, Persona] = {
                 6,
             ),
         ),
+        interests=("docs", "knowledge", "agents"),
     ),
     "pabo-teacher": Persona(
         id="pabo-teacher",
@@ -269,6 +275,7 @@ PERSONAS: dict[str, Persona] = {
                 3,
             ),
         ),
+        interests=("agents", "docs", "knowledge"),
     ),
     "data-engineer": Persona(
         id="data-engineer",
@@ -324,6 +331,7 @@ PERSONAS: dict[str, Persona] = {
                 8,
             ),
         ),
+        interests=("data", "shell", "git", "agents"),
     ),
     "interior-stylist": Persona(
         id="interior-stylist",
@@ -379,6 +387,7 @@ PERSONAS: dict[str, Persona] = {
                 5,
             ),
         ),
+        interests=("agents", "knowledge", "formats"),
     ),
 }
 

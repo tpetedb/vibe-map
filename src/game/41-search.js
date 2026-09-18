@@ -13,11 +13,14 @@ function palIndex(){
   if(typeof TREE!=="undefined")Object.keys(TREE).forEach(c=>TREE[c].forEach(t=>topics[t.n]=c));
   Object.keys(typeof NOTES==="undefined"?{}:NOTES).forEach(n=>{
     if(unlocked&&!unlocked.has(n))return;
-    out.push({k:topics[n]?"Topic":"Note",s:topics[n]?"Tech tree":"Vault note",t:n,go:()=>openNote(n)})});
-  MENTORS.forEach(m=>out.push({k:"Mentor",t:m.name,s:m.role+" · "+WORLDS[m.world].name,go:()=>openMentor(m.id)}));
-  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>out.push({k:"Artifact",t:a.name,s:a.concept,go:()=>openArtifact(a.id)}));
+    out.push({k:topics[n]?"Topic":"Note",s:topics[n]?"Tech tree":"Vault note",t:n,go:()=>openNote(n),c:topics[n]||null})});
+  MENTORS.forEach(m=>out.push({k:"Mentor",t:m.name,s:m.role+" · "+WORLDS[m.world].name,go:()=>openMentor(m.id),c:m.shelf||null}));
+  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>out.push({k:"Artifact",t:a.name,s:a.concept,go:()=>openArtifact(a.id),c:matchedShelf(a.links)}));
   (typeof ITEMS==="undefined"?{items:[]}:ITEMS).items.forEach(i=>out.push({k:"Item",t:i.name,s:i.concept,go:()=>openTopic(i.topic)}));
   return out}
+// A row on a chosen shelf sorts ahead of an equally good one that is not.
+// It is a tie-break, never a filter: everything stays in the list.
+function palShelf(row){return row.c&&!interestsAll()&&wantsShelf(row.c)?0:1}
 // Ranking, shortest rule that reads right: a match at the start beats a match
 // in the middle, a match in the title beats one in the line under it.
 function palScore(row,q){
@@ -29,11 +32,11 @@ function palScore(row,q){
 function palRender(){
   const list=$("pal-list");
   if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';return}
-  list.innerHTML=PALHITS.map((r,i)=>`<button class="pal-row${i===palSel?" sel":""}" role="option" aria-selected="${i===palSel}" data-i="${i}"><span class="pal-what">${esc(r.t)}<span class="pal-sub">${esc(r.s||"")}</span></span><span class="pal-kind">${esc(r.k)}</span></button>`).join("");
+  list.innerHTML=PALHITS.map((r,i)=>`<button class="pal-row${i===palSel?" sel":""}" role="option" aria-selected="${i===palSel}" data-i="${i}"><span class="pal-what">${palShelf(r)===0?interestDot(r.c):""}${esc(r.t)}<span class="pal-sub">${esc(r.s||"")}</span></span><span class="pal-kind">${esc(r.k)}</span></button>`).join("");
   list.querySelectorAll(".pal-row").forEach(b=>b.onclick=()=>palGo(+b.dataset.i));
   const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"})}
 window.palTyped=function(){const q=$("pal-q").value.trim().toLowerCase();
-  PALHITS=(q?PAL.map(r=>[palScore(r,q),r]).filter(([s])=>s>=0).sort((a,b)=>a[0]-b[0]).map(([,r])=>r):PAL.slice()).slice(0,40);
+  PALHITS=(q?PAL.map(r=>[palScore(r,q),r]).filter(([s])=>s>=0).sort((a,b)=>a[0]-b[0]||palShelf(a[1])-palShelf(b[1])).map(([,r])=>r):PAL.slice()).slice(0,40);
   palSel=0;palRender()};
 function palGo(i){const r=PALHITS[i];if(!r)return;closePalette();r.go()}
 window.palKey=function(e){

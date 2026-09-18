@@ -288,7 +288,7 @@ def test_the_theme_names_the_buttons_and_the_kpis(game: GamePage) -> None:
 
 
 def test_the_title_puts_the_form_above_the_go_button(game: GamePage) -> None:
-    """Form first, satire below: the four steps come before Go, the prose after."""
+    """Form first, satire below: the five steps come before Go, the prose after."""
     page = game.goto().page
     order = page.evaluate(
         """() => [...document.querySelectorAll('#title .box > *')]
@@ -296,7 +296,7 @@ def test_the_title_puts_the_form_above_the_go_button(game: GamePage) -> None:
     )
     go = order.index("row go")
     assert order.index("onboard") < go < order.index("intro") < order.index("roles")
-    assert page.locator("#onboard .step").count() == 4
+    assert page.locator("#onboard .step").count() == 5
     assert "prerequisites" in (page.text_content("#prereq") or "")
     game.assert_clean()
 

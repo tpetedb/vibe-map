@@ -61,9 +61,13 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    vibe persona data-engineer   # or chief-of-staff, cleaning-ceo, university-md, pabo-teacher, interior-stylist
    vibe difficulty normal       # beginner, easy, normal, hard, expert, god
    vibe theme studio            # studio is the default; wine-night is the original
+   vibe interests               # the eleven shelves of the tree, and what you chose
+   vibe interests set data,shell,agents   # or: vibe interests all
    ```
 
    Each command rewrites `config/camp.toml`. Delete the file and everything falls back to defaults.
+
+   Interests decide what comes first, never what exists. The tree and the search put your shelves in front and dim the rest, the Roadmap suggests the next topic from them, grow mode opens their basics from the first evening, and `vibe status` prints both. The thirty-two stops are the same course for everyone.
 
 5. Play, then claim.
 

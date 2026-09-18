@@ -66,6 +66,13 @@ const ART_DEMOS={
     {l:"Deliver twice",o:["queue  ->  deliver 8813 to leaderboard","leaderboard ...  no ack within 30 s","queue  ->  deliver 8813 to leaderboard   (retry 1)","leaderboard  <-  ack","At-least-once delivery: the same letter can arrive twice. The reader checks the id and does the work once."]},
     {l:"A letter nobody can read",o:["queue  ->  deliver 8814 to leaderboard   ERROR: score is 'four hundred'","retry 1 ... retry 2 ... retry 3 ... gave up","8814   ->  dead-letter shelf   (kept for a human to look at)","A poison letter is parked, not dropped and not retried forever."]}
   ],
+  switchboard:[
+    {l:"Read the labels",o:["just --list","Available recipes:","    build     # rebuild the game from src/","    test      # the whole pytest battery","    verify    # what CI runs: lint + tests + build check","The comment above a recipe is what --list prints. The project explains itself."]},
+    {l:"Connect one line",o:["just greet Lotte","hello Lotte","A parameter with a default: greet name='camp'. One recipe, many calls."]},
+    {l:"Pull two plugs at once",o:["just verify","  -> lint    (dependency, runs first)","  -> test    (dependency, runs first)","verify OK","A dependency runs before the recipe that names it, and only once per invocation."]},
+    {l:"Hand the board to an agent",o:['.claude/settings.json:  "allow": ["Bash(just *)"]',"agent  ->  just verify","agent  <-  verify OK: lint clean, 412 passed","One allow rule reaches the recipes you wrote and nothing else. The wildcard goes after the program."]},
+    {l:"Guard the switch that cuts the power",o:["[confirm]","reset-scores:","    rm workspace/data/scores.csv","just reset-scores","Run recipe `reset-scores`? y/n  >","A destructive recipe asks first, so the allow rule stays safe to hand out."]}
+  ],
   shop:[
     {l:"Buy a library",o:["uv add polars","Resolved 2 packages in 140 ms"," + polars==1.33.0","Installed 1 package in 210 ms","pyproject.toml:  polars>=1.33      uv.lock:  polars 1.33.0  sha256:9f2c...","The shelf is PyPI. The wish goes in pyproject.toml. The receipt is the lockfile."]},
     {l:"Look at the shelf",o:["polars, versions on the shelf:","  1.33.0    2026-08","  1.32.3    2026-07","  1.31.0    2026-06","  0.20.31   2024-06   (old API)","Major.minor.patch. A new major may break you; a patch should not."]},

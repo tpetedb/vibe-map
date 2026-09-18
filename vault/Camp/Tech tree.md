@@ -2,13 +2,13 @@
 title: "Tech tree"
 date: 2026-09-16
 tags: [overview]
-generated: 1bbe0dd064ed
+generated: 85c582475a11
 ---
 # Tech tree
 
 The whole map, shelf by shelf. Every topic has a depth: basics, working knowledge, deep.
 
-**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. [[Unix and the terminal]], [[Files, folders and paths]], [[Interfaces - GUI, TUI, CLI, API]], [[Bash and shell scripts]], [[zsh and your shell config]], [[Dotfiles]], [[localhost and ports]], [[SSH and remote machines]]
+**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. [[Unix and the terminal]], [[Files, folders and paths]], [[Interfaces - GUI, TUI, CLI, API]], [[Bash and shell scripts]], [[zsh and your shell config]], [[Dotfiles]], [[Justfiles and task running]], [[localhost and ports]], [[SSH and remote machines]]
 **Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. [[Git]], [[GitHub, pull requests, Pages]], [[Git hooks]], [[CI-CD and automation]]
 **Config and formats.** The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env. [[Config formats - JSON, YAML, TOML, Markdown]], [[.env files and secrets]], [[Markdown and Obsidian]], [[TOML in practice - pyproject.toml]], [[YAML in practice - CI and Compose]]
 **Languages and code.** Python first, then the web, the other languages and how to know the code works. [[Python]], [[Python libraries - what they are for]], [[HTML, CSS and JavaScript]], [[Separation of concerns]], [[Other languages and what they are for]], [[Tests and evals]]
