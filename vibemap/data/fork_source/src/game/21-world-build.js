@@ -210,5 +210,12 @@ let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}}
 
 /* ---------------- input & movement ---------------- */
-// The player's walker after a look change on the title screen: same spot, new body.
-function rebuildPlayer(){if(!chars.lotte)return;const p=chars.lotte.g.position.clone(),r=chars.lotte.g.rotation.y;scene.remove(chars.lotte.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;scene.add(chars.lotte.g)}
+// The player's walker after a look or a name change: same spot, new body. The
+// pose is state, the limbs are the view, so the new body takes over what the
+// old one was doing; the name is rebuilt on a timer, which can land long after
+// the walker has sat down.
+function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
+  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  // The limbs are put where the pose says in the same tick, so a rebuild never
+  // shows one frame of a standing body with the laptop gone.
+  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g)}
