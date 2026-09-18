@@ -50,6 +50,9 @@ GAME_ORDER = [
     "@campaign",
     "16-artifacts.js",
     "17-artifact-props.js",
+    "@items",
+    "18-avatar.js",
+    "19-items.js",
     "20-worlds.js",
     "21-world-build.js",
     "30-input.js",
@@ -95,6 +98,19 @@ def _campaign_js() -> str:
         "const MENTORS=" + dump(data["mentors"]) + ";\n"
         "const ARTIFACTS=" + dump(data.get("artifacts", [])) + ";\n"
     )
+
+
+def _items_js() -> str:
+    """Collectibles and seats: a fork's own list, else the package's."""
+    sys.path.insert(0, str(ROOT))
+    local = GENERATED / "items.json"
+    if local.exists():
+        data = json.loads(local.read_text(encoding="utf-8"))
+    else:
+        from vibemap.project import data_text  # noqa: PLC0415
+
+        data = json.loads(data_text("items.json"))
+    return "const ITEMS=" + json.dumps(data, ensure_ascii=False) + ";\n"
 
 
 def _notes_js() -> str:
@@ -165,6 +181,8 @@ def _game_script() -> str:
             parts.append(_config_modules())
         elif name == "@campaign":
             parts.append(_campaign_js())
+        elif name == "@items":
+            parts.append(_items_js())
         elif name == "@notes":
             parts.append(_notes_js())
         elif name == "@tree":

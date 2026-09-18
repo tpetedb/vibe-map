@@ -30,6 +30,10 @@ function character(spec){
     const beer=cyl(.12,.12,.3,"#F2B441",0,-.85,0);c.rArm.add(beer);
   }
   const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);
+  // A character carries a pose and a wardrobe; what they mean is the avatar
+  // module's (src/game/18-avatar.js), so every walker, mentor and host has
+  // the same actions available.
+  c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }
 

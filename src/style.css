@@ -290,3 +290,11 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 @media (max-width:480px){.pill button .ic{display:none}}
 /* Phones: the pill is full; Settings lives on the Roadmap sheet instead. */
 @media (max-width:480px){.pill button[aria-label="Settings"]{display:none}}
+/* The toast stack: what just happened, top right, gone in five seconds. It is
+   a message and never state, so nothing below it depends on one being there. */
+#toast{position:fixed;top:14px;right:14px;left:auto;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 28px));pointer-events:none}
+.tst{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);backdrop-filter:blur(8px)}
+.tst b{display:flex;align-items:center;gap:6px;font-family:Sora,sans-serif;font-size:13px;color:var(--yellow)}
+.tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
+.tst a{pointer-events:auto;color:var(--a1)}
+.packtabs button.pick{border-color:var(--a1);color:var(--text)}

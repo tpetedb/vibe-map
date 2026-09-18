@@ -24,7 +24,7 @@ function playerLook(){return LOOKS[S.look]||(S.name==="Lotte"?LOOKS.lotte:LOOKS.
 // What to call the player before a name is typed: the chosen preset, else
 // nothing. Never the placeholder.
 function playerLabel(){return S.name||(LOOKS[S.look]&&S.look!=="own"?LOOKS[S.look].label:"")}
-function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:n?n+", "+l.role:l.role}}
+function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,wear:sl("wear"),label:n?n+", "+l.role:l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
 // Every command block in a lesson becomes a <details>: open at beginner, easy
@@ -100,10 +100,17 @@ const NAME_HINT="Type your name plainly.";
 function clearNameError(){const h=$("namehint");if(h){h.classList.remove("err");h.textContent=NAME_HINT}}
 window.refuseEmptyName=function(){const nm=$("name"),h=$("namehint");if(h){h.textContent="Type your name first, then kick off.";h.classList.add("err")}
   if(nm){nm.classList.remove("shake");void nm.offsetWidth;nm.classList.add("shake");nm.focus()}};
+// What you have earned to wear, on the look picker: nothing until the first
+// achievement unlocks something, then one button a piece.
+function wardrobeRow(){const owned=WEAR.filter(w=>wearOwned(w.id));if(!owned.length)return "";
+  const worn=sl("wear");
+  return `<div class="choices">${owned.map(w=>`<button class="choice${worn.includes(w.id)?" on":""}" onclick="toggleWear('${w.id}')" title="${w.slot}">${w.name}</button>`).join("")}</div>
+<p class="small muted">Yours to wear, earned on the islands. The Backpack has the rest.</p>`}
 function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOOKS[S.look]?S.look:(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>
+${wardrobeRow()}
 <div class="step"><b>2</b><span>How hard?</span></div>
 <div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
