@@ -1,0 +1,37 @@
+# Building and consuming APIs. Regenerate the tree after editing: just tree
+id = "apis"
+title = "Building and consuming APIs"
+age = "castle"
+shelf = "net"
+depth = 2
+
+summary = "Consuming: read the docs, get a key, make a request, parse JSON. Building: FastAPI turns a Python function into an endpoint in five lines. Keys are secrets: environment variables, never in git. This is the bridge between your data and every other system."
+
+history = "SOAP was designed from 1998 and published in 1999; REST-with-JSON replaced it in the 2010s; GraphQL (open sourced 2015) and gRPC (announced 2015, 1.0 in 2016) added alternatives. Today the agent-facing version of an API is an MCP server."
+try_it = "Ask Claude: 'wrap workspace/sql/per_player.sql in a FastAPI endpoint /players and run it on localhost:8000'. Open the URL."
+
+unlocks = ["mcp", "docker"]
+
+[[sources]]
+label = "FastAPI tutorial"
+url = "https://fastapi.tiangolo.com/tutorial/"
+
+[[sources]]
+label = "httpx"
+url = "https://www.python-httpx.org"
+
+[[sources]]
+label = "Twelve-Factor config"
+url = "https://12factor.net/config"
+
+[[sources]]
+label = "Source: Don Box, A Brief History of SOAP (2001)"
+url = "https://www.xml.com/pub/a/ws/2001/04/04/soap.html"
+
+[[sources]]
+label = "Source: graphql.org, GraphQL: A data query language (September 2015)"
+url = "https://graphql.org/blog/2015-09-14-graphql/"
+
+[[sources]]
+label = "Source: gRPC 1.0 announcement (August 2016)"
+url = "https://grpc.io/blog/ga-announcement/"

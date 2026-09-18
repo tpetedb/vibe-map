@@ -1,0 +1,57 @@
+# Other languages and what they are for. Regenerate the tree after editing: just tree
+id = "languages"
+title = "Other languages and what they are for"
+age = "feudal"
+shelf = "code"
+depth = 3
+
+summary = "TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one binary. Rust: speed and safety, the new systems language. Java/Kotlin, C#: enterprise and Android. Swift: Apple. C/C++: everything underneath. Bash: gluing them. You do not learn them all; you learn to read them, and agents write them."
+
+history = "C 1972, C++ 1985, Java 1995, C# 2002, Go 2009, Rust 2015 (1.0), Swift 2014, TypeScript 2012. Each language is a bet on what is expensive: programmer time (Python), machine time (Rust), or organisational scale (Java)."
+try_it = "Ask Claude: 'rewrite workspace/python/scores.py in Go, explain each line to a Python person'. Read it. Delete it."
+
+unlocks = ["docker"]
+
+[[sources]]
+label = "Stack Overflow developer survey"
+url = "https://survey.stackoverflow.co"
+
+[[sources]]
+label = "Rust book"
+url = "https://doc.rust-lang.org/book/"
+
+[[sources]]
+label = "Go tour"
+url = "https://go.dev/tour/"
+
+[[sources]]
+label = "Source: Ritchie, The Development of the C Language (Harvard copy)"
+url = "https://cscie26.dce.harvard.edu/~dce-lib113/reference/c/c_history.html"
+
+[[sources]]
+label = "Source: Bjarne Stroustrup's FAQ"
+url = "https://www.stroustrup.com/bs_faq.html"
+
+[[sources]]
+label = "Source: java.com, What is Java?"
+url = "https://www.java.com/en/download/help/whatis_java.html"
+
+[[sources]]
+label = "Source: Microsoft Learn, The history of C#"
+url = "https://learn.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-version-history"
+
+[[sources]]
+label = "Source: Go FAQ, history"
+url = "https://go.dev/doc/faq"
+
+[[sources]]
+label = "Source: Announcing Rust 1.0 (May 2015)"
+url = "https://blog.rust-lang.org/2015/05/15/Rust-1.0/"
+
+[[sources]]
+label = "Source: Apple newsroom, iOS 8 SDK and Swift (June 2014)"
+url = "https://www.apple.com/newsroom/2014/06/02Apple-Releases-iOS-8-SDK-With-Over-4-000-New-APIs/"
+
+[[sources]]
+label = "Source: Announcing TypeScript 1.0 (first release October 2012)"
+url = "https://devblogs.microsoft.com/typescript/announcing-typescript-1-0/"

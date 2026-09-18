@@ -187,6 +187,7 @@ class State(BaseModel):
             "ach": list(self.ach),
             "wear": list(self.wear),
             "interests": list(self.interests),
+            "topics": list(self.roadmap_done),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
         return base64.urlsafe_b64encode(raw).decode().rstrip("=")
@@ -233,6 +234,10 @@ class State(BaseModel):
         for shelf in payload.get("interests") or []:
             if str(shelf) not in self.interests:
                 self.interests.append(str(shelf))
+        # A topic read stays read: the code adds ids and never takes one away.
+        for topic_id in payload.get("topics") or []:
+            if str(topic_id) not in self.roadmap_done:
+                self.roadmap_done.append(str(topic_id))
         return payload
 
 

@@ -1,0 +1,25 @@
+# localhost and ports. Regenerate the tree after editing: just tree
+id = "localhost"
+title = "localhost and ports"
+age = "dark"
+shelf = "shell"
+depth = 2
+
+summary = "localhost (127.0.0.1) is your own machine talking to itself over the network stack. A port is a numbered door; a dev server on port 8000 means open http://localhost:8000. Everything web starts here before it goes anywhere."
+
+history = "Network 127 is set aside for loopback in the Assigned Numbers RFCs (RFC 990, 1986); TCP/IP became the ARPANET standard on 1 January 1983 (RFC 801). Port numbers were assigned by hand by Jon Postel for years, in those same RFCs."
+try_it = "python3 -m http.server 8000 in the game folder, open http://localhost:8000/game/ in a browser. Ctrl-C to stop."
+
+unlocks = ["http", "docker", "mcp"]
+
+[[sources]]
+label = "MDN: How the web works"
+url = "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works"
+
+[[sources]]
+label = "Source: RFC 990, Assigned Numbers (1986)"
+url = "https://www.rfc-editor.org/rfc/rfc990"
+
+[[sources]]
+label = "Source: RFC 801, NCP/TCP Transition Plan (1981)"
+url = "https://www.rfc-editor.org/rfc/rfc801"

@@ -1,0 +1,37 @@
+# CI/CD and automation. Regenerate the tree after editing: just tree
+id = "ci"
+title = "CI/CD and automation"
+age = "castle"
+shelf = "git"
+depth = 3
+
+summary = "Continuous integration: every push runs the tests and checks in a clean machine. Continuous delivery: passing pushes deploy. GitHub Actions is a YAML file in .github/workflows/. This is where headless agents also live: a PR review bot is claude -p in a workflow."
+
+history = "CruiseControl (ThoughtWorks) was registered in March 2001, Hudson was renamed Jenkins in January 2011, Travis CI started in 2011, GitHub Actions became generally available in November 2019. CI made 'it works' a machine's opinion instead of a person's."
+try_it = "Ask Claude: 'add a GitHub Actions workflow that runs python3 workspace/python/scores.py and the three DuckDB queries on every push'. Push. Watch the tab."
+
+unlocks = ["headless", "tests"]
+
+[[sources]]
+label = "GitHub Actions quickstart"
+url = "https://docs.github.com/en/actions/quickstart"
+
+[[sources]]
+label = "Claude Code GitHub Actions"
+url = "https://code.claude.com/docs/en/github-actions"
+
+[[sources]]
+label = "Source: SourceForge, CruiseControl project (registered 2001-03-23)"
+url = "https://sourceforge.net/projects/cruisecontrol/"
+
+[[sources]]
+label = "Source: Jenkins blog, Jenkins! (January 2011)"
+url = "https://www.jenkins.io/blog/2011/01/29/jenkins/"
+
+[[sources]]
+label = "Source: travis-ci/travis-ci repository (February 2011)"
+url = "https://github.com/travis-ci/travis-ci"
+
+[[sources]]
+label = "Source: GitHub changelog, Actions generally available (November 2019)"
+url = "https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/"

@@ -59,7 +59,7 @@ LINK_SOURCES = (
     "docs/RESOURCES.md",
     "docs/ROADMAP.md",
     "docs/AOE-STUDY.md",
-    "vibemap/tech.py",
+    "vibemap/data/topics",
     "vibemap/data/campaign.json",
     "vibemap/data/resources.md",
 )
@@ -142,12 +142,16 @@ def _collect_links() -> dict[str, set[str]]:
         p = ROOT / rel
         if not p.exists():
             continue
-        text = p.read_text(encoding="utf-8")
-        if p.suffix == ".json":
-            text = json.dumps(json.loads(text))
-        for url in URL.findall(text):
-            url = url.rstrip(".,;:\\")
-            links.setdefault(url, set()).add(rel)
+        # A source may be a folder: the tech tree is one file per topic.
+        for f in sorted(p.rglob("*")) if p.is_dir() else [p]:
+            if not f.is_file():
+                continue
+            text = f.read_text(encoding="utf-8")
+            if f.suffix == ".json":
+                text = json.dumps(json.loads(text))
+            for url in URL.findall(text):
+                url = url.rstrip(".,;:\\")
+                links.setdefault(url, set()).add(rel)
     return links
 
 

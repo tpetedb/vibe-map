@@ -1,0 +1,21 @@
+# Subagents and multi-agent. Regenerate the tree after editing: just tree
+id = "subagents"
+title = "Subagents and multi-agent"
+age = "imperial"
+shelf = "agents"
+depth = 3
+
+summary = "A subagent is a second model instance with its own instructions and context, called by the first for a bounded job (scorekeeper). Teams of agents split large work; the risk is coordination cost and compounding errors, so keep each one's job small and testable."
+
+history = "AutoGPT (March 2023) showed loops of agents; they mostly wandered. 2025 harnesses added typed subagents with their own tools and permissions, which is what made delegation reliable."
+try_it = "The 23:00 workstream: create the scorekeeper, run it, read its note."
+
+unlocks = ["headless"]
+
+[[sources]]
+label = "Subagents"
+url = "https://code.claude.com/docs/en/sub-agents"
+
+[[sources]]
+label = "Source: Significant-Gravitas/AutoGPT repository (created March 2023)"
+url = "https://github.com/Significant-Gravitas/AutoGPT"

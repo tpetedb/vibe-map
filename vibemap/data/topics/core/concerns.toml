@@ -1,0 +1,41 @@
+# Separation of concerns. Regenerate the tree after editing: just tree
+id = "concerns"
+title = "Separation of concerns"
+age = "feudal"
+shelf = "code"
+depth = 2
+
+summary = "One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (config/camp.toml, AGENTS.md, the skills, the hooks) is visible and separate, and it has levels: the repository's, the source's, and your journey's; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything."
+
+history = "Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load."
+try_it = "Open your camp. For each top-level folder and file write one line in a vault note: which of the three zones it belongs to (product, configuration, your workspace) and which decision it hides. Then find one place where a file mixes two concerns (a script that both computes and prints, a note that is also a config) and name it. Naming it is the exercise; splitting it is optional."
+
+unlocks = ["meta", "agentsmd", "toml", "files"]
+
+[[sources]]
+label = "Dijkstra, On the role of scientific thought (EWD 447), 1974"
+url = "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html"
+
+[[sources]]
+label = "Parnas, On the criteria to be used in decomposing systems into modules, 1972"
+url = "https://web.archive.org/web/20230815003501/http://sunnyday.mit.edu/16.355/parnas-criteria.html"
+
+[[sources]]
+label = "Conway, How do committees invent?, 1968"
+url = "https://www.melconway.com/Home/Committees_Paper.html"
+
+[[sources]]
+label = "Ousterhout, A Philosophy of Software Design, 2018"
+url = "http://web.stanford.edu/~ouster/cgi-bin/aposd.php"
+
+[[sources]]
+label = "The Twelve-Factor App, III. Config"
+url = "https://12factor.net/config"
+
+[[sources]]
+label = "Skelton and Pais, Team cognitive load, 2021"
+url = "https://itrevolution.com/articles/cognitive-load/"
+
+[[sources]]
+label = "Source: Dijkstra, EWD 447 (the phrase and the definition); Parnas 1972 (information hiding as the criterion)"
+url = "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html"

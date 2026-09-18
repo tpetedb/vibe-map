@@ -1,4 +1,4 @@
-window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList()})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;const paste="Code is in the box. In your camp: uv run vibe import, then paste it.";
+window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList(),topics:sl("topics")})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;const paste="Code is in the box. In your camp: uv run vibe import, then paste it.";
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. In your camp: uv run vibe import, then paste it."},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));
     // The progress code is versioned: an unknown version is refused loudly.
@@ -6,7 +6,7 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     const dw=d.doneW||{campus:d.done||[]};Object.keys(dw).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{n=+n;if(n>=1&&n<=8&&!S.doneW[w].includes(n)){S.doneW[w].push(n);if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a))S.artifacts.push(a)});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);
     // Added inside version 2: an older code carries none of these keys and a
     // newer reader simply finds nothing to merge.
-    ["items","ach","wear"].forEach(k=>(d[k]||[]).forEach(v=>{if(!sl(k).includes(v))sl(k).push(v)}));
+    ["items","ach","wear","topics"].forEach(k=>(d[k]||[]).forEach(v=>{if(!sl(k).includes(v))sl(k).push(v)}));
     // An interest is a set: a code adds a shelf and never removes one, so a
     // choice made in the terminal is news here rather than a correction.
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();

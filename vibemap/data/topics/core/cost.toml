@@ -1,0 +1,25 @@
+# Cost, tokens and model choice. Regenerate the tree after editing: just tree
+id = "cost"
+title = "Cost, tokens and model choice"
+age = "imperial"
+shelf = "agents"
+depth = 2
+
+summary = "You pay per token in and out. A big context and a strong model cost more per call; a scheduled job that runs hourly multiplies it. Pick the smallest model that passes your evals, cache what repeats, and read the bill weekly."
+
+history = "Per-token pricing arrived with the OpenAI API (2020). Prices per token for equal capability have fallen steeply since; usage rose faster."
+try_it = "In Claude Code, /cost after a session. Write the number in your vault."
+
+unlocks = ["future"]
+
+[[sources]]
+label = "Claude Code costs"
+url = "https://code.claude.com/docs/en/costs"
+
+[[sources]]
+label = "Claude pricing"
+url = "https://claude.com/pricing"
+
+[[sources]]
+label = "Source: OpenAI API announcement (June 2020)"
+url = "https://openai.com/index/openai-api/"
