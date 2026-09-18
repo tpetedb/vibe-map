@@ -1,5 +1,8 @@
 function animate(){
   requestAnimationFrame(animate);if(!scene)return;const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
+  // Fast travel owns the camera and the frame while it lasts; the walker and
+  // the proximity checks wait until it lands.
+  if(flight){tickFlight(dt);renderer.render(scene,camera);return}
   // movement: acceleration, turning, collisions, jump
   const L=chars.lotte,pos=L.g.position;let mv=new T.Vector3();
   if(keys.arrowup||keys.w)mv.z-=1;if(keys.arrowdown||keys.s)mv.z+=1;if(keys.arrowleft||keys.a)mv.x-=1;if(keys.arrowright||keys.d)mv.x+=1;
@@ -57,6 +60,8 @@ function animate(){
   if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.35+Math.sin(t*.7)*.1:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
   if(P.volcano)P.volcano.userData.smoke.forEach(m=>{const u=(t*.25+m.userData.o*.125)%1;m.position.set(Math.sin(u*6+m.userData.o)*u*2,7.5+u*7,Math.cos(u*5)*u*2);m.scale.setScalar(.5+u*2);m.material.opacity=.55*(1-u)});
   if(P.lamps)P.lamps.forEach((l,i)=>{l.material.emissiveIntensity=skyN>=3?1.2+Math.sin(t*3+i)*.3:0});
+  // Every bridge lamp shares one material, so the whole deck lights at once.
+  if(P.bridgeLamps)P.bridgeLamps.emissiveIntensity=skyN>=3?1.4+Math.sin(t*2)*.3:0;
   // plots pulse & buildings
   plots.forEach((p,i)=>{const k=i+1,locked=k>1&&!S.done.includes(k-1);p.userData.ring.material.opacity=locked?.15:.55+Math.sin(t*3+i)*.3;p.userData.ring.scale.setScalar(1+Math.sin(t*3+i)*.04)});
   annexes.forEach(a=>{tickPop(a.g,dt);a.g.userData.flag.rotation.y=Math.sin(t*4+a.k)*.35});
@@ -85,6 +90,10 @@ function animate(){
     else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
     else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
     else{nearK=0;$("enter").classList.remove("on")}}
+  // Last in the frame: past the middle of a bridge the island under the
+  // walker changes, and the rebuild is what the next render draws.
+  if(started)checkCrossing(pos);
+  tickMinimap(dt);
   renderer.render(scene,camera);
 }
 function animChar(c,walking,dt,t){

@@ -47,6 +47,8 @@ and the warning goes away.
 | To change | Edit | Then |
 |---|---|---|
 | The game's world scale, island radius, palette | `src/config/00-config.js` | `just build` |
+| How far apart the four islands sit, and how wide a bridge is | `ISLAND_GAP`, `BRIDGE_W`, `BRIDGE_REST_R` in `src/config/00-config.js` | `just build` |
+| Which islands a bridge joins, and where it meets each shore | `BRIDGE_CHAIN` in `src/game/20-worlds.js` | `just build` |
 | A game module (scene, worlds, sheet, boot) | `src/game/*.js`, in load order | `just build` |
 | The load order itself | `GAME_ORDER` in `tools/build.py` | `just build` |
 | Three.js, Motion, d3-force | `src/vendor/` (never edited by hand) | `just build` |
