@@ -91,7 +91,7 @@ def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(
 ) -> None:
     page = game.goto().page
     steps = page.locator("#onboard .step")
-    assert steps.count() == 4
+    assert steps.count() == 5
     page.click("#onboard button.choice:has-text('Frank')")
     assert page.input_value("#name") == "Frank"
     page.click("#onboard button.choice:has-text('Hard')")
@@ -212,7 +212,7 @@ def test_the_setup_guide_renders_below_the_go_row(game: GamePage) -> None:
 def test_a_chosen_look_alone_offers_resume(game: GamePage) -> None:
     page = game.goto(state={"name": "Max", "look": "max", "doneW": {"campus": []}}).page
     assert page.is_visible("#btn-continue")
-    # Nothing is done yet, so the four steps stay on screen.
+    # Nothing is done yet, so the five steps stay on screen.
     assert page.is_visible("#onboard")
     game.resume()
     assert game.state()["look"] == "max"

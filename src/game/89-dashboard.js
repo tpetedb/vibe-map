@@ -141,6 +141,27 @@ function dashFeed(st){
     `<li><i style="background:${DASH_HUE[e.kind]||"var(--muted)"}"></i><span>${DASH_LABEL[e.kind]||e.kind}${e.id&&e.kind!=="session"?" <b>"+escAttr(e.id)+"</b>":""}${typeof e.v==="number"?" <span class='muted'>"+fmtDur(e.v)+"</span>":""}</span><span class="when">${fmtDay(e.ts)} ${fmtClock(e.ts)}</span></li>`).join("")+`</ul>`;
 }
 
+// Progress on the shelves you chose. The collectibles are the tree's own
+// topics lying on the islands, so "found of there" is a real count per shelf
+// rather than a new number to keep.
+function dashShelves(){
+  if(typeof ITEMS==="undefined"||typeof TREE==="undefined")return "";
+  const shelf={};Object.keys(TREE).forEach(c=>TREE[c].forEach(t=>{shelf[t.id]=c}));
+  const byId={};(typeof CATS==="undefined"?[]:CATS).forEach(([c,n])=>byId[c]=n);
+  const got=sl("items");const per={};
+  ITEMS.items.forEach(i=>{const c=shelf[i.topic];if(!c||!wantsShelf(c))return;
+    if(!per[c])per[c]={n:0,of:0};per[c].of++;if(got.includes(i.id))per[c].n++});
+  const rows=Object.keys(per);
+  if(!rows.length)return dashEmpty("Pick a shelf under Settings and this fills with what you found on it.");
+  const w=320,rh=22,l=124;
+  const bars=rows.map((c,i)=>{const y=i*rh,frac=per[c].of?per[c].n/per[c].of:0;
+    return `<text x="0" y="${y+14}" class="at">${escAttr(byId[c]||c).slice(0,18)}</text>`+
+      `<rect x="${l}" y="${y+3}" width="${(w-l-34)}" height="12" rx="4" fill="var(--hairline-2)"/>`+
+      `<rect x="${l}" y="${y+3}" width="${((w-l-34)*frac).toFixed(1)}" height="12" rx="4" fill="${CAT_COL[c]}"><title>${escAttr(byId[c]||c)}: ${per[c].n} of ${per[c].of}</title></rect>`+
+      `<text x="${w}" y="${y+14}" text-anchor="end" class="at v">${per[c].n}/${per[c].of}</text>`}).join("");
+  return svgWrap(w,rows.length*rh,"Things found on the shelves you chose",bars)+
+    `<p class="small muted legend">Collectibles on your shelves, found of what is out there. Nothing is locked; the other shelves are simply not counted here.</p>`;
+}
 function renderDashboard(){
   const st=dashStats();
   const per=k=>st.days.map(d=>{const day=d;return st.ev.filter(e=>e.kind===k&&dayStart(e.ts)===day).length});
@@ -151,7 +172,7 @@ function renderDashboard(){
     dashTile("XP earned",String(st.xp),"100 a stop, 50 a mentor or a build",dashSpark(xpSeries,"var(--orange)")),
     dashTile("Day streak",String(st.streak),st.streak?"days in a row":"nothing today yet",dashSpark(st.days.map(d=>st.perDay[d]||0),"var(--yellow)")),
     dashTile("Time played",fmtDur(st.played),"counted a minute at a time",dashSpark(playSeries,"var(--blue-bright)")),
-    dashTile("Artifacts",`${st.artifacts}<span class="of">/${(typeof ARTIFACTS!=="undefined"?ARTIFACTS.length:20)}</span>`,st.built+" built for real in your camp",dashSpark(per("artifact"),"var(--orange)")),
+    dashTile("Artifacts",`${st.artifacts}<span class="of">/${(typeof ARTIFACTS!=="undefined"?ARTIFACTS.length:21)}</span>`,st.built+" built for real in your camp",dashSpark(per("artifact"),"var(--orange)")),
     dashTile("Mentors",`${st.mentors}<span class="of">/${(typeof MENTORS!=="undefined"?MENTORS.length:12)}</span>`,st.met+" met on the islands, verified here",dashSpark(per("mentor"),"var(--orange)"))
   ].join("");
   const rings=Object.keys(WORLDS).map(w=>dashRing(WORLDS[w].name,(S.doneW[w]||[]).length,8,(S.doneW[w]||[]).length===8?"var(--green-bright)":"var(--yellow)")).join("");
@@ -160,6 +181,7 @@ function renderDashboard(){
    <div class="tiles" aria-live="polite">${tiles}</div>
    <div class="card"><h3>${icon("globe")}Progress by island</h3><div class="rings">${rings}</div></div>
    <div class="card"><h3>${icon("trophy")}XP over time</h3>${dashXpLine(st)}</div>
+   <div class="card"><h3>${icon("git-branch")}Your shelves</h3>${dashShelves()}</div>
    <div class="card"><h3>${icon("flag")}Activity by day and hour</h3>${dashHeat(st)}</div>
    <div class="card"><h3>${icon("milestone")}Time per stop</h3>${dashBars(st)}</div>
    <div class="card"><h3>${icon("map")}The path you took</h3>${dashPath(st)}</div>

@@ -353,8 +353,109 @@ def _k_frontmatter(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     return True, f"{name}: {str(head['description'])[:60]}"
 
 
+def _just_dump(here: Path, name: str) -> list[dict[str, Any]] | None:
+    """The recipes as just itself reads them, or None when just cannot answer."""
+    if not _tool("just"):
+        return None
+    out = subprocess.run(
+        ["just", "--justfile", name, "--dump", "--dump-format", "json"],
+        cwd=here, capture_output=True, text=True, timeout=RUN_TIMEOUT,
+    )  # fmt: skip
+    if out.returncode != 0:
+        return None
+    try:
+        data = json.loads(out.stdout)
+    except json.JSONDecodeError:
+        return None
+    recipes = data.get("recipes")
+    if not isinstance(recipes, dict):
+        return None
+    return [
+        {
+            "name": r.get("name", key),
+            "doc": r.get("doc"),
+            "parameters": len(r.get("parameters") or ()),
+            "dependencies": len(r.get("dependencies") or ()),
+            "private": bool(r.get("private")),
+        }
+        for key, r in recipes.items()
+    ]
+
+
+# A recipe header starts at column 0: a name, optional parameters, a colon that
+# is not the `:=` of an assignment, then the dependencies. Settings, imports,
+# modules and aliases are the other things that live at column 0.
+_JUST_HEADER = re.compile(
+    r"^(?P<name>[A-Za-z0-9_-]+)(?P<params>[^:\n]*):(?!=)(?P<deps>.*)$"
+)
+_JUST_KEYWORDS = ("set", "import", "import?", "mod", "mod?", "alias", "export")
+
+
+def _just_parse(text: str) -> list[dict[str, Any]]:
+    """The tolerant reader for a machine with no just on PATH."""
+    out: list[dict[str, Any]] = []
+    doc: str | None = None
+    for line in text.splitlines():
+        if not line.strip():
+            doc = None
+            continue
+        if line[0].isspace():  # a recipe body or a continuation
+            continue
+        if line.startswith("#"):
+            doc = line.lstrip("#").strip() or None
+            continue
+        if line.startswith("["):  # an attribute keeps the doc comment above it
+            continue
+        m = _JUST_HEADER.match(line)
+        if not m or m.group("name") in _JUST_KEYWORDS:
+            doc = None
+            continue
+        out.append(
+            {
+                "name": m.group("name"),
+                "doc": doc,
+                "parameters": len(m.group("params").split()),
+                "dependencies": len(m.group("deps").split()),
+                "private": m.group("name").startswith("_"),
+            }
+        )
+        doc = None
+    return out
+
+
+def _k_justfile(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
+    """Read the tasks as data: just itself when it is installed, else by line."""
+    name = spec["file"]
+    text = (here / name).read_text(encoding="utf-8", errors="replace")
+    recipes = _just_dump(here, name)
+    how = "just read it as JSON"
+    if recipes is None:
+        if _tool("just"):
+            return False, (
+                f"just could not parse {name}; run: just --justfile {name} --list"
+            )
+        recipes = _just_parse(text)
+        how = (
+            "just is not installed, so the file was read line by line "
+            "(brew install just, then run this again)"
+        )
+    public = [r for r in recipes if not r["private"]]
+    wanted = int(spec.get("recipes", 3))
+    if len(public) < wanted:
+        return False, f"{len(public)} recipe(s) in {name}, the task asks for {wanted}"
+    bare = [r["name"] for r in public if not r["doc"]]
+    if bare:
+        return False, f"no comment above: {', '.join(sorted(bare))}"
+    if spec.get("parameter") and not any(r["parameters"] for r in public):
+        return False, "no recipe takes a parameter"
+    if spec.get("dependency") and not any(r["dependencies"] for r in public):
+        return False, "no recipe depends on another"
+    return True, f"{len(public)} documented recipes; {how}"
+
+
 KINDS: dict[str, Callable[[Path, dict[str, Any]], tuple[bool, str]]] = {
     "script": _k_script,
+    "justfile": _k_justfile,
     "dockerfile": _k_dockerfile,
     "duckdb": _k_duckdb,
     "fastapi": _k_fastapi,

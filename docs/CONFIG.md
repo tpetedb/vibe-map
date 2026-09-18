@@ -24,6 +24,7 @@ command in the last column; nothing needs a build.
 |---|---|---|
 | Your name | `config/camp.toml` `[learner] name` | `vibe name <name>` does it for you |
 | Persona, difficulty, mode, provider | `config/camp.toml` `[learner]` | `vibe persona`, `vibe difficulty`, `vibe mode`, `vibe provider` |
+| What you want to learn (which shelves come first) | `config/camp.toml` `[learner] interests` | `vibe interests set data,shell,agents`, or `vibe interests all`; the game's Settings panel writes the same choice into the progress code. An empty list means everything, and nothing is ever hidden by a choice |
 | The theme (the voice, the pairings) | `config/camp.toml` `[theme] preset` | `vibe theme <name>`; custom themes live in `themes/` |
 | The finale dates | `config/camp.toml` `[finale] dates` | nothing; the game reads them at the next build or from the host |
 | Where the vault is, and whether it grows | `config/camp.toml` `[vault]` | `vibe vault mode grow`, then `vibe vault build` |

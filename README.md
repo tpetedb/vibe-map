@@ -61,7 +61,7 @@ The repository is the install source until the package is published; once it is 
 
 `uv run vibe check 3` runs the checks for a workstream and awards the XP when they pass. Levels are the XP ladder: Intern, Junior, Medior, Senior, Expert. Four evenings, four islands, thirty-two stops, twelve mentors from the field who stand on the islands with their real ideas and sources.
 
-## Twenty things on the islands that explain one idea each
+## Twenty-one things on the islands that explain one idea each
 
 ![The cafe artifact: order a coffee, get a 200; order five, get a 429](docs/media/artifact-cafe.png)
 
@@ -133,7 +133,7 @@ Three zones, on purpose. The **product** is the engine and lives here. The **tem
 | `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, `config/camp.toml`, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
 | `workspace/` | workspace | The learner's own zone: the game from workstream 1, the scores and their queries. Here it holds the worked example. |
 | `vault/` | product | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
-| `.agents/skills/` | configuration | Fourteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
+| `.agents/skills/` | configuration | Fifteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
 | `docs/` | product | [The brief](docs/BRIEF.md) (every request, what happened, the plan), [Maintainers](docs/MAINTAINERS.md), [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
 | `tests/` | product | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
 | `justfile` | configuration | Every task, for people and for agents. `just` lists them. |
