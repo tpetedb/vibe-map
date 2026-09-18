@@ -73,6 +73,11 @@ class State(BaseModel):
     artifacts_built: list[str] = Field(default_factory=list, alias="artifactsBuilt")
     mentors: list[str] = Field(default_factory=list)
     unlocked: list[str] = Field(default_factory=list)
+    # The avatar: what was picked up on the islands, what that unlocked, and
+    # what the walker is wearing. All three travel in the progress code.
+    items: list[str] = Field(default_factory=list)
+    ach: list[str] = Field(default_factory=list)
+    wear: list[str] = Field(default_factory=list)
 
     @property
     def done(self) -> list[int]:
@@ -145,6 +150,9 @@ class State(BaseModel):
             # keeps working, so the code version does not move for it.
             "mentors": list(self.mentors),
             "artifactsBuilt": list(self.artifacts_built),
+            "items": list(self.items),
+            "ach": list(self.ach),
+            "wear": list(self.wear),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
         return base64.urlsafe_b64encode(raw).decode().rstrip("=")
@@ -181,6 +189,11 @@ class State(BaseModel):
         for a in payload.get("artifactsBuilt") or []:
             if str(a) not in self.artifacts_built:
                 self.artifacts_built.append(str(a))
+        for key in ("items", "ach", "wear"):
+            mine: list[str] = getattr(self, key)
+            for value in payload.get(key) or []:
+                if str(value) not in mine:
+                    mine.append(str(value))
         return payload
 
 

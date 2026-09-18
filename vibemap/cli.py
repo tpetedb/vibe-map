@@ -128,6 +128,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
                     "persona": cfg.learner.persona,
                     "difficulty": cfg.learner.difficulty,
                     "mode": cfg.learner.mode, "provider": cfg.learner.provider,
+                    "items": st.items, "ach": st.ach, "wear": st.wear,
                 },
                 indent=2,
             )
@@ -151,6 +152,11 @@ def status(ctx: Ctx, as_json: bool) -> None:
         # "Met" is the verified encounter, not a hello on the island.
         + f"\n{len(st.mentors)}/{len(campaign.mentors())} mentors met "
         + "(their exercise done and checked)"
+        # The avatar, as text: what was picked up on the islands and what the
+        # walker is wearing while doing it.
+        + f"\n{len(st.items)}/{len(campaign.collectibles())} things collected"
+        + f" · {len(st.ach)} achievements"
+        + (f" · wearing {', '.join(st.wear)}" if st.wear else " · wearing nothing yet")
     )
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:
