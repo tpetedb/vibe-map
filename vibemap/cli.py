@@ -1366,26 +1366,25 @@ def dotfiles_install(
 @click.option("--json", "as_json", is_flag=True, help="print the items as JSON")
 @pass_ctx
 def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
-    """Pull the AI feeds into the vault note News and a news.json.
+    """Pull the world feed into the vault note News and a news.json.
 
-    The file is data/news.json in the product, where the build bakes it into
-    the game, and .vibe/news.json in a camp, which has no build.
+    The sources are vibemap/data/sources.json unless config/camp.toml lists
+    feeds of its own. The file is data/news.json in the product, where the
+    build bakes it into the game, and .vibe/news.json in a camp, which has no
+    build.
     """
     from vibemap import news
 
-    feeds = (
-        tuple((news.source_name(u), u) for u in ctx.cfg.news.feeds)
-        or news.DEFAULT_FEEDS
-    )
-    items, problems = news.fetch(feeds, per_feed=ctx.cfg.news.per_feed)
+    sources = tuple(news.source_for_url(u) for u in ctx.cfg.news.feeds) or None
+    items, problems = news.fetch(sources, per_feed=ctx.cfg.news.per_feed)
     items = items[:limit]
     if as_json:
-        click.echo(json.dumps([i.__dict__ for i in items], indent=1))
+        click.echo(json.dumps(news.payload(items), indent=1))
         return
     for it in items[:12]:
         console.print(
             f"[muted]{it.date[:10] or '          '}[/] {escape(it.title)}  "
-            f"[path]{it.source}[/]"
+            f"[path]{it.name}[/]"
         )
     if len(items) > 12:
         console.print(f"[muted]... and {len(items) - 12} more[/]")
