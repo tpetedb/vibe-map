@@ -1,0 +1,57 @@
+# Apache Airflow. Written from the official docs, nothing from memory.
+id = "airflow"
+title = "Apache Airflow"
+age = "castle"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''Airflow is the scheduler: it holds the graph of what runs, in what order, on what schedule, and what to do when a step fails. Reach for it when the pipeline has more than one moving part and somebody has to be able to see, at eight in the morning, which run failed and where. It does not transform your data and it does not move it; it calls the things that do, which is why it sits next to dbt and dlt rather than replacing either. The hands-on here parses a DAG with the real library instead of starting a server, and the reason is measured below, not assumed.'''
+for_agents = '''And for an agent: a DAG file is Python that is imported, not run, so anything slow at module level is paid on every parse.'''
+
+history = '''The concepts page is short about what a DAG is: "A Dag is a model that encapsulates everything needed to execute a workflow", with a schedule, tasks, task dependencies and callbacks. "Tasks are discrete units of work that are run on workers", and they "come in the form of Operators, Sensors or TaskFlow". Dependencies are declared with operators: "The recommended one is to use the >> and << operators", or the explicit set_upstream and set_downstream. The schedule is one argument: "You define it via the schedule argument", with values such as "@daily" or a cron string. Running the whole thing locally is documented as one command, where "The airflow standalone command initializes the database, creates a user, and starts all components", served at localhost:8080. That is the part this topic declines to make the exercise: the check against Airflow 3.3.2 on a laptop was a 179 MB environment in which importing the SDK alone took about six seconds, and standalone adds a database migration plus an api-server, a scheduler and a triggerer left running. Parsing the DAG with the real library is the honest twenty-minute version; start standalone yourself when you have the afternoon.'''
+
+try_it = '''uv run --with "apache-airflow==3.3.2" python -c "from airflow.sdk import DAG; print(DAG)" and note how long the import alone takes.'''
+
+unlocks = ["dagster", "datamap"]
+prerequisites = ["dbt"]
+
+[[sources]]
+label = "Airflow, core concepts: DAGs"
+url = "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html"
+checked = 2026-09-18
+
+[[sources]]
+label = "Airflow, quick start and airflow standalone"
+url = "https://airflow.apache.org/docs/apache-airflow/stable/start.html"
+checked = 2026-09-18
+
+[[sources]]
+label = "Airflow, the TaskFlow API"
+url = "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html"
+checked = 2026-09-18
+
+[[sources]]
+label = "Airflow, installation"
+url = "https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A DAG the real library agrees is a DAG"
+minutes = 18
+done = "camp_dag.py parses with airflow and reports its tasks, its schedule and its edges"
+check = { kind = "module", file = "camp_dag.py", modules = [
+  "airflow",
+], install = "uv add 'apache-airflow==3.3.2'", contains = [
+  "airflow.sdk",
+  "schedule",
+], prints = [
+  "dag: camp_scores",
+  "schedule: @daily",
+  "tasks: ['extract', 'load', 'transform']",
+  "after extract: ['transform']",
+  "roots: ['extract']",
+] }

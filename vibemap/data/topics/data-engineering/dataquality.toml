@@ -1,0 +1,55 @@
+# Data quality and contracts. Written from the official docs, nothing from memory.
+id = "dataquality"
+title = "Data quality and contracts"
+age = "castle"
+shelf = "data"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-18
+minutes = 20
+
+summary = '''A data contract is the small set of promises a table makes: these columns exist, this one is unique, this one is never null, that one only ever holds these values. Reach for it the moment somebody downstream depends on your table, because the alternative is finding out at the dashboard. The mechanism is the same as in code: write the assertion next to the thing, run it on every build, and fail the build rather than publish. This pack uses dbt tests for the exercise because they run against the same DuckDB file with nothing extra to install; Great Expectations is the fuller framework and is worth knowing exists.'''
+for_agents = '''And for an agent: a test that has never failed has never been proved. Break the data on purpose once and watch it go red.'''
+
+history = '''dbt ships four generic tests, and they are the four promises most contracts are made of: unique, not_null, accepted_values and relationships, the last being "each customer_id in the orders model exists as an id in the customers table (also known as referential integrity)". They are declared in YAML under a data_tests key on a column. The other half is a singular test: "when you write a SQL query that returns failing rows, you can save that query in a .sql file within your test directory", and the rule is blunt, "If the data test returns zero failing rows, it passes, and your assertion has been validated". Running them is one command: "When you run dbt test, dbt will tell you if each test in your project passes or fails." Great Expectations names the same ideas differently: "An Expectation is a verifiable assertion about data", "An Expectation Suite is a collection of Expectations", and "A Checkpoint is the primary means for validating data in a production deployment of GX". Soda is the third option in this space, but its published soda-core package does not import on Python 3.12, which is what this camp runs, so it is named here and not used.'''
+
+try_it = '''Add a not_null test to a column you know has a null in it, run dbt test, and read the failing row count.'''
+
+unlocks = ["medallion", "datamap"]
+prerequisites = ["dbt", "schemas"]
+
+[[sources]]
+label = "dbt, data tests: generic and singular"
+url = "https://docs.getdbt.com/docs/build/data-tests"
+checked = 2026-09-18
+
+[[sources]]
+label = "dbt, model contracts"
+url = "https://docs.getdbt.com/docs/collaborate/govern/model-contracts"
+checked = 2026-09-18
+
+[[sources]]
+label = "Great Expectations, the overview of GX Core"
+url = "https://docs.greatexpectations.io/docs/core/introduction/gx_overview"
+checked = 2026-09-18
+
+[[sources]]
+label = "Soda, the documentation"
+url = "https://docs.soda.io/"
+checked = 2026-09-18
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Write the contract, then break it on purpose"
+minutes = 18
+done = "run_contract.py builds green, inserts one bad row, and the same tests go red"
+check = { kind = "module", file = "run_contract.py", modules = [
+  "dbt",
+], install = "uv add dbt-duckdb", contains = [
+  "dbtRunner",
+  "insert into",
+], prints = [
+  "build: True",
+  "tests: 4",
+  "after breach: False",
+] }
