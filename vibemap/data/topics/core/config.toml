@@ -1,0 +1,45 @@
+# Config formats: JSON, YAML, TOML, Markdown. Regenerate the tree after editing: just tree
+id = "config"
+title = "Config formats: JSON, YAML, TOML, Markdown"
+age = "dark"
+shelf = "formats"
+depth = 1
+
+summary = "Tools read settings from text files in a few formats. JSON: strict, braces, what APIs speak. YAML: indentation, what CI and Docker Compose use. TOML: sections, what Python packaging uses. Markdown: prose with light structure, what agents and Obsidian read."
+
+history = "JSON was first presented at json.org by Douglas Crockford in 2001; YAML began in 2001 (1.0 spec in 2004); Markdown by John Gruber in 2004; TOML by Tom Preston-Werner in 2013. Agents made Markdown the config format for instructions (AGENTS.md, SKILL.md) because it is readable by both people and models."
+try_it = "Open .claude/settings.json (JSON) and .agents/skills/duckdb-sql/SKILL.md (Markdown with YAML frontmatter). Spot the three formats in one repo."
+
+unlocks = ["env", "yaml", "toml", "agentsmd", "skills"]
+
+[[sources]]
+label = "JSON"
+url = "https://www.json.org/json-en.html"
+
+[[sources]]
+label = "YAML"
+url = "https://yaml.org/spec/1.2.2/"
+
+[[sources]]
+label = "TOML"
+url = "https://toml.io"
+
+[[sources]]
+label = "Markdown"
+url = "https://daringfireball.net/projects/markdown/"
+
+[[sources]]
+label = "Source: ECMA-404, The JSON data interchange syntax (2nd edition)"
+url = "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf"
+
+[[sources]]
+label = "Source: YAML 1.0 specification (2004)"
+url = "https://yaml.org/spec/1.0/"
+
+[[sources]]
+label = "Source: Markdown 1.0.1 (December 2004)"
+url = "https://daringfireball.net/projects/markdown/"
+
+[[sources]]
+label = "Source: TOML v0.1.0 release (March 2013)"
+url = "https://github.com/toml-lang/toml/releases/tag/v0.1.0"

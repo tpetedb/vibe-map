@@ -1,0 +1,37 @@
+# Markdown and Obsidian. Regenerate the tree after editing: just tree
+id = "markdown"
+title = "Markdown and Obsidian"
+age = "feudal"
+shelf = "formats"
+depth = 1
+
+summary = "Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write."
+
+history = "Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language."
+try_it = "Write vault/Camp/Me.md with three sentences and two `[[links]]`. Open the graph."
+
+unlocks = ["vault", "agentsmd", "readme", "adr", "obsidian"]
+
+[[sources]]
+label = "Markdown guide"
+url = "https://www.markdownguide.org"
+
+[[sources]]
+label = "Obsidian help"
+url = "https://help.obsidian.md"
+
+[[sources]]
+label = "Mermaid"
+url = "https://mermaid.js.org/intro/"
+
+[[sources]]
+label = "Source: Markdown 1.0.1 (December 2004)"
+url = "https://daringfireball.net/projects/markdown/"
+
+[[sources]]
+label = "Source: Daring Fireball on GitHub Flavored Markdown (October 2009)"
+url = "https://daringfireball.net/linked/2009/10/23/github-flavored-markdown"
+
+[[sources]]
+label = "Source: Obsidian, About"
+url = "https://obsidian.md/about"

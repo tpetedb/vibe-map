@@ -1,0 +1,14 @@
+# The prose for this topic lives in a handwritten vault note of the
+# same title; only its place in the tree and its sources are data.
+id = "vault"
+title = "Memory: the vault as long-term memory"
+age = "future"
+shelf = "knowledge"
+depth = 2
+covered_elsewhere = true
+
+unlocks = []
+
+[[sources]]
+label = "Source: Obsidian help"
+url = "https://help.obsidian.md"

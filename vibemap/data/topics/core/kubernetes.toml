@@ -1,0 +1,25 @@
+# Kubernetes and platforms. Regenerate the tree after editing: just tree
+id = "kubernetes"
+title = "Kubernetes and platforms"
+age = "future"
+shelf = "ship"
+depth = 3
+
+summary = "Kubernetes runs containers across many machines: scheduling, scaling, self-healing. Most knowledge workers never need to touch it; they need to know it is why 'the cloud' can scale, and that agents can now write its YAML for them."
+
+history = "Google's internal Borg (running containers for over a decade by 2016) became Kubernetes (open sourced 2014). In the 2020s it became the default substrate of cloud software; platform engineering teams now hide it behind internal tools."
+try_it = "Read one Deployment YAML and identify: image, replicas, port."
+
+unlocks = ["future"]
+
+[[sources]]
+label = "Kubernetes basics"
+url = "https://kubernetes.io/docs/tutorials/kubernetes-basics/"
+
+[[sources]]
+label = "Source: Google Cloud, the Kubernetes origin story (2016)"
+url = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story"
+
+[[sources]]
+label = "Source: Kubernetes blog, Borg: the predecessor to Kubernetes (2015)"
+url = "https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/"

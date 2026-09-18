@@ -1,0 +1,49 @@
+# Docker and containers. Regenerate the tree after editing: just tree
+id = "docker"
+title = "Docker and containers"
+age = "castle"
+shelf = "ship"
+depth = 2
+
+summary = "A container is a packaged process: your code, its dependencies, and a slice of an operating system, running the same on any machine. A Dockerfile is the recipe; an image is the result; a container is a running copy. It ends 'works on my machine'."
+
+history = "Chroot arrived with Seventh Edition Unix in 1979; Linux mount namespaces in 2002 (kernel 2.4.19) and cgroups in January 2008 (2.6.24). Docker (Solomon Hykes, dotCloud) was first shown at PyCon in March 2013 and made them usable; Kubernetes (Google, open sourced 2014) made them run in fleets. Much of cloud software today runs in containers."
+try_it = "Install Docker Desktop or OrbStack. docker run -it python:3.12 python -c 'print(1)'. You just ran Python in a box you did not install."
+
+unlocks = ["cloud", "ci", "kubernetes"]
+
+[[sources]]
+label = "Docker get started"
+url = "https://docs.docker.com/get-started/"
+
+[[sources]]
+label = "OrbStack (lighter on Mac)"
+url = "https://orbstack.dev"
+
+[[sources]]
+label = "Dev containers"
+url = "https://containers.dev"
+
+[[sources]]
+label = "Source: TUHS, V7 chdir/chroot(2) manual page"
+url = "https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/man/man2/chdir.2"
+
+[[sources]]
+label = "Source: TUHS, Seventh Edition Unix (January 1979)"
+url = "https://www.tuhs.org/cgi-bin/utree.pl?file=V7"
+
+[[sources]]
+label = "Source: mount_namespaces(7), history"
+url = "https://man7.org/linux/man-pages/man7/mount_namespaces.7.html"
+
+[[sources]]
+label = "Source: cgroups(7)"
+url = "https://man7.org/linux/man-pages/man7/cgroups.7.html"
+
+[[sources]]
+label = "Source: Docker blog, Docker: Nine Years Young (2022)"
+url = "https://www.docker.com/blog/docker-nine-years-young/"
+
+[[sources]]
+label = "Source: Google Cloud, the Kubernetes origin story (2016)"
+url = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story"
