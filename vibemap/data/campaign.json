@@ -626,6 +626,7 @@
    "id": "cherny",
    "name": "Boris Cherny",
    "role": "Creator and head of Claude Code, Anthropic",
+   "shelf": "agents",
    "world": "campus",
    "pos": [
     6,
@@ -711,6 +712,7 @@
    "id": "wu",
    "name": "Cat Wu",
    "role": "Founding engineer and product lead, Claude Code",
+   "shelf": "agents",
    "world": "campus",
    "pos": [
     -7,
@@ -779,6 +781,7 @@
    "id": "karpathy",
    "name": "Andrej Karpathy",
    "role": "Researcher, educator; ex OpenAI, ex Tesla AI",
+   "shelf": "agents",
    "world": "winter",
    "pos": [
     -6,
@@ -861,6 +864,7 @@
    "id": "lecun",
    "name": "Yann LeCun",
    "role": "Turing Award 2018; convolutional networks; Meta AI chief scientist",
+   "shelf": "agents",
    "world": "winter",
    "pos": [
     8,
@@ -949,6 +953,7 @@
    "id": "hinton",
    "name": "Geoffrey Hinton",
    "role": "Backpropagation, deep learning; Nobel Prize in Physics 2024",
+   "shelf": "agents",
    "world": "winter",
    "pos": [
     -11,
@@ -1026,6 +1031,7 @@
    "id": "li",
    "name": "Fei-Fei Li",
    "role": "ImageNet; Stanford HAI co-director",
+   "shelf": "data",
    "world": "winter",
    "pos": [
     3,
@@ -1097,6 +1103,7 @@
    "id": "sutton",
    "name": "Rich Sutton",
    "role": "Reinforcement learning; the Bitter Lesson; Turing Award 2024",
+   "shelf": "agents",
    "world": "winter",
    "pos": [
     12,
@@ -1179,6 +1186,7 @@
    "id": "amodei",
    "name": "Dario Amodei",
    "role": "CEO and co-founder, Anthropic",
+   "shelf": "future",
    "world": "winter",
    "pos": [
     -2,
@@ -1259,6 +1267,7 @@
    "id": "olah",
    "name": "Chris Olah",
    "role": "Interpretability research lead, Anthropic",
+   "shelf": "agents",
    "world": "desert",
    "pos": [
     -6,
@@ -1332,6 +1341,7 @@
    "id": "hashimoto",
    "name": "Mitchell Hashimoto",
    "role": "Creator of Ghostty; co-founder of HashiCorp",
+   "shelf": "shell",
    "world": "prod",
    "pos": [
     -8,
@@ -1408,6 +1418,7 @@
    "id": "torvalds",
    "name": "Linus Torvalds",
    "role": "Creator of Linux and git",
+   "shelf": "git",
    "world": "prod",
    "pos": [
     10,
@@ -1477,6 +1488,7 @@
    "id": "opencode",
    "name": "The OpenCode team",
    "role": "Open-source terminal coding agent",
+   "shelf": "agents",
    "world": "prod",
    "pos": [
     4,
@@ -2148,6 +2160,54 @@
       "retry 3",
       "dead letter 3"
      ]
+    }
+   }
+  },
+  {
+   "id": "switchboard",
+   "name": "The switchboard",
+   "prop": "the switchboard by the fourth plot",
+   "world": "campus",
+   "pos": [
+    -3.6,
+    -8.4
+   ],
+   "r": 2.3,
+   "model": "switchboard",
+   "concept": "one named command per task",
+   "what": "An operator's panel: every line on the campus ends in a labelled socket, and you connect one by name instead of remembering which wire went where. A justfile is that panel for a project. Each task is a recipe with a name and a comment above it, just --list reads the labels back to you, and the same recipe is what a git hook, a CI job and your agent run, so there is one wire per job and nobody patches by hand.",
+   "rolinda": "Everyone here runs the tests a slightly different way. Which of those ways is the one the pipeline runs?",
+   "links": [
+    "Justfiles and task running",
+    "AGENTS.md",
+    "Git hooks"
+   ],
+   "real": {
+    "title": "Write a justfile with three recipes and let your agent run one",
+    "minutes": 15,
+    "dir": "workspace/artifacts/switchboard",
+    "doc": {
+     "title": "just manual: Recipes",
+     "url": "https://just.systems/man/en/recipes.html"
+    },
+    "steps": [
+     "Write a justfile in this folder with three recipes, and put a comment on the line directly above each one: the Documentation Comments chapter says that comment is what just --list prints next to the recipe.",
+     "Give one recipe a parameter with a default, the way Recipe Parameters shows (greet name='camp':), and give one recipe a dependency by naming another recipe after its colon.",
+     "Run just --list, then run each recipe, then just --dump --dump-format json to see your own tasks as data. That JSON is what the check reads.",
+     "Let your agent run one. Add the allow rule Bash(just *) to .claude/settings.json (the permissions page puts the wildcard after the program, so this covers your recipes and nothing else) and ask it to run a recipe by name."
+    ],
+    "commands": [
+     "just --list",
+     "just greet",
+     "just --dump --dump-format json"
+    ],
+    "done": "the justfile parses, has three recipes, every one documented, one with a parameter and one with a dependency",
+    "check": {
+     "kind": "justfile",
+     "file": "justfile",
+     "recipes": 3,
+     "parameter": true,
+     "dependency": true
     }
    }
   },
