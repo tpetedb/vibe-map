@@ -97,8 +97,12 @@ ACTIONS: dict[str, tuple[str, str]] = {
 }
 
 
+# Ticks the pet spends being pleased to see you before it settles.
+GREETING = 8
+
+
 class PetWidget(Static):
-    """The companion: idles, blinks, strolls the width of its box."""
+    """The companion: greets, idles, blinks, strolls the width of its box."""
 
     def __init__(self, cfg: Config, name: str) -> None:
         super().__init__(markup=False)
@@ -109,20 +113,40 @@ class PetWidget(Static):
             eye=cfg.pet.eye,
             hat=cfg.pet.hat,
         )
+        # Textual renders truecolor itself, so the config decides and `auto`
+        # means pixels wherever the species has them.
+        self.pet_style = "pixel" if cfg.pet.style == "auto" else cfg.pet.style
+        self.pet_width = pet.columns(self.pet, self.pet_style)
         self.tick = 0
 
     def on_mount(self) -> None:
         self.paint()
-        self.set_interval(0.5, self.step)
+        # Eight frames a second for the sprites, half a second for the art.
+        self.set_interval(0.125 if self.pet_width > pet.WIDTH else 0.5, self.step)
 
     def step(self) -> None:
         self.tick += 1
         self.paint()
 
+    def state_now(self, width: int) -> str:
+        """A hello when the screen opens, then walking or idling."""
+        if self.tick < GREETING:
+            return "happy"
+        return pet.gait(self.tick, width, sprite_width=self.pet_width)
+
     def paint(self) -> None:
-        width = max(pet.WIDTH, self.size.width or 40)
-        offset = pet.stroll(self.tick, width)
-        self.update(pet.render(self.pet, self.tick, stats=False, offset=offset))
+        width = max(self.pet_width, self.size.width or 40)
+        offset = pet.stroll(self.tick, width, sprite_width=self.pet_width)
+        self.update(
+            pet.render(
+                self.pet,
+                self.tick,
+                stats=False,
+                offset=offset,
+                style=self.pet_style,
+                state=self.state_now(width),
+            )
+        )
 
 
 class Welcome(Screen[None]):
@@ -495,7 +519,7 @@ class VibeApp(App[str]):
     #dotfiles .action Button {{ width: 26; }}
     #dotlog {{ height: 8; }}
     .maprow {{ margin: 0 1; }}
-    PetWidget {{ height: 8; width: 60; margin: 0 1 1 1; }}
+    PetWidget {{ height: 12; width: 60; margin: 0 1 1 1; }}
     .legend {{ color: {MUTED}; margin: 1 1 0 1; }}
     """
 
