@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:ns0="http://www.w3.org/2005/Atom" version="2.0">
+<channel>
+<ns0:link href="https://developer.apple.com/news/rss/news.rss" rel="self" type="application/rss+xml" />
+<title>Latest News - Apple Developer</title>
+<link>https://developer.apple.com/news/</link>
+<description />
+<language>en</language>
+<lastBuildDate>Wed, 16 Sep 2026 10:03:39 PDT</lastBuildDate>
+<generator>Custom</generator>
+<copyright>Copyright 2026, Apple Inc.</copyright>
+
+<item>
+<title>Get ready with the latest beta releases</title>
+<link>https://developer.apple.com/news/?id=rfb1rooi</link>
+<guid>https://developer.apple.com/news/?id=rfb1rooi</guid>
+<description>&lt;p&gt;The beta versions of iOS 27.2, iPadOS 27.2, macOS 27.2, tvOS 27.2, visionOS 27.2, and watchOS 27.2 are now available. Get your apps ready by confirming they work as expected on these releases. And make sure to build and test with Xcode 27.2 to take advantage of the advancements in the latest SDKs.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Note about iOS 27.1 and iPhone Duo&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;When iPhone Duo becomes available on October 23, it will run iOS 27.1. This version builds on the foundation of iOS 27 and introduces features that were purpose-built for the new foldable design.&lt;/p&gt;&lt;p&gt;Xcode 27.1 will add development </description>
+<pubDate>Wed, 16 Sep 2026 10:03:39 PDT</pubDate>
+</item>
+<item>
+<title>Get your subscriptions ready for iOS 27</title>
+<link>https://developer.apple.com/news/?id=likeohx4</link>
+<guid>https://developer.apple.com/news/?id=likeohx4</guid>
+<description>&lt;div class="inline-article-image"&gt;&lt;img src="https://devimages-cdn.apple.com/wwdc-services/articles/images/022EB77D-3E86-4604-B38E-39F1B024E868/2048.jpeg" data-img-dark="https://devimages-cdn.apple.com/wwdc-services/articles/images/022EB77D-3E86-4604-B38E-39F1B024E868/2048.jpeg" data-hires="false" alt="Two iPhone screens demonstrating an App Store subscription bundle: an in-app promotional sheet in the Forest Explorer app on the left, and the App Store subscription purchase sheet showing monthly and annual bundle options on the right."&gt;&lt;/div&gt;&lt;p&gt;Discover how you can expand the reach of your subs</description>
+<pubDate>Wed, 16 Sep 2026 10:02:58 PDT</pubDate>
+</item>
+</channel>
+</rss>
