@@ -1,4 +1,4 @@
-window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();say(S.done.length===8?"fin":"walk")};
+window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length===8?"fin":"walk")};
 // The News card shows NEWS, embedded at build time from data/news.json
 // (vibe news writes it; the weekly action rebuilds and commits the game).
 let newsLoaded=false;
@@ -7,8 +7,12 @@ function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),
   if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
   msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
   list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
-window.openSheet=function(id){closeVault();document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>{$("sheet").scrollIntoView({behavior:"smooth",block:"start"});const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
-window.closeSheet=function(){$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
+// How long a screen stayed open is the one thing the dashboard cannot derive
+// afterwards, so the panel that opens is remembered and closing records it.
+let sheetOpen=null;
+function sheetDwell(){if(!sheetOpen)return;const s=(Date.now()-sheetOpen.at)/1000;const id=sheetOpen.id;sheetOpen=null;if(s>=2)track("dwell",id,s)}
+window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>{$("sheet").scrollIntoView({behavior:"smooth",block:"start"});const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
+window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
 // Both panels are role=dialog, so Escape has to close them; the vault sits on
 // top of the sheet, so it goes first.
 addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("vault").classList.contains("on")){closeVault();e.preventDefault()}else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
@@ -31,7 +35,7 @@ window.talkMore=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;con
   S.met[id]=Math.min(d.length,(S.met[id]||1)+1);save();$("mtalk").innerHTML=mentorTalk(m);
   const b=$("talkmore");if(b&&S.met[id]>=d.length)b.remove()};
 window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const st=S.path[id];
-  if(!S.met[id]){S.met[id]=1;save()}
+  if(!S.met[id]){S.met[id]=1;save();track("mentor",id)}
   const src=m.src.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener">${t}</a>`).join(" · ");
   $("s-mentor").innerHTML=`<div class="mentor-head">${mentorFace(m.look)}<div><h2 style="margin:0">${m.name}</h2><div class="role">${m.role}</div></div></div>
    <p>${m.bio}</p><h3>The encounter</h3><div class="mtalk" id="mtalk">${mentorTalk(m)}</div>
@@ -45,6 +49,7 @@ window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;c
 window.choosePath=function(id,v){S.path[id]=v;save();if(props.mentors&&!S.mentors.includes(id)){const c=props.mentors.find(x=>x.id===id);if(c)c.ring.material.color.set(v==="deep"?"#0088CC":"#F04923")}if(v==="deep"){$("deep").classList.add("on");$("deep").scrollIntoView({behavior:"smooth",block:"nearest"})}else closeSheet();hud()};
 function mentorFace(lk){return `<svg viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="28" rx="6" fill="#F5D7BC"/><rect x="4" y="4" width="32" height="10" rx="4" fill="${lk.hair}"/>${lk.glasses?'<rect x="9" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/><rect x="22" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/>':'<circle cx="14" cy="21" r="2" fill="#333"/><circle cx="26" cy="21" r="2" fill="#333"/>'}${lk.beard?'<rect x="10" y="27" width="20" height="8" rx="3" fill="'+lk.hair+'"/>':'<path d="M15 29 Q20 33 25 29" stroke="#B0534B" stroke-width="2" fill="none"/>'}</svg>`}
 function open(n){
+  track("open",n);
   if(n===0){openSheet("s-0");return}
   if((S.world||"campus")!=="campus"){if(n===9){renderEveningDone();say("fin");openSheet("s-gen");return}const w=CH[n-1];const done=S.done.includes(n);
     $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html}<div class="row"><button class="primary" onclick="claim(${n})">${done?"Back to the island":"Mark as done and unlock the OKR"}</button><button onclick="closeSheet()">Back to the island</button></div>`;
@@ -64,7 +69,7 @@ function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"camp
     `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
 }
 window.claim=function(n){
-  if(!S.done.includes(n)){S.done.push(n);save();placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}
+  if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}
   closeSheet()};
 
 
