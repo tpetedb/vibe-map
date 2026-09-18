@@ -77,11 +77,11 @@ def test_the_progress_line_carries_stops_mentors_and_artifacts() -> None:
 
     st = State(name="Lotte")
     assert progress_line(st) == (
-        "0/32 stops, 0/12 mentors met, 0/20 artifacts built for real"
+        "0/32 stops, 0/12 mentors met, 0/21 artifacts built for real"
     )
     st.done_w["campus"] = [1, 2]
     st.mentors.append("torvalds")
     st.artifacts_built.extend(["dock", "crane"])
     line = progress_line(st)
     assert "2/32 stops" in line and "1/12 mentors met" in line
-    assert "2/20 artifacts built for real" in line
+    assert "2/21 artifacts built for real" in line

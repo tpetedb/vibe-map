@@ -807,6 +807,20 @@ print(f"train accuracy: {tree.score(X_train, y_train):.3f}")
 print(f"test accuracy: {tree.score(X_test, y_test):.3f}")
 """
 
+SWITCHBOARD = """\
+# say hello, to a name or to the camp
+greet name='camp':
+    @echo "hello {{name}}"
+
+# the numbers in this folder, counted
+count:
+    @ls -1 | wc -l
+
+# greet first, then count: one command for the whole round
+round: greet
+    @just count
+"""
+
 # One finished piece of work per artifact, built the way its walkthrough says.
 FIXTURES: dict[str, dict[str, str]] = {
     "cafe": {"cafe.py": CAFE},
@@ -821,6 +835,7 @@ FIXTURES: dict[str, dict[str, str]] = {
     "bridge": {"mcp.json": json.dumps(MCP, indent=2) + "\n"},
     "factory": {"raw.csv": RAW_CSV, "pipeline.py": PIPELINE},
     "post-office": {"postoffice.py": POST_OFFICE},
+    "switchboard": {"justfile": SWITCHBOARD},
     "shop": {"pyproject.toml": PYPROJECT, "uv.lock": UV_LOCK},
     "bank": {".gitignore": ".env\n", "env.example": "ANTHROPIC_API_KEY=\n"},
     "data-centre": {"batch.py": BATCH},

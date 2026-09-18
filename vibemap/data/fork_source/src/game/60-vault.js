@@ -13,6 +13,10 @@ function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow"
   Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;const title=ws&&byLower[ws.n.toLowerCase()];if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
   MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
   (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(S.artifacts.includes(a.id))a.links.forEach(t=>{if(NOTES[t])set.add(t)})});
+  // A head start on what you chose: the basics of your shelves are open from
+  // the first evening. Everything else still has to be earned.
+  if(typeof TREE!=="undefined"&&!interestsAll())Object.keys(TREE).forEach(c=>{
+    if(wantsShelf(c))TREE[c].filter(t=>t.d===1).forEach(t=>{if(NOTES[t.n])set.add(t.n)})});
   return set}
 let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vctxScale=1,vz=1,vtx=0,vty=0;
 // A node's label hangs under it and is centred on it, so the simulation keeps
@@ -99,8 +103,12 @@ let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
 window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");if(treeOn)renderTree()};
 window.treeScroll=function(d){const el=$("vtree");el.scrollBy({left:d*el.clientWidth*.8,behavior:motionOff()?"auto":"smooth"})};
+// Chosen shelves come first and keep their colour; the rest stay in the same
+// list, dimmed. Nothing is hidden or locked: an interest is an order, not a gate.
+function treeShelves(){const cats=CATS.slice();if(interestsAll())return cats;
+  return cats.filter(([c])=>wantsShelf(c)).concat(cats.filter(([c])=>!wantsShelf(c)))}
 function renderTree(){const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
-  $("vtree").innerHTML='<div class="treenav"><button onclick="treeScroll(-1)" aria-label="Earlier ages">Earlier</button><button onclick="treeScroll(1)" aria-label="Later ages">Later</button><span class="small muted">Eleven ages, side by side. Scroll or use the buttons.</span></div><div class="ages">'+CATS.map(([c,cn,d])=>`<div class="age"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
+  $("vtree").innerHTML='<div class="treenav"><button onclick="treeScroll(-1)" aria-label="Earlier ages">Earlier</button><button onclick="treeScroll(1)" aria-label="Later ages">Later</button><span class="small muted">'+(interestsAll()?"Eleven shelves, side by side. Scroll or use the buttons.":"Your shelves first, the rest dimmed and still open. Settings changes them.")+'</span></div><div class="ages">'+treeShelves().map(([c,cn,d])=>`<div class="age${wantsShelf(c)?"":" faded"}"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
   $("vtree").querySelectorAll(".tech").forEach(b=>b.onclick=()=>{vrender(b.dataset.n);renderTree();$("vnote").scrollIntoView({behavior:"smooth",block:"start"})})}
 // Only a file:// game knows where the vault folder is; over http the button
 // sends you to the same notes on GitHub, and says so.

@@ -1,7 +1,8 @@
-// Onboarding: the title screen is a four-step form on a first visit. Who you
-// are (a preset walker or your own name), how hard, how you want to play
-// (browser only, or the full experience with the terminal and Obsidian), go.
-// Everything it decides lives in S: S.name, S.look, S.settings.difficulty.
+// Onboarding: the title screen is a five-step form on a first visit. Who you
+// are (a preset walker or your own name), how hard, what you want to learn,
+// how you want to play (browser only, or the full experience with the terminal
+// and Obsidian), go. Everything it decides lives in S: S.name, S.look,
+// S.settings.difficulty, S.interests.
 // Returning players get the resume button first; the steps fold away.
 const LOOKS={
   lotte:{label:"Lotte",role:"CoS",blurb:"Chief of Staff. The default; the copy is written to her.",kind:"lotte",body:"#FFFFFF",legs:"#C9C1B8",arms:"#F5D7BC"},
@@ -114,10 +115,14 @@ ${wardrobeRow()}
 <div class="step"><b>2</b><span>How hard?</span></div>
 <div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>
-<div class="step"><b>3</b><span>How do you want to play?</span></div>
+<div class="step"><b>3</b><span>What do you want to learn?</span></div>
+${interestChips()}
+<p class="small muted">${interestSummary()}</p>
+${presetRow()}
+<div class="step"><b>4</b><span>How do you want to play?</span></div>
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Everything, synced. Add a terminal and Obsidian so your work is checked and your notes are saved. You can switch to this later; nothing is lost.</span></button></div>
 <p class="small muted" id="prereq">Honest prerequisites for the full experience: a Mac or Linux terminal, about fifteen minutes to install the tools, a GitHub account, and a paid plan for Claude, Codex or Gemini. Without those, pick just the game; you can switch later and nothing is lost.</p>
-<div class="step"><b>4</b><span>Your name, then go</span></div>`;
+<div class="step"><b>5</b><span>Your name, then go</span></div>`;
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}

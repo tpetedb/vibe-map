@@ -465,7 +465,7 @@ The data hour now runs on DuckDB (https://duckdb.org/docs/), which reads a CSV a
 
 ## The campaign: four evenings, four islands
 
-Evening 1 is the eight workstreams above. Evenings 2 to 4 are below, one island each in the game. Split them over as many nights as you like; the game, the CLI and the vault keep the state. Two things sit beside the thirty-two stops and are worth half a workstream each: the twelve mentor encounters and the twenty artifacts. Both are described after Evening 4.
+Evening 1 is the eight workstreams above. Evenings 2 to 4 are below, one island each in the game. Split them over as many nights as you like; the game, the CLI and the vault keep the state. Two things sit beside the thirty-two stops and are worth half a workstream each: the twelve mentor encounters and the twenty-one artifacts. Both are described after Evening 4.
 
 ### Evening 2: History, and how these models actually work
 
@@ -961,15 +961,35 @@ Checked by: `vibe check --mentor <id>`, or `--mentor all` for the lot. A verifie
 
 ### The artifacts, and doing them for real
 
-Twenty artifacts stand on the four islands: the cafe, the fountain, the well, the lighthouse, the dock, the windmill, the balloon, the mountain, the market stall, the bridge, the factory, the post office, the shop, the bank, the data centre, the energy grid, the library, the office, the households and the school. Walk into the yellow ring and press **Inspect**: the sheet explains one concept and a small terminal demonstrates it.
+Twenty-one artifacts stand on the four islands: the cafe, the fountain, the well, the lighthouse, the dock, the windmill, the balloon, the mountain, the market stall, the bridge, the factory, the post office, the switchboard, the shop, the bank, the data centre, the energy grid, the library, the office, the households and the school. Walk into the yellow ring and press **Inspect**: the sheet explains one concept and a small terminal demonstrates it.
 
-Every sheet also carries a **Do it for real** section: a task of under twenty minutes written from the official documentation of the thing the artifact stands for, with that page linked and the commands it gives behind the same Commands disclosure the lessons use. The cafe is `http.server`, the well is `sqlite3`, the dock is Docker's Writing a Dockerfile page, the windmill is the GitHub Actions events reference, the market stall is FastAPI's First Steps, the bridge is the MCP build-a-server quickstart, the factory is the DuckDB Python API, and so on. The work goes in `workspace/artifacts/<id>/`.
+Every sheet also carries a **Do it for real** section: a task of under twenty minutes written from the official documentation of the thing the artifact stands for, with that page linked and the commands it gives behind the same Commands disclosure the lessons use. The cafe is `http.server`, the well is `sqlite3`, the dock is Docker's Writing a Dockerfile page, the windmill is the GitHub Actions events reference, the market stall is FastAPI's First Steps, the bridge is the MCP build-a-server quickstart, the factory is the DuckDB Python API, and the switchboard is the just manual's Recipes chapter. The work goes in `workspace/artifacts/<id>/`.
 
-Checked by: `vibe check --artifact <id>`, or `--artifact all`. The check reads what you wrote and runs it, offline: a Dockerfile whose instructions all parse, a SQLite file with an indexed table holding rows, an app that answers 200 to its own test client, a workflow file that parses and has a schedule and a job with steps. A check that needs a tool this machine does not have says so with the install command instead of failing, so a missing Docker never blocks you. An artifact built for real is worth half a workstream in XP, reads "built for real" on the sheet, and all twenty earn the `builder` badge.
+Checked by: `vibe check --artifact <id>`, or `--artifact all`. The check reads what you wrote and runs it, offline: a Dockerfile whose instructions all parse, a SQLite file with an indexed table holding rows, an app that answers 200 to its own test client, a workflow file that parses and has a schedule and a job with steps. A check that needs a tool this machine does not have says so with the install command instead of failing, so a missing Docker never blocks you. An artifact built for real is worth half a workstream in XP, reads "built for real" on the sheet, and all twenty-one earn the `builder` badge.
 
 ## The tech tree: shelf by shelf
 
-Forty-eight topics on eleven shelves: terminal and shell; version control and GitHub; config and formats; languages and code; data; web, networks and APIs; ship and run; agents and the harness; docs and versioning; knowledge and Obsidian; what is coming. Every topic has a depth of its own (basics, working knowledge, deep), so a shelf is something you come back to rather than a rank you pass. The full tree, with what each topic is, its real history, a five-minute try, docs and what it unlocks, is generated from `vibemap/tech.py` into [ROADMAP.md](ROADMAP.md); the same notes sit in the vault under Tech tree and in the game under Tree. Your level (Intern to Expert) is the XP ladder, not the tree.
+Fifty-four topics on eleven shelves: terminal and shell; version control and GitHub; config and formats; languages and code; data; web, networks and APIs; ship and run; agents and the harness; docs and versioning; knowledge and Obsidian; what is coming. Every topic has a depth of its own (basics, working knowledge, deep), so a shelf is something you come back to rather than a rank you pass. The full tree, with what each topic is, its real history, a five-minute try, docs and what it unlocks, is generated from `vibemap/tech.py` into [ROADMAP.md](ROADMAP.md); the same notes sit in the vault under Tech tree and in the game under Tree. Your level (Intern to Expert) is the XP ladder, not the tree.
+
+### Choosing what you want to learn
+
+Eleven shelves is more than anyone wants at once, so you pick. The title screen
+asks after the difficulty ("What do you want to learn?"), Settings changes it
+later, and in the terminal it is `vibe interests` to see the shelves,
+`vibe interests set data,shell,agents` to narrow, `vibe interests all` to go
+back. The choice lives in `config/camp.toml` under `[learner] interests` and
+travels in the progress code, so the game and the camp agree. Each persona has
+a preset the title screen offers: the data engineer picks data, terminal and
+shell, git and agents; the teacher educator picks agents, docs and knowledge.
+Everything is the default.
+
+Nothing is hidden or locked by a choice, and the thirty-two stops are the same
+course for everyone. What changes is the order things are offered in: the tree
+and the search put your shelves in front and dim the rest, the Roadmap has a
+"What you want to learn" card with where to start, grow mode opens the basics
+of your shelves from the first evening, an artifact, a mentor or a collectible
+on one of your shelves gets a small coloured dot, the dashboard counts what you
+found per shelf, and `vibe status` prints your shelves and the next topic.
 
 Tom is available for one panicked message per week. Rolinda is available for wine.
 
