@@ -26,6 +26,9 @@
   --edge:inset 0 0 0 1px rgba(255,255,255,.08); --lift:0 10px 30px rgba(0,0,0,.6);
   --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
   --t-fast:150ms; --t-base:240ms; --t-slow:400ms;
+  /* The talk band under the stage: one number, so the stage can take the rest
+     of the window and no black strip is left between them. */
+  --talk-h:104px;
   --ease:cubic-bezier(.4,1,.75,.9); --ease-out:cubic-bezier(.2,.8,.2,1);
   /* Names the older rules below still use, mapped onto the tokens. */
   --bg2:var(--surface-1); --panel:rgba(10,10,10,.78); --panel2:var(--surface-2); --ink:var(--text);
@@ -36,8 +39,10 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
 body{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-/* The map: big by default; Settings offers compact and the whole window. */
-#stage{position:relative;height:min(84vh,860px);min-height:440px;overflow:hidden;background:#9BD3F5}
+/* The map: big by default; Settings offers compact and the whole window. Big
+   is the window minus the talk band, so the scene and the bubble together fill
+   the screen and nothing is left over as a black letterbox. */
+#stage{position:relative;height:calc(100dvh - var(--talk-h));min-height:440px;overflow:hidden;background:#9BD3F5}
 #stage.map-compact{height:min(56vh,520px)}
 #stage.map-tall{height:100vh;height:100dvh}
 /* Fullscreen is asked for on the document, not on #stage: the sheet and the
@@ -77,7 +82,13 @@ h3 .ic{width:13px;height:13px;margin-right:6px;vertical-align:-2px}
 /* overlays */
 .ui{position:absolute;z-index:5;pointer-events:none}
 .ui>*{pointer-events:auto}
-#hud{top:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+/* The HUD is the app bar: it stays above the sheet overlay, so Ask, Search and
+   the menu work while a stop is open. The name pill steps aside then, and the
+   sheet's Close button lives on the other side of the bar. */
+#hud{z-index:40;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;row-gap:6px;flex-wrap:wrap}
+body:has(#sheet.on) #hud-name,body:has(#sheet.on) #kpis,
+body:has(#sheet.on) #hud-stoplabel,body:has(#sheet.on) #hud-okrs{display:none}
+body:has(#sheet.on) #hud{justify-content:flex-end}
 #hud-name{flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis;display:block;flex:1}
 .pill{flex-shrink:1;min-width:0;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--panel);border:1px solid var(--line2);backdrop-filter:blur(12px);border-radius:999px;padding:8px 12px;display:flex;gap:8px;align-items:center;white-space:nowrap}
 .pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--line2)}
@@ -88,14 +99,29 @@ h3 .ic{width:13px;height:13px;margin-right:6px;vertical-align:-2px}
   @keyframes rune{0%{transform:scale(.6);box-shadow:none}60%{transform:scale(1.3);box-shadow:0 0 18px rgba(0,208,132,.8)}100%{transform:scale(1)}}
 }
 .pill button{padding:4px 10px;font-size:11px;border-radius:999px}
-#kpis{position:absolute;top:54px;left:12px;display:flex;flex-direction:row;gap:6px;z-index:5;pointer-events:none}
+/* The HUD menu. On a wide screen the secondary group is display:contents, so
+   its buttons sit in the pill and only the tertiary group is a popup; a phone
+   turns the whole menu into the popup. Nothing moves in the DOM either way. */
+#hud-bar{position:relative}
+#hud-more{position:relative;display:flex;align-items:center}
+#hud-menu,#hud-sec{display:contents}
+#hud-ter{position:absolute;top:calc(100% + 8px);right:0;z-index:8;display:none;flex-direction:column;gap:6px;min-width:170px;padding:8px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius-m);box-shadow:var(--lift);backdrop-filter:blur(12px)}
+#hud-more.open #hud-ter{display:flex}
+#hud-ter button,#hud-menu>#hud-sec>button{white-space:nowrap}
+#hud-ter button{justify-content:flex-start;text-align:left;width:100%}
+#hud-more-btn[aria-expanded="true"]{border-color:var(--yellow)}
+/* The menu drops through the KPI row, which is the HUD's own next line: the
+   numbers step aside while it is open rather than showing through it. */
+body:has(#hud-more.open) #kpis{visibility:hidden}
+/* The KPI row is the HUD's own last row, so it sits under the pills however
+   many of them wrap; no offset to keep in step with the button count. */
+#kpis{position:relative;z-index:0;flex-basis:100%;display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;pointer-events:none}
 .kpi{background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(12px);border-radius:999px;padding:4px 10px;display:flex;gap:6px;align-items:baseline}
 .kpi b{display:inline;font-family:var(--font-display);font-size:13px;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
 .kpi span{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 /* Phones: the button pill is wider than the screen minus the name, so the
-   name takes its own row and the KPIs drop below the second row. Must come
-   after the #kpis rule above or the cascade keeps top:54px. */
-@media (max-width:480px){#hud-name{flex-basis:100%}#kpis{top:100px;flex-wrap:wrap;right:12px}}
+   name takes its own row. */
+@media (max-width:480px){#hud-name{flex-basis:100%}}
 /* Future-retro, kept subtle: 4 percent scanlines on the title box only, never on body text elsewhere. */
 #title .box{position:relative;overflow:hidden}
 #title .box::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='2'%3E%3Crect y='1' width='1' height='1' fill='%23000' fill-opacity='.04'/%3E%3C/svg%3E");background-size:1px 2px}
@@ -112,23 +138,31 @@ h3 .ic{width:13px;height:13px;margin-right:6px;vertical-align:-2px}
 .bubble svg{width:44px;height:44px;flex:0 0 44px;background:var(--panel2);border-radius:12px;border:1px solid var(--line)}
 .bubble b{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .bubble span{font-size:13px;line-height:1.4;display:block}
-#talk{padding:10px 12px 0;background:var(--bg)}
-.hint{text-align:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-shadow:0 1px 2px rgba(0,0,0,.4)}
+#talk{height:var(--talk-h);padding:10px 12px;background:var(--bg);display:flex;align-items:center}
+#talk .bubble{max-height:calc(var(--talk-h) - 20px);overflow:auto}
+/* The hint sits on bright grass, so it carries its own backing instead of
+   relying on a text shadow. */
+.hint{align-self:center;max-width:100%;text-align:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text);background:rgba(0,0,0,.55);border:1px solid var(--hairline);border-radius:var(--radius-pill);padding:6px 14px;backdrop-filter:blur(8px)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
-/* sheet */
-#sheet{display:none;position:relative;background:var(--bg);border-top:1px solid var(--line2)}
-#sheet.on{display:block}
+/* The sheet is an overlay with its own scroll container: the page behind it
+   never moves, the reading column is framed instead of floating on black, and
+   the action row of the open screen sticks to the bottom of that container. */
+#sheet{display:none;position:fixed;inset:0;width:min(820px,100%);margin-inline:auto;z-index:30;background:var(--bg);box-shadow:var(--lift)}
+#sheet.on{display:flex;flex-direction:column}
+@media (min-width:821px){#sheet{border-left:1px solid var(--line2);border-right:1px solid var(--line2)}}
 #sheet .grab{display:none}
-#sheet .inner{padding:16px 18px 60px;max-width:640px;width:100%;margin:0 auto}
-#sheet .x{position:absolute;top:12px;right:14px;padding:6px 12px;font-size:12px;border-radius:999px;z-index:2}
-.screen{display:none}.screen.on{display:block}
+#sheet .inner{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-bottom:96px;padding:52px 22px 0;max-width:680px;width:100%;margin:0 auto}
+#sheet .x{position:absolute;top:12px;left:16px;right:auto;padding:6px 12px;font-size:12px;border-radius:999px;z-index:3}
+/* The action row of the open screen: Mark as done and Back, always reachable. */
+#sheet .inner .row.actions{position:sticky;bottom:0;z-index:2;margin:18px -22px 0;padding:14px 22px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
+.screen{display:none}.screen.on{display:block;padding-bottom:24px}
 
 /* title overlay */
 /* The island renders behind the title from the first frame (a slow orbit
    until start), so the panel sits left on wide screens and leaves the
    right half of the stage clear. */
-#title{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:flex-start;padding:16px;background:rgba(0,0,0,.22)}
+#title{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;padding:16px;background:rgba(0,0,0,.22)}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -163,6 +197,8 @@ details.brief p{margin-top:8px}
 /* The primary row stays on screen however long the form gets, and the setup
    guide is rendered below it rather than between two steps. */
 #title .box .row.go{position:sticky;bottom:-18px;z-index:2;margin:14px -22px -18px;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
+#title .box .row.go #name{flex:1;min-width:150px;width:auto}
+#title .box .row.go #namehint{flex-basis:100%;margin:-2px 0 0;font-size:13px}
 #title .box .row.go+.setup{margin-top:18px}
 #namehint.err{color:var(--red-bright)}
 @media (prefers-reduced-motion:no-preference){
@@ -268,6 +304,24 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 #vnote .bl .wl{display:inline-block;margin:2px 8px 2px 0}
 #vnote a{color:var(--blue-bright);border-bottom:1px solid rgba(0,136,204,.4)}
 #vnote code{background:#2a2a2a;border-radius:4px;padding:1px 5px;font-family:"JetBrains Mono",Menlo,monospace;font-size:13px}
+/* The command palette: one box over everything, the same spacing scale. */
+#pal{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);padding:max(8vh,24px) var(--space-4) var(--space-4);justify-content:center;align-items:flex-start}
+#pal.on{display:flex}
+.pal-box{width:min(620px,100%);max-height:70vh;display:flex;flex-direction:column;background:var(--surface-1);border:1px solid var(--hairline-2);border-radius:var(--radius-l);box-shadow:var(--lift);overflow:hidden}
+#pal-q{border:0;border-bottom:1px solid var(--hairline);border-radius:0;background:transparent;padding:var(--space-4);font-size:16px}
+#pal-q:focus-visible{outline-offset:-2px}
+#pal-list{overflow-y:auto;padding:var(--space-2);display:flex;flex-direction:column;gap:2px}
+.pal-row{display:flex;align-items:center;gap:var(--space-3);width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:var(--radius-m);background:transparent;box-shadow:none;font-weight:600}
+.pal-row:hover,.pal-row.sel{background:var(--surface-2);border-color:var(--hairline-2);transform:none}
+.pal-row .pal-what{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pal-row .pal-sub{display:block;font-size:11px;font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis}
+.pal-row .pal-kind{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);flex:none}
+.pal-empty{padding:var(--space-4);margin:0}
+.pal-hint{margin:0;padding:10px var(--space-4);border-top:1px solid var(--hairline)}
+@media (max-width:480px){.pal-hint{display:none}}
+/* The stick and the jump button are for fingers; a mouse gets the ground, the
+   arrow keys and WASD, which the hint line already offers. */
+@media (hover:hover) and (pointer:fine){#joy,#jump{display:none}}
 #joy{position:absolute;left:14px;bottom:44px;width:88px;height:88px;border-radius:50%;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(6px);z-index:6;touch-action:none}
 #knob{position:absolute;left:26px;top:26px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 2px 8px rgba(0,0,0,.3);transition:transform .05s}
 #jump{position:absolute;right:14px;bottom:52px;width:56px;height:56px;border-radius:50%;padding:0;font-size:22px;z-index:6;background:var(--accent);color:#000;border:0;box-shadow:0 6px 18px rgba(0,0,0,.5)}
@@ -308,8 +362,18 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 @media (prefers-reduced-motion:reduce){#enter,#sheet{transition:none;animation:none}}
 /* Phones: the HUD pill is already at its width limit, so the icons go. */
 @media (max-width:480px){.pill button .ic{display:none}}
-/* Phones: the pill is full; Settings lives on the Roadmap sheet instead. */
-@media (max-width:480px){.pill button[aria-label="Settings"]{display:none}}
+/* Phones: only Roadmap and Search stay in the pill, everything else is the
+   menu, where there is room for the icons again. Search is the icon alone. */
+@media (max-width:480px){
+  #hud-menu{position:absolute;top:calc(100% + 8px);right:0;z-index:8;display:none;flex-direction:column;gap:6px;min-width:190px;padding:8px;background:var(--panel);border:1px solid var(--line2);border-radius:var(--radius-m);box-shadow:var(--lift);backdrop-filter:blur(12px)}
+  #hud-more.open #hud-menu{display:flex}
+  #hud-sec{display:flex;flex-direction:column;gap:6px}
+  #hud-ter{position:static;display:flex;padding:0;min-width:0;background:none;border:0;box-shadow:none;border-top:1px solid var(--line);padding-top:6px}
+  #hud-menu button{justify-content:flex-start;text-align:left;width:100%;padding:8px 12px;font-size:12px}
+  #hud-menu .ic{display:inline-block}
+  #hud-search .lbl{display:none}
+  #hud-search .ic{display:inline-block;margin-right:0;width:14px;height:14px}
+}
 /* The toast stack: what just happened, top right, gone in five seconds. It is
    a message and never state, so nothing below it depends on one being there. */
 #toast{position:fixed;top:14px;right:14px;left:auto;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 28px));pointer-events:none}
@@ -318,10 +382,8 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}
 .packtabs button.pick{border-color:var(--a1);color:var(--text)}
-/* Phones: with the Stats button the HUD pill is wider than the screen, so it
-   wraps onto a second line instead of clipping its last button, and the KPI
-   row drops below the taller HUD. */
-@media (max-width:480px){.pill{flex-wrap:wrap;white-space:normal;row-gap:6px}#kpis{top:136px}}
+/* Phones: the pill wraps rather than clipping its last button. */
+@media (max-width:480px){.pill{flex-wrap:wrap;white-space:normal;row-gap:6px}}
 
 /* dashboard (s-dash). One spacing scale, tabular numerals everywhere, one hue
    per meaning; every chart is inline SVG sized by its viewBox, so the panel
@@ -365,15 +427,20 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 <canvas id="c"></canvas>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
+<!-- One hierarchy, one DOM: Roadmap and Search are always in the pill, the
+     secondary buttons sit in #hud-sec and the tertiary ones in #hud-ter. On a
+     wide screen #hud-sec is display:contents, so its buttons lay out inside
+     the pill and only #hud-ter drops out of the More menu; on a phone the
+     whole menu is the popup. A new button is one more line in #hud-sec. -->
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="flag" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
-</div>
-<div id="kpis">
-  <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
-  <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
-  <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
-  <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
+  <div class="pill" id="hud-bar"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button id="hud-search" data-icon="search" onclick="openPalette()" title="Search everything (Cmd K)"><span class="lbl">Search</span></button><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><div id="hud-more"><div id="hud-menu"><div id="hud-sec"><button data-icon="backpack" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div><div id="hud-ter"><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div></div><button id="hud-more-btn" data-icon="menu" aria-expanded="false" aria-haspopup="true" onclick="toggleHudMenu()"><span class="lbl">More</span></button></div></div>
+  <div id="kpis">
+    <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
+    <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
+    <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
+    <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
+  </div>
 </div>
 
 <div class="ui" id="bottom">
@@ -392,9 +459,10 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
-    <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"></div>
-    <p class="small muted" id="namehint" style="margin-top:-8px">Type your name plainly.</p>
-    <div class="row go"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button></div>
+    <!-- The field and the button the copy points at travel together: both live
+         in the sticky row, so neither can be below the fold while the other is
+         on screen. -->
+    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
@@ -411,6 +479,14 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
   <canvas id="vg"></canvas>
   <div id="vtree"></div>
   <div id="vnote"></div>
+</div>
+<!-- The command palette: one box over everything, filled by 41-search.js. -->
+<div id="pal" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="pal-box">
+    <input type="text" id="pal-q" autocomplete="off" spellcheck="false" aria-label="Search the camp" aria-controls="pal-list" placeholder="Stops, notes, topics, mentors, artifacts, items" oninput="palTyped()" onkeydown="palKey(event)">
+    <div id="pal-list" role="listbox" aria-label="Results"></div>
+    <p class="pal-hint small muted">Up and down to move, Enter to open, Escape to close.</p>
+  </div>
 </div>
 <div id="sheet" role="dialog">
   <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
@@ -432,6 +508,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
         <p class="small muted" id="syncmsg"></p>
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>
+      <div class="row"><button onclick="closeSheet()">Back to the campus</button></div>
     </section>
 <section class="screen" id="s-pack"></section>
 <section class="screen" id="s-0">
@@ -643,6 +720,7 @@ head -1 workspace/data/scores.csv</code></pre>
     <h3>Change management</h3>
     <textarea id="release">A scoring board that ranks the team by coffee consumption, pending a prioritisation workshop.</textarea>
     <div class="row"><button class="primary" onclick="commit()">Commit and tag release</button><button onclick="ruin()">Trigger a P1</button></div>
+    <p class="small muted" id="release-msg"></p>
     <ul class="versions" id="versions"></ul>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Git, rollback, and one hook</h3>
@@ -1045,6 +1123,9 @@ milestone:'<path d="M12 13v8" /><path d="M12 3v3" /><path d="M18.172 6a2 2 0 0 1
 settings:'<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" />',
 rss:'<path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" />',
 maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />',
+search:'<path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" />',
+menu:'<path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" />',
+backpack:'<path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><path d="M8 10h8" /><path d="M8 18h8" /><path d="M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" /><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />',
 message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />'};
 function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";return `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`}
 // Static markup declares data-icon; boot fills them in.
@@ -1292,7 +1373,7 @@ function artifactReal(a){const r=a.real;const built=S.artifactsBuilt.includes(a.
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;
   if(!S.artifacts.includes(id)){S.artifacts.push(id);save();track("artifact",id);hud();(props.artifacts||[]).forEach(x=>{if(x.a.id===id)x.ring.material.color.set("#00D084")})}
   const demos=ART_DEMOS[id]||[];
-  $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}Artifact ${S.artifacts.length} of ${ARTIFACTS.length}</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
+  $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
     `<pre class="term" id="art-term">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+
@@ -2301,17 +2382,46 @@ let newsLoaded=false;
 function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),list=$("newslist");if(!msg)return;
   const items=(NEWS.items||[]).slice(0,12);
   if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
-  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
+  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in config/camp.toml; the vault note News has the whole list.";
   list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
 // How long a screen stayed open is the one thing the dashboard cannot derive
 // afterwards, so the panel that opens is remembered and closing records it.
 let sheetOpen=null;
+// The sheet is an overlay over the HUD, so the screen a player was reading is
+// remembered after it closes: the chat asks about that one when the walker is
+// not standing next to anything of its own.
+let lastScreen=null;
 function sheetDwell(){if(!sheetOpen)return;const s=(Date.now()-sheetOpen.at)/1000;const id=sheetOpen.id;sheetOpen=null;if(s>=2)track("dwell",id,s)}
-window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>{$("sheet").scrollIntoView({behavior:"smooth",block:"start"});const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
-window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
-// Both panels are role=dialog, so Escape has to close them; the vault sits on
-// top of the sheet, so it goes first.
-addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("vault").classList.contains("on")){closeVault();e.preventDefault()}else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
+// A lesson is long, so the row that closes it (Mark as done, and the way back)
+// sticks to the bottom of the scroll container. Only that row: a list screen
+// would have its own items sitting under a bar that never scrolls away.
+function stickyActions(screen){
+  const rows=[...screen.querySelectorAll(".row")];
+  rows.forEach(r=>r.classList.remove("actions"));
+  const bar=rows.reverse().find(r=>[...r.querySelectorAll("button")].some(b=>(b.getAttribute("onclick")||"").indexOf("claim(")===0));
+  if(bar)bar.classList.add("actions")}
+window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};lastScreen=id;document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));const sc=$(id);sc.classList.add("on");stickyActions(sc);$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}
+  // The sheet has its own scroll container, so a new screen starts at the top
+  // of it and the page behind the overlay never moves.
+  $("sheet").querySelector(".inner").scrollTop=0;
+  setTimeout(()=>{const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
+window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on")};
+// Both panels are role=dialog, so Escape has to close them; the palette sits
+// on top of everything, then the vault, then the sheet.
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;
+  if($("pal").classList.contains("on")){closePalette();e.preventDefault()}
+  else if($("hud-more").classList.contains("open")){closeHudMenu();e.preventDefault()}
+  else if($("vault").classList.contains("on")){closeVault();e.preventDefault()}
+  else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
+/* ---------------- the HUD menu ---------------- */
+// Everything but Roadmap and Search lives behind one button; which of them the
+// menu actually shows is the stylesheet's business, not this function's.
+window.toggleHudMenu=function(){const on=!$("hud-more").classList.contains("open");
+  $("hud-more").classList.toggle("open",on);$("hud-more-btn").setAttribute("aria-expanded",String(on))};
+window.closeHudMenu=function(){$("hud-more").classList.remove("open");$("hud-more-btn").setAttribute("aria-expanded","false")};
+// A click anywhere else closes it, and so does picking an item in it.
+addEventListener("pointerdown",e=>{if(!$("hud-more").classList.contains("open"))return;if(!$("hud-more").contains(e.target))closeHudMenu()},true);
+$("hud-menu").addEventListener("click",e=>{if(e.target.closest("button"))closeHudMenu()});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
 function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
@@ -2360,9 +2470,9 @@ function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"camp
   $("plotlist").innerHTML=`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
     return `<button class="date${done?' pick':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
     ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(9)">${icon("milestone")}Calendar alignment${ok?"":" (pending eight OKRs)"}</button>`:"")+
-    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span><b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
-    `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span><b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
-    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
+    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span><b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
+    `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span><b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" aria-label="Open ${a.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
+    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
 }
 window.claim=function(n){
   if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}
@@ -2370,6 +2480,58 @@ window.claim=function(n){
 
 
 /* ---------------- vault (mini Obsidian) ---------------- */
+// The command palette: one box over the lists the game already holds, so a
+// stop, a note, a tree topic, a mentor, an artifact or an item is two
+// keystrokes away. Cmd K or Ctrl K, and the Search button in the HUD.
+// Nothing here is state: the index is derived from the same data the panels
+// render, every time the box opens.
+let PAL=[],PALHITS=[],palSel=0;
+function palIndex(){
+  const out=[];
+  const stopLabel=CONFIG.theme.stopLabel||"Stop";
+  CH.forEach((c,i)=>out.push({k:stopLabel,t:c.h+", "+c.n,s:c.d,go:()=>openCh(i+1)}));
+  const unlocked=typeof computeUnlocked==="function"?computeUnlocked():null;
+  const topics={};
+  if(typeof TREE!=="undefined")Object.keys(TREE).forEach(c=>TREE[c].forEach(t=>topics[t.n]=c));
+  Object.keys(typeof NOTES==="undefined"?{}:NOTES).forEach(n=>{
+    if(unlocked&&!unlocked.has(n))return;
+    out.push({k:topics[n]?"Topic":"Note",s:topics[n]?"Tech tree":"Vault note",t:n,go:()=>openNote(n)})});
+  MENTORS.forEach(m=>out.push({k:"Mentor",t:m.name,s:m.role+" · "+WORLDS[m.world].name,go:()=>openMentor(m.id)}));
+  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>out.push({k:"Artifact",t:a.name,s:a.concept,go:()=>openArtifact(a.id)}));
+  (typeof ITEMS==="undefined"?{items:[]}:ITEMS).items.forEach(i=>out.push({k:"Item",t:i.name,s:i.concept,go:()=>openTopic(i.topic)}));
+  return out}
+// Ranking, shortest rule that reads right: a match at the start beats a match
+// in the middle, a match in the title beats one in the line under it.
+function palScore(row,q){
+  const t=row.t.toLowerCase(),s=(row.s||"").toLowerCase();
+  const i=t.indexOf(q);
+  if(i===0)return 0;
+  if(i>0)return t[i-1]===" "?1:2;
+  return s.indexOf(q)>=0?3:-1}
+function palRender(){
+  const list=$("pal-list");
+  if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';return}
+  list.innerHTML=PALHITS.map((r,i)=>`<button class="pal-row${i===palSel?" sel":""}" role="option" aria-selected="${i===palSel}" data-i="${i}"><span class="pal-what">${esc(r.t)}<span class="pal-sub">${esc(r.s||"")}</span></span><span class="pal-kind">${esc(r.k)}</span></button>`).join("");
+  list.querySelectorAll(".pal-row").forEach(b=>b.onclick=()=>palGo(+b.dataset.i));
+  const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"})}
+window.palTyped=function(){const q=$("pal-q").value.trim().toLowerCase();
+  PALHITS=(q?PAL.map(r=>[palScore(r,q),r]).filter(([s])=>s>=0).sort((a,b)=>a[0]-b[0]).map(([,r])=>r):PAL.slice()).slice(0,40);
+  palSel=0;palRender()};
+function palGo(i){const r=PALHITS[i];if(!r)return;closePalette();r.go()}
+window.palKey=function(e){
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();
+    if(!PALHITS.length)return;
+    palSel=(palSel+(e.key==="ArrowDown"?1:PALHITS.length-1))%PALHITS.length;palRender();return}
+  if(e.key==="Enter"){e.preventDefault();palGo(palSel)}};
+window.openPalette=function(){closeHudMenu();PAL=palIndex();$("pal-q").value="";palTyped();
+  $("pal").classList.add("on");fx($("pal").querySelector(".pal-box"));$("pal-q").focus()};
+window.closePalette=function(){$("pal").classList.remove("on")};
+// The backdrop is a click target too, so the box closes the way every overlay
+// in the game closes.
+$("pal").addEventListener("pointerdown",e=>{if(e.target===$("pal"))closePalette()});
+addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();
+    $("pal").classList.contains("on")?closePalette():openPalette()}});
 const NOTES={
 "Unix and the terminal":{t:"shell",md:`# Unix and the terminal
 The terminal is a text conversation with the computer. Every tool in this tree is a command you type; every agent in the Imperial Age is, underneath, typing those same commands for you. Learning ten commands (ls, cd, cat, mkdir, cp, mv, rm, grep, find, man) covers most of daily use.
@@ -3058,7 +3220,7 @@ MENTORS.forEach(m=>{NOTES[m.name]={t:"p",md:mentorMd(m)}});
 const CATS=[["shell", "Terminal and shell", "Where every command starts: the terminal, files, the shell and its config, ports, remote machines."], ["git", "Git and GitHub", "Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push."], ["formats", "Config and formats", "The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env."], ["code", "Languages and code", "Python first, then the web, the other languages and how to know the code works."], ["data", "Data", "Files, schemas, warehouses and SQL over all of it."], ["net", "Web, networks and APIs", "How programs talk over HTTP and how to build and consume an API."], ["ship", "Ship and run", "Containers, the cloud, platforms and agents that run without you."], ["agents", "Agents and the harness", "What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost."], ["docs", "Docs and versioning", "The README, semantic versioning, changelogs and decision records."], ["knowledge", "Knowledge and Obsidian", "Obsidian feature by feature and the vault as long-term memory."], ["future", "What is coming", "What stays the same, what changes, and what to do about it."]];const DEPTHS={"1": "Basics", "2": "Working knowledge", "3": "Deep"};const TREE={"shell": [{"id": "unix", "n": "Unix and the terminal", "d": 1}, {"id": "files", "n": "Files, folders and paths", "d": 1}, {"id": "interfaces", "n": "Interfaces: GUI, TUI, CLI, API", "d": 1}, {"id": "bash", "n": "Bash and shell scripts", "d": 2}, {"id": "zsh", "n": "zsh and your shell config", "d": 2}, {"id": "dotfiles", "n": "Dotfiles", "d": 2}, {"id": "localhost", "n": "localhost and ports", "d": 2}, {"id": "ssh", "n": "SSH and remote machines", "d": 3}], "git": [{"id": "git", "n": "Git", "d": 1}, {"id": "github", "n": "GitHub, pull requests, Pages", "d": 2}, {"id": "githooks", "n": "Git hooks", "d": 2}, {"id": "ci", "n": "CI/CD and automation", "d": 3}], "formats": [{"id": "config", "n": "Config formats: JSON, YAML, TOML, Markdown", "d": 1}, {"id": "env", "n": ".env files and secrets", "d": 1}, {"id": "markdown", "n": "Markdown and Obsidian", "d": 1}, {"id": "toml", "n": "TOML in practice: pyproject.toml", "d": 2}, {"id": "yaml", "n": "YAML in practice: CI and Compose", "d": 2}], "code": [{"id": "python", "n": "Python", "d": 1}, {"id": "pylibs", "n": "Python libraries: what they are for", "d": 2}, {"id": "web", "n": "HTML, CSS and JavaScript", "d": 2}, {"id": "concerns", "n": "Separation of concerns", "d": 2}, {"id": "languages", "n": "Other languages and what they are for", "d": 3}, {"id": "tests", "n": "Tests and evals", "d": 3}], "data": [{"id": "data", "n": "Data: files, schemas, warehouses", "d": 1}, {"id": "sql", "n": "SQL and DuckDB", "d": 2}], "net": [{"id": "http", "n": "HTTP and APIs", "d": 1}, {"id": "apis", "n": "Building and consuming APIs", "d": 2}], "ship": [{"id": "docker", "n": "Docker and containers", "d": 2}, {"id": "cloud", "n": "Cloud and servers", "d": 2}, {"id": "headless", "n": "Headless agents and scheduling", "d": 3}, {"id": "kubernetes", "n": "Kubernetes and platforms", "d": 3}], "agents": [{"id": "llm", "n": "LLM versus harness", "d": 1}, {"id": "context", "n": "Context window and prompts", "d": 1}, {"id": "agentsmd", "n": "AGENTS.md", "d": 1}, {"id": "prompting", "n": "Prompting: task, goal, hard constraints", "d": 1}, {"id": "symbols", "n": "The symbols: slash, at, bang, hash", "d": 1}, {"id": "harness", "n": "Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents", "d": 2}, {"id": "skills", "n": "Agent Skills standard", "d": 2}, {"id": "hooks", "n": "Hook", "d": 2}, {"id": "promptstructure", "n": "Structure: XML tags and Markdown blocks", "d": 2}, {"id": "meta", "n": "Building the builder", "d": 2}, {"id": "mcp", "n": "MCP", "d": 2}, {"id": "security", "n": "Security and permissions", "d": 2}, {"id": "cost", "n": "Cost, tokens and model choice", "d": 2}, {"id": "agenthooks", "n": "Agent hooks", "d": 3}, {"id": "subagents", "n": "Subagents and multi-agent", "d": 3}], "docs": [{"id": "readme", "n": "README and the quickstart", "d": 1}, {"id": "semver", "n": "Semantic Versioning", "d": 2}, {"id": "changelog", "n": "Changelogs (Keep a Changelog)", "d": 2}, {"id": "adr", "n": "Architecture decision records", "d": 3}], "knowledge": [{"id": "obsidian", "n": "Obsidian features", "d": 1}, {"id": "vault", "n": "Claude and Obsidian", "d": 2}], "future": [{"id": "future", "n": "The future perspective", "d": 1}]};
 // One colour per shelf of the tree; the same map drives the Obsidian graph groups.
 const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",data:"#00D084",net:"#0088CC",ship:"#F04923",agents:"#D32F2F",docs:"#C29200",knowledge:"#FFA94D",future:"#CCCCCC"};
-// Grow mode (vibe.toml [vault] mode, or ?vault=grow for a look): the vault
+// Grow mode (config/camp.toml [vault] mode, or ?vault=grow for a look): the vault
 // starts with the hubs and unlocks a note when the campaign earns it, the
 // same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
 // they just do not enter the graph yet.
@@ -3103,20 +3265,33 @@ function vdraw(){
   VL.forEach(([i,j])=>{const a=VN[i],b=VN[j];const hot=vsel!==null&&(i===vsel||j===vsel);c.strokeStyle=hot?"rgba(0,136,204,.9)":"rgba(255,255,255,"+(vsel===null?.16:.06)+")";c.lineWidth=(hot?1.6:1)/vz;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()});
   // Same legend as the Obsidian graph (docs/VAULT.md): workstreams green, people blue, concepts orange, ages by tier.
   const col=Object.assign({ws:"#00A86B",c:"#FF8C1A",p:"#0088CC"},CAT_COL);
-  // Labels: the selection and its neighbours always; the rest only when the
-  // node is big enough on screen, so a phone shows hubs and a zoom shows all.
-  const small=Math.min(vW,vH)<520;
-  // Zoomed out, only the hubs are labelled; everything else would overlap.
-  const minDeg=vz<.9?3:vz<1.4?2:1;
+  // The nodes first, so no label is painted under a circle.
   VN.forEach((n,i)=>{const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);c.globalAlpha=dim?.3:1;
     if(i===vsel){c.fillStyle="rgba(0,136,204,.25)";c.beginPath();c.arc(n.x,n.y,r+8,0,7);c.fill()}
     c.fillStyle=col[n.t];c.beginPath();c.arc(n.x,n.y,r,0,7);c.fill();
-    const label=i===vsel||nb.has(i)||(!dim&&r*vz>=(small?9:5.5)&&n.deg>=minDeg);
-    if(label){c.fillStyle="#dcddde";c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
-      // Keep the whole label on the canvas, whatever the pan and the zoom.
-      const half=c.measureText(n.id).width/2,lo=(-vtx)/vz+half+4,hi=(vW-vtx)/vz-half-4;
-      c.fillText(n.id,Math.max(lo,Math.min(hi,n.x)),n.y+r+13)}
     c.globalAlpha=1});
+  // Labels: the selection and its neighbours always, then the rest by degree,
+  // the hubs first. A label whose box lands on one already drawn is dropped,
+  // so a dense patch stays readable instead of turning into a smear. The
+  // degree floor only thins what is offered; collision does the rest.
+  const small=Math.min(vW,vH)<520;
+  const minDeg=vz<.9?2:1;
+  const boxes=[];
+  const free=(x,y,w,h)=>{const b=[x-w/2-3,y-h,x+w/2+3,y+3];
+    for(const o of boxes)if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1])return false;
+    boxes.push(b);return true};
+  const order=VN.map((n,i)=>i).sort((a,b)=>{
+    const pa=a===vsel?2:nb.has(a)?1:0,pb=b===vsel?2:nb.has(b)?1:0;
+    return pb-pa||VN[b].deg-VN[a].deg});
+  order.forEach(i=>{const n=VN[i];const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);
+    const near=i===vsel||nb.has(i);
+    if(!near&&(dim||r*vz<(small?9:5.5)||n.deg<minDeg))return;
+    c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
+    // Keep the whole label on the canvas, whatever the pan and the zoom.
+    const w=c.measureText(n.id).width,lo=(-vtx)/vz+w/2+4,hi=(vW-vtx)/vz-w/2-4;
+    const x=Math.max(lo,Math.min(hi,n.x)),y=n.y+r+13;
+    if(!free(x,y,w,13)&&!near)return;
+    c.globalAlpha=dim?.3:1;c.fillStyle="#dcddde";c.fillText(n.id,x,y);c.globalAlpha=1});
 }
 function vpick(x,y){let best=null,bd=22/vz;VN.forEach((n,i)=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=i}});return best}
 function vrender(id){
@@ -3168,7 +3343,18 @@ window.closeVault=function(){const was=$("vault").classList.contains("on");$("va
 // lesson cannot drift apart.
 const GUARDRAIL = "Keep it to a single file called index.html, no external libraries, no frameworks. Keep score. When you are done, tell me how to open it.";
 window.pitchTyped=function(v){S.pitch=v;save();renderPitch()};
-window.copyPitch=function(){const t=$("pitch-out").textContent;const ok=()=>{$("pitch-copy").textContent="Copied";setTimeout(()=>$("pitch-copy").textContent="Copy the prompt",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok).catch(()=>{})};
+// One copy helper for every Copy button. A refused clipboard is not silence:
+// the text is selected so it can be copied by hand, and the button says so.
+// srcEl is the element holding the text, so the fallback can select it.
+function copyText(text,btn,label,srcEl){
+  const done=msg=>{btn.textContent=msg;setTimeout(()=>{btn.textContent=label},2500)};
+  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
+    done("Selected, press Cmd C")};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(()=>done("Copied"),fallback);
+  else fallback()}
+window.copyPitch=function(){copyText($("pitch-out").textContent,$("pitch-copy"),"Copy the prompt",$("pitch-out"))};
 function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitch");if(box&&box.value!==(S.pitch||""))box.value=S.pitch||"";
   const v=(S.pitch||"").trim();
   out.textContent=v?`Build a small browser game. ${v}\n\n${GUARDRAIL}`:"Type your three sentences above and the prompt appears here, with the guardrail already attached.";
@@ -3180,8 +3366,11 @@ function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitc
 // what it named; the vague one is free to change everything else too.
 const CARD0={title:"Tonight's scores",accent:"#0067A5",cols:["Player","Score"],badge:false,serif:false};
 let card=Object.assign({},CARD0);
+// Both asks start from the same card, which is what makes them comparable:
+// the precise one changes the one thing it named, the vague one everything
+// it was not told to leave alone.
 window.speak=function(precise){
-  card=precise?Object.assign({},card,{badge:true})
+  card=precise?Object.assign({},CARD0,{badge:true})
     :{title:"Impactful Scores Experience",accent:"#FF8C1A",cols:["Player"],badge:false,serif:true};
   $("speak-out").textContent=precise
     ?"One change, delivered as scoped: a badge. Title, colour, columns and font untouched, and a one-line summary back."
@@ -3215,7 +3404,11 @@ function renderSchema(){const el=$("schema");if(!el)return;const broken=scoreCol
   :"Four column names, in this order, are the contract. The game writes them, the queries read them."}</p>`}
 
 /* ---- Workstream 4: commits are snapshots, rollback is always on ---- */
-window.commit=function(){const t=$("release").value.trim();if(!t)return;S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
+// An empty box is a refusal with a reason, never a button that does nothing.
+function releaseMsg(t){const el=$("release-msg");if(el)el.textContent=t||""}
+window.commit=function(){const t=$("release").value.trim();
+  if(!t){releaseMsg("Nothing to commit: the release note is empty. Say what this release is, then tag it.");return}
+  releaseMsg("");S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
 function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${v.t.slice(0,44)}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
@@ -3230,7 +3423,7 @@ window.weave=function(){const nodes=[["Tonight",200,150],[playerLabel()||"You",9
   const links=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,2],[3,4],[4,7],[2,7],[5,7],[6,2]];const svg=$("web");svg.classList.remove("woven");
   svg.innerHTML=links.map(([a,b])=>`<line x1="${nodes[a][1]}" y1="${nodes[a][2]}" x2="${nodes[b][1]}" y2="${nodes[b][2]}"/>`).join("")+nodes.map((n,i)=>`<g style="animation-delay:${i*.12}s"><circle cx="${n[1]}" cy="${n[2]}" r="${i===0?13:8}"/><text x="${n[1]}" y="${n[2]+(i===6?-16:22)}" text-anchor="middle">${n[0]}</text></g>`).join("");
   requestAnimationFrame(()=>svg.classList.add("woven"))};
-// Dates and pairings come from vibe.toml through the build (CONFIG); the
+// Dates and pairings come from config/camp.toml through the build (CONFIG); the
 // wine-night theme keeps the original beverage stack.
 const DATES=CONFIG.dates;
 const WINES=CONFIG.theme.id==="wine-night"?["Bourgogne Chardonnay, the arrogant one","Sancerre, chalky, unresolved finish","Barolo, decanted, bureaucratic tannins","Grower Champagne, zero dosage","Whatever Hospitality Operations decants"]:(CONFIG.theme.pairings.length?CONFIG.theme.pairings:["Water, still","Water, sparkling"]);
@@ -3240,8 +3433,9 @@ function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";retu
   const bev=CONFIG.theme.pairing==="wine"?`Beverage stack, per Hospitality Operations: ${S.wine}, served at the sommelier-mandated temperature.`:`Refreshments: ${S.wine}.`;
   const m=`Hi Tom, per my last message and the ratified roadmap, confirming go-live: ${S.date}, 18:00, at the Hospitality Hub. ${bev} Current state of the campus: ${S.done.length} of 8 stops delivered, ${S.versions.length} tagged releases and ${Object.values(S.bridges).filter(Boolean).length} live integrations. Please loop in Rolinda, she will have questions, and they will be the only good ones. Please also confirm she has decanted.\n\nBest,\n${S.name}\nChief of Staff`;
   $("msg").textContent=m;$("wa").href="https://wa.me/?text="+encodeURIComponent(m);$("msgcard").style.display=""}
-window.copyMsg=function(){const m=$("msg").textContent;const ok=()=>{$("copybtn").textContent="Copied";setTimeout(()=>$("copybtn").textContent="Copy to clipboard",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(m).then(ok).catch(()=>{})};
-window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear")})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;$("syncmsg").textContent="Code is in the box. Copy it, then in the repo: uv run vibe import "+code.slice(0,12)+"…";if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{})};
+window.copyMsg=function(){copyText($("msg").textContent,$("copybtn"),"Copy to clipboard",$("msg"))};
+window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear")})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;const paste="Code is in the box. In your camp: uv run vibe import, then paste it.";
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. In your camp: uv run vibe import, then paste it."},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));
     // The progress code is versioned: an unknown version is refused loudly.
     if(d.v!==2){$("syncmsg").textContent="That code is version "+(d.v===undefined?"1 or older":d.v)+"; this game reads version 2. Run uv run vibe export again with an up-to-date vibe.";return}
@@ -3273,12 +3467,12 @@ window.reset=function(){if(!confirm("Decommission the campus and reset to greenf
 
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
-// vibe.toml still sets the defaults for a fresh browser; these override them.
+// config/camp.toml still sets the defaults for a fresh browser; these override them.
 const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
 const SETTINGS_OPTIONS={
-  difficulty:[["config","From vibe.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
+  difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
-  vault:[["config","From vibe.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
+  vault:[["config","From config/camp.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
   pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
   shadows:[["high","Soft shadows"],["low","Cheap shadows"],["off","No shadows (fastest)"]],
   motion:[["auto","Follow the system setting"],["off","No animations"]],
@@ -3299,10 +3493,10 @@ function applySettings(){const s=settings();
 }
 window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
 function renderSettings(){const s=settings();
-  $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
+  $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from config/camp.toml in your camp.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
-    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button></div>`+
-    `<p class="small muted">Persona and theme live in vibe.toml (uv run vibe persona, theme) and need a rebuild: just build. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
+    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
+    `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 // Fullscreen takes the whole document: the sheet and the vault live outside
@@ -3383,7 +3577,7 @@ brew install --cask obsidian</code></pre>
 vibe new ${dir}
 cd ${dir}
 just setup</code></pre>
-<p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>vibe.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
+<p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>config/camp.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
 <p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code> (needs <code>gh auth login</code> first).</p>
 <h4>3. Tell it who you are</h4>
 <pre><code>vibe name ${esc(shq(playerLabel()||"player"))}
@@ -3466,6 +3660,8 @@ function chatCtx(){const c={world:S.world||"campus",stop:null,mentor:null,artifa
   if(typeof nearK==="string"&&nearK.startsWith("m:"))c.mentor=nearK.slice(2);
   else if(typeof nearK==="string"&&nearK.startsWith("a:"))c.artifact=nearK.slice(2);
   else if(!c.stop&&typeof nearK==="number"&&nearK>0)c.stop=nearK;
+  // Nothing under the walker either: the last stop whose sheet was open.
+  if(!c.stop&&!c.mentor&&!c.artifact){const last=typeof lastScreen==="string"&&/^s-([1-9])$/.exec(lastScreen);if(last)c.stop=+last[1]}
   return c}
 function chatChip(c){const out=[(WORLDS[c.world]&&WORLDS[c.world].name)||c.world];
   if(c.stop&&CH[c.stop-1])out.push("stop "+c.stop+", "+CH[c.stop-1].n);
@@ -3749,9 +3945,14 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
   const blocks=[...document.querySelectorAll(".pairing")];
   if(!(th.pairings||[]).length){blocks.forEach(el=>el.remove());return}
   const kind=th.pairing.charAt(0).toUpperCase()+th.pairing.slice(1);
+  // The go-live block is the whole stack in one sentence. The items carry
+  // commas of their own, so they are separated by semicolons and the last one
+  // gets an "and", which is the only way the list reads as a sentence.
+  const stack=th.pairings.length===1?th.pairings[0]
+    :th.pairings.slice(0,-1).join("; ")+" and "+th.pairings[th.pairings.length-1];
   blocks.forEach((el,i)=>{if(i<th.pairings.length)el.innerHTML=`<b>${kind}, ${CH[i]?CH[i].h:"go-live"}</b>${th.pairings[i]}`;
-    else el.innerHTML=`<b>${kind}, go-live</b>${th.pairings.join(", ")}.`})}
-// Theme, dates and repo come from vibe.toml through CONFIG. Labels apply to
+    else el.innerHTML=`<b>${kind}, go-live</b>The stack for the evening, in order: ${stack}.`})}
+// Theme, dates and repo come from config/camp.toml through CONFIG. Labels apply to
 // every theme; the wine-night preset alone keeps the handwritten framing, and
 // any other theme swaps it and rewrites the pairings. Difficulty and persona
 // are exposed on <body> for CSS.

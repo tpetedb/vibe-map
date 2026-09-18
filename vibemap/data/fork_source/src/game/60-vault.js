@@ -1,6 +1,6 @@
 // One colour per shelf of the tree; the same map drives the Obsidian graph groups.
 const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",data:"#00D084",net:"#0088CC",ship:"#F04923",agents:"#D32F2F",docs:"#C29200",knowledge:"#FFA94D",future:"#CCCCCC"};
-// Grow mode (vibe.toml [vault] mode, or ?vault=grow for a look): the vault
+// Grow mode (config/camp.toml [vault] mode, or ?vault=grow for a look): the vault
 // starts with the hubs and unlocks a note when the campaign earns it, the
 // same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
 // they just do not enter the graph yet.
@@ -45,20 +45,33 @@ function vdraw(){
   VL.forEach(([i,j])=>{const a=VN[i],b=VN[j];const hot=vsel!==null&&(i===vsel||j===vsel);c.strokeStyle=hot?"rgba(0,136,204,.9)":"rgba(255,255,255,"+(vsel===null?.16:.06)+")";c.lineWidth=(hot?1.6:1)/vz;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke()});
   // Same legend as the Obsidian graph (docs/VAULT.md): workstreams green, people blue, concepts orange, ages by tier.
   const col=Object.assign({ws:"#00A86B",c:"#FF8C1A",p:"#0088CC"},CAT_COL);
-  // Labels: the selection and its neighbours always; the rest only when the
-  // node is big enough on screen, so a phone shows hubs and a zoom shows all.
-  const small=Math.min(vW,vH)<520;
-  // Zoomed out, only the hubs are labelled; everything else would overlap.
-  const minDeg=vz<.9?3:vz<1.4?2:1;
+  // The nodes first, so no label is painted under a circle.
   VN.forEach((n,i)=>{const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);c.globalAlpha=dim?.3:1;
     if(i===vsel){c.fillStyle="rgba(0,136,204,.25)";c.beginPath();c.arc(n.x,n.y,r+8,0,7);c.fill()}
     c.fillStyle=col[n.t];c.beginPath();c.arc(n.x,n.y,r,0,7);c.fill();
-    const label=i===vsel||nb.has(i)||(!dim&&r*vz>=(small?9:5.5)&&n.deg>=minDeg);
-    if(label){c.fillStyle="#dcddde";c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
-      // Keep the whole label on the canvas, whatever the pan and the zoom.
-      const half=c.measureText(n.id).width/2,lo=(-vtx)/vz+half+4,hi=(vW-vtx)/vz-half-4;
-      c.fillText(n.id,Math.max(lo,Math.min(hi,n.x)),n.y+r+13)}
     c.globalAlpha=1});
+  // Labels: the selection and its neighbours always, then the rest by degree,
+  // the hubs first. A label whose box lands on one already drawn is dropped,
+  // so a dense patch stays readable instead of turning into a smear. The
+  // degree floor only thins what is offered; collision does the rest.
+  const small=Math.min(vW,vH)<520;
+  const minDeg=vz<.9?2:1;
+  const boxes=[];
+  const free=(x,y,w,h)=>{const b=[x-w/2-3,y-h,x+w/2+3,y+3];
+    for(const o of boxes)if(b[0]<o[2]&&b[2]>o[0]&&b[1]<o[3]&&b[3]>o[1])return false;
+    boxes.push(b);return true};
+  const order=VN.map((n,i)=>i).sort((a,b)=>{
+    const pa=a===vsel?2:nb.has(a)?1:0,pb=b===vsel?2:nb.has(b)?1:0;
+    return pb-pa||VN[b].deg-VN[a].deg});
+  order.forEach(i=>{const n=VN[i];const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);
+    const near=i===vsel||nb.has(i);
+    if(!near&&(dim||r*vz<(small?9:5.5)||n.deg<minDeg))return;
+    c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
+    // Keep the whole label on the canvas, whatever the pan and the zoom.
+    const w=c.measureText(n.id).width,lo=(-vtx)/vz+w/2+4,hi=(vW-vtx)/vz-w/2-4;
+    const x=Math.max(lo,Math.min(hi,n.x)),y=n.y+r+13;
+    if(!free(x,y,w,13)&&!near)return;
+    c.globalAlpha=dim?.3:1;c.fillStyle="#dcddde";c.fillText(n.id,x,y);c.globalAlpha=1});
 }
 function vpick(x,y){let best=null,bd=22/vz;VN.forEach((n,i)=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=i}});return best}
 function vrender(id){

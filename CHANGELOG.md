@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A command palette over everything the game holds. **Cmd K** or **Ctrl K**, and the Search button in the HUD, open one box that searches the stops of the island you are on, every vault note, every tech-tree topic, the twelve mentors, the twenty artifacts and the forty collectibles; the arrow keys move, Enter opens the stop, the note, the topic, the mentor or the artifact, Escape closes. The index is derived from the same data the panels render, so a new note or a new artifact is in it without a second list to maintain (`src/game/41-search.js`).
+
 - One archipelago. The four islands now stand in the same scene, on the corners of a square, joined by long plank bridges with railings, lamps and a rest platform with a bench at the middle. Every coordinate in `WORLDS` stays local to its island and only the island origins move (`ISLANDS` and `BRIDGE_CHAIN` in `src/game/20-worlds.js`, `ISLAND_GAP`, `BRIDGE_W` and `BRIDGE_REST_R` in `src/config/00-config.js`), so the active island is still built at the origin and the camera, `onLandW`, the items, the artifacts and the mentors carry on unchanged. A bridge deck is ground: it is walkable, tap to walk aims at it, and walking past its middle switches the active island with no reload, the walker carried into the new island's coordinates while the HUD, the roadmap, the sky mood, the items, the mentors and the plaques rebuild for the new world and the island behind drops to a silhouette. A bridge opens when the island before it has its first stop done, and always on beginner; a shut one shows a barrier and does not carry you. The World button stays fast travel and flies the camera over the water before it builds (a cut under reduced motion). A minimap under the HUD (`src/game/32-minimap.js`) draws the four islands, the bridges open or shut, the walker and the next stop; on a phone it waits behind a Map button.
 
 - In-game chat, answered by the learner's own Claude, Codex, Gemini, Copilot or OpenCode subscription. The **Ask** button in the HUD and the **C** key open a panel with a context chip (the island, the stop whose sheet is open, the mentor or artifact in view), suggested questions for that context, a streamed answer and a history kept in the saved state. `vibe chat serve --pair <code>` runs the bridge that answers it: `127.0.0.1` only, one `POST /ask` endpoint that takes a question and never a command, the pairing code the panel shows as the shared secret, an Origin allowlist, a 16 KiB body cap, a queue of one and a timeout that kills the provider process. The prompt is built on the Python side from the course data, so the page sends identifiers rather than text to run, and the question is an argument, never a shell string. `vibe chat ask "..."` asks the same question with the same prompt in the terminal. With no bridge the panel explains how to start one in three lines, with the exact command and code in it, and answers by searching the notes and stops embedded in the game file. `docs/CHAT.md` and `docs/adr/0009-local-chat-bridge.md`.
@@ -27,6 +29,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The HUD has a hierarchy and an overflow menu. Roadmap and Search stay in the pill; Backpack, Ask, Stats, Vault, Tree and World are the secondary row, which sits in the pill on a wide screen and drops into the **More** menu on a phone; Settings is tertiary and lives in the menu at every width. It is one set of buttons in one place in the markup, so a new button is one more line in `#hud-sec` and needs no layout work. The KPI row is the HUD's own last line instead of a hand-measured offset, so it follows however the pills wrap. The HUD stays above the sheet, which is what keeps Ask and Search working while a stop is open, and the name pill and the stop dots step aside while it is.
+
+- The sheet is a real overlay: one panel, its own scroll container, the page behind it never moves, and the row that closes a lesson (Mark as done, and the way back) sticks to the bottom of that container. The reading column is framed rather than floating on black, and the Close button sits with the text instead of eight hundred pixels away from it.
+
+- The scene and the speech bubble fill the window: the stage takes the height the talk band does not, so the black letterbox under the island at 1440x900 is gone. The hint line carries its own backing pill instead of light grey on bright grass, and the joystick and the jump button are hidden on a fine pointer, where the ground, the arrow keys and WASD already do the work.
+
+- On the title screen the name field travels with the Start button in the sticky row, so the field the copy points at cannot be below the fold while the button that needs it is on screen.
+
+- The in-game Settings screen names `config/camp.toml`, which is the file a camp really has, and no longer tells a slim camp to run `just build`; the same stale reference is gone from the news line, the setup guide, the vault and the finale.
+
+- The vault graph labels the hubs first and drops a label that would land on one already drawn, so a dense patch reads instead of turning into a smear.
+
+- Workstream 2's demo asks both change requests of the same card, which is what makes them comparable: the precise one changes the badge it named and nothing else, the vague one changes everything it was not told to leave alone.
+
 - Static island props are merged. Trees, rocks, cacti and ice floes are collected while the island is built and flushed into one instanced mesh per shape and colour (`batchAdd` and `batchFlush` in `src/game/10-scene.js`), which pays for the archipelago and leaves the phone with more room than before: on the WebKit iPhone profile a fresh campus went from 282 draw calls to 271 and a fresh winter from 286 to 260, with the three silhouettes and the bridges already in the scene. The fog and the camera reach across the water so a neighbouring island reads as a silhouette in the haze rather than a wall of sky.
 
 - `vibe check` exits 1 when any check failed and 0 when they all passed, for workstreams, mentors, artifacts and the fork challenges; `--no-claim` changes what is recorded, never the exit code. The course's own gate can now be a step in a hook or a workflow, which is what it teaches.
@@ -36,6 +52,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `linked` badge counts only wikilinks the learner wrote. The generated vault satisfied it from day one, so it fired on whatever the learner happened to do next. Every note vibe generates whole now carries the hash of the body it was given, and the lint report counts own links separately.
 
 ### Fixed
+
+- The Copy buttons say what happened. A refused or missing clipboard now selects the text and says "Selected, press Cmd C" instead of failing silently, in the workstream 1 prompt and in the finale message.
+
+- Committing an empty release note in workstream 4 answers with a reason instead of doing nothing.
+
+- The artifact sheet says what its number counts ("3 of 20 artifacts found") instead of reading as an index.
+
+- The go-live pairing block is a sentence. The items carry commas of their own, so they are separated by semicolons with an "and" before the last, instead of being joined into an unparseable list.
+
+- The export message names the camp, not the repo, and no longer cuts the command with an ellipsis; it says the code is on the clipboard when it is.
+
+- The thirty-two "Open" buttons in the Roadmap and the "Go" buttons under the campaign carry an `aria-label` naming their row, so a screen reader hears the mentor or the artifact rather than "Open" thirty-two times.
 
 - Strict checks no longer print a Python exception at the learner. The workstream 1 game check, the workstream 2 `AGENTS.md` check, the DuckDB `top_runs.sql` check and the strict vault-note check all guard their reads and answer with the same plain sentence as the lenient row above them.
 

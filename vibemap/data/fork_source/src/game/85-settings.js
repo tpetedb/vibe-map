@@ -1,11 +1,11 @@
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
-// vibe.toml still sets the defaults for a fresh browser; these override them.
+// config/camp.toml still sets the defaults for a fresh browser; these override them.
 const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
 const SETTINGS_OPTIONS={
-  difficulty:[["config","From vibe.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
+  difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
-  vault:[["config","From vibe.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
+  vault:[["config","From config/camp.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
   pairings:[["config","From the theme"],["on","Show the pairings"],["off","Hide the pairings"]],
   shadows:[["high","Soft shadows"],["low","Cheap shadows"],["off","No shadows (fastest)"]],
   motion:[["auto","Follow the system setting"],["off","No animations"]],
@@ -26,10 +26,10 @@ function applySettings(){const s=settings();
 }
 window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
 function renderSettings(){const s=settings();
-  $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from vibe.toml.</p>`+
+  $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from config/camp.toml in your camp.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
-    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button></div>`+
-    `<p class="small muted">Persona and theme live in vibe.toml (uv run vibe persona, theme) and need a rebuild: just build. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
+    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
+    `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 // Fullscreen takes the whole document: the sheet and the vault live outside

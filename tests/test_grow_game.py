@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from playwright.sync_api import Page
-
 from tests.conftest import GamePage
 
 
-def _open_vault(page: Page) -> None:
+def _open_vault(game: GamePage) -> None:
     """In grow mode the vault counts unlocked notes, so wait for that count."""
-    page.click("#hud button:has-text('Vault')")
+    page = game.page
+    game.hud_action("#hud button:has-text('Vault')")
     page.wait_for_selector("#vault.on", state="attached")
     page.wait_for_selector("#vcount:has-text('unlocked')")
 
@@ -19,7 +18,7 @@ def test_graph_grows_as_you_play(game: GamePage) -> None:
     game.page.wait_for_function("typeof window.__S === 'function'")
     game.start()
     page = game.page
-    _open_vault(page)
+    _open_vault(game)
     count = page.text_content("#vcount") or ""
     assert "of" in count and "unlocked" in count
     start_n = int(count.split(" of ")[0].strip())
@@ -34,7 +33,7 @@ def test_graph_grows_as_you_play(game: GamePage) -> None:
     page.evaluate("openArtifact('dock')")
     page.wait_for_selector("#s-artifact.on", state="attached")
     page.click("#sheet .x")
-    _open_vault(page)
+    _open_vault(game)
     page.wait_for_function(
         "n => +(document.getElementById('vcount').textContent || '0 of')"
         ".split(' of ')[0].trim() > n",

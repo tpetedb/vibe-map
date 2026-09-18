@@ -5,17 +5,46 @@ let newsLoaded=false;
 function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),list=$("newslist");if(!msg)return;
   const items=(NEWS.items||[]).slice(0,12);
   if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
-  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in vibe.toml; the vault note News has the whole list.";
+  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in config/camp.toml; the vault note News has the whole list.";
   list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
 // How long a screen stayed open is the one thing the dashboard cannot derive
 // afterwards, so the panel that opens is remembered and closing records it.
 let sheetOpen=null;
+// The sheet is an overlay over the HUD, so the screen a player was reading is
+// remembered after it closes: the chat asks about that one when the walker is
+// not standing next to anything of its own.
+let lastScreen=null;
 function sheetDwell(){if(!sheetOpen)return;const s=(Date.now()-sheetOpen.at)/1000;const id=sheetOpen.id;sheetOpen=null;if(s>=2)track("dwell",id,s)}
-window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}setTimeout(()=>{$("sheet").scrollIntoView({behavior:"smooth",block:"start"});const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
-window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on");window.scrollTo({top:0,behavior:"smooth"})};
-// Both panels are role=dialog, so Escape has to close them; the vault sits on
-// top of the sheet, so it goes first.
-addEventListener("keydown",e=>{if(e.key!=="Escape")return;if($("vault").classList.contains("on")){closeVault();e.preventDefault()}else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
+// A lesson is long, so the row that closes it (Mark as done, and the way back)
+// sticks to the bottom of the scroll container. Only that row: a list screen
+// would have its own items sitting under a bar that never scrolls away.
+function stickyActions(screen){
+  const rows=[...screen.querySelectorAll(".row")];
+  rows.forEach(r=>r.classList.remove("actions"));
+  const bar=rows.reverse().find(r=>[...r.querySelectorAll("button")].some(b=>(b.getAttribute("onclick")||"").indexOf("claim(")===0));
+  if(bar)bar.classList.add("actions")}
+window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};lastScreen=id;document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));const sc=$(id);sc.classList.add("on");stickyActions(sc);$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}
+  // The sheet has its own scroll container, so a new screen starts at the top
+  // of it and the page behind the overlay never moves.
+  $("sheet").querySelector(".inner").scrollTop=0;
+  setTimeout(()=>{const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
+window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on")};
+// Both panels are role=dialog, so Escape has to close them; the palette sits
+// on top of everything, then the vault, then the sheet.
+addEventListener("keydown",e=>{if(e.key!=="Escape")return;
+  if($("pal").classList.contains("on")){closePalette();e.preventDefault()}
+  else if($("hud-more").classList.contains("open")){closeHudMenu();e.preventDefault()}
+  else if($("vault").classList.contains("on")){closeVault();e.preventDefault()}
+  else if($("sheet").classList.contains("on")){closeSheet();e.preventDefault()}});
+/* ---------------- the HUD menu ---------------- */
+// Everything but Roadmap and Search lives behind one button; which of them the
+// menu actually shows is the stylesheet's business, not this function's.
+window.toggleHudMenu=function(){const on=!$("hud-more").classList.contains("open");
+  $("hud-more").classList.toggle("open",on);$("hud-more-btn").setAttribute("aria-expanded",String(on))};
+window.closeHudMenu=function(){$("hud-more").classList.remove("open");$("hud-more-btn").setAttribute("aria-expanded","false")};
+// A click anywhere else closes it, and so does picking an item in it.
+addEventListener("pointerdown",e=>{if(!$("hud-more").classList.contains("open"))return;if(!$("hud-more").contains(e.target))closeHudMenu()},true);
+$("hud-menu").addEventListener("click",e=>{if(e.target.closest("button"))closeHudMenu()});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
 function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
@@ -64,9 +93,9 @@ function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"camp
   $("plotlist").innerHTML=`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
     return `<button class="date${done?' pick':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
     ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(9)">${icon("milestone")}Calendar alignment${ok?"":" (pending eight OKRs)"}</button>`:"")+
-    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span><b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
-    `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span><b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
-    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
+    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span><b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
+    `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span><b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" aria-label="Open ${a.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
+    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
 }
 window.claim=function(n){
   if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}

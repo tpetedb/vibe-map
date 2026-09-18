@@ -245,8 +245,23 @@ class GamePage:
         """Wait for the sheet's spring and openSheet's smooth scroll to finish."""
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
 
+    def hud_action(self, selector: str) -> None:
+        """Click a HUD button, opening the More menu when it lives in there.
+
+        Which buttons are in the pill and which are behind More is a width
+        question the stylesheet answers, so the helper asks the page rather
+        than the viewport. The HUD stays above the sheet overlay, so an open
+        sheet is not in the way.
+        """
+        button = self.page.locator(selector)
+        if not button.is_visible():
+            self.page.click("#hud-more-btn")
+            self.page.wait_for_selector("#hud-more.open", state="attached")
+            button.wait_for(state="visible", timeout=WAIT_MS)
+        button.click()
+
     def open_roadmap(self) -> None:
-        self.page.click("#hud button:has-text('Roadmap')")
+        self.hud_action("#hud button:has-text('Roadmap')")
         self.page.wait_for_selector("#sheet.on", state="attached")
         self.page.wait_for_selector("#plotlist button", state="attached")
         self.sheet_in_place()
@@ -274,7 +289,7 @@ class GamePage:
         self.frames()
 
     def open_vault(self) -> None:
-        self.page.click("#hud button:has-text('Vault')")
+        self.hud_action("#hud button:has-text('Vault')")
         self.page.wait_for_selector("#vault.on", state="attached")
         self.page.wait_for_selector("#vnote .wl", state="attached")
 
@@ -283,7 +298,7 @@ class GamePage:
 
     def next_world(self) -> None:
         before = self.page.evaluate("window.__S().world")
-        self.page.click("#hud button:has-text('World')")
+        self.hud_action("#hud button:has-text('World')")
         self.page.wait_for_function(
             "w => window.__S().world !== w", arg=before, timeout=WAIT_MS
         )
@@ -323,7 +338,7 @@ class GamePage:
 # rather than by hand keeps the CI split honest: a new browser test lands in
 # the browser job without anyone remembering to label it.
 BROWSER_FIXTURES = frozenset(
-    {"game", "game_webkit_iphone", "phone", "chromium", "webkit"}
+    {"game", "game_desktop", "game_webkit_iphone", "phone", "chromium", "webkit"}
 )
 
 
@@ -349,6 +364,17 @@ def _attach_error_collectors(page: Page, errors: list[str]) -> None:
 def game(chromium: Browser, server: str) -> Iterator[GamePage]:
     """A fresh Chromium page at a phone-sized viewport, errors collected."""
     context = chromium.new_context(viewport={"width": 420, "height": 860})
+    page = context.new_page()
+    gp = GamePage(page=page, url=server + GAME_PATH)
+    _attach_error_collectors(page, gp.errors)
+    yield gp
+    context.close()
+
+
+@pytest.fixture
+def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
+    """A fresh Chromium page at 1440x900: the laptop the course is written for."""
+    context = chromium.new_context(viewport={"width": 1440, "height": 900})
     page = context.new_page()
     gp = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, gp.errors)
