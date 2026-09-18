@@ -135,7 +135,7 @@ function artifactReal(a){const r=a.real;const built=S.artifactsBuilt.includes(a.
 window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)return;
   if(!S.artifacts.includes(id)){S.artifacts.push(id);save();track("artifact",id);hud();(props.artifacts||[]).forEach(x=>{if(x.a.id===id)x.ring.material.color.set("#00D084")})}
   const demos=ART_DEMOS[id]||[];
-  $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}Artifact ${S.artifacts.length} of ${ARTIFACTS.length}</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
+  $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
     `<pre class="term" id="art-term">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+

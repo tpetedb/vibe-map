@@ -74,7 +74,7 @@ def seeded_state() -> dict[str, Any]:
 
 
 def open_dashboard(game: GamePage) -> None:
-    game.page.click("#hud button:has-text('Stats')")
+    game.hud_action("#hud button:has-text('Stats')")
     game.page.wait_for_selector("#s-dash.on", state="attached")
     game.page.wait_for_selector("#s-dash .tile", state="attached")
     game.sheet_in_place()

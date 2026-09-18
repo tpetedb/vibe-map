@@ -1,4 +1,4 @@
-// Dates and pairings come from vibe.toml through the build (CONFIG); the
+// Dates and pairings come from config/camp.toml through the build (CONFIG); the
 // wine-night theme keeps the original beverage stack.
 const DATES=CONFIG.dates;
 const WINES=CONFIG.theme.id==="wine-night"?["Bourgogne Chardonnay, the arrogant one","Sancerre, chalky, unresolved finish","Barolo, decanted, bureaucratic tannins","Grower Champagne, zero dosage","Whatever Hospitality Operations decants"]:(CONFIG.theme.pairings.length?CONFIG.theme.pairings:["Water, still","Water, sparkling"]);
@@ -8,4 +8,4 @@ function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";retu
   const bev=CONFIG.theme.pairing==="wine"?`Beverage stack, per Hospitality Operations: ${S.wine}, served at the sommelier-mandated temperature.`:`Refreshments: ${S.wine}.`;
   const m=`Hi Tom, per my last message and the ratified roadmap, confirming go-live: ${S.date}, 18:00, at the Hospitality Hub. ${bev} Current state of the campus: ${S.done.length} of 8 stops delivered, ${S.versions.length} tagged releases and ${Object.values(S.bridges).filter(Boolean).length} live integrations. Please loop in Rolinda, she will have questions, and they will be the only good ones. Please also confirm she has decanted.\n\nBest,\n${S.name}\nChief of Staff`;
   $("msg").textContent=m;$("wa").href="https://wa.me/?text="+encodeURIComponent(m);$("msgcard").style.display=""}
-window.copyMsg=function(){const m=$("msg").textContent;const ok=()=>{$("copybtn").textContent="Copied";setTimeout(()=>$("copybtn").textContent="Copy to clipboard",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(m).then(ok).catch(()=>{})};
+window.copyMsg=function(){copyText($("msg").textContent,$("copybtn"),"Copy to clipboard",$("msg"))};

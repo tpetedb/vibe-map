@@ -21,6 +21,8 @@ function chatCtx(){const c={world:S.world||"campus",stop:null,mentor:null,artifa
   if(typeof nearK==="string"&&nearK.startsWith("m:"))c.mentor=nearK.slice(2);
   else if(typeof nearK==="string"&&nearK.startsWith("a:"))c.artifact=nearK.slice(2);
   else if(!c.stop&&typeof nearK==="number"&&nearK>0)c.stop=nearK;
+  // Nothing under the walker either: the last stop whose sheet was open.
+  if(!c.stop&&!c.mentor&&!c.artifact){const last=typeof lastScreen==="string"&&/^s-([1-9])$/.exec(lastScreen);if(last)c.stop=+last[1]}
   return c}
 function chatChip(c){const out=[(WORLDS[c.world]&&WORLDS[c.world].name)||c.world];
   if(c.stop&&CH[c.stop-1])out.push("stop "+c.stop+", "+CH[c.stop-1].n);

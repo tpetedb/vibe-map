@@ -9,9 +9,14 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
   const blocks=[...document.querySelectorAll(".pairing")];
   if(!(th.pairings||[]).length){blocks.forEach(el=>el.remove());return}
   const kind=th.pairing.charAt(0).toUpperCase()+th.pairing.slice(1);
+  // The go-live block is the whole stack in one sentence. The items carry
+  // commas of their own, so they are separated by semicolons and the last one
+  // gets an "and", which is the only way the list reads as a sentence.
+  const stack=th.pairings.length===1?th.pairings[0]
+    :th.pairings.slice(0,-1).join("; ")+" and "+th.pairings[th.pairings.length-1];
   blocks.forEach((el,i)=>{if(i<th.pairings.length)el.innerHTML=`<b>${kind}, ${CH[i]?CH[i].h:"go-live"}</b>${th.pairings[i]}`;
-    else el.innerHTML=`<b>${kind}, go-live</b>${th.pairings.join(", ")}.`})}
-// Theme, dates and repo come from vibe.toml through CONFIG. Labels apply to
+    else el.innerHTML=`<b>${kind}, go-live</b>The stack for the evening, in order: ${stack}.`})}
+// Theme, dates and repo come from config/camp.toml through CONFIG. Labels apply to
 // every theme; the wine-night preset alone keeps the handwritten framing, and
 // any other theme swaps it and rewrites the pairings. Difficulty and persona
 // are exposed on <body> for CSS.

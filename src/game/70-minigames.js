@@ -8,7 +8,18 @@
 // lesson cannot drift apart.
 const GUARDRAIL = "Keep it to a single file called index.html, no external libraries, no frameworks. Keep score. When you are done, tell me how to open it.";
 window.pitchTyped=function(v){S.pitch=v;save();renderPitch()};
-window.copyPitch=function(){const t=$("pitch-out").textContent;const ok=()=>{$("pitch-copy").textContent="Copied";setTimeout(()=>$("pitch-copy").textContent="Copy the prompt",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok).catch(()=>{})};
+// One copy helper for every Copy button. A refused clipboard is not silence:
+// the text is selected so it can be copied by hand, and the button says so.
+// srcEl is the element holding the text, so the fallback can select it.
+function copyText(text,btn,label,srcEl){
+  const done=msg=>{btn.textContent=msg;setTimeout(()=>{btn.textContent=label},2500)};
+  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
+    done("Selected, press Cmd C")};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(()=>done("Copied"),fallback);
+  else fallback()}
+window.copyPitch=function(){copyText($("pitch-out").textContent,$("pitch-copy"),"Copy the prompt",$("pitch-out"))};
 function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitch");if(box&&box.value!==(S.pitch||""))box.value=S.pitch||"";
   const v=(S.pitch||"").trim();
   out.textContent=v?`Build a small browser game. ${v}\n\n${GUARDRAIL}`:"Type your three sentences above and the prompt appears here, with the guardrail already attached.";
@@ -20,8 +31,11 @@ function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitc
 // what it named; the vague one is free to change everything else too.
 const CARD0={title:"Tonight's scores",accent:"#0067A5",cols:["Player","Score"],badge:false,serif:false};
 let card=Object.assign({},CARD0);
+// Both asks start from the same card, which is what makes them comparable:
+// the precise one changes the one thing it named, the vague one everything
+// it was not told to leave alone.
 window.speak=function(precise){
-  card=precise?Object.assign({},card,{badge:true})
+  card=precise?Object.assign({},CARD0,{badge:true})
     :{title:"Impactful Scores Experience",accent:"#FF8C1A",cols:["Player"],badge:false,serif:true};
   $("speak-out").textContent=precise
     ?"One change, delivered as scoped: a badge. Title, colour, columns and font untouched, and a one-line summary back."
@@ -55,7 +69,11 @@ function renderSchema(){const el=$("schema");if(!el)return;const broken=scoreCol
   :"Four column names, in this order, are the contract. The game writes them, the queries read them."}</p>`}
 
 /* ---- Workstream 4: commits are snapshots, rollback is always on ---- */
-window.commit=function(){const t=$("release").value.trim();if(!t)return;S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
+// An empty box is a refusal with a reason, never a button that does nothing.
+function releaseMsg(t){const el=$("release-msg");if(el)el.textContent=t||""}
+window.commit=function(){const t=$("release").value.trim();
+  if(!t){releaseMsg("Nothing to commit: the release note is empty. Say what this release is, then tag it.");return}
+  releaseMsg("");S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
 function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${v.t.slice(0,44)}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}

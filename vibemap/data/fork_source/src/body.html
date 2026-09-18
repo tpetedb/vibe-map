@@ -3,15 +3,20 @@
 <canvas id="c"></canvas>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
+<!-- One hierarchy, one DOM: Roadmap and Search are always in the pill, the
+     secondary buttons sit in #hud-sec and the tertiary ones in #hud-ter. On a
+     wide screen #hud-sec is display:contents, so its buttons lay out inside
+     the pill and only #hud-ter drops out of the More menu; on a phone the
+     whole menu is the popup. A new button is one more line in #hud-sec. -->
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="flag" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
-</div>
-<div id="kpis">
-  <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
-  <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
-  <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
-  <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
+  <div class="pill" id="hud-bar"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button id="hud-search" data-icon="search" onclick="openPalette()" title="Search everything (Cmd K)"><span class="lbl">Search</span></button><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><div id="hud-more"><div id="hud-menu"><div id="hud-sec"><button data-icon="backpack" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div><div id="hud-ter"><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div></div><button id="hud-more-btn" data-icon="menu" aria-expanded="false" aria-haspopup="true" onclick="toggleHudMenu()"><span class="lbl">More</span></button></div></div>
+  <div id="kpis">
+    <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
+    <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
+    <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
+    <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
+  </div>
 </div>
 
 <div class="ui" id="bottom">
@@ -30,9 +35,10 @@
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
     <div id="onboard"></div>
-    <div class="row"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"></div>
-    <p class="small muted" id="namehint" style="margin-top:-8px">Type your name plainly.</p>
-    <div class="row go"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button></div>
+    <!-- The field and the button the copy points at travel together: both live
+         in the sticky row, so neither can be below the fold while the other is
+         on screen. -->
+    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
@@ -49,6 +55,14 @@
   <canvas id="vg"></canvas>
   <div id="vtree"></div>
   <div id="vnote"></div>
+</div>
+<!-- The command palette: one box over everything, filled by 41-search.js. -->
+<div id="pal" role="dialog" aria-modal="true" aria-label="Search">
+  <div class="pal-box">
+    <input type="text" id="pal-q" autocomplete="off" spellcheck="false" aria-label="Search the camp" aria-controls="pal-list" placeholder="Stops, notes, topics, mentors, artifacts, items" oninput="palTyped()" onkeydown="palKey(event)">
+    <div id="pal-list" role="listbox" aria-label="Results"></div>
+    <p class="pal-hint small muted">Up and down to move, Enter to open, Escape to close.</p>
+  </div>
 </div>
 <div id="sheet" role="dialog">
   <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
@@ -70,6 +84,7 @@
         <p class="small muted" id="syncmsg"></p>
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>
+      <div class="row"><button onclick="closeSheet()">Back to the campus</button></div>
     </section>
 <section class="screen" id="s-pack"></section>
 <section class="screen" id="s-0">
@@ -281,6 +296,7 @@ head -1 workspace/data/scores.csv</code></pre>
     <h3>Change management</h3>
     <textarea id="release">A scoring board that ranks the team by coffee consumption, pending a prioritisation workshop.</textarea>
     <div class="row"><button class="primary" onclick="commit()">Commit and tag release</button><button onclick="ruin()">Trigger a P1</button></div>
+    <p class="small muted" id="release-msg"></p>
     <ul class="versions" id="versions"></ul>
   </div>
   <div class="lesson"><h3 style="margin-top:6px">Lesson: Git, rollback, and one hook</h3>

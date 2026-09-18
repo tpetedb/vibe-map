@@ -64,7 +64,7 @@ def seed(port: int) -> dict[str, Any]:
 
 
 def open_chat(game: GamePage) -> None:
-    game.page.click("#hud button:has-text('Ask')")
+    game.hud_action("#hud button:has-text('Ask')")
     game.page.wait_for_selector("#s-chat.on", state="attached")
     game.page.wait_for_selector("#chatq", state="attached")
     game.sheet_in_place()

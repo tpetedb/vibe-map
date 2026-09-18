@@ -63,6 +63,7 @@ GAME_ORDER = [
     "31-animate.js",
     "32-minimap.js",
     "40-sheet.js",
+    "41-search.js",
     "@notes",
     "51-notes-dynamic.js",
     "@tree",
