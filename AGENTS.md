@@ -23,6 +23,8 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`config/camp.toml`), `pet.py` (the companion), `chat.py` (the loopback bridge the game's Ask panel talks to), `obsidian.py` (feature notes), `dashboard.py` (the HTML report and the numbers behind it), `dotfiles.py` (terminal setup modules from `data/dotfiles/`). |
 | `vibemap/project.py` | Where a camp is: `VIBE_HOME`, else the nearest ancestor with a `config/camp.toml` (the retired `vibe.toml` still counts, for one release). The CLI installs globally (`uv tool install vibe-map`) and runs in any camp; `vibe new` writes a slim camp from the template, without the engine. |
 | `tools/regen_tree.py` | Emits the tree notes JS, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
+| `changelog.d/` | One file per change, `<slug>.<type>.md`, assembled into `CHANGELOG.md` at release time by `tools/changelog.py`. A branch adds a fragment and never edits `CHANGELOG.md`; the folder's `README.md` is the short version. |
+| `tools/sync_main.py` | `just sync-main`: merge `origin/main`, resolve a conflict in a generated file by regenerating it in dependency order, refuse and name the file when a real source conflict is left, then run the fast gates. |
 | `tools/new_topic.py` | Scaffolds a topic file, or a whole pack, under `vibemap/data/topics/`. The way to start one; `docs/TOPICS.md` is the rest. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
@@ -41,6 +43,8 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 - Versioned formats fail loudly. The progress code and `state.json` carry a version; an unknown version is refused with a clear message, not patched around.
 - Scores are a system of record. Never reset or rewrite `workspace/data/scores.csv` without asking.
 - Python dependencies are welcome when they remove real work. Declare them in `pyproject.toml`, install with `uv`, never bare pip.
+- The changelog entry is a fragment, not an edit. Add `changelog.d/<slug>.<type>.md` (type: added, changed, deprecated, removed, fixed, security) in the same commit as the change, and leave `CHANGELOG.md` alone; a release assembles it. CI refuses a change under `src/`, `vibemap/` or `tools/` that carries no fragment.
+- Generated files are never merged by hand. `game/vibe-map.html`, `game/news.json`, `tools/generated/`, `docs/ROADMAP.md`, `docs/RESOURCES.md`, `docs/OBSIDIAN.md`, `docs/COOKBOOK.md`, `vibemap/data/fork_source/`, `vibemap/data/template/_agents` and `_claude` and `vault/` are outputs: on a conflict take either side and regenerate. `just sync-main` does exactly that.
 - After every change, end with one line: what changed.
 
 ## Test loop
@@ -80,6 +84,8 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 
 - Commit after every change you would be sad to lose. Message: what and why, one line.
 - Never force-push. Never rewrite history on `main`. Push feature branches and open a PR; `main` only takes green, up-to-date pull requests (branch protection, see `docs/MAINTAINERS.md`). A green PR may be merged by the agent that opened it when Tom has said so for that work.
+- Catch up with `main` through `just sync-main`, not by hand. It merges, resolves the generated files by regenerating them in the right order, stops and names the file when a real source conflict is left, and runs the fast gates. `just sync-main --push` pushes when they are green.
+- Your changelog entry goes in `changelog.d/`, never in `CHANGELOG.md`: that is what stops two branches conflicting over the same three lines. `just changelog` prints what Unreleased would say; `just release X.Y.Z` cuts it.
 
 ## Security
 

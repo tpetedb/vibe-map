@@ -1,0 +1,1 @@
+- A `justfile` skill in `.agents/skills/justfile/`, synced into the camp template: when a recipe earns its place, how to name it, that the doc comment is the interface, that a secret never goes in a justfile, and the contract with an agent.

@@ -1,0 +1,37 @@
+# Generated outputs. Nothing here is hand-edited: each file is a function of
+# its source, so the way to resolve a conflict in one is to regenerate it
+# (`just sync-main`, which runs the generators in dependency order).
+#
+# Two attributes, both of which work in a fresh clone:
+#
+# `merge=binary` is one of the three merge drivers git has built in (text,
+# binary, union; gitattributes(5)). It means: keep our version in the work
+# tree and leave the path conflicted for the user to sort out. So a two megabyte
+# built game never gets conflict markers pasted through the middle of it, and
+# the conflict is still reported, which is what makes it impossible to forget
+# the regenerate step. A custom merge driver would do more, but it needs
+# `git config merge.<name>.driver` in every clone, so this file names none.
+#
+# `linguist-generated=true` is GitHub's: the file is collapsed in a diff by
+# default and does not count toward the repository's languages, so a review
+# reads the source change instead of the output.
+
+game/vibe-map.html merge=binary linguist-generated=true
+game/news.json merge=binary linguist-generated=true
+tools/generated/** merge=binary linguist-generated=true
+docs/ROADMAP.md merge=binary linguist-generated=true
+docs/RESOURCES.md merge=binary linguist-generated=true
+docs/OBSIDIAN.md merge=binary linguist-generated=true
+docs/COOKBOOK.md merge=binary linguist-generated=true
+vibemap/data/fork_source/** merge=binary linguist-generated=true
+vibemap/data/template/_agents/** merge=binary linguist-generated=true
+vibemap/data/template/_claude/** merge=binary linguist-generated=true
+
+# The vault is written by `vibe vault build`, but a note can also be written by
+# hand, and a handwritten one would be lost by a keep-ours resolution. So the
+# vault keeps the ordinary text merge and only takes the review attribute.
+vault/** linguist-generated=true
+
+# Vendored, not ours: three.js, Motion, d3-force and the pixel sprites.
+src/vendor/** linguist-vendored=true
+vibemap/data/pets/** linguist-vendored=true

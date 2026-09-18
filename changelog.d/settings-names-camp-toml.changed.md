@@ -1,0 +1,1 @@
+- The in-game Settings screen names `config/camp.toml`, which is the file a camp really has, and no longer tells a slim camp to run `just build`; the same stale reference is gone from the news line, the setup guide, the vault and the finale.
