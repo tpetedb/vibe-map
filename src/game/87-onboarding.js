@@ -61,7 +61,7 @@ brew install --cask obsidian</code></pre>
 vibe new ${dir}
 cd ${dir}
 just setup</code></pre>
-<p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>vibe.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
+<p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>config/camp.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
 <p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code> (needs <code>gh auth login</code> first).</p>
 <h4>3. Tell it who you are</h4>
 <pre><code>vibe name ${esc(shq(playerLabel()||"player"))}
