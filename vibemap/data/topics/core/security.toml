@@ -1,0 +1,25 @@
+# Security and permissions. Regenerate the tree after editing: just tree
+id = "security"
+title = "Security and permissions"
+age = "imperial"
+shelf = "agents"
+depth = 2
+
+summary = "Agents run commands. Give them the least they need: a folder, a permission list, hooks that veto dangerous commands, secrets in the environment, and a git history to undo. Prompt injection (instructions hidden in data the agent reads) is the new phishing."
+
+history = "Least privilege dates to Saltzer and Schroeder, 1975: 'every program and every user of the system should operate using the least set of privileges necessary to complete the job'. It applies unchanged to agents; the harness enforces it with permissions and hooks."
+try_it = "Open .claude/settings.json; add a PreToolUse hook that blocks 'rm -rf'. Test it."
+
+unlocks = ["cost"]
+
+[[sources]]
+label = "Claude Code permissions"
+url = "https://code.claude.com/docs/en/permissions"
+
+[[sources]]
+label = "OWASP LLM Top 10"
+url = "https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+
+[[sources]]
+label = "Source: Saltzer and Schroeder, The Protection of Information in Computer Systems (1975)"
+url = "https://web.mit.edu/Saltzer/www/publications/protection/"

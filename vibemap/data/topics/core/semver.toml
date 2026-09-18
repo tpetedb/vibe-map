@@ -1,0 +1,29 @@
+# Semantic Versioning. Regenerate the tree after editing: just tree
+id = "semver"
+title = "Semantic Versioning"
+age = "castle"
+shelf = "docs"
+depth = 2
+
+summary = "A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud."
+
+history = "Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling."
+try_it = "uv run vibe --version, then open pyproject.toml and vibemap/__init__.py: the number lives in both. With the semver skill, decide what 0.3.0 would need."
+
+unlocks = ["changelog"]
+
+[[sources]]
+label = "Semantic Versioning 2.0.0"
+url = "https://semver.org/spec/v2.0.0.html"
+
+[[sources]]
+label = "Source: semver.org, About (authored by Tom Preston-Werner)"
+url = "https://semver.org/"
+
+[[sources]]
+label = "Source: semver/semver, merge of release-2.0 (18 June 2013)"
+url = "https://github.com/semver/semver/commit/7c834b3f3a4940d77ab593bc32583004d6a426a9"
+
+[[sources]]
+label = "Source: semver/semver, the commit tagged v1.0.0 (September 2011)"
+url = "https://github.com/semver/semver/commit/ec80195ed310aab3ae1f1ce797b7ba88b4246d27"

@@ -1,6 +1,9 @@
 # Workstream 7, Go-to-Market: publish your game from workspace/game/index.html
 # at https://<you>.github.io/<repo>/. Switch Pages on once (Settings, Pages,
 # Source: GitHub Actions); every push to main redeploys.
+#
+# Pages from a PRIVATE repository needs GitHub Pro or above: on GitHub Free the
+# repository has to be public. README.md has the table of what else changes.
 name: pages
 
 on:

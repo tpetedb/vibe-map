@@ -142,9 +142,8 @@ def test_dashboard_is_keyboard_reachable_and_escapes(game: GamePage) -> None:
     game.goto(state=seeded_state())
     game.resume()
     open_dashboard(game)
-    assert game.page.evaluate(
-        "() => document.activeElement === document.querySelector('#sheet .x')"
-    )
+    # The sheet moves the focus a tick after it opens, so wait for the move.
+    game.until("document.activeElement === document.querySelector('#sheet .x')")
     game.page.keyboard.press("Escape")
     game.page.wait_for_selector("#sheet.on", state="detached")
     game.assert_clean()

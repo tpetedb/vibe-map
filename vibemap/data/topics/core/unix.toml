@@ -1,0 +1,33 @@
+# Unix and the terminal. Regenerate the tree after editing: just tree
+id = "unix"
+title = "Unix and the terminal"
+age = "dark"
+shelf = "shell"
+depth = 1
+
+summary = "The terminal is a text conversation with the computer. Every tool in this tree is a command you type; every agent in the Imperial Age is, underneath, typing those same commands for you. Learning ten commands (ls, cd, cat, mkdir, cp, mv, rm, grep, find, man) covers most of daily use."
+
+history = "Unix was born at Bell Labs in 1969 (Thompson, Ritchie). macOS is a certified Unix, so your Mac terminal is the direct descendant. Linux (1991, Torvalds) is the free reimplementation that servers, clouds and containers run on."
+try_it = "Open Terminal.app. Type pwd, then ls -la, then man ls (q to quit)."
+
+unlocks = ["bash", "files", "git"]
+
+[[sources]]
+label = "The Missing Semester (MIT)"
+url = "https://missing.csail.mit.edu"
+
+[[sources]]
+label = "Linux Journey"
+url = "https://linuxjourney.com"
+
+[[sources]]
+label = "Source: Ritchie, The Evolution of the Unix Time-sharing System (1984)"
+url = "https://www.read.seas.harvard.edu/~kohler/class/aosref/ritchie84evolution.pdf"
+
+[[sources]]
+label = "Source: The Open Group register of UNIX certified products"
+url = "https://www.opengroup.org/openbrand/register/"
+
+[[sources]]
+label = "Source: Torvalds' 1991 Linux announcements (CMU archive)"
+url = "https://www.cs.cmu.edu/~awb/linux.history.html"

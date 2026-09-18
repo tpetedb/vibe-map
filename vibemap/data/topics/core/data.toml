@@ -1,0 +1,57 @@
+# Data: files, schemas, warehouses. Regenerate the tree after editing: just tree
+id = "data"
+title = "Data: files, schemas, warehouses"
+age = "feudal"
+shelf = "data"
+depth = 1
+
+summary = "Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses (Snowflake, BigQuery, DuckDB locally). A schema is the contract: column names and types. Most data pain is schema drift, which is why AGENTS.md pins the columns of scores.csv."
+
+history = "Relational databases: Codd 1970. Postgres 1986 (Berkeley). SQLite 2000, in every phone. Cloud warehouses (BigQuery 2011, Redshift 2012, Snowflake 2015) separated storage from compute. Parquet (2013, Twitter and Cloudera) is the file format they all read."
+try_it = '''duckdb -c "copy 'workspace/data/scores.csv' to 'workspace/data/scores.parquet'" then query the parquet file. Same SQL, smaller file.'''
+
+unlocks = ["apis", "tests"]
+
+[[sources]]
+label = "Parquet"
+url = "https://parquet.apache.org/docs/"
+
+[[sources]]
+label = "SQLite"
+url = "https://www.sqlite.org/docs.html"
+
+[[sources]]
+label = "Postgres tutorial"
+url = "https://www.postgresql.org/docs/current/tutorial.html"
+
+[[sources]]
+label = "Source: IBM, The relational database (Codd, 1970)"
+url = "https://www.ibm.com/history/relational-database"
+
+[[sources]]
+label = "Source: PostgreSQL docs, A Brief History of PostgreSQL"
+url = "https://www.postgresql.org/docs/current/history.html"
+
+[[sources]]
+label = "Source: SQLite release history (2000-05-29)"
+url = "https://www.sqlite.org/changes.html"
+
+[[sources]]
+label = "Source: SQLite, Most Widely Deployed Database"
+url = "https://www.sqlite.org/mostdeployed.html"
+
+[[sources]]
+label = "Source: Google Cloud blog, Google BigQuery Service (November 2011)"
+url = "https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-data.html"
+
+[[sources]]
+label = "Source: AWS, Announcing Amazon Redshift (November 2012)"
+url = "https://aws.amazon.com/about-aws/whats-new/2012/11/28/announcing-amazon-redshift/"
+
+[[sources]]
+label = "Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)"
+url = "https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf"
+
+[[sources]]
+label = "Source: Twitter Engineering, Announcing Parquet 1.0 (2013)"
+url = "https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop"

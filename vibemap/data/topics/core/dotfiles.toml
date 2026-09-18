@@ -1,0 +1,29 @@
+# Dotfiles. Regenerate the tree after editing: just tree
+id = "dotfiles"
+title = "Dotfiles"
+age = "dark"
+shelf = "shell"
+depth = 2
+
+summary = "Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable."
+
+history = "Sharing dotfile repos on GitHub took off after GitHub launched in 2008; the community guide dotfiles.github.io followed in 2012. Today the same idea configures AI agents: .claude/settings.json, .agents/skills/."
+try_it = "ls -la ~ and open ~/.zshrc. Add one alias: alias g='uv run vibe'."
+
+unlocks = ["config", "env", "harness"]
+
+[[sources]]
+label = "dotfiles.github.io"
+url = "https://dotfiles.github.io"
+
+[[sources]]
+label = "Claude Code settings"
+url = "https://code.claude.com/docs/en/settings"
+
+[[sources]]
+label = "Source: GitHub launch post (April 2008)"
+url = "https://github.blog/2008-04-10-we-launched/"
+
+[[sources]]
+label = "Source: dotfiles.github.io repository (created April 2012)"
+url = "https://github.com/dotfiles/dotfiles.github.com"

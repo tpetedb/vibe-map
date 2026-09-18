@@ -1,0 +1,41 @@
+# HTML, CSS and JavaScript. Regenerate the tree after editing: just tree
+id = "web"
+title = "HTML, CSS and JavaScript"
+age = "feudal"
+shelf = "code"
+depth = 2
+
+summary = "The three languages of a web page: structure, style, behaviour. A single HTML file can hold all three, which is why the game is one file. JavaScript is also the language of Node and most CLIs you install with npm."
+
+history = "Tim Berners-Lee's first web software ran in 1990 and HTML was written up as an IETF draft in 1993; CSS1 became a W3C Recommendation in 1996; Brendan Eich prototyped JavaScript in ten days in May 1995. Node.js (2009) put JavaScript on servers; npm calls itself the world's largest software registry."
+try_it = "Open workspace/game/index.html in a text editor and in a browser side by side. Change the h1, reload."
+
+unlocks = ["http", "localhost"]
+
+[[sources]]
+label = "MDN Web Docs"
+url = "https://developer.mozilla.org/en-US/docs/Learn_web_development"
+
+[[sources]]
+label = "three.js (what the game uses)"
+url = "https://threejs.org/docs/"
+
+[[sources]]
+label = "Source: Berners-Lee and Connolly, HTML Internet-Draft (June 1993)"
+url = "https://www.w3.org/MarkUp/draft-ietf-iiir-html-01.txt"
+
+[[sources]]
+label = "Source: W3C, Cascading Style Sheets level 1 (December 1996)"
+url = "https://www.w3.org/TR/REC-CSS1-961217"
+
+[[sources]]
+label = "Source: Brendan Eich, New JavaScript Engine Module Owner (2011)"
+url = "https://brendaneich.com/2011/06/new-javascript-engine-module-owner/"
+
+[[sources]]
+label = "Source: Node.js v0.x source archive (2009)"
+url = "https://github.com/nodejs/node-v0.x-archive"
+
+[[sources]]
+label = "Source: npm docs, About npm"
+url = "https://docs.npmjs.com/about-npm"

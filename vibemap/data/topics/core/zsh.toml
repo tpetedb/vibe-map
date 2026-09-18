@@ -1,0 +1,37 @@
+# zsh and your shell config. Regenerate the tree after editing: just tree
+id = "zsh"
+title = "zsh and your shell config"
+age = "dark"
+shelf = "shell"
+depth = 2
+
+summary = "~/.zshrc runs every time you open a terminal: it sets PATH (the folders where commands are looked up), aliases (short names for long commands), the prompt, and small functions. zsh is the macOS default; it is bash-compatible for daily use and adds better completion and globbing. oh-my-zsh bundles plugins and themes; starship is a fast prompt that works in any shell. Keep .zshrc in your dotfiles repo so a new machine is one clone away."
+
+history = "zsh was written by Paul Falstad while a student at Princeton, around 1990. Apple made it the default login shell with macOS 10.15 Catalina in October 2019, replacing bash."
+try_it = "source scripts/vibe.zsh then g status."
+
+unlocks = ["dotfiles"]
+
+[[sources]]
+label = "zsh manual"
+url = "https://zsh.sourceforge.io/Doc/"
+
+[[sources]]
+label = "oh-my-zsh"
+url = "https://ohmyz.sh"
+
+[[sources]]
+label = "starship prompt"
+url = "https://starship.rs"
+
+[[sources]]
+label = "Source: zsh FAQ, 1.1 What is it?"
+url = "https://zsh.sourceforge.io/FAQ/zshfaq01.html"
+
+[[sources]]
+label = "Source: Apple, Use zsh as the default shell on your Mac"
+url = "https://support.apple.com/en-us/102360"
+
+[[sources]]
+label = "Source: Apple newsroom, macOS Catalina is available today (October 2019)"
+url = "https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/"

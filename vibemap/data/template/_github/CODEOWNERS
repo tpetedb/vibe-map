@@ -1,0 +1,17 @@
+# A teaching example. GitHub reads the first CODEOWNERS it finds in .github/,
+# the repository root or docs/, and asks its owners to review a pull request
+# that touches a matching file. Patterns follow gitignore rules and the LAST
+# matching line wins, so put the general line first.
+#
+# Replace @your-github-handle with your login, and add a collaborator's handle
+# next to the folder you want them to look at.
+#
+# In a private camp this only works on GitHub Pro or above; in a public one it
+# works on every plan. Making it do something also needs a branch protection
+# rule with "Require review from Code Owners" (Settings, Branches).
+
+*                     @your-github-handle
+
+# The notes are yours; the game is the thing other people will open.
+/workspace/game/      @your-github-handle
+/vault/               @your-github-handle

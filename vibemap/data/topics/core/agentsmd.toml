@@ -1,0 +1,14 @@
+# The prose for this topic lives in a handwritten vault note of the
+# same title; only its place in the tree and its sources are data.
+id = "agentsmd"
+title = "AGENTS.md"
+age = "imperial"
+shelf = "agents"
+depth = 1
+covered_elsewhere = true
+
+unlocks = ["adr"]
+
+[[sources]]
+label = "Source: agents.md"
+url = "https://agents.md"

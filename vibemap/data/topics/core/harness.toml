@@ -1,0 +1,37 @@
+# Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents. Regenerate the tree after editing: just tree
+id = "harness"
+title = "Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents"
+age = "imperial"
+shelf = "agents"
+depth = 2
+
+summary = "Your standing instructions, per repo and per machine, in files the agent reads before it starts. AGENTS.md for every agent; CLAUDE.md importing it for Claude; .claude/settings.json for permissions and hooks; ~/.claude/ for personal defaults. This is your operating model, versioned."
+
+history = "Cursor's rules files came first, then CLAUDE.md with Claude Code (February 2025) and AGENTS.md (August 2025, stewarded since December 2025 by the Agentic AI Foundation under the Linux Foundation). In one year instruction files went from a hack to a standard read by dozens of tools and used in tens of thousands of repos."
+try_it = "Edit AGENTS.md, add 'always end with one line: what changed'. Next session, check it does."
+
+unlocks = ["skills", "hooks", "mcp"]
+
+[[sources]]
+label = "agents.md"
+url = "https://agents.md"
+
+[[sources]]
+label = "Claude Code memory"
+url = "https://code.claude.com/docs/en/memory"
+
+[[sources]]
+label = "Settings"
+url = "https://code.claude.com/docs/en/settings"
+
+[[sources]]
+label = "Source: Anthropic, Claude 3.7 Sonnet and Claude Code (February 2025)"
+url = "https://www.anthropic.com/news/claude-3-7-sonnet"
+
+[[sources]]
+label = "Source: openai/agents.md repository (August 2025)"
+url = "https://github.com/openai/agents.md"
+
+[[sources]]
+label = "Source: Linux Foundation, formation of the Agentic AI Foundation (December 2025)"
+url = "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation"
