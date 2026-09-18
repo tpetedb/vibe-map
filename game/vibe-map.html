@@ -288,6 +288,16 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .pathrow .st{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--panel2);color:var(--muted)}
 .pathrow .st.deep{background:rgba(0,136,204,.15);color:var(--a1)}
 .pathrow .st.skip{background:rgba(240,73,35,.12);color:var(--red-bright)}
+/* The chat panel. The log is a fixed window so the question box stays in view
+   on a phone; every turn says where its answer came from. */
+.chip{display:inline-block;font-size:12px;color:var(--blue-bright);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:3px 10px;margin:0 0 10px}
+.chatlog{max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--surface-1)}
+.chatlog .cturn{border-top:1px solid var(--line);padding:8px 0}
+.chatlog .cturn:first-child{border-top:0;padding-top:0}
+.chatlog .you{margin:0 0 4px;font-size:13px;color:var(--muted)}
+.chatlog .them{margin:0;font-size:14px;white-space:pre-wrap}
+.chatlog .src{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.chatlog .wl{display:inline-block;margin:4px 8px 0 0;font-size:13px;color:var(--blue-bright);cursor:pointer;border-bottom:1px solid rgba(0,136,204,.4)}
 .evening{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a2);margin-bottom:4px}
 .worlds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}
 .world{border-radius:14px;padding:10px 12px;text-align:left;font-size:13px;line-height:1.35}
@@ -308,7 +318,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
+  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
@@ -774,6 +784,7 @@ gh auth login</code></pre>
 <section class="screen" id="s-gen"></section>
 <section class="screen" id="s-mentor"></section>
 <section class="screen" id="s-artifact"></section>
+<section class="screen" id="s-chat"></section>
 <section class="screen" id="s-settings"></section>
 <section class="screen" id="s-setup"></section>
 <section class="screen" id="s-9">
@@ -830,7 +841,7 @@ gh auth login</code></pre>
 </script>
 <script>
 (function(){
-const CONFIG={"version": "0.9.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda.", "taglineSuffix": "Four evenings, eight stops each, at your own pace.", "goLabel": "Start", "resumeLabel": "Resume", "stopLabel": "Stops", "kpiLabels": ["Progress", "Streak", "Connections", "Found"]}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "mode": "campaign", "vault": {"mode": "full"}};
+const CONFIG={"version": "0.9.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda.", "taglineSuffix": "Four evenings, eight stops each, at your own pace.", "goLabel": "Start", "resumeLabel": "Resume", "stopLabel": "Stops", "kpiLabels": ["Progress", "Streak", "Connections", "Found"]}, "dates": ["Friday 25 September", "Saturday 3 October", "Friday 9 October", "Saturday 17 October", "Friday 23 October", "Another slot, I will circle back with Tom"], "repo": "https://github.com/tpetedb/vibe-map", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "provider": "claude", "mode": "campaign", "vault": {"mode": "full"}};
 const NEWS={"fetched_at": "2026-09-17T01:07:07Z", "items": [{"source": "Claude Code releases", "title": "v2.1.274", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274", "date": "2026-09-17T00:12:02Z"}, {"source": "Simon Willison", "title": "datasette 1.0a40", "link": "https://simonwillison.net/2026/Sep/16/datasette/", "date": "2026-09-16T23:51:43Z"}, {"source": "Simon Willison", "title": "datasette 0.65.5", "link": "https://simonwillison.net/2026/Sep/16/datasette-2/", "date": "2026-09-16T23:51:08Z"}, {"source": "GitHub changelog", "title": "Automate SSO authorization for classic PATs and SSH keys", "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys", "date": "2026-09-16T20:20:16Z"}, {"source": "GitHub changelog", "title": "SCIM user responses now include a profileUrl attribute", "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute", "date": "2026-09-16T20:19:58Z"}, {"source": "GitHub changelog", "title": "Copilot budget increase requests are generally available", "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available", "date": "2026-09-16T20:17:18Z"}, {"source": "Simon Willison", "title": "Claude Cowork and chat are now one Claude", "link": "https://simonwillison.net/2026/Sep/16/one-claude/", "date": "2026-09-16T18:09:49Z"}, {"source": "OpenAI news", "title": "Our framework for reporting model misalignment", "link": "https://openai.com/index/model-misalignment-reporting-framework", "date": "2026-09-16T17:00:00Z"}, {"source": "Simon Willison", "title": "Quoting Mustafa Suleyman", "link": "https://simonwillison.net/2026/Sep/16/mustafa-suleyman/", "date": "2026-09-16T16:00:54Z"}, {"source": "OpenAI news", "title": "Helping older adults use AI in everyday life", "link": "https://openai.com/index/helping-older-adults-use-ai-in-everyday-life", "date": "2026-09-16T16:00:00Z"}, {"source": "GitHub changelog", "title": "Code scanning AI Scan no longer requires CodeQL default setup", "link": "https://github.blog/changelog/2026-09-16-code-scanning-ai-scan-no-longer-requires-codeql-default-setup", "date": "2026-09-16T13:26:06Z"}, {"source": "OpenAI news", "title": "Reimagining advertising with AI", "link": "https://openai.com/index/reimagining-advertising-with-ai", "date": "2026-09-16T13:00:00Z"}, {"source": "OpenAI news", "title": "How to connect AI usage to business value", "link": "https://openai.com/index/how-to-connect-ai-usage-to-business-value", "date": "2026-09-16T12:00:00Z"}, {"source": "OpenAI news", "title": "How workers are unlocking new ways of working", "link": "https://openai.com/index/unlocking-new-ways-of-working", "date": "2026-09-16T09:00:00Z"}, {"source": "arXiv cs.AI", "title": "ZGCM-1: A Fully Open and Extremely Efficient Foundation Model for Math and Agentic Search", "link": "https://arxiv.org/abs/2609.13356", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Converge Then Diversify: Decoupling Convergence and Diversity in Multi-Objective Bayesian Optimisation", "link": "https://arxiv.org/abs/2609.13396", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Generalized Agent Iteration: One Formal Framework for Iterative Policy Improvement and Recursive Self-Improvement", "link": "https://arxiv.org/abs/2609.13406", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Vibe Patenting: Evaluating LLM Judges for Professional Patent-Drafting Agents", "link": "https://arxiv.org/abs/2609.13422", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "Toward Self-Adaptive Physical AI: Can LLM Agents Manage Long-Horizon Physical Tasks?", "link": "https://arxiv.org/abs/2609.13436", "date": "2026-09-16T04:00:00Z"}, {"source": "arXiv cs.AI", "title": "LabAgent: Customize Any Research Hubs for Scientific Discoveries Using AI Agents", "link": "https://arxiv.org/abs/2609.13437", "date": "2026-09-16T04:00:00Z"}]};
 // Source configuration for the game: the numbers and colours a fork changes
 // first. The build concatenates every file in src/config/ ahead of the game
@@ -949,7 +960,8 @@ flag:'<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.
 milestone:'<path d="M12 13v8" /><path d="M12 3v3" /><path d="M18.172 6a2 2 0 0 1 1.414.586l2.06 2.06a1.207 1.207 0 0 1 0 1.708l-2.06 2.06a2 2 0 0 1-1.414.586H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z" />',
 settings:'<path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" />',
 rss:'<path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1" />',
-maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />'};
+maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" /><path d="M3 16v3a2 2 0 0 0 2 2h3" /><path d="M16 21h3a2 2 0 0 0 2-2v-3" />',
+message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />'};
 function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";return `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`}
 // Static markup declares data-icon; boot fills them in.
 function iconize(root){(root||document).querySelectorAll("[data-icon]").forEach(el=>{if(el.querySelector(":scope>svg.ic"))return;el.insertAdjacentHTML("afterbegin",icon(el.dataset.icon))})}
@@ -2693,6 +2705,123 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOO
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
+/* ---------------- chat (your own subscription, answering about the game) ---------------- */
+// A browser page cannot reach a terminal subscription, so the answers come from
+// a loopback bridge the player starts themselves: vibe chat serve --pair CODE.
+// The code below is the shared secret that binds the bridge to this browser;
+// without a bridge the panel searches the notes that are already in this file.
+// docs/CHAT.md and docs/adr/0009-local-chat-bridge.md.
+const CHAT_PORT=7717,CHAT_MAX=20,CHAT_ABC="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+// A pairing code is a secret, so it comes from the crypto source when there is
+// one; Math.random is the fallback for a browser that has none.
+function chatCode(){const n=8;const out=[];if(window.crypto&&crypto.getRandomValues){const b=new Uint8Array(n);crypto.getRandomValues(b);for(let i=0;i<n;i++)out.push(CHAT_ABC[b[i]%CHAT_ABC.length])}
+  else for(let i=0;i<n;i++)out.push(CHAT_ABC[Math.floor(Math.random()*CHAT_ABC.length)]);return out.join("")}
+function chatState(){if(!S.chat)S.chat={};const c=S.chat;if(!c.code)c.code=chatCode();if(!c.port)c.port=CHAT_PORT;if(!Array.isArray(c.hist))c.hist=[];return c}
+function chatBase(){return "http://127.0.0.1:"+chatState().port}
+function chatEsc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+// What the question is about: the stop whose sheet is open, else the mentor,
+// artifact or plot the walker is standing next to. Identifiers only; the
+// bridge looks the lesson up in the course data itself.
+let chatWhere={world:"campus",stop:null,mentor:null,artifact:null};
+function chatCtx(){const c={world:S.world||"campus",stop:null,mentor:null,artifact:null};
+  const scr=document.querySelector("#sheet.on .screen.on"),m=scr&&/^s-([1-9])$/.exec(scr.id);if(m)c.stop=+m[1];
+  if(typeof nearK==="string"&&nearK.startsWith("m:"))c.mentor=nearK.slice(2);
+  else if(typeof nearK==="string"&&nearK.startsWith("a:"))c.artifact=nearK.slice(2);
+  else if(!c.stop&&typeof nearK==="number"&&nearK>0)c.stop=nearK;
+  return c}
+function chatChip(c){const out=[(WORLDS[c.world]&&WORLDS[c.world].name)||c.world];
+  if(c.stop&&CH[c.stop-1])out.push("stop "+c.stop+", "+CH[c.stop-1].n);
+  if(c.mentor){const m=MENTORS.find(x=>x.id===c.mentor);if(m)out.push(m.name)}
+  if(c.artifact){const a=ARTIFACTS.find(x=>x.id===c.artifact);if(a)out.push(a.name)}
+  return out.join(" · ")}
+function chatSuggest(c){const out=[];
+  if(c.stop&&CH[c.stop-1])out.push("What am I meant to build in "+CH[c.stop-1].n+"?","Why does this stop come before the next one?");
+  if(c.mentor){const m=MENTORS.find(x=>x.id===c.mentor);if(m)out.push("What is "+m.name+" on record for?","How do I do their exercise?")}
+  if(c.artifact){const a=ARTIFACTS.find(x=>x.id===c.artifact);if(a)out.push("What does "+a.name+" teach?","Show me the smallest version of "+a.concept)}
+  if(!out.length)out.push("What is this game for?","Which stop should I do next?","How do I use the terminal companion?");
+  return out.slice(0,4)}
+
+// No bridge: the same question against the notes and the stops embedded in
+// this file. Word overlap, best three passages, each one a link into the vault.
+// Words that match everything and mean nothing in a search over our own notes.
+const CHAT_STOP=["the","and","what","how","why","does","this","that","for","are","you","can","with","from","should","have","was","not"];
+function chatSearch(q){const words=(q.toLowerCase().match(/[a-z0-9]{3,}/g)||[]).filter(w=>!CHAT_STOP.includes(w));if(!words.length)return[];
+  const hits=[];
+  Object.keys(NOTES).forEach(t=>{const md=NOTES[t].md,low=(t+" "+md).toLowerCase();let sc=0;
+    words.forEach(w=>{if(low.indexOf(w)>=0)sc++;if(t.toLowerCase().indexOf(w)>=0)sc+=2});
+    if(!sc)return;
+    const best=md.split("\n").filter(l=>l.trim()&&!l.startsWith("#")).map(l=>({l:l,s:words.filter(w=>l.toLowerCase().indexOf(w)>=0).length})).sort((a,b)=>b.s-a.s)[0];
+    hits.push({t:t,s:sc,p:best?best.l:"",note:true})});
+  CH.forEach((ws,i)=>{const low=(ws.n+" "+ws.d).toLowerCase();let sc=0;words.forEach(w=>{if(low.indexOf(w)>=0)sc+=2});
+    if(sc)hits.push({t:"Stop "+(i+1)+": "+ws.n,s:sc,p:ws.d})});
+  return hits.sort((a,b)=>b.s-a.s).slice(0,3)}
+function chatOfflineAnswer(q){const hits=chatSearch(q);
+  if(!hits.length)return {text:"Nothing in the notes matches that. Start the bridge and your own Claude or Codex can answer it properly.",links:[]};
+  return {text:hits.map(h=>h.t+": "+h.p.replace(/\[\[([^\]]+)\]\]/g,"$1").replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,"$1").replace(/[*`]/g,"")).join("\n"),links:hits.filter(h=>h.note).map(h=>h.t)}}
+
+// State is data: every exchange lives in S.chat.hist and the panel is drawn
+// from it, newest last, capped so a long evening does not fill localStorage.
+function chatPush(entry){const c=chatState();c.hist.push(entry);while(c.hist.length>CHAT_MAX)c.hist.shift();save();return entry}
+function renderChatLog(){const el=$("chatlog");if(!el)return;const c=chatState();
+  el.innerHTML=c.hist.length?c.hist.map(h=>`<div class="cturn"><p class="you">${chatEsc(h.q)}</p><p class="them">${chatEsc(h.a||"...")}</p>${(h.links||[]).map(t=>`<span class="wl" data-n="${chatEsc(t)}">${chatEsc(t)}</span>`).join("")}<span class="src">${h.src==="offline"?"from the notes in this file":h.src==="error"?"not answered":"your "+chatEsc(h.provider||"provider")}</span></div>`).join(""):`<p class="small muted">No questions yet. Pick one below, or type your own.</p>`;
+  el.querySelectorAll(".wl").forEach(e=>e.onclick=()=>openNote(e.dataset.n));
+  el.scrollTop=el.scrollHeight}
+function chatHelp(){const c=chatState();
+  return `<div class="card" id="chathelp"><h3>No bridge answered on port ${c.port}</h3>
+   <p class="small">Three lines, in the folder of your camp. Your subscription stays on your machine; the bridge only takes questions, never commands.</p>
+   <ol class="small"><li>Open a terminal in your camp.</li><li>Run <code>uv run vibe chat serve --pair ${c.code}</code></li><li>Ask again here.</li></ol>
+   <div class="row"><label class="small muted" for="chatport">Port</label><input type="number" id="chatport" value="${c.port}" style="width:100px" onchange="chatSetPort(this.value)"><button onclick="chatRetry()">Try again</button></div>
+   <p class="small muted">Pairing code <b>${c.code}</b>. The bridge only answers a page that knows it, so a hosted copy cannot talk to someone else's terminal.</p></div>`}
+window.chatSetPort=function(v){const c=chatState();const n=parseInt(v,10);if(n>0&&n<65536){c.port=n;save()}};
+window.chatRetry=function(){const c=chatState();const last=c.hist.length?c.hist[c.hist.length-1]:null;if(last)chatAsk(last.q);else $("chatmsg").textContent="Type a question first."};
+function renderChat(){const sug=chatSuggest(chatWhere);
+  $("s-chat").innerHTML=`<h2>Ask about this</h2>
+   <p class="chip" id="chatchip">${chatEsc(chatChip(chatWhere))}</p>
+   <div id="chatlog" class="chatlog"></div>
+   <div class="row" id="chatsug">${sug.map(q=>`<button class="small" onclick="chatAsk(this.dataset.q)" data-q="${chatEsc(q)}">${chatEsc(q)}</button>`).join("")}</div>
+   <div class="row"><input type="text" id="chatq" placeholder="Ask a question about this stop" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')chatSend()"><button class="primary" data-icon="message-circle" onclick="chatSend()">Ask</button></div>
+   <p class="small muted" id="chatmsg"></p>
+   <div id="chatwhy"></div>`;
+  iconize($("s-chat"));renderChatLog()}
+window.openChat=function(){chatWhere=chatCtx();renderChat();openSheet("s-chat")};
+window.chatSend=function(){const el=$("chatq");const q=(el&&el.value||"").trim();if(!q){$("chatmsg").textContent="Type a question first.";return}
+  if(el)el.value="";chatAsk(q)};
+// One question at a time on this side too: the bridge refuses a second one and
+// the panel should not pretend otherwise.
+let chatBusy=false;
+window.chatAsk=async function(q){if(chatBusy)return;chatBusy=true;
+  const c=chatState(),entry=chatPush({q:q,a:"",ctx:chatChip(chatWhere),at:Date.now(),src:"bridge",links:[]});
+  $("chatmsg").textContent="Asking your "+(CONFIG.provider||"provider")+"...";renderChatLog();
+  try{
+    const r=await fetch(chatBase()+"/ask",{method:"POST",headers:{"Content-Type":"application/json","X-Vibe-Code":c.code},body:JSON.stringify({question:q,world:chatWhere.world,stop:chatWhere.stop,mentor:chatWhere.mentor,artifact:chatWhere.artifact})});
+    if(!r.ok){const why=await r.json().catch(()=>({error:"refused"}));throw new Error(why.error||("refused with "+r.status))}
+    await chatRead(r,entry);
+    $("chatwhy").innerHTML="";$("chatmsg").textContent="";
+  }catch(e){chatFallback(entry,e&&e.message||String(e))}
+  save();renderChatLog();chatBusy=false};
+// Server-sent events, read as they arrive: one frame per blank line.
+async function chatRead(r,entry){const rd=r.body.getReader(),dec=new TextDecoder();let buf="";
+  for(;;){const step=await rd.read();if(step.done)break;buf+=dec.decode(step.value,{stream:true});
+    let i;while((i=buf.indexOf("\n\n"))>=0){chatFrame(buf.slice(0,i),entry);buf=buf.slice(i+2)}}
+  if(buf.trim())chatFrame(buf,entry)}
+function chatFrame(frame,entry){let ev="message",data="";
+  frame.split("\n").forEach(l=>{if(l.indexOf("event: ")===0)ev=l.slice(7).trim();else if(l.indexOf("data: ")===0)data+=l.slice(6)});
+  let d={};try{d=JSON.parse(data||"{}")}catch(e){return}
+  if(ev==="start"){entry.provider=d.provider;if(d.context)entry.ctx=d.context}
+  else if(ev==="delta"){entry.a+=d.text||"";renderChatLog()}
+  else if(ev==="error"){entry.src="error";entry.a=d.message||"the provider failed";renderChatLog()}}
+// No bridge, or a bridge that refused: say so in three lines and answer from
+// the notes that are already in this file, so the panel is never a dead end.
+function chatFallback(entry,why){const off=chatOfflineAnswer(entry.q);
+  entry.src="offline";entry.a=off.text;entry.links=off.links;
+  $("chatmsg").textContent="No answer from the bridge ("+why+"). Searched the notes instead.";
+  $("chatwhy").innerHTML=chatHelp();iconize($("chatwhy"))}
+// C opens the panel, unless the player is typing somewhere.
+addEventListener("keydown",e=>{if(e.key!=="c"&&e.key!=="C")return;if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const t=e.target&&e.target.tagName||"";if(/^(input|textarea|select)$/i.test(t))return;
+  if($("vault").classList.contains("on"))return;
+  if($("sheet").classList.contains("on")&&$("s-chat").classList.contains("on")){closeSheet();return}
+  openChat();e.preventDefault()});
 // Resume is offered to anyone who has been here before, not only to someone
 // with a stop done; the steps only fold away once the campaign has started.
 if(load()){$("name").value=S.name;if(S.done.length||S.look||S.name)$("btn-continue").style.display="";if(S.done.length)$("title").classList.add("returning")}

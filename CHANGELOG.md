@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- In-game chat, answered by the learner's own Claude, Codex, Gemini, Copilot or OpenCode subscription. The **Ask** button in the HUD and the **C** key open a panel with a context chip (the island, the stop whose sheet is open, the mentor or artifact in view), suggested questions for that context, a streamed answer and a history kept in the saved state. `vibe chat serve --pair <code>` runs the bridge that answers it: `127.0.0.1` only, one `POST /ask` endpoint that takes a question and never a command, the pairing code the panel shows as the shared secret, an Origin allowlist, a 16 KiB body cap, a queue of one and a timeout that kills the provider process. The prompt is built on the Python side from the course data, so the page sends identifiers rather than text to run, and the question is an argument, never a shell string. `vibe chat ask "..."` asks the same question with the same prompt in the terminal. With no bridge the panel explains how to start one in three lines, with the exact command and code in it, and answers by searching the notes and stops embedded in the game file. `docs/CHAT.md` and `docs/adr/0009-local-chat-bridge.md`.
+
 ### Changed
 
 - `main` is protected on GitHub: pull requests only, both CI jobs green and up to date, no force pushes or deletion, enforced for admins; release tags are immutable; merged branches are deleted automatically; secret scanning with push protection and Dependabot security updates are on. `docs/MAINTAINERS.md` and `AGENTS.md` say so.

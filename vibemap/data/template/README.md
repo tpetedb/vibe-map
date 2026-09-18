@@ -29,7 +29,13 @@ just start        # the terminal menu: checks, the pet, the launchers
 just camp         # the game in the browser, the vault in Obsidian, your status here
 just check 1      # verify the definition of done for a workstream, earn the XP
 just vault        # rebuild the notes and lint for dead links
+vibe chat serve --pair <code>   # the game's Ask panel, answered by your own agent
 ```
+
+The **Ask** button (or the **C** key) in the game answers questions about the stop
+you are on. It needs the bridge above: one command, loopback only, paired with the
+code the panel shows, and your subscription never leaves your machine. Without it
+the panel searches the notes embedded in the game.
 
 From workstream 3 on, when `workspace/data/scores.csv` exists, `just scores` summarises it and `just scores top_runs` runs a query from `workspace/sql`.
 
