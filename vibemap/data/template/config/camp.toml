@@ -9,6 +9,7 @@ persona = "chief-of-staff"  # chief-of-staff | cleaning-ceo | university-md | pa
 difficulty = "normal"  # beginner | easy | normal | hard | expert | god
 mode = "campaign"  # campaign (four evenings) | roadmap (the tech tree as quests)
 provider = "claude"  # claude | codex | gemini | copilot | opencode
+interests = []  # shelves to offer first; empty = everything (vibe interests)
 
 [theme]
 preset = "studio"  # studio | wine-night | boardroom | seminar | field-guide | a name in themes/

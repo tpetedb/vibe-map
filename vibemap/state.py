@@ -82,6 +82,10 @@ class State(BaseModel):
     items: list[str] = Field(default_factory=list)
     ach: list[str] = Field(default_factory=list)
     wear: list[str] = Field(default_factory=list)
+    # Shelves of the tech tree chosen in the game; empty means everything.
+    # config/camp.toml is the source of truth, this is the game's copy so the
+    # progress code can carry the choice both ways.
+    interests: list[str] = Field(default_factory=list)
 
     @property
     def done(self) -> list[int]:
@@ -182,6 +186,7 @@ class State(BaseModel):
             "items": list(self.items),
             "ach": list(self.ach),
             "wear": list(self.wear),
+            "interests": list(self.interests),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
         return base64.urlsafe_b64encode(raw).decode().rstrip("=")
@@ -223,6 +228,11 @@ class State(BaseModel):
             for value in payload.get(key) or []:
                 if str(value) not in mine:
                     mine.append(str(value))
+        # An interest is a set, so a code adds a shelf and never removes one:
+        # a choice made on the other machine is news, not a correction.
+        for shelf in payload.get("interests") or []:
+            if str(shelf) not in self.interests:
+                self.interests.append(str(shelf))
         return payload
 
 
