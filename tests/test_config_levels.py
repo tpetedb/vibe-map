@@ -139,7 +139,7 @@ def test_vibe_fork_builds_and_is_checked_end_to_end(tmp_path: Path) -> None:
     # An untouched fork is not yet the learner's: it builds, but nothing differs.
     first = _run(camp, "check", "--fork", "config")
     assert "src/config is still the product's" in first.stdout, first.stdout
-    assert first.returncode == 0
+    assert first.returncode == 1
 
     cfg_js = fork / "src" / "config" / "00-config.js"
     cfg_js.write_text(
@@ -170,3 +170,72 @@ def test_fork_needs_a_product_checkout(tmp_path: Path) -> None:
     assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Lotte"]).exit_code == 0
     out = _run(camp, "fork", "--from", str(tmp_path))
     assert out.returncode != 0 and "not a product checkout" in out.stdout
+
+
+# ---- the source an installed vibe carries --------------------------------------
+
+
+def test_the_packaged_fork_source_is_in_sync_with_the_product() -> None:
+    from tools.sync_fork_source import stale
+
+    assert stale() == []
+
+
+def test_the_package_carries_everything_the_fork_needs() -> None:
+    packaged = ROOT / "vibemap" / "data" / "fork_source"
+    for rel in (
+        "src/config/00-config.js",
+        "src/vendor/three.min.js",
+        "src/game/90-boot.js",
+        "tools/build.py",
+        "tools/generated/tree.js",
+        "tools/generated/notes.js",
+    ):
+        assert (packaged / rel).is_file(), rel
+
+
+@pytest.mark.integration
+def test_vibe_fork_works_in_a_camp_with_no_checkout(tmp_path: Path) -> None:
+    """The course says `vibe fork` in your camp, so it has to work there."""
+    camp = tmp_path / "camp"
+    assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Lotte"]).exit_code == 0
+    assert not (camp / "src").exists()
+
+    made = _run(camp, "fork")
+    assert made.returncode == 0, made.stdout + made.stderr
+    fork = camp / quests.FORK_DIR
+    for rel in ("src/config/00-config.js", "src/vendor/three.min.js", "tools/build.py"):
+        assert (fork / rel).exists(), rel
+    manifest = json.loads((fork / quests.FORK_MANIFEST).read_text(encoding="utf-8"))
+    assert manifest["source"].startswith("vibe-map ")
+    assert "packaged source" in manifest["source"]
+
+    exists = _run(camp, "check", "--fork", "exists")
+    assert exists.returncode == 0, exists.stdout
+
+
+def test_the_fork_build_finds_the_vibe_that_made_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A camp builds its fork with a plain python3, which has no vibemap."""
+    import tools.build as build
+
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "vibe"
+    script.write_text(
+        f"#!{sys.executable}\n# -*- coding: utf-8 -*-\n", encoding="utf-8"
+    )
+    script.chmod(0o755)
+    monkeypatch.setenv("PATH", str(bin_dir))
+    assert build._vibe_interpreter() == sys.executable
+
+    # Nothing to hand over while vibemap is importable, whatever the root is.
+    monkeypatch.setattr(build, "ROOT", tmp_path)
+    build._hand_over_to_vibe()
+
+    monkeypatch.setenv("PATH", str(tmp_path / "empty"))
+    monkeypatch.setattr(build.importlib.util, "find_spec", lambda name: None)
+    with pytest.raises(SystemExit) as refused:
+        build._hand_over_to_vibe()
+    assert "uv tool install vibe-map" in str(refused.value)
