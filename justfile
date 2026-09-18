@@ -54,6 +54,10 @@ status:
 check *n:
     uv run vibe check {{n}}
 
+# write workspace/dashboard.html from the state, the vault and the scores, and open it
+dashboard:
+    uv run vibe dashboard
+
 # rebuild the vault notes and the Mermaid map, then lint for orphans and dead links
 vault:
     uv run vibe vault build

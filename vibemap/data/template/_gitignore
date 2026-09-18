@@ -2,6 +2,8 @@
 backups/
 .vibe/
 workspace/python/out/
+# the dashboard report: regenerate with `vibe dashboard`
+workspace/dashboard.html
 .DS_Store
 __pycache__/
 .env

@@ -69,3 +69,52 @@ AGE_COLOURS = {
 def hex_to_int(hex_colour: str) -> int:
     """Convert '#RRGGBB' to the integer Obsidian stores in graph.json."""
     return int(hex_colour.lstrip("#"), 16)
+
+
+# The design tokens of docs/DESIGN.md, in the order src/style.css declares
+# them. Anything the CLI renders as HTML (the dashboard report) writes this
+# block instead of spelling colours again; a test keeps it equal to the game's.
+CSS_TOKENS: dict[str, str] = {
+    "bg": BLACK,
+    "surface-1": SURFACE,
+    "surface-2": "#141414",
+    "surface-3": "#1A1A1A",
+    "hairline": "rgba(255,255,255,.10)",
+    "hairline-2": "rgba(255,255,255,.18)",
+    "text": TEXT,
+    "muted": MUTED,
+    "red": RED,
+    "red-dim": "#9A2A2A",
+    "red-bright": "#F04923",
+    "orange": ORANGE,
+    "orange-dim": "#C26A14",
+    "orange-bright": "#FFA94D",
+    "yellow": YELLOW,
+    "yellow-dim": "#C29200",
+    "yellow-bright": "#FFD500",
+    "green": GREEN,
+    "green-dim": "#0A7A52",
+    "green-bright": "#00D084",
+    "blue": BLUE,
+    "blue-dim": "#0A4E7A",
+    "blue-bright": "#0088CC",
+    "radius-s": "8px",
+    "radius-m": "12px",
+    "radius-l": "16px",
+    "radius-pill": "999px",
+    "space-1": "4px",
+    "space-2": "8px",
+    "space-3": "12px",
+    "space-4": "16px",
+    "space-6": "24px",
+    "space-8": "32px",
+    "font-display": "Sora,system-ui,sans-serif",
+    "font-body": "Inter,system-ui,sans-serif",
+    "font-mono": '"JetBrains Mono",ui-monospace,Menlo,monospace',
+}
+
+
+def css_tokens(indent: str = "  ") -> str:
+    """The :root block every generated page starts from."""
+    body = "\n".join(f"{indent}--{k}:{v};" for k, v in CSS_TOKENS.items())
+    return ":root{\n" + body + "\n}"

@@ -48,6 +48,10 @@ check *n:
 done n note:
     vibe done {{n}} "{{note}}"
 
+# write workspace/dashboard.html from your state, vault and scores, and open it
+dashboard:
+    vibe dashboard
+
 # rebuild the vault notes and the Mermaid map, then lint for orphans and dead links
 vault:
     vibe vault build

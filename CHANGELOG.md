@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- An analytics dashboard, in the game and in the terminal, on one event shape: `{ts, kind, id, world}` with `v` for a number of seconds. The game records into `S.events` through one helper, `track(kind, id, v)` (`src/game/00-state.js`), from the places where something happens: a session start, a stop opened and delivered, an artifact inspected, a mentor met, a mentor verified or an artifact built on import, the time a screen stayed open, and a minute tick while the island is on screen. The log is capped at 600 events and compacts a day of ticks into one before it drops anything, it stays in the browser, and the progress code still carries no events, so an import merges none. The Stats button on the HUD opens the panel (`src/game/89-dashboard.js`): six KPI tiles with sparklines, a ring per island, XP over time, a day-by-hour heatmap, bars for the time per stop, the path you took and a feed of recent events, all inline SVG, all derived from the state, working from 393px up.
+- `vibe dashboard` writes `workspace/dashboard.html` from `.vibe/state.json`, the vault and `workspace/data/scores.csv` and opens it (`--no-open` to skip, `--out` to place it elsewhere, `--json` to print the numbers instead). It is one self-contained file with no script and no network, in the same design as the game panel: the tokens come from `vibemap/palette.py` (`css_tokens()`), and a test keeps them equal to the game's `:root` in `src/style.css`.
+
 ### Changed
 
 - `main` is protected on GitHub: pull requests only, both CI jobs green and up to date, no force pushes or deletion, enforced for admins; release tags are immutable; merged branches are deleted automatically; secret scanning with push protection and Dependabot security updates are on. `docs/MAINTAINERS.md` and `AGENTS.md` say so.

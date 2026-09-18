@@ -46,11 +46,34 @@ const SAY_PLAIN={
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
-let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[]};
+let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+/* ---------------- the event log ---------------- */
+// One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
+// number of seconds when the event measures time. The log is local to this
+// browser and never travels in the progress code, so an import merges none of
+// it. track() is the only way in; the dashboard derives every number from it.
+const EVENT_CAP=600;
+function track(kind,id,v){
+  if(!Array.isArray(S.events))S.events=[];
+  const e={ts:Date.now(),kind:String(kind),id:id==null?"":String(id),world:S.world||"campus"};
+  if(typeof v==="number"&&isFinite(v))e.v=Math.round(v);
+  S.events.push(e);compactEvents();save();return e}
+// Over the cap the minute ticks of a day collapse into one event carrying
+// their seconds, so a long evening loses its ticks and keeps its shape;
+// only then does the oldest event fall off the front.
+function compactEvents(){
+  if(S.events.length<=EVENT_CAP)return;
+  const day=ts=>new Date(ts).toISOString().slice(0,10),ticks={},kept=[];
+  S.events.forEach(e=>{if(e.kind!=="play"){kept.push(e);return}
+    const k=day(e.ts);if(ticks[k]){ticks[k].v+=(e.v||60);return}
+    ticks[k]={ts:e.ts,kind:"play",id:"day",world:e.world,v:e.v||60};kept.push(ticks[k])});
+  S.events=kept.slice(-EVENT_CAP)}
+// Other modules (chat, the avatar) record through this one helper.
+window.track=track;
 const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just
