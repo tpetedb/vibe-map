@@ -18,7 +18,7 @@ This folder is a camp: the place where you play the course and build your own th
 |---|---|---|
 | Your work | `workspace/` | Everything you build during the course: the game from workstream 1, the scores CSV and its queries, the chart, the tool, the mentor exercises in `mentors/`, the artifact tasks in `artifacts/` and your fork of the game in `forks/`. Empty on day one apart from a README. The lessons run here and the checks look here. |
 | Your notes | `vault/` | The course notes. `vibe` writes them, you and your agent add your own. Open it in Obsidian. |
-| Settings | `config/camp.toml`, `justfile`, `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/` | How the camp and your agent behave. You will be taught to change these; until then, leave them alone. |
+| Settings | `config/camp.toml`, `justfile`, `AGENTS.md`, `CLAUDE.md`, `.agents/`, `.claude/`, `.github/`, `.devcontainer/` | How the camp, your agent and the cloud container behave. You will be taught to change these; until then, leave them alone. |
 
 The state of your progress lives in `.vibe/state.json` (ignored by git) and travels to the game as a progress code (`vibe export`, `vibe import`).
 
@@ -58,6 +58,36 @@ The full loop between the terminal, the game and Obsidian: https://github.com/tp
 ## The notes belong in git
 
 `vibe` regenerates the notes under `vault/Camp/`, so a check or a vault build leaves the tree dirty. That is the point: the notes are the record of what you did. Commit them. `git add -A && git commit -m "what I learned"` is the right move after a session, and it will include the regenerated notes.
+
+## Playing without installing anything: Codespaces
+
+`.devcontainer/` is a recipe for a Linux container with uv, just, duckdb, the
+GitHub CLI and the `vibe` command already in it. Push this camp to GitHub, then
+**Code**, **Codespaces**, **Create codespace on main**, and you have the whole
+camp in a browser tab. Two ports are labelled for you: 8000 for your game
+(`python3 -m http.server 8000 --directory workspace/game`) and 7717 for
+`vibe chat serve`. A forwarded port is private to you until you say otherwise.
+
+It is your repository, so the codespace is yours: the compute is charged to the
+account that owns it, out of the free hours every personal account gets. Set a
+spending limit of zero if you want those hours to be a hard stop. Prebuilds make
+a codespace start faster and cost Actions minutes and storage, so none is set up
+here; switch one on only if you decide you want to pay for it.
+
+## Public camp or private camp
+
+`vibe new --github you/camp` makes the repository public. `--private` makes it
+private, and three things then depend on the plan of the account that owns it:
+
+| What | Public repository | Private repository |
+|---|---|---|
+| GitHub Pages (`.github/workflows/pages.yml`, workstream 7) | every plan | GitHub Pro or above; on GitHub Free the repository has to be public |
+| Protected branches, required reviewers | every plan | GitHub Pro or above |
+| `.github/CODEOWNERS` (who is asked to review what) | every plan | GitHub Pro or above |
+
+Nothing else changes. On GitHub Free, a private camp still gets git, issues,
+Actions and Codespaces; you just cannot publish the game from it, so keep the
+camp public or upgrade before workstream 7.
 
 ## Separation of concerns, on purpose
 
