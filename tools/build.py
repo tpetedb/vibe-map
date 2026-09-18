@@ -67,6 +67,7 @@ GAME_ORDER = [
     "80-sync.js",
     "85-settings.js",
     "87-onboarding.js",
+    "89-dashboard.js",
     "90-boot.js",
 ]
 
