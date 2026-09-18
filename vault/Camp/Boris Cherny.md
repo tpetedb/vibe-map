@@ -2,6 +2,7 @@
 title: "Boris Cherny"
 date: 2026-09-16
 tags: [people]
+generated: 0d1113f87342
 ---
 # Boris Cherny
 

@@ -52,6 +52,10 @@ class CheckRecord(BaseModel):
 # It reads as an instruction and never as a person, which is the point.
 PLACEHOLDER = "<your_name>"
 
+# The log entry a progress code writes. The game claims, it never checks, so
+# an imported stop is worth half until `vibe check` passes it (ADR 0004).
+IMPORTED_NOTE = "done in the game, imported"
+
 
 class State(BaseModel):
     """Everything the CLI remembers about the learner."""
@@ -102,6 +106,31 @@ class State(BaseModel):
         self.xp = max(0, self.xp - xp)
         self.checks.pop(f"{world}:{n}", None)
         return xp
+
+    def awarded(self, world: str, n: int) -> int:
+        """The XP this stop has already paid out, over every claim it carries."""
+        return sum(e.xp for e in self.log if e.world == world and e.n == n)
+
+    def is_verified(self, world: str, n: int) -> bool:
+        """True when a check confirmed this stop, not the game and not --force."""
+        rec = self.checks.get(f"{world}:{n}")
+        return bool(rec and rec.ok)
+
+    def owed(self, world: str, n: int, full_xp: int) -> int:
+        """What a passing check still has to pay a stop claimed at half price."""
+        if not self.is_done(world, n):
+            return 0
+        return max(0, full_xp - self.awarded(world, n))
+
+    def imported_stops(self) -> list[tuple[str, int]]:
+        """Stops a progress code claimed that no check has confirmed since."""
+        return sorted(
+            {
+                (e.world, e.n)
+                for e in self.log
+                if e.note == IMPORTED_NOTE and not self.is_verified(e.world, e.n)
+            }
+        )
 
     def total_done(self) -> int:
         return sum(len(v) for v in self.done_w.values())

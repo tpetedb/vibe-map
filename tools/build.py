@@ -18,7 +18,10 @@ copy of src/ and this file in workspace/forks/ builds on its own (`vibe fork`).
 from __future__ import annotations
 
 import functools
+import importlib.util
 import json
+import os
+import shutil
 import sys
 import tomllib
 from pathlib import Path
@@ -208,7 +211,46 @@ def build() -> str:
     )
 
 
+# The re-exec below runs this file again; the flag stops a second round.
+REEXEC_FLAG = "VIBE_BUILD_REEXEC"
+
+
+def _vibe_interpreter() -> str | None:
+    """The python behind the `vibe` on PATH, from its console script shebang."""
+    exe = shutil.which("vibe")
+    if not exe:
+        return None
+    try:
+        first = Path(exe).read_text(encoding="utf-8", errors="ignore").splitlines()[0]
+    except (OSError, IndexError):
+        return None
+    py = first[2:].strip().strip('"') if first.startswith("#!") else ""
+    if not py:
+        py = str(Path(exe).resolve().parent / "python")
+    return py if Path(py).exists() else None
+
+
+def _hand_over_to_vibe() -> None:
+    """A fork is built by a plain python3, which has no vibemap; borrow one.
+
+    The build reads the camp's journey configuration through the package, and
+    the only copy in a camp lives in the virtualenv of the installed `vibe`.
+    A product checkout has a pyproject.toml and never takes this path.
+    """
+    if (ROOT / "pyproject.toml").exists() or importlib.util.find_spec("vibemap"):
+        return
+    py = None if os.environ.get(REEXEC_FLAG) else _vibe_interpreter()
+    if not py:
+        raise SystemExit(
+            "this build needs the vibe package. Install it with "
+            "`uv tool install vibe-map`, or run it with the python that has it."
+        )
+    os.environ[REEXEC_FLAG] = "1"
+    os.execv(py, [py, str(Path(__file__).resolve()), *sys.argv[1:]])
+
+
 def main() -> None:
+    _hand_over_to_vibe()
     html = build()
     if "--check" in sys.argv:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""

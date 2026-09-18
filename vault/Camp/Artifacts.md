@@ -2,6 +2,7 @@
 title: "Artifacts"
 date: 2026-09-17
 tags: [concept]
+generated: ab61d51dfce4
 ---
 # Artifacts
 

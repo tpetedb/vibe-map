@@ -2,6 +2,7 @@
 title: "Linus Torvalds"
 date: 2026-09-16
 tags: [people]
+generated: 732e78e935d2
 ---
 # Linus Torvalds
 
