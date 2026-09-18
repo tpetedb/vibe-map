@@ -76,18 +76,21 @@ jobs:
         include:
           - shard: smoke
             files: >-
-              tests/test_game_smoke.py tests/test_game_avatar.py
-              tests/test_game_mentors.py tests/test_stops.py
+              tests/test_game_smoke.py tests/test_stops.py
               tests/test_grow_game.py
           - shard: ui
             files: >-
-              tests/test_game_ui.py tests/test_game_chat.py
-              tests/test_interests.py tests/test_artifacts.py
+              tests/test_game_ui.py tests/test_interests.py
+              tests/test_artifacts.py
+          - shard: bridges
+            files: >-
+              tests/test_game_bridges.py tests/test_game_news.py
+              tests/test_dashboard.py
           - shard: panels
             files: >-
-              tests/test_game_bridges.py tests/test_game_dashboard.py
-              tests/test_game_news.py tests/test_onboarding.py
-              tests/test_reset.py tests/test_dashboard.py
+              tests/test_game_chat.py tests/test_game_avatar.py
+              tests/test_game_mentors.py tests/test_game_dashboard.py
+              tests/test_onboarding.py tests/test_reset.py
           - shard: webkit
             files: tests/test_game_webkit.py
             retry: true

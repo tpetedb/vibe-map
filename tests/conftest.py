@@ -244,16 +244,20 @@ class GamePage:
     def sheet_in_place(self) -> None:
         """Wait for the sheet's spring and openSheet's smooth scroll to finish.
 
-        The spring is driven by animation frames. A loaded runner starves
-        those, so a sampler reading every 32 ms sees the same number twice and
-        calls a sheet that is still 16 px low settled. The transform reaching
-        identity is the page's own end of the spring, so that is waited for
-        first and the scroll is sampled after.
+        The sheet springs in from translateY(16px) on animation frames, which
+        a loaded runner starves, so a sampler reading every 32 ms sees the same
+        number twice and calls a sheet that is still 16 px low settled. Asking
+        the animation instead does not help: it has not started when the first
+        check runs, so anything that reads the transform passes before the
+        spring exists. The sheet is `position:fixed;inset:0`, so covering the
+        viewport is its resting geometry and the only state that cannot be
+        true early; wait for that, then sample the scroll.
         """
         self.page.wait_for_function(
-            "() => {const t = getComputedStyle("
-            "document.getElementById('sheet')).transform;"
-            " return t === 'none' || Math.abs(new DOMMatrix(t).m42) < 0.5;}",
+            "() => {const r = document.getElementById('sheet')"
+            ".getBoundingClientRect();"
+            " return Math.abs(r.top) < 0.5"
+            " && Math.abs(r.bottom - window.innerHeight) < 0.5;}",
             timeout=WAIT_MS,
         )
         self.still("document.getElementById('sheet').getBoundingClientRect().top")
