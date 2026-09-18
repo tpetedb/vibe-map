@@ -77,6 +77,10 @@ def test_cli_lists_and_dry_runs(
         and "ghostty" in out.output
         and "obsidian-theme" in out.output
     )
-    dry = runner.invoke(cli, ["dotfiles", "install", "tmux", "--dry-run"])
+    # A printed path is wrapped at the console's width, which is 80 on a CI
+    # runner and wider in a terminal, so the width is fixed like everywhere else.
+    dry = runner.invoke(
+        cli, ["dotfiles", "install", "tmux", "--dry-run"], env={"COLUMNS": "200"}
+    )
     assert dry.exit_code == 0, dry.output
     assert "tmux.conf" in dry.output and not (tmp_path / ".config").exists()

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 
 import pytest
 
@@ -107,3 +108,47 @@ def test_nightly_runs_on_a_schedule_on_tags_and_on_demand() -> None:
     runs = [s.get("run", "") for j in flow["jobs"].values() for s in j["steps"]]
     assert any("tools/fresh_camp.py" in r for r in runs)
     assert any("-m integration" in r for r in runs)
+
+
+def _browser_test_files() -> set[str]:
+    """The files pytest itself puts in the browser battery, asked of pytest."""
+    out = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-m",
+            "browser and not integration",
+            "--collect-only",
+            "--no-header",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    ).stdout
+    # The quiet collect prints one "tests/test_x.py: 4" line per file.
+    return set(re.findall(r"^(tests/\S+\.py)(?=[:\s])", out, re.MULTILINE))
+
+
+def test_every_browser_test_file_is_in_exactly_one_shard() -> None:
+    """A browser test file in no shard would never run; in two it runs twice."""
+    from tools.ci_shards import shards
+
+    owned: list[str] = [f for s in shards() for f in s.files]
+    collected = _browser_test_files()
+    assert collected, "collected no browser tests, so this guard proves nothing"
+    assert len(owned) == len(set(owned)), "a file is in two shards"
+    assert collected - set(owned) == set(), "browser test files in no shard"
+    assert set(owned) - collected == set(), "a shard names a file with no browser test"
+
+
+def test_the_required_context_is_its_own_job_and_keeps_its_name() -> None:
+    """Branch protection names these two contexts; a rename blocks every PR."""
+    jobs = _workflows()["ci"]["jobs"]
+    assert jobs["lint-and-unit"]["name"] == "lint, unit tests, generated files in sync"
+    assert jobs["browser"]["name"] == "Playwright tests (Chromium and WebKit)"
+    # The matrix job carries the leg in its name, so it can never be the
+    # required context; the aggregator that needs it is.
+    assert jobs["browser"]["needs"] == ["browser-shard"]
+    assert "matrix" not in jobs["browser"].get("strategy", {})
+    assert jobs["browser"]["if"] == "always()"
