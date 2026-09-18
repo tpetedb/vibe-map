@@ -40,6 +40,13 @@ jobs:
       - run: uv run python tools/regen_tree.py --check
       - run: uv run python tools/build.py --check
       - run: uv run python tools/gen_cookbook.py --check
+      # A pull request that changes the product carries its changelog entry as
+      # a fragment under changelog.d/, so no branch edits CHANGELOG.md.
+      - name: a changelog fragment for a product change
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=50 origin ${{ github.base_ref }}
+          uv run python tools/changelog.py check --base origin/${{ github.base_ref }}
       # No -q on the command line: pyproject already passes -q -ra, and a
       # second -q would swallow the summary of what failed.
       - run: uv run pytest -m "not browser and not integration"

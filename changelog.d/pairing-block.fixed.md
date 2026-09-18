@@ -1,0 +1,1 @@
+- The go-live pairing block is a sentence. The items carry commas of their own, so they are separated by semicolons with an "and" before the last, instead of being joined into an unparseable list.

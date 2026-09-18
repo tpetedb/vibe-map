@@ -1,0 +1,1 @@
+- On the title screen the name field travels with the Start button in the sticky row, so the field the copy points at cannot be below the fold while the button that needs it is on screen.

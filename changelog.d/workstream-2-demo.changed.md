@@ -1,0 +1,1 @@
+- Workstream 2's demo asks both change requests of the same card, which is what makes them comparable: the precise one changes the badge it named and nothing else, the vague one changes everything it was not told to leave alone.

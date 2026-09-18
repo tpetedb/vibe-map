@@ -72,6 +72,36 @@ People who want the engine press **Use this template** on GitHub or clone this r
 
 An agent that hits one of these rules reports it; it never works around it.
 
+## Catching up with main, and the files that conflict
+
+Strict checks mean a branch has to be up to date with `main` at the moment its checks go green, so with several branches open every merge sends the others back for another round. Almost every conflict that round produces is in a file nobody wrote: a generated output, or `CHANGELOG.md`.
+
+Both are removed at the source.
+
+- **The changelog is written by a release, not by a branch.** A branch adds `changelog.d/<slug>.<type>.md` with its bullets; `uv run python tools/changelog.py release X.Y.Z` (`just release X.Y.Z`) writes the dated section into `CHANGELOG.md`, moves the compare links and deletes the fragments. `just changelog` prints the Unreleased view in between. The check in CI's lint job refuses a pull request that changes `src/`, `vibemap/` or `tools/` without a fragment, and one that edits `CHANGELOG.md` outside a release. Keep a Changelog 1.1.0 stays the published form. towncrier is the packaged version of this idea and was read first: it assembles at a `start_string` marker and knows nothing about the compare-link block a Keep a Changelog file ends with ([its configuration reference](https://towncrier.readthedocs.io/en/stable/configuration.html)), so it would have to be templated back into this format, which is more work than the hundred lines in `tools/changelog.py` and one more dependency.
+- **A generated file is resolved by regenerating it.** Take either side, run the generators in dependency order, and the result is what both branches meant. `just sync-main` is that: merge `origin/main`, resolve the generated conflicts that way, refuse and name the file when a real source conflict is left (`git merge --abort` undoes it), then run the fast gates. One exception to watch: a vault note written by hand rather than by `vibe vault build` is not regenerated, so resolve `vault/` yourself before running it if your branch wrote one.
+
+`.gitattributes` supports the policy with the two things that work in a fresh clone:
+
+| Attribute | What it does | Source |
+|---|---|---|
+| `merge=binary` on the generated outputs | One of git's three built-in merge drivers: keep our version in the work tree and leave the path conflicted for the user to sort out. So a two megabyte built game never gets conflict markers written through it, and the conflict is still reported, which is what makes the regenerate step impossible to skip. | [gitattributes, the merge attribute](https://git-scm.com/docs/gitattributes) |
+| `linguist-generated=true` on the same set | GitHub collapses the file in a diff by default and leaves it out of the repository's languages, so a review reads the source change. | [Customizing how changed files appear on GitHub](https://docs.github.com/en/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github) |
+
+A **custom** merge driver would do more (it could run the generator itself), but git only knows a driver that `git config merge.<name>.driver` names, and that configuration lives in each clone, not in the repository. Nothing here relies on it, and nothing should: a rule that works only on the machine that set it up is worse than no rule.
+
+## Merge queue: checked, not available here
+
+A merge queue would fix the remaining cost, which is that every branch has to be rebuilt after every merge. It is not available for this repository. GitHub's own announcement of general availability says: "Merge queue is available on private and public repos on the GitHub Enterprise Cloud plan and all public repos owned by organizations" ([GitHub Changelog, 12 July 2023](https://github.blog/changelog/2023-07-12-pull-request-merge-queue-is-now-generally-available/), read 2026-09-18). `tpetedb/vibe-map` is public but owned by a personal account on Pro, not by an organization, so it qualifies under neither half.
+
+The recommendation, for Tom or the orchestrator to decide, is therefore **not** to chase it:
+
+1. Keep the fragments and `just sync-main`. They remove the conflicts, which is the expensive half of falling behind.
+2. If the queue is ever wanted, the only route is moving the repository into an organization (free), after which the queue is enabled on the `main` ruleset and pull requests are added with **Merge when ready** instead of auto-merge. That changes the URL of the repository and of the Pages site, every camp's remote, and the `vibe new --github` path, so it is not a harness decision.
+3. Until then, the cheap substitute is what the agents already do: arm auto-merge, run `just sync-main` when the branch falls behind, and land one thing at a time.
+
+Nothing in this repository's settings was changed to write this down.
+
 `.github/CODEOWNERS` names who a pull request asks for review. It works in a public repository on every plan and in a private one on GitHub Pro or above; the same is true of protected branches and of Pages. A camp made private with `vibe new --github you/camp --private` therefore needs Pro before workstream 7 can publish its game, which is the table in the camp's own `README.md`. Changing the visibility of an existing repository is the owner's call and never an agent's.
 
 ## Where the rules live
@@ -79,7 +109,7 @@ An agent that hits one of these rules reports it; it never works around it.
 - `AGENTS.md` (this repository): the file map, ways of working, the test loop, code style. Every agent reads it through `CLAUDE.md`.
 - `vibemap/data/template/AGENTS.md`: the same for a camp, shorter, with the zones table and the rule that `workspace/data/scores.csv` is a system of record.
 - `docs/adr/`: decisions with their why.
-- `CHANGELOG.md`: Keep a Changelog form; `Unreleased` is cut into a section at release time (`docs/QUICKSTART.md` and the release script in the session notes describe the steps).
+- `CHANGELOG.md`: Keep a Changelog form, written only by a release from the fragments in `changelog.d/` (see "Catching up with main" below).
 
 ## The idea behind it
 
