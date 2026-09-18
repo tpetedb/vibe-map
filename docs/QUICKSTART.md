@@ -1,6 +1,6 @@
 # Quickstart
 
-Three ways in, from nothing installed to a full camp. Every step is a command you can paste; every block says what you should see afterwards. Numbers are steps, not minutes.
+Four ways in, from nothing installed to a full camp. Every step is a command you can paste; every block says what you should see afterwards. Numbers are steps, not minutes.
 
 ## Path A: play now, install nothing
 
@@ -44,7 +44,7 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    vibe status
    ```
 
-   The folder name is the convention: your name, vibe-map, the date you started (`vibe new ~/vibe-map-tom-2026-09-17` spells it out; `--name tom` changes the person part). One camp per person and start date sorts by date in a listing and tells you which camp a note or a progress code came from. `vibe status` prints your name, level, XP and the four-by-eight grid of workstreams. Add `--github you/camp` to `vibe new` to push the camp to a new GitHub repository as well (needs `gh auth login`). The camp has three zones: `workspace/` (yours), `vault/` (the notes) and the configuration files; the engine stays inside the `vibe` command and the hosted game (`vibe play`).
+   The folder name is the convention: your name, vibe-map, the date you started (`vibe new ~/vibe-map-tom-2026-09-17` spells it out; `--name tom` changes the person part). One camp per person and start date sorts by date in a listing and tells you which camp a note or a progress code came from. `vibe status` prints your name, level, XP and the four-by-eight grid of workstreams. Add `--github you/camp` to `vibe new` to push the camp to a new GitHub repository as well (needs `gh auth login`); `--private` with it creates the repository private instead of public, which needs GitHub Pro for the camp's Pages workflow, its protected branches and its CODEOWNERS file. The camp has three zones: `workspace/` (yours), `vault/` (the notes) and the configuration files; the engine stays inside the `vibe` command and the hosted game (`vibe play`).
 
 3. Pick a provider. Everything that talks to a model runs the CLI you already pay for, in print mode.
 
@@ -157,6 +157,58 @@ This path is not a camp. It clones the product: the game's source, the CLI's cod
    vibe explain                 # the provider explains the last commits in plain words
    just rescue                  # back on main, nothing lost
    ```
+
+## Path D: in the browser, on GitHub Codespaces
+
+Nothing on your machine: a container in GitHub's cloud with the tools already
+in it. Works from a Chromebook, a borrowed laptop or an iPad. A personal
+account gets free Codespaces hours every month and GitHub Pro raises the
+allowance; you can also open a codespace on a machine type you pay for.
+
+1. Open a codespace. On the repository page: **Code**, **Codespaces**, **Create
+   codespace on main**. Or from a terminal with `gh`:
+
+   ```bash
+   gh codespace create --repo tpetedb/vibe-map
+   gh codespace code                     # or --web for the browser editor
+   ```
+
+   This works on a camp made by `vibe new` too: every camp carries its own
+   `.devcontainer/`.
+
+2. Wait for the setup to finish. `.devcontainer/setup.sh` installs uv, just,
+   duckdb and the GitHub CLI, syncs the Python environment and, in this
+   repository only, downloads the Playwright browsers. A camp's container skips
+   the browsers, because a camp has no test battery; it installs the `vibe`
+   command instead. When the terminal prints `ready:` you are in.
+
+3. Serve the game and click the forwarded port.
+
+   ```bash
+   python3 -m http.server 8000           # then open game/vibe-map.html
+   ```
+
+   In a camp it is your own game: `python3 -m http.server 8000 --directory workspace/game`.
+   Port 8000 is labelled **The game** in the **Ports** panel and opens in a new
+   tab. Port 7717 is labelled **Chat bridge** for `vibe chat serve`. A forwarded
+   port is private to you until you change its visibility in that panel.
+
+4. Everything else is Path B or Path C, unchanged: `just start`, `vibe status`,
+   `just verify`.
+
+The container is `mcr.microsoft.com/devcontainers/python:1-3.12-bookworm` with
+the `github-cli` dev container feature. The same file opens in VS Code locally
+(**Dev Containers: Reopen in Container**) if you have Docker, and it costs
+nothing there.
+
+Who pays: "compute usage is charged to the account that owns the codespace", so
+a codespace you create is yours, on your own free monthly hours, whichever
+repository you opened it from. Set a spending limit of zero on your account if
+you want the hours to be the hard stop. Prebuilds would make a codespace start
+faster, and they bill the repository's owner for Actions minutes and storage,
+so none are configured here; the slow work sits in `onCreateCommand` anyway,
+which is the part a prebuild would cache if you ever enable one on a repository
+of your own.
 
 ## Playing over weeks
 

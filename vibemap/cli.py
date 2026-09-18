@@ -1837,6 +1837,7 @@ TEMPLATE_NAMES = {
     "_agents": ".agents",
     "_claude": ".claude",
     "_github": ".github",
+    "_devcontainer": ".devcontainer",
 }
 
 
@@ -1881,11 +1882,21 @@ def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
     help="also create OWNER/NAME on GitHub and push the camp there (needs gh)",
 )
 @click.option(
+    "--private",
+    is_flag=True,
+    help="with --github: create the repository private (Pages and protected "
+    "branches on a private repository need GitHub Pro)",
+)
+@click.option(
     "--name", "who", default=None, help="your name for the folder (default: the login)"
 )
-def new(directory: str | None, github: str | None, who: str | None) -> None:
+def new(
+    directory: str | None, github: str | None, private: bool, who: str | None
+) -> None:
     """Start a camp in DIRECTORY (default vibe-map-<name>-<date>): your workspace,
     your vault, the configuration. The engine stays in the vibe command."""
+    if private and not github:
+        _fail("--private only says something with --github OWNER/NAME")
     if directory is None:
         directory = camp_dir_name(who)
         console.print(f"[muted]folder from the convention:[/] {directory}")
@@ -1930,10 +1941,17 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     if github and not committed:
         _fail("no first commit to push; fix git, commit, then: gh repo create")
     if github:
-        cmd = ["gh", "repo", "create", github, "--source", ".", "--public", "--push"]
+        # gh wants exactly one visibility flag, so the choice is one or the other.
+        visibility = "--private" if private else "--public"
+        cmd = ["gh", "repo", "create", github, "--source", ".", visibility, "--push"]
         console.print(f"[muted]$ {' '.join(cmd)}[/]")
         if subprocess.run(cmd, cwd=target).returncode != 0:
             _fail("gh could not create the repository; is gh installed and logged in?")
+        if private:
+            console.print(
+                "[muted]private camp:[/] Pages, protected branches and code "
+                "owners on a private repository need GitHub Pro"
+            )
     console.print(
         f"[ok]camp ready[/] at {target}\nNext:\n  cd {target}\n"
         "  just start          # or: vibe start\n"

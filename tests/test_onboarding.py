@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import json
+import os
+import stat
 from datetime import date
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
-from tests.conftest import GO_BUTTON, GamePage
+from tests.conftest import GO_BUTTON, ROOT, GamePage
 from vibemap.cli import camp_dir_name, cli
 
 
@@ -45,6 +49,9 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
         ".claude/agents/scorekeeper.md",
         ".agents/skills/camp-progress/SKILL.md",
         ".github/workflows/pages.yml",
+        ".github/CODEOWNERS",
+        ".devcontainer/devcontainer.json",
+        ".devcontainer/setup.sh",
         ".git/HEAD",
     ):
         assert (camp / rel).exists(), rel
@@ -80,10 +87,133 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
     assert "Innovation Hub done" in out.stdout, out.stdout
 
 
+def _fake_gh(bin_dir: Path, log: Path) -> None:
+    """A gh on PATH that records its arguments and succeeds."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    gh = bin_dir / "gh"
+    gh.write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n')
+    gh.chmod(gh.stat().st_mode | stat.S_IXUSR)
+
+
+@pytest.mark.parametrize(
+    ("flags", "wanted"), [([], "--public"), (["--private"], "--private")]
+)
+def test_new_github_passes_the_visibility_the_flag_asked_for(
+    tmp_path: Path, monkeypatch, flags: list[str], wanted: str
+) -> None:
+    log = tmp_path / "gh.log"
+    _fake_gh(tmp_path / "bin", log)
+    monkeypatch.setenv("PATH", f"{tmp_path / 'bin'}{os.pathsep}{os.environ['PATH']}")
+    # The push only happens after a first commit, so git needs an identity here.
+    for k, v in (
+        ("GIT_AUTHOR_NAME", "Camp Test"),
+        ("GIT_AUTHOR_EMAIL", "camp@example.com"),
+        ("GIT_COMMITTER_NAME", "Camp Test"),
+        ("GIT_COMMITTER_EMAIL", "camp@example.com"),
+    ):
+        monkeypatch.setenv(k, v)
+    monkeypatch.chdir(tmp_path)
+    out = CliRunner().invoke(
+        cli, ["new", "camp", "--name", "Frank", "--github", "you/camp", *flags]
+    )
+    assert out.exit_code == 0, out.output
+    call = log.read_text()
+    assert wanted in call, call
+    other = "--private" if wanted == "--public" else "--public"
+    assert other not in call, call
+
+
+def test_private_without_github_says_so(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    out = CliRunner().invoke(cli, ["new", "camp", "--private"])
+    assert out.exit_code != 0
+    assert "--github" in out.output
+
+
 def test_template_is_in_sync_with_the_product_configuration() -> None:
     from tools.sync_template import stale
 
     assert stale() == []
+
+
+def _devcontainer(path: Path) -> dict:
+    """Parse a devcontainer.json. Ours stay strict JSON so this is the whole check."""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize(
+    "rel",
+    [
+        ".devcontainer/devcontainer.json",
+        "vibemap/data/template/_devcontainer/devcontainer.json",
+    ],
+)
+def test_devcontainers_declare_only_keys_the_spec_has(rel: str) -> None:
+    # An unknown key is ignored in silence, so the set is closed on purpose.
+    # https://containers.dev/implementors/json_reference/
+    spec = {
+        "name",
+        "image",
+        "features",
+        "containerEnv",
+        "remoteEnv",
+        "remoteUser",
+        "containerUser",
+        "onCreateCommand",
+        "updateContentCommand",
+        "postCreateCommand",
+        "postStartCommand",
+        "postAttachCommand",
+        "waitFor",
+        "forwardPorts",
+        "portsAttributes",
+        "otherPortsAttributes",
+        "hostRequirements",
+        "customizations",
+    }
+    conf = _devcontainer(ROOT / rel)
+    assert set(conf) <= spec, set(conf) - spec
+    assert conf["forwardPorts"] == [8000, 7717]
+    assert conf["portsAttributes"]["7717"]["label"] == "Chat bridge"
+    for attrs in conf["portsAttributes"].values():
+        assert set(attrs) <= {
+            "label",
+            "protocol",
+            "onAutoForward",
+            "requireLocalPort",
+            "elevateIfNeeded",
+        }
+        assert attrs["onAutoForward"] in {"notify", "openBrowser", "silent", "ignore"}
+    assert conf["features"] == {"ghcr.io/devcontainers/features/github-cli:1": {}}
+    assert conf["customizations"]["vscode"]["extensions"]
+
+
+def test_only_the_product_container_downloads_browsers() -> None:
+    product = (ROOT / ".devcontainer" / "setup.sh").read_text()
+    camp = (
+        ROOT / "vibemap" / "data" / "template" / "_devcontainer" / "setup.sh"
+    ).read_text()
+    assert "playwright install-deps" in product and "--frozen" in product
+    assert "playwright" not in camp
+    assert "uv tool install" in camp
+
+
+def test_codeowners_lines_are_a_pattern_and_an_owner() -> None:
+    # GitHub reads .github/CODEOWNERS first; a line is a gitignore pattern plus
+    # one or more @owners. https://docs.github.com/en/repositories/
+    # managing-your-repositorys-settings-and-features/customizing-your-repository/
+    # about-code-owners
+    for rel in (".github/CODEOWNERS", "vibemap/data/template/_github/CODEOWNERS"):
+        lines = [
+            ln.split()
+            for ln in (ROOT / rel).read_text().splitlines()
+            if ln.strip() and not ln.lstrip().startswith("#")
+        ]
+        assert lines, rel
+        assert lines[0][0] == "*", rel
+        for parts in lines:
+            assert len(parts) >= 2, (rel, parts)
+            assert all(o.startswith("@") for o in parts[1:]), (rel, parts)
 
 
 def test_first_visit_shows_the_steps_and_a_preset_changes_the_walker(
