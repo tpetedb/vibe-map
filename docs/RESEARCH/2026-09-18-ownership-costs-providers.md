@@ -120,7 +120,7 @@ Source: <https://docs.github.com/en/get-started/learning-about-github/githubs-pl
 
 plus "2,000 minutes per month" of Actions, "120 GitHub Codespaces core hours per month", "15 GB GitHub Codespaces storage per month", and "GitHub Pages in public repositories". GitHub Pro raises Actions to "3,000 GitHub Actions minutes per month" and Codespaces to "180 GitHub Codespaces core hours per month" and "20 GB", and adds protected branches, required reviewers and code owners.
 
-Note for this repository: `docs/MAINTAINERS.md` relies on branch protection on `main`. On a **public** repository branch protection is available on Free; the Pro row above lists it as part of what Pro adds for private repositories. Learners protecting a private camp repository would need Pro.
+**Gap worth flagging for this repository**: `docs/MAINTAINERS.md` relies on branch protection on `main`, and branch protection appears in the list above as something Pro adds. The page as fetched does not say whether protected branches are available on Free for public repositories, which is the case that matters here. Branch protection demonstrably works on this repository today, so the practical answer is settled by observation; the documented answer is not, and a learner deciding whether to protect a private camp repository should check the plans page rather than trust this report.
 
 ### A.8 Copilot Free
 
