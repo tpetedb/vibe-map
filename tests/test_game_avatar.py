@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from tests.conftest import GamePage, encode_progress
+from tests.conftest import WAIT_MS, GamePage, encode_progress
 from vibemap import campaign
 from vibemap.state import State
 
@@ -81,12 +81,17 @@ def test_the_progress_code_carries_the_avatar_additively() -> None:
 
 
 def test_x_sits_the_walker_down_with_the_laptop_open(island: GamePage) -> None:
+    before = island.page.evaluate("window.__toasts()")
     _sit(island)
     state = _avatar(island)
     assert state["pose"] == "sit"
     assert state["laptop"], "the laptop did not open on the lap"
     assert "first-sit" in state["ach"]
-    island.page.wait_for_selector("#toast .tst", state="attached")
+    # A toast removes itself after a few seconds, so the wait is on the count
+    # of toasts raised, not on the element still being in the page.
+    island.page.wait_for_function(
+        "n => window.__toasts() > n", arg=before, timeout=WAIT_MS
+    )
     island.screenshot("avatar_sitting_with_laptop", clip_height=700)
     island.assert_clean()
 

@@ -73,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The sitting test waits for a toast that was raised, not for one that is still on screen. A toast removes itself after a few seconds, so looking for the element raced with the machine being slow; the toast stack counts what it has raised and the test waits on that.
+
 - The minimap test waits for a painted map rather than for three frames. The map is drawn on its own throttle, so a fast frame loop could pass the wait with the canvas still blank; opening the map now also paints it on the next frame instead of waiting the throttle out.
 
 - The Copy buttons say what happened. A refused or missing clipboard now selects the text and says "Selected, press Cmd C" instead of failing silently, in the workstream 1 prompt and in the finale message.
