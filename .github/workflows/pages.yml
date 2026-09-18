@@ -10,6 +10,7 @@ on:
     branches: [main]
     paths:
       - "game/**"
+      - "workspace/game/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -35,6 +36,9 @@ jobs:
           mkdir -p site
           cp game/vibe-map.html site/index.html
           cp game/vibe-map.html site/vibe-map.html
+          # The runtime feed, next to the page: the game fetches ./news.json
+          # from its own origin and never from a third party.
+          cp game/news.json site/news.json
           cp workspace/game/index.html site/your-game.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

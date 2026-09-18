@@ -1,15 +1,22 @@
-"""AI news from a handful of feeds, so the game stays current after launch.
+"""The live world feed: real organisations, people and projects, by name only.
 
-`vibe news` pulls the feeds listed in vibe.toml ([news] feeds), keeps the
-newest items, writes `data/news.json` for the game's News card and a dated
-`News` note in the vault. A weekly GitHub Action runs the same command and
-commits the result, so a hosted game refreshes itself. Only the standard
-library: RSS 2.0 and Atom are both small enough to parse by hand.
+`vibe news` pulls every source in `vibemap/data/sources.json` (or the feeds a
+camp lists in `config/camp.toml`), keeps the newest items, writes
+`data/news.json` for the game and a dated `News` note in the vault. A daily
+GitHub Action runs the same command, so a hosted game refreshes itself.
+
+A summary is the feed's own description with the markup stripped and the tail
+cut off. Nothing here is written by a model and nothing is attributed to a
+person that they did not publish themselves: see
+`docs/adr/0010-real-names-and-live-content.md`. Only the standard library:
+RSS 2.0 and Atom are both small enough to parse by hand.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -21,23 +28,143 @@ from urllib.request import Request, urlopen
 ATOM = "{http://www.w3.org/2005/Atom}"
 USER_AGENT = "vibe-map (+https://github.com/tpetedb/vibe-map)"
 
-# Verified on 2026-09-17: each answers with RSS or Atom. Anthropic publishes no feed.
-DEFAULT_FEEDS: tuple[tuple[str, str], ...] = (
-    ("OpenAI news", "https://openai.com/news/rss.xml"),
-    ("Hugging Face blog", "https://huggingface.co/blog/feed.xml"),
-    ("Simon Willison", "https://simonwillison.net/atom/everything/"),
-    ("Claude Code releases", "https://github.com/anthropics/claude-code/releases.atom"),
-    ("GitHub changelog", "https://github.blog/changelog/feed/"),
-    ("arXiv cs.AI", "https://rss.arxiv.org/rss/cs.AI"),
-)
+# The registry and the file the game reads both carry a version: an unknown
+# one is refused with the number in the message, never guessed at.
+SOURCES_VERSION = 1
+FEED_VERSION = 2
+SOURCES_PATH = Path(__file__).resolve().parent / "data" / "sources.json"
+
+SUMMARY_CHARS = 220
+KINDS = ("organisation", "person", "project")
+ITEM_KINDS = ("release", "post", "talk")
+
+
+@dataclass(frozen=True, slots=True)
+class Source:
+    """One feed in the registry: who publishes it and why it is trusted."""
+
+    id: str
+    kind: str  # organisation | person | project
+    name: str
+    url: str
+    publisher: str
+    trust: str
+    building: str = ""
+    tags: tuple[str, ...] = ()
+    # A high volume feed would fill the card on its own; 0 means the run's cap.
+    cap: int = 0
+
+    @property
+    def item_kind(self) -> str:
+        """A releases feed yields releases; everything else yields posts."""
+        return "release" if self.url.endswith("releases.atom") else "post"
 
 
 @dataclass(frozen=True, slots=True)
 class Item:
-    source: str
+    id: str  # stable across runs: the link, hashed
+    source: str  # the source id
+    name: str  # the organisation or person, as it is shown
+    kind: str  # release | post | talk
     title: str
     link: str
     date: str  # ISO 8601, UTC, or "" when the feed gave none
+    summary: str = ""
+    tags: tuple[str, ...] = ()
+
+
+class SourcesError(ValueError):
+    """The registry is unreadable or of a version this release does not know."""
+
+
+def load_sources(path: Path = SOURCES_PATH) -> tuple[Source, ...]:
+    """The registry, validated. A bad entry names itself and stops the run."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    version = data.get("version")
+    if version != SOURCES_VERSION:
+        raise SourcesError(
+            f"{path.name}: version {version!r}, this release reads "
+            f"{SOURCES_VERSION}. Upgrade vibe-map or check the file out again."
+        )
+    out: list[Source] = []
+    seen: set[str] = set()
+    for raw in data.get("sources", []):
+        missing = [
+            k
+            for k in ("id", "kind", "name", "url", "publisher", "trust")
+            if not raw.get(k)
+        ]
+        if missing:
+            raise SourcesError(
+                f"{path.name}: source {raw.get('id', '?')!r} is missing "
+                + ", ".join(missing)
+            )
+        if raw["kind"] not in KINDS:
+            raise SourcesError(
+                f"{path.name}: source {raw['id']!r} has kind {raw['kind']!r}, "
+                f"expected one of {', '.join(KINDS)}"
+            )
+        if not raw["url"].startswith("https://"):
+            raise SourcesError(f"{path.name}: source {raw['id']!r} is not https")
+        if raw["id"] in seen:
+            raise SourcesError(f"{path.name}: source {raw['id']!r} appears twice")
+        seen.add(raw["id"])
+        out.append(
+            Source(
+                id=raw["id"],
+                kind=raw["kind"],
+                name=raw["name"],
+                url=raw["url"],
+                publisher=raw["publisher"],
+                trust=raw["trust"],
+                building=raw.get("building", ""),
+                tags=tuple(raw.get("tags", ())),
+                cap=int(raw.get("cap", 0)),
+            )
+        )
+    if not out:
+        raise SourcesError(f"{path.name}: no sources")
+    return tuple(out)
+
+
+def source_name(url: str) -> str:
+    host = urlparse(url).netloc.removeprefix("www.")
+    return host or url
+
+
+def source_for_url(url: str) -> Source:
+    """A camp's own feed from config/camp.toml, which carries no provenance."""
+    host = source_name(url)
+    return Source(
+        id=host,
+        kind="organisation",
+        name=host,
+        url=url,
+        publisher=host,
+        trust="Listed in config/camp.toml by the owner of this camp.",
+    )
+
+
+def item_id(link: str) -> str:
+    """Stable across runs and across sources, so the game can remember one."""
+    return hashlib.sha1(link.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
+
+
+_TAGS = re.compile(r"<[^>]+>")
+_SPACE = re.compile(r"\s+")
+
+
+def summarise(raw: str, *, limit: int = SUMMARY_CHARS) -> str:
+    """The feed's own words: markup out, whitespace collapsed, tail cut.
+
+    Never generated. A cut lands on a word boundary so the sentence reads as
+    an opening rather than as a broken word.
+    """
+    text = _SPACE.sub(" ", _TAGS.sub(" ", raw or "")).strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip(" ,;:.")
+    return (cut or text[:limit].rstrip()) + "..."
 
 
 def _text(el: ET.Element | None) -> str:
@@ -60,14 +187,38 @@ def _date(raw: str) -> str:
     return dt.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def parse(xml: bytes | str, source: str, *, limit: int = 8) -> list[Item]:
+def _item(src: Source, title: str, link: str, when: str, body: str) -> Item:
+    return Item(
+        id=item_id(link),
+        source=src.id,
+        name=src.name,
+        kind=src.item_kind,
+        title=title,
+        link=link,
+        date=_date(when),
+        summary=summarise(body),
+        tags=src.tags,
+    )
+
+
+def parse(xml: bytes | str, src: Source | str, *, limit: int = 8) -> list[Item]:
     """Items from an RSS 2.0 or Atom document; unknown shapes give nothing."""
+    if isinstance(src, str):
+        src = Source(src, "organisation", src, "", src, "ad hoc")
     root = ET.fromstring(xml)
     items: list[Item] = []
     for it in root.iter("item"):
         title, link = _text(it.find("title")), _text(it.find("link"))
         if title and link:
-            items.append(Item(source, title, link, _date(_text(it.find("pubDate")))))
+            items.append(
+                _item(
+                    src,
+                    title,
+                    link,
+                    _text(it.find("pubDate")),
+                    _text(it.find("description")),
+                )
+            )
     if not items:
         for en in root.iter(f"{ATOM}entry"):
             title = _text(en.find(f"{ATOM}title"))
@@ -78,28 +229,35 @@ def parse(xml: bytes | str, source: str, *, limit: int = 8) -> list[Item]:
             when = _text(en.find(f"{ATOM}published")) or _text(
                 en.find(f"{ATOM}updated")
             )
+            body = _text(en.find(f"{ATOM}summary")) or _text(en.find(f"{ATOM}content"))
             if title and link:
-                items.append(Item(source, title, link, _date(when)))
+                items.append(_item(src, title, link, when, body))
     return items[:limit]
 
 
-def fetch_one(name: str, url: str, *, limit: int = 8, timeout: int = 20) -> list[Item]:
-    req = Request(url, headers={"User-Agent": USER_AGENT})
+def fetch_one(src: Source, *, limit: int = 8, timeout: int = 20) -> list[Item]:
+    req = Request(src.url, headers={"User-Agent": USER_AGENT})
     with urlopen(req, timeout=timeout) as r:  # noqa: S310 (feeds are config)
-        return parse(r.read(), name, limit=limit)
+        return parse(r.read(), src, limit=limit)
 
 
 def fetch(
-    feeds: tuple[tuple[str, str], ...] = DEFAULT_FEEDS, *, per_feed: int = 8
+    sources: tuple[Source, ...] | None = None, *, per_feed: int = 8
 ) -> tuple[list[Item], list[str]]:
-    """All feeds, newest first, deduplicated by link; failures reported, not raised."""
+    """Every source, newest first, deduplicated by link; failures are reported.
+
+    One dead feed must not stop the rest: the world keeps turning without it
+    and the note says which one was quiet.
+    """
+    if sources is None:
+        sources = load_sources()
     out: list[Item] = []
     problems: list[str] = []
-    for name, url in feeds:
+    for src in sources:
         try:
-            out += fetch_one(name, url, limit=per_feed)
+            out += fetch_one(src, limit=src.cap or per_feed)
         except Exception as e:  # reason: one dead feed must not stop the rest
-            problems.append(f"{name}: {type(e).__name__}: {str(e)[:80]}")
+            problems.append(f"{src.name}: {type(e).__name__}: {str(e)[:80]}")
     seen: set[str] = set()
     unique = []
     for it in sorted(out, key=lambda i: i.date, reverse=True):
@@ -109,28 +267,31 @@ def fetch(
     return unique, problems
 
 
-def source_name(url: str) -> str:
-    host = urlparse(url).netloc.removeprefix("www.")
-    return host or url
+def payload(items: list[Item]) -> dict[str, object]:
+    """What both the file and the baked constant carry, in one shape."""
+    return {
+        "version": FEED_VERSION,
+        "fetched_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "items": [{**asdict(i), "tags": list(i.tags)} for i in items],
+    }
 
 
 def write_json(items: list[Item], path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    payload = {
-        "fetched_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "items": [asdict(i) for i in items],
-    }
     path.write_text(
-        json.dumps(payload, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        json.dumps(payload(items), indent=1, ensure_ascii=False) + "\n",
+        encoding="utf-8",
     )
 
 
 def note_body(items: list[Item], problems: list[str]) -> str:
     """The vault note: newest first, grouped by day, one line per item."""
     lines = [
-        "What happened in AI lately, pulled from the feeds in `vibe.toml` by "
-        "`vibe news`. A weekly action does the same on GitHub, so the hosted "
-        "game and this note keep up without you.",
+        "What the organisations, projects and people in "
+        "`vibemap/data/sources.json` published lately, pulled by `vibe news`. "
+        "A daily action does the same on GitHub, so the hosted game and this "
+        "note keep up without you. Every summary is the feed's own wording, "
+        "cut short; nothing here is written for them.",
         "",
     ]
     day = None
@@ -139,7 +300,9 @@ def note_body(items: list[Item], problems: list[str]) -> str:
         if d != day:
             lines += [f"## {d}", ""]
             day = d
-        lines.append(f"- [{it.title}]({it.link}) ({it.source})")
+        lines.append(f"- [{it.title}]({it.link}) ({it.name})")
+        if it.summary:
+            lines.append(f"  - {it.summary}")
     if problems:
         lines += ["", "## Feeds that did not answer", ""] + [f"- {p}" for p in problems]
     lines += ["", "Back to [[Tonight]] · [[Resources]]", "", "#concept"]
