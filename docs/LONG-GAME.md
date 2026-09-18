@@ -63,7 +63,8 @@ A screen opens in the terminal. Pick your name, your field, a difficulty, your m
 2. Press **Mark as done** when the definition of done is met.
 3. Walk into a yellow ring, press **Inspect**, press the buttons, then read the **Do it for real** section on the sheet and build the thing in `workspace/artifacts/<id>/`.
 4. Walk up to a mentor, press **Enter**, walk the dialogue one question at a time, and do the exercise they set in `workspace/mentors/<id>/`. It takes under fifteen minutes.
-5. Open **Roadmap**, press **Export progress**. The code is now in your clipboard.
+5. Stuck on any of it, press **Ask** (or **C**) and ask. Your own Claude or Codex answers, over a bridge you start yourself with `vibe chat serve --pair <the code the panel shows>`. Without a bridge the panel searches the notes in the game file instead. See [CHAT.md](CHAT.md).
+6. Open **Roadmap**, press **Export progress**. The code is now in your clipboard.
 
 ### In the terminal
 

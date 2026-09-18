@@ -11,7 +11,8 @@ import os
 import re
 import shutil
 import subprocess
-from collections.abc import Callable
+import threading
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
 
@@ -109,6 +110,56 @@ def ask(provider_id: str, prompt: str, *, timeout: int = 600) -> str:
             f"{_strip_ansi(result.stderr).strip()[:500]}"
         )
     return result.stdout.strip()
+
+
+def stream(provider_id: str, prompt: str, *, timeout: int = 600) -> Iterator[str]:
+    """Run the provider once in print mode and yield its output as it arrives.
+
+    The prompt is one element of an argument list, never a shell string, so a
+    question with backticks or a semicolon in it is a question.
+
+    Raises:
+        ProviderMissing: when the CLI is not installed.
+        RuntimeError: when the CLI exits non-zero or runs past the timeout.
+    """
+    provider = get_provider(provider_id)
+    if not provider.available():
+        raise ProviderMissing(
+            f"{provider.label} is not installed. Install: {provider.install} "
+            f"(docs: {provider.docs})"
+        )
+    proc = subprocess.Popen(
+        provider.argv(prompt),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=_clean_env(),
+    )
+    expired = threading.Event()
+
+    def cut() -> None:
+        expired.set()
+        proc.kill()
+
+    alarm = threading.Timer(timeout, cut)
+    alarm.start()
+    try:
+        assert proc.stdout is not None
+        yield from proc.stdout
+        proc.wait()
+        err = _strip_ansi(proc.stderr.read() if proc.stderr else "").strip()[:500]
+    finally:
+        alarm.cancel()
+        if proc.stdout:
+            proc.stdout.close()
+        if proc.stderr:
+            proc.stderr.close()
+    if expired.is_set():
+        raise RuntimeError(
+            f"{provider.label} ran past {timeout} seconds and was stopped"
+        )
+    if proc.returncode:
+        raise RuntimeError(f"{provider.label} exited {proc.returncode}: {err}")
 
 
 def _clean_env() -> dict[str, str]:
