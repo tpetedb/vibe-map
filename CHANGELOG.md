@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The browser tests no longer measure a panel while it is still moving. The sheet opens with a spring that lifts it in from 16px below, and the stillness helper sampled on a timer alone, so on a loaded runner, where the spring advances only when a frame is drawn, five samples of the same stale number read as settled and the sticky action bar was measured 16px below the window. Stillness now only counts a sample once the page has painted again, `GamePage.until()` waits for a condition rather than a sampled value, and `sheet_in_place()` waits for the sheet to be back at the top of the window. No product change: the sheet is `position:fixed;inset:0`, so the bar cannot really sit below the window.
+
 - The Copy buttons say what happened. A refused or missing clipboard now selects the text and says "Selected, press Cmd C" instead of failing silently, in the workstream 1 prompt and in the finale message.
 
 - Committing an empty release note in workstream 4 answers with a reason instead of doing nothing.
