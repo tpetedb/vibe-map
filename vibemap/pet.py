@@ -1,11 +1,15 @@
 """A small companion that lives in the terminal.
 
-The sprites, the idle animation and the deterministic roll are ported from
+The ASCII art, the idle animation and the deterministic roll are ported from
 claude-buddy by Romesh Niriella (MIT, https://github.com/btcromesh/claude-buddy),
 itself extracted from the short-lived /buddy feature of Claude Code (April
-2026, removed in 2.1.97). The crab is ours. Same name, same creature: the
+2026, removed in 2.1.97). The ASCII crab is ours. Same name, same creature: the
 roll is a seeded PRNG over the learner's name, and every field can be
 overridden in vibe.toml under [pet].
+
+Four species also have real pixel sprites, vendored from vscode-pets and
+credited in data/pets/CREDITS.md; vibemap/sprites.py paints them in half
+blocks. Everything else, and every terminal without truecolor, keeps the art.
 """
 
 from __future__ import annotations
@@ -14,6 +18,7 @@ from dataclasses import dataclass
 
 from rich.text import Text
 
+from vibemap import sprites
 from vibemap.palette import BLUE, GREEN, MUTED, ORANGE, YELLOW
 
 RARITIES = ("common", "uncommon", "rare", "epic", "legendary")
@@ -312,9 +317,11 @@ def frame(pet: Pet, tick: int) -> list[str]:
     return sprite(pet, 0, blink=True) if step == -1 else sprite(pet, step)
 
 
-def stroll(tick: int, width: int, *, period: int = 24) -> int:
+def stroll(
+    tick: int, width: int, *, period: int = 24, sprite_width: int = WIDTH
+) -> int:
     """A left-to-right offset that turns around at the edges, in columns."""
-    span = max(0, width - WIDTH)
+    span = max(0, width - sprite_width)
     if span == 0:
         return 0
     pos = tick % (2 * period)
@@ -322,7 +329,49 @@ def stroll(tick: int, width: int, *, period: int = 24) -> int:
     return int(round(frac * span))
 
 
-def render(pet: Pet, tick: int = 0, *, stats: bool = True, offset: int = 0) -> Text:
+def columns(pet: Pet, style: str = "auto") -> int:
+    """How wide the creature draws, so the stroll knows where the edge is."""
+    if sprites.style_for(style, pet.species) == "pixel":
+        return sprites.sheet(pet.species).width
+    return WIDTH
+
+
+def gait(tick: int, width: int, *, period: int = 24, sprite_width: int = WIDTH) -> str:
+    """Walking while the stroll moves it, idling when it has nowhere to go."""
+    here = stroll(tick, width, period=period, sprite_width=sprite_width)
+    before = stroll(tick - 1, width, period=period, sprite_width=sprite_width)
+    return "walk" if here != before else "idle"
+
+
+def body(
+    pet: Pet,
+    tick: int = 0,
+    *,
+    style: str = "auto",
+    state: str = "idle",
+    offset: int = 0,
+) -> Text:
+    """The creature itself: vendored pixels where they exist, else the art."""
+    if sprites.style_for(style, pet.species) == "pixel":
+        return sprites.half_blocks(
+            sprites.sheet(pet.species).frame(state, tick), offset=offset
+        )
+    pad = " " * offset
+    out = Text()
+    for row in frame(pet, tick):
+        out.append(f"{pad}{row}\n", style=pet.colour)
+    return out
+
+
+def render(
+    pet: Pet,
+    tick: int = 0,
+    *,
+    stats: bool = True,
+    offset: int = 0,
+    style: str = "auto",
+    state: str = "idle",
+) -> Text:
     """A rich Text of the pet, its name, rarity and optionally the stats."""
     pad = " " * offset
     out = Text()
@@ -331,8 +380,10 @@ def render(pet: Pet, tick: int = 0, *, stats: bool = True, offset: int = 0) -> T
     if pet.shiny:
         out.append("  shiny", style=f"bold {YELLOW}")
     out.append(f"\n{pad}{pet.species} · {pet.rarity}\n", style=MUTED)
-    for row in frame(pet, tick):
-        out.append(f"{pad}{row}\n", style=pet.colour)
+    out.append(body(pet, tick, style=style, state=state, offset=offset))
+    # The sprites carry no hats yet, so a hat is a line of text until they do.
+    if pet.hat != "none" and sprites.style_for(style, pet.species) == "pixel":
+        out.append(f"{pad}wearing a {pet.hat}\n", style=MUTED)
     if stats:
         out.append(f"{pad}face: {pet.face}\n", style=MUTED)
         for stat in STAT_NAMES:
@@ -342,6 +393,13 @@ def render(pet: Pet, tick: int = 0, *, stats: bool = True, offset: int = 0) -> T
             out.append(chr(0x2588) * filled, style=pet.colour)
             out.append(chr(0x2591) * (20 - filled) + f" {value}\n", style=MUTED)
     return out
+
+
+def credit(pet: Pet, style: str = "auto") -> str:
+    """Who drew what is on screen, empty when it is the ASCII art."""
+    if sprites.style_for(style, pet.species) != "pixel":
+        return ""
+    return sprites.sheet(pet.species).credit
 
 
 def gallery() -> list[tuple[str, list[str]]]:

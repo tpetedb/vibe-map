@@ -190,7 +190,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
     panel = Panel(head, title="Vibe Code Camp", border_style="accent")
     if cfg.pet.enabled:
         grid = Table.grid(padding=(0, 2))
-        grid.add_row(panel, pet.render(_pet(ctx), stats=False))
+        grid.add_row(panel, pet.render(_pet(ctx), stats=False, style=cfg.pet.style))
         console.print(grid)
     else:
         console.print(panel)
@@ -1417,12 +1417,26 @@ def _pet(ctx: Ctx) -> pet.Pet:
 
 
 @cli.command("pet")
-@click.option("--animate", "-a", is_flag=True, help="idle loop until Ctrl-C")
+@click.option(
+    "--watch",
+    "--animate",
+    "-w",
+    "-a",
+    "animate",
+    is_flag=True,
+    help="a looping preview until Ctrl-C",
+)
 @click.option("--all", "gallery", is_flag=True, help="every species, frame 0")
 @click.option("--species", default=None, help="set the species in camp.toml")
 @click.option("--name", "pet_name", default=None, help="set the name in camp.toml")
 @click.option("--eye", default=None, help="set the eye in camp.toml")
 @click.option("--hat", default=None, help="set the hat in camp.toml")
+@click.option(
+    "--style",
+    type=click.Choice(["auto", "pixel", "ascii"]),
+    default=None,
+    help="set the renderer in camp.toml",
+)
 @click.option("--on/--off", "enabled", default=None, help="show or hide the pet")
 @click.option("--reset", is_flag=True, help="back to what your name rolled")
 @pass_ctx
@@ -1434,13 +1448,18 @@ def pet_cmd(
     pet_name: str | None,
     eye: str | None,
     hat: str | None,
+    style: str | None,
     enabled: bool | None,
     reset: bool,
 ) -> None:
-    """Your terminal companion: show it, animate it, or configure it.
+    """Your terminal companion: show it, watch it, or configure it.
 
     The creature, its rarity and its stats are rolled from your name, the
-    same roll as claude-buddy. Overrides live in config/camp.toml under [pet].
+    same roll as claude-buddy (MIT, Romesh Niriella). The crab, duck, turtle
+    and snail are real pixel sprites from vscode-pets (MIT, Anthony Shaw),
+    drawn by Marc Duiker, enkeefe and Kennet Shin and credited in
+    vibemap/data/pets/CREDITS.md; every other species keeps the ASCII art.
+    Overrides live in config/camp.toml under [pet].
     """
     if gallery:
         for name, rows in pet.gallery():
@@ -1460,9 +1479,11 @@ def pet_cmd(
     }
     if reset:
         changes = {"species": "", "name": "", "eye": "", "hat": ""}
-    if changes or enabled is not None:
+    if changes or style is not None or enabled is not None:
         data = ctx.cfg.model_dump()
         data["pet"].update(changes)
+        if style is not None:
+            data["pet"]["style"] = style
         if enabled is not None:
             data["pet"]["enabled"] = enabled
         cfg = Config.model_validate(data)
@@ -1474,22 +1495,46 @@ def pet_cmd(
         ctx.cfg = cfg
         console.print(f"[ok]{CONFIG_PATH.name} [pet] updated[/]")
     p = _pet(ctx)
+    how = ctx.cfg.pet.style
     if not animate:
-        console.print(pet.render(p))
+        console.print(pet.render(p, style=how))
+        _pet_credit(p, how)
         return
     import time
 
     from rich.live import Live
 
+    sprite = pet.columns(p, how)
+    width = max(sprite, console.width - 4)
+    # Eight frames a second for the sprites, half a second for the art.
+    period = 0.125 if sprite > pet.WIDTH else 0.5
     tick = 0
     try:
-        with Live(pet.render(p, 0), console=console, refresh_per_second=4) as live:
+        with Live(console=console, refresh_per_second=8) as live:
             while True:
-                time.sleep(0.5)
+                offset = pet.stroll(tick, width, sprite_width=sprite)
+                live.update(
+                    pet.render(
+                        p,
+                        tick,
+                        stats=False,
+                        offset=offset,
+                        style=how,
+                        state=pet.gait(tick, width, sprite_width=sprite),
+                    )
+                )
+                time.sleep(period)
                 tick += 1
-                live.update(pet.render(p, tick))
     except KeyboardInterrupt:
+        _pet_credit(p, how)
         console.print(f"{p.face}  bye")
+
+
+def _pet_credit(p: pet.Pet, style: str) -> None:
+    """Say who drew the sprites whenever they are the thing on screen."""
+    line = pet.credit(p, style)
+    if line:
+        console.print(f"[muted]{line}[/]")
 
 
 # ---- explain, council, toolbelt ------------------------------------------------
