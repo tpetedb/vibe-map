@@ -74,6 +74,9 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
+  // After dark the screen is what lights the face, which is the joke. A light
+  // costs no draw call, and the lid hides it from everything behind.
+  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
