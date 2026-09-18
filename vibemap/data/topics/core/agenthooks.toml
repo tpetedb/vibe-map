@@ -1,0 +1,29 @@
+# Agent hooks. Regenerate the tree after editing: just tree
+id = "agenthooks"
+title = "Agent hooks"
+age = "imperial"
+shelf = "agents"
+depth = 3
+
+summary = "The same idea inside a coding agent: shell commands (or HTTP endpoints, MCP tools, prompts) that Claude Code runs at points in its lifecycle. PreToolUse can block a tool call, PostToolUse can react to an edit (this repo backs up data/ after every edit), UserPromptSubmit can add context, Stop can keep the agent working, SessionStart can load state. Configured under hooks in settings.json, filtered by a matcher, fed JSON on stdin; exit 2 blocks, JSON on stdout decides."
+
+history = "Claude Code documents thirty-two hook events, from SessionStart and PreToolUse to PreCompact and WorktreeCreate, in five configuration scopes (user, project, local, managed policy, plugins); the vibe-map repo uses one PostToolUse hook and Tom's toolbox ships guard hooks as a template."
+try_it = '''Open .claude/settings.json in this repo, read the PostToolUse hook, then add a PreToolUse hook with matcher Bash whose command is `jq -e '.tool_input.command | test("rm -rf") | not' >/dev/null || exit 2`. Ask Claude to delete a folder with rm -rf and watch the refusal.'''
+
+unlocks = ["security", "headless"]
+
+[[sources]]
+label = "Claude Code hooks reference"
+url = "https://code.claude.com/docs/en/hooks"
+
+[[sources]]
+label = "Claude Code hooks guide"
+url = "https://code.claude.com/docs/en/hooks-guide"
+
+[[sources]]
+label = "This repo's hook"
+url = "https://github.com/tpetedb/vibe-map/blob/main/.claude/settings.json"
+
+[[sources]]
+label = "Source: Claude Code hooks reference (events, scopes, exit codes)"
+url = "https://code.claude.com/docs/en/hooks"

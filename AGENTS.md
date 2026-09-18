@@ -17,7 +17,7 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 | `src/config/` | The game's source configuration, concatenated before the modules: world scale, island radius, palette. What a learner's `vibe fork` copies and changes. |
 | `src/` | The game's source parts in load order; `tools/build.py` concatenates them and injects the campaign, the tech notes and `CONFIG` from `config/camp.toml`. `src/vendor/` holds three.js r128, Motion 12, d3-force 3 and the Lucide licence, never edited; `src/game/05-icons.js` is generated from Lucide SVGs. |
 | `vibemap/data/fork_source/` | The game's source as an installed `vibe` carries it: a mirror of `src/`, `tools/build.py` and `tools/generated/`, written by `tools/sync_fork_source.py` and never hand-edited. It is what `vibe fork` copies into a camp that has no checkout. |
-| `vibemap/data/` | Package data the game and the CLI share: `campaign.json` (four evenings, twelve mentors), `resources.md` (the curated links; `docs/RESOURCES.md` is generated from it), `obsidian.json` (thirty-five Obsidian features extracted from the official help; `docs/OBSIDIAN.md` and the feature notes are generated from it), `items.json` (forty collectibles and the seats, positioned relative to a plot, an annex or the path, never as world coordinates). `vibemap/tech.py` is the tech tree. Installed copies of the CLI carry all three. `pets/` holds the vendored pixel sprites, packed by `tools/sync_pets.py`, with their licence and `CREDITS.md` next to them; never hand-edit a `frames.json`. |
+| `vibemap/data/` | Package data the game and the CLI share: `campaign.json` (four evenings, twelve mentors), `resources.md` (the curated links; `docs/RESOURCES.md` is generated from it), `obsidian.json` (thirty-five Obsidian features extracted from the official help; `docs/OBSIDIAN.md` and the feature notes are generated from it), `items.json` (forty collectibles and the seats, positioned relative to a plot, an annex or the path, never as world coordinates). `topics/` is the tech tree, one TOML file per topic inside a pack (`vibemap/topics.py` loads it, `vibemap/tech.py` is the shape the generators read; see `docs/TOPICS.md` and ADR 0013). Installed copies of the CLI carry all of it. `pets/` holds the vendored pixel sprites, packed by `tools/sync_pets.py`, with their licence and `CREDITS.md` next to them; never hand-edit a `frames.json`. |
 | `workspace/` | The learner's zone: `game/index.html` from workstream 1, `data/scores.csv`, `sql/`, `python/`. Nothing may depend on its contents; `vibemap/quests.py` only reads it. |
 | `vibemap/data/template/` | The camp skeleton `vibe new` copies (README, AGENTS, CLAUDE, `config/camp.toml`, justfile, workspace, `_claude/`, `_agents/skills/`, `_github/`). Underscore folders become dot-folders in the camp. Skills, hook and subagent are synced from `.agents/` and `.claude/`; a test fails when they drift. |
 | `vibemap/` | The CLI package: `cli.py` (click commands), `state.py` (pydantic models, versioned), `quests.py` (auto-verified workstreams and XP), `vault.py` (Obsidian writer and lint), `scores.py` (polars and DuckDB), `tui.py` (the `just start` onboarding), `personas.py` and `themes.py` (presets), `config.py` (`config/camp.toml`), `pet.py` (the companion), `chat.py` (the loopback bridge the game's Ask panel talks to), `obsidian.py` (feature notes), `dashboard.py` (the HTML report and the numbers behind it), `dotfiles.py` (terminal setup modules from `data/dotfiles/`). |
@@ -25,9 +25,10 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 | `tools/regen_tree.py` | Emits the tree notes JS, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
 | `changelog.d/` | One file per change, `<slug>.<type>.md`, assembled into `CHANGELOG.md` at release time by `tools/changelog.py`. A branch adds a fragment and never edits `CHANGELOG.md`; the folder's `README.md` is the short version. |
 | `tools/sync_main.py` | `just sync-main`: merge `origin/main`, resolve a conflict in a generated file by regenerating it in dependency order, refuse and name the file when a real source conflict is left, then run the fast gates. |
+| `tools/new_topic.py` | Scaffolds a topic file, or a whole pack, under `vibemap/data/topics/`. The way to start one; `docs/TOPICS.md` is the rest. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
-| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us). |
+| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us), `TOPICS.md` (how to write a topic of the tech tree). |
 | `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hot cache; every note is reachable from it. `.obsidian/` is pre-configured. |
 | `.agents/skills/` | Skills in the Agent Skills standard. `.claude/skills/` holds symlinks to them. |
 | `justfile`, `agents.just` | Every task a human or an agent runs. `just` lists them; `just start` onboards. |
@@ -54,7 +55,7 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 2. Before every commit, the full battery: `just verify` (ruff, pytest with Playwright, build check). Zero page errors in the browser is the bar.
 3. Test the entry point, not the mechanism. The smoke test clicks the real buttons; it does not call `claim()` directly.
 4. Take a screenshot and look at it. They land in `tests/out/`.
-5. Regenerate, never hand-edit: `just tree` after editing `vibemap/tech.py`.
+5. Regenerate, never hand-edit: `just tree` after editing anything under `vibemap/data/topics/`.
 6. Never sleep in a test. Wait for something the page produced: a state, a rendered frame (`window.__debug().frame`), a note, a message. A fixed wait passes on a fast machine and hides the failure it was covering.
 7. The slow runs (`-m integration`: the play-through and the fresh camp) are nightly and on tags, in `.github/workflows/nightly.yml`. `ci.yml` stays fast and runs everything else.
 
@@ -63,6 +64,7 @@ Adopted from sokrypton/aoe, see `docs/AOE-STUDY.md`:
 - `just` lists everything. `just start` is the onboarding menu. `just setup` installs what is missing.
 - Run the game: `just game`. Build it: `just build`.
 - Progress and quests: `uv run vibe status`, `uv run vibe check`, `uv run vibe done <n>`.
+- The tech tree: `uv run vibe topics`, `uv run vibe topic <id>`, `uv run vibe check --topic <id>`.
 - Scores: `uv run vibe scores`, `duckdb -c "$(cat workspace/sql/top_runs.sql)"`, `python3 workspace/python/scores.py`.
 - Tests: `just test`. Full gate: `just verify`.
 

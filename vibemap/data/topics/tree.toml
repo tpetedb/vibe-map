@@ -1,0 +1,91 @@
+# The ladder, the shelves and the depths every topic is placed on.
+
+[[ages]]
+id = "dark"
+name = "Dark Age"
+rank = "Intern"
+blurb = "The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier."
+
+[[ages]]
+id = "feudal"
+name = "Feudal Age"
+rank = "Junior"
+blurb = "Languages and data. You can now make the machine do a specific thing and keep the result."
+
+[[ages]]
+id = "castle"
+name = "Castle Age"
+rank = "Medior"
+blurb = "Networks and shipping. Your thing runs somewhere other than your laptop, repeatably."
+
+[[ages]]
+id = "imperial"
+name = "Imperial Age"
+rank = "Senior"
+blurb = "The AI harness. You stop typing code and start directing agents, with guardrails you wrote."
+
+[[ages]]
+id = "future"
+name = "Future Age"
+rank = "Expert"
+blurb = "What is coming, what stays the same, and what a knowledge worker or founder should actually do about it."
+
+[[shelves]]
+id = "shell"
+name = "Terminal and shell"
+blurb = "Where every command starts: the terminal, files, the shell and its config, ports, remote machines."
+
+[[shelves]]
+id = "git"
+name = "Git and GitHub"
+blurb = "Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push."
+
+[[shelves]]
+id = "formats"
+name = "Config and formats"
+blurb = "The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env."
+
+[[shelves]]
+id = "code"
+name = "Languages and code"
+blurb = "Python first, then the web, the other languages and how to know the code works."
+
+[[shelves]]
+id = "data"
+name = "Data"
+blurb = "Files, schemas, warehouses and SQL over all of it."
+
+[[shelves]]
+id = "net"
+name = "Web, networks and APIs"
+blurb = "How programs talk over HTTP and how to build and consume an API."
+
+[[shelves]]
+id = "ship"
+name = "Ship and run"
+blurb = "Containers, the cloud, platforms and agents that run without you."
+
+[[shelves]]
+id = "agents"
+name = "Agents and the harness"
+blurb = "What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost."
+
+[[shelves]]
+id = "docs"
+name = "Docs and versioning"
+blurb = "The README, semantic versioning, changelogs and decision records."
+
+[[shelves]]
+id = "knowledge"
+name = "Knowledge and Obsidian"
+blurb = "Obsidian feature by feature and the vault as long-term memory."
+
+[[shelves]]
+id = "future"
+name = "What is coming"
+blurb = "What stays the same, what changes, and what to do about it."
+
+[depths]
+1 = "Basics"
+2 = "Working knowledge"
+3 = "Deep"

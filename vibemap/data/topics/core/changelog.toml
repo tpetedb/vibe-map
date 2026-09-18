@@ -1,0 +1,25 @@
+# Changelogs (Keep a Changelog). Regenerate the tree after editing: just tree
+id = "changelog"
+title = "Changelogs (Keep a Changelog)"
+age = "castle"
+shelf = "docs"
+depth = 2
+
+summary = "A CHANGELOG.md lists what changed for the person using your thing: newest first, one section per version with its date, six kinds of change (Added, Changed, Deprecated, Removed, Fixed, Security) and an Unreleased section on top. It is not the git log. Commits are for the people who wrote them; the changelog is for everyone else."
+
+history = "Olivier Lacan started Keep a Changelog on 31 May 2014 as a CHANGELOG that documents itself, under the motto 'Don't let your friends dump git logs into changelogs.' Version 1.0.0 followed on 20 June 2017, 1.1.0 on 15 February 2019 and 2.0.0 on 7 June 2026. The site is MIT licensed; this repo follows 1.1.0."
+try_it = "cat CHANGELOG.md. Then make one change to the repo and add its line under Unreleased in the same commit."
+
+unlocks = ["ci"]
+
+[[sources]]
+label = "Keep a Changelog 1.1.0"
+url = "https://keepachangelog.com/en/1.1.0/"
+
+[[sources]]
+label = "Source: keep-a-changelog, its own CHANGELOG.md (dated releases since 2014-05-31)"
+url = "https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md"
+
+[[sources]]
+label = "Source: Keep a Changelog 2.0.0 (2026-06-07)"
+url = "https://keepachangelog.com/en/2.0.0/"
