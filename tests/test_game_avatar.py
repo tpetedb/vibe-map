@@ -125,7 +125,7 @@ def test_walking_over_a_collectible_picks_it_up(island: GamePage) -> None:
 def test_the_backpack_lists_the_inventory_and_the_achievements(
     island: GamePage,
 ) -> None:
-    island.page.click("#hud button[aria-label='Backpack']")
+    island.hud_action("#hud button[aria-label='Backpack']")
     island.page.wait_for_selector("#s-pack.on", state="attached")
     island.sheet_in_place()
     assert "Backpack" in (island.page.text_content("#s-pack h2") or "")
@@ -140,7 +140,7 @@ def test_an_achievement_unlocks_a_hat_you_can_wear(island: GamePage) -> None:
     _sit(island)
     island.page.keyboard.press("x")
     island.page.wait_for_function("() => window.__avatar().pose === 'stand'")
-    island.page.click("#hud button[aria-label='Backpack']")
+    island.hud_action("#hud button[aria-label='Backpack']")
     island.page.wait_for_selector("#s-pack.on", state="attached")
     island.page.click("#s-pack .packtabs button:has-text('Wardrobe')")
     island.page.click("#s-pack button:has-text('Wear')")

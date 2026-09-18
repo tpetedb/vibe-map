@@ -219,7 +219,7 @@ def test_full_screen_takes_the_element_that_holds_the_panels(game: GamePage) -> 
 def test_the_tech_tree_says_it_scrolls(game: GamePage) -> None:
     game.goto()
     game.start()
-    game.page.click("#hud button:has-text('Tree')")
+    game.hud_action("#hud button:has-text('Tree')")
     game.page.wait_for_selector("#vtree.on", state="attached")
     game.page.wait_for_selector("#vtree .treenav button", state="attached")
     assert game.page.locator("#vtree .treenav button").count() == 2
