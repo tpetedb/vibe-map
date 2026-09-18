@@ -25,6 +25,7 @@ function animate(){
   // dust when walking
   if(walking&&L.jy===0&&Math.random()<dt*14){const m=new T.Mesh(new T.SphereGeometry(.09,5,5),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
   if(props.shadow){props.shadow.position.set(pos.x,.02,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
+  tickAvatar(dt,t,sp);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
   const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
@@ -76,7 +77,7 @@ function animate(){
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
     const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
-    (props.mentors||[]).forEach(c=>{c.g.position.y=Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
+    (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
     if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
     else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
     // Plots before artifacts: a signpost you can walk into always wins, even
@@ -87,6 +88,8 @@ function animate(){
   renderer.render(scene,camera);
 }
 function animChar(c,walking,dt,t){
+  // A pose that is not standing owns the limbs for this frame.
+  if(c.pose&&c.pose!=="stand"&&poseChar(c,dt,t))return;
   if(walking){c.walkT+=dt*11;const s=Math.sin(c.walkT);c.lLeg.rotation.x=s*.7;c.rLeg.rotation.x=-s*.7;c.lArm.rotation.x=-s*.6;if(!c.raised)c.rArm.rotation.x=s*.6;c.g.position.y=Math.abs(Math.sin(c.walkT))*.08}
   else{c.lLeg.rotation.x*=.85;c.rLeg.rotation.x*=.85;c.lArm.rotation.x=Math.sin(t*2)*.08;if(!c.raised)c.rArm.rotation.x=-Math.sin(t*2)*.08;c.g.position.y=Math.sin(t*2)*.03}
   c.head.rotation.y=Math.sin(t*.7)*.15;

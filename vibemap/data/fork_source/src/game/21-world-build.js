@@ -98,6 +98,9 @@ function buildWorld(id){
   props.mentors=[];MENTORS.filter(m=>m.world===id).forEach(m=>{const c=character({kind:"mentor",body:m.look.shirt,legs:"#374151",arms:"#F5D7BC",label:m.name,look:m.look});c.g.position.set(m.pos[0],0,m.pos[1]);c.g.rotation.y=Math.PI;scene.add(c.g);c.id=m.id;props.mentors.push(c);obstacles.push([m.pos[0],m.pos[1],.6]);
     const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.mentors.includes(m.id)?"#00D084":S.path[m.id]==="deep"?"#0088CC":S.path[m.id]==="skip"?"#F04923":"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
   props.plaques={};placePlaques(false);
+  // Seats and collectibles come from data, positioned against the plots and
+  // the annexes that already exist (src/game/19-items.js).
+  props.items=[];placeSeats();placeItems();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:"#000",transparent:true,opacity:.25}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.02;scene.add(props.shadow);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:"#0088CC",transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -152,6 +155,7 @@ function placeAnnex(k,pop){
   const lb=label(CH[k-1].h,.5);lb.position.y=3.9;g.add(lb);
   fixColors(g);scene.add(g);island.userData.parts.push(grass,cw);
   annexes.push({k,x:ax,z:az,r:ANNEX_R,px:pp.x,pz:pp.z,g});obstacles.push([ax,az,.5]);
+  placeItems();
   if(pop)popIn(g);
 }
 // The pop every new thing on the island gets: it grows from nothing (the

@@ -310,6 +310,14 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 @media (max-width:480px){.pill button .ic{display:none}}
 /* Phones: the pill is full; Settings lives on the Roadmap sheet instead. */
 @media (max-width:480px){.pill button[aria-label="Settings"]{display:none}}
+/* The toast stack: what just happened, top right, gone in five seconds. It is
+   a message and never state, so nothing below it depends on one being there. */
+#toast{position:fixed;top:14px;right:14px;left:auto;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 28px));pointer-events:none}
+.tst{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);backdrop-filter:blur(8px)}
+.tst b{display:flex;align-items:center;gap:6px;font-family:Sora,sans-serif;font-size:13px;color:var(--yellow)}
+.tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
+.tst a{pointer-events:auto;color:var(--a1)}
+.packtabs button.pick{border-color:var(--a1);color:var(--text)}
 /* Phones: with the Stats button the HUD pill is wider than the screen, so it
    wraps onto a second line instead of clipping its last button, and the KPI
    row drops below the taller HUD. */
@@ -359,7 +367,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
+  <div class="pill"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="flag" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="globe" onclick="nextWorld()">World</button><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div>
 </div>
 <div id="kpis">
   <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
@@ -425,6 +433,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>
     </section>
+<section class="screen" id="s-pack"></section>
 <section class="screen" id="s-0">
       <div class="hour">Workstream 0</div>
       <h2>Pre-flight</h2>
@@ -1078,6 +1087,10 @@ function character(spec){
     const beer=cyl(.12,.12,.3,"#F2B441",0,-.85,0);c.rArm.add(beer);
   }
   const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);
+  // A character carries a pose and a wardrobe; what they mean is the avatar
+  // module's (src/game/18-avatar.js), so every walker, mentor and host has
+  // the same actions available.
+  c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }
 
@@ -1306,6 +1319,338 @@ const ART_PROPS={
   school(){const g=new T.Group();g.add(box(2.6,1.4,1.6,"#E7C9A0",0,.7,0));const r=cone(2,.9,"#0067A5",0,1.85,0,4);r.rotation.y=Math.PI/4;g.add(r);g.add(box(.5,1,.5,"#F8FAFC",0,2.5,0));const tr=cone(.5,.45,"#0067A5",0,3.2,0,4);tr.rotation.y=Math.PI/4;g.add(tr);
     g.add(sph(.13,"#FFBF00",0,2.3,.27,6));g.add(box(1.2,.6,.06,"#1F2937",0,.85,.82));g.add(sph(.2,"#FF8C1A",1.7,.2,.9,7));g.userData={r:1.7,h:3.8};return g}
 };
+const ITEMS={"note": "Collectibles and seats. Every spot is relative to a plot, an annex or the path of its island, never a world coordinate, so a new layout carries them along. Colours name a key of PALETTE in src/config/00-config.js. topic is a tech tree id in vibemap/tech.py.", "kinds": {"commit": {"model": "octa", "colour": "greenBright"}, "branch": {"model": "ring", "colour": "blue"}, "token": {"model": "chip", "colour": "yellow"}, "crate": {"model": "cube", "colour": "orange"}, "packet": {"model": "slab", "colour": "blueBright"}, "key": {"model": "rod", "colour": "yellow"}, "tube": {"model": "tube", "colour": "greenBright"}, "bean": {"model": "bead", "colour": "orangeBright"}, "scroll": {"model": "roll", "colour": "text"}, "bubble": {"model": "ico", "colour": "blueBright"}}, "items": [{"id": "campus-commit", "world": "campus", "kind": "commit", "name": "A commit", "topic": "git", "concept": "A commit is a labelled save point in your work that you can always return to.", "at": {"plot": 1, "d": 2.6, "a": 1.7}}, {"id": "campus-pr", "world": "campus", "kind": "branch", "name": "A pull request", "topic": "github", "concept": "A pull request is a branch asking to join the main line, with the review attached.", "at": {"plot": 2, "d": 2.6, "a": -1.7}}, {"id": "campus-token", "world": "campus", "kind": "token", "name": "A token", "topic": "llm", "concept": "A model reads and writes tokens, the word pieces you are billed for.", "at": {"plot": 3, "d": 2.4, "a": 2.3}}, {"id": "campus-crate", "world": "campus", "kind": "crate", "name": "A container", "topic": "docker", "concept": "A container ships the machine together with the program, so it runs the same everywhere.", "at": {"plot": 4, "d": 2.6, "a": -2.2}}, {"id": "campus-packet", "world": "campus", "kind": "packet", "name": "A packet", "topic": "http", "concept": "Everything you send over a network travels as small addressed packets that are put back together at the other end.", "at": {"plot": 5, "d": 2.4, "a": 1.6}}, {"id": "campus-key", "world": "campus", "kind": "key", "name": "A key", "topic": "ssh", "concept": "A key proves who you are to a server without ever sending your password.", "at": {"plot": 6, "d": 2.6, "a": -1.6}}, {"id": "campus-tube", "world": "campus", "kind": "tube", "name": "A test tube", "topic": "tests", "concept": "A test is a question with a known answer, asked again after every change.", "at": {"plot": 7, "d": 2.4, "a": 2.4}}, {"id": "campus-bean", "world": "campus", "kind": "bean", "name": "A coffee bean", "topic": "cost", "concept": "Every agent run costs money per token, so measure a small run before you scale it.", "at": {"plot": 8, "d": 2.6, "a": -2.4}}, {"id": "campus-scroll", "world": "campus", "kind": "scroll", "name": "A scroll of YAML", "topic": "yaml", "concept": "YAML is the indented list of settings that pipelines, containers and agents read.", "at": {"annex": 1, "d": 1.5, "a": 1.2}}, {"id": "campus-bubble", "world": "campus", "kind": "bubble", "name": "A prompt", "topic": "prompting", "concept": "A prompt with a scope, a keep list and a do not touch list is most of the craft.", "at": {"annex": 5, "d": 1.5, "a": -1.2}}, {"id": "winter-commit", "world": "winter", "kind": "commit", "name": "A version tag", "topic": "semver", "concept": "A version number tells you whether an upgrade can break you: major breaks, minor adds, patch fixes.", "at": {"plot": 1, "d": 2.6, "a": 1.7}}, {"id": "winter-branch", "world": "winter", "kind": "branch", "name": "A git hook", "topic": "githooks", "concept": "A git hook is a script git runs for you at commit or push time, so the rule cannot be forgotten.", "at": {"plot": 2, "d": 2.6, "a": -1.7}}, {"id": "winter-token", "world": "winter", "kind": "token", "name": "A note", "topic": "markdown", "concept": "Markdown is plain text with a few marks, which is why it still opens in thirty years.", "at": {"plot": 3, "d": 2.4, "a": 2.3}}, {"id": "winter-crate", "world": "winter", "kind": "crate", "name": "A table", "topic": "sql", "concept": "SQL asks a question of a table and gets rows back, with no loop to write.", "at": {"plot": 4, "d": 2.6, "a": -2.2}}, {"id": "winter-packet", "world": "winter", "kind": "packet", "name": "An API call", "topic": "apis", "concept": "An API is a promise about the shape of the answer, so two programs can agree without meeting.", "at": {"plot": 5, "d": 2.4, "a": 1.6}}, {"id": "winter-key", "world": "winter", "kind": "key", "name": "An environment variable", "topic": "env", "concept": "An environment variable keeps a secret out of your code and inside the machine that runs it.", "at": {"plot": 6, "d": 2.6, "a": -1.6}}, {"id": "winter-tube", "world": "winter", "kind": "tube", "name": "A pipeline run", "topic": "ci", "concept": "Continuous integration runs your checks on someone else's machine on every push, so green means green.", "at": {"plot": 7, "d": 2.4, "a": 2.4}}, {"id": "winter-bean", "world": "winter", "kind": "bean", "name": "A frozen row", "topic": "data", "concept": "Data at rest is cheap and data in motion is expensive, which is the whole reason cold storage exists.", "at": {"plot": 8, "d": 2.6, "a": -2.4}}, {"id": "winter-scroll", "world": "winter", "kind": "scroll", "name": "A TOML file", "topic": "toml", "concept": "TOML is configuration written for people to read, with sections and plain keys.", "at": {"annex": 1, "d": 1.5, "a": 1.2}}, {"id": "winter-bubble", "world": "winter", "kind": "bubble", "name": "A context window", "topic": "context", "concept": "The context window is everything the model can see at once, and it is smaller than your repository.", "at": {"annex": 5, "d": 1.5, "a": -1.2}}, {"id": "desert-commit", "world": "desert", "kind": "commit", "name": "A changelog entry", "topic": "changelog", "concept": "A changelog is the human half of the history, written for the people who have to upgrade.", "at": {"plot": 1, "d": 2.6, "a": 1.7}}, {"id": "desert-branch", "world": "desert", "kind": "branch", "name": "A decision record", "topic": "adr", "concept": "A decision record says what was chosen and why, so the next person does not reopen it from scratch.", "at": {"plot": 2, "d": 2.6, "a": -1.7}}, {"id": "desert-token", "world": "desert", "kind": "token", "name": "A vault note", "topic": "obsidian", "concept": "A note becomes knowledge the moment you link it to another note.", "at": {"plot": 3, "d": 2.4, "a": 2.3}}, {"id": "desert-crate", "world": "desert", "kind": "crate", "name": "A rented server", "topic": "cloud", "concept": "The cloud is a computer you rent by the hour and never see, billed while you forget about it.", "at": {"plot": 4, "d": 2.6, "a": -2.2}}, {"id": "desert-packet", "world": "desert", "kind": "packet", "name": "Localhost", "topic": "localhost", "concept": "Localhost is your own machine answering itself, on a port you picked.", "at": {"plot": 5, "d": 2.4, "a": 1.6}}, {"id": "desert-key", "world": "desert", "kind": "key", "name": "A dotfile", "topic": "dotfiles", "concept": "A dotfile is your tool remembering how you like it, saved where you can copy it to the next machine.", "at": {"plot": 6, "d": 2.6, "a": -1.6}}, {"id": "desert-tube", "world": "desert", "kind": "tube", "name": "A Python script", "topic": "python", "concept": "Python is the language most of this stack is written in, and twenty lines of it replace an afternoon.", "at": {"plot": 7, "d": 2.4, "a": 2.4}}, {"id": "desert-bean", "world": "desert", "kind": "bean", "name": "A file path", "topic": "files", "concept": "A path is an address, and everything else in the terminal is a verb applied to one.", "at": {"plot": 8, "d": 2.6, "a": -2.4}}, {"id": "desert-scroll", "world": "desert", "kind": "scroll", "name": "A config file", "topic": "config", "concept": "Configuration is the part of a program you are allowed to change without reading the code.", "at": {"annex": 1, "d": 1.5, "a": 1.2}}, {"id": "desert-bubble", "world": "desert", "kind": "bubble", "name": "A structured prompt", "topic": "promptstructure", "concept": "A prompt reads best as role, task, constraints and the shape of the answer you want back.", "at": {"annex": 5, "d": 1.5, "a": -1.2}}, {"id": "prod-commit", "world": "prod", "kind": "commit", "name": "A secret vault", "topic": "vault", "concept": "A secret belongs in a vault or a keychain, never in the repository, not even briefly.", "at": {"plot": 1, "d": 2.6, "a": 1.7}}, {"id": "prod-branch", "world": "prod", "kind": "branch", "name": "An agent hook", "topic": "hooks", "concept": "An agent hook runs your own command around a tool call, which is how you keep an agent inside the lines.", "at": {"plot": 2, "d": 2.6, "a": -1.7}}, {"id": "prod-token", "world": "prod", "kind": "token", "name": "A subagent", "topic": "subagents", "concept": "A subagent gets its own context and hands back only the answer, which keeps the main thread clean.", "at": {"plot": 3, "d": 2.4, "a": 2.3}}, {"id": "prod-crate", "world": "prod", "kind": "crate", "name": "A cluster", "topic": "kubernetes", "concept": "Kubernetes keeps a stated number of containers alive, and most projects never need it.", "at": {"plot": 4, "d": 2.6, "a": -2.2}}, {"id": "prod-packet", "world": "prod", "kind": "packet", "name": "An MCP server", "topic": "mcp", "concept": "MCP is one plug shape for tools, so a model can use a service nobody wrote a custom client for.", "at": {"plot": 5, "d": 2.4, "a": 1.6}}, {"id": "prod-key", "world": "prod", "kind": "key", "name": "An SSH key", "topic": "ssh", "concept": "SSH gives you a shell on another machine over an encrypted link, with a key instead of a password.", "at": {"plot": 6, "d": 2.6, "a": -1.6}}, {"id": "prod-tube", "world": "prod", "kind": "tube", "name": "A harness", "topic": "harness", "concept": "The harness is the loop around the model: your files, your tools and your rules.", "at": {"plot": 7, "d": 2.4, "a": 2.4}}, {"id": "prod-bean", "world": "prod", "kind": "bean", "name": "A headless run", "topic": "headless", "concept": "Headless means the agent runs without you in the room, on a schedule or on an event.", "at": {"plot": 8, "d": 2.6, "a": -2.4}}, {"id": "prod-scroll", "world": "prod", "kind": "scroll", "name": "An AGENTS.md", "topic": "agentsmd", "concept": "AGENTS.md is the file every agent reads first, and it is the cheapest way to be understood.", "at": {"annex": 1, "d": 1.5, "a": 1.2}}, {"id": "prod-bubble", "world": "prod", "kind": "bubble", "name": "A skill", "topic": "skills", "concept": "A skill is a folder of instructions an agent loads only when the task matches.", "at": {"annex": 5, "d": 1.5, "a": -1.2}}], "seats": [{"id": "campus-bench-1", "world": "campus", "kind": "bench", "at": {"plot": 1, "d": 2.8, "a": -1.9}}, {"id": "campus-bench-2", "world": "campus", "kind": "bench", "at": {"plot": 5, "d": 2.8, "a": -1.9}}, {"id": "campus-chair-1", "world": "campus", "kind": "chair", "at": {"plot": 3, "d": 2.6, "a": -2.5}}, {"id": "campus-chair-2", "world": "campus", "kind": "chair", "at": {"annex": 2, "d": 1.6, "a": 2.0}}, {"id": "winter-bench-1", "world": "winter", "kind": "bench", "at": {"plot": 1, "d": 2.8, "a": -1.9}}, {"id": "winter-bench-2", "world": "winter", "kind": "bench", "at": {"plot": 5, "d": 2.8, "a": -1.9}}, {"id": "winter-chair-1", "world": "winter", "kind": "chair", "at": {"plot": 3, "d": 2.6, "a": -2.5}}, {"id": "winter-chair-2", "world": "winter", "kind": "chair", "at": {"annex": 2, "d": 1.6, "a": 2.0}}, {"id": "desert-bench-1", "world": "desert", "kind": "bench", "at": {"plot": 1, "d": 2.8, "a": -1.9}}, {"id": "desert-bench-2", "world": "desert", "kind": "bench", "at": {"plot": 5, "d": 2.8, "a": -1.9}}, {"id": "desert-chair-1", "world": "desert", "kind": "chair", "at": {"plot": 3, "d": 2.6, "a": -2.5}}, {"id": "desert-chair-2", "world": "desert", "kind": "chair", "at": {"annex": 2, "d": 1.6, "a": 2.0}}, {"id": "prod-bench-1", "world": "prod", "kind": "bench", "at": {"plot": 1, "d": 2.8, "a": -1.9}}, {"id": "prod-bench-2", "world": "prod", "kind": "bench", "at": {"plot": 5, "d": 2.8, "a": -1.9}}, {"id": "prod-chair-1", "world": "prod", "kind": "chair", "at": {"plot": 3, "d": 2.6, "a": -2.5}}, {"id": "prod-chair-2", "world": "prod", "kind": "chair", "at": {"annex": 2, "d": 1.6, "a": 2.0}}]};
+// The avatar: what a character can do (a pose, a laptop, something to wear)
+// and what the player earns for doing it (achievements, wearables).
+// State is data: S.items, S.ach and S.wear are the whole record and the scene,
+// the backpack panel and the progress code are rebuilt from them. A character
+// only carries a pose and a wardrobe; the behaviour lives here.
+
+// Every list this module keeps lives under its own key in S, created on first
+// use so an older save, or a reset, never has to be migrated.
+function sl(k){if(!Array.isArray(S[k]))S[k]=[];return S[k]}
+function totalDone(){return Object.values(S.doneW||{}).reduce((n,v)=>n+(v||[]).length,0)}
+
+/* ---------------- poses ---------------- */
+// A pose is a name. poseChar puts the limbs where the name says, once a frame,
+// and answers true when it has taken the frame over from the walk cycle.
+// A timed pose (wave, cheer) falls back to standing on its own.
+const POSE_MS={wave:1.6,cheer:2.2};
+// Sitting on the ground, and on a seat; the walker's hips are at .7 standing.
+const GROUND_SEAT=.34,HIP=.7;
+function setPose(c,p,seat){if(!c)return;c.pose=p;c.poseT=0;c.seatH=seat===undefined?c.seatH:seat;
+  if(p==="sit")return;
+  // Standing again clears what only a pose ever touches, so the walk cycle
+  // starts from the same body every time.
+  c.poseY=0;c.head.rotation.x=0;c.rArm.rotation.z=0;if(c.lap)c.lap.visible=false}
+function isSitting(c){return !!c&&c.pose==="sit"}
+function poseChar(c,dt,t){
+  const p=c.pose;
+  if(p==="sit"){
+    const h=(c.seatH||GROUND_SEAT)-HIP;c.poseY=h;c.g.position.y=h;
+    c.lLeg.rotation.x=-1.5;c.rLeg.rotation.x=-1.5;
+    const lap=c.lap||addLaptop(c);lap.visible=true;
+    // Typing: both forearms tap out of phase, a hand's width apart.
+    const k=Math.sin(t*9+(c.g.position.x||0))*.07;
+    c.lArm.rotation.x=-1.2+k;if(!c.raised)c.rArm.rotation.x=-1.2-k;
+    c.head.rotation.x=.2;c.head.rotation.y=Math.sin(t*.6)*.06;
+    return true}
+  if(p==="wave"||p==="cheer"){
+    c.poseT+=dt;if(c.poseT>POSE_MS[p]){setPose(c,"stand");return false}
+    const s=Math.sin(c.poseT*9);
+    if(p==="wave"){c.rArm.rotation.x=-2.6;c.rArm.rotation.z=s*.35;c.lArm.rotation.x=Math.sin(t*2)*.08}
+    else{c.lArm.rotation.x=-2.7;c.rArm.rotation.x=-2.7;c.g.position.y=Math.abs(s)*.22}
+    c.head.rotation.y=Math.sin(t*3)*.2;return true}
+  if(p==="carry"){
+    // Rolinda serving: one arm out, the tray steady, a slow shift of weight.
+    c.rArm.rotation.x=-1.5;c.lArm.rotation.x=Math.sin(t*1.4)*.1;
+    c.g.position.y=Math.sin(t*1.6)*.02;c.head.rotation.y=Math.sin(t*.5)*.25;return true}
+  return false;
+}
+window.wave=function(){setPose(chars.lotte,"wave")};
+// The cheer the whole party does when a stop lands.
+function cheer(){setPose(chars.lotte,"cheer");setPose(chars.tom,"cheer")}
+
+/* ---------------- the laptop ---------------- */
+// An original low-poly clamshell: two thin slabs in aluminium grey with a lit
+// panel between them, no marks on the lid. The geometries and the three
+// materials are built once and shared by every character that sits down, so a
+// second laptop costs no memory and no new material.
+let LAPTOP=null;
+function laptopParts(){if(LAPTOP)return LAPTOP;
+  LAPTOP={
+    base:new T.BoxGeometry(.62,.04,.44),
+    lid:new T.BoxGeometry(.62,.42,.03),
+    screen:new T.PlaneGeometry(.54,.34),
+    keys:new T.BoxGeometry(.46,.012,.22),
+    shell:mat(PALETTE.muted,{roughness:.35,metalness:.5}),
+    dark:mat(PALETTE.black),
+    lit:mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9}),
+  };return LAPTOP}
+// lite is the version an onlooker gets: the lid is the lit panel and the keys
+// are left off, which is two draw calls instead of four at the distance a
+// mentor is ever seen from.
+function laptop(lite){const P=laptopParts(),g=new T.Group();
+  const base=new T.Mesh(P.base,P.shell);base.castShadow=true;g.add(base);
+  const lid=new T.Mesh(P.lid,lite?P.lit:P.shell);lid.position.set(0,.2,-.24);lid.rotation.x=-.18;lid.castShadow=true;g.add(lid);
+  if(lite)return g;
+  const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
+  const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
+  return g}
+// The lap: where the clamshell sits once the thighs are horizontal.
+function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
+
+/* ---------------- wearables ---------------- */
+// One per slot, unlocked by an achievement. The mesh is built from the same
+// boxes as the walker, in the palette, so a hat reads at a glance from above.
+const WEAR=[
+  {id:"cap",slot:"head",name:"Field cap",by:"first-sit"},
+  {id:"beanie",slot:"head",name:"Wool beanie",by:"ten-items"},
+  {id:"shades",slot:"face",name:"Dark glasses",by:"first-light"},
+  {id:"jacket",slot:"body",name:"Field jacket",by:"island-items"},
+  {id:"backpack",slot:"back",name:"Backpack",by:"collector"},
+  {id:"lanyard",slot:"neck",name:"Conference lanyard",by:"mentor-verified"},
+];
+function wearOwned(id){const w=WEAR.find(x=>x.id===id);return !!w&&sl("ach").includes(w.by)}
+function wearMesh(id){const g=new T.Group();
+  if(id==="cap"){g.add(box(.86,.18,.86,PALETTE.blue,0,2.54,0));g.add(box(.52,.06,.36,PALETTE.blue,0,2.48,.5))}
+  else if(id==="beanie"){g.add(box(.88,.32,.88,PALETTE.red,0,2.56,0));g.add(sph(.14,PALETTE.text,0,2.78,0,6))}
+  else if(id==="shades"){g.add(box(.78,.16,.08,PALETTE.black,0,2.12,.44))}
+  else if(id==="jacket"){g.add(box(.98,.94,.58,PALETTE.green,0,1.15,0))}
+  else if(id==="backpack"){g.add(box(.62,.72,.28,PALETTE.orange,0,1.25,-.4));[-.26,.26].forEach(x=>g.add(box(.1,.8,.1,PALETTE.orangeBright,x,1.3,.2)))}
+  else if(id==="lanyard"){[-.2,.2].forEach(x=>g.add(box(.07,.44,.07,PALETTE.yellow,x,1.5,.2)));g.add(box(.34,.24,.05,PALETTE.text,0,1.22,.28))}
+  else return null;
+  return g}
+// A character's wardrobe is rebuilt from the list, never patched in place.
+function applyWear(c,ids){if(!c)return;if(c.wearG)c.g.remove(c.wearG);
+  const g=new T.Group();(ids||[]).forEach(id=>{const m=wearMesh(id);if(m)g.add(m)});
+  c.g.add(g);c.wearG=g;fixColors(g)}
+window.toggleWear=function(id){const w=WEAR.find(x=>x.id===id);if(!w||!wearOwned(id))return;
+  const worn=sl("wear");const i=worn.indexOf(id);
+  if(i>=0)worn.splice(i,1);
+  else{WEAR.filter(x=>x.slot===w.slot).forEach(x=>{const j=worn.indexOf(x.id);if(j>=0)worn.splice(j,1)});worn.push(id)}
+  save();applyWear(chars.lotte,worn);renderPack("wardrobe");if(typeof renderOnboarding==="function")renderOnboarding()};
+
+/* ---------------- achievements ---------------- */
+// Six mirror the CLI's badges (vibemap/quests.py) so the two agree on what an
+// evening was worth; the rest are the island's own. Each answers when() from
+// state, except the ones only the moment knows, which unlock() records.
+let speedRun=false,lastClaimAt=0;
+const ACH=[
+  {id:"first-light",name:"First light",what:"The first stop delivered.",when:()=>totalDone()>=1},
+  {id:"full-evening",name:"Full evening",what:"Eight of eight on one island.",when:()=>Object.values(S.doneW||{}).some(v=>(v||[]).length>=8)},
+  {id:"campaign",name:"Campaign",what:"All thirty-two stops across the four islands.",when:()=>totalDone()>=32},
+  {id:"collector",name:"Collector",what:"Every artifact inspected.",when:()=>(S.artifacts||[]).length>=ARTIFACTS.length},
+  {id:"builder",name:"Builder",what:"Every artifact built for real, not only inspected.",when:()=>(S.artifactsBuilt||[]).length>=ARTIFACTS.length},
+  {id:"mentored",name:"Mentored",what:"Every mentor's exercise verified.",when:()=>(S.mentors||[]).length>=MENTORS.length},
+  {id:"mentor-verified",name:"Verified",what:"A mentor's exercise checked in your camp.",when:()=>(S.mentors||[]).length>=1},
+  {id:"first-sit",name:"First sit",what:"You sat down and opened the laptop.",when:()=>false},
+  {id:"ten-items",name:"Ten things",what:"Ten collectibles picked up.",when:()=>sl("items").length>=10},
+  {id:"island-items",name:"Clean sweep",what:"Every collectible on one island.",when:()=>Object.keys(WORLDS).some(w=>{const all=ITEMS.items.filter(i=>i.world===w);return all.length>0&&all.every(i=>sl("items").includes(i.id))})},
+  {id:"night-owl",name:"Night owl",what:"On the island after eleven at night.",when:()=>new Date().getHours()>=23},
+  {id:"speed-run",name:"Speed run",what:"Two stops inside five minutes.",when:()=>speedRun},
+];
+function unlock(id){const a=ACH.find(x=>x.id===id);if(!a||sl("ach").includes(id))return false;
+  sl("ach").push(id);save();
+  const w=WEAR.find(x=>x.by===id);
+  toast(icon("trophy")+"Achievement: "+a.name,a.what+(w?" Unlocked: the "+w.name.toLowerCase()+", in the Backpack.":""));
+  if(typeof track==="function")track("achievement",id);
+  return true}
+function achCheck(){ACH.forEach(a=>{if(a.when()&&!sl("ach").includes(a.id))unlock(a.id)})}
+
+/* ---------------- toast ---------------- */
+// One stack, created on demand so the page keeps its markup. A toast is a
+// message, never state: it says what just happened and goes away.
+function toast(title,body){
+  let el=$("toast");
+  if(!el){el=document.createElement("div");el.id="toast";el.setAttribute("aria-live","polite");document.body.appendChild(el)}
+  const n=document.createElement("div");n.className="tst";
+  n.innerHTML=`<b>${title}</b><span>${body}</span>`;el.appendChild(n);fx(n);
+  setTimeout(()=>n.remove(),5000)}
+
+/* ---------------- the backpack panel ---------------- */
+// The tech tree topic a collectible points at, by its note title.
+function topicName(id){for(const k in TREE){const t=TREE[k].find(x=>x.id===id);if(t)return t.n}return null}
+window.openTopic=function(id){const n=topicName(id);if(n)openNote(n)};
+let packTab="inventory";
+window.openPack=function(tab){renderPack(tab||packTab);openSheet("s-pack")};
+window.renderPack=renderPack;
+function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"),worn=sl("wear");
+  const tabs=[["inventory","Inventory"],["achievements","Achievements"],["wardrobe","Wardrobe"]]
+    .map(([k,l])=>`<button class="${packTab===k?"pick":""}" onclick="renderPack('${k}')">${l}</button>`).join("");
+  let body="";
+  if(packTab==="inventory"){
+    body=`<p class="small muted">${got.length} of ${ITEMS.items.length} picked up. Walk over one to collect it; each explains one idea and opens its topic in the tech tree.</p>`+
+      Object.keys(WORLDS).map(w=>{const list=ITEMS.items.filter(i=>i.world===w);
+        const mine=list.filter(i=>got.includes(i.id));
+        return `<div class="card"><h3>${WORLDS[w].name}</h3><p class="small muted">${mine.length} of ${list.length}</p>`+
+          mine.map(i=>`<div class="pathrow"><span><b>${i.name}</b><br><span class="muted small">${i.concept}</span></span><button onclick="openTopic('${i.topic}')" style="padding:4px 10px;font-size:12px">Topic</button></div>`).join("")+
+          (mine.length<list.length?`<div class="pathrow"><span class="muted small">${list.length-mine.length} still out there, along the paths and on the annexes.</span></div>`:"")+`</div>`}).join("")}
+  else if(packTab==="achievements"){
+    body=`<p class="small muted">${ach.length} of ${ACH.length} unlocked. Six of them are the badges the terminal hands out, so a progress code keeps the two in step.</p>`+
+      ACH.map(a=>`<div class="pathrow"><span><b>${a.name}</b><br><span class="muted small">${a.what}</span></span><span class="st ${ach.includes(a.id)?"deep":""}">${ach.includes(a.id)?"unlocked":"locked"}</span></div>`).join("")}
+  else{
+    body=`<p class="small muted">Earned by achievements, worn one per slot. What you wear shows on the walker, on the title screen and in the terminal.</p>`+
+      WEAR.map(w=>`<div class="pathrow"><span><b>${w.name}</b><br><span class="muted small">${w.slot} · from ${(ACH.find(a=>a.id===w.by)||{}).name}</span></span>`+
+        (wearOwned(w.id)
+          ?`<button class="${worn.includes(w.id)?"primary":""}" onclick="toggleWear('${w.id}')" style="padding:4px 10px;font-size:12px">${worn.includes(w.id)?"Worn":"Wear"}</button>`
+          :`<span class="st">locked</span>`)+`</div>`).join("")}
+  $("s-pack").innerHTML=`<h2>Backpack</h2><div class="row packtabs">${tabs}</div>${body}`;
+  iconize($("s-pack"))}
+
+/* ---------------- the frame ---------------- */
+// One call a frame from the animation loop: sitting, picking things up and the
+// achievements that follow. Everything it needs is already computed there.
+let wantSit=false,avatarWired=false,achT=0;
+function wireAvatar(){if(avatarWired)return;avatarWired=true;
+  // The key is caught on its own event rather than sampled in the loop: a tap
+  // can start and end between two frames on a slow machine.
+  addEventListener("keydown",e=>{if(e.key.toLowerCase()!=="x"||e.metaKey||e.ctrlKey)return;
+    const el=document.activeElement;if(el&&/^(input|textarea|select)$/i.test(el.tagName))return;
+    wantSit=true});
+  // A claim is the party's moment, so the cheer hangs off the real entry point
+  // rather than off a copy of the rule that decides a stop is done.
+  const claimed=window.claim;
+  window.claim=function(n){const before=(S.done||[]).includes(n);claimed.apply(this,arguments);
+    if(before||!(S.done||[]).includes(n))return;
+    const now=Date.now();if(lastClaimAt&&now-lastClaimAt<300000)speedRun=true;lastClaimAt=now;
+    cheer();achCheck()};
+  const h=$("hint");if(h&&h.textContent.indexOf("sit")<0)h.textContent+=" · x to sit";
+  setPose(chars.rolinda,"carry");
+  applyWear(chars.lotte,sl("wear"));
+}
+function toggleSit(){const L=chars.lotte;if(!L)return;
+  if(isSitting(L)){setPose(L,"stand");return}
+  // Sitting is a full stop: with no speed left the frame loop skips the
+  // collision push, so a walker on a bench stays on it.
+  if(L.vel)L.vel.set(0,0,0);hasTarget=false;if(marker)marker.material.opacity=0;
+  const s=nearestSeat(L.g.position);
+  if(s){L.g.position.set(s.x,0,s.z);L.g.rotation.y=s.face;setPose(L,"sit",s.h)}
+  else setPose(L,"sit",GROUND_SEAT);
+  unlock("first-sit")}
+function tickAvatar(dt,t,sp){
+  wireAvatar();
+  const L=chars.lotte;if(!L)return;
+  if(wantSit){wantSit=false;if(started)toggleSit()}
+  if(isSitting(L)&&(sp>.35||wantJump||L.jy>0))setPose(L,"stand");
+  // Mentors work at their spot: the animation loop moves them, so their pose
+  // is applied here, where the loop has not yet touched them this frame.
+  (props.mentors||[]).forEach(c=>{if(isSitting(c))poseChar(c,dt,t)});
+  tickItems(dt,t);
+  // The derived achievements read the whole state, so they are answered about
+  // once a second rather than every frame; the earned-by-a-moment ones unlock
+  // where they happen.
+  achT+=dt;if(achT>1){achT=0;achCheck()}
+}
+// Collectibles and seats, placed from vibemap/data/items.json (ITEMS).
+// Every spot in that file is relative to a plot, an annex or the path of its
+// island, so a new layout carries the furniture along instead of stranding it
+// in the sea. Nothing here holds a world coordinate of its own.
+
+// Where a spot lands: the anchor, then d units outward turned by a radians.
+// Outward is the direction from the island's centre, which is what makes the
+// same number mean the same thing on a plot on either side of the island.
+// A spot that falls off the land is pulled back towards its anchor rather
+// than dropped, so every collectible on an island can always be collected.
+function itemSpot(at){
+  let cx,cz;
+  if(at.plot!==undefined){const p=PLOT_POS[at.plot-1];if(!p)return null;cx=p.x;cz=p.z}
+  else if(at.annex!==undefined){const a=annexes.find(x=>x.k===at.annex);if(!a)return null;cx=a.x;cz=a.z}
+  else if(at.path!==undefined){const c=props.curve;if(!c)return null;const pt=c.getPointAt(Math.min(1,Math.max(0,at.path)));cx=pt.x;cz=pt.z}
+  else return null;
+  const ang=Math.atan2(cx,cz)+(at.a||0),d=(at.d||0)*WORLD_SCALE;
+  for(const f of [1,.6,.3,0]){const x=cx+Math.sin(ang)*d*f,z=cz+Math.cos(ang)*d*f;
+    if(onLandW(x,z))return {x,z,face:Math.atan2(cx-x,cz-z)}}
+  return null}
+
+/* ---------------- seats ---------------- */
+// Every seat on the island is three instanced meshes, whatever the count: one
+// for the slabs, one for the backs, one for the legs. A bench and a chair are
+// the same model at a different width.
+const SEAT_W={bench:1.5,chair:.8},SEAT_H=.6;
+let SEATG=null;
+function seatParts(){if(SEATG)return SEATG;
+  SEATG={slab:new T.BoxGeometry(1,.12,.52),back:new T.BoxGeometry(1,.5,.1),leg:new T.BoxGeometry(.1,.55,.1)};
+  return SEATG}
+function placeSeats(){
+  props.seats=[];
+  const list=(ITEMS.seats||[]).filter(s=>s.world===(S.world||"campus"));
+  const spots=[];
+  list.forEach(s=>{const p=itemSpot(s.at);if(!p)return;
+    spots.push({id:s.id,x:p.x,z:p.z,face:p.face,w:SEAT_W[s.kind]||1,h:SEAT_H});
+    obstacles.push([p.x,p.z,.5])});
+  // A mentor works at their spot, so they get the chair they are sitting on.
+  (props.mentors||[]).forEach(c=>{const p=c.g.position;
+    spots.push({id:"seat:"+c.id,x:p.x,z:p.z,face:c.g.rotation.y,w:SEAT_W.chair,h:SEAT_H,taken:true});
+    setPose(c,"sit",SEAT_H)});
+  props.seats=spots;
+  if(!spots.length)return;
+  const P=seatParts(),d=new T.Object3D();
+  const wood=mat(W.bank),metal=mat(PALETTE.muted);
+  const slabs=new T.InstancedMesh(P.slab,wood,spots.length);
+  const backs=new T.InstancedMesh(P.back,metal,spots.length);
+  const legs=new T.InstancedMesh(P.leg,metal,spots.length*4);
+  spots.forEach((s,i)=>{
+    d.position.set(s.x,SEAT_H-.06,s.z);d.rotation.set(0,s.face,0);d.scale.set(s.w,1,1);d.updateMatrix();slabs.setMatrixAt(i,d.matrix);
+    d.position.set(s.x,SEAT_H+.28,s.z);d.translateZ(-.22);d.updateMatrix();backs.setMatrixAt(i,d.matrix);
+    [[-.38,.18],[.38,.18],[-.38,-.18],[.38,-.18]].forEach(([lx,lz],j)=>{
+      d.position.set(s.x,.28,s.z);d.scale.set(1,1,1);d.translateX(lx*s.w);d.translateZ(lz);d.updateMatrix();legs.setMatrixAt(i*4+j,d.matrix)})});
+  slabs.castShadow=backs.castShadow=legs.castShadow=true;slabs.receiveShadow=true;
+  scene.add(slabs,backs,legs);props.seatMeshes=[slabs,backs,legs]}
+// The seat you would sit on from here, if one is within reach and free.
+function nearestSeat(pos){let best=null,bd=2.2*WORLD_SCALE;
+  (props.seats||[]).forEach(s=>{if(s.taken)return;const d=Math.hypot(pos.x-s.x,pos.z-s.z);if(d<bd){bd=d;best=s}});
+  return best}
+
+/* ---------------- collectibles ---------------- */
+// One mesh each, with the geometry and the material of its kind shared across
+// the island, so ten collectibles are ten draw calls and no more.
+let ITEMG=null;
+function itemParts(){if(ITEMG)return ITEMG;
+  ITEMG={geo:{
+    octa:new T.OctahedronGeometry(.22),
+    ring:new T.TorusGeometry(.18,.06,5,10),
+    chip:new T.BoxGeometry(.3,.3,.09),
+    cube:new T.BoxGeometry(.3,.3,.3),
+    slab:new T.BoxGeometry(.34,.24,.06),
+    rod:new T.CylinderGeometry(.06,.06,.44,6),
+    tube:new T.CylinderGeometry(.11,.11,.4,8),
+    bead:new T.SphereGeometry(.17,7,5),
+    roll:new T.CylinderGeometry(.09,.09,.42,7),
+    ico:new T.IcosahedronGeometry(.21,0),
+  },mats:{}};return ITEMG}
+function itemMat(colour){const P=itemParts();
+  if(!P.mats[colour])P.mats[colour]=mat(PALETTE[colour]||PALETTE.text,{emissive:PALETTE[colour]||PALETTE.text,emissiveIntensity:.35});
+  return P.mats[colour]}
+// Idempotent: called when the island is built and again when an annex appears,
+// and it only ever adds what is missing and not already collected.
+function placeItems(){
+  if(!props.items)props.items=[];
+  const got=sl("items"),P=itemParts();
+  ITEMS.items.filter(i=>i.world===(S.world||"campus")).forEach(i=>{
+    if(got.includes(i.id)||props.items.some(x=>x.id===i.id))return;
+    const sp=itemSpot(i.at);if(!sp)return;
+    const k=ITEMS.kinds[i.kind];if(!k)return;
+    const m=new T.Mesh(P.geo[k.model]||P.geo.cube,itemMat(k.colour));
+    m.position.set(sp.x,.75,sp.z);m.castShadow=true;scene.add(m);
+    props.items.push({id:i.id,m,x:sp.x,z:sp.z,p:props.items.length})})}
+// Walking over one collects it: a small burst, a line in the backpack, and the
+// concept with the tech tree topic it belongs to.
+function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
+  scene.remove(it.m);props.items=props.items.filter(x=>x!==it);
+  if(!data)return;
+  sl("items").push(data.id);save();
+  for(let i=0;i<12;i++){const m=new T.Mesh(new T.BoxGeometry(.1,.1,.1),new T.MeshBasicMaterial({color:PALETTE[ITEMS.kinds[data.kind].colour]||PALETTE.text}));
+    m.position.set(it.x,.8,it.z);m.userData.v=new T.Vector3((Math.random()-.5)*3,2+Math.random()*2,(Math.random()-.5)*3);m.userData.life=.8;scene.add(m);parts.push(m)}
+  toast(icon("compass")+"Picked up: "+data.name,
+    data.concept+` <a href="#" onclick="openTopic('${data.topic}');return false">Read the topic</a>`);
+  if(typeof track==="function")track("item",data.id);
+  achCheck()}
+function tickItems(dt,t){
+  const pos=chars.lotte&&chars.lotte.g.position;if(!pos)return;
+  (props.items||[]).slice().forEach(it=>{
+    it.m.rotation.y+=dt*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
+    if(Math.hypot(pos.x-it.x,pos.z-it.z)<1.1)collect(it)})}
 const WORLDS={
  campus:{name:"Innovation Campus",tag:"Green island, harbour, airstrip. The default environment.",swatch:"#79CC72",
   grass:"#79CC72",dirt:"#9C7A4E",bank:"#E3D2B0",water:"#2E9BD6",river:"#3FB0E8",fog:"#9BD3F5",tree:"mixed",
@@ -1459,6 +1804,9 @@ function buildWorld(id){
   props.mentors=[];MENTORS.filter(m=>m.world===id).forEach(m=>{const c=character({kind:"mentor",body:m.look.shirt,legs:"#374151",arms:"#F5D7BC",label:m.name,look:m.look});c.g.position.set(m.pos[0],0,m.pos[1]);c.g.rotation.y=Math.PI;scene.add(c.g);c.id=m.id;props.mentors.push(c);obstacles.push([m.pos[0],m.pos[1],.6]);
     const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.mentors.includes(m.id)?"#00D084":S.path[m.id]==="deep"?"#0088CC":S.path[m.id]==="skip"?"#F04923":"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
   props.plaques={};placePlaques(false);
+  // Seats and collectibles come from data, positioned against the plots and
+  // the annexes that already exist (src/game/19-items.js).
+  props.items=[];placeSeats();placeItems();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.CircleGeometry(.55,12),new T.MeshBasicMaterial({color:"#000",transparent:true,opacity:.25}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.02;scene.add(props.shadow);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:"#0088CC",transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -1513,6 +1861,7 @@ function placeAnnex(k,pop){
   const lb=label(CH[k-1].h,.5);lb.position.y=3.9;g.add(lb);
   fixColors(g);scene.add(g);island.userData.parts.push(grass,cw);
   annexes.push({k,x:ax,z:az,r:ANNEX_R,px:pp.x,pz:pp.z,g});obstacles.push([ax,az,.5]);
+  placeItems();
   if(pop)popIn(g);
 }
 // The pop every new thing on the island gets: it grows from nothing (the
@@ -1574,6 +1923,7 @@ function animate(){
   // dust when walking
   if(walking&&L.jy===0&&Math.random()<dt*14){const m=new T.Mesh(new T.SphereGeometry(.09,5,5),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
   if(props.shadow){props.shadow.position.set(pos.x,.02,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
+  tickAvatar(dt,t,sp);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
   const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
@@ -1625,7 +1975,7 @@ function animate(){
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
     const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
-    (props.mentors||[]).forEach(c=>{c.g.position.y=Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
+    (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
     if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
     else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
     // Plots before artifacts: a signpost you can walk into always wins, even
@@ -1636,6 +1986,8 @@ function animate(){
   renderer.render(scene,camera);
 }
 function animChar(c,walking,dt,t){
+  // A pose that is not standing owns the limbs for this frame.
+  if(c.pose&&c.pose!=="stand"&&poseChar(c,dt,t))return;
   if(walking){c.walkT+=dt*11;const s=Math.sin(c.walkT);c.lLeg.rotation.x=s*.7;c.rLeg.rotation.x=-s*.7;c.lArm.rotation.x=-s*.6;if(!c.raised)c.rArm.rotation.x=s*.6;c.g.position.y=Math.abs(Math.sin(c.walkT))*.08}
   else{c.lLeg.rotation.x*=.85;c.rLeg.rotation.x*=.85;c.lArm.rotation.x=Math.sin(t*2)*.08;if(!c.raised)c.rArm.rotation.x=-Math.sin(t*2)*.08;c.g.position.y=Math.sin(t*2)*.03}
   c.head.rotation.y=Math.sin(t*.7)*.15;
@@ -2591,11 +2943,16 @@ function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";retu
   const m=`Hi Tom, per my last message and the ratified roadmap, confirming go-live: ${S.date}, 18:00, at the Hospitality Hub. ${bev} Current state of the campus: ${S.done.length} of 8 stops delivered, ${S.versions.length} tagged releases and ${Object.values(S.bridges).filter(Boolean).length} live integrations. Please loop in Rolinda, she will have questions, and they will be the only good ones. Please also confirm she has decanted.\n\nBest,\n${S.name}\nChief of Staff`;
   $("msg").textContent=m;$("wa").href="https://wa.me/?text="+encodeURIComponent(m);$("msgcard").style.display=""}
 window.copyMsg=function(){const m=$("msg").textContent;const ok=()=>{$("copybtn").textContent="Copied";setTimeout(()=>$("copybtn").textContent="Copy to clipboard",1500)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(m).then(ok).catch(()=>{})};
-window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;$("syncmsg").textContent="Code is in the box. Copy it, then in the repo: uv run vibe import "+code.slice(0,12)+"…";if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{})};
+window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear")})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;$("syncmsg").textContent="Code is in the box. Copy it, then in the repo: uv run vibe import "+code.slice(0,12)+"…";if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).catch(()=>{})};
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));
     // The progress code is versioned: an unknown version is refused loudly.
     if(d.v!==2){$("syncmsg").textContent="That code is version "+(d.v===undefined?"1 or older":d.v)+"; this game reads version 2. Run uv run vibe export again with an up-to-date vibe.";return}
-    const dw=d.doneW||{campus:d.done||[]};Object.keys(dw).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{n=+n;if(n>=1&&n<=8&&!S.doneW[w].includes(n)){S.doneW[w].push(n);if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a))S.artifacts.push(a)});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);$("syncmsg").textContent="Imported: "+S.done.length+"/8 workstreams."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
+    const dw=d.doneW||{campus:d.done||[]};Object.keys(dw).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{n=+n;if(n>=1&&n<=8&&!S.doneW[w].includes(n)){S.doneW[w].push(n);if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a))S.artifacts.push(a)});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);
+    // Added inside version 2: an older code carries none of these keys and a
+    // newer reader simply finds nothing to merge.
+    ["items","ach","wear"].forEach(k=>(d[k]||[]).forEach(v=>{if(!sl(k).includes(v))sl(k).push(v)}));
+    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{scene.remove(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
+    if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);$("syncmsg").textContent="Imported: "+S.done.length+"/8 workstreams."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
 const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.isSprite);return sp?{text:sp.userData.text,fs:sp.userData.fs}:null};
 window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
@@ -2607,6 +2964,12 @@ window.__demos=()=>ART_DEMOS;
 // Test seam: read-only view of the walker for the Playwright battery, never written to.
 // frame is the renderer's own frame counter: proximity, the camera and the pop-ins
 // are sampled in the frame loop, so a test waits for frames, never for a wall clock.
+// Test seam: the avatar's pose and the furniture on this island, read-only.
+window.__avatar=()=>({pose:chars.lotte?chars.lotte.pose:null,seat:chars.lotte?chars.lotte.seatH||0:0,
+  laptop:!!(chars.lotte&&chars.lotte.lap&&chars.lotte.lap.visible),
+  onGround:(props.items||[]).map(i=>({id:i.id,x:i.x,z:i.z})),seats:(props.seats||[]).filter(s=>!s.taken).map(s=>({x:s.x,z:s.z})),
+  sitting:(props.mentors||[]).filter(c=>c.pose==="sit").length,
+  items:sl("items"),ach:sl("ach"),wear:sl("wear"),wearing:chars.lotte&&chars.lotte.wearG?chars.lotte.wearG.children.length:0});
 window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,label:playerPlate(),near:nearK,started,world:S.world,draws:renderer?renderer.info.render.calls:0,frame:renderer?renderer.info.render.frame:0,mentors:MENTORS.map(m=>({id:m.id,world:m.world,exercise:m.encounter.exercise.file,done:S.mentors.includes(m.id),seen:S.met[m.id]||0})),vault:()=>VSIM?{alpha:VSIM.alpha(),n:VN.length,sample:VN.slice(0,4).map(n=>[Math.round(n.x),Math.round(n.y)])}:null});
 window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}location.reload()};
 
@@ -2685,7 +3048,7 @@ function playerLook(){return LOOKS[S.look]||(S.name==="Lotte"?LOOKS.lotte:LOOKS.
 // What to call the player before a name is typed: the chosen preset, else
 // nothing. Never the placeholder.
 function playerLabel(){return S.name||(LOOKS[S.look]&&S.look!=="own"?LOOKS[S.look].label:"")}
-function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,label:n?n+", "+l.role:l.role}}
+function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,wear:sl("wear"),label:n?n+", "+l.role:l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
 // Every command block in a lesson becomes a <details>: open at beginner, easy
@@ -2761,10 +3124,17 @@ const NAME_HINT="Type your name plainly.";
 function clearNameError(){const h=$("namehint");if(h){h.classList.remove("err");h.textContent=NAME_HINT}}
 window.refuseEmptyName=function(){const nm=$("name"),h=$("namehint");if(h){h.textContent="Type your name first, then kick off.";h.classList.add("err")}
   if(nm){nm.classList.remove("shake");void nm.offsetWidth;nm.classList.add("shake");nm.focus()}};
+// What you have earned to wear, on the look picker: nothing until the first
+// achievement unlocks something, then one button a piece.
+function wardrobeRow(){const owned=WEAR.filter(w=>wearOwned(w.id));if(!owned.length)return "";
+  const worn=sl("wear");
+  return `<div class="choices">${owned.map(w=>`<button class="choice${worn.includes(w.id)?" on":""}" onclick="toggleWear('${w.id}')" title="${w.slot}">${w.name}</button>`).join("")}</div>
+<p class="small muted">Yours to wear, earned on the islands. The Backpack has the rest.</p>`}
 function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOOKS[S.look]?S.look:(S.name==="Lotte"?"lotte":"own");const diff=difficulty();const mode=S.mode||"";
   box.innerHTML=`<div class="step"><b>1</b><span>Who are you?</span></div>
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>
+${wardrobeRow()}
 <div class="step"><b>2</b><span>How hard?</span></div>
 <div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>

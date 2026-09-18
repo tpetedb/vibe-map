@@ -93,6 +93,16 @@ def artifacts() -> list[dict[str, Any]]:
     return list(raw().get("artifacts", []))
 
 
+@cache
+def items_raw() -> dict[str, Any]:
+    return json.loads(project.data_text("items.json"))
+
+
+def collectibles() -> list[dict[str, Any]]:
+    """The tokens spread over the islands, one concept each (items.json)."""
+    return list(items_raw().get("items", []))
+
+
 def mentors() -> list[dict[str, Any]]:
     return list(raw()["mentors"])
 
