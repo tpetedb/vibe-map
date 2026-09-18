@@ -146,6 +146,12 @@ def test_the_sheet_is_an_overlay_with_a_sticky_action_bar(
     game.still(
         "document.querySelector('#s-1 .row.actions').getBoundingClientRect().top"
     )
+    # The bar's own requirement, waited for rather than sampled: it sits on the
+    # bottom edge of the window once the sheet's open spring has landed.
+    game.until(
+        "Math.abs(document.querySelector('#s-1 .row.actions')"
+        ".getBoundingClientRect().bottom - window.innerHeight) < 2"
+    )
     metrics = game.page.evaluate(
         """() => {
           const sheet = document.getElementById('sheet');
