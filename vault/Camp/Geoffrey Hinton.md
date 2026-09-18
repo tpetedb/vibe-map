@@ -2,6 +2,7 @@
 title: "Geoffrey Hinton"
 date: 2026-09-16
 tags: [people]
+generated: 0d0082ab5eb5
 ---
 # Geoffrey Hinton
 

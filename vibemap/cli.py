@@ -21,6 +21,8 @@ import shutil
 import subprocess
 import sys
 import unicodedata
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
@@ -35,7 +37,11 @@ from rich.table import Table
 
 from vibemap import __version__, campaign, pet, project, quests
 from vibemap.artifact_checks import (
+    ARTIFACT_NOTE,
+    ARTIFACT_SECTION,
+    ARTIFACT_WORDS,
     ARTIFACT_XP_SHARE,
+    artifact_dir,
     artifact_ids,
     artifact_quest,
     get_artifact,
@@ -55,7 +61,13 @@ from vibemap.quests import (
     run_quest,
     xp_for,
 )
-from vibemap.state import PLACEHOLDER, CheckRecord, LogEntry, State
+from vibemap.state import (
+    IMPORTED_NOTE,
+    PLACEHOLDER,
+    CheckRecord,
+    LogEntry,
+    State,
+)
 from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, get_tool, install
 from vibemap.vault import Vault, safe_title
@@ -93,6 +105,15 @@ def _fail(msg: str) -> None:
     sys.exit(1)
 
 
+def _exit_code(ok: bool) -> None:
+    """End the command: 0 when every check passed, 1 when one did not.
+
+    A failed check is an undone task, not a broken tool, so nothing else is
+    printed; the table above already says which row failed.
+    """
+    sys.exit(0 if ok else 1)
+
+
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(__version__, prog_name="vibe")
 @click.pass_context
@@ -108,6 +129,13 @@ def cli(ctx: click.Context) -> None:
 
 
 # ---- status -------------------------------------------------------------------
+
+
+def _stop_cell(st: State, world: str, n: int) -> str:
+    """One square of the status grid: done, claimed but not checked, or to do."""
+    if not st.is_done(world, n):
+        return "[todo].[/]"
+    return "[done]x[/]" if st.is_verified(world, n) else "[warn]i[/]"
 
 
 @cli.command()
@@ -165,11 +193,14 @@ def status(ctx: Ctx, as_json: bool) -> None:
         t.add_column(str(i), justify="center")
     t.add_column("done", justify="right")
     for w, ev in campaign.evenings().items():
-        cells = [
-            "[done]x[/]" if st.is_done(w, i) else "[todo].[/]" for i in range(1, 9)
-        ]
+        cells = [_stop_cell(st, w, i) for i in range(1, 9)]
         t.add_row(f"{ev.short} · {ev.island}", *cells, f"{len(st.done_w.get(w, []))}/8")
     console.print(t)
+    if st.imported_stops():
+        console.print(
+            "[muted]i = claimed in the game, not verified here; "
+            "vibe check pays the other half.[/]"
+        )
     if st.badges:
         console.print(
             "Badges: "
@@ -227,10 +258,17 @@ def _print_results(results, quest, cfg: Config) -> bool:
 
 def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) -> None:
     ws = campaign.evenings()[world].workstreams[n - 1]
-    xp = xp_for(ctx.cfg.learner.difficulty)
-    if forced:
-        xp //= 2
+    full = xp_for(ctx.cfg.learner.difficulty)
+    xp = full // 2 if forced else full
     fresh = ctx.state.mark_done(world, n, note=note, xp=xp)
+    # A stop already claimed at half price (imported from the game, or forced)
+    # is topped up to full the first time its checks actually pass.
+    topped = 0
+    if not fresh and not forced and all(r.ok for r in results):
+        topped = ctx.state.owed(world, n, full)
+        if topped:
+            ctx.state.log.append(LogEntry(world=world, n=n, note=note, xp=topped))
+            ctx.state.xp += topped
     ctx.state.checks[f"{world}:{n}"] = CheckRecord(
         ok=all(r.ok for r in results),
         passed=[r.name for r in results if r.ok],
@@ -258,6 +296,11 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
         console.print(
             f"[ok]{ws.name} done[/] [xp]+{xp} XP[/]"
             + (" (forced, half XP)" if forced else "")
+        )
+    elif topped:
+        console.print(
+            f"[ok]{ws.name} verified[/] [xp]+{topped} XP[/] "
+            "(it was claimed without a check, at half)"
         )
     else:
         console.print(f"[muted]{ws.name} was already done; note added.[/]")
@@ -315,23 +358,26 @@ def check(
     artifact_id: str | None,
     fork_: str | None,
 ) -> None:
-    """Verify the definition of done for a workstream and award the XP."""
+    """Verify the definition of done for a workstream and award the XP.
+
+    Exit code 0 when every check passed, 1 when any failed, so the command can
+    be a step in a pipeline. --no-claim changes what is recorded, never the code.
+    """
     if mentor_id:
-        _check_mentors(ctx, mentor_id, claim=claim)
-        return
+        _exit_code(_check_mentors(ctx, mentor_id, claim=claim))
     if artifact_id:
-        _check_artifacts(ctx, artifact_id, claim=claim)
-        return
+        _exit_code(_check_artifacts(ctx, artifact_id, claim=claim))
     if fork_:
         try:
             quest = fork_quest(ctx.cfg, fork_)
         except ValueError as e:
             _fail(str(e))
-        if _print_results(run_quest(quest, ctx.cfg), quest, ctx.cfg):
+        ok = _print_results(run_quest(quest, ctx.cfg), quest, ctx.cfg)
+        if ok:
             console.print("[ok]your fork builds and is yours[/]")
         else:
             console.print("[warn]not yet.[/] Fix the failed checks and run it again.")
-        return
+        _exit_code(ok)
     world = world or "campus"
     if all_:
         targets = list(range(1, 9))
@@ -345,11 +391,16 @@ def check(
         if not 1 <= n <= 8:
             _fail("workstream is 1 to 8")
         targets = [n]
+    every = True
     for k in targets:
         quest = quest_for(world, k, ctx.cfg)
         results = run_quest(quest, ctx.cfg)
         ok = _print_results(results, quest, ctx.cfg)
-        if ok and claim and not ctx.state.is_done(world, k):
+        every = every and ok
+        # A stop claimed in the game or forced carries half the XP; passing the
+        # checks later is what buys the other half (ADR 0004).
+        owed = ctx.state.owed(world, k, xp_for(ctx.cfg.learner.difficulty))
+        if ok and claim and (not ctx.state.is_done(world, k) or owed):
             _claim(ctx, world, k, "verified by vibe check", results, forced=False)
         elif ok:
             console.print("[ok]all checks pass[/]")
@@ -358,6 +409,7 @@ def check(
                 "[warn]not yet.[/] Fix the failed checks, "
                 "or `vibe done` with --force for half XP."
             )
+    _exit_code(every)
 
 
 @cli.command()
@@ -622,9 +674,7 @@ def import_(ctx: Ctx, code: str) -> None:
         {(w, n) for w, lst in ctx.state.done_w.items() for n in lst} - before
     )
     for w, n in fresh:
-        ctx.state.log.append(
-            LogEntry(world=w, n=n, note="done in the game, imported", xp=half)
-        )
+        ctx.state.log.append(LogEntry(world=w, n=n, note=IMPORTED_NOTE, xp=half))
     ctx.state.xp += half * len(fresh)
     new_badges(ctx.state, ctx.cfg)
     ctx.save()
@@ -633,6 +683,16 @@ def import_(ctx: Ctx, code: str) -> None:
         f"[ok]imported[/]: {len(fresh)} new stops, {ctx.state.total_done()}/32 "
         f"in total, {ctx.state.xp} XP"
     )
+    waiting = ctx.state.imported_stops()
+    if waiting:
+        console.print(
+            f"[warn]imported, not verified[/]: {len(waiting)} stop(s) at half XP. "
+            "The game claims a stop, it never checks one. Run the check to earn "
+            "the other half:"
+        )
+        for w, n in waiting:
+            flag = "" if w == "campus" else f" -w {w}"
+            console.print(f"  [accent]vibe check{flag} {n}[/]")
 
 
 def _mentor_or_fail(mentor_id: str) -> dict:
@@ -644,16 +704,18 @@ def _mentor_or_fail(mentor_id: str) -> dict:
         raise  # unreachable: _fail exits
 
 
-def _check_mentors(ctx: Ctx, mentor_id: str, *, claim: bool) -> None:
+def _check_mentors(ctx: Ctx, mentor_id: str, *, claim: bool) -> bool:
     """Run the encounter checks for one mentor, or for all twelve."""
     if mentor_id == "all":
         ids = [m["id"] for m in campaign.mentors()]
     else:
         ids = [_mentor_or_fail(mentor_id)["id"]]
+    every = True
     for mid in ids:
         quest = mentor_quest(mid, ctx.cfg)
         results = run_quest(quest, ctx.cfg)
         ok = _print_results(results, quest, ctx.cfg)
+        every = every and ok
         if ok and claim and mid not in ctx.state.mentors:
             _claim_mentor(ctx, mid, results)
         elif ok:
@@ -662,6 +724,7 @@ def _check_mentors(ctx: Ctx, mentor_id: str, *, claim: bool) -> None:
             console.print(
                 f"[warn]not yet.[/] The exercise lives in workspace/mentors/{mid}/."
             )
+    return every
 
 
 def _claim_mentor(ctx: Ctx, mentor_id: str, results) -> None:
@@ -684,7 +747,7 @@ def _claim_mentor(ctx: Ctx, mentor_id: str, results) -> None:
         console.print(f"[title]Badge:[/] {BADGES[b]}")
 
 
-def _check_artifacts(ctx: Ctx, artifact_id: str, *, claim: bool) -> None:
+def _check_artifacts(ctx: Ctx, artifact_id: str, *, claim: bool) -> bool:
     """Run the Do it for real checks for one artifact, or for all twenty."""
     if artifact_id == "all":
         ids = artifact_ids()
@@ -693,19 +756,23 @@ def _check_artifacts(ctx: Ctx, artifact_id: str, *, claim: bool) -> None:
             ids = [get_artifact(artifact_id)["id"]]
         except ValueError as e:
             _fail(str(e))
+    every = True
     for aid in ids:
         quest = artifact_quest(aid, ctx.cfg)
         results = run_quest(quest, ctx.cfg)
         ok = _print_results(results, quest, ctx.cfg)
+        every = every and ok
         if ok and claim and aid not in ctx.state.artifacts_built:
             _claim_artifact(ctx, aid, results)
         elif ok:
             console.print("[ok]all checks pass[/]")
         else:
             console.print(
-                f"[warn]not yet.[/] The walkthrough is in the game, on the "
-                f"artifact sheet; the work goes in workspace/artifacts/{aid}/."
+                f"[warn]not yet.[/] The walkthrough: [accent]vibe artifact {aid}[/], "
+                f"or the artifact sheet in the game; the work goes in "
+                f"workspace/artifacts/{aid}/."
             )
+    return every
 
 
 def _claim_artifact(ctx: Ctx, artifact_id: str, results) -> None:
@@ -837,6 +904,128 @@ def mentor(ctx: Ctx, mentor_id: str | None, choice: str | None, start: bool) -> 
         for name in kept:
             console.print(f"[warn]kept your {where}/{name}[/], it was already there")
     _show_encounter(ctx, m)
+
+
+# A scaffolded artifact folder is the same promise the mentor one makes: the
+# stub names the task and the check keeps failing until the learner writes it.
+ARTIFACT_COMMENT = {".py": "# ", ".yml": "# ", ".yaml": "# ", ".md": "", "": "# "}
+
+
+def _artifact_stub(artifact_id: str, real: dict) -> tuple[str, str] | None:
+    """(file name, body) for the one file the walkthrough names, if it names one.
+
+    A task whose files are produced by its commands (uv init, git) gets no stub:
+    a fake pyproject.toml would be in the way of the tool that writes it.
+    """
+    name = real["check"].get("file")
+    if not name:
+        return None
+    title = real["title"]
+    if name.endswith(".json"):
+        body = json.dumps({"TODO": title, "see": real["doc"]["url"]}, indent=2) + "\n"
+        return name, body
+    mark = ARTIFACT_COMMENT.get(Path(name).suffix, "# ")
+    lines = [f"{mark}TODO: {title}", f"{mark}{STUB_LINES[1]}"]
+    lines.append(f"{mark}Run: vibe check --artifact {artifact_id}")
+    return name, "\n".join(lines) + "\n"
+
+
+def _artifact_note_stub() -> str:
+    return (
+        f"{ARTIFACT_SECTION}\n\n"
+        "Replace this line with your own words, at least "
+        f"{ARTIFACT_WORDS} of them.\n"
+    )
+
+
+def _scaffold_artifact(a: dict) -> tuple[list[str], list[str]]:
+    """Create workspace/artifacts/<id>/; returns (written, kept) file names."""
+    here = artifact_dir(a["id"])
+    here.mkdir(parents=True, exist_ok=True)
+    files = [(ARTIFACT_NOTE, _artifact_note_stub())]
+    stub = _artifact_stub(a["id"], a["real"])
+    if stub:
+        files.insert(0, stub)
+    written, kept = [], []
+    for name, body in files:
+        target = here / name
+        if target.exists():
+            kept.append(name)
+            continue
+        target.write_text(body, encoding="utf-8")
+        written.append(name)
+    return written, kept
+
+
+def _show_artifact(ctx: Ctx, a: dict) -> None:
+    """The walkthrough the artifact sheet shows in the game, in the terminal."""
+    real = a["real"]
+    built = a["id"] in ctx.state.artifacts_built
+    state = "[ok]built for real[/]" if built else "[todo]not built yet[/]"
+    console.print(
+        f"[title]{a['name']}[/] · [path]{campaign.WORLD_NAMES[a['world']]}[/] · {state}"
+    )
+    console.print(f"[muted]{escape(a['what'])}[/]")
+    console.print(f"[accent]{escape(real['title'])}[/] · {real['minutes']} minutes")
+    console.print(f"Read first: {escape(real['doc']['title'])} {real['doc']['url']}")
+    for i, step in enumerate(real["steps"], 1):
+        console.print(f"  {i}. {escape(step)}")
+    for cmd in real.get("commands", ()):
+        console.print(f"  [muted]$ {escape(cmd)}[/]")
+    console.print(f"Work in: [path]{real['dir']}/[/]")
+    console.print(f"Done when: {escape(real['done'])}")
+    console.print(f"Check it: [accent]vibe check --artifact {a['id']}[/]")
+
+
+def _list_artifacts(ctx: Ctx) -> None:
+    """The twenty, their island and whether they were built for real."""
+    t = Table(header_style="path", box=None, padding=(0, 1))
+    for col in ("id", "artifact", "island", "task", "built"):
+        t.add_column(col)
+    for a in campaign.artifacts():
+        built = a["id"] in ctx.state.artifacts_built
+        t.add_row(
+            a["id"],
+            a["name"],
+            campaign.WORLD_NAMES[a["world"]],
+            a["real"]["title"],
+            "[done]for real[/]" if built else "[todo]not yet[/]",
+        )
+    console.print(t)
+    console.print(
+        "One artifact: [accent]vibe artifact <id>[/], "
+        "and [accent]vibe artifact <id> --start[/] to set the folder up."
+    )
+
+
+@cli.command()
+@click.argument("artifact_id", required=False)
+@click.option(
+    "--start", is_flag=True, help="scaffold workspace/artifacts/<id>/ for the task"
+)
+@pass_ctx
+def artifact(ctx: Ctx, artifact_id: str | None, start: bool) -> None:
+    """The walkthrough for an artifact, the same one the game shows."""
+    if not artifact_id:
+        _list_artifacts(ctx)
+        return
+    try:
+        a = get_artifact(artifact_id)
+    except ValueError as e:
+        _fail(str(e))
+    if start:
+        written, kept = _scaffold_artifact(a)
+        where = a["real"]["dir"]
+        if written:
+            console.print(f"[ok]{where}/[/]: wrote {', '.join(written)}")
+        for name in kept:
+            console.print(f"[warn]kept your {where}/{name}[/], it was already there")
+        if not a["real"]["check"].get("file"):
+            console.print(
+                f"[muted]{where}/ is ready; this task's files come from the "
+                "commands below, so vibe writes none of them.[/]"
+            )
+    _show_artifact(ctx, a)
 
 
 # ---- scores -------------------------------------------------------------------
@@ -1544,7 +1733,7 @@ def new(directory: str | None, github: str | None, who: str | None) -> None:
     "--from",
     "source",
     default=None,
-    help="a product checkout to copy from (default: this one)",
+    help="a product checkout to copy from (default: the source vibe carries)",
 )
 @click.option("--force", is_flag=True, help="replace an existing fork")
 @pass_ctx
@@ -1554,19 +1743,15 @@ def fork(ctx: Ctx, source: str | None, force: bool) -> None:
     The fork carries src/ (with its own src/config/), tools/build.py and the
     generated inputs the build needs, so `just build` there produces your own
     game file. Its journey configuration is still the camp's config/camp.toml.
+    No clone and no network: an installed vibe ships the source it copies.
     """
-    src_root = Path(source).expanduser().resolve() if source else ROOT
-    if not (src_root / "src" / "config").is_dir():
-        _fail(
-            f"{src_root} is not a product checkout (no src/config). "
-            "Clone https://github.com/tpetedb/vibe-map and pass it with --from."
-        )
     dest = quests.fork_dir()
     if dest.exists() and any(dest.iterdir()) and not force:
         _fail(f"{dest} exists; pass --force to replace it")
-    if dest.exists():
-        shutil.rmtree(dest)
-    n = _copy_fork(src_root, dest)
+    with _fork_source(source) as src_root:
+        if dest.exists():
+            shutil.rmtree(dest)
+        n = _copy_fork(src_root, dest)
     console.print(f"[ok]{n} files[/] into [path]{dest}[/]")
     console.print(
         "Next:\n"
@@ -1687,6 +1872,49 @@ Each one is checked; `vibe check --fork <challenge>` runs one of them, and
 """
 
 
+FORK_SOURCE = "fork_source"
+
+
+def _fork_source_label(src_root: Path) -> str:
+    """What the manifest records: a checkout by path, the package by version.
+
+    The packaged source unpacks to a path nobody can visit twice, so naming the
+    release is the only line that stays true.
+    """
+    if src_root.name == FORK_SOURCE:
+        return f"vibe-map {__version__} (packaged source)"
+    return str(src_root)
+
+
+@contextmanager
+def _fork_source(source: str | None) -> Iterator[Path]:
+    """Where the fork is copied from: --from, this checkout, else the package.
+
+    An installed `vibe` carries the game's source under vibemap/data, so a camp
+    from `vibe new` can fork offline; a product checkout forks from its own src/
+    so a maintainer always sees the working tree.
+    """
+    if source:
+        given = Path(source).expanduser().resolve()
+        if not (given / "src" / "config").is_dir():
+            _fail(
+                f"{given} is not a product checkout (no src/config). "
+                "Clone https://github.com/tpetedb/vibe-map and pass it with --from."
+            )
+        yield given
+        return
+    if (ROOT / "src" / "config").is_dir():
+        yield ROOT
+        return
+    with project.data_dir(FORK_SOURCE) as packaged:
+        if not (Path(packaged) / "src" / "config").is_dir():
+            _fail(
+                "this copy of vibe carries no game source. Clone "
+                "https://github.com/tpetedb/vibe-map and pass it with --from."
+            )
+        yield Path(packaged)
+
+
 def _copy_fork(src_root: Path, dest: Path) -> int:
     """Write the fork: src/, the build tool, the generated inputs, the tasks."""
     dest.mkdir(parents=True, exist_ok=True)
@@ -1711,7 +1939,7 @@ def _copy_fork(src_root: Path, dest: Path) -> int:
         json.dumps(
             {
                 "version": quests.FORK_VERSION,
-                "source": str(src_root),
+                "source": _fork_source_label(src_root),
                 "created": date.today().isoformat(),
                 "config_sha256": quests.config_fingerprint(dest / "src" / "config"),
             },

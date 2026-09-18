@@ -65,6 +65,8 @@ SOFT_STATUSES = {401, 403, 405, 429, 999}
 # Copied in verbatim from elsewhere; their comments are not our prose.
 VENDORED = (
     "src/vendor/",
+    # A synced mirror of src/ and tools/build.py; checked at the original.
+    "vibemap/data/fork_source/",
     "vibemap/data/dotfiles/",
     ".agents/skills/webapp-testing/",
     ".agents/skills/verification-before-completion/",

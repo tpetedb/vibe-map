@@ -12,12 +12,15 @@ A learner should start in an empty folder that is theirs and build up from there
 flowchart LR
   P["Product (this repository)<br/>src/, vibemap/, tools/, tests/"]:::proc
   T[("Template<br/>vibemap/data/template/")]:::store
+  F[("Fork source<br/>vibemap/data/fork_source/")]:::store
   C["A camp (a learner's folder)<br/>workspace/, vault/, config/camp.toml, .agents/, .claude/"]:::term
   H["Hosted game<br/>tpetedb.github.io/vibe-map"]:::io
   I["Installed vibe command<br/>uv tool install vibe-map"]:::io
   P -->|"just build, release"| H
   P -->|"tag, uv tool install"| I
   P -->|"tools/sync_template.py"| T
+  P -->|"tools/sync_fork_source.py"| F
+  F -->|"vibe fork copies"| C
   I -->|"vibe new copies"| C
   H -->|"progress code"| C
   classDef term fill:#00A86B,stroke:#00D084,color:#000000
@@ -45,6 +48,7 @@ flowchart LR
 | `vibemap/artifact_checks.py` (a check kind, one function per kind, named from the `real` block) | `just verify` (`tests/test_artifact_tasks.py`), PR, release, tag | `uv tool install`, as any CLI change |
 | a mentor encounter: the `encounter` dialogue and exercise in `vibemap/data/campaign.json`, plus `mentor_quest` in `vibemap/quests.py` | `just build`, `just verify`; every dialogue line needs its source index | the hosted game for the dialogue and the plaque, `uv tool install` for `vibe check --mentor <id>` |
 | `src/config/00-config.js` alone (world scale, island radius, palette) | `just build`; a learner's fork has its own copy, so nothing in `tools/build.py` may assume the product's path | the hosted game, and a fork after `just build` there |
+| `src/`, `src/vendor/`, `tools/build.py` or `tools/generated/` | `uv run python tools/sync_fork_source.py`, then `just verify`; the mirror in `vibemap/data/fork_source/` is what an installed `vibe fork` copies into a camp, and a test fails when it drifts | `uv tool install`, then `vibe fork` in any camp |
 | `.agents/skills/`, `.claude/settings.json`, `.claude/agents/scorekeeper.md` | `uv run python tools/sync_template.py`, then `just verify` | `vibe new` on the next install; existing camps copy what they want |
 | `vibemap/data/template/` (README, AGENTS, justfile, config/camp.toml, pages.yml) | edit in place, `just verify` (`tests/test_onboarding.py` runs `vibe new` into a temp folder) | `vibe new` on the next install |
 | `workspace/` in this repository | nothing else; it is the worked example | never; each camp has its own |

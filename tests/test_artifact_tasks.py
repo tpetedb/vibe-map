@@ -195,7 +195,7 @@ def test_vibe_check_artifact_claims_and_reaches_the_vault(tmp_path: Path) -> Non
     assert made.exit_code == 0, made.output
 
     out = _run(camp, "check", "--artifact", "fountain")
-    assert out.returncode == 0, out.stdout + out.stderr
+    assert out.returncode == 1, out.stdout + out.stderr
     assert "does not exist" in out.stdout
 
     here = camp / "workspace" / "artifacts" / "fountain"
@@ -252,3 +252,76 @@ def test_the_progress_code_carries_what_was_built_for_real() -> None:
     old = State()
     old.merge_code(code)
     assert old.artifacts == ["well"] and old.artifacts_built == []
+
+
+# ---- the terminal route to the walkthrough -------------------------------------
+
+
+def test_vibe_artifact_lists_the_twenty_and_refuses_an_unknown_id(
+    tmp_path: Path,
+) -> None:
+    from click.testing import CliRunner
+
+    from vibemap.cli import cli
+
+    camp = tmp_path / "camp"
+    assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Tom"]).exit_code == 0
+    out = _run(camp, "artifact")
+    assert out.returncode == 0, out.stdout + out.stderr
+    for a in campaign.artifacts():
+        assert a["id"] in out.stdout
+    assert "not yet" in out.stdout
+    unknown = _run(camp, "artifact", "nowhere")
+    assert unknown.returncode == 1 and "unknown artifact" in unknown.stdout
+
+
+def test_vibe_artifact_prints_the_walkthrough_the_game_shows(tmp_path: Path) -> None:
+    from click.testing import CliRunner
+
+    from vibemap.cli import cli
+
+    camp = tmp_path / "camp"
+    assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Tom"]).exit_code == 0
+    out = _run(camp, "artifact", "cafe")
+    assert out.returncode == 0, out.stdout + out.stderr
+    real = get_artifact("cafe")["real"]
+    assert real["title"] in out.stdout and real["doc"]["url"] in out.stdout
+    assert real["done"] in out.stdout
+    assert "vibe check --artifact cafe" in out.stdout
+    for step in real["steps"]:
+        # The table wraps, so the first words of every step are the evidence.
+        assert " ".join(step.split()[:4]) in " ".join(out.stdout.split())
+
+
+def test_vibe_artifact_start_scaffolds_honest_stubs(tmp_path: Path) -> None:
+    from click.testing import CliRunner
+
+    from vibemap.cli import cli
+
+    camp = tmp_path / "camp"
+    assert CliRunner().invoke(cli, ["new", str(camp), "--name", "Tom"]).exit_code == 0
+    out = _run(camp, "artifact", "cafe", "--start")
+    assert out.returncode == 0, out.stdout + out.stderr
+    here = camp / "workspace" / "artifacts" / "cafe"
+    assert (here / "cafe.py").exists() and (here / "notes.md").exists()
+    assert "TODO" in (here / "cafe.py").read_text(encoding="utf-8")
+    # A stub is a starting point, never a pass.
+    assert _run(camp, "check", "--artifact", "cafe").returncode == 1
+    # The learner's own work is never overwritten.
+    (here / "cafe.py").write_text("mine\n", encoding="utf-8")
+    again = _run(camp, "artifact", "cafe", "--start")
+    assert "kept your" in again.stdout
+    assert (here / "cafe.py").read_text(encoding="utf-8") == "mine\n"
+
+
+def test_every_scaffolded_artifact_starts_red(tmp_path: Path, monkeypatch) -> None:
+    from vibemap import artifact_checks
+    from vibemap.cli import _scaffold_artifact
+    from vibemap.quests import run_quest
+
+    monkeypatch.setattr(artifact_checks, "ARTIFACTS_DIR", tmp_path)
+    cfg = Config.model_validate({"learner": {"difficulty": "god"}})
+    for aid in artifact_ids():
+        _scaffold_artifact(get_artifact(aid))
+        results = run_quest(artifact_quest(aid, cfg), cfg)
+        assert not all(r.ok for r in results), aid

@@ -78,16 +78,20 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    The islands hold two more kinds of work, and both are checked the same way. An artifact's sheet has a "Do it for real" task written from the official documentation of the thing; you build it in `workspace/artifacts/<id>/`. A mentor sets one exercise of under fifteen minutes; it goes in `workspace/mentors/<id>/` and a verified encounter raises a plaque on their spot.
 
    ```bash
+   vibe artifact cafe           # the walkthrough, the same one the game shows
+   vibe artifact cafe --start   # writes workspace/artifacts/cafe/ with honest stubs
    vibe check --artifact cafe   # or --artifact all
    vibe check --mentor cherny   # or --mentor all
    ```
 
    The artifact checks look at what you built and run it. One that needs a tool you do not have (Docker, for instance) says so with the install command instead of failing.
 
+   `vibe check` exits 0 when every check passed and 1 when one failed, so you can put it in a hook or a workflow. `--no-claim` changes what is recorded, never the exit code.
+
 6. Take the game apart, on the production island.
 
    ```bash
-   vibe fork                     # your own copy in workspace/forks/vibe-map/
+   vibe fork                     # your own copy in workspace/forks/vibe-map/, no clone needed
    cd workspace/forks/vibe-map
    just build                    # your own game/vibe-map.html
    cd -
@@ -165,6 +169,7 @@ This path is not a camp. It clones the product: the game's source, the CLI's cod
 | camp | `vibe new`, `vibe init` | `.vibe/state.json`, `vault/` |
 | camp | `vibe persona`, `vibe theme`, `vibe provider` | `config/camp.toml` |
 | camp | `vibe done N` | `vault/Camp/<workstream>.md`, `vault/Camp/Tonight.md` |
+| camp | `vibe artifact <id> --start` | `workspace/artifacts/<id>/` with a stub for the file the task names and `notes.md` |
 | camp | `vibe check --artifact <id>` | `workspace/artifacts/<id>/` is read; the XP and the "built for real" line land in `.vibe/state.json` and the Artifacts note |
 | camp | `vibe check --mentor <id>` | `workspace/mentors/<id>/` is read; the plaque, the badge and the mentor's vault note follow |
 | camp | `vibe fork` | `workspace/forks/vibe-map/` with its own `src/config/`, `justfile` and `fork.json` |
