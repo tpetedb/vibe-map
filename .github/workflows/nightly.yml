@@ -52,6 +52,23 @@ jobs:
       - name: vibe new, the checks that refuse, the checks that pass, the code
         run: python3 tools/fresh_camp.py
 
+  # The registry is only as good as the feeds in it. This is the one job that
+  # is allowed to reach the open internet; a source that stops answering is a
+  # red night, which is a bug report against vibemap/data/sources.json.
+  feeds-alive:
+    name: every registered feed answers and parses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - run: uv sync --frozen
+      - run: uv run pytest -m integration tests/test_news.py
+
   # The one job left on macOS, and it runs on a release tag only. The product
   # is written for a MacBook, so a tag says the installed command still makes a
   # camp on the machine a learner actually has. Five macOS jobs at once is the
@@ -81,7 +98,7 @@ jobs:
         run: python3 tools/fresh_camp.py
       # A test that is genuinely macOS-only carries the `macos` marker and
       # skips itself everywhere else, so this job is the only place it runs.
-      # There are none today; the step stays so the next one has a home.
+      # There are none today, and exit code 5 is pytest for "nothing selected".
       - run: uv sync --frozen
       - run: uv run pytest -m macos || test $? -eq 5
 
