@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>LWN.net</title>
+        <link>https://lwn.net</link>
+        <description> LWN.net is a comprehensive source of news and opinions from
+        and about the Linux community.  This is the main LWN.net feed,
+        listing all articles which are posted to the site front page.
+</description>
+        <language>en-us</language>
+        <pubDate>Fri, 18 Sep 2026 12:58:43 +0000</pubDate>
+        <lastBuildDate>Fri, 18 Sep 2026 12:58:43 +0000</lastBuildDate>
+        <docs>https://www.rssboard.org/rss-specification</docs>
+        <webMaster>lwn@lwn.net</webMaster>
+        <ns0:link href="https://lwn.net/headlines/rss2" rel="self" type="application/rss+xml" />
+    <item>
+        <title>Systemtap 5.6 released</title>
+        <link>https://lwn.net/Articles/1095220/</link>
+        <guid>https://lwn.net/Articles/1095220/</guid>
+        <dc:creator>corbet</dc:creator>
+        <description>Version 5.6 of the Systemtap tracing tool has been released.
+&lt;p&gt;
+&lt;blockquote class="bq"&gt;
+	BPF LSM hooks and XDP packet-processing probes for the --bpf
+	runtime, BTF-based kernel.tracepoint probes, statement execution
+	tracing, a new @enumname() operator, richer runtime error context,
+	dyninst hardware watchpoints, modern systemd service templates, and
+	broad Linux 7.2 runtime/tapset compatibility work.  Multithreaded
+	speedups throughout.
+&lt;/blockquote&gt;
+</description>
+        <pubDate>Fri, 18 Sep 2026 12:58:42 +0000</pubDate>
+        </item>
+        <item>
+        <title>Security updates for Friday</title>
+        <link>https://lwn.net/Articles/1095219/</link>
+        <guid>https://lwn.net/Articles/1095219/</guid>
+        <dc:creator>corbet</dc:creator>
+        <description>Security updates have been issued by &lt;b&gt;AlmaLinux&lt;/b&gt; (.NET 10.0, coreutils, kernel, libevent, libsoup3, microcode_ctl, perl-Net-DNS, postgresql18, postgresql:16, postgresql:18, tomcat, and unbound), &lt;b&gt;Debian&lt;/b&gt; (bind9, chromium, libapache2-mod-auth-openidc, nginx, xz-utils, and zip), &lt;b&gt;Fedora&lt;/b&gt; (chromium, freeipmi, GitPython, gnatcoll, nodejs-undici, parted, python-django5, and sblim-cmpi-base), &lt;b&gt;Mageia&lt;/b&gt; (imagemagick and python-starlette), &lt;b&gt;Oracle&lt;/b&gt; (.NET 10.0, .NET 8.0, .NET 9.0, coreutils, corosync, firewalld, kernel, libevent, libsoup, microcode_ctl, nginx:1.24, perl, perl:5.</description>
+        <pubDate>Fri, 18 Sep 2026 12:52:10 +0000</pubDate>
+        </item>
+        </channel>
+</rss>

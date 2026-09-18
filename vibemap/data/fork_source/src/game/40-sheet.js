@@ -1,12 +1,33 @@
 window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length===8?"fin":"walk")};
-// The News card shows NEWS, embedded at build time from data/news.json
-// (vibe news writes it; the weekly action rebuilds and commits the game).
+// The world feed: real organisations, projects and people by name, each line
+// their own headline and their own words with the link next to it. Never a
+// logo, never a sentence written for them (docs/adr/0010). NEWS is baked in at
+// build time from data/news.json; the version travels with it so a file of a
+// shape this build does not know is refused rather than half read.
+const NEWS_VERSION=2;
+let newsData=(typeof NEWS==="object"&&NEWS&&NEWS.version===NEWS_VERSION)?NEWS:{fetched_at:"",items:[]};
 let newsLoaded=false;
-function loadNews(){if(newsLoaded)return;newsLoaded=true;const msg=$("newsmsg"),list=$("newslist");if(!msg)return;
-  const items=(NEWS.items||[]).slice(0,12);
-  if(!items.length){msg.textContent="No news yet. Run uv run vibe news, then just build; a forked repo does it every Monday.";return}
-  msg.textContent="Pulled "+(NEWS.fetched_at||"").slice(0,10)+" from the feeds in config/camp.toml; the vault note News has the whole list.";
-  list.innerHTML=items.map(i=>`<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.source}</span></span><span class="st">${(i.date||"").slice(0,10)}</span></div>`).join("")}
+// The one place that answers "does anything from the feed appear": the
+// Settings dropdown wins, config/camp.toml [news] live is the default.
+function liveNews(){const v=(typeof settings==="function"?settings().live:"config");
+  if(v==="off")return false;if(v==="on")return true;return !(CONFIG.news&&CONFIG.news.live===false)}
+function newsRow(i){const tag=i.kind==="release"?"release":"";
+  return `<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.name}${tag?" · "+tag:""}</span>${i.summary?`<br><span class="muted small">${i.summary}</span>`:""}</span><span class="st">${(i.date||"").slice(0,10)}</span></div>`}
+function renderNews(){const msg=$("newsmsg"),list=$("newslist");if(!msg||!liveNews())return;
+  const items=(newsData.items||[]).slice(0,12);
+  if(!items.length){msg.textContent="Nothing pulled yet. Run uv run vibe news, then just build; a forked repo does it every day.";list.innerHTML="";return}
+  msg.textContent="Pulled "+(newsData.fetched_at||"").slice(0,10)+" from the sources in vibemap/data/sources.json. Unofficial, not affiliated; every line links to the publisher.";
+  list.innerHTML=items.map(newsRow).join("")}
+// Same origin only: ./news.json sits next to the page the Pages workflow
+// publishes, never a third party feed read from the browser. A file:// game
+// has no origin to ask, and a camp may host the page without the file, so a
+// failure leaves the baked copy in place and says nothing.
+function refreshNews(){if(!liveNews()||location.protocol==="file:")return;
+  fetch("./news.json?t="+Date.now(),{cache:"no-store"})
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{if(!d||d.version!==NEWS_VERSION||!Array.isArray(d.items))return;newsData=d;renderNews()})
+    .catch(()=>{})}
+function loadNews(){renderNews();if(newsLoaded)return;newsLoaded=true;refreshNews()}
 // How long a screen stayed open is the one thing the dashboard cannot derive
 // afterwards, so the panel that opens is remembered and closing records it.
 let sheetOpen=null;

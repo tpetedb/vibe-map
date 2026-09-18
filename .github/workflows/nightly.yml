@@ -44,6 +44,21 @@ jobs:
       - name: vibe new, the checks that refuse, the checks that pass, the code
         run: python3 tools/fresh_camp.py
 
+  # The registry is only as good as the feeds in it. This is the one job that
+  # is allowed to reach the open internet; a source that stops answering is a
+  # red night, which is a bug report against vibemap/data/sources.json.
+  feeds-alive:
+    name: every registered feed answers and parses
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv sync --frozen
+      - run: uv run pytest -m integration tests/test_news.py
+
   playthrough:
     name: every island, every stop, every mentor, the finale
     runs-on: macos-latest
