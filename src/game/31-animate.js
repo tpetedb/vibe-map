@@ -1,3 +1,12 @@
+// Where the frame is centred on one axis. On the island the follow is partial
+// and capped at CAM.drift, which is the allowance camFitDist() frames on top
+// of the island's radius, so nothing clips wherever the walker stands. Past
+// the shore, on an annex or a bridge, the frame is about the walker and not
+// the island any more, so it follows them one for one.
+function camCentre(v){const c=Math.max(-CAM.drift,Math.min(CAM.drift,v*CAM.follow));
+  const over=Math.abs(v)-W.land[0][2];
+  return over<=0?c:c+Math.sign(v)*over}
+const camLook=new T.Vector3(),camAim=new T.Vector3();let camFitLast=0;
 function animate(){
   requestAnimationFrame(animate);if(!scene)return;const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
   // Fast travel owns the camera and the frame while it lasts; the walker and
@@ -27,7 +36,10 @@ function animate(){
   if(L.jv!==0||L.jy>0){L.jv-=22*dt;L.jy=Math.max(0,L.jy+L.jv*dt);if(L.jy===0)L.jv=0}
   // dust when walking
   if(walking&&L.jy===0&&Math.random()<dt*14){const m=new T.Mesh(new T.SphereGeometry(.09,5,5),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
-  if(props.shadow){props.shadow.position.set(pos.x,.02,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
+  if(props.shadow){props.shadow.position.set(pos.x,.05,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
+  // The ring under the walker: three figures of the same size stand on this
+  // island, and this is the one you steer.
+  if(props.you){props.you.position.set(pos.x,.07,pos.z);props.you.material.opacity=started?.45+Math.sin(t*2.4)*.18:0}
   tickAvatar(dt,t,sp);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
@@ -35,13 +47,24 @@ function animate(){
   if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*.05}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
   marker.material.opacity*=.985;marker.rotation.z+=dt*2;
-  // camera: a slow orbit of the island behind the title, then it follows.
-  // Height and offset scale with the world; the follow is partial (.7 of the
-  // walker's position) so the island centre stays in frame from an annex.
-  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*36*WS,20*WS,Math.cos(oa)*36*WS),.04);camera.lookAt(0,-1,0)}
-  else{const asp=$("stage").clientWidth/$("stage").clientHeight;const port=Math.min(1.5,Math.max(1,1.15/asp));const lv=chars.lotte.vel||new T.Vector3();const cp=new T.Vector3(pos.x*.7+lv.x*.4,16*port*WS,pos.z*.7+18*port*WS+lv.z*.4);camera.position.lerp(cp,.06);const lk=new T.Vector3(pos.x*.8,.8,pos.z*.8-WS);camera.lookAt(lk)}
-  // water
-  const a=wGeo.attributes.position.array;for(let i=0;i<a.length;i+=3){a[i+1]=Math.sin(wBase[i]*.35+t*1.3)*.16+Math.cos(wBase[i+2]*.3+t*1.1)*.16}wGeo.attributes.position.needsUpdate=true;wGeo.computeVertexNormals();
+  // camera: a slow orbit of the island behind the title, then it follows. The
+  // distance is whatever frames the island at this viewport's aspect ratio
+  // (camFitDist), the follow takes only part of the walker's position and is
+  // capped, so the island never leaves the frame, and the look-ahead runs a
+  // little in front of the walk. The easing is in time, not in frames.
+  // A new fit is a new window, not movement in the world: resizing, going full
+  // screen, changing the map size or arriving on a wider island reframes at
+  // once. Only the walk is eased, so the frame never drifts for a second after
+  // the window has stopped changing.
+  const fit=camFitDist(),reframed=Math.abs(fit-camFitLast)>.01;camFitLast=fit;
+  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*fit*.86,fit*.52,Math.cos(oa)*fit*.86),.04);camera.lookAt(0,-1,0)}
+  else{const lv=chars.lotte.vel||new T.Vector3();
+    const fx=camCentre(pos.x)+lv.x*CAM.ahead,fz=camCentre(pos.z)+lv.z*CAM.ahead;
+    const k=reframed||reducedMotion()?1:Math.min(1,1-Math.exp(-CAM.ease*dt));
+    camera.position.lerp(camAim.set(fx,Math.sin(CAM.pitch)*fit,fz+Math.cos(CAM.pitch)*fit),k);
+    camLook.lerp(camAim.set(fx,.8,fz-WS),k);camera.lookAt(camLook)}
+  // water: the surface moves on the GPU, so the frame only advances its clock
+  if(water.material.userData.u)water.material.userData.u.uTime.value=reducedMotion()?0:t;
   clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>50*WS)c.position.x=-50*WS});
   // props
   const P=props;if(P.boat){P.boat.rotation.z=Math.sin(t*1.3)*.06;P.boat.rotation.x=Math.sin(t*.9)*.04;P.boat.position.y=-1.35+Math.sin(t*1.5)*.08}
@@ -59,7 +82,8 @@ function animate(){
   if(P.embers){const a=P.embers.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]+=dt*(1.5+(i%5)*.3);a[i-1]+=Math.sin(t*2+i)*dt*.8;if(a[i]>16)a[i]=6}P.embers.geometry.attributes.position.needsUpdate=true}
   if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.35+Math.sin(t*.7)*.1:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
   if(P.volcano)P.volcano.userData.smoke.forEach(m=>{const u=(t*.25+m.userData.o*.125)%1;m.position.set(Math.sin(u*6+m.userData.o)*u*2,7.5+u*7,Math.cos(u*5)*u*2);m.scale.setScalar(.5+u*2);m.material.opacity=.55*(1-u)});
-  if(P.lamps)P.lamps.forEach((l,i)=>{l.material.emissiveIntensity=skyN>=3?1.2+Math.sin(t*3+i)*.3:0});
+  // Every path lamp shares one material, so the whole path lights at once.
+  if(P.lamps)P.lamps.emissiveIntensity=skyN>=3?1.4+Math.sin(t*3)*.3:0;
   // Every bridge lamp shares one material, so the whole deck lights at once.
   if(P.bridgeLamps)P.bridgeLamps.emissiveIntensity=skyN>=3?1.4+Math.sin(t*2)*.3:0;
   // plots pulse & buildings
@@ -73,11 +97,20 @@ function animate(){
     if(g.userData.gear)g.userData.gear.rotation.z+=dt*1.5;
     if(g.userData.smoke)g.userData.smoke.forEach(m=>{const u=(t*.4+m.userData.o*.2)%1;m.position.y=3.6+u*3;m.scale.setScalar(.6+u*1.2);m.material.opacity=.6*(1-u)})}
   parts.forEach((m,i)=>{m.userData.life-=dt;m.position.addScaledVector(m.userData.v,dt);m.userData.v.y-=(m.userData.dust?4:9)*dt;if(m.userData.dust)m.material.opacity=Math.max(0,m.userData.life*1.4);m.rotation.x+=dt*4;m.rotation.y+=dt*3;if(m.userData.life<=0){scene.remove(m);parts.splice(i,1)}});
-  // sky
+  // sky: the ramp, the fog and the whole light rig move with the stage index
   if(skyT<1){skyT=Math.min(1,skyT+dt*.5);const c=skyFrom.clone().lerp(skyTo,skyT);scene.background=c;scene.fog.color.copy(c)}
-  const n=skyN;const day=Math.max(0,1-n/4);dirL.intensity=.2+day*.95;hemiL.intensity=.12+day*.6;ambL.intensity=.04+day*.12;stars.material.opacity=Math.max(0,(n-3)/3);
-  sunM.position.set((-30+n*14)*WS,(26-n*6)*WS,-50*WS);sunM.visible=n<4;moonM.position.set(30*WS,26*WS,-50*WS);moonM.visible=n>=4;
-  builds.inn.userData.light.intensity=n>=3?1.6:0;
+  tickRig(Math.min(1,dt*2.2));
+  // The dome is centred on the camera so the ramp holds over the whole
+  // archipelago, not just over the island it was built around.
+  if(props.sky)props.sky.position.set(camera.position.x,0,camera.position.z);
+  stars.material.opacity=Math.max(0,(skyN-3)/3);
+  const night=skyN>=3;
+  builds.inn.userData.light.intensity=night?1.6:0;
+  // Lit windows and lava: the evening is what makes them worth drawing.
+  for(const k in builds){const lit=builds[k].userData.lit;
+    if(lit)lit.material.emissiveIntensity=night?.85+Math.sin(t*1.3+k.length)*.12:0}
+  if(props.lava)props.lava.emissiveIntensity=.95+Math.sin(t*1.1)*.28;
+  tickPlates(pos);
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
     // The inn radius reaches over its terrace, so the last walk back ends at

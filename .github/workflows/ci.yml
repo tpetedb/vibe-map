@@ -92,7 +92,7 @@ jobs:
           - shard: bridges
             files: >-
               tests/test_game_bridges.py tests/test_game_news.py
-              tests/test_dashboard.py
+              tests/test_dashboard.py tests/test_game_graphics.py
           - shard: panels
             files: >-
               tests/test_game_chat.py tests/test_game_avatar.py

@@ -74,6 +74,9 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
+  // After dark the screen is what lights the face, which is the joke. A light
+  // costs no draw call, and the lid hides it from everything behind.
+  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
@@ -81,14 +84,7 @@ function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c
 /* ---------------- wearables ---------------- */
 // One per slot, unlocked by an achievement. The mesh is built from the same
 // boxes as the walker, in the palette, so a hat reads at a glance from above.
-const WEAR=[
-  {id:"cap",slot:"head",name:"Field cap",by:"first-sit"},
-  {id:"beanie",slot:"head",name:"Wool beanie",by:"ten-items"},
-  {id:"shades",slot:"face",name:"Dark glasses",by:"first-light"},
-  {id:"jacket",slot:"body",name:"Field jacket",by:"island-items"},
-  {id:"backpack",slot:"back",name:"Backpack",by:"collector"},
-  {id:"lanyard",slot:"neck",name:"Conference lanyard",by:"mentor-verified"},
-];
+const WEAR=ITEMS.wearables;
 function wearOwned(id){const w=WEAR.find(x=>x.id===id);return !!w&&sl("ach").includes(w.by)}
 function wearMesh(id){const g=new T.Group();
   if(id==="cap"){g.add(box(.86,.18,.86,PALETTE.blue,0,2.54,0));g.add(box(.52,.06,.36,PALETTE.blue,0,2.48,.5))}
@@ -139,7 +135,12 @@ function achCheck(){ACH.forEach(a=>{if(a.when()&&!sl("ach").includes(a.id))unloc
 /* ---------------- toast ---------------- */
 // One stack, created on demand so the page keeps its markup. A toast is a
 // message, never state: it says what just happened and goes away.
+// The count is what a test waits for: a toast removes itself after a few
+// seconds, so looking for the element is a race on a loaded machine.
+let toastN=0;
+window.__toasts=()=>toastN;
 function toast(title,body){
+  toastN++;
   let el=$("toast");
   if(!el){el=document.createElement("div");el.id="toast";el.setAttribute("aria-live","polite");document.body.appendChild(el)}
   const n=document.createElement("div");n.className="tst";

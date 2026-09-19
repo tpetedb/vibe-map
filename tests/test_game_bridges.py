@@ -150,7 +150,12 @@ def test_the_minimap_maps_the_archipelago(opened: GamePage) -> None:
     assert info["bridges"] == 3, info
     assert info["phone"] is True and info["open"] is False, info
     opened.page.click("#minimap-btn")
-    opened.frames()
+    # The map is painted on its own throttle, so the wait is for a paint that
+    # happened, not for a count of frames.
+    before = opened.page.evaluate("window.__minimap().painted")
+    opened.page.wait_for_function(
+        "n => window.__minimap().painted > n", arg=before, timeout=WAIT_MS
+    )
     assert opened.page.evaluate("window.__minimap()")["open"] is True
     box = opened.page.locator("#minimap").bounding_box()
     assert box and box["width"] > 40 and box["height"] > 40, box
