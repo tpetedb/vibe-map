@@ -67,21 +67,34 @@ def today() -> str:
 
 
 DATED = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-# The bullet a workstream note carries until the stop is actually done.
+# The bullets a workstream note carries before the learner has written in it.
+# STUB_BULLET is what older notes hold; a fresh one names its own stop.
 STUB_BULLET = "not done yet; run `vibe check` when it is"
+STUB_RE = re.compile(r"^not done yet; run `vibe check [^`]+` when it is$")
+IMPORTED_RE = re.compile(r"^done in the game, imported")
+
+
+def stub_bullet(world: str, n: int) -> str:
+    """The stub of one stop, naming the command that checks that stop."""
+    where = "" if world == "campus" else f"-w {world} "
+    return f"not done yet; run `vibe check {where}{n}` when it is"
+
+
 # Everything vibe itself writes into a workstream note. A note check ignores
 # these lines, so a stop is never green on the strength of generated text.
 GENERATED_BULLETS = (
     STUB_BULLET,
-    "done in the game, imported with `vibe import`",
     "verified by vibe check",
     "built it",
     "checked again",
 )
 GENERATED_PATTERNS = (
     re.compile(r"^done at \d{1,2}:\d{2}$"),
+    STUB_RE,
+    IMPORTED_RE,
     re.compile(r"^checks: "),
-    re.compile(r"^links: "),
+    # Only the line vibe writes itself; the learner's own links line is theirs.
+    re.compile(r"^links: \[\[Tonight\]\], \[\[Map\]\]$"),
     re.compile(r"^.{1,20}, \[\[[^\]]+\]\]\. Outcome: "),
 )
 
@@ -166,8 +179,14 @@ class LintReport:
         """Wikilinks the learner wrote: a generated note contributes none."""
         return self._own_links
 
+    @property
+    def own_notes(self) -> int:
+        """Notes the learner wrote in: a template vault of stubs counts none."""
+        return self._own_notes
+
     _links: int = 0
     _own_links: int = 0
+    _own_notes: int = 0
 
 
 class Vault:
@@ -651,15 +670,18 @@ class Vault:
         logged = {(e.world, e.n): e for e in self.state.log}
         for world, ev in evs.items():
             for ws in ev.workstreams:
-                if self.exists(ws.name):
-                    continue
                 e = logged.get((world, ws.n))
+                done = bool(e) or self.state.is_done(world, ws.n)
+                # An existing note is the learner's, except while it still only
+                # says the stop is not done: a stop done since then says so.
+                if self.exists(ws.name) and not (done and self._stubbed(ws.name)):
+                    continue
                 if e:
                     bullets = [f"done at {e.at[11:16]}", e.note or "built it"]
-                elif self.state.is_done(world, ws.n):
+                elif done:
                     bullets = ["done in the game, imported with `vibe import`"]
                 else:
-                    bullets = ["not done yet; run `vibe check` when it is"]
+                    bullets = [stub_bullet(world, ws.n)]
                 out.append(
                     self.upsert_dated(
                         ws.name,
@@ -670,6 +692,12 @@ class Vault:
                     )
                 )
         return out
+
+    def _stubbed(self, title: str) -> bool:
+        """The note says the stop is not done and holds nothing else of its own."""
+        text = self.path(title).read_text(encoding="utf-8")
+        _, sep, rest = text.partition("\n## ")
+        return bool(sep) and any(_is_stub_section(s) for s in _sections(sep + rest))
 
     def _write_ignore_filters(self, cfg_dir: Path) -> None:
         """Grow mode hides the library from the graph, search and completion."""
@@ -730,6 +758,7 @@ class Vault:
         report = LintReport(notes=len(notes))
         links = 0
         own_links = 0
+        own_notes = 0
         for p in notes:
             text = p.read_text(encoding="utf-8")
             if not text.startswith("---\n"):
@@ -737,7 +766,10 @@ class Vault:
             # Links inside code are examples, not links (Obsidian agrees).
             prose = re.sub(r"```.*?```", "", text, flags=re.S)
             prose = re.sub(r"`[^`\n]*`", "", prose)
-            own_links += _own_links_in(p, prose)
+            own = _own_lines(p, prose)
+            own_links += sum(len(WIKILINK.findall(line)) for line in own)
+            if sum(len(line.split()) for line in own) >= OWN_WORDS_IN_A_NOTE:
+                own_notes += 1
             for target in WIKILINK.findall(prose):
                 target = target.strip()
                 if not target:
@@ -750,27 +782,28 @@ class Vault:
                     report.dead_links.append((p.stem, target))
         report._links = links
         report._own_links = own_links
+        report._own_notes = own_notes
         report.orphans = sorted(
             t for t, n in inbound.items() if n == 0 and t != "Tonight"
         )
         return report
 
 
-def _own_links_in(p: Path, prose: str) -> int:
-    """How many wikilinks in this note the learner wrote.
+# What a note needs from the learner before it is theirs and not the camp's.
+OWN_WORDS_IN_A_NOTE = 20
+
+
+def _own_lines(p: Path, prose: str) -> list[str]:
+    """The lines of this note the learner wrote.
 
     A note vibe generates carries the hash of the body it was given, and it
-    stays vibe's note however it is edited afterwards, so none of its links
-    count. Everywhere else the generated lines (the claim bullets, the campaign
-    sources) are skipped and what is left is the learner's.
+    stays vibe's note however it is edited afterwards, so none of it counts.
+    Everywhere else the generated lines (the stub, the claim bullets, the
+    campaign sources) are skipped and what is left is the learner's.
     """
     if _front_value(p, "generated") is not None:
-        return 0
-    return sum(
-        len(WIKILINK.findall(line))
-        for _, lines in learner_sections(prose)
-        for line in lines
-    )
+        return []
+    return [line for _, lines in learner_sections(prose) for line in lines]
 
 
 def _existing_date(p: Path) -> str | None:
@@ -805,9 +838,15 @@ def _is_stub_section(section: tuple[str, list[str]]) -> bool:
     if not DATED.match(heading):
         return False
     body = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
-    return any(STUB_BULLET in ln for ln in body) and all(
-        STUB_BULLET in ln or ln.lstrip("- ").startswith("links:") for ln in body
+    stub = [ln for ln in body if _is_stub_line(ln)]
+    return bool(stub) and all(
+        ln in stub or ln.lstrip("- ").startswith("links:") for ln in body
     )
+
+
+def _is_stub_line(line: str) -> bool:
+    text = line.strip().lstrip("-").strip()
+    return text == STUB_BULLET or bool(STUB_RE.match(text))
 
 
 def _section(p: Path, heading: str) -> str:

@@ -23,8 +23,8 @@ import json
 import os
 import shutil
 import sys
-import tomllib
 from pathlib import Path
+from string import ascii_letters, digits
 
 
 def _root(argv: list[str] | None = None) -> Path:
@@ -87,13 +87,6 @@ GAME_ORDER = [
 
 def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
-
-
-def _config_modules() -> str:
-    """src/config/*.js: the source configuration, in name order, first."""
-    return "".join(
-        f.read_text(encoding="utf-8") for f in sorted(CONFIG_DIR.glob("*.js"))
-    )
 
 
 def _campaign_js() -> str:
@@ -192,6 +185,8 @@ def _news_js() -> str:
 
 def _version() -> str:
     """The product version: this checkout's pyproject, else the installed package."""
+    import tomllib  # noqa: PLC0415 (3.11+; a fork may be started by an older python)
+
     pyproject = ROOT / "pyproject.toml"
     if pyproject.exists():
         return tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"][
@@ -245,25 +240,164 @@ def _config_js() -> str:
     return "const CONFIG=" + json.dumps(data, ensure_ascii=False) + ";\n"
 
 
+# Every part of the script is a whole unit of JavaScript, so its brackets
+# close inside it. A part whose brackets do not close cannot parse, and the
+# concatenation would hide the fault in whichever part the browser gives up on.
+_CLOSERS = {")": "(", "]": "[", "}": "{"}
+# After these, a slash divides; anywhere else it opens a regular expression.
+_DIVIDE_AFTER = frozenset("_$)]}") | frozenset(ascii_letters + digits)
+
+
+def _js_fault(text: str) -> str | None:
+    """Where this JavaScript stops making sense, or None when it holds up.
+
+    Strings, template literals, comments and regular expressions are skipped,
+    so the scan sees code only. It weighs brackets rather than parsing: that
+    is what catches the truncated or hand-garbled file a build must refuse.
+    """
+    stack: list[tuple[str, int]] = []
+    modes = ["code"]  # "template" while inside a `...`, back to code in ${...}
+    line, i, n, prev = 1, 0, len(text), ""
+    while i < n:
+        c = text[i]
+        if modes[-1] == "template":
+            if c == "\n":
+                line += 1
+            elif c == "\\":
+                i += 1
+            elif c == "`":
+                modes.pop()
+            elif c == "$" and text[i : i + 2] == "${":
+                stack.append(("${", line))
+                modes.append("code")
+                i += 1
+            i += 1
+            continue
+        if c == "\n":
+            line += 1
+            i += 1
+            continue
+        if c.isspace():
+            i += 1
+            continue
+        if c == "/" and text[i : i + 2] == "//":
+            nl = text.find("\n", i)
+            i = n if nl < 0 else nl
+            continue
+        if c == "/" and text[i : i + 2] == "/*":
+            end = text.find("*/", i + 2)
+            if end < 0:
+                return f"line {line}: a block comment is never closed"
+            line += text.count("\n", i, end)
+            i = end + 2
+            continue
+        if c == "/" and prev not in _DIVIDE_AFTER:
+            end = _regex_end(text, i)
+            if end is not None:
+                i = end
+                prev = "/"
+                continue
+        if c in "\"'":
+            end = _string_end(text, i)
+            if end is None:
+                return f"line {line}: a string is never closed"
+            i = end
+            prev = c
+            continue
+        if c == "`":
+            modes.append("template")
+            i += 1
+            prev = "`"
+            continue
+        if c in "([{":
+            stack.append((c, line))
+        elif c in _CLOSERS:
+            if not stack:
+                return f"line {line}: `{c}` closes nothing"
+            opened, at = stack.pop()
+            if opened == "${":
+                if c != "}":
+                    return f"line {line}: `{c}` closes the ${{ of line {at}"
+                modes.pop()
+            elif opened != _CLOSERS[c]:
+                return f"line {line}: `{c}` closes the `{opened}` of line {at}"
+        prev = c
+        i += 1
+    if modes[-1] == "template":
+        return "a template literal is never closed"
+    if stack:
+        opened, at = stack[-1]
+        return f"line {at}: `{opened}` is never closed"
+    return None
+
+
+def _string_end(text: str, i: int) -> int | None:
+    """The index after the quote that closes the string starting at i."""
+    quote, i = text[i], i + 1
+    while i < len(text):
+        c = text[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == quote:
+            return i + 1
+        if c == "\n":
+            return None
+        i += 1
+    return None
+
+
+def _regex_end(text: str, i: int) -> int | None:
+    """The index after the slash closing the regex at i, or None if it is not one.
+
+    A regular expression lives on one line, so a slash whose partner is not on
+    the same line was a division sign after all.
+    """
+    i, in_class = i + 1, False
+    while i < len(text):
+        c = text[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "\n":
+            return None
+        if c == "[":
+            in_class = True
+        elif c == "]":
+            in_class = False
+        elif c == "/" and not in_class:
+            return i + 1
+        i += 1
+    return None
+
+
+def _part(name: str, text: str) -> str:
+    fault = _js_fault(text)
+    if fault:
+        raise SystemExit(f"{name} is not JavaScript the browser can read: {fault}")
+    return text
+
+
 def _game_script() -> str:
     parts = []
     for name in GAME_ORDER:
         if name == "@config":
-            parts.append(_config_js())
-            parts.append(_news_js())
-            parts.append(_config_modules())
+            parts.append(_part("CONFIG", _config_js()))
+            parts.append(_part("NEWS", _news_js()))
+            for f in sorted(CONFIG_DIR.glob("*.js")):
+                parts.append(_part(f"src/config/{f.name}", f.read_text("utf-8")))
         elif name == "@campaign":
-            parts.append(_campaign_js())
+            parts.append(_part("the campaign", _campaign_js()))
         elif name == "@pets":
-            parts.append(_pets_js())
+            parts.append(_part("the pixel pets", _pets_js()))
         elif name == "@items":
-            parts.append(_items_js())
+            parts.append(_part("the items", _items_js()))
         elif name == "@notes":
-            parts.append(_notes_js())
+            parts.append(_part("src/game/50-notes.js", _notes_js()))
         elif name == "@tree":
-            parts.append(_tree_js())
+            parts.append(_part("tools/generated/tree.js", _tree_js()))
         else:
-            parts.append(_read("game/" + name))
+            parts.append(_part("src/game/" + name, _read("game/" + name)))
     return "(function(){\n" + "".join(parts) + "})();\n"
 
 

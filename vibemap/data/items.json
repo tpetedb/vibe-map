@@ -12,6 +12,14 @@
     "scroll": {"model": "roll", "colour": "text"},
     "bubble": {"model": "ico", "colour": "blueBright"}
   },
+  "wearables": [
+    {"id": "cap", "slot": "head", "name": "Field cap", "by": "first-sit"},
+    {"id": "beanie", "slot": "head", "name": "Wool beanie", "by": "ten-items"},
+    {"id": "shades", "slot": "face", "name": "Dark glasses", "by": "first-light"},
+    {"id": "jacket", "slot": "body", "name": "Field jacket", "by": "island-items"},
+    {"id": "backpack", "slot": "back", "name": "Backpack", "by": "collector"},
+    {"id": "lanyard", "slot": "neck", "name": "Conference lanyard", "by": "mentor-verified"}
+  ],
   "items": [
     {"id": "campus-commit", "world": "campus", "kind": "commit", "name": "A commit", "topic": "git", "concept": "A commit is a labelled save point in your work that you can always return to.", "at": {"plot": 1, "d": 2.6, "a": 1.7}},
     {"id": "campus-pr", "world": "campus", "kind": "branch", "name": "A pull request", "topic": "github", "concept": "A pull request is a branch asking to join the main line, with the review attached.", "at": {"plot": 2, "d": 2.6, "a": -1.7}},

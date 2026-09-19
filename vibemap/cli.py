@@ -46,6 +46,7 @@ from vibemap.artifact_checks import (
     artifact_ids,
     artifact_quest,
     get_artifact,
+    note_requirement,
 )
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config, deprecation_note
 from vibemap.interests import (
@@ -195,13 +196,17 @@ def status(ctx: Ctx, as_json: bool) -> None:
         + f" · {len(st.artifacts)}/{len(campaign.artifacts())} artifacts"
         + f" ({len(st.artifacts_built)} built for real)"
         # "Met" is the verified encounter, not a hello on the island.
-        + f"\n{len(st.mentors)}/{len(campaign.mentors())} mentors met "
+        + f"\n{len(st.mentors)}/{len(campaign.mentors())} mentors verified "
         + "(their exercise done and checked)"
         # The avatar, as text: what was picked up on the islands and what the
         # walker is wearing while doing it.
         + f"\n{len(st.items)}/{len(campaign.collectibles())} things collected"
         + f" · {len(st.ach)} achievements"
-        + (f" · wearing {', '.join(st.wear)}" if st.wear else " · wearing nothing yet")
+        + (
+            f" · wearing {', '.join(campaign.wear_label(w) for w in st.wear)}"
+            if st.wear
+            else " · wearing nothing yet"
+        )
         + "\nLearning: "
         + (
             ", ".join(shelf_label(c) for c in cfg.learner.interests)
@@ -408,7 +413,7 @@ def check(
         _exit_code(_check_artifacts(ctx, artifact_id, claim=claim))
     if topic_id:
         _exit_code(_check_topic(ctx, topic_id, claim=claim))
-    if fork_:
+    if fork_ is not None:
         try:
             quest = fork_quest(ctx.cfg, fork_)
         except ValueError as e:
@@ -887,7 +892,11 @@ def _scaffold_mentor(m: dict) -> tuple[list[str], list[str]]:
 def _show_encounter(ctx: Ctx, m: dict) -> None:
     """What this mentor asks of you, and the command that proves it."""
     ex = m["encounter"]["exercise"]
-    met = "[ok]met[/]" if m["id"] in ctx.state.mentors else "[todo]not yet met[/]"
+    met = (
+        "[ok]verified[/]"
+        if m["id"] in ctx.state.mentors
+        else "[todo]not yet verified[/]"
+    )
     console.print(
         f"[title]{m['name']}[/] · [path]{campaign.WORLD_NAMES[m['world']]}[/] · {met}"
     )
@@ -909,7 +918,7 @@ def _list_mentors(ctx: Ctx) -> None:
             m["id"],
             m["name"],
             campaign.WORLD_NAMES[m["world"]],
-            "[done]verified[/]" if done else "[todo]not yet[/]",
+            "[done]verified[/]" if done else "[todo]not yet verified[/]",
         )
     console.print(t)
     console.print(
@@ -936,7 +945,8 @@ def mentor(ctx: Ctx, mentor_id: str | None, choice: str | None, start: bool) -> 
         ctx.save()
         ctx.vault.build(ctx.persona)
         console.print(f"[ok]{m['name']}[/]: {choice}")
-        return
+        if not start:
+            return
     if start:
         written, kept = _scaffold_mentor(m)
         where = m["encounter"]["exercise"]["dir"]
@@ -1015,6 +1025,9 @@ def _show_artifact(ctx: Ctx, a: dict) -> None:
         console.print(f"  [muted]$ {escape(cmd)}[/]")
     console.print(f"Work in: [path]{real['dir']}/[/]")
     console.print(f"Done when: {escape(real['done'])}")
+    note = note_requirement(a, ctx.cfg)
+    if note:
+        console.print(escape(note))
     console.print(f"Check it: [accent]vibe check --artifact {a['id']}[/]")
 
 
