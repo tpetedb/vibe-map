@@ -74,6 +74,9 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
+  // After dark the screen is what lights the face, which is the joke. A light
+  // costs no draw call, and the lid hides it from everything behind.
+  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
@@ -139,7 +142,12 @@ function achCheck(){ACH.forEach(a=>{if(a.when()&&!sl("ach").includes(a.id))unloc
 /* ---------------- toast ---------------- */
 // One stack, created on demand so the page keeps its markup. A toast is a
 // message, never state: it says what just happened and goes away.
+// The count is what a test waits for: a toast removes itself after a few
+// seconds, so looking for the element is a race on a loaded machine.
+let toastN=0;
+window.__toasts=()=>toastN;
 function toast(title,body){
+  toastN++;
   let el=$("toast");
   if(!el){el=document.createElement("div");el.id="toast";el.setAttribute("aria-live","polite");document.body.appendChild(el)}
   const n=document.createElement("div");n.className="tst";

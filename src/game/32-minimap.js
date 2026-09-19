@@ -9,7 +9,10 @@
 // map and nothing else.
 
 const MM_SIZE=136,MM_PHONE=560;
-let mmCv=null,mmCtx=null,mmBtn=null,mmOpen=false,mmT=0;
+// mmPaints counts the times the map has actually been painted, so a test can
+// wait for a drawn map rather than for a number of frames: the paint is
+// throttled and a fast frame loop can pass three times before one lands.
+let mmCv=null,mmCtx=null,mmBtn=null,mmOpen=false,mmT=0,mmPaints=0;
 const mmPhone=()=>innerWidth<=MM_PHONE;
 function mmBuild(){
   if(mmCv)return;
@@ -24,7 +27,9 @@ function mmBuild(){
   mmBtn.textContent="Map";mmBtn.setAttribute("aria-label","Show the map of the archipelago");
   mmBtn.style.cssText="position:fixed;right:10px;z-index:6;display:none;padding:6px 10px;font-size:12px;"+
     "border-radius:10px;background:rgba(0,0,0,.55);color:#F1F1F8;border:1px solid rgba(241,241,248,.18)";
-  mmBtn.addEventListener("click",()=>{mmOpen=!mmOpen;mmLayout()});
+  // Opening the map paints it on the next frame instead of waiting out the
+  // throttle, so it is never shown blank.
+  mmBtn.addEventListener("click",()=>{mmOpen=!mmOpen;mmT=1;mmLayout()});
   document.body.appendChild(mmBtn);
   addEventListener("resize",mmLayout);mmLayout()}
 function mmLayout(){
@@ -44,6 +49,7 @@ function mmLayout(){
 function mmScale(){const half=ISLAND_GAP/2+WORLDS.campus.land[0][2]+6;return MM_SIZE/(half*2)}
 function drawMinimap(){
   if(!mmCtx||mmCv.style.display==="none")return;
+  mmPaints++;
   const g=mmCtx,s=mmScale()*2,c=MM_SIZE,here=S.world||"campus";
   g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,MM_SIZE*2,MM_SIZE*2);
   // Canvas x is world x, canvas y is world z, both centred on the square.
@@ -70,4 +76,4 @@ function tickMinimap(dt){
   if(!started)return;
   mmBuild();mmT+=dt;if(mmT<.16)return;mmT=0;mmLayout();drawMinimap()}
 window.__minimap=()=>({open:mmCv?mmCv.style.display!=="none":false,phone:mmPhone(),
-  islands:WORLD_IDS.length,bridges:bridges.length,size:MM_SIZE});
+  islands:WORLD_IDS.length,bridges:bridges.length,size:MM_SIZE,painted:mmPaints});

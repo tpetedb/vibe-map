@@ -59,12 +59,12 @@ function buildBridges(){
     if(!b.open)[0,b.len].forEach(d=>{const p=at(d===0?1.2:b.len-1.2);
       barrier.push(xform(p.x,.45,p.z,0,ry,0))})});
   const plank=shape("plank",()=>new T.BoxGeometry(.5,.16,BRIDGE_W*2));
-  const decks=instOf(plank,mat("#D9A76A"),deck,false);
-  instOf(shape("rail",()=>new T.BoxGeometry(1,.14,.14)),mat("#7B5128"),rail,false);
-  instOf(shape("post",()=>new T.BoxGeometry(.14,.9,.14)),mat("#7B5128"),post,false);
+  const decks=instOf(plank,mat(PALETTE.deck),deck,false);
+  instOf(shape("rail",()=>new T.BoxGeometry(1,.14,.14)),mat(PALETTE.timber),rail,false);
+  instOf(shape("post",()=>new T.BoxGeometry(.14,.9,.14)),mat(PALETTE.timber),post,false);
   instOf(shape("lamppost",()=>new T.CylinderGeometry(.05,.07,2,5)),mat("#334155"),lampPost,false);
   const lamps=instOf(shape("bulb",()=>new T.SphereGeometry(.2,6,6)),
-    mat("#FDE68A",{emissive:"#FFBF00",emissiveIntensity:0}),bulb,false);
+    mat(PALETTE.lamp,{emissive:PALETTE.yellow,emissiveIntensity:0}),bulb,false);
   if(lamps)props.bridgeLamps=lamps.material;
   const platform=instOf(shape("rest",()=>new T.CylinderGeometry(BRIDGE_REST_R,BRIDGE_REST_R,.2,12)),
     mat("#C8A882"),rest,false);

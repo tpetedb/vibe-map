@@ -31,4 +31,46 @@ const PALETTE={
   red:"#D32F2F",orange:"#FF8C1A",yellow:"#FFBF00",green:"#00A86B",blue:"#0067A5",
   greenBright:"#00D084",blueBright:"#0088CC",orangeBright:"#F04923",
   black:"#000000",surface:"#0A0A0A",text:"#F1F1F8",muted:"#8B93A7",
+  lamp:"#FDE68A",window:"#FFD36B",lava:"#FF4500",timber:"#7B5128",deck:"#D9A76A",
+  stone:"#9CA3AF",snow:"#F8FAFC",ink:"#1F2937",
 };
+
+
+// The camera. The diorama only reads when the whole island is inside the
+// frame, so the distance is derived from the island's radius and the field of
+// view rather than fixed: a narrow window pushes the camera back instead of
+// cropping the island. pitch is the angle above the horizon in radians,
+// follow is how much of the walker's position the frame takes, drift caps how
+// far that may pull the island off centre, ahead is the look-ahead along the
+// walk and ease is how fast the frame catches up.
+const CAM={fov:46,pitch:.72,margin:1.03,follow:.5,drift:4.5,ahead:.45,ease:3.2};
+
+// Tone mapping: ACES with a little exposure, so bright grass and a lamp at
+// night roll off instead of clipping to the same flat value.
+const EXPOSURE=1.06;
+
+// The light rig, one entry per sky stage; WORLDS[*].sky carries the horizon
+// colour for the same nine. az and el are the bearing and the height of the
+// sun (of the moon from stage four) in degrees, sun is its colour, i its
+// intensity, zen the top of the sky dome over the world's horizon colour, and
+// hemi and amb the fill that keeps a night lit like a night.
+const SKY_RIG=[
+  {az:35,el:52,sun:"#FFF6E0",i:1.18,zen:"#3E8FD8",hemi:.44,amb:.12,hs:"#CFE9FF",hg:"#4A7A3A"},
+  {az:20,el:34,sun:"#FFE3AE",i:1.06,zen:"#5C9BD6",hemi:.4,amb:.11,hs:"#D7E4F5",hg:"#4A6E3C"},
+  {az:5,el:17,sun:"#FF9E5E",i:.9,zen:"#7A6FA8",hemi:.34,amb:.1,hs:"#E3C6C0",hg:"#4A4038"},
+  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A"},
+  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434"},
+  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C"},
+  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824"},
+  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320"},
+  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A"},
+];
+
+// The pixel companion that follows the walker (src/game/19b-pet.js). The
+// frames are the vendored sets the terminal paints, so only its placement is
+// a number here. FOLLOW and LAG are what make it a companion rather than a
+// shadow: it settles that far behind the walker, and reaches the spot with an
+// exponential ease of that rate per second. HEIGHT is in world units against
+// a walker about 2.4 units tall.
+const PET={FOLLOW:2.2,LAG:4.5,HEIGHT:1.05,BOB:.06,WALK_AT:.55,FPS:8};
+
