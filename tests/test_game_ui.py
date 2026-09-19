@@ -373,3 +373,133 @@ def test_the_go_live_pairing_block_is_a_sentence(game: GamePage) -> None:
     else:
         assert ";" in text and " and " in text, text
     game.assert_clean()
+
+
+def test_a_reload_restores_exactly_the_islands_that_were_played(
+    game: GamePage,
+) -> None:
+    """Two islands played, then a reload: every island keeps its own stops.
+
+    The campus is the one that used to collect another island's progress,
+    because the saved record carried both the map and the alias of the active
+    island's array.
+    """
+    game = _started(game)
+    game.next_world()
+    game.claim(1)
+    game.next_world()
+    game.claim(1)
+    before = game.state()["doneW"]
+    assert before["campus"] == []
+    game.page.reload()
+    game.page.wait_for_function("typeof window.__S === 'function'")
+    game.resume()
+    assert game.state()["doneW"] == before
+    game.assert_clean()
+
+
+def test_enter_opens_the_stop_you_are_standing_on(game: GamePage) -> None:
+    """The line says to tap Enter, so Enter has to be the button's twin."""
+    game = _started(game)
+    game.walk_to(0, 16)
+    game.until("window.__debug().near === 1")
+    game.page.evaluate("() => document.body.focus()")
+    game.page.keyboard.press("Enter")
+    game.page.wait_for_selector("#sheet.on", state="attached")
+    assert game.page.text_content("#sheet .screen.on h2")
+    game.assert_clean()
+
+
+def test_a_locked_signpost_says_why_it_is_locked(game: GamePage) -> None:
+    game = _started(game)
+    game.walk_to(-14.4, 12.8)
+    said = game.page.locator("#toast .tst", has_text="opens once").first
+    said.wait_for(state="attached", timeout=WAIT_MS)
+    assert "Centre of Excellence" in (said.text_content() or "")
+    assert game.near() == 0
+    game.assert_clean()
+
+
+def test_the_streak_tile_counts_the_stops_done_today(game: GamePage) -> None:
+    """The tile is labelled Streak, so it carries the number the CLI counts."""
+    game = _started(game)
+    game.claim(1)
+    game.claim(2)
+    game.until("document.getElementById('k2').textContent === '2'")
+    game.assert_clean()
+
+
+def test_the_terrace_of_the_inn_offers_the_finale(game: GamePage) -> None:
+    """At eight of eight the walk back ends at the finale, not at the cafe."""
+    game.goto(state={"name": "Tom", "doneW": {"campus": [1, 2, 3, 4, 5, 6, 7, 8]}})
+    game.resume()
+    game.walk_to(2.8, 5.2)
+    game.until("window.__debug().near === 9")
+    label = game.page.text_content("#enterbtn") or ""
+    assert "Calendar alignment" in label, label
+    game.screenshot("hunt1-terrace-finale")
+    game.assert_clean()
+
+
+def test_a_delivered_stop_shows_one_way_back(game: GamePage) -> None:
+    """The primary of a delivered stop is never the secondary's label."""
+    game = _started(game)
+    game.next_world()
+    game.claim(1)
+    game.open_workstream(1)
+    labels = game.page.locator("#sheet .screen.on .row button").all_text_contents()
+    assert "Mark as done and unlock the OKR" not in labels, labels
+    assert len(labels) == len(set(labels)), labels
+    assert labels.count("Back to the island") == 1, labels
+    game.page.click("#sheet .screen.on .row button")
+    game.page.wait_for_selector("#sheet.on", state="detached")
+    game.assert_clean()
+
+
+def test_the_last_island_ends_the_campaign_rather_than_the_evening(
+    game: GamePage,
+) -> None:
+    """Production is the end of the campaign: no next environment, no hub."""
+    game.goto(
+        state={
+            "name": "Tom",
+            "world": "prod",
+            "doneW": {"prod": [1, 2, 3, 4, 5, 6, 7, 8]},
+        }
+    )
+    game.resume()
+    game.until("window.__debug().near === 9")
+    game.page.click("#enterbtn")
+    game.page.wait_for_selector("#s-gen.on", state="attached")
+    text = game.page.text_content("#s-gen") or ""
+    assert "Campaign complete" in text, text
+    assert "Next environment" not in text, text
+    assert "Come back to the hub" not in (game.page.text_content("#bub-text") or "")
+    game.screenshot("hunt1-prod-campaign-complete")
+    game.assert_clean()
+
+
+def test_a_ninth_stop_on_an_island_opens_instead_of_the_island_ending(
+    game: GamePage,
+) -> None:
+    """The fork challenge adds a stop to the island data; it has to be playable."""
+    game.goto(
+        state={
+            "name": "Tom",
+            "world": "prod",
+            "doneW": {"prod": [1, 2, 3, 4, 5, 6, 7, 8]},
+        }
+    )
+    game.resume()
+    game.page.evaluate(
+        "() => window.__data().campaign.prod.ws.push("
+        "{h: 'Stop 9', n: 'My own stop', d: 'The one I added',"
+        " html: '<p>Mine.</p>'})"
+    )
+    game.open_roadmap()
+    game.page.click("#plotlist button:has-text('My own stop')")
+    game.page.wait_for_selector("#s-gen.on", state="attached")
+    assert game.page.text_content("#s-gen h2") == "My own stop"
+    game.page.click("#s-gen button:has-text('Mark as done')")
+    game.page.wait_for_function("() => window.__S().doneW.prod.includes(9)")
+    game.assert_clean()
