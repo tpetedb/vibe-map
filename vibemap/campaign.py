@@ -103,6 +103,19 @@ def collectibles() -> list[dict[str, Any]]:
     return list(items_raw().get("items", []))
 
 
+def wearables() -> list[dict[str, Any]]:
+    """What the walker can put on, named as the game names it (items.json)."""
+    return list(items_raw().get("wearables", []))
+
+
+def wear_label(wear_id: str) -> str:
+    """The name the game shows for a wearable, or the id when it knows none."""
+    return next(
+        (w["name"] for w in wearables() if w["id"] == wear_id),
+        wear_id,
+    )
+
+
 def mentors() -> list[dict[str, Any]]:
     return list(raw()["mentors"])
 

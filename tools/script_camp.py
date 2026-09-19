@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 from vibemap import campaign, quests
-from vibemap.vault import safe_title
+from vibemap.vault import safe_title, stub_bullet
 
 ROOT = Path(__file__).resolve().parents[1]
 CAMP_MARKER = "config/camp.toml"
@@ -119,7 +119,9 @@ OWN_SOURCE = (
 )
 
 
-STUB = "- not done yet; run `vibe check` when it is"
+# The stub names its own stop, so the line to replace differs per note.
+def _stub(world: str, n: int) -> str:
+    return f"- {stub_bullet(world, n)}"
 
 
 def _write_notes(camp: Path) -> int:
@@ -135,10 +137,11 @@ def _write_notes(camp: Path) -> int:
             if not note.exists():
                 raise ScriptError(f"no vault note for {ws.name}; is this a camp?")
             text = note.read_text(encoding="utf-8")
-            if STUB not in text:
+            stub = _stub(world, ws.n)
+            if stub not in text:
                 continue
             text = text.replace(
-                STUB,
+                stub,
                 "\n".join(f"- {line}" for line in OWN_NOTE.strip().splitlines()),
             )
             if OWN_SOURCE not in text:

@@ -395,3 +395,83 @@ def test_every_scaffolded_artifact_starts_red(tmp_path: Path, monkeypatch) -> No
         _scaffold_artifact(get_artifact(aid))
         results = run_quest(artifact_quest(aid, cfg), cfg)
         assert not all(r.ok for r in results), aid
+
+
+# ---- the findings of hunt wave 1 ------------------------------------------------
+
+
+def test_a_failing_script_says_when_only_the_spacing_differs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`print("a -> ", x)` prints two spaces, and the message looked identical."""
+    here = _build(tmp_path, "lighthouse", monkeypatch)
+    spec = get_artifact("lighthouse")["real"]["check"]
+    lines = "".join(f'print("{line} ")\n' for line in spec["prints"])
+    (here / spec["file"]).write_text(lines, encoding="utf-8")
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert ok, detail
+    (here / spec["file"]).write_text(
+        'print("localhost -> ", "127.0.0.1")\nprint("AF_INET")\n', encoding="utf-8"
+    )
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert not ok
+    assert "not the spacing" in detail, detail
+
+
+def test_a_lowercase_keyword_is_the_same_keyword(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The camp's own SQL skill writes lowercase; the check asked for capitals."""
+    from vibemap.artifact_checks import _absent
+
+    assert _absent("create index i on t(c);", ["CREATE INDEX"]) == []
+    assert _absent("nothing here", ["CREATE INDEX"]) == ["CREATE INDEX"]
+    # A name is not a keyword, so its case still counts.
+    assert _absent("import Polars", ["polars"]) == ["polars"]
+
+
+def test_a_syntax_directive_is_read_from_the_raw_text(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    here = _build(tmp_path, "dock", monkeypatch)
+    spec = get_artifact("dock")["real"]["check"]
+    (here / spec["file"]).write_text(
+        '# syntax=docker/dockerfile:1\nFROM python:3.12-slim\nCMD ["python"]\n',
+        encoding="utf-8",
+    )
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert ok, detail
+    if "docker is not installed" in detail:
+        assert "after a syntax directive" in detail, detail
+
+
+def test_a_private_recipe_is_private_with_or_without_just(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from vibemap.artifact_checks import _just_dump, _just_parse
+
+    text = (
+        "# build it\nbuild:\n    @echo one\n\n"
+        "# test it\ntest:\n    @echo two\n\n"
+        "# helper\n[private]\nhelp:\n    @echo three\n"
+    )
+    here = _build(tmp_path, "switchboard", monkeypatch)
+    (here / "justfile").write_text(text, encoding="utf-8")
+    by_line = _just_parse(text)
+    assert [r["name"] for r in by_line if not r["private"]] == ["build", "test"]
+    by_just = _just_dump(here, "justfile")
+    if by_just is not None:
+        assert sorted(r["name"] for r in by_just if not r["private"]) == [
+            "build",
+            "test",
+        ]
+
+
+def test_the_walkthrough_states_the_note_at_the_difficulty_that_asks_for_it() -> None:
+    from vibemap.artifact_checks import note_requirement
+
+    a = get_artifact("cafe")
+    easy = Config.model_validate({"learner": {"difficulty": "easy"}})
+    assert note_requirement(a, easy) is None
+    said = note_requirement(a, GOD)
+    assert said and "notes.md" in said and ARTIFACT_SECTION in said

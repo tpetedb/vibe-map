@@ -85,10 +85,23 @@ def _floor(here: Path, spec: dict[str, Any]) -> tuple[bool, str] | None:
     if gone:
         return False, gone
     text = (here / name).read_text(encoding="utf-8", errors="replace")
-    absent = [s for s in spec.get("contains", ()) if s not in text]
+    absent = _absent(text, spec.get("contains", ()))
     if absent:
         return False, f"{name} does not use: {', '.join(absent)}"
     return None
+
+
+def _absent(text: str, wanted: Any) -> list[str]:
+    """Which of the wanted strings this file does not use.
+
+    A wanted string written in capitals is a keyword of the language the file
+    is in (SQL, Dockerfile), and a keyword is the same word in any case; the
+    camp's own SQL skill writes lowercase.
+    """
+    low = text.lower()
+    return [
+        s for s in wanted if (s.lower() not in low if s == s.upper() else s not in text)
+    ]
 
 
 def _run(here: Path, name: str) -> tuple[bool, str]:
@@ -136,6 +149,12 @@ def _k_script(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     astray = _in_order(out, wanted)
     if astray is not None:
         first = " ".join(out.split())[:90]
+        flat = [" ".join(w.split()) for w in wanted]
+        if _in_order(" ".join(out.split()), flat) is None:
+            return False, (
+                f"the output has every expected line, in order, but not the "
+                f"spacing: expected {astray!r}, got: {first!r}"
+            )
         return False, f"expected {astray!r} in the output, got: {first!r}"
     return True, f"{spec['file']} printed all {len(wanted)} expected lines"
 
@@ -143,12 +162,11 @@ def _k_script(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
 def _k_dockerfile(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     """Parse it always; build it when docker is installed."""
     text = (here / spec["file"]).read_text(encoding="utf-8")
-    lines = [
-        line.strip()
-        for line in text.splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    ]
-    if not lines or not lines[0].upper().startswith(("FROM", "ARG", "# syntax")):
+    raw = [line.strip() for line in text.splitlines() if line.strip()]
+    # A parser directive is a comment and only the first line may carry one.
+    directive = bool(raw) and raw[0].lower().startswith("# syntax=")
+    lines = [line for line in raw if not line.startswith("#")]
+    if not lines or not lines[0].upper().startswith(("FROM", "ARG")):
         return False, "a Dockerfile starts with FROM (an ARG may come before it)"
     known = {
         "ADD", "ARG", "CMD", "COPY", "ENTRYPOINT", "ENV", "EXPOSE", "FROM",
@@ -166,8 +184,11 @@ def _k_dockerfile(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
         if word not in known:
             return False, f"{word} is not a Dockerfile instruction"
     if not _tool("docker"):
+        said = f"{len(joined)} instructions"
+        if directive:
+            said += " after a syntax directive"
         return True, (
-            f"{len(joined)} instructions parse; docker is not installed, so the "
+            f"{said} parse; docker is not installed, so the "
             "image was not built (install Docker Desktop and run the check again)"
         )
     tag = spec.get("tag", f"vibe-{here.name}")
@@ -417,9 +438,11 @@ def _just_parse(text: str) -> list[dict[str, Any]]:
     """The tolerant reader for a machine with no just on PATH."""
     out: list[dict[str, Any]] = []
     doc: str | None = None
+    private = False
     for line in text.splitlines():
         if not line.strip():
             doc = None
+            private = False
             continue
         if line[0].isspace():  # a recipe body or a continuation
             continue
@@ -427,10 +450,12 @@ def _just_parse(text: str) -> list[dict[str, Any]]:
             doc = line.lstrip("#").strip() or None
             continue
         if line.startswith("["):  # an attribute keeps the doc comment above it
+            private = private or bool(re.search(r"\bprivate\b", line))
             continue
         m = _JUST_HEADER.match(line)
         if not m or m.group("name") in _JUST_KEYWORDS:
             doc = None
+            private = False
             continue
         out.append(
             {
@@ -438,10 +463,11 @@ def _just_parse(text: str) -> list[dict[str, Any]]:
                 "doc": doc,
                 "parameters": len(m.group("params").split()),
                 "dependencies": len(m.group("deps").split()),
-                "private": m.group("name").startswith("_"),
+                "private": private or m.group("name").startswith("_"),
             }
         )
         doc = None
+        private = False
     return out
 
 
@@ -524,6 +550,22 @@ def _built_check(a: dict[str, Any]) -> Check:
         return run(here, spec)
 
     return Check(real["title"], fn, f"{real['dir']}/: {real['done']}")
+
+
+def note_requirement(a: dict[str, Any], cfg: Config) -> str | None:
+    """What the note check asks of this artifact here, or None when it is off.
+
+    The walkthrough is the only place a learner reads before building, so the
+    requirement that appears at hard has to be readable there and not only in
+    the row that failed afterwards.
+    """
+    if "strict" not in required_levels(cfg.learner.difficulty):
+        return None
+    return (
+        f"At {cfg.learner.difficulty} this also needs "
+        f"{a['real']['dir']}/{ARTIFACT_NOTE} with a {ARTIFACT_SECTION} section "
+        f"of at least {ARTIFACT_WORDS} words."
+    )
 
 
 def _note_check(a: dict[str, Any]) -> Check:
