@@ -126,9 +126,19 @@ def render() -> tuple[dict[str, dict[str, str]], str, str]:
     return notes, tree_js, md
 
 
+def _template_literal(text: str) -> str:
+    """A JavaScript template literal that evaluates to exactly this text.
+
+    Three things mean something inside backticks: the backslash, the backtick
+    and a dollar before a brace. A topic about the shell writes all three.
+    """
+    body = text.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+    return "`" + body + "`"
+
+
 def _notes_js(notes: dict[str, dict[str, str]]) -> str:
     return ",\n".join(
-        f"{json.dumps(k)}:{{t:{json.dumps(v['t'])},md:`{v['md'].replace('`', '\\`')}`}}"
+        f"{json.dumps(k)}:{{t:{json.dumps(v['t'])},md:{_template_literal(v['md'])}}}"
         for k, v in notes.items()
     )
 

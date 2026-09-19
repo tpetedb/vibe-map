@@ -108,3 +108,96 @@ def test_the_build_refuses_javascript_it_cannot_read(tmp_path) -> None:
     assert r.returncode != 0
     assert "00-config.js" in r.stdout + r.stderr
     assert not (root / "game" / "vibe-map.html").exists(), "it wrote the broken game"
+
+
+# What the build writes into the script element is data from a camp's own
+# config and from other people's feeds. Inside a script element the HTML parser
+# looks for the closing tag and for a comment opener before JavaScript sees a
+# single character, so both must be impossible to spell from data.
+BREAKOUT = "</script><script>window.__pwned=1</script>"
+
+
+def _script_bodies(html: str) -> list[str]:
+    import re
+
+    return re.findall(r"<script>(.*?)</script>", html, flags=re.S)
+
+
+def test_a_config_value_cannot_close_the_script_element(tmp_path) -> None:
+    root = _fork_root(tmp_path)
+    clean = _run("tools/build.py", "--root", str(root))
+    assert clean.returncode == 0, clean.stdout + clean.stderr
+    scripts = len(_script_bodies((root / "game" / "vibe-map.html").read_text()))
+    (root / "config").mkdir()
+    (root / "config" / "camp.toml").write_text(
+        f"[finale]\ndates = [{json.dumps('Friday ' + BREAKOUT)}]\n"
+    )
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode == 0, r.stdout + r.stderr
+    html = (root / "game" / "vibe-map.html").read_text()
+    assert BREAKOUT not in html
+    assert len(_script_bodies(html)) == scripts
+    # The value is still the value: escaped for the parser, whole for the game.
+    assert "Friday \\u003c/script\\u003e\\u003cscript\\u003ewindow.__pwned=1" in html
+
+
+def test_a_feed_title_cannot_swallow_the_script_element(tmp_path) -> None:
+    """A comment opener then a script opener puts the parser in a state where
+    the real closing tag no longer closes, and the game never starts."""
+    root = _fork_root(tmp_path)
+    (root / "data").mkdir()
+    item = {
+        "id": "a",
+        "source": "s",
+        "name": "n",
+        "kind": "post",
+        "title": "Release notes <!-- <script x",
+        "link": "https://example.com/",
+        "date": "",
+        "summary": "",
+        "tags": [],
+    }
+    (root / "data" / "news.json").write_text(
+        json.dumps({"version": 2, "fetched_at": "", "items": [item]})
+    )
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode == 0, r.stdout + r.stderr
+    game = _script_bodies((root / "game" / "vibe-map.html").read_text())[-1]
+    assert "<!--" not in game and "<script" not in game.lower()
+    assert "Release notes \\u003c!-- \\u003cscript x" in game
+    # The file the hosted page fetches is JSON for fetch(), and stays readable.
+    feed = json.loads((root / "game" / "news.json").read_text())
+    assert feed["items"][0]["title"] == item["title"]
+
+
+@pytest.mark.parametrize("spelling", ["</script>", "</SCRIPT >", "<!--"])
+def test_the_build_refuses_a_script_that_could_end_its_own_element(
+    tmp_path, spelling: str
+) -> None:
+    root = _fork_root(tmp_path)
+    cfg = root / "src" / "config" / "00-config.js"
+    cfg.write_text(cfg.read_text() + f"\nconst CLOSER={json.dumps(spelling)};\n")
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode != 0
+    assert "script element" in r.stdout + r.stderr
+    assert not (root / "game" / "vibe-map.html").exists()
+
+
+def test_a_note_reaches_the_game_character_for_character() -> None:
+    """Notes travel as template literals: a backslash, a backtick and a dollar
+    brace in a topic are text, never an escape or an expression."""
+    sys.path.insert(0, str(ROOT))
+    from tools.regen_tree import _notes_js
+
+    md = "Run `echo ${HOME}` and see '\\n' and a,\\\"b\\\""
+    js = _notes_js({"Shell": {"t": "tech", "md": md}})
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("no node to read the literal back with")
+    out = subprocess.run(
+        [node, "-e", f"const N={{{js}}};process.stdout.write(N.Shell.md)"],
+        capture_output=True,
+        text=True,
+    )
+    assert out.returncode == 0, out.stderr
+    assert out.stdout == md
