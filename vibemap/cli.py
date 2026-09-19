@@ -855,7 +855,7 @@ def _claim_artifact(ctx: Ctx, artifact_id: str, results) -> None:
 # writes the real thing.
 STUB_LINES = (
     "TODO: {title}",
-    "Write this yourself; the check fails until you do.",
+    f"Write this yourself; {quests.STUB_MARK}.",
 )
 
 

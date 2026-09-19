@@ -137,6 +137,22 @@ def _tool(name: str) -> bool:
     return shutil.which(name) is not None
 
 
+# What a docker CLI says when it cannot reach a daemon. The confirmation layer
+# needs a running engine, so this is a machine that cannot build, never a
+# Dockerfile that is wrong.
+NO_DAEMON = (
+    "cannot connect to the docker daemon",
+    "failed to connect to the docker api",
+    "is the docker daemon running",
+    "error during connect",
+)
+
+
+def _daemon_down(text: str) -> bool:
+    low = text.lower()
+    return any(said in low for said in NO_DAEMON)
+
+
 # ---- the kinds ----------------------------------------------------------------
 
 
@@ -197,6 +213,12 @@ def _k_dockerfile(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
         cwd=here, capture_output=True, text=True, timeout=600,
     )  # fmt: skip
     if out.returncode != 0:
+        if _daemon_down(out.stderr + out.stdout):
+            return True, (
+                f"{len(joined)} instructions parse; docker is installed but no "
+                "daemon answers, so the image was not built (start Docker "
+                "Desktop and run the check again)"
+            )
         tail = [line for line in out.stderr.splitlines() if line.strip()]
         return False, f"docker build failed: {tail[-1] if tail else 'no output'}"
     return True, f"docker built the image {tag}"
@@ -376,11 +398,11 @@ def _k_frontmatter(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     import yaml  # a dependency of this package, so never missing
 
     text = (here / spec["file"]).read_text(encoding="utf-8")
-    parts = text.split("---")
-    if not text.startswith("---") or len(parts) < 3:
+    front, brief = _frontmatter(text)
+    if front is None:
         return False, f"{spec['file']} does not open with a --- frontmatter block"
     try:
-        head = yaml.safe_load(parts[1])
+        head = yaml.safe_load(front)
     except yaml.YAMLError as e:
         return False, f"the frontmatter is not valid YAML: {str(e).splitlines()[0]}"
     if not isinstance(head, dict):
@@ -391,9 +413,24 @@ def _k_frontmatter(here: Path, spec: dict[str, Any]) -> tuple[bool, str]:
     name = str(head["name"])
     if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", name):
         return False, f"name {name!r} is not lowercase words joined by hyphens"
-    if not parts[2].strip():
+    if not brief.strip():
         return False, f"{spec['file']} has frontmatter but no brief under it"
     return True, f"{name}: {str(head['description'])[:60]}"
+
+
+def _frontmatter(text: str) -> tuple[str | None, str]:
+    """The leading YAML block and everything under it.
+
+    Only the block the file opens with is frontmatter; a --- further down is a
+    horizontal rule, which Markdown allows and a brief may well start with.
+    """
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None, text
+    for i, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return "\n".join(lines[1:i]), "\n".join(lines[i + 1 :])
+    return None, text
 
 
 def _just_dump(here: Path, name: str) -> list[dict[str, Any]] | None:
