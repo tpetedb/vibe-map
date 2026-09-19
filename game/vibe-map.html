@@ -1105,11 +1105,11 @@ function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test
   // A name and a password in front of the host is how a link to one site is
   // made to read like another, so such a link is no link either.
   try{const p=new URL(s);return (p.protocol==="http:"||p.protocol==="https:")&&!p.username&&!p.password?p.href:""}catch(e){return ""}}
+// A plain object, which is what JSON calls a map: not null, not a list.
+function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
 // An identifier from data we did not write (a progress code): a short word of
 // letters, digits, dot, dash, underscore and colon, which is every id the
 // course data uses. Anything else is not an id, whatever it claims to be.
-// A plain object, which is what JSON calls a map: not null, not a list.
-function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
 function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(v)}
 // A document published beside the game on the product's site. The site has
 // syllabus.html next to the game; a camp, a fork and file:// do not, so
