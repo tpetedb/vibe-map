@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from vibemap import campaign
+from vibemap.vault import safe_title
 
 if TYPE_CHECKING:
     from vibemap.vault import Vault
@@ -87,7 +88,9 @@ def unlocked_titles(vault: Vault, lookup: dict[str, Path]) -> set[str]:
             out.add(m["name"])
     for a in campaign.artifacts():
         if a["id"] in st.artifacts:
-            out |= set(a["links"])
+            # The data names the topic; a note in the vault is filed under
+            # the name a file system allows.
+            out |= {safe_title(t) for t in a["links"]}
     ids = {n.id: n.name for n in campaign.tech_nodes()}
     out |= {ids[t] for t in st.roadmap_done if t in ids}
     if st.is_done("campus", VAULT_STOP):

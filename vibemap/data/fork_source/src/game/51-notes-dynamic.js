@@ -1,3 +1,7 @@
+// The campus is the one island whose workstream notes are written by hand in
+// 50-notes.js, and whose stops carry the theme's own names, so the stop a
+// learner claims maps to its note by position rather than by title.
+const CAMPUS_STOP_NOTES=["Innovation Hub","Centre of Excellence","Data warehouse","Business continuity","Integration layer","Vault","Go-to-market","Autonomous operations"];
 Object.keys(CAMPAIGN).forEach(k=>{const ev=CAMPAIGN[k];if(k==="campus")return;const title=ev.title.split(": ")[0];
   NOTES[title]={t:"ws",md:`# ${ev.title}\n${ev.blurb}\n`+ev.ws.map(w=>`- ${w.h} [[${w.n}]]: ${w.d}`).join("\n")+`\nMentors on this island: `+MENTORS.filter(m=>m.world===k).map(m=>`[[${m.name}]]`).join(", ")+`\nPart of [[Tonight]] · [[The campaign]]\n#overview`};
   ev.ws.forEach(w=>{const tmp=document.createElement("div");tmp.innerHTML=w.html;const links=[...tmp.querySelectorAll("a")].map(a=>`- [${a.textContent}](${a.href})`).join("\n");const steps=[...tmp.querySelectorAll("li")].map(l=>"- "+l.textContent).join("\n");const ps=[...tmp.querySelectorAll(":scope > p")].map(p=>p.textContent).join("\n\n");

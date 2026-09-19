@@ -1680,7 +1680,7 @@
    "rolinda": "Why did the second pull take four milliseconds when the first took most of a second?",
    "links": [
     "SQL and DuckDB",
-    "Data - files, schemas, warehouses"
+    "Data: files, schemas, warehouses"
    ],
    "real": {
     "title": "A table, an index and one transaction",
@@ -1780,7 +1780,7 @@
    "rolinda": "The crate ran on the other island without a single change. What exactly was in it?",
    "links": [
     "Docker and containers",
-    "CI-CD and automation"
+    "CI/CD and automation"
    ],
    "real": {
     "title": "Write a Dockerfile and build the image",
@@ -1827,7 +1827,7 @@
    "rolinda": "It turned at nine on Monday. What happens if nobody is there to see it fail?",
    "links": [
     "Headless agents and scheduling",
-    "CI-CD and automation"
+    "CI/CD and automation"
    ],
    "real": {
     "title": "A workflow that turns without you",
@@ -1924,7 +1924,7 @@
    "links": [
     "Unix and the terminal",
     "Python",
-    "Python libraries - what they are for"
+    "Python libraries: what they are for"
    ],
    "real": {
     "title": "Name the six layers under your own keystroke",
@@ -2073,9 +2073,9 @@
    "what": "Raw is what arrived, bronze keeps it as it came, silver cleans and types it, gold answers one question; each step reads the one before and writes its own table. A good pipeline is idempotent: a failed run leaves nothing half-written, and a rerun on the same input gives the same output with no duplicates.",
    "rolinda": "Run 41 fell over halfway through. Why did the gold numbers not change, and why was that the right thing?",
    "links": [
-    "Data - files, schemas, warehouses",
+    "Data: files, schemas, warehouses",
     "Repetitive tasks, reliably",
-    "CI-CD and automation"
+    "CI/CD and automation"
    ],
    "real": {
     "title": "Raw to bronze to silver to gold, in one file",
@@ -2226,8 +2226,8 @@
    "what": "uv add polars is a purchase: the shelf is PyPI, every version sits on it with a date, and the wish goes into pyproject.toml. The receipt is uv.lock, exact versions and checksums, so uv sync --frozen rebuilds the same environment on any machine; a yanked version stays on the shelf with a warning not to take it.",
    "rolinda": "You bought polars once and it works on CI too. Which file is the receipt, and what happens if you delete it?",
    "links": [
-    "Python libraries - what they are for",
-    "TOML in practice - pyproject.toml",
+    "Python libraries: what they are for",
+    "TOML in practice: pyproject.toml",
     "Semantic Versioning"
    ],
    "real": {
@@ -2441,7 +2441,7 @@
    "what": "A question becomes a vector, a long list of numbers, and the notes that sit nearest to it in that space come back as the shelves to read; the model answers from those pages and cites them. The index is a snapshot: a note edited after the last build is invisible until you re-index, so the rebuild belongs on a hook.",
    "rolinda": "You asked what changed tonight and got yesterday's note with a confident citation. What was out of date, the model or the shelves?",
    "links": [
-    "Memory - the vault as long-term memory",
+    "Memory: the vault as long-term memory",
     "Context window and prompts",
     "Markdown and Obsidian"
    ],
@@ -2540,7 +2540,7 @@
    "rolinda": "The leaderboard shows a name and a score. Why does it also have their birthday in the table, and who asked for it?",
    "links": [
     "Security and permissions",
-    "Data - files, schemas, warehouses",
+    "Data: files, schemas, warehouses",
     "SQL and DuckDB"
    ],
    "real": {
@@ -2594,7 +2594,7 @@
    "links": [
     "From base model to assistant",
     "Neurons and backprop (1943 to 1989)",
-    "Evals - measure the agent, not the vibe"
+    "Evals: measure the agent, not the vibe"
    ],
    "real": {
     "title": "Split the data, train, and read the honest number",

@@ -491,7 +491,10 @@ class Vault:
                 if a["id"] in found
                 else "not yet"
             )
-            links = ", ".join(f"[[{t}]]" for t in a["links"])
+            # The note titles in the data are the real ones; a file name in
+            # the vault cannot hold a colon, so the link goes through the same
+            # rule as every other generated wikilink.
+            links = ", ".join(f"[[{safe_title(t)}]]" for t in a["links"])
             real = a["real"]
             body.append(
                 f"- {mark}: **{a['name']}** ({a['prop']}): {a['concept']}. "
