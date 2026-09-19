@@ -122,7 +122,7 @@ const FACE={
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
-function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);
   if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
 function say(k){const [who,t]=line(k);bubble(who,t)}
 // A mentor is known by their last name; a team is not a person, so a name that

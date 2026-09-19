@@ -44,9 +44,9 @@ function character(spec){
   // A character carries a pose and a wardrobe; what they mean is the avatar
   // module's (src/game/18-avatar.js), so every walker, mentor and host has
   // the same actions available.
-  // The materials the night lifts (tickRig), collected before the wardrobe so
-  // a hat stays a hat.
-  c.mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive)c.mats.push(o.material)});figures.push(c);figDirty=true;
+  // The night lifts the body (figMat), before the wardrobe goes on so a lit
+  // screen or a hat keeps its own material.
+  g.traverse(o=>{if(o.isMesh&&o.material.isMeshStandardMaterial)figMat(o.material)});
   c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }

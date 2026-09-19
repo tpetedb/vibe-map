@@ -22,7 +22,7 @@ function watchContext(c){
   c.addEventListener("webglcontextrestored",()=>{gfxLost=false;clock.getDelta();fitRenderer();gfxNotice()})}
 function gfxNotice(){const n=$("gfxlost");if(n)n.hidden=!gfxLost;
   $("stage").classList.toggle("lost",gfxLost);
-  if(gfxLost&&started){$("enter").classList.remove("on");openSheet("s-map")}}
+  if(gfxLost&&started){enterHide();openSheet("s-map")}}
 // The frame the island needs: the distance that makes a disc of the island's
 // radius fit inside both the vertical and the horizontal field of view. A
 // narrow window pushes the camera back rather than cropping the diorama, and
@@ -197,6 +197,7 @@ function buildWorld(id,carry){
   blobFlush();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.PlaneGeometry(1.4,1.4),new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.05;props.shadow.renderOrder=1;props.shadow.material.userData.cs=1;scene.add(props.shadow);
+  props.lapGlow=lapGlow();scene.add(props.lapGlow);
   // The ring that says which of the three figures you are steering.
   props.you=new T.Mesh(new T.RingGeometry(.62,.8,24),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:.75,side:T.DoubleSide}));props.you.rotation.x=-Math.PI/2;props.you.position.y=.07;props.you.renderOrder=2;props.you.material.userData.cs=1;scene.add(props.you);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -210,16 +211,16 @@ function buildWorld(id,carry){
 // they are what stops the ground being one flat sheet of colour under the
 // walker's feet. They keep off the path, the plots, the inn and the lake, and
 // they are seeded, so the island is the same island on every visit.
-function buildTufts(){const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
+function buildTufts(){if(!GROUND.tufts)return;const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
   let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
   for(let i=0;i<GROUND.tufts*3&&mats.length<GROUND.tufts;i++){
     const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*R,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.7+rnd()*.9,ry=rnd()*Math.PI;
     if(!W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-1.4))continue;
     if(Math.hypot(x,z)<6.2||Math.hypot(x-W.lake[0],z-W.lake[1])<4.2)continue;
     if(PLOT_POS.some(p=>Math.hypot(x-p.x,z-p.z)<3)||path.some(p=>Math.hypot(x-p.x,z-p.z)<1.5))continue;
-    mats.push(xform(x,.1*s,z,0,ry,0,new T.Vector3(s,s,s)))}
+    mats.push(xform(x,.05*s,z,0,ry,0,new T.Vector3(s,s,s)))}
   const c=new T.Color(W.grass).multiplyScalar(GROUND.shade);
-  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.22,.3,5)),mat("#"+c.getHexString()),mats,false);
+  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.2,.13,5)),mat("#"+c.getHexString()),mats,false);
   if(im)im.receiveShadow=true;props.tufts=im}
 // One building per artifact of this world that names a model in ART_PROPS;
 // the group is an obstacle so the walker goes round it, and the ring stays.
@@ -302,13 +303,14 @@ function buildSky(){
   geo.setAttribute("color",new T.BufferAttribute(c,3));
   const m=new T.MeshBasicMaterial({color:"#ffffff",vertexColors:true,side:T.BackSide,fog:false,depthWrite:false});
   m.userData.cs=1;
-  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d}
+  // A new dome has no colours yet, whatever the last one was painted with.
+  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d;skyPainted=-1}
 // The ramp, repainted whenever the stage moves. Height runs from the horizon
 // to the zenith over the top half of the dome; below the horizon it holds the
 // horizon colour, which is also the fog, so the two meet with no seam.
-const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted="";
+const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted=-1;
 function paintSky(bottom,top){const d=props.sky;if(!d)return;
-  const key=bottom.getHexString()+top.getHexString();if(key===skyPainted)return;skyPainted=key;
+  const key=bottom.getHex()*16777216+top.getHex();if(key===skyPainted)return;skyPainted=key;
   _skyBot.copy(bottom).convertSRGBToLinear();_skyTop.copy(top).convertSRGBToLinear();
   const p=d.geometry.attributes.position,c=d.geometry.attributes.color,r=140*WORLD_SCALE;
   for(let i=0;i<p.count;i++){const t=Math.max(0,Math.min(1,p.getY(i)/r*1.35+.06));
@@ -356,7 +358,6 @@ function seaMaterial(){
   return m}
 
 let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
-let rigFig=0;
 const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3(),_far=new T.Vector3();
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
   if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}
@@ -379,13 +380,8 @@ function tickRig(k){const r=SKY_RIG[skyN],WS=WORLD_SCALE;
   sunM.position.copy(_far);sunM.visible=skyN<4;
   moonM.position.copy(_far);moonM.visible=skyN>=4;
   rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen);
-  // The figures' lift, in the light's own colour. Written only when it moves
-  // or a figure is new, and figures that have left the scene drop off the list.
-  const fig=rigFig+(r.fig-rigFig)*k;
-  if(figDirty||Math.abs(fig-rigFig)>1e-4){figDirty=false;rigFig=Math.abs(r.fig-fig)<1e-3?r.fig:fig;
-    for(let i=figures.length-1;i>=0;i--){const c=figures[i];
-      if(!inScene(c.g)){figures.splice(i,1);continue}
-      c.mats.forEach(m=>{m.emissive.copy(dirL.color);m.emissiveIntensity=rigFig})}}}
+  // The people's share of their own colour, up as the light goes down.
+  FIG_LIFT.value+=(r.fig-FIG_LIFT.value)*k}
 
 // What the graphics tests read: the renderer's colour pipeline, the rig of
 // this stage, the camera's fit, and how much of the island is inside the

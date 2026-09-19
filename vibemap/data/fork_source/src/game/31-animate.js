@@ -1,6 +1,12 @@
 // Scratch vectors for the frame loop. It runs sixty times a second for as
 // long as the tab is open, so nothing in it allocates.
 const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.Vector3();
+// The proximity button. The frame asks for it sixty times a second with the
+// same words, so the DOM is only written when the words change: parsing an
+// icon's markup every frame is work a phone feels.
+let enterHtml=null;
+function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
+function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
 function animate(){
   requestAnimationFrame(animate);if(!scene||gfxLost)return;const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the
@@ -39,7 +45,7 @@ function animate(){
   // The ring under the walker: three figures of the same size stand on this
   // island, and this is the one you steer.
   if(props.you){props.you.position.set(pos.x,.07,pos.z);props.you.material.opacity=started?.45+Math.sin(t*2.4)*.18:0}
-  tickAvatar(dt,t,sp);
+  tickAvatar(dt,t,sp);tickLapGlow(props.lapGlow,L);
   tickPet(dt,t);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
@@ -105,17 +111,17 @@ function animate(){
     const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;enterShow(icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name))}
+    else if(allDone&&nearInn){nearK=finaleStop();enterShow(icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete"))}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
-    else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
-    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    else if(np.d<2.6&&!locked){nearK=k;enterShow(icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n);if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
+    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;enterShow(icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase());return true}return false})()){}
     // A signpost that is not open yet is a question the island answers once,
     // after the artifacts have had their turn: a locked plot is not a target.
-    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+    else if(np.d<2.6&&locked){nearK=0;enterHide();
       if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
-    else{nearK=0;$("enter").classList.remove("on")}}
+    else{nearK=0;enterHide()}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
   if(started)checkCrossing(pos);

@@ -74,10 +74,17 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
-  // After dark the screen is what lights the face, which is the joke. A light
-  // costs no draw call, and the lid hides it from everything behind.
-  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
+// After dark the screen is what lights the face, which is the joke. The light
+// is the island's and not the laptop's: three.js compiles every lit material
+// again when the number of lights changes, so a light that came and went with
+// the laptop cost a second of frozen frame on every sit and every stand. This
+// one is always there, dark until somebody opens a laptop under it.
+const LAP_GLOW={at:new T.Vector3(0,1.24,.34),power:.9,reach:3.2};
+function lapGlow(){const l=new T.PointLight(PALETTE.blueBright,0,LAP_GLOW.reach);return l}
+function tickLapGlow(l,c){if(!l)return;const on=isSitting(c)&&c.lap&&c.lap.visible;l.intensity=on?LAP_GLOW.power:0;
+  if(on)l.position.copy(LAP_GLOW.at).applyAxisAngle(UP,c.g.rotation.y).add(c.g.position)}
+const UP=new T.Vector3(0,1,0);
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
 

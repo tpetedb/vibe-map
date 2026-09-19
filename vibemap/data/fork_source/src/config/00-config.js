@@ -68,7 +68,7 @@ const PLATE={minPx:22,maxPx:34,grow:4,fadeZoom:.35,gap:3};
 
 // The ground's texture: how many tufts an island gets, and how much darker
 // than the world's own grass colour they are.
-const GROUND={tufts:280,shade:.86};
+const GROUND={tufts:240,shade:.9};
 
 // Tone mapping: ACES with a little exposure, so bright grass and a lamp at
 // night roll off instead of clipping to the same flat value.
@@ -78,20 +78,20 @@ const EXPOSURE=1.06;
 // colour for the same nine. az and el are the bearing and the height of the
 // sun (of the moon from stage four) in degrees, sun is its colour, i its
 // intensity, zen the top of the sky dome over the world's horizon colour, and
-// hemi and amb the fill that keeps a night lit like a night. fig is the lift
-// the figures get in that light's colour: a night dark enough to make the
-// lamps worth having is also dark enough to lose a walker in a dark coat, and
-// the people are what the player is looking for.
+// hemi and amb the fill that keeps a night lit like a night. fig is the share
+// of their own colour the figures glow with: a night dark enough to make the
+// lamps worth having is also dark enough to lose the walker in, and the people
+// are what the player is looking for.
 const SKY_RIG=[
   {az:35,el:52,sun:"#FFF6E0",i:1.18,zen:"#3E8FD8",hemi:.44,amb:.12,hs:"#CFE9FF",hg:"#4A7A3A",fig:0},
   {az:20,el:34,sun:"#FFE3AE",i:1.06,zen:"#5C9BD6",hemi:.4,amb:.11,hs:"#D7E4F5",hg:"#4A6E3C",fig:0},
   {az:5,el:17,sun:"#FF9E5E",i:.9,zen:"#7A6FA8",hemi:.34,amb:.1,hs:"#E3C6C0",hg:"#4A4038",fig:0},
-  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A",fig:.06},
-  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434",fig:.12},
-  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C",fig:.14},
-  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824",fig:.16},
-  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320",fig:.17},
-  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A",fig:.18},
+  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A",fig:.1},
+  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434",fig:.2},
+  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C",fig:.24},
+  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824",fig:.27},
+  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320",fig:.29},
+  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A",fig:.3},
 ];
 
 // The pixel companion that follows the walker (src/game/19b-pet.js). The

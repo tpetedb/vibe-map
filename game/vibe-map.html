@@ -1105,7 +1105,7 @@ const PLATE={minPx:22,maxPx:34,grow:4,fadeZoom:.35,gap:3};
 
 // The ground's texture: how many tufts an island gets, and how much darker
 // than the world's own grass colour they are.
-const GROUND={tufts:280,shade:.86};
+const GROUND={tufts:240,shade:.9};
 
 // Tone mapping: ACES with a little exposure, so bright grass and a lamp at
 // night roll off instead of clipping to the same flat value.
@@ -1115,20 +1115,20 @@ const EXPOSURE=1.06;
 // colour for the same nine. az and el are the bearing and the height of the
 // sun (of the moon from stage four) in degrees, sun is its colour, i its
 // intensity, zen the top of the sky dome over the world's horizon colour, and
-// hemi and amb the fill that keeps a night lit like a night. fig is the lift
-// the figures get in that light's colour: a night dark enough to make the
-// lamps worth having is also dark enough to lose a walker in a dark coat, and
-// the people are what the player is looking for.
+// hemi and amb the fill that keeps a night lit like a night. fig is the share
+// of their own colour the figures glow with: a night dark enough to make the
+// lamps worth having is also dark enough to lose the walker in, and the people
+// are what the player is looking for.
 const SKY_RIG=[
   {az:35,el:52,sun:"#FFF6E0",i:1.18,zen:"#3E8FD8",hemi:.44,amb:.12,hs:"#CFE9FF",hg:"#4A7A3A",fig:0},
   {az:20,el:34,sun:"#FFE3AE",i:1.06,zen:"#5C9BD6",hemi:.4,amb:.11,hs:"#D7E4F5",hg:"#4A6E3C",fig:0},
   {az:5,el:17,sun:"#FF9E5E",i:.9,zen:"#7A6FA8",hemi:.34,amb:.1,hs:"#E3C6C0",hg:"#4A4038",fig:0},
-  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A",fig:.06},
-  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434",fig:.12},
-  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C",fig:.14},
-  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824",fig:.16},
-  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320",fig:.17},
-  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A",fig:.18},
+  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A",fig:.1},
+  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434",fig:.2},
+  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C",fig:.24},
+  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824",fig:.27},
+  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320",fig:.29},
+  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A",fig:.3},
 ];
 
 // The pixel companion that follows the walker (src/game/19b-pet.js). The
@@ -1272,7 +1272,7 @@ const FACE={
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
-function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);
   if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
 function say(k){const [who,t]=line(k);bubble(who,t)}
 // A mentor is known by their last name; a team is not a person, so a name that
@@ -1446,11 +1446,19 @@ function mergeStatic(g){
 // for two shrinks its font. The canvas is drawn at twice the plate's
 // coordinates so the text is sharp at the camera's distance, and the dark
 // stroke keeps it legible over bright grass.
-const plates=[];
-// Every walker, host and mentor on the island, for what applies to all of them.
-const figures=[];let figDirty=false;
+const plates=[];let plateProbe=null;
+// The night lift of the people on the island: a share of each figure's own
+// colour added to what the lights give it, so a face stays a face and a dark
+// coat stays dark. One uniform object is shared by every figure material, so
+// the rig moves them all by writing one number (tickRig), and one cache key
+// keeps them on one program per material kind.
+const FIG_LIFT={value:0};
+function figMat(m){m.onBeforeCompile=s=>{s.uniforms.uLift=FIG_LIFT;
+  s.fragmentShader="uniform float uLift;\n"+s.fragmentShader.replace("#include <emissivemap_fragment>",
+    "#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*uLift;")};
+  m.customProgramCacheKey=()=>"fig";m.needsUpdate=true;return m}
 function label(text,scale=1){const DPR=2,FONT=f=>"bold "+f+"px Inter,sans-serif";
-  const probe=label.probe||(label.probe=document.createElement("canvas").getContext("2d"));
+  const probe=plateProbe||(plateProbe=document.createElement("canvas").getContext("2d"));
   let fs=30;probe.font=FONT(fs);
   const wide=probe.measureText(text).width>222,CW=wide?512:256,MAXW=CW-34;
   while(fs>11&&probe.measureText(text).width>MAXW){fs-=1;probe.font=FONT(fs)}
@@ -1483,8 +1491,9 @@ function tickPlates(at,dt){
   const out=1-Math.max(0,Math.min(1,(camZoom()-PLATE.fadeZoom)/.3));
   for(let i=plates.length-1;i>=0;i--){const sp=plates[i],u=sp.userData;
     if(!inScene(sp)){plates.splice(i,1);continue}
+    // y0 is where the caller put the plate; it grows upwards from there.
     if(u.y0===undefined)u.y0=sp.position.y;
-    sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
+    sp.position.y=u.y0;sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
     u.want=u.off?0:Math.max(0,Math.min(1,(PLATE_FAR-u.d)/PLATE_FADE))*out;
     const depth=Math.max(.1,-_pw.applyMatrix4(camera.matrixWorldInverse).z);
     const px=u.sy*unit/depth,k=Math.min(PLATE.grow,Math.max(PLATE.minPx,Math.min(PLATE.maxPx,px))/px);
@@ -1545,9 +1554,9 @@ function character(spec){
   // A character carries a pose and a wardrobe; what they mean is the avatar
   // module's (src/game/18-avatar.js), so every walker, mentor and host has
   // the same actions available.
-  // The materials the night lifts (tickRig), collected before the wardrobe so
-  // a hat stays a hat.
-  c.mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive)c.mats.push(o.material)});figures.push(c);figDirty=true;
+  // The night lifts the body (figMat), before the wardrobe goes on so a lit
+  // screen or a hat keeps its own material.
+  g.traverse(o=>{if(o.isMesh&&o.material.isMeshStandardMaterial)figMat(o.material)});
   c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }
@@ -1742,7 +1751,7 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
     `<p class="small muted">In the vault: ${a.links.map(n=>`<span class="wl" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(" · ")}</p>`;
   // The sheet is built after boot, so its command block is wrapped and folded here.
   wrapCommands();$("s-artifact").querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
-  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, "+CONFIG.theme.guideRole;typeOut($("bub-text"),a.rolinda);
+  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent=roleName("rolinda");typeOut($("bub-text"),a.rolinda);
   openSheet("s-artifact")};
 window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const el=$("art-term");if(!el)return;el.textContent="";
   d.o.forEach((line,k)=>setTimeout(()=>{el.textContent+=(k?"\n":"")+line;el.scrollTop=el.scrollHeight},k*320))};
@@ -1880,10 +1889,17 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
-  // After dark the screen is what lights the face, which is the joke. A light
-  // costs no draw call, and the lid hides it from everything behind.
-  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
+// After dark the screen is what lights the face, which is the joke. The light
+// is the island's and not the laptop's: three.js compiles every lit material
+// again when the number of lights changes, so a light that came and went with
+// the laptop cost a second of frozen frame on every sit and every stand. This
+// one is always there, dark until somebody opens a laptop under it.
+const LAP_GLOW={at:new T.Vector3(0,1.24,.34),power:.9,reach:3.2};
+function lapGlow(){const l=new T.PointLight(PALETTE.blueBright,0,LAP_GLOW.reach);return l}
+function tickLapGlow(l,c){if(!l)return;const on=isSitting(c)&&c.lap&&c.lap.visible;l.intensity=on?LAP_GLOW.power:0;
+  if(on)l.position.copy(LAP_GLOW.at).applyAxisAngle(UP,c.g.rotation.y).add(c.g.position)}
+const UP=new T.Vector3(0,1,0);
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
 
@@ -2455,7 +2471,7 @@ function watchContext(c){
   c.addEventListener("webglcontextrestored",()=>{gfxLost=false;clock.getDelta();fitRenderer();gfxNotice()})}
 function gfxNotice(){const n=$("gfxlost");if(n)n.hidden=!gfxLost;
   $("stage").classList.toggle("lost",gfxLost);
-  if(gfxLost&&started){$("enter").classList.remove("on");openSheet("s-map")}}
+  if(gfxLost&&started){enterHide();openSheet("s-map")}}
 // The frame the island needs: the distance that makes a disc of the island's
 // radius fit inside both the vertical and the horizontal field of view. A
 // narrow window pushes the camera back rather than cropping the diorama, and
@@ -2630,6 +2646,7 @@ function buildWorld(id,carry){
   blobFlush();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.PlaneGeometry(1.4,1.4),new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.05;props.shadow.renderOrder=1;props.shadow.material.userData.cs=1;scene.add(props.shadow);
+  props.lapGlow=lapGlow();scene.add(props.lapGlow);
   // The ring that says which of the three figures you are steering.
   props.you=new T.Mesh(new T.RingGeometry(.62,.8,24),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:.75,side:T.DoubleSide}));props.you.rotation.x=-Math.PI/2;props.you.position.y=.07;props.you.renderOrder=2;props.you.material.userData.cs=1;scene.add(props.you);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -2643,16 +2660,16 @@ function buildWorld(id,carry){
 // they are what stops the ground being one flat sheet of colour under the
 // walker's feet. They keep off the path, the plots, the inn and the lake, and
 // they are seeded, so the island is the same island on every visit.
-function buildTufts(){const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
+function buildTufts(){if(!GROUND.tufts)return;const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
   let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
   for(let i=0;i<GROUND.tufts*3&&mats.length<GROUND.tufts;i++){
     const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*R,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.7+rnd()*.9,ry=rnd()*Math.PI;
     if(!W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-1.4))continue;
     if(Math.hypot(x,z)<6.2||Math.hypot(x-W.lake[0],z-W.lake[1])<4.2)continue;
     if(PLOT_POS.some(p=>Math.hypot(x-p.x,z-p.z)<3)||path.some(p=>Math.hypot(x-p.x,z-p.z)<1.5))continue;
-    mats.push(xform(x,.1*s,z,0,ry,0,new T.Vector3(s,s,s)))}
+    mats.push(xform(x,.05*s,z,0,ry,0,new T.Vector3(s,s,s)))}
   const c=new T.Color(W.grass).multiplyScalar(GROUND.shade);
-  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.22,.3,5)),mat("#"+c.getHexString()),mats,false);
+  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.2,.13,5)),mat("#"+c.getHexString()),mats,false);
   if(im)im.receiveShadow=true;props.tufts=im}
 // One building per artifact of this world that names a model in ART_PROPS;
 // the group is an obstacle so the walker goes round it, and the ring stays.
@@ -2735,13 +2752,14 @@ function buildSky(){
   geo.setAttribute("color",new T.BufferAttribute(c,3));
   const m=new T.MeshBasicMaterial({color:"#ffffff",vertexColors:true,side:T.BackSide,fog:false,depthWrite:false});
   m.userData.cs=1;
-  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d}
+  // A new dome has no colours yet, whatever the last one was painted with.
+  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d;skyPainted=-1}
 // The ramp, repainted whenever the stage moves. Height runs from the horizon
 // to the zenith over the top half of the dome; below the horizon it holds the
 // horizon colour, which is also the fog, so the two meet with no seam.
-const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted="";
+const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted=-1;
 function paintSky(bottom,top){const d=props.sky;if(!d)return;
-  const key=bottom.getHexString()+top.getHexString();if(key===skyPainted)return;skyPainted=key;
+  const key=bottom.getHex()*16777216+top.getHex();if(key===skyPainted)return;skyPainted=key;
   _skyBot.copy(bottom).convertSRGBToLinear();_skyTop.copy(top).convertSRGBToLinear();
   const p=d.geometry.attributes.position,c=d.geometry.attributes.color,r=140*WORLD_SCALE;
   for(let i=0;i<p.count;i++){const t=Math.max(0,Math.min(1,p.getY(i)/r*1.35+.06));
@@ -2789,7 +2807,6 @@ function seaMaterial(){
   return m}
 
 let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
-let rigFig=0;
 const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3(),_far=new T.Vector3();
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
   if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}
@@ -2812,13 +2829,8 @@ function tickRig(k){const r=SKY_RIG[skyN],WS=WORLD_SCALE;
   sunM.position.copy(_far);sunM.visible=skyN<4;
   moonM.position.copy(_far);moonM.visible=skyN>=4;
   rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen);
-  // The figures' lift, in the light's own colour. Written only when it moves
-  // or a figure is new, and figures that have left the scene drop off the list.
-  const fig=rigFig+(r.fig-rigFig)*k;
-  if(figDirty||Math.abs(fig-rigFig)>1e-4){figDirty=false;rigFig=Math.abs(r.fig-fig)<1e-3?r.fig:fig;
-    for(let i=figures.length-1;i>=0;i--){const c=figures[i];
-      if(!inScene(c.g)){figures.splice(i,1);continue}
-      c.mats.forEach(m=>{m.emissive.copy(dirL.color);m.emissiveIntensity=rigFig})}}}
+  // The people's share of their own colour, up as the light goes down.
+  FIG_LIFT.value+=(r.fig-FIG_LIFT.value)*k}
 
 // What the graphics tests read: the renderer's colour pipeline, the rig of
 // this stage, the camera's fit, and how much of the island is inside the
@@ -3180,6 +3192,12 @@ let nearK=0,started=false,inited=false,lastSay="";
 // Scratch vectors for the frame loop. It runs sixty times a second for as
 // long as the tab is open, so nothing in it allocates.
 const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.Vector3();
+// The proximity button. The frame asks for it sixty times a second with the
+// same words, so the DOM is only written when the words change: parsing an
+// icon's markup every frame is work a phone feels.
+let enterHtml=null;
+function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
+function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
 function animate(){
   requestAnimationFrame(animate);if(!scene||gfxLost)return;const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the
@@ -3218,7 +3236,7 @@ function animate(){
   // The ring under the walker: three figures of the same size stand on this
   // island, and this is the one you steer.
   if(props.you){props.you.position.set(pos.x,.07,pos.z);props.you.material.opacity=started?.45+Math.sin(t*2.4)*.18:0}
-  tickAvatar(dt,t,sp);
+  tickAvatar(dt,t,sp);tickLapGlow(props.lapGlow,L);
   tickPet(dt,t);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
@@ -3284,17 +3302,17 @@ function animate(){
     const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;enterShow(icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name))}
+    else if(allDone&&nearInn){nearK=finaleStop();enterShow(icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete"))}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
-    else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
-    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    else if(np.d<2.6&&!locked){nearK=k;enterShow(icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n);if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
+    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;enterShow(icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase());return true}return false})()){}
     // A signpost that is not open yet is a question the island answers once,
     // after the artifacts have had their turn: a locked plot is not a target.
-    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+    else if(np.d<2.6&&locked){nearK=0;enterHide();
       if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
-    else{nearK=0;$("enter").classList.remove("on")}}
+    else{nearK=0;enterHide()}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
   if(started)checkCrossing(pos);

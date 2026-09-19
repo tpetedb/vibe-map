@@ -419,6 +419,25 @@ def test_a_walk_leaves_no_dust_behind_on_the_gpu(game_desktop: GamePage) -> None
     game.assert_clean()
 
 
+def test_sitting_down_compiles_no_shaders(game_desktop: GamePage) -> None:
+    """The laptop's glow is a light the island always has.
+
+    three.js compiles every lit material again when the number of lights
+    changes, which froze the frame for a second on every sit and every stand.
+    """
+    game = _island(game_desktop)
+    programs = _gfx(game)["mem"]["programs"]
+    game.page.keyboard.press("x")
+    game.until("window.__avatar().pose === 'sit'")
+    game.frames(3)
+    assert _gfx(game)["mem"]["programs"] == programs
+    game.page.keyboard.press("x")
+    game.until("window.__avatar().pose !== 'sit'")
+    game.frames(3)
+    assert _gfx(game)["mem"]["programs"] == programs
+    game.assert_clean()
+
+
 def test_a_lost_webgl_context_says_so_and_comes_back(game_desktop: GamePage) -> None:
     game = _island(game_desktop)
     game.page.evaluate(

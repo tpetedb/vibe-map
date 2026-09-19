@@ -123,11 +123,19 @@ function mergeStatic(g){
 // for two shrinks its font. The canvas is drawn at twice the plate's
 // coordinates so the text is sharp at the camera's distance, and the dark
 // stroke keeps it legible over bright grass.
-const plates=[];
-// Every walker, host and mentor on the island, for what applies to all of them.
-const figures=[];let figDirty=false;
+const plates=[];let plateProbe=null;
+// The night lift of the people on the island: a share of each figure's own
+// colour added to what the lights give it, so a face stays a face and a dark
+// coat stays dark. One uniform object is shared by every figure material, so
+// the rig moves them all by writing one number (tickRig), and one cache key
+// keeps them on one program per material kind.
+const FIG_LIFT={value:0};
+function figMat(m){m.onBeforeCompile=s=>{s.uniforms.uLift=FIG_LIFT;
+  s.fragmentShader="uniform float uLift;\n"+s.fragmentShader.replace("#include <emissivemap_fragment>",
+    "#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*uLift;")};
+  m.customProgramCacheKey=()=>"fig";m.needsUpdate=true;return m}
 function label(text,scale=1){const DPR=2,FONT=f=>"bold "+f+"px Inter,sans-serif";
-  const probe=label.probe||(label.probe=document.createElement("canvas").getContext("2d"));
+  const probe=plateProbe||(plateProbe=document.createElement("canvas").getContext("2d"));
   let fs=30;probe.font=FONT(fs);
   const wide=probe.measureText(text).width>222,CW=wide?512:256,MAXW=CW-34;
   while(fs>11&&probe.measureText(text).width>MAXW){fs-=1;probe.font=FONT(fs)}
@@ -160,8 +168,9 @@ function tickPlates(at,dt){
   const out=1-Math.max(0,Math.min(1,(camZoom()-PLATE.fadeZoom)/.3));
   for(let i=plates.length-1;i>=0;i--){const sp=plates[i],u=sp.userData;
     if(!inScene(sp)){plates.splice(i,1);continue}
+    // y0 is where the caller put the plate; it grows upwards from there.
     if(u.y0===undefined)u.y0=sp.position.y;
-    sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
+    sp.position.y=u.y0;sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
     u.want=u.off?0:Math.max(0,Math.min(1,(PLATE_FAR-u.d)/PLATE_FADE))*out;
     const depth=Math.max(.1,-_pw.applyMatrix4(camera.matrixWorldInverse).z);
     const px=u.sy*unit/depth,k=Math.min(PLATE.grow,Math.max(PLATE.minPx,Math.min(PLATE.maxPx,px))/px);

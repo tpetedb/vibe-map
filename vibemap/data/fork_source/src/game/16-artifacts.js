@@ -150,7 +150,7 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
     `<p class="small muted">In the vault: ${a.links.map(n=>`<span class="wl" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(" · ")}</p>`;
   // The sheet is built after boot, so its command block is wrapped and folded here.
   wrapCommands();$("s-artifact").querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
-  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, "+CONFIG.theme.guideRole;typeOut($("bub-text"),a.rolinda);
+  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent=roleName("rolinda");typeOut($("bub-text"),a.rolinda);
   openSheet("s-artifact")};
 window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const el=$("art-term");if(!el)return;el.textContent="";
   d.o.forEach((line,k)=>setTimeout(()=>{el.textContent+=(k?"\n":"")+line;el.scrollTop=el.scrollHeight},k*320))};
