@@ -1,1 +1,0 @@
-- The vault graph labels the hubs first and drops a label that would land on one already drawn, so a dense patch reads instead of turning into a smear.

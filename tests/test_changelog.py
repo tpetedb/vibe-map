@@ -6,6 +6,8 @@ for `release`, where the shape of the file is the point.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from tests.conftest import ROOT
@@ -18,9 +20,10 @@ def write(folder, name: str, body: str) -> None:
     (folder / name).write_text(body)
 
 
-def test_the_repository_carries_its_fragments_and_a_readme() -> None:
+def test_the_repository_carries_a_readable_fragment_folder() -> None:
+    """Empty right after a release is fine; a malformed fragment is not."""
     assert (FRAGMENTS / "README.md").is_file()
-    assert changelog.read_fragments(), "changelog.d holds no entries"
+    changelog.read_fragments()
 
 
 def test_changelog_md_has_no_entries_of_its_own() -> None:
@@ -72,16 +75,25 @@ def test_draft_of_nothing_points_at_the_folder(tmp_path) -> None:
     assert "changelog.d" in changelog.draft(changelog.read_fragments(tmp_path))
 
 
+def _latest_release() -> tuple[str, str]:
+    """The newest released section: these tests must outlive a release."""
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    found = re.search(r"^## \[(\d+\.\d+\.\d+)\] - (\S+)", text, flags=re.M)
+    assert found, "CHANGELOG.md has no released section"
+    return found.group(1), found.group(2)
+
+
 def test_release_writes_a_dated_section_and_moves_the_links(tmp_path) -> None:
     write(tmp_path, "a.added.md", "- An addition.\n")
-    out = changelog.release("1.0.0", "2026-09-18", changelog.read_fragments(tmp_path))
-    assert "## [1.0.0] - 2026-09-18" in out
+    previous, released_on = _latest_release()
+    out = changelog.release("99.0.0", "2026-09-18", changelog.read_fragments(tmp_path))
+    assert "## [99.0.0] - 2026-09-18" in out
     assert "- An addition." in out
     base = "https://github.com/tpetedb/vibe-map/compare"
-    assert f"[Unreleased]: {base}/v1.0.0...HEAD" in out
-    assert f"[1.0.0]: {base}/v0.9.0...v1.0.0" in out
+    assert f"[Unreleased]: {base}/v99.0.0...HEAD" in out
+    assert f"[99.0.0]: {base}/v{previous}...v99.0.0" in out
     # The section that was there before is untouched, and Unreleased is empty.
-    assert "## [0.9.0] - 2026-09-17" in out
+    assert f"## [{previous}] - {released_on}" in out
     head, unreleased, _ = changelog._split(out)
     assert "### " not in unreleased
 
@@ -89,7 +101,9 @@ def test_release_writes_a_dated_section_and_moves_the_links(tmp_path) -> None:
 def test_release_refuses_a_version_that_is_already_in_the_file(tmp_path) -> None:
     write(tmp_path, "a.added.md", "- An addition.\n")
     with pytest.raises(SystemExit):
-        changelog.release("0.9.0", "2026-09-18", changelog.read_fragments(tmp_path))
+        changelog.release(
+            _latest_release()[0], "2026-09-18", changelog.read_fragments(tmp_path)
+        )
 
 
 def test_release_refuses_a_number_that_is_not_semver(tmp_path) -> None:

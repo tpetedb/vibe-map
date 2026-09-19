@@ -190,6 +190,13 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    until start), so the panel sits left on wide screens and leaves the
    right half of the stage clear. */
 #title{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;padding:16px;background:rgba(0,0,0,.22)}
+/* The title is modal: the island keeps turning behind it, but the HUD, the
+   walk hint and the speech bubble are covered by the panel and dead to a
+   click, so they are hidden rather than half readable under it. Hidden, not
+   removed: the stage keeps its size, so the camera does not jump at Start.
+   This is also what takes the HUD out of the tab order until then. */
+body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
+body:has(#title:not(.off)) #talk{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -222,8 +229,14 @@ details.brief p{margin-top:8px}
 .setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
 .setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
 /* The primary row stays on screen however long the form gets, and the setup
-   guide is rendered below it rather than between two steps. */
-#title .box .row.go{position:sticky;bottom:-18px;z-index:2;margin:14px -22px -18px;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
+   guide is rendered below it rather than between two steps. Both offsets: a
+   sticky bottom alone lets the row scroll off the top once the guide is open,
+   and the field and the button must never be out of reach. The top offset is
+   the box's own padding, so the held row covers that strip instead of leaving
+   a clipped line of text above itself. The row's own
+   padding fills the box's bottom padding when it rests at the end, so it takes
+   no negative margin, which would print the opaque row over the text below. */
+#title .box .row.go{position:sticky;top:-22px;bottom:-18px;z-index:2;margin:14px -22px 0;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
 #title .box .row.go #name{flex:1;min-width:150px;width:auto}
 #title .box .row.go #namehint{flex-basis:100%;margin:-2px 0 0;font-size:13px}
 #title .box .row.go+.setup{margin-top:18px}
@@ -232,7 +245,12 @@ details.brief p{margin-top:8px}
   #name.shake{animation:shake 320ms var(--ease)}
   @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-4px)}}
 }
-#title.returning #onboard{display:none}
+/* First visit: the steps are the screen, so the disclosure is invisible and
+   only a returning player gets the line that opens them again. */
+#title:not(.returning) #obfold>summary{display:none}
+#obfold>summary{cursor:pointer;font-size:13px;color:var(--blue-bright);list-style:none;font-family:var(--font-mono);margin:12px 0 0}
+#obfold>summary::-webkit-details-marker{display:none}
+#obfold>summary::before{content:"> "}#obfold[open]>summary::before{content:"v "}
 #title.returning details.brief{margin-top:10px}
 /* Lesson commands fold at hard and above; the summary is the only thing
    that changes with the difficulty, the commands are always one click away. */
@@ -500,11 +518,14 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
-    <div id="onboard"></div>
+    <!-- The five steps fold rather than disappear for a returning player, so
+         the look, the difficulty and the play mode stay changeable on every
+         later evening. 90-boot.js closes it once a stop is done. -->
+    <details id="obfold" open><summary>Change your setup</summary><div id="onboard"></div></details>
     <!-- The field and the button the copy points at travel together: both live
          in the sticky row, so neither can be below the fold while the other is
          on screen. -->
-    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
+    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();start()}"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
@@ -1012,7 +1033,7 @@ gh auth login</code></pre>
 </script>
 <script>
 (function(){
-const CONFIG={"version": "0.9.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda.", "taglineSuffix": "Four evenings, eight stops each, at your own pace.", "goLabel": "Start", "resumeLabel": "Resume", "stopLabel": "Stops", "kpiLabels": ["Progress", "Streak", "Connections", "Found"]}, "dates": ["Friday evening", "Saturday afternoon", "Saturday evening", "Sunday afternoon", "A weekday evening"], "repo": "https://github.com/tpetedb/vibe-map", "site": "https://tpetedb.github.io/vibe-map/", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "provider": "claude", "mode": "campaign", "interests": [], "personaInterests": ["agents", "docs", "knowledge"], "pet": {"species": "crab", "enabled": true}, "vault": {"mode": "full"}, "news": {"live": true}};
+const CONFIG={"version": "0.10.0", "theme": {"id": "studio", "tone": "plain", "hostRole": "Site Reliability Engineer", "guideRole": "Head of Operations", "pairing": "coffee", "showPairings": true, "intro": "Welcome to the campus. Over one evening you build one small piece of software with an AI coding agent, keep it under version control, connect it to real data and one tool, publish it, and schedule an agent to run without you. Eight stops, each with a definition of done and one plain question at the end. Tom keeps the systems up; Rolinda asks the questions everyone else is too polite to ask.", "pairings": ["Espresso, to start", "Filter, slow", "Flat white", "Cortado", "Cold brew", "Decaf, sensibly", "Sparkling water", "Still water"], "signOff": "Done is a green check and one sentence you can explain to Rolinda.", "taglineSuffix": "Four evenings, eight stops each, at your own pace.", "goLabel": "Start", "resumeLabel": "Resume", "stopLabel": "Stops", "kpiLabels": ["Progress", "Streak", "Connections", "Found"]}, "dates": ["Friday evening", "Saturday afternoon", "Saturday evening", "Sunday afternoon", "A weekday evening"], "repo": "https://github.com/tpetedb/vibe-map", "site": "https://tpetedb.github.io/vibe-map/", "shadowMap": 2048, "difficulty": "normal", "persona": "chief-of-staff", "provider": "claude", "mode": "campaign", "interests": [], "personaInterests": ["agents", "docs", "knowledge"], "pet": {"species": "crab", "enabled": true}, "vault": {"mode": "full"}, "news": {"live": true}};
 const NEWS={"version": 2, "fetched_at": "2026-09-18T13:54:29Z", "items": [{"id": "b701a7e31470", "source": "lwn-headlines", "name": "LWN.net", "kind": "post", "title": "Systemtap 5.6 released", "link": "https://lwn.net/Articles/1095220/", "date": "2026-09-18T12:58:42Z", "summary": "Version 5.6 of the Systemtap tracing tool has been released. BPF LSM hooks and XDP packet-processing probes for the --bpf runtime, BTF-based kernel.tracepoint probes, statement execution tracing, a new @enumname()...", "tags": ["shell", "ship"]}, {"id": "ea29658a0050", "source": "lwn-headlines", "name": "LWN.net", "kind": "post", "title": "Security updates for Friday", "link": "https://lwn.net/Articles/1095219/", "date": "2026-09-18T12:52:10Z", "summary": "Security updates have been issued by AlmaLinux (.NET 10.0, coreutils, kernel, libevent, libsoup3, microcode_ctl, perl-Net-DNS, postgresql18, postgresql:16, postgresql:18, tomcat, and unbound), Debian (bind9, chromium...", "tags": ["shell", "ship"]}, {"id": "5b59161f0e8e", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.156.0-alpha.2", "link": "https://github.com/openai/codex/releases/tag/rust-v0.156.0-alpha.2", "date": "2026-09-18T05:04:39Z", "summary": "Release 0.156.0-alpha.2", "tags": ["agents"]}, {"id": "b92c247dcc1a", "source": "arxiv-cs-ai", "name": "arXiv cs.AI", "kind": "post", "title": "Regularized Emphatic Temporal-Difference Learning: Stability under Constant Stepsizes", "link": "https://arxiv.org/abs/2609.19170", "date": "2026-09-18T04:00:00Z", "summary": "arXiv:2609.19170v1 Announce Type: new Abstract: Emphatic temporal-difference learning (ETD) stabilizes the expected off-policy TD update and changes its projection geometry, but neither property determines...", "tags": ["agents"]}, {"id": "7b3bd791b71a", "source": "arxiv-cs-ai", "name": "arXiv cs.AI", "kind": "post", "title": "BioPhys-Bridge: A Benchmark for Interdisciplinary Scientific Reasoning in Physics-Grounded Biological Research", "link": "https://arxiv.org/abs/2609.19180", "date": "2026-09-18T04:00:00Z", "summary": "arXiv:2609.19180v1 Announce Type: new Abstract: Language models face unique challenges in analyzing interdisciplinary scientific research literature. In biophysics research, faithful answers require grounding observed...", "tags": ["agents"]}, {"id": "8c88d48a4f44", "source": "arxiv-cs-ai", "name": "arXiv cs.AI", "kind": "post", "title": "What Do We Expect from LLMs? Mapping the Design of LLM Benchmarks", "link": "https://arxiv.org/abs/2609.19182", "date": "2026-09-18T04:00:00Z", "summary": "arXiv:2609.19182v1 Announce Type: new Abstract: Benchmarks are central to how progress in large language models (LLMs) is assessed and communicated. Yet model rankings alone reveal little about how evaluation...", "tags": ["agents"]}, {"id": "9985050c9044", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.155.0-alpha.9.2", "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.9.2", "date": "2026-09-18T03:13:47Z", "summary": "Release 0.155.0-alpha.9.2", "tags": ["agents"]}, {"id": "c18e91983c94", "source": "uv-releases", "name": "uv releases", "kind": "release", "title": "0.12.15", "link": "https://github.com/astral-sh/uv/releases/tag/0.12.15", "date": "2026-09-18T02:36:52Z", "summary": "Release Notes Released on 2026-09-15. Performance Speed up cold-cache resolution and HTTP cache revalidation by batching cache writes ( #21675 ) Bug fixes Fix regressions in 0.12.14 when installing to symlinked...", "tags": ["code"]}, {"id": "4399ac2176df", "source": "uv-releases", "name": "uv releases", "kind": "release", "title": "0.12.14", "link": "https://github.com/astral-sh/uv/releases/tag/0.12.14", "date": "2026-09-18T02:36:49Z", "summary": "Release Notes Released on 2026-09-15. Enhancements Resume interrupted downloads with HTTP Range requests when supported ( #21570 ) Use a consistent format for error rendering ( #17110 ) Render error and warning causes...", "tags": ["code"]}, {"id": "3575631df8c6", "source": "claude-code-releases", "name": "Claude Code releases", "kind": "release", "title": "v2.1.276", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.276", "date": "2026-09-18T02:12:26Z", "summary": "What's changed Fixed every request failing with 400 … Input tag 'advisor_20260301' when ANTHROPIC_BASE_URL points at a proxy or gateway (2.1.275 regression)", "tags": ["agents"]}, {"id": "1e1d16021cc5", "source": "uv-releases", "name": "uv releases", "kind": "release", "title": "0.12.16", "link": "https://github.com/astral-sh/uv/releases/tag/0.12.16", "date": "2026-09-18T01:01:42Z", "summary": "Release Notes Released on 2026-09-17. Python Add Pyodide 314.0.7, 0.29.5, and 0.27.8 ( #21741 ) Enhancements Verify downloaded wheels and source distributions against hashes supplied by package indexes ( #21562 ) Allow...", "tags": ["code"]}, {"id": "02a18c36914d", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.156.0-alpha.1", "link": "https://github.com/openai/codex/releases/tag/rust-v0.156.0-alpha.1", "date": "2026-09-18T00:31:15Z", "summary": "Release 0.156.0-alpha.1", "tags": ["agents"]}, {"id": "acc67ef32e42", "source": "simon-willison", "name": "Simon Willison", "kind": "post", "title": "Be alert: targeted attacks on prominent Rustaceans", "link": "https://simonwillison.net/2026/Sep/17/targeted-attacks-on-rustaceans/", "date": "2026-09-17T23:59:19Z", "summary": "Be alert: targeted attacks on prominent Rustaceans Important warning from Adam Harvey and the crates security team: We believe that there is an ongoing campaign targeting rust-lang members and owners of popular crates...", "tags": ["agents", "code"]}, {"id": "e4addcf48f06", "source": "simon-willison", "name": "Simon Willison", "kind": "post", "title": "How To Write With An LLM", "link": "https://simonwillison.net/2026/Sep/17/how-to-write-with-an-llm/", "date": "2026-09-17T23:37:27Z", "summary": "How To Write With An LLM Thomas Ptacek on using LLMs as copyeditors, not as writing assistants: Rule Number One: You may not use a single word an LLM suggests to you. [...] I think that as a form of intellectual...", "tags": ["agents", "code"]}, {"id": "271950b5c74d", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.155.0", "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0", "date": "2026-09-17T23:16:01Z", "summary": "New Features Added experimental /voice conversations with live transcripts and microphone controls on supported builds, enabled through /experimental . ( #43581 , #43651 , #44331 ) The TUI now shows live reasoning...", "tags": ["agents"]}, {"id": "0440cb315cc4", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.155.0-alpha.18", "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.18", "date": "2026-09-17T22:49:12Z", "summary": "Release 0.155.0-alpha.18", "tags": ["agents"]}, {"id": "965bd319e890", "source": "claude-code-releases", "name": "Claude Code releases", "kind": "release", "title": "v2.1.275", "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.275", "date": "2026-09-17T22:33:17Z", "summary": "What's changed Added the signed-in account to Claude apps gateway sign-in: when the gateway names it, you confirm it before the credential is saved, and /status shows it Added a send-now key (ctrl+enter, or ctrl+x...", "tags": ["agents"]}, {"id": "cfbfb7473f2f", "source": "github-changelog", "name": "GitHub Changelog", "kind": "post", "title": "Copilot impact dashboard now shows feature engagement", "link": "https://github.blog/changelog/2026-09-17-copilot-impact-dashboard-now-shows-feature-engagement", "date": "2026-09-17T21:47:27Z", "summary": "The Copilot impact dashboard now shows how many active users regularly use key Copilot features. Enterprise administrators can quickly see which experiences are widely adopted and which may need more&#8230; The post...", "tags": ["git"]}, {"id": "579b9dbabecc", "source": "codex-releases", "name": "Codex releases", "kind": "release", "title": "0.155.0-alpha.17", "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.17", "date": "2026-09-17T21:19:20Z", "summary": "Release 0.155.0-alpha.17", "tags": ["agents"]}, {"id": "7fbb1d664de3", "source": "github-changelog", "name": "GitHub Changelog", "kind": "post", "title": "Agentic CLI customizations now in the usage metrics API", "link": "https://github.blog/changelog/2026-09-17-agentic-cli-customizations-now-in-the-usage-metrics-api", "date": "2026-09-17T21:08:50Z", "summary": "GitHub Copilot expands existing CLI report coverage with agentic activity metrics for skills, custom agents, Model Context Protocol (MCP) servers, slash commands, and plugins. What&#8217;s new The fields appear...", "tags": ["git"]}, {"id": "2f269a03d10a", "source": "simon-willison", "name": "Simon Willison", "kind": "post", "title": "Self-generated prompt injections in compaction summaries", "link": "https://simonwillison.net/2026/Sep/17/compaction-summaries/", "date": "2026-09-17T20:57:55Z", "summary": "Self-generated prompt injections in compaction summaries In Our framework for reporting model misalignment OpenAI provide \"six reports on unexpected or concerning model behavior we’ve observed in the last six months\"...", "tags": ["agents", "code"]}, {"id": "a4ef61465bc2", "source": "github-changelog", "name": "GitHub Changelog", "kind": "post", "title": "Ubuntu 26 generally available and latest migration", "link": "https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration", "date": "2026-09-17T16:27:16Z", "summary": "The Ubuntu 26.04 runner image for GitHub Actions is now out of public preview and fully supported for production workflows on both x64 and arm64. As part of this release,&#8230; The post Ubuntu 26 generally available...", "tags": ["git"]}, {"id": "ba788d57500e", "source": "github-changelog", "name": "GitHub Changelog", "kind": "post", "title": "Workflow execution protections in GitHub Actions generally available", "link": "https://github.blog/changelog/2026-09-17-workflow-execution-protections-in-github-actions-generally-available", "date": "2026-09-17T15:45:26Z", "summary": "Workflow execution protections for GitHub Actions, previously in public preview, are now generally available for GitHub Enterprise, organizations, and repositories. Execution protections let you define an allowlist that...", "tags": ["git"]}, {"id": "19b83421b880", "source": "lwn-headlines", "name": "LWN.net", "kind": "post", "title": "[$] Thread-identity switcheroo for io_uring", "link": "https://lwn.net/Articles/1094303/", "date": "2026-09-17T13:49:59Z", "summary": "The io_uring subsystem is all about asynchronous execution; applications count on it to not block — unless explicitly requested to. Within io_uring, maintaining the \"never blocks\" guarantee has sometimes been a...", "tags": ["shell", "ship"]}]};
 // Source configuration for the game: the numbers and colours a fork changes
 // first. The build concatenates every file in src/config/ ahead of the game
@@ -1120,7 +1141,7 @@ let CH=[
 // every other theme uses. Rolinda asks the simple question in both.
 const SAY_WINE={
   title:["tom","Welcome aboard, and thank you for prioritising this. Confirm your preferred name, then we kick off. I have blocked four hours, one bottle, and a contingency bottle."],
-  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the 18:00 signpost before it warms up."],
+  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the {stop1} signpost before it warms up."],
   near:["rolinda","Go on then. Tap Enter. Swirl first, it needs air, like most of your MVP."],
   1:["tom","Let's not boil the ocean here. Three sentences, press the button, ship it. Zero enablement this hour, that is a feature, not a gap."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Also this Chardonnay is opening up. Notes of hazelnut and mild regret."],
@@ -1136,7 +1157,7 @@ const SAY_WINE={
 };
 const SAY_PLAIN={
   title:["tom","Welcome. Confirm your name and we start. Four hours are blocked, the coffee is on, and nothing on this island can break in a way we cannot undo."],
-  walk:["rolinda","Coffee is poured. Walk to the 18:00 signpost; the first stop is the one where you build something."],
+  walk:["rolinda","Coffee is poured. Walk to the {stop1} signpost; the first stop is the one where you build something."],
   near:["rolinda","Go on, tap Enter. Read the definition of done first, then do the thing, then tell me in one sentence what happened."],
   1:["tom","Three sentences, one file, ship it. We fix the loop before we fix the game."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Write that down; that is the whole lesson."],
@@ -1151,6 +1172,18 @@ const SAY_PLAIN={
   fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
 };
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
+// SAY is the campus voice. An island that is not the campus has no hub and no
+// date to pick, and production ends the campaign, so their closing lines and
+// their walk line are overrides on the same keys.
+const SAY_WORLD={
+  winter:{fin:["rolinda","Every stop on this island is done. The next environment is one bridge away; take it when you are ready."]},
+  desert:{fin:["rolinda","Every stop on this island is done. One environment left, and it is the one you cannot break gently."]},
+  prod:{fin:["rolinda","Every stop on production is done, which is the whole campaign. Nothing left to deploy tonight; go and tell somebody what you built."]}
+};
+// The one place a line is chosen: the island's override, else the campus line,
+// with the first signpost of this island filled in.
+function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
+  return [l[0],l[1].replace("{stop1}",CH[0]?CH[0].h:"first")]}
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
 // topics: the tech tree ids the terminal has verified. The game shows the tree
@@ -1159,8 +1192,10 @@ const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:""};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+// S.done is a view: the array doneW[world] under another name. Only the map is
+// written, so a reload can never copy one island's stops onto another.
+function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);delete S.done;if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 /* ---------------- the event log ---------------- */
 // One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
 // number of seconds when the event measures time. The log is local to this
@@ -1199,7 +1234,23 @@ const FACE={
 };
 // Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
-function say(k){const [who,t]=SAY[k];$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").textContent=t}}
+// Every line in the bubble goes through here: the face, the role the theme
+// gives the speaker, and the running type-out that a new line must cancel.
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+  if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
+function say(k){const [who,t]=line(k);bubble(who,t)}
+// A mentor is known by their last name; a team is not a person, so a name that
+// starts with "The" keeps all of it.
+function shortName(n){return /^The\s/.test(n)?n.charAt(0).toLowerCase()+n.slice(1):n.split(" ").slice(-1)[0]}
+// The stops of the island the player is on. CH is the island's ws, so a camp
+// that adds a ninth stop has nine, and the stop after the last one is the
+// finale on the campus and the end of the island everywhere else.
+function stopCount(){return CH.length}
+function finaleStop(){return CH.length+1}
+// The KPI says Streak, so the number is the one the CLI counts under that
+// name (vibemap/quests.py, badge streak-3): stops claimed today.
+function streakToday(){const day=new Date().toDateString();
+  return (S.events||[]).filter(e=>e.kind==="claim"&&new Date(e.ts).toDateString()===day).length}
 
 /* ---------------- 3D ---------------- */
 // Lucide icons, ISC licence, https://lucide.dev (see src/vendor/LUCIDE-LICENSE.txt).
@@ -2282,6 +2333,10 @@ function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id
 function buildWorld(id,carry){
   const prevBg=scene&&scene.background?scene.background.clone():null;
   W=WORLDS[id]||WORLDS.campus;S.world=id;if(!S.doneW[id])S.doneW[id]=[];S.done=S.doneW[id];CH=CAMPAIGN[id].ws;save();
+  // The bubble is about the island you are on, so arriving replaces whatever
+  // the island you left had put in it. Before the first start() it is the
+  // title's line, which start() writes itself.
+  if(started)say(S.done.length>=stopCount()?"fin":"walk");
   plots.length=0;clouds.length=0;parts.length=0;plates.length=0;for(const k in builds)delete builds[k];for(const k in props)delete props[k];obstacles=[];annexes=[];
   PLOT_POS=W.plots.map(p=>new T.Vector3(p[0],0,p[1]));
   // The bridges are ground, so they exist before anything asks onLandW.
@@ -2739,7 +2794,11 @@ function setupInput(){
   c.addEventListener("pointerup",e=>{if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()});
+  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+    // Enter is the keyboard twin of the proximity button, so it only fires
+    // while the page itself has focus and nothing is standing in front of it:
+    // a form field and an open panel keep their own Enter.
+    if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
   const j=$("joy"),kn=$("knob");let jid=null;
   j.addEventListener("pointerdown",e=>{jid=e.pointerId;j.setPointerCapture(jid);joy.on=true;jm(e)});
@@ -2868,15 +2927,21 @@ function animate(){
   tickPlates(pos);
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
-    const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
+    // The inn radius reaches over its terrace, so the last walk back ends at
+    // the finale rather than at the cafe standing on that terrace.
+    const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
+    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
     else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
     else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    // A signpost that is not open yet is a question the island answers once,
+    // after the artifacts have had their turn: a locked plot is not a target.
+    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+      if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
     else{nearK=0;$("enter").classList.remove("on")}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
@@ -2893,8 +2958,8 @@ function animChar(c,walking,dt,t){
 }
 
 /* ---------------- UI ---------------- */
-function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=[1,2,3,4,5,6,7,8].map(k=>`<i class="${S.done.includes(k)?'on':''}"></i>`).join("");
-  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),Math.round(S.done.length/8*100),v=>Math.round(v)+"%");countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
+function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=CH.map((c,i)=>`<i class="${S.done.includes(i+1)?'on':''}"></i>`).join("");
+  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),streakToday(),v=>String(Math.round(v)));countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
 // The minimap: the four islands, the bridges, you, and the next stop. It is a
 // 2D canvas rather than a second camera, so it costs no draw call in the
 // scene. Like everything else on screen it is derived: it reads S, WORLDS and
@@ -2974,7 +3039,7 @@ function tickMinimap(dt){
   mmBuild();mmT+=dt;if(mmT<.16)return;mmT=0;mmLayout();drawMinimap()}
 window.__minimap=()=>({open:mmCv?mmCv.style.display!=="none":false,phone:mmPhone(),
   islands:WORLD_IDS.length,bridges:bridges.length,size:MM_SIZE,painted:mmPaints});
-window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length===8?"fin":"walk")};
+window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line
 // their own headline and their own words with the link next to it. Never a
 // logo, never a sentence written for them (docs/adr/0010). NEWS is baked in at
@@ -3047,18 +3112,35 @@ addEventListener("pointerdown",e=>{if(!$("hud-more").classList.contains("open"))
 $("hud-menu").addEventListener("click",e=>{if(e.target.closest("button"))closeHudMenu()});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
-function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
+function renderEveningDone(){const id=S.world||"campus",t=CAMPAIGN[id],ids=Object.keys(WORLDS),last=ids.indexOf(id)===ids.length-1;
+  $("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>${last?"Campaign complete":"Island complete"}</h2><p>Every stop on this island is done. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. ${last?"That was the last environment of the campaign, so there is nothing left to deploy tonight.":"Pick the next environment from the World button, or walk the bridge."} Export your progress to the CLI so the vault on your Mac catches up.</p><div class="row">${last?"":`<button class="primary" onclick="nextWorld();closeSheet()">Next environment</button>`}<button class="${last?"primary":""}" onclick="openSheet('s-map')">Roadmap</button></div>`}
+// The way back out of a stop, in the words of the island you are on.
+const backLabel=()=>(S.world||"campus")==="campus"?"Back to the campus":"Back to the island";
+// The claim row is a view over S.done: a delivered stop offers one way back,
+// so no two buttons in the row ever carry the same name and the primary is
+// never a button that does nothing.
+function syncClaimRow(sc,n){const b=sc.querySelector('button[onclick^="claim("]');
+  if(!b||!S.done.includes(n))return;
+  const row=b.closest(".row"),others=row?[...row.querySelectorAll("button")].filter(x=>x!==b):[];
+  b.textContent=others.length?others[0].textContent:backLabel();
+  b.removeAttribute("onclick");b.onclick=closeSheet;others.forEach(x=>x.remove());
+  if(row)row.classList.add("actions")}
+
 // The encounter: the dialogue the learner walks through one exchange at a
 // time, then the exercise. Every mentor line paraphrases a recorded idea and
 // carries the link it came from; nothing here is a quote. The summary list of
 // ideas stays in the vault note, so the screen says each thing once.
 function mentorTalk(m){const d=m.encounter.dialogue;const seen=Math.min(d.length,S.met[m.id]||1);
   return d.slice(0,seen).map(x=>`<div class="mturn"><p class="you">${x.you}</p><p class="them"><b>${m.name}:</b> ${x.m} <a class="cite" href="${m.src[x.src][1]}" target="_blank" rel="noopener">${m.src[x.src][0]}</a></p></div>`).join("")}
+// The second check of a mentor quest, mirrored from vibemap/quests.py: it runs
+// at a strict difficulty, so the card only promises it there.
+const MENTOR_NOTE="notes.md",MENTOR_SECTION="## What I learned",MENTOR_WORDS=25;
+const strictChecks=()=>["hard","expert","god"].indexOf(typeof difficulty==="function"?difficulty():CONFIG.difficulty)>=0;
 function mentorExercise(m){const ex=m.encounter.exercise;const done=S.mentors.includes(m.id);
   return `<div class="card"><h3>${icon("compass")}Your exercise: ${ex.title}</h3>
    <p class="small muted">About ${ex.minutes} minutes, in <code>${ex.dir}/</code> in your camp.</p>
    <ol class="small">${ex.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
-   <p class="small"><b>Checked by</b> <code>vibe check --mentor ${m.id}</code>: ${ex.done}.</p>
+   <p class="small"><b>Checked by</b> <code>vibe check --mentor ${m.id}</code>: ${ex.done}${strictChecks()?`, and your note in <code>${ex.dir}/${MENTOR_NOTE}</code> with a ${MENTOR_SECTION} section of at least ${MENTOR_WORDS} words`:""}.</p>
    <p class="small ${done?"":"muted"}">${done?"Verified. The plaque on their spot reads: "+m.encounter.plaque:"Not verified yet. Run the check in your camp, then bring the progress code back here."}</p></div>`}
 window.talkMore=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const d=m.encounter.dialogue;
   S.met[id]=Math.min(d.length,(S.met[id]||1)+1);save();$("mtalk").innerHTML=mentorTalk(m);
@@ -3074,32 +3156,42 @@ window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;c
    <div class="rolinda"><b>Rolinda asks</b>${m.ask}</div>
    <div class="row"><button class="primary" onclick="choosePath('${id}','deep')">${st==="deep"?"Keep on my path":"Tell me more"}</button><button onclick="choosePath('${id}','skip')">${st==="skip"?"Still not now":"Not interested for now"}</button><button onclick="closeSheet()">Back</button></div>
    <p class="small muted">Your choice is saved to your path (Roadmap) and to the vault. You can come back and change it.</p>`;
-  $("bub-face").innerHTML=FACE.tom;$("bub-who").textContent="Tom, Site Reliability Engineer";$("bub-text").textContent=m.name+" is on the island. Ask, or walk on. Either is a valid product decision.";openSheet("s-mentor")};
+  bubble("tom",m.name+" is on the island. Ask, or walk on. Either is a valid product decision.");openSheet("s-mentor")};
 window.choosePath=function(id,v){S.path[id]=v;save();if(props.mentors&&!S.mentors.includes(id)){const c=props.mentors.find(x=>x.id===id);if(c)c.ring.material.color.set(v==="deep"?"#0088CC":"#F04923")}if(v==="deep"){$("deep").classList.add("on");$("deep").scrollIntoView({behavior:"smooth",block:"nearest"})}else closeSheet();hud()};
 function mentorFace(lk){return `<svg viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="28" rx="6" fill="#F5D7BC"/><rect x="4" y="4" width="32" height="10" rx="4" fill="${lk.hair}"/>${lk.glasses?'<rect x="9" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/><rect x="22" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/>':'<circle cx="14" cy="21" r="2" fill="#333"/><circle cx="26" cy="21" r="2" fill="#333"/>'}${lk.beard?'<rect x="10" y="27" width="20" height="8" rx="3" fill="'+lk.hair+'"/>':'<path d="M15 29 Q20 33 25 29" stroke="#B0534B" stroke-width="2" fill="none"/>'}</svg>`}
 function open(n){
   track("open",n);
   if(n===0){openSheet("s-0");return}
-  if((S.world||"campus")!=="campus"){if(n===9){renderEveningDone();say("fin");openSheet("s-gen");return}const w=CH[n-1];const done=S.done.includes(n);
-    $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html}<div class="row"><button class="primary" onclick="claim(${n})">${done?"Back to the island":"Mark as done and unlock the OKR"}</button><button onclick="closeSheet()">Back to the island</button></div>`;
-    $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, Head of Hospitality Operations";$("bub-text").textContent="Same rule as always: explain it to me in one sentence when you are done.";openSheet("s-gen");return}
-  if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
-  if(n===5)renderBridges();if(n===6)weave();if(n===9)renderFinale();
-  say(n);openSheet("s-"+n);
+  const sc=$("s-"+n);
+  // The campus lessons are sections written into the page; every other stop,
+  // including one a camp adds to an island, is rendered from the island's ws.
+  if((S.world||"campus")==="campus"&&sc){
+    if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
+    if(n===5)renderBridges();if(n===6)weave();if(n===finaleStop())renderFinale();
+    say(n);openSheet("s-"+n);syncClaimRow(sc,n);return}
+  const w=CH[n-1];
+  if(!w){renderEveningDone();say("fin");openSheet("s-gen");return}
+  const done=S.done.includes(n);
+  $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html||`<p>${w.d}</p>`}<div class="row"><button class="primary" onclick="claim(${n})">Mark as done and unlock the OKR</button><button onclick="closeSheet()">${backLabel()}</button></div>`;
+  bubble("rolinda","Same rule as always: explain it to me in one sentence when you are done.");
+  openSheet("s-gen");syncClaimRow($("s-gen"),n);
 }
-function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"campus"];
+function renderMap(){const ok=S.done.length>=stopCount();const ev=CAMPAIGN[S.world||"campus"];
   // Pre-flight (workstream 0) only exists on the campus; the other islands start at stop 1.
   const preflight=(S.world||"campus")==="campus"?`<button class="date" onclick="openCh(0)">Before the evening, Pre-flight<br><span class="small" style="opacity:.75">Install Claude Code, git, Obsidian. 20 minutes, alone.</span></button>`:"";
   $("plotlist").innerHTML=`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
     return `<button class="date${done?' pick':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
-    ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(9)">${icon("milestone")}Calendar alignment${ok?"":" (pending eight OKRs)"}</button>`:"")+
+    ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(${finaleStop()})">${icon("milestone")}Calendar alignment${ok?"":" (pending "+stopCount()+" OKRs)"}</button>`:"")+
     interestCard()+
-    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span>${interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)}<b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
+    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span>${interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)}<b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":S.met[m.id]?"met":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
     `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty-one things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span>${interestDot(matchedShelf(a.links))}<b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" aria-label="Open ${a.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
-    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
+    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length>=CAMPAIGN[k].ws.length?'deep':''}">${(S.doneW[k]||[]).length}/${CAMPAIGN[k].ws.length}</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
 }
 window.claim=function(n){
-  if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}
+  if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);
+    // A stop a camp added has data but no plot of its own on the island, so
+    // there is nothing to build on it.
+    if(PLOT_POS[n-1])placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length>=stopCount()?"fin":"done");lastSay="done";return}
   closeSheet()};
 
 
@@ -4307,7 +4399,7 @@ const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.is
 window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
-window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,config:CONFIG});
+window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,campaign:CAMPAIGN,config:CONFIG});
 // Test seam: the demo scripts behind the artifact terminal, so a test can wait
 // for the last line a demo types instead of guessing how long typing takes.
 window.__demos=()=>ART_DEMOS;
@@ -4453,9 +4545,9 @@ const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
   ["easy","Easy","Commands open, a little less hand-holding."],
   ["normal","Normal","Commands open. Checks look at what you built."],
-  ["hard","Hard","Commands folded (one click opens them). Strict checks."],
-  ["expert","Expert","Commands folded. Tests must exist and pass."],
-  ["god","God","Commands folded. just verify must be green to claim."]
+  ["hard","Hard","Command blocks folded (one click opens them). Strict checks."],
+  ["expert","Expert","Command blocks folded. Tests must exist and pass."],
+  ["god","God","Command blocks folded. just verify must be green to claim."]
 ];
 // The walker spec for the current player. Unknown or missing looks fall back
 // to Lotte for a saved game that was played as her, else to your own look.
@@ -4514,7 +4606,7 @@ vibe vault build</code></pre>
 <p class="small muted">You should see: <code>vault/Camp/Tonight.md</code> on disk, and a graph with notes in it in Obsidian.</p>
 <h4>5. Keep the two in sync</h4>
 <p class="small">Progress here and progress in the terminal are one code. After a session in either place, carry it across:</p>
-<pre><code>vibe export                                # prints a code; paste it in the game under World, Sync
+<pre><code>vibe export                                # prints a code; paste it in the game under Roadmap, Sync
 vibe import &lt;code from the game&gt;           # the other way round</code></pre>
 <p class="small muted">You should see: a long code on export, and a line naming the stops that were added on import.</p>
 <h4>6. Confirm the whole thing</h4>
@@ -4524,7 +4616,12 @@ vibe import &lt;code from the game&gt;           # the other way round</code></p
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+// A preset's label is the picker's own writing, never something the player
+// typed, so it is the one value "Your own name" is allowed to clear.
+function presetLabel(v){return Object.keys(LOOKS).some(k=>k!=="own"&&LOOKS[k].label===v)}
+window.pickLook=function(id){S.look=id;const nm=$("name");
+  if(id!=="own")nm.value=LOOKS[id].label;else{if(presetLabel(nm.value))nm.value="";nm.focus()}
+  S.name=nm.value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
 // The walker carries the name on a sprite, so it is rebuilt after typing
@@ -4564,6 +4661,15 @@ ${presetRow()}
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
+// The title is modal: until Start the campus behind it is not there. The
+// stylesheet takes away the HUD's tab stops and its clicks; this takes away the
+// global keys, so c, Cmd K and Escape cannot open a panel over the form or
+// claim a stop before the game has begun. A key aimed at the form is swallowed
+// on its way out, after the field or the button it was aimed at has had it; a
+// key aimed at nothing is swallowed on the window, before the handlers there.
+function swallowKey(e){if(!$("title").classList.contains("off"))e.stopPropagation()}
+$("title").addEventListener("keydown",swallowKey);
+addEventListener("keydown",e=>{if(!$("title").contains(e.target))swallowKey(e)},true);
 /* ---------------- chat (your own subscription, answering about the game) ---------------- */
 // A browser page cannot reach a terminal subscription, so the answers come from
 // a loopback bridge the player starts themselves: vibe chat serve --pair CODE.
@@ -4881,9 +4987,12 @@ setInterval(()=>{if(typeof started!=="undefined"&&started&&!document.hidden)trac
 // Test seam: the derived numbers, so a test can assert on them without
 // re-deriving the shapes by hand.
 window.__dash=()=>{const st=dashStats();return {events:st.ev.length,stops:st.stops,xp:st.xp,streak:st.streak,played:st.played,dwell:st.dwell,claims:st.claims.length}};
-// Resume is offered to anyone who has been here before, not only to someone
-// with a stop done; the steps only fold away once the campaign has started.
-if(load()){$("name").value=S.name;if(S.done.length||S.look||S.name)$("btn-continue").style.display="";if(S.done.length)$("title").classList.add("returning")}
+// Resume is offered to anyone who has been here before, but only when there is
+// something to resume with: start() refuses an empty name, so a saved look on
+// its own would be a button that turns you down. Once a stop is done the five
+// steps fold into their disclosure and the resume button is the first thing.
+if(load()){$("name").value=S.name;if(S.name)$("btn-continue").style.display="";
+  if(S.done.length){$("title").classList.add("returning");$("obfold").open=false}}
 // ?reset must run after load(), or it saves the defaults over the real record.
 if(new URLSearchParams(location.search).has("reset"))resetProgress();
 // Pairings are written for wine. Any other theme gets its own one-line pairing
