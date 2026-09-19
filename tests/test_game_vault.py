@@ -190,9 +190,10 @@ def test_the_graph_spreads_instead_of_piling_on_the_edges(
     game.start()
     _open_vault(game)
     page = game.page
-    # The layout cools on its own, so wait for it to stop moving rather than
-    # reading a frame of it.
-    game.still("window.__vault().nodes.reduce((s, p) => s + p.y, 0)")
+    # The layout cools on its own, so wait for the simulation's own end. A
+    # sampler over the sum of y calls a slow tick stillness on a software
+    # renderer and reads a graph that is still spreading.
+    game.until("window.__debug().vault().alpha < 0.01")
     # Clamping pinned the overflow to the exact border, so a couple of dozen
     # nodes shared one y to the pixel. A settled layout shares none.
     row = page.evaluate(
