@@ -370,7 +370,15 @@ class GamePage:
 # rather than by hand keeps the CI split honest: a new browser test lands in
 # the browser job without anyone remembering to label it.
 BROWSER_FIXTURES = frozenset(
-    {"game", "game_desktop", "game_webkit_iphone", "phone", "chromium", "webkit"}
+    {
+        "game",
+        "game_desktop",
+        "game_webkit_iphone",
+        "game_android",
+        "phone",
+        "chromium",
+        "webkit",
+    }
 )
 
 
@@ -407,6 +415,27 @@ def game(chromium: Browser, server: str) -> Iterator[GamePage]:
 def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
     """A fresh Chromium page at 1440x900: the laptop the course is written for."""
     context = chromium.new_context(viewport={"width": 1440, "height": 900})
+    page = context.new_page()
+    gp = GamePage(page=page, url=server + GAME_PATH)
+    _attach_error_collectors(page, gp.errors)
+    yield gp
+    context.close()
+
+
+@pytest.fixture
+def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
+    """Chromium with Pixel 7 metrics: the phone the owner actually plays on."""
+    context = chromium.new_context(
+        viewport={"width": 412, "height": 915},
+        device_scale_factor=2.625,
+        is_mobile=True,
+        has_touch=True,
+        user_agent=(
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/126.0.0.0 Mobile Safari/537.36"
+        ),
+    )
     page = context.new_page()
     gp = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, gp.errors)

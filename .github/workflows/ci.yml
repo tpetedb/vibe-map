@@ -99,6 +99,8 @@ jobs:
               tests/test_game_chat.py tests/test_game_avatar.py
               tests/test_game_mentors.py tests/test_game_dashboard.py
               tests/test_onboarding.py tests/test_reset.py
+          - shard: qol
+            files: tests/test_game_qol.py
           - shard: webkit
             files: tests/test_game_webkit.py
             retry: true
