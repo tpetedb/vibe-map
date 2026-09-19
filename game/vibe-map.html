@@ -141,9 +141,6 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
 .kpi{background:var(--panel);border:1px solid var(--line);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:999px;padding:4px 10px;display:flex;gap:6px;align-items:baseline}
 .kpi b{display:inline;font-family:var(--font-display);font-size:13px;letter-spacing:-.02em;color:var(--text);font-variant-numeric:tabular-nums}
 .kpi span{font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-/* Phones: the button pill is wider than the screen minus the name, so the
-   name takes its own row. */
-@media (max-width:480px){#hud-name{flex-basis:100%}}
 /* Future-retro, kept subtle: 4 percent scanlines on the title box only, never on body text elsewhere. */
 #title .box{position:relative;overflow:hidden}
 #title .box::after{content:"";position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='2'%3E%3Crect y='1' width='1' height='1' fill='%23000' fill-opacity='.04'/%3E%3C/svg%3E");background-size:1px 2px}
