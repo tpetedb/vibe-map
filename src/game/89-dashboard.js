@@ -43,8 +43,7 @@ function dashStats(){
 }
 
 // ---- chart primitives: viewBox only, so every one of them is fluid --------
-function svgWrap(w,h,label,inner){return `<svg class="ch" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escAttr(label)}">${inner}</svg>`}
-function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function svgWrap(w,h,label,inner){return `<svg class="ch" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(label)}">${inner}</svg>`}
 function dashEmpty(msg){return `<p class="small muted dash-empty">${msg}</p>`}
 
 // A sparkline is a shape, not a reading: no axis, no dots, one hue.
@@ -130,7 +129,7 @@ function dashPath(st){
   if(!st.claims.length)return dashEmpty("Deliver a stop and the path starts here.");
   const name=e=>(WORLDS[e.world]||{name:e.world}).name;
   return `<div class="path">`+st.claims.map(e=>
-    `<span class="step" title="${escAttr(name(e)+", stop "+e.id+", "+fmtDay(e.ts)+" "+fmtClock(e.ts))}">${name(e).split(" ")[0]} ${e.id}</span>`).join(`<span class="arrow" aria-hidden="true">&rsaquo;</span>`)+
+    `<span class="step" title="${esc(name(e)+", stop "+e.id+", "+fmtDay(e.ts)+" "+fmtClock(e.ts))}">${name(e).split(" ")[0]} ${e.id}</span>`).join(`<span class="arrow" aria-hidden="true">&rsaquo;</span>`)+
     `</div><p class="small muted legend">Island and stop, in the order you delivered them.</p>`;
 }
 
@@ -138,7 +137,7 @@ function dashFeed(st){
   const recent=st.ev.slice(-12).reverse();
   if(!recent.length)return dashEmpty("The feed fills as you play.");
   return `<ul class="feed">`+recent.map(e=>
-    `<li><i style="background:${DASH_HUE[e.kind]||"var(--muted)"}"></i><span>${DASH_LABEL[e.kind]||e.kind}${e.id&&e.kind!=="session"?" <b>"+escAttr(e.id)+"</b>":""}${typeof e.v==="number"?" <span class='muted'>"+fmtDur(e.v)+"</span>":""}</span><span class="when">${fmtDay(e.ts)} ${fmtClock(e.ts)}</span></li>`).join("")+`</ul>`;
+    `<li><i style="background:${DASH_HUE[e.kind]||"var(--muted)"}"></i><span>${DASH_LABEL[e.kind]||e.kind}${e.id&&e.kind!=="session"?" <b>"+esc(e.id)+"</b>":""}${typeof e.v==="number"?" <span class='muted'>"+fmtDur(e.v)+"</span>":""}</span><span class="when">${fmtDay(e.ts)} ${fmtClock(e.ts)}</span></li>`).join("")+`</ul>`;
 }
 
 // Progress on the shelves you chose. The collectibles are the tree's own
@@ -155,9 +154,9 @@ function dashShelves(){
   if(!rows.length)return dashEmpty("Pick a shelf under Settings and this fills with what you found on it.");
   const w=320,rh=22,l=124;
   const bars=rows.map((c,i)=>{const y=i*rh,frac=per[c].of?per[c].n/per[c].of:0;
-    return `<text x="0" y="${y+14}" class="at">${escAttr(byId[c]||c).slice(0,18)}</text>`+
+    return `<text x="0" y="${y+14}" class="at">${esc(byId[c]||c).slice(0,18)}</text>`+
       `<rect x="${l}" y="${y+3}" width="${(w-l-34)}" height="12" rx="4" fill="var(--hairline-2)"/>`+
-      `<rect x="${l}" y="${y+3}" width="${((w-l-34)*frac).toFixed(1)}" height="12" rx="4" fill="${CAT_COL[c]}"><title>${escAttr(byId[c]||c)}: ${per[c].n} of ${per[c].of}</title></rect>`+
+      `<rect x="${l}" y="${y+3}" width="${((w-l-34)*frac).toFixed(1)}" height="12" rx="4" fill="${CAT_COL[c]}"><title>${esc(byId[c]||c)}: ${per[c].n} of ${per[c].of}</title></rect>`+
       `<text x="${w}" y="${y+14}" text-anchor="end" class="at v">${per[c].n}/${per[c].of}</text>`}).join("");
   return svgWrap(w,rows.length*rh,"Things found on the shelves you chose",bars)+
     `<p class="small muted legend">Collectibles on your shelves, found of what is out there. Nothing is locked; the other shelves are simply not counted here.</p>`;

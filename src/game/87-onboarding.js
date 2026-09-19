@@ -43,7 +43,6 @@ function slug(s){return fold(s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-
 // a space in it cannot end the argument.
 function shq(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 // The setup guide: the exact commands for the full experience. Rendered on the
 // title screen (step 3) and on its own screen from the Roadmap, from one
