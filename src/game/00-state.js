@@ -1,3 +1,13 @@
+// Text that is not ours goes into the page through here: the feed, an answer
+// from the bridge, an imported name. One helper, early, so every module can
+// reach it; the page is built from strings, so escaping is the rule and raw
+// interpolation is the exception that has to be one of our own constants.
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+// A link from data we did not write. Only an absolute http or https URL may
+// become an anchor; javascript:, data: and anything else give "" and the row
+// is rendered without a link rather than with a dangerous one.
+function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
+  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},

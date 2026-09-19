@@ -11,8 +11,11 @@ let newsLoaded=false;
 // Settings dropdown wins, config/camp.toml [news] live is the default.
 function liveNews(){const v=(typeof settings==="function"?settings().live:"config");
   if(v==="off")return false;if(v==="on")return true;return !(CONFIG.news&&CONFIG.news.live===false)}
-function newsRow(i){const tag=i.kind==="release"?"release":"";
-  return `<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.name}${tag?" · "+tag:""}</span>${i.summary?`<br><span class="muted small">${i.summary}</span>`:""}</span><span class="st">${(i.date||"").slice(0,10)}</span></div>`}
+// The feed comes from other people's machines, so every string in a row is
+// text and the link is checked: an item with no usable link keeps its title
+// as plain words rather than becoming an anchor we cannot vouch for.
+function newsRow(i){const tag=i.kind==="release"?"release":"";const t=esc(i.title),u=safeUrl(i.link);
+  return `<div class="pathrow"><span>${u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`:t}<br><span class="muted small">${esc(i.name)}${tag?" · "+tag:""}</span>${i.summary?`<br><span class="muted small">${esc(i.summary)}</span>`:""}</span><span class="st">${esc((i.date||"").slice(0,10))}</span></div>`}
 function renderNews(){const msg=$("newsmsg"),list=$("newslist");if(!msg||!liveNews())return;
   const items=(newsData.items||[]).slice(0,12);
   if(!items.length){msg.textContent="Nothing pulled yet. Run uv run vibe news, then just build; a forked repo does it every day.";list.innerHTML="";return}
