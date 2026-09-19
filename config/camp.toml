@@ -15,12 +15,11 @@ preset = "studio"  # studio | wine-night | boardroom | seminar | field-guide | a
 
 [finale]
 dates = [
-  "Friday 25 September",
-  "Saturday 3 October",
-  "Friday 9 October",
-  "Saturday 17 October",
-  "Friday 23 October",
-  "Another slot, I will circle back with Tom",
+  "Friday evening",
+  "Saturday afternoon",
+  "Saturday evening",
+  "Sunday afternoon",
+  "A weekday evening",
 ]
 
 [game]

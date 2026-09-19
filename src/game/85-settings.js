@@ -36,12 +36,16 @@ function renderSettings(){const s=settings();
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
     petPicker()+
     `<div class="setting wide"><label>What you want to learn</label>${interestChips()}<p class="small muted">${interestSummary()}</p>${presetRow()}</div>`+
-    `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
+    `<div class="row"><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
     `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};
 // Fullscreen takes the whole document: the sheet and the vault live outside
 // #stage, so asking for the stage alone hides every panel behind the canvas.
+// iPhone Safari has no Fullscreen API, so the control that asks for it is not
+// offered there. One class on the body, so every entry obeys the same fact.
+document.body.classList.toggle("no-fullscreen",
+  !(document.fullscreenEnabled||document.webkitFullscreenEnabled));
 window.goFullscreen=function(){const el=document.documentElement;if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}
   else if(el.requestFullscreen){el.requestFullscreen().catch(()=>{})}else if(el.webkitRequestFullscreen){el.webkitRequestFullscreen()}};
 window.resetSettings=function(){S.settings={};save();applySettings()};
