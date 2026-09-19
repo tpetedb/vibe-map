@@ -251,7 +251,7 @@ class State(BaseModel):
         # The companion is one choice, not a set, so the code overwrites it.
         if payload.get("pet"):
             self.pet = check_pet(str(payload["pet"]))
-                # An interest is a set, so a code adds a shelf and never removes one:
+            # An interest is a set, so a code adds a shelf and never removes one:
         # a choice made on the other machine is news, not a correction.
         for shelf in payload.get("interests") or []:
             if str(shelf) not in self.interests:
