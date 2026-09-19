@@ -8,17 +8,6 @@
 // lesson cannot drift apart.
 const GUARDRAIL = "Keep it to a single file called index.html, no external libraries, no frameworks. Keep score. When you are done, tell me how to open it.";
 window.pitchTyped=function(v){S.pitch=v;save();renderPitch()};
-// One copy helper for every Copy button. A refused clipboard is not silence:
-// the text is selected so it can be copied by hand, and the button says so.
-// srcEl is the element holding the text, so the fallback can select it.
-function copyText(text,btn,label,srcEl){
-  const done=msg=>{btn.textContent=msg;setTimeout(()=>{btn.textContent=label},2500)};
-  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
-      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
-    done("Selected, press Cmd C")};
-  if(navigator.clipboard&&navigator.clipboard.writeText)
-    navigator.clipboard.writeText(text).then(()=>done("Copied"),fallback);
-  else fallback()}
 window.copyPitch=function(){copyText($("pitch-out").textContent,$("pitch-copy"),"Copy the prompt",$("pitch-out"))};
 function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitch");if(box&&box.value!==(S.pitch||""))box.value=S.pitch||"";
   const v=(S.pitch||"").trim();

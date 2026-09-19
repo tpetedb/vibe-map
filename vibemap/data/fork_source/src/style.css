@@ -450,3 +450,32 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 #s-dash .feed li span:first-of-type{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #s-dash .feed .when{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 #s-dash .dash-empty{margin:0}
+
+/* quality of life (issue #127, batch 3): the copy row under every command
+   block, the Continue card on the title and the Roadmap, and the line that
+   says which island you are standing on. Palette variables and the existing
+   button, card and pill shapes only, so these read as part of the panel they
+   sit in. */
+/* Spoken, not shown: the confirmation a screen reader reads out. It stays in
+   the layout (a display:none region is never announced) and takes no room. */
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* The copy control is a row under its command block, never over it: on a
+   phone a button on top of the text hides the command it copies. */
+.cmdbar{display:flex;justify-content:flex-end;margin:-6px 0 12px}
+.cmdbar .copy{padding:6px 14px;font-size:12px;font-family:var(--font-mono);border-radius:var(--radius-pill);color:var(--blue-bright)}
+details.cmds .cmdbar{margin-top:-8px}
+/* A finger needs 44 px, so on a touch screen the button grows to it rather
+   than the text shrinking away from it. */
+@media (pointer:coarse){.cmdbar .copy{min-height:44px;min-width:88px;font-size:13px}}
+/* Continue: the next stop, its goal and the one command for it. */
+.cont{border-color:var(--yellow-dim)}
+.cont h3{color:var(--yellow)}
+.cont .cont-t{display:block;font-family:var(--font-display);font-size:17px;letter-spacing:-.01em;margin:2px 0 4px}
+.cont pre.cmd{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.cont .row{margin:0}
+#cont .cont{margin:10px 0 0;padding:14px 16px}
+#mapcont .cont{margin-top:10px}
+/* You are here, above the list of stops, and the one row to open next. */
+.here{font-size:13px;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.here b{color:var(--text)}
+.date.next{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}

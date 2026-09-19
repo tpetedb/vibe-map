@@ -8,6 +8,24 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 // is rendered without a link rather than with a dangerous one.
 function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
   try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
+// One copy helper for every Copy button, early so every module can reach it.
+// A refused clipboard is not silence: the text is selected so it can be copied
+// by hand, and the button says so. srcEl is the element holding the text, so
+// the fallback can select it; msg is what a copy that worked should say.
+// The button is the visible confirmation and #copysay is the spoken one, so a
+// screen reader hears the same words a sighted player reads.
+// navigator.clipboard.writeText has to be called inside the click handler
+// (MDN, Clipboard: writeText), which is why the text is resolved by the caller.
+function copyKey(){return /Mac|iPhone|iPad|iPod/.test(navigator.platform||navigator.userAgent||"")?"Cmd C":"Ctrl C"}
+function copySay(msg){const el=document.getElementById("copysay");if(el)el.textContent=msg}
+function copyText(text,btn,label,srcEl,msg){
+  const done=m=>{btn.textContent=m;copySay(m);setTimeout(()=>{btn.textContent=label},2500)};
+  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
+    done("Selected, press "+copyKey())};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(()=>done(msg||"Copied"),fallback);
+  else fallback()}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
