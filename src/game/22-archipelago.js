@@ -95,7 +95,7 @@ function checkCrossing(pos){
   crossTo(b.b===here?b.a:b.b)}
 function crossTo(id){
   const d=worldOffset(id,S.world),L=chars.lotte,p=L.g.position.clone().sub(d);
-  camera.position.sub(d);
+  camShift(d,id);
   buildWorld(id,{x:p.x,z:p.z,rot:L.g.rotation.y,vel:L.vel?L.vel.clone():null});
   if(typeof track==="function")track("world",id);
   toast(icon("globe")+"You are on "+W.name,CAMPAIGN[id].title)}
@@ -111,5 +111,7 @@ function tickFlight(dt){
   camera.position.copy(flight.from).lerp(to,e);camera.lookAt(flight.at.x,0,flight.at.z);
   if(x<1)return;
   const id=flight.to;flight=null;
+  // The flight ended over the new island; from there the camera glides down
+  // to the walker at whatever zoom the player keeps.
   buildWorld(id);renderWorldPicker();
-  camera.position.set(2,20*WS,22*WS)}
+  camera.position.set(0,26*WS,20*WS);camLook.set(0,0,0);camGlide()}

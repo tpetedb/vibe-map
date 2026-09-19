@@ -105,5 +105,6 @@ function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
 function tickItems(dt,t){
   const pos=chars.lotte&&chars.lotte.g.position;if(!pos)return;
   (props.items||[]).slice().forEach(it=>{
-    it.m.rotation.y+=dt*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
+    // t is the ambient clock, which reduced motion stops; the spin stops with it.
+    it.m.rotation.y+=(reducedMotion()?0:dt)*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
     if(Math.hypot(pos.x-it.x,pos.z-it.z)<1.1)collect(it)})}

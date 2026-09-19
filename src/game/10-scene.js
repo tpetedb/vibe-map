@@ -3,6 +3,24 @@ const plots=[],builds={},clouds=[],parts=[],chars={},props={};
 let PLOT_POS=[];
 const mat=(c,o={})=>{const m=new T.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));m.color.convertSRGBToLinear();if(o.emissive)m.emissive.convertSRGBToLinear();m.userData.viaMat=1;m.userData.cs=1;return m};
 function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.userData.cs){m.userData.cs=1;if(!(m instanceof T.MeshStandardMaterial&&m.flatShading&&m.userData.viaMat)){m.color.convertSRGBToLinear();if(m.emissive)m.emissive.convertSRGBToLinear()}}})}
+// What the GPU holds for an object, given back. The island is rebuilt on every
+// crossing and the walker on every change of look, and three.js frees nothing
+// on its own: without this each rebuild left its buffers, its plate textures
+// and its shadow map behind. A geometry or a texture that outlives a scene
+// (the shapes the instanced props share, the contact shadow, a pet's sheet)
+// is marked with keep() and is left alone.
+const KEPT=new WeakSet();
+const keep=o=>{KEPT.add(o);return o};
+function release(root){root.traverse(o=>{
+  if(o.geometry&&!KEPT.has(o.geometry))o.geometry.dispose();
+  (Array.isArray(o.material)?o.material:o.material?[o.material]:[]).forEach(m=>{
+    if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
+  if(o.isInstancedMesh)o.dispose();
+  if(o.isLight&&o.shadow)o.shadow.dispose()})}
+// Whether an object is still part of the island being drawn: a plate of a
+// walker that was rebuilt still has a parent, just not one in the scene.
+function inScene(o){for(;o;o=o.parent)if(o===scene)return true;return false}
+function discard(o){if(!o)return;if(o.parent)o.parent.remove(o);release(o)}
 function box(w,h,d,c,x=0,y=0,z=0,py=false){const g=new T.BoxGeometry(w,h,d);if(py)g.translate(0,-h/2,0);const m=new T.Mesh(g,mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;return m}
 // A window: the same box, marked so the merge keeps it in the lit half and
 // the evening can put a light behind it.
@@ -23,7 +41,7 @@ function instOf(geo,material,mats,shadow){if(!mats.length)return null;
   mats.forEach((m,i)=>im.setMatrixAt(i,m));
   im.castShadow=im.receiveShadow=!!shadow;scene.add(im);return im}
 let BATCH=new Map();const BGEO={};
-const shape=(key,make)=>BGEO[key]||(BGEO[key]=make());
+const shape=(key,make)=>BGEO[key]||(BGEO[key]=keep(make()));
 function batchAdd(key,make,colour,m){const k=key+"|"+colour;let e=BATCH.get(k);
   if(!e){e={geo:shape(key,make),colour,m:[]};BATCH.set(k,e)}e.m.push(m)}
 function batchFlush(){BATCH.forEach(e=>instOf(e.geo,mat(e.colour),e.m,true));BATCH=new Map()}
@@ -37,7 +55,7 @@ function blobTexture(){if(blobTex)return blobTex;
   const cv=document.createElement("canvas");cv.width=cv.height=64;const g=cv.getContext("2d");
   const gr=g.createRadialGradient(32,32,0,32,32,32);
   gr.addColorStop(0,"rgba(0,0,0,.9)");gr.addColorStop(.5,"rgba(0,0,0,.45)");gr.addColorStop(1,"rgba(0,0,0,0)");
-  g.fillStyle=gr;g.fillRect(0,0,64,64);blobTex=new T.CanvasTexture(cv);return blobTex}
+  g.fillStyle=gr;g.fillRect(0,0,64,64);blobTex=keep(new T.CanvasTexture(cv));return blobTex}
 function blobAdd(x,z,r){BLOBS.push(xform(x,.04,z,-Math.PI/2,0,0,new T.Vector3(r,r,1)))}
 function blobFlush(){if(!BLOBS.length)return;
   const m=new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5});
@@ -100,24 +118,61 @@ function mergeStatic(g){
   const merged=add(matte,base);g.userData.lit=add(lit,glow);
   return merged}
 
-// A name can be long; the canvas cannot grow, so the font shrinks until the
-// text fits the plate instead of running off it. The canvas is drawn at twice
-// the plate's coordinates so the text is sharp at the camera's distance, and
-// the dark stroke keeps it legible over bright grass.
+// A name can be long, so the plate is as wide as it has to be: the canvas is
+// one or two plate widths, a power of two either way, and only a name too long
+// for two shrinks its font. The canvas is drawn at twice the plate's
+// coordinates so the text is sharp at the camera's distance, and the dark
+// stroke keeps it legible over bright grass.
 const plates=[];
-function label(text,scale=1){const cv=document.createElement("canvas");const DPR=2;cv.width=256*DPR;cv.height=64*DPR;
-  const g=cv.getContext("2d");g.scale(DPR,DPR);const MAXW=222;let fs=30;g.font="bold "+fs+"px Inter,sans-serif";
-  while(fs>11&&g.measureText(text).width>MAXW){fs-=1;g.font="bold "+fs+"px Inter,sans-serif"}
-  g.textAlign="center";g.fillStyle="rgba(0,0,0,.62)";g.beginPath();const w=g.measureText(text).width+28;g.roundRect?g.roundRect(128-w/2,10,w,44,22):g.rect(128-w/2,10,w,44);g.fill();
-  g.textBaseline="middle";g.lineJoin="round";g.lineWidth=Math.max(3,fs*.22);g.strokeStyle="rgba(0,0,0,.85)";g.strokeText(text,128,33);
-  g.fillStyle="#fff";g.fillText(text,128,33);
+// Every walker, host and mentor on the island, for what applies to all of them.
+const figures=[];let figDirty=false;
+function label(text,scale=1){const DPR=2,FONT=f=>"bold "+f+"px Inter,sans-serif";
+  const probe=label.probe||(label.probe=document.createElement("canvas").getContext("2d"));
+  let fs=30;probe.font=FONT(fs);
+  const wide=probe.measureText(text).width>222,CW=wide?512:256,MAXW=CW-34;
+  while(fs>11&&probe.measureText(text).width>MAXW){fs-=1;probe.font=FONT(fs)}
+  const cv=document.createElement("canvas");cv.width=CW*DPR;cv.height=64*DPR;
+  const g=cv.getContext("2d");g.scale(DPR,DPR);g.font=FONT(fs);
+  g.textAlign="center";g.fillStyle="rgba(0,0,0,.62)";g.beginPath();const w=g.measureText(text).width+28;g.roundRect?g.roundRect(CW/2-w/2,10,w,44,22):g.rect(CW/2-w/2,10,w,44);g.fill();
+  g.textBaseline="middle";g.lineJoin="round";g.lineWidth=Math.max(3,fs*.22);g.strokeStyle="rgba(0,0,0,.85)";g.strokeText(text,CW/2,33);
+  g.fillStyle="#fff";g.fillText(text,CW/2,33);
   const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv),transparent:true,depthTest:false}));
-  sp.scale.set(4.6*scale,1.15*scale,1);sp.userData.text=text;sp.userData.fs=fs;plates.push(sp);return sp}
-// Plates cost a draw call each, so only the ones near the walker are drawn;
-// the rest fade out and stop being rendered at all.
-const PLATE_FAR=11*WORLD_SCALE,PLATE_FADE=3.5*WORLD_SCALE,_pw=new T.Vector3();
-function tickPlates(at){for(let i=plates.length-1;i>=0;i--){const sp=plates[i];
-  if(!sp.parent){plates.splice(i,1);continue}
-  sp.getWorldPosition(_pw);const d=Math.hypot(_pw.x-at.x,_pw.z-at.z);
-  const o=Math.max(0,Math.min(1,(PLATE_FAR-d)/PLATE_FADE));
-  sp.material.opacity=o;sp.visible=o>.02}}
+  // sx and sy are the plate's own size; pw and ph are the part of it the pill
+  // covers, which is what may not overlap another pill.
+  const sx=4.6*scale*CW/256,sy=1.15*scale;sp.scale.set(sx,sy,1);
+  Object.assign(sp.userData,{text,fs,sx,sy,pw:w/CW,ph:44/64,o:0});
+  sp.material.opacity=0;sp.visible=false;plates.push(sp);return sp}
+// Which plates are drawn, and how large. A plate costs a draw call, so only
+// the ones near the walker are candidates. Each is held at a legible size on
+// screen however far the camera is (PLATE.minPx), and where two pills would
+// overlap the nearer one wins: the walker's own first, then by distance. The
+// loser fades rather than pops. Nothing here allocates: it runs every frame.
+// A plate that must stay hidden (a signpost whose stop is built) says so with
+// userData.off, because visible is this function's to set.
+const PLATE_FAR=11*WORLD_SCALE,PLATE_FADE=3.5*WORLD_SCALE,_pw=new T.Vector3(),_shown=[];
+const plateOrder=(a,b)=>a.userData.d-b.userData.d;
+function plateHidden(u){for(let i=0;i<_shown.length;i++){const o=_shown[i];
+  if(Math.abs(o.cx-u.cx)<o.hw+u.hw&&Math.abs(o.cy-u.cy)<o.hh+u.hh)return true}
+  return false}
+function tickPlates(at,dt){
+  const you=chars.lotte&&chars.lotte.plate,h=VIEW.h||1,w=VIEW.w||1;
+  const unit=h/(2*Math.tan(camera.fov*Math.PI/360));
+  const out=1-Math.max(0,Math.min(1,(camZoom()-PLATE.fadeZoom)/.3));
+  for(let i=plates.length-1;i>=0;i--){const sp=plates[i],u=sp.userData;
+    if(!inScene(sp)){plates.splice(i,1);continue}
+    if(u.y0===undefined)u.y0=sp.position.y;
+    sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
+    u.want=u.off?0:Math.max(0,Math.min(1,(PLATE_FAR-u.d)/PLATE_FADE))*out;
+    const depth=Math.max(.1,-_pw.applyMatrix4(camera.matrixWorldInverse).z);
+    const px=u.sy*unit/depth,k=Math.min(PLATE.grow,Math.max(PLATE.minPx,Math.min(PLATE.maxPx,px))/px);
+    sp.scale.set(u.sx*k,u.sy*k,1);sp.position.y=u.y0+(k-1)*u.sy/2;
+    // The pill's box on the canvas, in CSS pixels.
+    _pw.applyMatrix4(camera.projectionMatrix);
+    u.cx=(_pw.x+1)/2*w;u.cy=(1-_pw.y)/2*h-(k-1)*u.sy/2*unit/depth;
+    u.hw=u.sx*k*u.pw*unit/depth/2+PLATE.gap;u.hh=u.sy*k*u.ph*unit/depth/2+PLATE.gap}
+  plates.sort(plateOrder);_shown.length=0;
+  const ease=reducedMotion()?1:Math.min(1,dt*9);
+  for(const sp of plates){const u=sp.userData;
+    if(u.want>0&&plateHidden(u))u.want=0;
+    if(u.want>0)_shown.push(u);
+    u.o+=(u.want-u.o)*ease;sp.material.opacity=u.o;sp.visible=u.o>.02}}

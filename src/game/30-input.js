@@ -1,13 +1,18 @@
 const ray=new T.Raycaster(),ndc=new T.Vector2(),target=new T.Vector3(),keys={};let hasTarget=false,downPos=null,marker=null;
 let joy={x:0,y:0,on:false},wantJump=false;
+// A key typed into a field belongs to the field: the caret moves, the walker
+// does not. One test for it, because the walk, the jump and the zoom all ask.
+function inField(el){return !!el&&(el.isContentEditable||/^(input|textarea|select)$/i.test(el.tagName||""))}
 function setupInput(){
   const c=$("c");
   c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
-  c.addEventListener("pointerup",e=>{if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
+  c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()});
+  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()});
   addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
+  // A key held while the focus moves into a field never sends its keyup here.
+  addEventListener("focusin",e=>{if(inField(e.target))for(const k in keys)keys[k]=false});
   const j=$("joy"),kn=$("knob");let jid=null;
   j.addEventListener("pointerdown",e=>{jid=e.pointerId;j.setPointerCapture(jid);joy.on=true;jm(e)});
   j.addEventListener("pointermove",e=>{if(e.pointerId===jid)jm(e)});

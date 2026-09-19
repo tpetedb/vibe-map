@@ -24,7 +24,9 @@ maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" 
 search:'<path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" />',
 menu:'<path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" />',
 backpack:'<path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><path d="M8 10h8" /><path d="M8 18h8" /><path d="M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" /><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />',
-message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />'};
+message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />',
+plus:'<path d="M5 12h14" /><path d="M12 5v14" />',
+minus:'<path d="M5 12h14" />'};
 function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";return `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`}
 // Static markup declares data-icon; boot fills them in.
 function iconize(root){(root||document).querySelectorAll("[data-icon]").forEach(el=>{if(el.querySelector(":scope>svg.ic"))return;el.insertAdjacentHTML("afterbegin",icon(el.dataset.icon))})}

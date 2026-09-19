@@ -370,7 +370,15 @@ class GamePage:
 # rather than by hand keeps the CI split honest: a new browser test lands in
 # the browser job without anyone remembering to label it.
 BROWSER_FIXTURES = frozenset(
-    {"game", "game_desktop", "game_webkit_iphone", "phone", "chromium", "webkit"}
+    {
+        "game",
+        "game_desktop",
+        "game_webkit_iphone",
+        "game_android",
+        "phone",
+        "chromium",
+        "webkit",
+    }
 )
 
 
@@ -426,6 +434,26 @@ def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
             "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
             "Mobile/15E148 Safari/604.1"
+        ),
+    )
+    page = context.new_page()
+    gp = GamePage(page=page, url=server + GAME_PATH)
+    _attach_error_collectors(page, gp.errors)
+    yield gp
+    context.close()
+
+
+@pytest.fixture
+def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
+    """Chromium with Pixel 7 metrics and touch: the owner's own phone."""
+    context = chromium.new_context(
+        viewport={"width": 412, "height": 915},
+        device_scale_factor=2.625,
+        is_mobile=True,
+        has_touch=True,
+        user_agent=(
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
         ),
     )
     page = context.new_page()

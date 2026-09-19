@@ -26,7 +26,16 @@ def _gfx(game: GamePage) -> dict[str, Any]:
 
 def _island(game: GamePage, done: list[int] | None = None) -> GamePage:
     stops = done or []
-    game.goto(state={"name": "Lotte", "done": stops, "doneW": {"campus": stops}})
+    # Zoom 0 is the fitted, whole-island view, which is the frame these tests
+    # are about; the zoom itself is tests/test_game_camera.py.
+    game.goto(
+        state={
+            "name": "Lotte",
+            "done": stops,
+            "doneW": {"campus": stops},
+            "settings": {"zoom": 0},
+        }
+    )
     game.resume()
     return game
 

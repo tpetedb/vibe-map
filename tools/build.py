@@ -64,6 +64,7 @@ GAME_ORDER = [
     "20-worlds.js",
     "21-world-build.js",
     "22-archipelago.js",
+    "23-camera.js",
     "30-input.js",
     "31-animate.js",
     "32-minimap.js",
