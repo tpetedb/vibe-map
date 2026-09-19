@@ -58,6 +58,38 @@ def test_no_em_dashes_or_emoji_in_tracked_text() -> None:
     assert check_style([]) == 0
 
 
+def test_every_value_the_game_writes_as_html_has_been_looked_at() -> None:
+    """docs/SECURITY-MODEL.md: escape it, or register it as build-time data."""
+    from tools.checks import check_sinks
+
+    assert check_sinks() == 0
+
+
+def test_the_sink_guard_catches_a_raw_value_and_a_new_sink(tmp_path) -> None:
+    """The guard is only worth its register if it bites on the real mistake."""
+    import shutil
+
+    from tools.checks import GAME_SRC, check_sinks
+
+    src = tmp_path / "game"
+    shutil.copytree(GAME_SRC, src)
+    assert check_sinks(src=src) == 0
+    sheet = src / "40-sheet.js"
+    sheet.write_text(
+        sheet.read_text()
+        + '\nfunction feedLine(i){return `<p class="small">${i.title}</p>`}\n'
+    )
+    assert check_sinks(src=src) == 1
+    sheet.write_text(sheet.read_text() + '\n$("newsmsg").innerHTML=newsData.note;\n')
+    assert check_sinks(src=src) == 2
+    # An escaped value passes, and eval never does.
+    (src / "41-search.js").write_text(
+        (src / "41-search.js").read_text()
+        + "\nfunction hit(r){return `<b>${esc(r.t)}</b>`}\nconst run=s=>eval(s);\n"
+    )
+    assert check_sinks(src=src) == 3
+
+
 def test_version_matches_pyproject() -> None:
     import tomllib
 
