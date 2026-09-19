@@ -9,6 +9,7 @@ they are enforced rather than where they are decided.
 from __future__ import annotations
 
 import json
+import socket
 import threading
 import urllib.error
 import urllib.request
@@ -277,6 +278,45 @@ def test_an_unknown_endpoint_is_a_404(running) -> None:
     with pytest.raises(urllib.error.HTTPError) as e:
         urllib.request.urlopen(req, timeout=10)
     assert e.value.code == 404
+
+
+def _raw(url: str, head: str, body: bytes = b"") -> str:
+    """One request written by hand, for headers no client library would send."""
+    host, port = url.removeprefix("http://").split(":")
+    with socket.create_connection((host, int(port)), timeout=5) as sock:
+        sock.sendall(head.encode() + body)
+        chunks = []
+        while chunk := sock.recv(4096):
+            chunks.append(chunk)
+    return b"".join(chunks).decode()
+
+
+@pytest.mark.parametrize("length", ["-1", "-16385", "many"])
+def test_a_length_that_is_not_a_size_is_refused_at_once(running, length: str) -> None:
+    """A negative length would have the socket read until the peer hangs up,
+    which holds a thread for as long as the peer likes."""
+    url, _ = running
+    answer = _raw(
+        url,
+        "POST /ask HTTP/1.1\r\nHost: x\r\nConnection: close\r\n"
+        "Origin: http://localhost:8000\r\n"
+        f"X-Vibe-Code: ABCD2345\r\nContent-Length: {length}\r\n\r\n",
+        b'{"question": "hello"}',
+    )
+    assert answer.startswith("HTTP/1.0 400") or answer.startswith("HTTP/1.1 400")
+    assert "Content-Length" in answer
+
+
+def test_an_answer_is_never_sniffed_into_a_page(running) -> None:
+    url, _ = running
+    status, _ = post(url, {"question": "hello"}, code="WRONG234")
+    assert status == 401
+    req = urllib.request.Request(
+        url + "/health", headers={"Origin": "http://localhost:8000"}
+    )
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        assert resp.headers["X-Content-Type-Options"] == "nosniff"
+        assert resp.headers["Content-Type"] == "application/json"
 
 
 def test_the_bridge_binds_loopback_only(running) -> None:
