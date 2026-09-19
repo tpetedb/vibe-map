@@ -114,15 +114,21 @@ function animate(){
   tickPlates(pos);
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
-    const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
+    // The inn radius reaches over its terrace, so the last walk back ends at
+    // the finale rather than at the cafe standing on that terrace.
+    const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
+    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
     else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
     else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    // A signpost that is not open yet is a question the island answers once,
+    // after the artifacts have had their turn: a locked plot is not a target.
+    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+      if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
     else{nearK=0;$("enter").classList.remove("on")}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
@@ -139,5 +145,5 @@ function animChar(c,walking,dt,t){
 }
 
 /* ---------------- UI ---------------- */
-function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=[1,2,3,4,5,6,7,8].map(k=>`<i class="${S.done.includes(k)?'on':''}"></i>`).join("");
-  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),Math.round(S.done.length/8*100),v=>Math.round(v)+"%");countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
+function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=CH.map((c,i)=>`<i class="${S.done.includes(i+1)?'on':''}"></i>`).join("");
+  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),streakToday(),v=>String(Math.round(v)));countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
