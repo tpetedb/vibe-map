@@ -78,3 +78,77 @@ def test_a_mentor_note_in_the_vault_holds_the_exercise(game: GamePage) -> None:
     assert "vibe check --mentor hinton" in note
     game.close_vault()
     game.assert_clean()
+
+
+def _roles(game: GamePage) -> dict:
+    return game.page.evaluate("() => window.__data().config.theme")
+
+
+def test_both_speakers_carry_the_roles_the_theme_gives_them(game: GamePage) -> None:
+    """The bubble is the theme's, not the wine night's two job titles."""
+    game.goto()
+    game.start("Lotte")
+    theme = _roles(game)
+    game.next_world()
+    game.open_workstream(1)
+    assert game.page.text_content("#bub-who") == "Rolinda, " + theme["guideRole"]
+    game.page.click("#sheet .screen.on .row button:has-text('Back')")
+    _open_mentor(game, "olah")
+    assert game.page.text_content("#bub-who") == "Tom, " + theme["hostRole"]
+    game.assert_clean()
+
+
+def test_opening_a_mentor_stops_the_line_that_was_typing(game: GamePage) -> None:
+    """Rolinda types; a mentor line must not be overwritten mid-sentence."""
+    game.goto()
+    game.start("Lotte")
+    game.walk_to(0, 16)
+    game.until("window.__debug().near === 1")
+    _open_mentor(game, "cherny")
+    line = game.page.text_content("#bub-text") or ""
+    game.frames(20)
+    assert game.page.text_content("#bub-text") == line, line
+    assert "Boris Cherny" in line, line
+    game.assert_clean()
+
+
+def test_the_bubble_does_not_name_a_mentor_from_the_island_you_left(
+    game: GamePage,
+) -> None:
+    game.goto()
+    game.start("Lotte")
+    _open_mentor(game, "cherny")
+    game.page.click("#s-mentor .row button:has-text('Back')")
+    game.next_world()
+    assert "Boris Cherny" not in (game.page.text_content("#bub-text") or "")
+    game.assert_clean()
+
+
+def test_the_roadmap_says_met_after_a_complete_encounter(game: GamePage) -> None:
+    game.goto()
+    game.start("Lotte")
+    _open_mentor(game, "olah")
+    game.page.wait_for_function("() => (window.__S().met || {}).olah >= 1")
+    game.page.click("#s-mentor .row button:has-text('Back')")
+    game.open_roadmap()
+    row = game.page.locator("#s-map .pathrow", has_text="Chris Olah").first
+    assert "met" in (row.text_content() or "")
+    assert "not met" not in (row.text_content() or "")
+    game.assert_clean()
+
+
+def test_a_strict_camp_is_told_about_the_note_the_command_checks(
+    game: GamePage,
+) -> None:
+    """At hard the same command also checks the mentor note, so the card says so."""
+    game.goto()
+    game.start("Lotte")
+    game.page.evaluate("openSettings()")
+    game.page.wait_for_selector("#s-settings.on", state="attached")
+    game.page.select_option("#set-difficulty", "hard")
+    game.page.wait_for_function("() => document.body.dataset.difficulty === 'hard'")
+    _open_mentor(game, "li")
+    card = game.page.text_content("#s-mentor .card") or ""
+    assert "notes.md" in card, card
+    assert "What I learned" in card, card
+    game.assert_clean()

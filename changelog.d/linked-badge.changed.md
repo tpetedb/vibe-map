@@ -1,1 +1,0 @@
-- The `linked` badge counts only wikilinks the learner wrote. The generated vault satisfied it from day one, so it fired on whatever the learner happened to do next. Every note vibe generates whole now carries the hash of the body it was given, and the lint report counts own links separately.

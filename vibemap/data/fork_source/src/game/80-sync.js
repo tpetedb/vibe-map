@@ -20,7 +20,7 @@ const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.is
 window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
-window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,config:CONFIG});
+window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,campaign:CAMPAIGN,config:CONFIG});
 // Test seam: the demo scripts behind the artifact terminal, so a test can wait
 // for the last line a demo types instead of guessing how long typing takes.
 window.__demos=()=>ART_DEMOS;
