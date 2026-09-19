@@ -208,6 +208,25 @@ def test_a_pasted_progress_code_cannot_carry_markup(game: GamePage, field: str) 
     game.assert_clean()
 
 
+def test_a_pasted_code_is_refused_on_the_iphone_profile_too(
+    game_webkit_iphone: GamePage,
+) -> None:
+    """The refusal is a line of text the phone player reads, in another engine."""
+    game = game_webkit_iphone
+    game.goto()
+    game.start("Lotte")
+    message = game.import_code(
+        _code({"v": 2, "name": "Lotte", "interests": [BREAKOUT]})
+    )
+    assert "cannot read" in message and "interests" in message, message
+    assert game.page.evaluate(NO_MARKUP) == 0
+    box = game.page.locator("#syncmsg").bounding_box()
+    assert box and box["x"] >= 0 and box["x"] + box["width"] <= 393 + 1, box
+    game.page.locator("#syncmsg").scroll_into_view_if_needed()
+    game.screenshot("import_refused_iphone")
+    game.assert_clean()
+
+
 def test_state_that_already_holds_markup_is_drawn_as_text(game: GamePage) -> None:
     """The sinks hold on their own: a state poisoned before the import learnt
     to refuse (or edited by hand) still reaches every panel as words."""
