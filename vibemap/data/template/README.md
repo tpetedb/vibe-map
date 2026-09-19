@@ -8,7 +8,7 @@ just start        # the terminal menu: who you are, what the machine has, where 
 
 You should see a screen with your name, your field and a difficulty, then a launcher list. From there: the game in the browser, the vault in Obsidian, your status in this terminal.
 
-`just` does not come with a Mac: `brew install just` puts it there. You never need it, though. Every recipe in this camp is one line that calls the `vibe` command, so `just check 1` and `vibe check 1` do the same thing; `just` on its own lists them all.
+`just` does not come with a Mac: `brew install just` puts it there. Most recipes are one line that calls the `vibe` command, so `just check 1` and `vibe check 1` do the same thing, and you never need `just` for those. Five do more: `setup` also links the skills into `.claude/`, `camp` opens Obsidian next to the game, `scores` picks a query file, and `break` and `rescue` are git recipes with no `vibe` equivalent. `just` on its own lists them all.
 
 ## What you get
 
