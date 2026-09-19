@@ -14,6 +14,7 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 from vibemap import project
+from vibemap.config import toml_str
 
 ROOT = project.root()
 THEMES_DIR = ROOT / "themes"
@@ -45,20 +46,17 @@ class Theme:
     def to_toml(self) -> str:
         d = asdict(self)
         lines = [
-            f"# Theme {self.id}: edit freely, then set [theme] preset in vibe.toml"
+            f"# Theme {self.id}: edit freely, then set [theme] preset"
+            " in config/camp.toml"
         ]
         for k, v in d.items():
             if isinstance(v, (tuple, list)):
                 lines.append(f"{k} = [")
-                lines += [f"  {_q(x)}," for x in v]
+                lines += [f"  {toml_str(x)}," for x in v]
                 lines.append("]")
             else:
-                lines.append(f"{k} = {_q(str(v))}")
+                lines.append(f"{k} = {toml_str(str(v))}")
         return "\n".join(lines) + "\n"
-
-
-def _q(s: str) -> str:
-    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 THEMES: dict[str, Theme] = {

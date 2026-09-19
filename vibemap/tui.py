@@ -164,7 +164,7 @@ class Welcome(Screen[None]):
             yield Static(BANNER, classes="banner")
             yield Static(
                 "From intern to expert, one evening at a time. "
-                "Pick who you are; every choice lives in vibe.toml "
+                "Pick who you are; every choice lives in config/camp.toml "
                 "and can change later.",
                 classes="lead",
             )
