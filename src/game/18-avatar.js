@@ -194,7 +194,8 @@ function wireAvatar(){if(avatarWired)return;avatarWired=true;
     if(before||!(S.done||[]).includes(n))return;
     const now=Date.now();if(lastClaimAt&&now-lastClaimAt<300000)speedRun=true;lastClaimAt=now;
     cheer();achCheck()};
-  const h=$("hint");if(h&&h.textContent.indexOf("sit")<0)h.textContent+=" · x to sit";
+  // Sitting is a key, so it joins the half of the hint the keyboard reads.
+  const h=$("hint").querySelector(".keys");if(h&&h.textContent.indexOf("sit")<0)h.textContent+=" · x to sit";
   setPose(chars.rolinda,"carry");
   applyWear(chars.lotte,sl("wear"));
 }

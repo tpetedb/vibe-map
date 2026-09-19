@@ -89,6 +89,8 @@ jobs:
             files: >-
               tests/test_game_ui.py tests/test_interests.py
               tests/test_artifacts.py tests/test_game_vault.py
+          - shard: phone
+            files: tests/test_game_phone.py
           - shard: bridges
             files: >-
               tests/test_game_bridges.py tests/test_game_news.py

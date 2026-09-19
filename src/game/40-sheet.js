@@ -63,8 +63,13 @@ addEventListener("keydown",e=>{if(e.key!=="Escape")return;
 window.toggleHudMenu=function(){const on=!$("hud-more").classList.contains("open");
   $("hud-more").classList.toggle("open",on);$("hud-more-btn").setAttribute("aria-expanded",String(on))};
 window.closeHudMenu=function(){$("hud-more").classList.remove("open");$("hud-more-btn").setAttribute("aria-expanded","false")};
-// A click anywhere else closes it, and so does picking an item in it.
-addEventListener("pointerdown",e=>{if(!$("hud-more").classList.contains("open"))return;if(!$("hud-more").contains(e.target))closeHudMenu()},true);
+// A tap anywhere but the menu and its own button closes it. On a phone that
+// tap lands on the sheet's backdrop, which is part of #hud-more: it is spent
+// on closing the menu rather than also walking the avatar to that spot.
+addEventListener("pointerdown",e=>{const more=$("hud-more");
+  if(!more.classList.contains("open"))return;
+  if($("hud-menu").contains(e.target)||$("hud-more-btn").contains(e.target))return;
+  closeHudMenu();if(e.target===more)e.preventDefault()},true);
 $("hud-menu").addEventListener("click",e=>{if(e.target.closest("button"))closeHudMenu()});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
