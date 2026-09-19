@@ -21,10 +21,13 @@ import functools
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
+import urllib.parse
 from pathlib import Path
 from string import ascii_letters, digits
+from typing import Any
 
 
 def _root(argv: list[str] | None = None) -> Path:
@@ -87,6 +90,44 @@ GAME_ORDER = [
 
 def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
+
+
+def site_url(repo_url: str) -> str:
+    """Where this camp publishes its game, derived from its repository URL.
+
+    GitHub serves a project's Pages at https://<owner>.github.io/<repo>/, so
+    the repository URL already in config/camp.toml is the whole answer and a
+    fork's page never advertises ours. Anything that is not a GitHub URL falls
+    back to the repository itself, which is always a real address.
+    """
+    tail = repo_url.rstrip("/").removeprefix("https://github.com/")
+    owner, _, repo = tail.partition("/")
+    if tail == repo_url or not owner or not repo or "/" in repo:
+        return repo_url.rstrip("/") + "/"
+    return f"https://{owner}.github.io/{repo}/"
+
+
+def _icon_data_uri() -> str:
+    """src/icon.svg as an inline data URI: the tab icon costs no request.
+
+    Single quotes inside, so the URI can sit in a double-quoted attribute; the
+    hash of every colour has to be escaped or the browser reads it as the
+    start of a fragment.
+    """
+    svg = " ".join(_read("icon.svg").split()).replace('"', "'")
+    return "data:image/svg+xml," + urllib.parse.quote(svg, safe="/:=;,' ")
+
+
+def _head_html() -> str:
+    """head.html with its placeholders filled; an unfilled one is a build fault."""
+    site = site_url(_camp().game.repo_url)
+    text = _read("head.html")
+    for key, value in (("{{SITE}}", site), ("{{ICON}}", _icon_data_uri())):
+        text = text.replace(key, value)
+    left = re.search(r"\{\{[A-Z]+\}\}", text)
+    if left:
+        raise SystemExit(f"src/head.html has no value for {left.group(0)}")
+    return text
 
 
 def _campaign_js() -> str:
@@ -205,14 +246,22 @@ def _persona_interests(persona_id: str) -> list[str]:
     return list(p.interests) if p else []
 
 
-def _config_js() -> str:
-    """The journey values (config/camp.toml) the game exposes as a constant."""
+@functools.cache
+def _camp() -> Any:
+    """This camp's config/camp.toml: the one read, shared by everything here."""
     sys.path.insert(0, str(ROOT))
     from vibemap import project  # noqa: PLC0415
     from vibemap.config import Config  # noqa: PLC0415
+
+    return Config.load(project.nearest_config(ROOT))
+
+
+def _config_js() -> str:
+    """The journey values (config/camp.toml) the game exposes as a constant."""
+    sys.path.insert(0, str(ROOT))
     from vibemap.themes import load_theme, theme_for_game  # noqa: PLC0415
 
-    cfg = Config.load(project.nearest_config(ROOT))
+    cfg = _camp()
     version = _version()
     theme = theme_for_game(
         load_theme(cfg.theme.preset), show_pairings=cfg.game.show_pairings
@@ -222,6 +271,9 @@ def _config_js() -> str:
         "theme": theme,
         "dates": cfg.finale.dates,
         "repo": cfg.game.repo_url,
+        # Where this camp publishes: the one absolute address a page needs
+        # when a relative link will not do (a share card, a link home).
+        "site": site_url(cfg.game.repo_url),
         "shadowMap": cfg.game.shadow_map,
         "difficulty": cfg.learner.difficulty,
         "persona": cfg.learner.persona,
@@ -404,7 +456,7 @@ def _game_script() -> str:
 def build() -> str:
     """Return the full HTML document as a string."""
     return (
-        _read("head.html")
+        _head_html()
         + "<style>\n"
         + _read("style.css")
         + "</style>\n</head>\n"

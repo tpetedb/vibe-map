@@ -3,6 +3,12 @@
 # because game/vibe-map.html is committed already built. Enable Pages once in
 # the repo settings with source "GitHub Actions"; after that this workflow
 # owns the URL.
+#
+# site/ is committed and holds what the game itself does not carry: the page a
+# missing path lands on. The copies below add the built game and its two
+# runtime files to it. The learner's own workspace/game/index.html is not
+# published here: in this checkout it is the untouched stub, and a public page
+# telling a stranger to open their agent in "this folder" helps nobody.
 name: pages
 
 on:
@@ -10,7 +16,8 @@ on:
     branches: [main]
     paths:
       - "game/**"
-      - "workspace/game/**"
+      - "site/**"
+      - "docs/media/hero.png"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -31,6 +38,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - id: pages
+        uses: actions/configure-pages@v5
       - name: Make the game the front page
         run: |
           mkdir -p site
@@ -39,8 +48,16 @@ jobs:
           # The runtime feed, next to the page: the game fetches ./news.json
           # from its own origin and never from a third party.
           cp game/news.json site/news.json
-          cp workspace/game/index.html site/your-game.html
-      - uses: actions/configure-pages@v5
+          # The share card the page's og:image points at. Nothing in the game
+          # loads it; a crawler does, so it has to be on this origin.
+          cp docs/media/hero.png site/hero.png
+          # 404.html is served for any path under the site, so its way home
+          # cannot be a relative link: base_path is this site's own root
+          # ("/vibe-map", or empty on a user page), whoever published it.
+          sed -i 's|{{BASE}}|${{ steps.pages.outputs.base_path }}|g' site/404.html
+          if grep -q 'BASE' site/404.html; then
+            echo "the 404 page still has an unfilled link home" && exit 1
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
