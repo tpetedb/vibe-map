@@ -5,11 +5,11 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
 ## Principles
 
 1. **Black is the canvas, colour is a signal.** Each hue means one thing (red action and errors, green done, blue paths and organisation, yellow curiosity and warnings, orange XP), like Blueprint's four intents and Powerlevel10k's `prompt_char` that "turns red on error". Example: the only green on the stage is a lit OKR rune.
-2. **Dense but calm.** Blueprint is "optimized for building complex, data-dense web interfaces"; density is earned with size and muted text, not boxes. Example: the KPI row is three Sora numerals with 10px muted labels and no card.
+2. **Dense but calm.** Blueprint is "optimized for building complex, data-dense web interfaces"; density is earned with size and muted text, not boxes. Example: the KPI row is three display numerals with 10px muted labels and no card.
 3. **State at a glance, like a prompt.** Powerlevel10k shows that "the effect of every command is instantly reflected by the very next prompt". Example: every screen opens with one status line: name, persona, level, XP, stops done.
 4. **Elevation is light on an edge, not a shadow.** Blueprint's dark elevation is `inset 0 0 0 1px rgba(white, 20%)` plus a soft drop; on OLED black a shadow is invisible, so levels are surface tints plus a hairline. Example: sheet on surface-1, title box on surface-2.
 5. **Motion explains, then leaves.** One motion per component, 150 to 400 ms, `transform` and `opacity` only (web.dev), inside NN/g's 100 to 500 ms window, and honoured `prefers-reduced-motion`. Example: the Enter pill rises 8px in 300 ms; with reduced motion it fades.
-6. **Warmth through words, one accent, restraint.** Claude's product design uses cream `#FAF9F5`, sand `#E3DACC`, one terracotta accent `#D97757`, serif headlines and plain copy; we keep Sora headings, Rolinda's voice, and one yellow primary button per view.
+6. **Warmth through words, one accent, restraint.** Claude's product design uses cream `#FAF9F5`, sand `#E3DACC`, one terracotta accent `#D97757`, serif headlines and plain copy; we keep tight display headings, Rolinda's voice, and one yellow primary button per view.
 7. **Retro is a seasoning.** Exactly three future-retro touches, each under 8 percent opacity or bounded in time, never on body text.
 
 ## Tokens
@@ -26,8 +26,9 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
   --blue:#0067A5; --blue-dim:#0A4E7A; --blue-bright:#0088CC;
   --radius-s:8px; --radius-m:12px; --radius-l:16px; --radius-pill:999px;
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px;
-  --font-display:Sora,system-ui,sans-serif; --font-body:Inter,system-ui,sans-serif;
-  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --text-xs:10px; --text-sm:13px; --text-md:16px; --text-lg:22px; --text-xl:clamp(28px,7vw,40px);
   --edge:inset 0 0 0 1px rgba(255,255,255,.08); --lift:0 10px 30px rgba(0,0,0,.6);
   --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
@@ -35,6 +36,11 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
   --ease:cubic-bezier(.4,1,.75,.9); --ease-out:cubic-bezier(.2,.8,.2,1);
 }
 ```
+
+The type is the stack the device already has: the game is one file with no
+CDN and it must work offline, so no page here asks a third party for a
+typeface. `--font-display` and `--font-body` are the same stack; display is
+told apart by weight, size and a tighter letter-spacing.
 
 Measured contrast on `#000000`: text 18.7:1, muted 6.8:1, yellow 12.7, orange 9.0, green 6.8, red 4.2, blue 3.5. So base red and base blue are fills, borders and 3D materials only; as text use `--red-bright` (5.7:1) and `--blue-bright` (5.4:1). Filled buttons: black text on yellow, orange or green; white text on blue (5.4:1); never text on a red fill.
 
@@ -59,15 +65,15 @@ Textual: `dark=True`, register with `self.register_theme(theme); self.theme = "v
 
 | Component | Look | The one motion | Accessibility |
 | --- | --- | --- | --- |
-| Title screen | Surface-2 box, `--radius-l`, hairline-2, Sora h1, three paragraphs, name input, one yellow primary button | Box fades in and rises 8px, 300 ms `--ease-out` | Input keeps `aria-label`; 2px `--yellow-bright` focus ring, offset 2px; reduced motion: opacity only |
+| Title screen | Surface-2 box, `--radius-l`, hairline-2, display h1, three paragraphs, name input, one yellow primary button | Box fades in and rises 8px, 300 ms `--ease-out` | Input keeps `aria-label`; 2px `--yellow-bright` focus ring, offset 2px; reduced motion: opacity only |
 | HUD pills | Pill radius, surface-1 at 78 percent with blur, 10px uppercase, 7px rune dots | Rune fills green over 240 ms | Buttons at least 32px tall; muted labels 6.8:1 |
-| KPI tiles | Sora tabular numerals in `--text` (no gradient text), 10px muted labels | Number counts up over 400 ms | Group has `aria-live="polite"` |
+| KPI tiles | display tabular numerals in `--text` (no gradient text), 10px muted labels | Number counts up over 400 ms | Group has `aria-live="polite"` |
 | Sheet (lesson) | Surface-1, hairline top, 640px column, `pre` in mono 12.5/1.5 on surface-2 | Smooth `scrollIntoView` (exists) | `role="dialog"` plus `aria-labelledby` the h2; Close first in tab order; Escape closes |
 | Callouts | 1px border at 40 percent hue, fill at 8 percent, 10px uppercase label in the bright variant: done green, why blue, try yellow, Rolinda orange 3px left rule, italic | None | The label word carries the meaning, colour never alone |
 | Buttons | Secondary: surface-2, hairline-2, `--text`. Primary: yellow fill, black text (12.7:1). Danger (reset): `--red-bright` text and border, no fill | Hover lifts 1px in 150 ms; active resets | `:focus-visible` ring as above; disabled keeps text at 35 percent opacity plus a "blocked" word |
-| Dashboard tiles | Surface-2 card, `--radius-m`, 10px uppercase muted label, Sora tabular numeral, 11px caption, a 120 by 26 sparkline in the tile's hue; a tile whose seven days are all zero shows no line | None | The tile group is `aria-live="polite"`; the number is never colour alone |
+| Dashboard tiles | Surface-2 card, `--radius-m`, 10px uppercase muted label, display tabular numeral, 11px caption, a 120 by 26 sparkline in the tile's hue; a tile whose seven days are all zero shows no line | None | The tile group is `aria-live="polite"`; the number is never colour alone |
 | Charts (game panel and `vibe dashboard`) | Inline SVG sized by its `viewBox`, so one layout works from 393px up: rings for progress (green when full, yellow while in progress), one orange line for XP, a single-hue green heatmap for activity, blue bars for magnitude, red never used for a value. Thin marks, 4px rounded data ends, recessive `--hairline` grid, mono tabular labels | None | Every chart is `role="img"` with an `aria-label` that states the reading, every mark carries an SVG `<title>`, and a legend names what colour means |
-| Vault graph and reader | Black canvas; nodes by tag (workstream green, people blue, tech yellow, decision red, concept orange, as in `vibe.css`); links white 16 percent; selected halo `--blue-bright` at 25 percent. Reader: Inter 15/1.6, wikilinks `--blue-bright` | Halo scales 1 to 1.15 in 240 ms on select; the force layout is content, not decoration | Canvas `aria-label` with counts; every note reachable through the Tech tree buttons by keyboard; links focusable |
+| Vault graph and reader | Black canvas; nodes by tag (workstream green, people blue, tech yellow, decision red, concept orange, as in `vibe.css`); links white 16 percent; selected halo `--blue-bright` at 25 percent. Reader: body text 15/1.6, wikilinks `--blue-bright` | Halo scales 1 to 1.15 in 240 ms on select; the force layout is content, not decoration | Canvas `aria-label` with counts; every note reachable through the Tech tree buttons by keyboard; links focusable |
 | TUI welcome | `Panel` with `accent` border, `title` style header, one status line: name, persona, level, XP, stops | None | Pass and fail are words, colour is extra |
 | TUI checks | Table tool, tier, status, what; status `ok`, `err` (missing), `warn` (hint) | Spinner only while a probe runs | Documented install command printed in `path`, copyable |
 | TUI launcher | Numbered `Button` list: game, vault, docs, claude; focused button uses `$primary` | None | Keys 1 to 9 bound, footer lists them |
