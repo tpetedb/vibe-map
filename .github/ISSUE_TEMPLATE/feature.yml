@@ -1,0 +1,46 @@
+# The companion to bug.yml: what an idea needs before anyone can size it.
+name: Idea or feature
+description: Something the camp should do that it does not do yet
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem, not the solution
+      description: >-
+        Who runs into it, and what they do today instead. An idea with a
+        person in it is far easier to judge than a feature name.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would build
+    validations:
+      required: true
+  - type: dropdown
+    id: zone
+    attributes:
+      label: Which zone it touches
+      description: >-
+        The three zones are in
+        [docs/MAINTAINERS.md](https://github.com/tpetedb/vibe-map/blob/main/docs/MAINTAINERS.md).
+      multiple: true
+      options:
+        - The game (src/, the built one file)
+        - The vibe command (vibemap/)
+        - The course and the docs
+        - The tech tree (vibemap/data/topics/)
+        - The camp template a vibe new writes
+        - The learner's workspace
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: How we would know it works
+      description: The test or the thing you would look at to call it done.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you considered and dropped
