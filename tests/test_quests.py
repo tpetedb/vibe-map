@@ -6,6 +6,7 @@ one, so a check that passes on the scaffolding fails the test.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
@@ -15,7 +16,6 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from vibemap.cli import cli
-
 
 ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -82,8 +82,9 @@ def test_an_mcp_server_in_the_default_scope_passes_stop_5(tmp_path: Path) -> Non
     home = tmp_path / "home"
     _write(
         home / ".claude.json",
-        '{"projects": {"%s": {"mcpServers": {"weather": {"command": "x"}}}}}'
-        % camp.resolve(),
+        json.dumps(
+            {"projects": {str(camp.resolve()): {"mcpServers": {"weather": {}}}}}
+        ),
     )
     out = _vibe(camp, "check", "--no-claim", "5", home=home)
     assert "weather" in _flat(out), out
