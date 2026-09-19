@@ -360,5 +360,12 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 
 /* ---------------- input & movement ---------------- */
-// The player's walker after a look change on the title screen: same spot, new body.
-function rebuildPlayer(){if(!chars.lotte)return;const p=chars.lotte.g.position.clone(),r=chars.lotte.g.rotation.y;scene.remove(chars.lotte.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;scene.add(chars.lotte.g)}
+// The player's walker after a look or a name change: same spot, new body. The
+// pose is state, the limbs are the view, so the new body takes over what the
+// old one was doing; the name is rebuilt on a timer, which can land long after
+// the walker has sat down.
+function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
+  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  // The limbs are put where the pose says in the same tick, so a rebuild never
+  // shows one frame of a standing body with the laptop gone.
+  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g)}
