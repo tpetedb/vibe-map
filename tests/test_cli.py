@@ -530,7 +530,7 @@ def test_status_counts_encounters_and_artifacts(tmp_path: Path) -> None:
     state["artifactsBuilt"] = ["dock"]
     state_path.write_text(json.dumps(state))
     out = _run(camp, "status")
-    assert "1/12 mentors met" in out.stdout, out.stdout
+    assert "1/12 mentors verified" in out.stdout, out.stdout
     assert "1/21 artifacts (1 built for real)" in out.stdout
     data = json.loads(_run(camp, "status", "--json").stdout)
     assert data["mentors"] == ["torvalds"] and data["artifacts"] == ["dock"]
@@ -601,3 +601,51 @@ def test_imported_progress_is_half_and_a_passing_check_pays_the_rest(
     # Verified now, so the check does not pay twice.
     assert _run(camp, "check", "-w", "campus", "1").returncode == 0
     assert json.loads((camp / ".vibe" / "state.json").read_text())["xp"] == full
+
+
+def test_an_empty_fork_challenge_is_refused_like_a_wrong_one(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    empty = _run(camp, "check", "--fork", "")
+    bogus = _run(camp, "check", "--fork", "bogus")
+    assert empty.returncode == 1, empty.stdout
+    assert "fork challenge" in empty.stdout, empty.stdout
+    assert bogus.returncode == 1, bogus.stdout
+    assert "unknown fork challenge ''" in empty.stdout, empty.stdout
+
+
+def test_a_mentor_choice_with_start_also_scaffolds(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    out = _run(camp, "mentor", "opencode", "skip", "--start")
+    assert out.returncode == 0, out.stdout
+    assert "skip" in out.stdout
+    assert list((camp / "workspace" / "mentors" / "opencode").glob("*")), out.stdout
+
+
+def test_one_word_per_mentor_state_across_the_cli(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    state_path = camp / ".vibe" / "state.json"
+    state = json.loads(state_path.read_text())
+    state["mentors"] = ["cherny"]
+    state_path.write_text(json.dumps(state))
+    table = _run(camp, "mentor").stdout
+    one = _run(camp, "mentor", "cherny").stdout
+    other = _run(camp, "mentor", "torvalds").stdout
+    status = _run(camp, "status").stdout
+    assert "verified" in table and "not yet verified" in table
+    assert "verified" in one and "not yet verified" not in one
+    assert "not yet verified" in other
+    assert "1/12 mentors verified" in status
+
+
+def test_the_terminal_names_a_wearable_the_way_the_game_does(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    state_path = camp / ".vibe" / "state.json"
+    state = json.loads(state_path.read_text())
+    state["wear"] = ["shades"]
+    state_path.write_text(json.dumps(state))
+    out = _run(camp, "status").stdout
+    assert "wearing Dark glasses" in out, out
+    names = {w["id"]: w["name"] for w in campaign.wearables()}
+    html = (ROOT / "game" / "vibe-map.html").read_text(encoding="utf-8")
+    for wear_id, name in names.items():
+        assert f'"{wear_id}"' in html and name in html
