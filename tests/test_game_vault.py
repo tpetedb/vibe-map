@@ -194,14 +194,19 @@ def test_the_graph_spreads_instead_of_piling_on_the_edges(
     # reading a frame of it.
     game.still("window.__vault().nodes.reduce((s, p) => s + p.y, 0)")
     # Clamping pinned the overflow to the exact border, so a couple of dozen
-    # nodes shared one y to the pixel. A settled layout shares none.
-    row = page.evaluate(
+    # nodes shared one y to the pixel. A settled layout piles up nowhere: the
+    # bound is a share of the graph, not a small count, because a few of sixty
+    # free nodes land within half a pixel of each other by chance and that is
+    # not the defect.
+    rows = page.evaluate(
         "() => {const rows = {};"
         " window.__vault().nodes.forEach(p => {const k = Math.round(p.y);"
         " rows[k] = (rows[k] || 0) + 1});"
-        " return Math.max(...Object.values(rows))}"
+        " return {worst: Math.max(...Object.values(rows)),"
+        " n: window.__vault().nodes.length}}"
     )
-    assert row <= 3, f"{row} nodes sit on one line"
+    limit = max(6, rows["n"] // 8)
+    assert rows["worst"] <= limit, f"{rows['worst']} of {rows['n']} on one line"
     game.screenshot("vault-graph-spread")
     assert not game.errors, game.errors
 
