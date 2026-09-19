@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.script_camp import FIXTURES, FOUNTAIN, NOTE
+from tools.script_camp import FOUNTAIN, NOTE, fixture_files
 from vibemap import campaign
 from vibemap.artifact_checks import (
     ARTIFACT_SECTION,
@@ -38,7 +38,7 @@ def _build(tmp_path: Path, artifact_id: str, monkeypatch: pytest.MonkeyPatch) ->
     """Write the fixture into a workspace of its own and point the checks at it."""
     here = tmp_path / "workspace" / "artifacts" / artifact_id
     here.mkdir(parents=True)
-    for name, body in FIXTURES[artifact_id].items():
+    for name, body in fixture_files(artifact_id, tmp_path).items():
         (here / name).write_text(body, encoding="utf-8")
     (here / "notes.md").write_text(NOTE, encoding="utf-8")
     monkeypatch.setattr(

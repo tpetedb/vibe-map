@@ -40,13 +40,15 @@ Difficulty = Literal["beginner", "easy", "normal", "hard", "expert", "god"]
 Mode = Literal["campaign", "roadmap"]
 Provider = Literal["claude", "codex", "gemini", "copilot", "opencode"]
 
+# The finale's slots, by the part of the week rather than by a date: a camp
+# keeps its config/camp.toml for months and a calendar date would age out of
+# it. A camp that has picked its evenings writes them over these.
 DEFAULT_DATES = [
-    "Friday 25 September",
-    "Saturday 3 October",
-    "Friday 9 October",
-    "Saturday 17 October",
-    "Friday 23 October",
-    "Another slot, I will circle back with Tom",
+    "Friday evening",
+    "Saturday afternoon",
+    "Saturday evening",
+    "Sunday afternoon",
+    "A weekday evening",
 ]
 
 

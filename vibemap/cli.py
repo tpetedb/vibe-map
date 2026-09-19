@@ -2155,6 +2155,26 @@ def _copy_tree(src: Path, target: Path) -> int:
     return n
 
 
+def _name_the_camp(target: Path, who: str | None) -> None:
+    """Fill the blanks the template leaves: the learner's name and this year.
+
+    The camp is a repository the learner pushes, so its LICENSE has to carry a
+    real copyright line. The year is always known; the name only when they
+    said it, and `<your_name>` stays visible until they do.
+    """
+    blanks = {"<year>": str(date.today().year)}
+    if who:
+        blanks["<your_name>"] = who
+    for rel in (project.CAMP_CONFIG, "LICENSE"):
+        p = target / rel
+        if not p.is_file():
+            continue
+        text = p.read_text(encoding="utf-8")
+        for blank, value in blanks.items():
+            text = text.replace(blank, value)
+        p.write_text(text, encoding="utf-8")
+
+
 def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
     return subprocess.run(
         cmd, cwd=cwd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -2193,14 +2213,7 @@ def new(
     target.mkdir(parents=True, exist_ok=True)
     n = copy_template(target)
     console.print(f"[ok]{n} files[/] from the template into {target}")
-    if who:
-        toml = target / project.CAMP_CONFIG
-        toml.write_text(
-            toml.read_text(encoding="utf-8").replace(
-                'name = "<your_name>"', f'name = "{who}"', 1
-            ),
-            encoding="utf-8",
-        )
+    _name_the_camp(target, who)
     env = dict(os.environ, VIBE_HOME=str(target))
     if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
         console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")
