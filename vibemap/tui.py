@@ -264,10 +264,12 @@ class Welcome(Screen[None]):
         if not name:
             # The placeholder is the state's word for "nobody has said yet";
             # storing it would greet the learner by it on the next screen.
-            self.query_one("#nameproblem", Static).update(
+            problem = self.query_one("#nameproblem", Static)
+            problem.update(
                 "Type your name first. It goes in camp.toml and can change "
                 "later with vibe name."
             )
+            problem.display = True
             self.set_focus(self.query_one("#name", Input))
             return
         data = self.cfg.model_dump()
@@ -568,7 +570,7 @@ class VibeApp(App[str]):
     .action {{ height: auto; margin: 0 1; }}
     .action Button {{ width: 34; margin: 0 2 0 0; }}
     .hint {{ color: {MUTED}; width: 1fr; padding: 1 0; }}
-    .problem {{ color: {RED}; margin: 0 1; }}
+    .problem {{ color: {RED}; margin: 0 1; display: none; }}
     DataTable {{ height: 1fr; min-height: 10; margin: 0 1; border: round {GREEN}; }}
     Log {{ height: 6; margin: 0 1; border: round {BLUE}; }}
     #welcome, #checks, #launch, #map, #dotfiles {{ padding: 0 1; }}
