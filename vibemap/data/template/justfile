@@ -45,8 +45,8 @@ check *n:
     vibe check {{n}}
 
 # mark a workstream done with one line on what you built
-done n note:
-    vibe done {{n}} "{{note}}"
+done n note *args:
+    vibe done {{n}} "{{note}}" {{args}}
 
 # write workspace/dashboard.html from your state, vault and scores, and open it
 dashboard:
@@ -78,8 +78,17 @@ council topic:
 
 # a sandbox branch to break things in: play/<name>
 break name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # git switch carries a dirty tree onto the new branch, so rescue would
+    # commit work you did on main over there and main would look untouched.
+    if [ -n "$(git status --porcelain)" ]; then
+      echo "uncommitted work here; commit or stash it first, then: just break {{name}}"
+      git status --short
+      exit 1
+    fi
     git switch -c play/{{name}}
-    @echo "You are on play/{{name}}. Break anything. Come back with: just rescue"
+    echo "You are on play/{{name}}. Break anything. Come back with: just rescue"
 
 # commit whatever is lying around on the play branch and return to main, unhurt
 rescue:

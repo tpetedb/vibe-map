@@ -9,7 +9,11 @@ function setupInput(){
   c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()});
+  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+    // Enter is the keyboard twin of the proximity button, so it only fires
+    // while the page itself has focus and nothing is standing in front of it:
+    // a form field and an open panel keep their own Enter.
+    if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
   // A key held while the focus moves into a field never sends its keyup here.
   addEventListener("focusin",e=>{if(inField(e.target))for(const k in keys)keys[k]=false});

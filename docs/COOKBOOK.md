@@ -99,7 +99,7 @@ Read every .md file in notes/, list the decisions made, the open decisions with 
 Workstream 3. A chart of minutes per decision by meeting.
 
 ```text
-Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to workspace/python/out/. Explain the one SQL construct I have not seen.
+Using workspace/data/examples/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to workspace/python/out/. Explain the one SQL construct I have not seen.
 ```
 
 **Done when:** The chart opens and the worst meeting is obvious.
@@ -139,7 +139,7 @@ Write quote.py: I type the facade size in square metres and the dirt level (1 to
 Workstream 5. Reschedule tomorrow's jobs when the forecast says rain.
 
 ```text
-Read workspace/data/jobs.csv and the weather in weather.json; list the jobs to move, who to call, and draft the message in Dutch. Do not send anything.
+Read workspace/data/examples/jobs.csv and the weather in weather.json; list the jobs to move, who to call, and draft the message in Dutch. Do not send anything.
 ```
 
 **Done when:** A draft per client, nothing sent.
@@ -179,7 +179,7 @@ Read docs/ and produce index.md grouped by the accreditation standard each docum
 Workstream 3. A line chart per programme, 2023 to 2026.
 
 ```text
-Using workspace/data/enrolments.csv, write workspace/sql/ratio.sql in DuckDB and a Python chart. One sentence on what the trend implies.
+Using workspace/data/examples/enrolments.csv, write workspace/sql/ratio.sql in DuckDB and a Python chart. One sentence on what the trend implies.
 ```
 
 **Done when:** Chart in workspace/python/out/, sentence in the vault.
@@ -229,7 +229,7 @@ Read observations/*.md and write feedback.md per student teacher: two strengths,
 Workstream 3. Attention by subject and group from lessons.csv.
 
 ```text
-Write workspace/sql/attention.sql and a Python chart from workspace/data/lessons.csv. Explain group by in one comment.
+Write workspace/sql/attention.sql and a Python chart from workspace/data/examples/lessons.csv. Explain group by in one comment.
 ```
 
 **Done when:** The chart matches your gut feeling, or you learned something.
@@ -269,7 +269,7 @@ Write a pre-commit style Claude Code hook (PostToolUse on Edit and Write) that c
 Workstream 8. Headless agent summarises last night's runs into the vault.
 
 ```text
-Write a script that runs the provider in print mode over workspace/data/pipeline_runs.csv and writes vault/Camp/Runs.md with a table and one paragraph. Schedule it at 07:00.
+Write a script that runs the provider in print mode over workspace/data/examples/pipeline_runs.csv and writes vault/Camp/Runs.md with a table and one paragraph. Schedule it at 07:00.
 ```
 
 **Done when:** Runs.md is updated by the schedule, not by you.
@@ -299,7 +299,7 @@ Read client-email.txt and write brief.md: rooms, style words, must-haves, budget
 Workstream 3. Spent versus budget per client and style, with a chart.
 
 ```text
-Using workspace/data/projects.csv, write workspace/sql/over_budget.sql and a Python chart of spent versus budget per style. One sentence on the worst offender.
+Using workspace/data/examples/projects.csv, write workspace/sql/over_budget.sql and a Python chart of spent versus budget per style. One sentence on the worst offender.
 ```
 
 **Done when:** The chart shows the style that overruns.

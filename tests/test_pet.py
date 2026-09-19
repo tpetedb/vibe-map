@@ -23,12 +23,12 @@ def _camp(tmp_path: Path) -> Path:
     return camp
 
 
-def _vibe(camp: Path, *args: str) -> str:
+def _vibe(camp: Path, *args: str, **env: str) -> str:
     """The CLI as a learner runs it, in a camp of its own."""
     out = subprocess.run(
         [sys.executable, "-m", "vibemap.cli", *args],
         cwd=camp,
-        env=dict(os.environ, VIBE_HOME=str(camp), NO_COLOR="1", COLUMNS="100"),
+        env=dict(os.environ, VIBE_HOME=str(camp), NO_COLOR="1", COLUMNS="100", **env),
         capture_output=True,
         text=True,
     )
@@ -64,6 +64,20 @@ def test_every_frame_is_five_rows_of_twelve_columns() -> None:
             assert all(len(r) == pet.WIDTH for r in rows), (species, tick, rows)
     blink = pet.frame(pet.roll("tom"), pet.IDLE_SEQUENCE.index(-1))
     assert pet.roll("tom").eye not in "".join(blink)
+
+
+def test_the_hat_stays_on_every_frame() -> None:
+    # Row 0 is the hat's row; a fidget there keeps only what the hat misses.
+    for species in pet.SPECIES:
+        p = pet.Pet(species, species, pet.EYES[0], "crown", "epic", False, {})
+        for index in range(len(pet.BODIES[species])):
+            rows = pet.sprite(p, index)
+            assert "\\^^^/" in rows[0], (species, index, rows[0])
+            assert all(len(r) == pet.WIDTH for r in rows), (species, index)
+    dragon = pet.Pet("dragon", "d", pet.EYES[0], "crown", "epic", False, {})
+    assert pet.sprite(dragon, 2)[0] == "   \\^^^/~   "
+    bare = pet.Pet("dragon", "d", pet.EYES[0], "none", "common", False, {})
+    assert pet.sprite(bare, 2)[0] == "   ~    ~   "
 
 
 def test_resolve_applies_overrides_and_refuses_unknown_ones() -> None:
@@ -131,6 +145,15 @@ def test_vibe_pet_species_writes_the_choice_into_the_camp(tmp_path) -> None:
     assert 'species = "dog"' in (camp / "config" / "camp.toml").read_text()
     assert "dog ·" in _vibe(camp, "pet")
     assert "unknown species" in _vibe(camp, "pet", "--species", "wyvern")
+
+
+def test_a_colourless_terminal_hears_why_the_pixels_look_flat(tmp_path) -> None:
+    camp = _camp(tmp_path)
+    forced = _vibe(camp, "pet", "--species", "crab", "--style", "pixel")
+    # NO_COLOR paints no truecolor, so the half blocks arrive flat: say so.
+    assert "truecolor" in forced and "ascii" in forced, forced
+    art = _vibe(camp, "pet", "--style", "ascii", TERM="dumb")
+    assert "\u2580" not in art and "truecolor" not in art, art
 
 
 def test_a_claimed_stop_flashes_the_happy_state(tmp_path) -> None:
