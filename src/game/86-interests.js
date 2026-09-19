@@ -11,7 +11,6 @@
 function interestList(){const s=S.interests;return Array.isArray(s)?s:((CONFIG&&CONFIG.interests)||[])}
 function interestsAll(){return interestList().length===0}
 function wantsShelf(c){return interestsAll()||interestList().indexOf(c)>=0}
-function interestAnswered(){return Array.isArray(S.interests)}
 function shelfName(c){const row=(typeof CATS==="undefined"?[]:CATS).find(x=>x[0]===c);return row?row[1]:c}
 // The shelf a tree topic sits on, by its note title. TREE is the generated
 // map of shelf to topics, so this never needs a second list.

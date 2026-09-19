@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -194,3 +195,127 @@ def test_no_claude_artifact_link_survives_anywhere() -> None:
         and "claude.ai/artifact" in path.read_text(encoding="utf-8", errors="ignore")
     ]
     assert offenders == []
+
+
+def test_the_licence_is_the_whole_mit_text() -> None:
+    """A truncated MIT text is detected as "Other", so the repo has no licence."""
+    text = (ROOT / "LICENSE").read_text(encoding="utf-8")
+    assert "Copyright (c) 2026 Tom Peters" in text
+    # The clause GitHub's detector and a reuser both need, and the one that
+    # was missing: the warranty disclaimer in full, plus the liability limit.
+    for clause in (
+        "WITHOUT WARRANTY OF ANY KIND, EXPRESS OR",
+        "MERCHANTABILITY",
+        "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT",
+        "IN NO EVENT SHALL THE",
+        "BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER",
+    ):
+        assert clause in text, clause
+
+
+def test_the_community_files_are_there() -> None:
+    """GitHub's community profile, and what an outsider needs on day one."""
+    for name in (
+        "LICENSE",
+        "SECURITY.md",
+        "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".github/ISSUE_TEMPLATE/bug.yml",
+        ".github/ISSUE_TEMPLATE/feature.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
+    ):
+        p = ROOT / name
+        assert p.is_file() and p.stat().st_size > 0, name
+    # No personal address anywhere in them: reports go through GitHub.
+    for name in ("SECURITY.md", "CODE_OF_CONDUCT.md"):
+        assert "@gmail" not in (ROOT / name).read_text(encoding="utf-8"), name
+
+
+def test_every_vendored_bundle_carries_its_licence() -> None:
+    """MIT and ISC both say the licence text travels with the copy."""
+    vendor = ROOT / "src" / "vendor"
+    for bundle, licence in (
+        ("three.min.js", "THREE-LICENSE.txt"),
+        ("motion.min.js", "MOTION-LICENSE.txt"),
+        ("d3-force.min.js", "D3-LICENSE.txt"),
+    ):
+        assert (vendor / bundle).is_file(), bundle
+        text = (vendor / licence).read_text(encoding="utf-8")
+        assert "Copyright" in text and "WARRANT" in text.upper(), licence
+
+
+def test_the_page_says_what_it_is_and_where_it_lives() -> None:
+    """A link pasted into a chat shows a title, a sentence and the card."""
+    head = (ROOT / "src" / "head.html").read_text(encoding="utf-8")
+    for tag in (
+        'name="description"',
+        'rel="canonical"',
+        'property="og:title"',
+        'property="og:description"',
+        'property="og:image"',
+        'property="og:url"',
+        'name="twitter:card"',
+        'name="theme-color"',
+        'rel="icon"',
+    ):
+        assert tag in head, tag
+    built = GAME.read_text()
+    # The placeholders are filled at build time, and the card is absolute:
+    # a crawler cannot resolve a relative one.
+    assert "{{" not in built[: built.index("<style>")]
+    assert 'content="https://tpetedb.github.io/vibe-map/hero.png"' in built
+    assert 'href="data:image/svg+xml,' in built
+
+
+# What makes a browser fetch something, as opposed to offering a link the
+# reader may click: the course is full of honest anchors to other people's
+# documentation and those are content, not a dependency.
+_FETCHES_SRC = re.compile(
+    r'<(?:script|img|iframe|source|video|audio|embed)\b[^>]*?\bsrc="([^"]+)"', re.I
+)
+_FETCHES_LINK = re.compile(
+    r'<link\b[^>]*?\brel="(stylesheet|preconnect|dns-prefetch|preload|icon'
+    r'|apple-touch-icon|manifest)"[^>]*?\bhref="([^"]+)"',
+    re.I,
+)
+_CSS_FETCHES = re.compile(r"(?:@import\b|\burl\()\s*[\"']?([^)\"']+)", re.I)
+# A build placeholder counts as ours: tools/build.py refuses to leave one
+# behind, and the built head is checked for that above.
+_OURS = ("data:", "blob:", "#", "./", "news.json", "{{")
+
+
+def _loaded_from_outside(path: Path) -> list[str]:
+    text = path.read_text(encoding="utf-8")
+    urls = [m.group(1) for m in _FETCHES_SRC.finditer(text)]
+    urls += [m.group(2) for m in _FETCHES_LINK.finditer(text)]
+    if path.suffix == ".css":
+        urls += [m.group(1) for m in _CSS_FETCHES.finditer(text)]
+    return [u for u in urls if not u.startswith(_OURS)]
+
+
+def test_no_source_file_makes_the_page_fetch_a_third_party() -> None:
+    """One file, no CDN. A link the reader clicks is fine; a load is not."""
+    src = ROOT / "src"
+    files = [src / "head.html", src / "body.html", src / "style.css"]
+    files += sorted(src.glob("game/*.js")) + sorted(src.glob("config/*.js"))
+    for f in files:
+        outside = _loaded_from_outside(f)
+        assert outside == [], (f.name, outside)
+
+
+def test_the_published_site_carries_the_card_and_a_way_home() -> None:
+    """og:image and the 404 page are files the Pages workflow really writes."""
+    assert (ROOT / "docs" / "media" / "hero.png").is_file()
+    page = ROOT / "site" / "404.html"
+    assert page.is_file()
+    steps = [
+        s.get("run", "")
+        for job in _workflows()["pages"]["jobs"].values()
+        for s in job["steps"]
+    ]
+    run = "\n".join(steps)
+    assert "docs/media/hero.png site/hero.png" in run
+    # The way home is filled in from the site's own base path, never guessed.
+    assert "base_path" in run
+    assert "{{BASE}}" in page.read_text(encoding="utf-8")

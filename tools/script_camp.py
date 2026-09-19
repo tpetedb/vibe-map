@@ -605,14 +605,19 @@ if __name__ == "__main__":
     print(answer.status_code, answer.json()["message"])
 """
 
-MCP = {
-    "mcpServers": {
-        "camp-scores": {
-            "command": "uv",
-            "args": ["--directory", "/Users/you/vibe-map-camp", "run", "scores.py"],
-        }
+
+def _mcp_json(camp: Path) -> str:
+    """The bridge artifact's .mcp.json, naming the path this camp really has.
+
+    An MCP server is started from an absolute path, so a path copied from
+    another machine starts nothing and the artifact teaches the wrong thing.
+    """
+    server = {
+        "command": "uv",
+        "args": ["--directory", str(camp), "run", "scores.py"],
     }
-}
+    return json.dumps({"mcpServers": {"camp-scores": server}}, indent=2) + "\n"
+
 
 RAW_CSV = """\
 played_at,player,score
@@ -861,7 +866,9 @@ FIXTURES: dict[str, dict[str, str]] = {
     "balloon": {"meter.py": METER},
     "mountain": {"layers.py": LAYERS},
     "stall": {"main.py": MAIN},
-    "bridge": {"mcp.json": json.dumps(MCP, indent=2) + "\n"},
+    # Empty on purpose: its one file names an absolute path, so fixture_files
+    # writes it once the camp is known.
+    "bridge": {},
     "factory": {"raw.csv": RAW_CSV, "pipeline.py": PIPELINE},
     "post-office": {"postoffice.py": POST_OFFICE},
     "switchboard": {"justfile": SWITCHBOARD},
@@ -890,10 +897,22 @@ def _artifact_note() -> str:
 NOTE = _artifact_note()
 
 
+def fixture_files(artifact_id: str, camp: Path) -> dict[str, str]:
+    """The finished files for one artifact, in the camp they belong to.
+
+    Every fixture but one is the same text anywhere; the bridge's mcp.json
+    names an absolute path and only the camp knows it.
+    """
+    if artifact_id == "bridge":
+        return {"mcp.json": _mcp_json(camp)}
+    return FIXTURES[artifact_id]
+
+
 def script_artifacts(camp: Path) -> str:
     """Every artifact built for real, one folder each, with the learner's note."""
     written = kept = 0
-    for artifact_id, files in FIXTURES.items():
+    for artifact_id in FIXTURES:
+        files = fixture_files(artifact_id, camp)
         rel = f"workspace/artifacts/{artifact_id}"
         wrote = [_write(camp, f"{rel}/{name}", body) for name, body in files.items()]
         wrote.append(_write(camp, f"{rel}/notes.md", NOTE))
