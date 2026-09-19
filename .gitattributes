@@ -23,6 +23,7 @@ docs/ROADMAP.md merge=binary linguist-generated=true
 docs/RESOURCES.md merge=binary linguist-generated=true
 docs/OBSIDIAN.md merge=binary linguist-generated=true
 docs/COOKBOOK.md merge=binary linguist-generated=true
+docs/site/syllabus.html merge=binary linguist-generated=true
 vibemap/data/fork_source/** merge=binary linguist-generated=true
 vibemap/data/template/_agents/** merge=binary linguist-generated=true
 vibemap/data/template/_claude/** merge=binary linguist-generated=true

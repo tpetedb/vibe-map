@@ -25,10 +25,11 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 | `tools/regen_tree.py` | Emits the tree notes JS, the tree JS, `docs/ROADMAP.md` and `docs/RESOURCES.md` from the package data. Never hand-edit those outputs. |
 | `changelog.d/` | One file per change, `<slug>.<type>.md`, assembled into `CHANGELOG.md` at release time by `tools/changelog.py`. A branch adds a fragment and never edits `CHANGELOG.md`; the folder's `README.md` is the short version. |
 | `tools/sync_main.py` | `just sync-main`: merge `origin/main`, resolve a conflict in a generated file by regenerating it in dependency order, refuse and name the file when a real source conflict is left, then run the fast gates. |
+| `tools/gen_syllabus.py` | Writes the generated blocks of `docs/SYLLABUS.md` (the course map, the mentors, the artifacts, the tech tree) from `vibemap/data/`, and renders the whole file into `docs/site/syllabus.html`, the page `pages.yml` publishes next to the game. Never hand-edit inside a `<!-- generated:... -->` marker or the page. |
 | `tools/new_topic.py` | Scaffolds a topic file, or a whole pack, under `vibemap/data/topics/`. The way to start one; `docs/TOPICS.md` is the rest. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
-| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us), `TOPICS.md` (how to write a topic of the tech tree). |
+| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course; the blocks between its generated markers come from the package data), `site/syllabus.html` (generated, published), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us), `TOPICS.md` (how to write a topic of the tech tree). |
 | `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hot cache; every note is reachable from it. `.obsidian/` is pre-configured. |
 | `.agents/skills/` | Skills in the Agent Skills standard. `.claude/skills/` holds symlinks to them. |
 | `justfile`, `agents.just` | Every task a human or an agent runs. `just` lists them; `just start` onboards. |
@@ -44,7 +45,7 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 - Scores are a system of record. Never reset or rewrite `workspace/data/scores.csv` without asking.
 - Python dependencies are welcome when they remove real work. Declare them in `pyproject.toml`, install with `uv`, never bare pip.
 - The changelog entry is a fragment, not an edit. Add `changelog.d/<slug>.<type>.md` (type: added, changed, deprecated, removed, fixed, security) in the same commit as the change, and leave `CHANGELOG.md` alone; a release assembles it. CI refuses a change under `src/`, `vibemap/` or `tools/` that carries no fragment.
-- Generated files are never merged by hand. `game/vibe-map.html`, `game/news.json`, `tools/generated/`, `docs/ROADMAP.md`, `docs/RESOURCES.md`, `docs/OBSIDIAN.md`, `docs/COOKBOOK.md`, `vibemap/data/fork_source/`, `vibemap/data/template/_agents` and `_claude` and `vault/` are outputs: on a conflict take either side and regenerate. `just sync-main` does exactly that.
+- Generated files are never merged by hand. `game/vibe-map.html`, `game/news.json`, `tools/generated/`, `docs/ROADMAP.md`, `docs/RESOURCES.md`, `docs/OBSIDIAN.md`, `docs/COOKBOOK.md`, `docs/site/syllabus.html`, `vibemap/data/fork_source/`, `vibemap/data/template/_agents` and `_claude` and `vault/` are outputs: on a conflict take either side and regenerate. `just sync-main` does exactly that.
 - After every change, end with one line: what changed.
 
 ## Test loop

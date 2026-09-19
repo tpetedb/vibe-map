@@ -35,6 +35,9 @@ function placeSeats(){
   list.forEach(s=>{const p=itemSpot(s.at);if(!p)return;
     spots.push({id:s.id,x:p.x,z:p.z,face:p.face,w:SEAT_W[s.kind]||1,h:SEAT_H});
     obstacles.push([p.x,p.z,.5])});
+  // The bench on a bridge's rest platform is a seat like any other; the
+  // bridge knows where it is, this is the one place that builds one.
+  (props.bridgeSeats||[]).forEach(s=>spots.push({id:s.id,x:s.x,z:s.z,face:s.face,w:s.w,h:SEAT_H}));
   // A mentor works at their spot, so they get the chair they are sitting on.
   (props.mentors||[]).forEach(c=>{const p=c.g.position;
     spots.push({id:"seat:"+c.id,x:p.x,z:p.z,face:c.g.rotation.y,w:SEAT_W.chair,h:SEAT_H,taken:true});

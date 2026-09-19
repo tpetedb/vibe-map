@@ -69,7 +69,9 @@ def test_import_code_from_the_cli(game: GamePage) -> None:
     game.start()
     code = encode_progress(done_w={"campus": [1, 2, 3], "winter": [1]})
     msg = game.import_code(code)
-    assert msg.startswith("Imported: 3/8"), msg
+    # The confirmation names what was merged, then where the island stands.
+    assert msg.startswith("Imported: 4 stops"), msg
+    assert "3/8 workstreams on this island" in msg, msg
     state = game.state()
     assert state["doneW"]["campus"] == [1, 2, 3]
     assert state["doneW"]["winter"] == [1]
@@ -85,6 +87,34 @@ def test_export_round_trips(game: GamePage) -> None:
     game.page.click("#s-map button:has-text('Export progress')")
     code = game.page.input_value("#impcode")
     assert code and "=" not in code and "+" not in code and "/" not in code
+    game.assert_clean()
+
+
+def test_the_import_message_names_what_it_merged(game: GamePage) -> None:
+    """A code carrying only mentors merged something, and it says so."""
+    game.goto()
+    game.start()
+    msg = game.import_code(encode_progress(mentors=["cherny", "wu"]))
+    assert "2 mentors" in msg, msg
+    assert not msg.startswith("Imported: 0"), msg
+    # Nothing new the second time round, and the message is honest about it.
+    again = game.import_code(encode_progress(mentors=["cherny"]))
+    assert again.startswith("That code held nothing new"), again
+    game.assert_clean()
+
+
+def test_the_export_panel_names_the_command_a_camp_has(game: GamePage) -> None:
+    """A camp is not a Python project, so the command is the plain one."""
+    game.goto()
+    game.start()
+    game.open_roadmap()
+    game.page.click("#s-map button:has-text('Export progress')")
+    game.page.wait_for_function(
+        "() => (document.getElementById('syncmsg').textContent || '') !== ''"
+    )
+    msg = game.page.text_content("#syncmsg") or ""
+    assert "vibe import" in msg, msg
+    assert "uv run vibe import" not in msg, msg
     game.assert_clean()
 
 
