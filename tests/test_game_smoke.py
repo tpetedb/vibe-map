@@ -295,7 +295,8 @@ def test_the_title_puts_the_form_above_the_go_button(game: GamePage) -> None:
              .map(e => e.id || e.className)"""
     )
     go = order.index("row go")
-    assert order.index("onboard") < go < order.index("intro") < order.index("roles")
+    # The steps live in their disclosure, which a returning player folds shut.
+    assert order.index("obfold") < go < order.index("intro") < order.index("roles")
     assert page.locator("#onboard .step").count() == 5
     assert "prerequisites" in (page.text_content("#prereq") or "")
     game.assert_clean()

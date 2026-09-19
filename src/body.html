@@ -34,11 +34,14 @@
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
-    <div id="onboard"></div>
+    <!-- The five steps fold rather than disappear for a returning player, so
+         the look, the difficulty and the play mode stay changeable on every
+         later evening. 90-boot.js closes it once a stop is done. -->
+    <details id="obfold" open><summary>Change your setup</summary><div id="onboard"></div></details>
     <!-- The field and the button the copy points at travel together: both live
          in the sticky row, so neither can be below the fold while the other is
          on screen. -->
-    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
+    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();start()}"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
