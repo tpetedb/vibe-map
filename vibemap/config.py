@@ -82,6 +82,11 @@ class Finale(_Strict):
 
 class GameConfig(_Strict):
     repo_url: str = "https://github.com/tpetedb/vibe-map"
+    # Where the product is published. The game links to documents that live
+    # beside it there (the syllabus), and a camp keeps this pointing at the
+    # product so its own copy of the game never links into a folder it has
+    # not got.
+    site_url: str = "https://tpetedb.github.io/vibe-map/"
     shadow_map: int = 2048
     show_pairings: bool | None = None
 
@@ -162,53 +167,57 @@ class Config(_Strict):
             "# configuration is src/config/, see docs/CONFIG.md.",
             "",
             "[learner]",
-            f"name = {_q(self.learner.name)}",
-            f"persona = {_q(self.learner.persona)}"
+            f"name = {toml_str(self.learner.name)}",
+            f"persona = {toml_str(self.learner.persona)}"
             "  # chief-of-staff | cleaning-ceo | university-md | pabo-teacher"
             " | data-engineer | interior-stylist",
-            f"difficulty = {_q(self.learner.difficulty)}"
+            f"difficulty = {toml_str(self.learner.difficulty)}"
             "  # beginner | easy | normal | hard | expert | god",
-            f"mode = {_q(self.learner.mode)}"
+            f"mode = {toml_str(self.learner.mode)}"
             "  # campaign (four evenings) | roadmap (the tech tree as quests)",
-            f"provider = {_q(self.learner.provider)}"
+            f"provider = {toml_str(self.learner.provider)}"
             "  # claude | codex | gemini | copilot | opencode",
-            "interests = [" + ", ".join(_q(i) for i in self.learner.interests) + "]"
+            "interests = ["
+            + ", ".join(toml_str(i) for i in self.learner.interests)
+            + "]"
             "  # shelves to offer first; empty = everything (vibe interests)",
             "",
             "[theme]",
-            f"preset = {_q(self.theme.preset)}"
+            f"preset = {toml_str(self.theme.preset)}"
             "  # studio | wine-night | boardroom | seminar | field-guide"
             " | a name in themes/",
             "",
             "[finale]",
             "dates = [",
-            *[f"  {_q(d)}," for d in self.finale.dates],
+            *[f"  {toml_str(d)}," for d in self.finale.dates],
             "]",
             "",
             "[game]",
-            f"repo_url = {_q(self.game.repo_url)}",
+            f"repo_url = {toml_str(self.game.repo_url)}",
+            f"site_url = {toml_str(self.game.site_url)}"
+            "  # where the product is published",
             f"shadow_map = {self.game.shadow_map}  # drop to 1024 if a phone stutters",
             "",
             "[vault]",
-            f"path = {_q(self.vault.path)}",
-            f"folder = {_q(self.vault.folder)}",
-            f"mode = {_q(self.vault.mode)}"
+            f"path = {toml_str(self.vault.path)}",
+            f"folder = {toml_str(self.vault.folder)}",
+            f"mode = {toml_str(self.vault.mode)}"
             "  # full (every note from day one) | grow (notes unlock as you play)",
             "",
             "[news]  # the live world feed; empty feeds means the source registry",
             f"live = {str(self.news.live).lower()}"
             "  # false hides every feed-driven element in the game",
-            "feeds = [" + ", ".join(_q(f) for f in self.news.feeds) + "]",
+            "feeds = [" + ", ".join(toml_str(f) for f in self.news.feeds) + "]",
             f"per_feed = {self.news.per_feed}",
             "",
             "[pet]  # the terminal companion; empty means what your name rolled",
             f"enabled = {str(self.pet.enabled).lower()}",
-            f"species = {_q(self.pet.species)}  # {' | '.join(pet.SPECIES)}",
-            f"name = {_q(self.pet.name)}",
-            f"eye = {_q(self.pet.eye)}  # one of: · * × ◉ @ °",
-            f"hat = {_q(self.pet.hat)}"
+            f"species = {toml_str(self.pet.species)}  # {' | '.join(pet.SPECIES)}",
+            f"name = {toml_str(self.pet.name)}",
+            f"eye = {toml_str(self.pet.eye)}  # one of: · * × ◉ @ °",
+            f"hat = {toml_str(self.pet.hat)}"
             "  # none | crown | tophat | propeller | halo | wizard | beanie | tinyduck",
-            f"style = {_q(self.pet.style)}  # auto | pixel | ascii; pixel sprites"
+            f"style = {toml_str(self.pet.style)}  # auto | pixel | ascii; pixel sprites"
             f" for {', '.join(sprites.available())}",
             "",
         ]
@@ -224,8 +233,37 @@ class Config(_Strict):
         path.write_text(self.dump(), encoding="utf-8")
 
 
-def _q(value: str) -> str:
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+# tomllib only reads, so every write goes through this one serialiser. A name
+# with a quote, a backslash or a newline must come back out of the file
+# unchanged; TOML 1.0 basic strings escape those and every control character.
+_TOML_ESCAPES = {
+    "\\": "\\\\",
+    '"': '\\"',
+    "\b": "\\b",
+    "\t": "\\t",
+    "\n": "\\n",
+    "\f": "\\f",
+    "\r": "\\r",
+}
+
+
+def toml_str(value: str) -> str:
+    """VALUE as a TOML basic string, ready to be written into camp.toml."""
+    out = []
+    for c in value:
+        escaped = _TOML_ESCAPES.get(c)
+        if escaped is None and (c < " " or c == "\x7f"):
+            escaped = f"\\u{ord(c):04X}"
+        out.append(escaped or c)
+    return '"' + "".join(out) + '"'
+
+
+def config_label(path: Path = CONFIG_PATH) -> str:
+    """How the configuration file is named in output: one spelling everywhere."""
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.name
 
 
 @dataclass(frozen=True, slots=True)

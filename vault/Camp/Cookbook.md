@@ -2,7 +2,7 @@
 title: "Cookbook"
 date: 2026-09-16
 tags: [recipe]
-generated: 0a2ab50f3510
+generated: 4676f70b05e0
 ---
 # Cookbook
 
@@ -21,7 +21,7 @@ Read every .md file in notes/, list the decisions made, the open decisions with 
 Workstream 3. A chart of minutes per decision by meeting.
 
 ```text
-Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to workspace/python/out/. Explain the one SQL construct I have not seen.
+Using workspace/data/examples/meetings.csv, write workspace/sql/cost_per_decision.sql in DuckDB and a Python script that draws a bar chart to workspace/python/out/. Explain the one SQL construct I have not seen.
 ```
 
 **Done when:** The chart opens and the worst meeting is obvious.

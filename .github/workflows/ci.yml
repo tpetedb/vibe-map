@@ -56,6 +56,7 @@ jobs:
       - run: uv run python tools/regen_tree.py --check
       - run: uv run python tools/build.py --check
       - run: uv run python tools/gen_cookbook.py --check
+      - run: uv run python tools/gen_syllabus.py --check
       # A pull request that changes the product carries its changelog entry as
       # a fragment under changelog.d/, so no branch edits CHANGELOG.md.
       - name: a changelog fragment for a product change
@@ -101,6 +102,7 @@ jobs:
               tests/test_game_chat.py tests/test_game_avatar.py
               tests/test_game_mentors.py tests/test_game_dashboard.py
               tests/test_onboarding.py tests/test_reset.py
+              tests/test_syllabus.py
           - shard: webkit
             files: tests/test_game_webkit.py
             retry: true
