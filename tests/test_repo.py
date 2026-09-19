@@ -90,6 +90,31 @@ def test_the_sink_guard_catches_a_raw_value_and_a_new_sink(tmp_path) -> None:
     assert check_sinks(src=src) == 3
 
 
+@pytest.mark.parametrize(
+    ("expr", "harmless"),
+    [
+        ("done?' pick':''", True),
+        (
+            'st==="deep"?"on path":st==="skip"?"skipped":S.met[m.id]?"met":"not met"',
+            True,
+        ),
+        ("(S.doneW[k]||[]).length", True),
+        ("x(i).toFixed(1)", True),
+        ("i.title", False),
+        ('tag?" · "+tag:""', False),
+        ('done?"yes":i.title', False),
+        ("i.title||list.length", False),
+        ('done?icon("check"):""', False),
+    ],
+)
+def test_only_a_value_spelled_out_in_the_source_passes_unregistered(
+    expr: str, harmless: bool
+) -> None:
+    from tools.checks import _harmless
+
+    assert _harmless(expr) is harmless
+
+
 def test_version_matches_pyproject() -> None:
     import tomllib
 

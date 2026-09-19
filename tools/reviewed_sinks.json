@@ -17,9 +17,7 @@
  "16-artifacts.js": {
   "sinks": 2,
   "raw": {
-   "ARTIFACTS.length": 1,
    "JSON.stringify(n)": 1,
-   "S.artifacts.length": 1,
    "a.concept": 1,
    "a.id": 1,
    "a.links.map(n=>`<span class=\"wl\" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(\" · \")": 1,
@@ -27,8 +25,6 @@
    "a.prop": 1,
    "a.rolinda": 1,
    "a.what": 1,
-   "built?\"\":\"muted\"": 1,
-   "built?\"Built for real, and verified in your camp.\":\"Not built yet. Do it in your camp, run the check, then bring the progress code back here.\"": 1,
    "d.l": 1,
    "demos.map((d,i)=>`<button data-demo=\"${i}\" onclick=\"runDemo('${id}',${i})\">${icon(\"play\")}${d.l}</button>`).join(\"\")": 1,
    "i": 2,
@@ -46,32 +42,20 @@
   "sinks": 2,
   "raw": {
    "(ACH.find(a=>a.id===w.by)||{}).name": 1,
-   "ACH.length": 1,
-   "ITEMS.items.length": 1,
    "WORLDS[w].name": 1,
    "a.name": 1,
    "a.what": 1,
-   "ach.includes(a.id)?\"deep\":\"\"": 1,
-   "ach.includes(a.id)?\"unlocked\":\"locked\"": 1,
-   "ach.length": 1,
    "body": 2,
-   "got.length": 1,
    "i.concept": 1,
    "i.name": 1,
    "i.topic": 1,
    "k": 1,
    "l": 1,
-   "list.length": 1,
-   "list.length-mine.length": 1,
-   "mine.length": 1,
-   "packTab===k?\"pick\":\"\"": 1,
    "tabs": 1,
    "title": 1,
    "w.id": 1,
    "w.name": 1,
-   "w.slot": 1,
-   "worn.includes(w.id)?\"Worn\":\"Wear\"": 1,
-   "worn.includes(w.id)?\"primary\":\"\"": 1
+   "w.slot": 1
   }
  },
  "19-items.js": {
@@ -85,7 +69,6 @@
   "raw": {
    "PET_LABEL[k]||k": 1,
    "el": 3,
-   "id===k?\" selected\":\"\"": 1,
    "k": 1,
    "k===\"none\"?\"No companion\":PET_LABEL[k]||k": 1,
    "petCredits()": 1,
@@ -99,7 +82,6 @@
  "21-world-build.js": {
   "sinks": 1,
   "raw": {
-   "(S.world||\"campus\")===k?' pick':''": 1,
    "CAMPAIGN[k].title.split(\": \")[1]": 1,
    "CAMPAIGN[k].title.split(\":\")[0]": 1,
    "WORLDS[k].name": 1,
@@ -109,50 +91,44 @@
  },
  "31-animate.js": {
   "sinks": 5,
-  "raw": {
-   "S.done.includes(k)?'on':''": 1
-  }
+  "raw": {}
  },
  "40-sheet.js": {
-  "sinks": 9,
+  "sinks": 7,
   "raw": {
-   "(S.doneW[k]||[]).length": 1,
-   "(S.doneW[k]||[]).length===8?'deep':''": 1,
    "CAMPAIGN[S.world||\"campus\"].title": 1,
    "CAMPAIGN[k].title": 1,
-   "S.artifacts.includes(a.id)?\"found\":\"not yet\"": 1,
-   "S.artifacts.includes(a.id)?'deep':''": 1,
+   "MENTOR_NOTE": 1,
+   "MENTOR_SECTION": 1,
+   "MENTOR_WORDS": 1,
    "S.met[id]>=m.encounter.dialogue.length?\"\":`<button id=\"talkmore\" onclick=\"talkMore('${id}')\">Ask the next question</button>`": 1,
    "WORLDS[k].name": 2,
    "WORLDS[m.world].name": 1,
    "a.concept": 1,
    "a.id": 1,
    "a.name": 2,
+   "backLabel()": 1,
    "c.d": 1,
    "c.h": 1,
    "c.n": 1,
-   "done?\" (delivered)\":locked?\" (blocked by dependency)\":\"\"": 1,
-   "done?\"\":\"muted\"": 1,
-   "done?\"Back to the island\":\"Mark as done and unlock the OKR\"": 1,
    "done?\"Verified. The plaque on their spot reads: \"+m.encounter.plaque:\"Not verified yet. Run the check in your camp, then bring the progress code back here.\"": 1,
-   "done?' pick':''": 1,
    "done?icon(\"check\"):\"\"": 1,
    "ev.blurb": 1,
    "ev.title": 1,
-   "ex.dir": 1,
+   "ex.dir": 2,
    "ex.done": 1,
    "ex.minutes": 1,
    "ex.steps.map(s=>`<li>${s}</li>`).join(\"\")": 1,
    "ex.title": 1,
+   "finaleStop()": 1,
    "i.summary?`<br><span class=\"muted small\">${esc(i.summary)}</span>`:\"\"": 1,
    "id": 3,
    "interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)": 1,
    "interestDot(matchedShelf(a.links))": 1,
    "k": 2,
+   "last?\"\":`<button class=\"primary\" onclick=\"nextWorld();closeSheet()\">Next environment</button>`": 1,
    "lk.beard?'<rect x=\"10\" y=\"27\" width=\"20\" height=\"8\" rx=\"3\" fill=\"'+lk.hair+'\"/>':'<path d=\"M15 29 Q20 33 25 29\" stroke=\"#B0534B\" stroke-width=\"2\" fill=\"none\"/>'": 1,
-   "lk.glasses?'<rect x=\"9\" y=\"19\" width=\"9\" height=\"5\" rx=\"2\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.5\"/><rect x=\"22\" y=\"19\" width=\"9\" height=\"5\" rx=\"2\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.5\"/>':'<circle cx=\"14\" cy=\"21\" r=\"2\" fill=\"#333\"/><circle cx=\"26\" cy=\"21\" r=\"2\" fill=\"#333\"/>'": 1,
    "lk.hair": 1,
-   "locked?'disabled':''": 1,
    "m.ask": 1,
    "m.bio": 1,
    "m.deep": 1,
@@ -165,22 +141,19 @@
    "mentorFace(m.look)": 1,
    "mentorTalk(m)": 1,
    "n": 1,
-   "ok?\"\":\" (pending eight OKRs)\"": 1,
-   "ok?'':'disabled'": 1,
+   "ok?\"\":\" (pending \"+stopCount()+\" OKRs)\"": 1,
    "s": 1,
    "src": 1,
-   "st===\"deep\"?\" on\":\"\"": 1,
-   "st===\"deep\"?\"Keep on my path\":\"Tell me more\"": 1,
-   "st===\"deep\"?\"on path\":st===\"skip\"?\"skipped\":\"not met\"": 1,
    "st===\"deep\"||st===\"skip\"?st:\"\"": 1,
-   "st===\"skip\"?\"Still not now\":\"Not interested for now\"": 1,
+   "strictChecks()?`, and your note in <code>${ex.dir}/${MENTOR_NOTE}</code> with a ${MENTOR_SECTION} section of at least ${MENTOR_WORDS} words`:\"\"": 1,
    "t": 2,
    "t.title": 1,
    "tag?\" · \"+tag:\"\"": 1,
    "u": 1,
    "u?`<a href=\"${esc(u)}\" target=\"_blank\" rel=\"noopener noreferrer\">${t}</a>`:t": 1,
+   "w.d": 1,
    "w.h": 1,
-   "w.html": 1,
+   "w.html||`<p>${w.d}</p>`": 1,
    "w.n": 1,
    "x.m": 1,
    "x.you": 1
@@ -191,7 +164,6 @@
   "raw": {
    "i": 1,
    "i===palSel": 1,
-   "i===palSel?\" sel\":\"\"": 1,
    "palShelf(r)===0?interestDot(r.c):\"\"": 1
   }
  },
@@ -204,16 +176,12 @@
   "raw": {
    "CAT_COL[c]": 1,
    "DEPTHS[t.d]": 1,
-   "TREE[c].length": 1,
    "TREE[c].map(t=>`<button class=\"tech${t.n===cur?' sel':''}${noteLocked(t.n)?' locked':''}\" data-n=\"${t.n}\"${noteLocked(t.n)?` title=\"${LOCK_WHY}\"`:\"\"}><i style=\"background:${CAT_COL[c]}\"></i>${t.n}<em class=\"d d${t.d}\">${DEPTHS[t.d]}</em></button>`).join(\"\")": 1,
    "cn": 1,
    "d": 1,
-   "noteLocked(t.n)?' locked':''": 1,
    "noteLocked(t.n)?` title=\"${LOCK_WHY}\"`:\"\"": 1,
    "t.d": 1,
-   "t.n": 2,
-   "t.n===cur?' sel':''": 1,
-   "wantsShelf(c)?\"\":\" faded\"": 1
+   "t.n": 2
   }
  },
  "70-minigames.js": {
@@ -222,16 +190,11 @@
    "QUERY": 1,
    "ROWS.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join(\"\")}</tr>`).join(\"\")": 1,
    "[[\"Lotte\",1240],[\"Frank\",980],[\"Rolinda\",1810]].map(r=>`<tr>${card.cols.map((c,i)=>`<td>${r[i]}</td>`).join(\"\")}</tr>`).join(\"\")": 1,
-   "broken\n  ?\"One rename, every query downstream red. Nothing is corrupt; the contract simply changed and nobody was told.\"\n  :\"Four column names, in this order, are the contract. The game writes them, the queries read them.\"": 1,
    "broken\n  ?`Binder Error: Referenced column \"score\" not found in FROM clause!\\nCandidate bindings: \"${scoreCol}\"`\n  :\"player    best\\nRolinda   1810\\nLotte     1240\\nFrank      980\"": 1,
-   "broken?\" err\":\"\"": 1,
    "c": 2,
-   "c===scoreCol&&broken?' class=\"changed\"':\"\"": 1,
    "card.accent": 2,
-   "card.badge?'<span class=\"demo-badge\">new</span>':\"\"": 1,
    "card.cols.map((c,i)=>`<td>${r[i]}</td>`).join(\"\")": 1,
    "card.cols.map(c=>`<th>${c}</th>`).join(\"\")": 1,
-   "card.serif?\" serif\":\"\"": 1,
    "card.title": 1,
    "cols.map(c=>`<th${c===scoreCol&&broken?' class=\"changed\"':\"\"}>${c}</th>`).join(\"\")": 1,
    "i": 1,
@@ -248,8 +211,7 @@
    "nodes[b][2]": 1,
    "r.map(v=>`<td>${v}</td>`).join(\"\")": 1,
    "r[i]": 1,
-   "v": 1,
-   "v.t.length>44?\"…\":\"\"": 1
+   "v": 1
   }
  },
  "71-finale.js": {
@@ -266,18 +228,15 @@
    "k": 3,
    "l": 1,
    "presetRow()": 1,
-   "s[k]===v?\" selected\":\"\"": 1,
    "v": 1
   }
  },
  "86-interests.js": {
   "sinks": 0,
   "raw": {
-   "!all&&wantsShelf(c)?\" on\":\"\"": 1,
    "CAT_COL[c]": 1,
    "CAT_COL[c]||\"var(--accent)\"": 1,
    "CAT_COL[t.c]": 1,
-   "all?\" on\":\"\"": 1,
    "c": 1,
    "interestSummary()": 1,
    "p.map(c=>esc(shelfName(c))).join(\", \")": 1,
@@ -294,15 +253,11 @@
    "LOOKS[k].label": 1,
    "LOOKS[look].blurb": 1,
    "Object.keys(LOOKS).map(k=>`<button class=\"choice${look===k?\" on\":\"\"}\" onclick=\"pickLook('${k}')\" title=\"${LOOKS[k].blurb}\"><i style=\"background:${LOOKS[k].body}\"></i>${LOOKS[k].label}</button>`).join(\"\")": 1,
-   "diff===k?\" on\":\"\"": 1,
    "dir": 4,
    "interestChips()": 1,
    "interestSummary()": 1,
    "k": 2,
    "l": 1,
-   "look===k?\" on\":\"\"": 1,
-   "mode===\"full\"?\" on\":\"\"": 1,
-   "mode===\"online\"?\" on\":\"\"": 1,
    "owned.map(w=>`<button class=\"choice${worn.includes(w.id)?\" on\":\"\"}\" onclick=\"toggleWear('${w.id}')\" title=\"${w.slot}\">${w.name}</button>`).join(\"\")": 1,
    "petPicker('ob-pet')": 1,
    "presetRow()": 1,
@@ -312,8 +267,7 @@
    "w.id": 1,
    "w.name": 1,
    "w.slot": 1,
-   "wardrobeRow()": 1,
-   "worn.includes(w.id)?\" on\":\"\"": 1
+   "wardrobeRow()": 1
   }
  },
  "88-chat.js": {
@@ -327,10 +281,6 @@
  "89-dashboard.js": {
   "sinks": 1,
   "raw": {
-   "((w-l-34)*frac).toFixed(1)": 1,
-   "(c*frac).toFixed(1)": 1,
-   "(cw-gap).toFixed(2)": 1,
-   "(l+hr*cw).toFixed(2)": 2,
    "(typeof ARTIFACTS!==\"undefined\"?ARTIFACTS.length:21)": 1,
    "(typeof MENTORS!==\"undefined\"?MENTORS.length:12)": 1,
    "(w-l-34)": 1,
@@ -338,7 +288,6 @@
    "DASH_HUE[e.kind]||\"var(--muted)\"": 1,
    "String(hr).padStart(2,\"0\")": 2,
    "area": 1,
-   "c.toFixed(1)": 1,
    "caption": 1,
    "ch": 1,
    "dashBars(st)": 1,
@@ -348,7 +297,6 @@
    "dashShelves()": 1,
    "dashXpLine(st)": 1,
    "done": 2,
-   "done?\"var(--green)\":\"var(--blue)\"": 1,
    "dots": 1,
    "e.id&&e.kind!==\"session\"?\" <b>\"+esc(e.id)+\"</b>\":\"\"": 1,
    "fmtClock(e.ts)": 1,
@@ -368,12 +316,10 @@
    "l": 6,
    "l-6": 3,
    "label": 1,
-   "len.toFixed(1)": 1,
    "line": 2,
    "max": 1,
    "msg": 1,
    "n": 1,
-   "n?(0.2+0.8*n/max).toFixed(2):\"0.06\"": 1,
    "n?`<title>${fmtDay(d)} ${String(hr).padStart(2,\"0\")}:00, ${n} events</title>`:\"\"": 1,
    "name": 1,
    "new Date(d).toLocaleDateString(undefined,{weekday:\"short\"})": 1,
@@ -388,7 +334,6 @@
    "spark||\"\"": 1,
    "st.artifacts": 1,
    "st.days.length*(ch+gap)+12": 1,
-   "st.ev.length": 1,
    "st.mentors": 1,
    "st.stops": 1,
    "st.total": 1,
@@ -399,10 +344,8 @@
    "value": 1,
    "w": 3,
    "w-r": 3,
-   "x(i).toFixed(1)": 1,
    "y(max)": 2,
    "y(max)+4": 1,
-   "y(s[1]).toFixed(1)": 1,
    "y+14": 4,
    "y+3": 3
   }

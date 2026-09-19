@@ -24,6 +24,7 @@ import urllib.request
 from pathlib import Path
 
 from rich.console import Console
+from rich.markup import escape
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT_SUFFIXES = {
@@ -200,8 +201,9 @@ def check_links() -> int:
 # The page is built from strings, so a value that reaches innerHTML is markup
 # unless it went through esc(). docs/SECURITY-MODEL.md is the rule; this is
 # the ratchet: every interpolation inside an HTML template that is not wrapped
-# in a helper of SAFE_CALLS, and every sink, is counted in a register somebody
-# has looked at. A new one fails until it is escaped or added with a reason to
+# in a helper of SAFE_CALLS and is not harmless on its face (a choice between
+# literals, a length), and every sink, is counted in a register somebody has
+# looked at. A new one fails until it is escaped or added with a reason to
 # believe it is build-time data of ours.
 GAME_SRC = ROOT / "src" / "game"
 SINK_REGISTER = ROOT / "tools" / "reviewed_sinks.json"
@@ -272,6 +274,56 @@ def _code(text: str, i: int, found: list[tuple[str, list[str]]], until: str) -> 
     return i
 
 
+def _top_level(expr: str, marks: str) -> list[tuple[int, str]]:
+    """Where these characters stand outside every string and bracket."""
+    out: list[tuple[int, str]] = []
+    depth, i = 0, 0
+    while i < len(expr):
+        c = expr[i]
+        if c in "\"'`":
+            end = expr.find(c, i + 1)
+            while end > 0 and expr[end - 1] == "\\":
+                end = expr.find(c, end + 1)
+            i = len(expr) if end < 0 else end
+        elif c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif depth == 0 and c in marks:
+            out.append((i, c))
+        i += 1
+    return out
+
+
+def _harmless(expr: str) -> bool:
+    """True when whatever this evaluates to was spelled out in the source.
+
+    A quoted literal, a choice between harmless things (the condition yields
+    nothing, so it may read anything), a length, or a fixed-point number.
+    """
+    expr = expr.strip()
+    if len(expr) >= 2 and expr[0] in "\"'" and expr[-1] == expr[0]:
+        return not _top_level(expr[1:-1], expr[0])
+    # A plus can join a string on, and an or can hand back its left side.
+    if _top_level(expr, "+|"):
+        return False
+    marks = _top_level(expr, "?:")
+    if not marks:
+        return bool(re.search(r"(\.length|\.toFixed\(\d*\))$", expr))
+    ask = marks[0][0]
+    if marks[0][1] != "?" or expr[ask : ask + 2] == "?." or expr[ask : ask + 2] == "??":
+        return False
+    # The colon that belongs to this question mark: skip one per nested choice.
+    nested = 0
+    for at, c in marks[1:]:
+        nested += c == "?"
+        if c == ":":
+            if nested == 0:
+                return _harmless(expr[ask + 1 : at]) and _harmless(expr[at + 1 :])
+            nested -= 1
+    return False
+
+
 def _wrapped(expr: str) -> bool:
     """True when the whole expression is one call to a helper of SAFE_CALLS."""
     for name in SAFE_CALLS:
@@ -298,7 +350,7 @@ def scan_sinks(src: Path = GAME_SRC) -> dict[str, dict[str, object]]:
             if "<" not in static:
                 continue
             for expr in holes:
-                if not _wrapped(expr):
+                if not (_wrapped(expr) or _harmless(expr)):
                     raw[expr] = raw.get(expr, 0) + 1
         sinks = len(SINK.findall(text))
         if sinks or raw:
@@ -333,7 +385,7 @@ def check_sinks(write: bool = False, src: Path = GAME_SRC) -> int:
         for expr, count in entry["raw"].items():  # type: ignore[union-attr]
             if count > old["raw"].get(expr, 0):
                 console.print(
-                    f"[red]{name}[/]: ${{{expr}}} goes into HTML without esc()."
+                    f"[red]{name}[/]: ${{{escape(expr)}}} goes into HTML without esc()."
                     " Wrap it, or if it is build-time data of ours, run"
                     " tools/checks.py sinks --write and say why in the PR."
                 )

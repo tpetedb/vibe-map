@@ -40,7 +40,7 @@ Cut a string before you escape it, never after: a cut can land inside `&amp;`.
 
 ## The guards
 
-- `uv run python tools/checks.py sinks` (also `just sinks-check`, and `tests/test_repo.py` runs it): every interpolation inside an HTML template in `src/game/` that is not wrapped in `esc()` or `icon()`, and every `innerHTML` or `insertAdjacentHTML`, is counted per module in `tools/reviewed_sinks.json`. A new one fails. Escape it; if it really is build-time data of ours, run the check with `--write` and say in the pull request why it is ours. `eval`, `new Function`, `document.write`, `outerHTML`, `srcdoc` and a timer given a string fail always.
+- `uv run python tools/checks.py sinks` (also `just sinks-check`, and `tests/test_repo.py` runs it): every interpolation inside an HTML template in `src/game/` is either wrapped in `esc()` or `icon()`, harmless on its face (a choice between quoted literals, a `.length`, a `.toFixed()`), or counted per module in `tools/reviewed_sinks.json`, next to the number of `innerHTML` and `insertAdjacentHTML` sinks. A new one fails. Escape it; if it really is build-time data of ours, run the check with `--write` and say in the pull request why it is ours. `eval`, `new Function`, `document.write`, `outerHTML`, `srcdoc` and a timer given a string fail always.
 - `tools/build.py` refuses to write a game whose script could end or swallow its own element.
 - `tests/test_game_security.py` drives the hostile feed, the hostile bridge, the hostile progress code and a poisoned state through the real buttons, and records that the page talks to its own origin only.
 
