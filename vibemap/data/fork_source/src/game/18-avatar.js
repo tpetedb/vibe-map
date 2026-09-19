@@ -57,13 +57,13 @@ function cheer(){setPose(chars.lotte,"cheer");setPose(chars.tom,"cheer")}
 let LAPTOP=null;
 function laptopParts(){if(LAPTOP)return LAPTOP;
   LAPTOP={
-    base:new T.BoxGeometry(.62,.04,.44),
-    lid:new T.BoxGeometry(.62,.42,.03),
-    screen:new T.PlaneGeometry(.54,.34),
-    keys:new T.BoxGeometry(.46,.012,.22),
-    shell:mat(PALETTE.muted,{roughness:.35,metalness:.5}),
-    dark:mat(PALETTE.black),
-    lit:mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9}),
+    base:keep(new T.BoxGeometry(.62,.04,.44)),
+    lid:keep(new T.BoxGeometry(.62,.42,.03)),
+    screen:keep(new T.PlaneGeometry(.54,.34)),
+    keys:keep(new T.BoxGeometry(.46,.012,.22)),
+    shell:keep(mat(PALETTE.muted,{roughness:.35,metalness:.5})),
+    dark:keep(mat(PALETTE.black)),
+    lit:keep(mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9})),
   };return LAPTOP}
 // lite is the version an onlooker gets: the lid is the lit panel and the keys
 // are left off, which is two draw calls instead of four at the distance a
@@ -103,7 +103,7 @@ function wearMesh(id){const g=new T.Group();
   else return null;
   return g}
 // A character's wardrobe is rebuilt from the list, never patched in place.
-function applyWear(c,ids){if(!c)return;if(c.wearG)c.g.remove(c.wearG);
+function applyWear(c,ids){if(!c)return;discard(c.wearG);
   const g=new T.Group();(ids||[]).forEach(id=>{const m=wearMesh(id);if(m)g.add(m)});
   c.g.add(g);c.wearG=g;fixColors(g)}
 window.toggleWear=function(id){const w=WEAR.find(x=>x.id===id);if(!w||!wearOwned(id))return;

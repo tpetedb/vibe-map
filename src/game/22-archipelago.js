@@ -90,7 +90,7 @@ function refreshBridges(){
   const was=bridges.map(b=>b.open);
   bridges=bridgesFor(S.world||"campus");
   if(bridges.every((b,i)=>b.open===was[i]))return;
-  (props.bridgeParts||[]).forEach(m=>{scene.remove(m);
+  (props.bridgeParts||[]).forEach(m=>{discard(m);
     if(island)island.userData.parts=island.userData.parts.filter(p=>p!==m)});
   buildBridges()}
 

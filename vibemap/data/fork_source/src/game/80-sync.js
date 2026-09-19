@@ -22,7 +22,7 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // choice made in the terminal is news here rather than a correction.
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();
       d.interests.forEach(c=>{if(cur.indexOf(c)<0)cur.push(c)});S.interests=cur}
-    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{scene.remove(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
+    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
     if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+

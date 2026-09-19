@@ -6,15 +6,15 @@ function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.
 // What the GPU holds for an object, given back. The island is rebuilt on every
 // crossing and the walker on every change of look, and three.js frees nothing
 // on its own: without this each rebuild left its buffers, its plate textures
-// and its shadow map behind. A geometry or a texture that outlives a scene
-// (the shapes the instanced props share, the contact shadow, a pet's sheet)
-// is marked with keep() and is left alone.
+// and its shadow map behind. A geometry, a material or a texture that outlives
+// a scene (the shapes the instanced props share, the contact shadow, a pet's
+// sheet, the one laptop every lap shows) is marked with keep() and left alone.
 const KEPT=new WeakSet();
 const keep=o=>{KEPT.add(o);return o};
 function release(root){root.traverse(o=>{
   if(o.geometry&&!KEPT.has(o.geometry))o.geometry.dispose();
   (Array.isArray(o.material)?o.material:o.material?[o.material]:[]).forEach(m=>{
-    if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
+    if(KEPT.has(m))return;if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
   if(o.isInstancedMesh)o.dispose();
   if(o.isLight&&o.shadow)o.shadow.dispose()})}
 // Whether an object is still part of the island being drawn: a plate of a

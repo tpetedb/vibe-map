@@ -300,7 +300,10 @@ function placeAnnex(k,pop){
 }
 // The pop every new thing on the island gets: it grows from nothing (the
 // animation loop eases popT) under a burst of forty confetti cubes.
-function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+function popIn(g){
+  // Reduced motion: the thing is simply there, with no growth and no confetti.
+  if(reducedMotion()){g.scale.set(1,1,1);return}
+  g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(shape("confetti",()=>new T.BoxGeometry(.18,.18,.18)),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
 // Everything that pops in is on this list, so one loop in the frame grows a
 // building, an annex and a mentor's plaque alike.
 const pops=[];
@@ -448,10 +451,10 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
 // old one was doing; the name is rebuilt on a timer, which can land long after
 // the walker has sat down.
 function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
-  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  discard(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
   // The walk is state as much as the pose: a look changed mid-stride keeps its
   // speed and its jump instead of stopping the walker dead.
   chars.lotte.vel=old.vel||new T.Vector3();chars.lotte.jy=old.jy||0;chars.lotte.jv=old.jv||0;
   // The limbs are put where the pose says in the same tick, so a rebuild never
   // shows one frame of a standing body with the laptop gone.
-  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g);release(old.g)}
+  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g)}

@@ -1336,15 +1336,15 @@ function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.
 // What the GPU holds for an object, given back. The island is rebuilt on every
 // crossing and the walker on every change of look, and three.js frees nothing
 // on its own: without this each rebuild left its buffers, its plate textures
-// and its shadow map behind. A geometry or a texture that outlives a scene
-// (the shapes the instanced props share, the contact shadow, a pet's sheet)
-// is marked with keep() and is left alone.
+// and its shadow map behind. A geometry, a material or a texture that outlives
+// a scene (the shapes the instanced props share, the contact shadow, a pet's
+// sheet, the one laptop every lap shows) is marked with keep() and left alone.
 const KEPT=new WeakSet();
 const keep=o=>{KEPT.add(o);return o};
 function release(root){root.traverse(o=>{
   if(o.geometry&&!KEPT.has(o.geometry))o.geometry.dispose();
   (Array.isArray(o.material)?o.material:o.material?[o.material]:[]).forEach(m=>{
-    if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
+    if(KEPT.has(m))return;if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
   if(o.isInstancedMesh)o.dispose();
   if(o.isLight&&o.shadow)o.shadow.dispose()})}
 // Whether an object is still part of the island being drawn: a plate of a
@@ -1879,13 +1879,13 @@ function cheer(){setPose(chars.lotte,"cheer");setPose(chars.tom,"cheer")}
 let LAPTOP=null;
 function laptopParts(){if(LAPTOP)return LAPTOP;
   LAPTOP={
-    base:new T.BoxGeometry(.62,.04,.44),
-    lid:new T.BoxGeometry(.62,.42,.03),
-    screen:new T.PlaneGeometry(.54,.34),
-    keys:new T.BoxGeometry(.46,.012,.22),
-    shell:mat(PALETTE.muted,{roughness:.35,metalness:.5}),
-    dark:mat(PALETTE.black),
-    lit:mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9}),
+    base:keep(new T.BoxGeometry(.62,.04,.44)),
+    lid:keep(new T.BoxGeometry(.62,.42,.03)),
+    screen:keep(new T.PlaneGeometry(.54,.34)),
+    keys:keep(new T.BoxGeometry(.46,.012,.22)),
+    shell:keep(mat(PALETTE.muted,{roughness:.35,metalness:.5})),
+    dark:keep(mat(PALETTE.black)),
+    lit:keep(mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9})),
   };return LAPTOP}
 // lite is the version an onlooker gets: the lid is the lit panel and the keys
 // are left off, which is two draw calls instead of four at the distance a
@@ -1925,7 +1925,7 @@ function wearMesh(id){const g=new T.Group();
   else return null;
   return g}
 // A character's wardrobe is rebuilt from the list, never patched in place.
-function applyWear(c,ids){if(!c)return;if(c.wearG)c.g.remove(c.wearG);
+function applyWear(c,ids){if(!c)return;discard(c.wearG);
   const g=new T.Group();(ids||[]).forEach(id=>{const m=wearMesh(id);if(m)g.add(m)});
   c.g.add(g);c.wearG=g;fixColors(g)}
 window.toggleWear=function(id){const w=WEAR.find(x=>x.id===id);if(!w||!wearOwned(id))return;
@@ -2154,7 +2154,7 @@ function placeItems(){
 // Walking over one collects it: a small burst, a line in the backpack, and the
 // concept with the tech tree topic it belongs to.
 function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
-  scene.remove(it.m);props.items=props.items.filter(x=>x!==it);
+  discard(it.m);props.items=props.items.filter(x=>x!==it);
   if(!data)return;
   sl("items").push(data.id);save();
   for(let i=0;i<12;i++){const m=new T.Mesh(new T.BoxGeometry(.1,.1,.1),new T.MeshBasicMaterial({color:PALETTE[ITEMS.kinds[data.kind].colour]||PALETTE.text}));
@@ -2776,7 +2776,10 @@ function placeAnnex(k,pop){
 }
 // The pop every new thing on the island gets: it grows from nothing (the
 // animation loop eases popT) under a burst of forty confetti cubes.
-function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+function popIn(g){
+  // Reduced motion: the thing is simply there, with no growth and no confetti.
+  if(reducedMotion()){g.scale.set(1,1,1);return}
+  g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(shape("confetti",()=>new T.BoxGeometry(.18,.18,.18)),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
 // Everything that pops in is on this list, so one loop in the frame grows a
 // building, an annex and a mentor's plaque alike.
 const pops=[];
@@ -2924,13 +2927,13 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
 // old one was doing; the name is rebuilt on a timer, which can land long after
 // the walker has sat down.
 function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
-  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  discard(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
   // The walk is state as much as the pose: a look changed mid-stride keeps its
   // speed and its jump instead of stopping the walker dead.
   chars.lotte.vel=old.vel||new T.Vector3();chars.lotte.jy=old.jy||0;chars.lotte.jv=old.jv||0;
   // The limbs are put where the pose says in the same tick, so a rebuild never
   // shows one frame of a standing body with the laptop gone.
-  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g);release(old.g)}
+  setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g)}
 // The archipelago: the three islands you are not on, the bridges between
 // them, the crossing that swaps the active island under your feet, and the
 // camera flight the World button does instead of a cut.
@@ -3023,7 +3026,7 @@ function refreshBridges(){
   const was=bridges.map(b=>b.open);
   bridges=bridgesFor(S.world||"campus");
   if(bridges.every((b,i)=>b.open===was[i]))return;
-  (props.bridgeParts||[]).forEach(m=>{scene.remove(m);
+  (props.bridgeParts||[]).forEach(m=>{discard(m);
     if(island)island.userData.parts=island.userData.parts.filter(p=>p!==m)});
   buildBridges()}
 
@@ -4854,7 +4857,7 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // choice made in the terminal is news here rather than a correction.
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();
       d.interests.forEach(c=>{if(cur.indexOf(c)<0)cur.push(c)});S.interests=cur}
-    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{scene.remove(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
+    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
     if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
