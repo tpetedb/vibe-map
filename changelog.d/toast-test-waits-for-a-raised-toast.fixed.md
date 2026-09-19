@@ -1,0 +1,1 @@
+- The sitting test waits for a toast that was raised, not for one that is still on screen. A toast removes itself after a few seconds, so looking for the element raced with the machine being slow; the toast stack counts what it has raised and the test waits on that.
