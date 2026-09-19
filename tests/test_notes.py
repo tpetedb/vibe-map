@@ -232,3 +232,55 @@ def test_a_links_line_of_the_learners_own_counts(tmp_path: Path) -> None:
     output = _check(camp, "winter", 2)
     assert "pass" in output, output
     assert "fail" not in output, output
+
+
+def test_a_claim_drops_the_stub_line_the_learner_wrote_around(tmp_path: Path) -> None:
+    """The note keeps their paragraph and loses the line that contradicts it."""
+    cfg = Config.model_validate({"vault": {"path": str(tmp_path), "folder": "G"}})
+    v = Vault(cfg, State(name="T"))
+    ws = campaign.evenings()["winter"].workstreams[0]
+    common = {
+        "summary": f"{ws.hour}, [[Evening 2]]. Outcome: {ws.outcome}.",
+        "tags": ["workstream"],
+        "sources": [u for _, u in ws.sources],
+    }
+    v.upsert_dated(
+        ws.name,
+        bullets=[stub_bullet("winter", ws.n), "links: [[Tonight]], [[Map]]"],
+        **common,
+    )
+    note = v.path(ws.name)
+    text = note.read_text(encoding="utf-8")
+    note.write_text(
+        text.replace(
+            "- links: [[Tonight]], [[Map]]",
+            "- links: [[Tonight]], [[Map]]\n" + OWN_NOTE.strip(),
+        ),
+        encoding="utf-8",
+    )
+    v.upsert_dated(ws.name, bullets=["done at 16:50", "built it"], **common)
+    text = note.read_text(encoding="utf-8")
+    assert "not done yet" not in text, text
+    assert "done at 16:50" in text, text
+    assert "the agent wrote the first draft" in text.lower(), text
+    assert text.count(f"## {date.today().isoformat()}") == 1, text
+
+
+def test_the_graph_groups_use_the_palette_and_not_the_banned_hues() -> None:
+    """docs/DESIGN.md bans the cyan, violet and pink the graph used to carry."""
+    from vibemap.palette import CSS_TOKENS, MUTED
+    from vibemap.vault import GRAPH_GROUPS
+
+    banned = {"#22D3EE", "#8B5CF6", "#A78BFA", "#F472B6", "#D1477D", "#C084FC"}
+    known = {v.upper() for v in CSS_TOKENS.values() if v.startswith("#")}
+    known |= {MUTED.upper()}
+    known |= {c.upper() for c in _category_colours()}
+    for query, colour in GRAPH_GROUPS:
+        assert colour.upper() not in banned, query
+        assert colour.upper() in known, (query, colour)
+
+
+def _category_colours() -> list[str]:
+    from vibemap.palette import CATEGORY_COLOURS
+
+    return list(CATEGORY_COLOURS.values())

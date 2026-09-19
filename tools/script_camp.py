@@ -239,6 +239,8 @@ ln -sf "$PWD/zshrc" "$HOME/.zshrc"
 # The remote the stop asks for, used only when the camp has none of its own.
 PLACEHOLDER_REMOTE = "https://github.com/learner/my-camp.git"
 SECOND_BRANCH = "feature/nickname"
+# The line that keeps the dotfiles repository out of the camp's index.
+DOTFILES_IGNORE = "workspace/dotfiles/"
 # What the production history check looks for in the reflog.
 REWRITES = ("rebase", "revert", "cherry-pick", "reset")
 
@@ -332,6 +334,21 @@ def _script_git(camp: Path) -> list[str]:
         _git(dots, "init", "-q")
     _commit(dots, "mine")
 
+    # A repository inside the camp is kept out of the camp's index, or
+    # `git add -A` below files it as a gitlink and a learner's own one stops
+    # the command dead. The stop asks for this line; the script writes it.
+    ignore = camp / ".gitignore"
+    text = ignore.read_text(encoding="utf-8") if ignore.exists() else ""
+    if DOTFILES_IGNORE not in text.splitlines():
+        ignore.write_text(
+            text.rstrip("\n") + f"\n{DOTFILES_IGNORE}\n"
+            if text
+            else f"{DOTFILES_IGNORE}\n",
+            encoding="utf-8",
+        )
+    else:
+        kept.append("kept the ignore line it already had")
+
     started_on = _branch(camp)
 
     # The check wants an origin on github.com. A real remote satisfies it better
@@ -352,6 +369,15 @@ def _script_git(camp: Path) -> list[str]:
         kept.append(f"kept its {len(branches)} branches")
     else:
         _git(camp, "branch", SECOND_BRANCH)
+
+    # The stop wants a branch that reached the remote. Pushing needs a real
+    # repository and the network, so a camp that has never fetched gets the
+    # ref a fetch would have written, and one that has keeps what it has.
+    if _git_out(camp, "for-each-ref", "--format=%(refname)", "refs/remotes/"):
+        kept.append("kept the remote branches it already had")
+    elif _git_out(camp, "rev-parse", "--verify", "-q", "HEAD"):
+        here = _branch(camp) or "main"
+        _git(camp, "update-ref", f"refs/remotes/origin/{here}", "HEAD")
 
     log = _git_out(camp, "reflog", "-n", "300")
     if any(word in log for word in REWRITES):

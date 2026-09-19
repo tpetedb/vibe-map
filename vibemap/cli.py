@@ -20,6 +20,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tomllib
 import unicodedata
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -48,7 +49,14 @@ from vibemap.artifact_checks import (
     get_artifact,
     note_requirement,
 )
-from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config, deprecation_note
+from vibemap.config import (
+    CONFIG_PATH,
+    DIFFICULTIES,
+    Config,
+    config_label,
+    deprecation_note,
+    toml_str,
+)
 from vibemap.interests import (
     label as shelf_label,
 )
@@ -847,7 +855,7 @@ def _claim_artifact(ctx: Ctx, artifact_id: str, results) -> None:
 # writes the real thing.
 STUB_LINES = (
     "TODO: {title}",
-    "Write this yourself; the check fails until you do.",
+    f"Write this yourself; {quests.STUB_MARK}.",
 )
 
 
@@ -1307,7 +1315,8 @@ def dashboard(ctx: Ctx, as_json: bool, open_it: bool, out: Path | None) -> None:
 
 @cli.group()
 def config() -> None:
-    """Show or change config/camp.toml."""
+    """Show config/camp.toml; change it with vibe name, difficulty, theme,
+    interests, persona, provider, mode, pet, or an editor."""
 
 
 @config.command("show")
@@ -1316,12 +1325,26 @@ def config_show(ctx: Ctx) -> None:
     click.echo(ctx.cfg.dump())
 
 
+def _require_camp() -> None:
+    """Writing configuration outside a camp would invent one; say so instead.
+
+    A mistyped VIBE_HOME is the usual way here: the path is not a camp, so a
+    write would scatter a config, a state file and a vault at the typo.
+    """
+    if not project.is_camp():
+        _fail(
+            f"no camp at {ROOT} (no {project.CAMP_CONFIG.as_posix()}). "
+            "Start one with [accent]vibe new[/], or cd into a camp."
+        )
+
+
 def _set_learner(ctx: Ctx, field: str, value: str) -> None:
+    _require_camp()
     data = ctx.cfg.model_dump()
     data["learner"][field] = value
     ctx.cfg = Config.model_validate(data)
     ctx.cfg.save(CONFIG_PATH)
-    console.print(f"[ok]{field}[/] = {value} ({CONFIG_PATH.name})")
+    console.print(f"[ok]{field}[/] = {escape(value)} ({config_label()})")
 
 
 @cli.command()
@@ -1361,8 +1384,10 @@ def persona(ctx: Ctx, persona_id: str | None) -> None:
 def name(ctx: Ctx, name: str | None) -> None:
     """Show or set your name (the game and the vault use it)."""
     if name is None:
-        console.print(ctx.cfg.learner.name)
+        console.print(escape(ctx.cfg.learner.name))
         return
+    if not name.strip():
+        _fail("a name, please: vibe name Tom (the game refuses an empty one too)")
     _set_learner(ctx, "name", name)
     ctx.state.name = name
     ctx.save()
@@ -1386,6 +1411,7 @@ def difficulty(ctx: Ctx, level: str | None) -> None:
 
 def _set_interests(ctx: Ctx, chosen: list[str]) -> None:
     """One writer for the choice: camp.toml is the truth, state is the copy."""
+    _require_camp()
     data = ctx.cfg.model_dump()
     data["learner"]["interests"] = chosen
     ctx.cfg = Config.model_validate(data)
@@ -1423,7 +1449,7 @@ def interests(ctx: Ctx, action: str | None, names: str | None) -> None:
         return
     if action == "all":
         _set_interests(ctx, [])
-        console.print("[ok]interests[/] = everything (config/camp.toml)")
+        console.print(f"[ok]interests[/] = everything ({config_label()})")
         return
     if not names:
         _fail("vibe interests set data,shell,agents (or: vibe interests all)")
@@ -1433,7 +1459,7 @@ def interests(ctx: Ctx, action: str | None, names: str | None) -> None:
         _fail(str(e))
     _set_interests(ctx, chosen)
     console.print(
-        f"[ok]interests[/] = {', '.join(chosen) or 'everything'} ({CONFIG_PATH.name})"
+        f"[ok]interests[/] = {', '.join(chosen) or 'everything'} ({config_label()})"
     )
     _print_next_topic(ctx)
 
@@ -1851,7 +1877,7 @@ def _pet_cheer(ctx: Ctx) -> None:
 
 def _pet_credit(p: pet.Pet, style: str) -> None:
     """Say who drew the sprites whenever they are the thing on screen."""
-    line = pet.credit(p, style)
+    line = pet.footnote(p, style)
     if line:
         console.print(f"[muted]{line}[/]")
 
@@ -2106,6 +2132,11 @@ def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
     console.print(t)
 
 
+# A path component caps at 255 bytes on every filesystem we run on, and a name
+# that long is a paste, not a name, so the slug is cut instead.
+SLUG_MAX = 48
+
+
 # One camp per person and start date: vibe-map-<name>-<YYYY-MM-DD>. Sorts by
 # date in a listing and tells you which camp a note or a code came from.
 def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
@@ -2114,6 +2145,7 @@ def camp_dir_name(who: str | None = None, day: date | None = None) -> str:
     # Fold accents (Jorg, not j-rg) the same way the game's setup guide does.
     folded = unicodedata.normalize("NFD", raw).encode("ascii", "ignore").decode()
     slug = re.sub(r"[^a-z0-9]+", "-", folded.lower()).strip("-") or "player"
+    slug = slug[:SLUG_MAX].strip("-") or "player"
     return f"vibe-map-{slug}-{(day or date.today()).isoformat()}"
 
 
@@ -2155,24 +2187,41 @@ def _copy_tree(src: Path, target: Path) -> int:
     return n
 
 
-def _name_the_camp(target: Path, who: str | None) -> None:
-    """Fill the blanks the template leaves: the learner's name and this year.
+def _write_camp_name(toml: Path, who: str) -> None:
+    """Put WHO in the fresh camp.toml, then prove the file still parses.
 
-    The camp is a repository the learner pushes, so its LICENSE has to carry a
+    A name is free text, so it is written as a TOML string and read back: a
+    camp whose configuration no command can read is worse than no camp.
+    """
+    toml.write_text(
+        toml.read_text(encoding="utf-8").replace(
+            'name = "<your_name>"', f"name = {toml_str(who)}", 1
+        ),
+        encoding="utf-8",
+    )
+    try:
+        written = Config.load(toml).learner.name
+    except (ValueError, tomllib.TOMLDecodeError) as e:
+        _fail(f"{toml} does not parse after writing the name: {e}")
+        return
+    if written != who:
+        _fail(f"{toml} did not keep the name it was given")
+
+
+def _licence_the_camp(target: Path, who: str | None) -> None:
+    """Fill the blanks the template's LICENSE leaves open.
+
+    A camp is a repository the learner pushes, so its licence has to carry a
     real copyright line. The year is always known; the name only when they
     said it, and `<your_name>` stays visible until they do.
     """
-    blanks = {"<year>": str(date.today().year)}
+    p = target / "LICENSE"
+    if not p.is_file():
+        return
+    text = p.read_text(encoding="utf-8").replace("<year>", str(date.today().year))
     if who:
-        blanks["<your_name>"] = who
-    for rel in (project.CAMP_CONFIG, "LICENSE"):
-        p = target / rel
-        if not p.is_file():
-            continue
-        text = p.read_text(encoding="utf-8")
-        for blank, value in blanks.items():
-            text = text.replace(blank, value)
-        p.write_text(text, encoding="utf-8")
+        text = text.replace("<your_name>", who)
+    p.write_text(text, encoding="utf-8")
 
 
 def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
@@ -2207,13 +2256,22 @@ def new(
     if directory is None:
         directory = camp_dir_name(who)
         console.print(f"[muted]folder from the convention:[/] {directory}")
+    if github and not shutil.which("gh"):
+        _fail("--github needs the GitHub CLI: install gh, then gh auth login")
     target = Path(directory).expanduser().resolve()
-    if target.exists() and any(target.iterdir()):
+    try:
+        crowded = target.exists() and any(target.iterdir())
+    except OSError as e:
+        _fail(f"{directory}: {e.strerror}")
+        return
+    if crowded:
         _fail(f"{target} exists and is not empty")
     target.mkdir(parents=True, exist_ok=True)
     n = copy_template(target)
     console.print(f"[ok]{n} files[/] from the template into {target}")
-    _name_the_camp(target, who)
+    if who:
+        _write_camp_name(target / project.CAMP_CONFIG, who)
+    _licence_the_camp(target, who)
     env = dict(os.environ, VIBE_HOME=str(target))
     if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
         console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")
@@ -2245,8 +2303,15 @@ def new(
         visibility = "--private" if private else "--public"
         cmd = ["gh", "repo", "create", github, "--source", ".", visibility, "--push"]
         console.print(f"[muted]$ {' '.join(cmd)}[/]")
-        if subprocess.run(cmd, cwd=target).returncode != 0:
-            _fail("gh could not create the repository; is gh installed and logged in?")
+        try:
+            made = subprocess.run(cmd, cwd=target).returncode == 0
+        except FileNotFoundError:
+            made = False
+        if not made:
+            _fail(
+                "gh could not create the repository; is gh installed and logged in? "
+                f"The camp itself is ready at {target}; push it when gh works."
+            )
         if private:
             console.print(
                 "[muted]private camp:[/] Pages, protected branches and code "

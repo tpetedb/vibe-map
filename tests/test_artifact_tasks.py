@@ -475,3 +475,66 @@ def test_the_walkthrough_states_the_note_at_the_difficulty_that_asks_for_it() ->
     assert note_requirement(a, easy) is None
     said = note_requirement(a, GOD)
     assert said and "notes.md" in said and ARTIFACT_SECTION in said
+
+
+# ---- the findings of hunt wave 2 ------------------------------------------------
+
+
+def test_a_brief_that_opens_with_a_rule_is_still_a_brief(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A --- under the frontmatter is a horizontal rule, not a second fence."""
+    here = _build(tmp_path, "office", monkeypatch)
+    spec = get_artifact("office")["real"]["check"]
+    (here / spec["file"]).write_text(
+        "---\nname: reviewer\ndescription: reviews a diff\ntools: Read, Grep\n---\n"
+        "\n---\n\nRead the diff and say what would break.\n",
+        encoding="utf-8",
+    )
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert ok, detail
+    assert "reviewer" in detail, detail
+
+
+def test_a_file_with_no_frontmatter_still_says_so(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    here = _build(tmp_path, "office", monkeypatch)
+    spec = get_artifact("office")["real"]["check"]
+    (here / spec["file"]).write_text(
+        "# Reviewer\n\ntools: Read\n\n---\n\nA brief with a rule in it.\n",
+        encoding="utf-8",
+    )
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert not ok
+    assert "does not open with a --- frontmatter block" in detail, detail
+
+
+def test_a_docker_daemon_that_is_down_is_not_a_broken_dockerfile(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Correct work is never marked wrong because the engine is not running."""
+    import subprocess as sp
+
+    from vibemap import artifact_checks
+
+    here = _build(tmp_path, "dock", monkeypatch)
+    spec = get_artifact("dock")["real"]["check"]
+    (here / spec["file"]).write_text(
+        'FROM python:3.12-slim\nCMD ["python"]\n', encoding="utf-8"
+    )
+    monkeypatch.setattr(artifact_checks, "_tool", lambda name: True)
+    monkeypatch.setattr(
+        artifact_checks.subprocess,
+        "run",
+        lambda *a, **k: sp.CompletedProcess(
+            a[0],
+            1,
+            "",
+            "ERROR: Cannot connect to the Docker daemon at unix:///var/run/"
+            "docker.sock. Is the docker daemon running?\n",
+        ),
+    )
+    ok, detail = KINDS[spec["kind"]](here, spec)
+    assert ok, detail
+    assert "no daemon answers" in detail, detail
