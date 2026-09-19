@@ -339,6 +339,26 @@ def test_the_setup_guide_renders_below_the_go_row(game: GamePage) -> None:
     assert game.errors == []
 
 
+def test_the_setup_guide_gives_every_command_it_offers(game: GamePage) -> None:
+    """It offered a clone it never printed, and broke a flag across a line."""
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_selector("#ob-setup", state="visible")
+    guide = page.inner_text("#ob-setup")
+    assert "clone below" not in guide, "an offer with no command behind it"
+    # Every command a reader is told to type lives in a pre block, which never
+    # wraps, so a flag can never arrive as two words.
+    flags = page.evaluate(
+        """() => [...document.querySelectorAll('#ob-setup')]
+             .flatMap(g => [...g.querySelectorAll('code')])
+             .filter(c => c.textContent.includes('--github'))
+             .map(c => c.parentElement.tagName)"""
+    )
+    assert flags == ["PRE"], flags
+    assert "--github" in guide
+    assert game.errors == []
+
+
 def test_a_chosen_look_alone_offers_resume(game: GamePage) -> None:
     page = game.goto(state={"name": "Max", "look": "max", "doneW": {"campus": []}}).page
     assert page.is_visible("#btn-continue")
