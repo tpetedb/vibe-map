@@ -41,6 +41,7 @@ function animate(){
   // island, and this is the one you steer.
   if(props.you){props.you.position.set(pos.x,.07,pos.z);props.you.material.opacity=started?.45+Math.sin(t*2.4)*.18:0}
   tickAvatar(dt,t,sp);
+  tickPet(dt,t);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
   const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;

@@ -281,6 +281,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .age p{font-size:11px;color:#999;margin:0 0 8px;line-height:1.35}
 .tech{display:block;width:100%;text-align:left;font-size:12px;padding:7px 9px;margin:4px 0;border-radius:9px;background:#2a2a2a;border:1px solid #3a3a3a;color:#ddd;box-shadow:none}
 .tech.sel{border-color:var(--blue-bright);background:rgba(0,136,204,.18)}
+.tech.locked{opacity:.5}
 .tech em.d{float:right;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:6px}
 .tech em.d2{color:var(--yellow)}.tech em.d3{color:var(--orange-bright)}
 .tech i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
@@ -290,6 +291,13 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .idot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .setting.wide{display:block}
 .setting.wide label{display:block;margin-bottom:8px}
+/* The companion picker: the select and its animated preview on one row, the
+   preview drawn at whole pixels so the sprite stays crisp. */
+.setting.pet{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.setting.pet label{flex:0 0 auto;margin:0}
+.setting.pet select{max-width:none}
+.setting.pet canvas{width:96px;height:72px;image-rendering:pixelated;background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px}
+.setting.pet p{flex:1 0 100%;margin:0}
 button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-bright);font:inherit;font-size:inherit;text-decoration:underline;cursor:pointer}
 #vnote{padding:16px 18px 60px;font-size:15px;line-height:1.6;max-width:640px;margin:0 auto}
 #vnote h1{font-size:22px;color:#fff;margin:0 0 8px;letter-spacing:-.01em}

@@ -61,7 +61,7 @@ function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
 // topics: the tech tree ids the terminal has verified. The game shows the tree
 // but never marks it, so this is the terminal's record travelling with the
 // progress code: it must survive a round trip through here untouched.
-let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[]};
+let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:""};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 // S.done is a view: the array doneW[world] under another name. Only the map is

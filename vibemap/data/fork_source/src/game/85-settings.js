@@ -32,6 +32,7 @@ window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[ke
 function renderSettings(){const s=settings();
   $("s-settings").innerHTML=`<h2>Settings</h2><p class="small muted">Changes apply at once and stay in this browser. The defaults come from config/camp.toml in your camp.</p>`+
     Object.keys(SETTINGS_OPTIONS).map(k=>`<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`).join("")+
+    petPicker()+
     `<div class="setting wide"><label>What you want to learn</label>${interestChips()}<p class="small muted">${interestSummary()}</p>${presetRow()}</div>`+
     `<div class="row"><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button><button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
     `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
@@ -48,7 +49,7 @@ window.resetSettings=function(){S.settings={};save();applySettings()};
 // game does the same from ?reset in the URL.
 let resetArmed=null;
 window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;const old=btn.textContent;btn.textContent="Really start over? Click again";btn.classList.add("danger");setTimeout(()=>{if(resetArmed===btn){resetArmed=null;btn.textContent=old;btn.classList.remove("danger")}},5000);return}
-  const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{},interests:S.interests};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
-  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings,interests:keep.interests};save();
+  const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{},interests:S.interests,pet:S.pet};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
+  S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings,interests:keep.interests,pet:keep.pet};save();
   location.replace(location.pathname)};
 document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});

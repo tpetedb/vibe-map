@@ -31,6 +31,7 @@ command in the last column; nothing needs a build.
 | The live world feed, on or off | `config/camp.toml` `[news] live` | a rebuild, or the Settings dropdown Live world |
 | The news feeds | `config/camp.toml` `[news] feeds`, empty means `vibemap/data/sources.json` | `vibe news` |
 | The terminal pet | `config/camp.toml` `[pet]` | `vibe pet --species dog` writes it for you; twenty species, six with pixel sprites (cat, crab, dog, duck, snail, turtle) |
+| The companion in the game | `config/camp.toml` `[pet] species` and `enabled` | a rebuild; the six with pixel sprites follow the walker on the islands. The player overrides it in the onboarding or in Settings (Companion), and that choice travels in the progress code |
 | How the pet is drawn | `config/camp.toml` `[pet] style` | `vibe pet --style pixel` (`auto`, `pixel`, `ascii`); `auto` uses the vendored sprites where a species has them and the terminal has truecolor |
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |
 | Your own work | `workspace/` | `vibe check` |

@@ -35,7 +35,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign, pet, project, quests, topics
+from vibemap import __version__, campaign, pet, project, quests, sprites, topics
 from vibemap import chat as chat_bridge
 from vibemap.artifact_checks import (
     ARTIFACT_NOTE,
@@ -1766,6 +1766,7 @@ def pet_cmd(
         ctx.cfg = cfg
         # The table name is square-bracketed, so it has to be escaped for rich.
         console.print(f"[ok]{CONFIG_PATH.name} \\[pet] updated[/]")
+        _carry_pet_to_the_game(ctx, cfg.pet.species, enabled=cfg.pet.enabled)
     p = _pet(ctx)
     how = ctx.cfg.pet.style
     if not animate:
@@ -1800,6 +1801,26 @@ def pet_cmd(
     except KeyboardInterrupt:
         _pet_credit(p, how)
         console.print(f"{p.face}  bye")
+
+
+def _carry_pet_to_the_game(ctx: Ctx, species: str, *, enabled: bool) -> None:
+    """The game shows the six vendored sets; tell it what the camp chose.
+
+    camp.toml is the truth, the state is the copy the progress code carries,
+    the way it carries the interests. A species with no pixels leaves the
+    game's own choice alone, because there is nothing for it to draw.
+    """
+    chosen = "none" if not enabled else species
+    if chosen and chosen != "none" and chosen not in sprites.available():
+        console.print(
+            f"[muted]the game has no pixels for the {species}; "
+            "it keeps the companion you picked there[/]"
+        )
+        return
+    if not chosen:
+        return
+    ctx.state.pet = chosen
+    ctx.save()
 
 
 def _pet_cheer(ctx: Ctx) -> None:
