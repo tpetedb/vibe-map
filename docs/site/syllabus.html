@@ -1,0 +1,1338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vibe Code Camp: the syllabus</title>
+<meta name="description" content="The written version of Vibe Code Camp: every evening, every stop, every command.">
+<link rel="canonical" href="https://tpetedb.github.io/vibe-map/syllabus.html">
+<style>
+:root{
+  --blue:#0067A5;--blue-bright:#0088CC;--green:#00A86B;
+  --orange:#FF8C1A;--yellow:#FFBF00;--red:#D32F2F;
+  --paper:#FDFDFB;--ink:#16181D;--muted:#5C6472;--rule:#E3E4E8;
+  --card:#F6F6F3;--code:#F1F1EE;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --measure:38rem;
+}
+@media (prefers-color-scheme:dark){
+  :root{--paper:#000000;--ink:#F1F1F8;--muted:#8B93A7;
+    --rule:#23252C;--card:#0A0A0A;--code:#111218;--blue:#0088CC;}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:1.5rem}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--font-body);font-size:17px;line-height:1.65;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:68rem;margin:0 auto;padding:0 16px 6rem;
+  display:grid;grid-template-columns:1fr;gap:0 2.5rem}
+header.top{grid-column:1/-1;padding:3.5rem 0 1.5rem;
+  border-bottom:1px solid var(--rule)}
+header.top .kicker{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 .6rem}
+header.top h1{font-size:clamp(30px,5vw,44px);line-height:1.1;letter-spacing:-.02em;
+  margin:0 0 .5rem}
+header.top p{max-width:var(--measure);color:var(--muted);margin:0}
+nav.toc{display:none}
+/* Prose keeps a readable line; a table and a code block may use the column. */
+main{min-width:0;padding-top:2rem}
+main>p,main>ul,main>ol,main>blockquote,main>h1,main>h2,main>h3,main>h4{
+  max-width:var(--measure)}
+main>h2:first-of-type{margin-top:1.2rem}
+h2{font-size:1.6rem;line-height:1.2;letter-spacing:-.015em;
+  margin:3.2rem 0 .8rem;padding-top:.6rem;border-top:2px solid var(--blue)}
+h3{font-size:1.15rem;margin:2.2rem 0 .6rem;letter-spacing:-.01em}
+h4{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--muted);margin:1.8rem 0 .4rem}
+p,ul,ol{margin:0 0 1rem}
+li{margin:.25rem 0}
+a{color:var(--blue);text-underline-offset:2px}
+a:hover{color:var(--orange)}
+strong{font-weight:650}
+code{font-family:var(--font-mono);font-size:.86em;background:var(--code);
+  border-radius:5px;padding:.12em .35em;word-break:break-word}
+pre{background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  padding:14px 16px;overflow-x:auto;margin:0 0 1.2rem}
+pre code{background:none;padding:0;font-size:.85em;line-height:1.5}
+blockquote{margin:0 0 1rem;padding-left:1rem;border-left:3px solid var(--yellow);
+  color:var(--muted)}
+hr{border:0;border-top:1px solid var(--rule);margin:2.5rem 0}
+.tablewrap{overflow-x:auto;margin:0 0 1.4rem;max-width:100%}
+table{border-collapse:collapse;font-size:.88rem;min-width:100%}
+th,td{text-align:left;vertical-align:top;padding:.5rem .7rem;
+  border-bottom:1px solid var(--rule)}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);font-weight:650;white-space:nowrap}
+td:first-child{white-space:nowrap;color:var(--muted)}
+footer{grid-column:1/-1;margin-top:4rem;padding-top:1.2rem;
+  border-top:1px solid var(--rule);color:var(--muted);font-size:.85rem}
+@media (min-width:60rem){
+  .wrap{grid-template-columns:15.5rem minmax(0,1fr)}
+  nav.toc{display:block;position:sticky;top:0;align-self:start;
+    max-height:100vh;overflow-y:auto;padding:2rem 0 3rem;font-size:.86rem}
+  nav.toc h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--muted);border:0;margin:0 0 .6rem;padding:0}
+  nav.toc ol{list-style:none;margin:0;padding:0}
+  nav.toc li{margin:0}
+  nav.toc a{display:block;padding:.2rem 0 .2rem .6rem;color:var(--ink);
+    text-decoration:none;border-left:2px solid var(--rule)}
+  nav.toc a:hover{color:var(--blue);border-left-color:var(--blue)}
+  nav.toc .lvl3 a{padding-left:1.4rem;color:var(--muted);font-size:.95em}
+}
+@media print{
+  :root{--paper:#FFFFFF;--ink:#000000;--muted:#444444;--rule:#BBBBBB;
+    --card:#FFFFFF;--code:#FFFFFF;--blue:#000000;--measure:100%}
+  nav.toc{display:none}
+  .wrap{display:block;max-width:none;padding:0}
+  main{max-width:none;padding-top:0}
+  body{font-size:10.5pt}
+  h2{border-top-width:1px;page-break-after:avoid}
+  h3,h4{page-break-after:avoid}
+  pre,table,blockquote{page-break-inside:avoid}
+  a{text-decoration:none}
+  main a[href^="http"]::after{content:" (" attr(href) ")";font-size:.82em;
+    word-break:break-all;color:#444444}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+<p class="kicker">Vibe Code Camp</p>
+<h1>Vibe Code Camp: the syllabus</h1>
+<p>Four evenings, thirty-two stops, one glass per stop. Evening 1 is the core; Evenings 2 to 4 go into history, how the models work, determinism, and the terminal. Optimised for a MacBook with Apple silicon and Chrome. This is the written version of everything in the game, with every command, so the parts we do not reach on the night can be done alone. Cast: Lotte (Chief of Staff, apprentice), Tom (Site Reliability Engineer, guide), Rolinda (Head of Hospitality Operations, sommelier, and the only person allowed to ask plain questions).</p>
+</header>
+<nav class="toc" aria-label="Contents">
+<h2>Contents</h2>
+<ol>
+<li class="lvl2"><a href="#the-rule-of-the-evening">The rule of the evening</a></li>
+<li class="lvl2"><a href="#the-pairings">The pairings</a></li>
+<li class="lvl2"><a href="#before-you-start-what-you-need">Before you start: what you need</a></li>
+<li class="lvl2"><a href="#the-course-at-a-glance">The course at a glance</a></li>
+<li class="lvl2"><a href="#before-the-evening-pre-flight-set-up-the-machine">Before the evening: Pre-flight: set up the machine</a></li>
+<li class="lvl3"><a href="#1-install-claude-code">1. Install Claude Code</a></li>
+<li class="lvl3"><a href="#2-log-in">2. Log in</a></li>
+<li class="lvl3"><a href="#3-install-git-and-jq">3. Install git and jq</a></li>
+<li class="lvl3"><a href="#4-install-obsidian">4. Install Obsidian</a></li>
+<li class="lvl3"><a href="#5-think-of-a-game">5. Think of a game</a></li>
+<li class="lvl2"><a href="#18-00-ship-an-mvp">18:00: Ship an MVP</a></li>
+<li class="lvl3"><a href="#concept-the-agentic-loop">Concept: the agentic loop</a></li>
+<li class="lvl3"><a href="#do-this">Do this</a></li>
+<li class="lvl3"><a href="#one-more-thing-then-stop">One more thing, then stop</a></li>
+<li class="lvl2"><a href="#19-00-specificity-claude-md-and-your-first-skill">19:00: Specificity, CLAUDE.md and your first skill</a></li>
+<li class="lvl3"><a href="#concept-1-the-model-has-no-line-of-sight-into-your-head">Concept 1: the model has no line of sight into your head</a></li>
+<li class="lvl3"><a href="#do-this-break-it-then-fix-it">Do this: break it, then fix it</a></li>
+<li class="lvl3"><a href="#concept-2-claude-md-the-note-it-reads-every-session">Concept 2: CLAUDE.md, the note it reads every session</a></li>
+<li class="lvl3"><a href="#concept-3-skills-procedures-that-load-on-demand">Concept 3: skills, procedures that load on demand</a></li>
+<li class="lvl3"><a href="#bonus-auto-memory">Bonus: auto memory</a></li>
+<li class="lvl2"><a href="#20-00-persisted-scores-and-a-dashboard">20:00: Persisted scores and a dashboard</a></li>
+<li class="lvl3"><a href="#concept-a-fixed-home-and-a-fixed-shape">Concept: a fixed home and a fixed shape</a></li>
+<li class="lvl3"><a href="#do-this-2">Do this</a></li>
+<li class="lvl3"><a href="#what-lotte-will-notice">What Lotte will notice</a></li>
+<li class="lvl2"><a href="#21-00-git-rollback-and-one-hook">21:00: Git, rollback, and one hook</a></li>
+<li class="lvl3"><a href="#concept-1-commits-are-named-snapshots">Concept 1: commits are named snapshots</a></li>
+<li class="lvl3"><a href="#concept-2-two-undo-buttons">Concept 2: two undo buttons</a></li>
+<li class="lvl3"><a href="#concept-3-hooks-things-that-happen-every-time">Concept 3: hooks, things that happen every time</a></li>
+<li class="lvl3"><a href="#optional-if-the-evening-allows">Optional, if the evening allows</a></li>
+<li class="lvl2"><a href="#21-30-connectors-and-mcp">21:30: Connectors and MCP</a></li>
+<li class="lvl3"><a href="#concept-mcp-is-the-plug">Concept: MCP is the plug</a></li>
+<li class="lvl3"><a href="#do-this-a-server-that-needs-no-account">Do this: a server that needs no account</a></li>
+<li class="lvl3"><a href="#scopes-where-it-is-saved">Scopes: where it is saved</a></li>
+<li class="lvl3"><a href="#do-this-something-you-actually-use">Do this: something you actually use</a></li>
+<li class="lvl2"><a href="#22-00-obsidian-and-the-graph">22:00: Obsidian and the graph</a></li>
+<li class="lvl3"><a href="#concept-a-vault-is-a-folder-of-markdown-links-are-just-text">Concept: a vault is a folder of markdown, links are just text</a></li>
+<li class="lvl3"><a href="#do-this-3">Do this</a></li>
+<li class="lvl3"><a href="#this-is-your-long-term-memory">This is your long-term memory</a></li>
+<li class="lvl2"><a href="#22-30-github-and-github-pages-a-real-url">22:30: GitHub and GitHub Pages, a real URL</a></li>
+<li class="lvl3"><a href="#concept-remote-and-static-hosting">Concept: remote and static hosting</a></li>
+<li class="lvl3"><a href="#do-this-4">Do this</a></li>
+<li class="lvl2"><a href="#23-00-headless-claude-on-a-schedule-and-a-subagent">23:00: Headless Claude on a schedule, and a subagent</a></li>
+<li class="lvl3"><a href="#concept-headless-mode-and-subagents">Concept: headless mode and subagents</a></li>
+<li class="lvl3"><a href="#do-this-5">Do this</a></li>
+<li class="lvl2"><a href="#provider-agnostic-instructions-agents-md-and-the-agent-skills-standard">Provider-agnostic instructions: AGENTS.md and the Agent Skills standard</a></li>
+<li class="lvl2"><a href="#the-camp-the-terminal-companion-and-the-pet">The camp, the terminal companion and the pet</a></li>
+<li class="lvl2"><a href="#sql-and-python-in-the-20-00-hour">SQL and Python, in the 20:00 hour</a></li>
+<li class="lvl2"><a href="#the-campaign-four-evenings-four-islands">The campaign: four evenings, four islands</a></li>
+<li class="lvl3"><a href="#evening-2-history-and-how-these-models-actually-work">Evening 2: History, and how these models actually work</a></li>
+<li class="lvl3"><a href="#evening-3-from-vibes-to-determinism">Evening 3: From vibes to determinism</a></li>
+<li class="lvl3"><a href="#evening-4-terminal-git-and-the-toolbelt-on-apple-silicon">Evening 4: Terminal, git and the toolbelt, on Apple silicon</a></li>
+<li class="lvl3"><a href="#the-mentors-and-how-an-encounter-works">The mentors, and how an encounter works</a></li>
+<li class="lvl3"><a href="#the-artifacts-and-doing-them-for-real">The artifacts, and doing them for real</a></li>
+<li class="lvl2"><a href="#the-tech-tree-shelf-by-shelf">The tech tree: shelf by shelf</a></li>
+<li class="lvl3"><a href="#the-packs-two">The packs (two)</a></li>
+<li class="lvl3"><a href="#the-shelves">The shelves</a></li>
+<li class="lvl3"><a href="#choosing-what-you-want-to-learn">Choosing what you want to learn</a></li>
+<li class="lvl2"><a href="#reference">Reference</a></li>
+</ol>
+</nav>
+<main>
+
+<h2 id="the-rule-of-the-evening">The rule of the evening</h2>
+<p>Every workstream ends the same way: Lotte explains what just happened to Rolinda in one sentence without the word &quot;AI&quot;. If Rolinda nods, it is done.</p>
+<h2 id="the-pairings">The pairings</h2>
+<p>18:00 Bourgogne Chardonnay, unoaked, 11°C, gougères. 19:00 same bottle opening up, Marcona almonds. 20:00 Sancerre, chèvre by ash content. 21:00 Barolo decanted at 19:30, charcuterie. 21:30 Grüner Veltliner, truffle crisps. 22:00 grower Champagne, zero dosage, 72% chocolate. 22:30 Tokaji Aszú with Roquefort. 23:00 Armagnac, last orders. Rolinda's note on the Chardonnay, verbatim: &quot;lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.&quot;</p>
+<h2 id="before-you-start-what-you-need">Before you start: what you need</h2>
+<p>A Mac with Apple silicon and Chrome is what these evenings were written on. You need a coding agent in your terminal with a paid plan behind it: the course is written for Claude Code on a Claude Pro, Max, Team or Enterprise plan, and <code>config/camp.toml</code> under <code>[learner] provider</code> points the companion at <code>codex</code>, <code>gemini</code>, <code>copilot</code> or <code>opencode</code> instead. The instructions still read the same either way, because AGENTS.md and the Agent Skills standard are what the rest of the setup speaks, not a vendor.</p>
+<p>You also need a GitHub account for the evening that publishes your game, Obsidian, which is free, and about twenty minutes for the pre-flight below.</p>
+<p>Nothing to install, if you would rather not: the whole course runs in a browser on GitHub Codespaces. Open the repository, press <strong>Code</strong>, <strong>Codespaces</strong>, <strong>Create codespace on main</strong>, and the container arrives with the tools in it. Compute is charged to the account that owns the codespace, so one you create runs on your own free monthly hours. <a href="https://github.com/tpetedb/vibe-map/blob/main/docs/QUICKSTART.md">QUICKSTART.md</a> has all four ways in, including this one.</p>
+<h2 id="the-course-at-a-glance">The course at a glance</h2>
+<p>Four evenings, thirty-two stops, one island each. Every stop has a definition of done the terminal companion can check, so the parts a night does not reach can be done alone later.</p>
+<p><strong>Evening 1: Ship first, then discipline</strong> on the Innovation Campus. Eight workstreams, one island, from an MVP to headless automation.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Stop</th>
+<th>What</th>
+<th>You leave with</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>18:00</td>
+<td>Innovation Hub</td>
+<td>a playable single-file game</td>
+<td><a href="https://code.claude.com/docs/en/quickstart">Docs</a></td>
+</tr>
+<tr>
+<td>19:00</td>
+<td>Centre of Excellence</td>
+<td>AGENTS.md rules and a first skill</td>
+<td><a href="https://agents.md">Docs</a></td>
+</tr>
+<tr>
+<td>20:00</td>
+<td>Data Warehouse</td>
+<td>scores.csv, DuckDB queries, a Python chart</td>
+<td><a href="https://duckdb.org/docs/">Docs</a></td>
+</tr>
+<tr>
+<td>21:00</td>
+<td>Business Continuity</td>
+<td>git history, one rollback, one hook</td>
+<td><a href="https://code.claude.com/docs/en/hooks-guide">Docs</a></td>
+</tr>
+<tr>
+<td>21:30</td>
+<td>Stakeholder Bridge</td>
+<td>one MCP integration</td>
+<td><a href="https://code.claude.com/docs/en/mcp">Docs</a></td>
+</tr>
+<tr>
+<td>22:00</td>
+<td>Knowledge Tree</td>
+<td>a linked vault and its graph</td>
+<td><a href="https://help.obsidian.md/plugins/graph">Docs</a></td>
+</tr>
+<tr>
+<td>22:30</td>
+<td>Go-to-Market</td>
+<td>the game at a public URL</td>
+<td><a href="https://docs.github.com/en/pages/quickstart">Docs</a></td>
+</tr>
+<tr>
+<td>23:00</td>
+<td>Autonomous Operations</td>
+<td>headless Claude on a schedule</td>
+<td><a href="https://code.claude.com/docs/en/headless">Docs</a></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Evening 2: History, and how these models actually work</strong> on the Cold Storage Cluster. Cold storage: the archive. Eighty years in eight stops, with the people who did it.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Stop</th>
+<th>What</th>
+<th>You leave with</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop 1</td>
+<td>Neurons and backprop (1943 to 1989)</td>
+<td>McCulloch-Pitts, Rosenblatt, Rumelhart-Hinton-Williams, LeCun's zip codes</td>
+<td><a href="https://www.nature.com/articles/323533a0">Rumelhart, Hinton, Williams 1986 (Nature)</a> · <a href="https://github.com/karpathy/lecun1989-repro">Karpathy's lecun1989 reproduction</a> · <a href="https://karpathy.ai/zero-to-hero.html">micrograd lecture, Zero to Hero</a></td>
+</tr>
+<tr>
+<td>Stop 2</td>
+<td>The ImageNet moment (2012)</td>
+<td>Fei-Fei Li's dataset, AlexNet, and why GPUs mattered</td>
+<td><a href="https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html">AlexNet paper (NeurIPS 2012)</a> · <a href="https://www.image-net.org">ImageNet</a> · <a href="https://karpathy.ai/">Karpathy on being the ImageNet reference human</a></td>
+</tr>
+<tr>
+<td>Stop 3</td>
+<td>Attention Is All You Need (2017)</td>
+<td>Tokens, embeddings, attention, next-token prediction: the transformer, without hand-waving</td>
+<td><a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need (arXiv)</a> · <a href="https://karpathy.ai/zero-to-hero.html">Let's build GPT, Zero to Hero</a> · <a href="https://www.youtube.com/@AndrejKarpathy">Karpathy's channel (general audience track)</a></td>
+</tr>
+<tr>
+<td>Stop 4</td>
+<td>Scaling laws and the Bitter Lesson</td>
+<td>Why bigger kept winning, and why the Claude Code team framed Sutton's essay</td>
+<td><a href="http://www.incompleteideas.net/IncIdeas/BitterLesson.html">The Bitter Lesson (Sutton, 2019)</a> · <a href="https://arxiv.org/abs/2001.08361">Scaling Laws for Neural Language Models (Kaplan et al. 2020)</a> · <a href="https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works">How the Claude Code team works (Cherny interview notes)</a></td>
+</tr>
+<tr>
+<td>Stop 5</td>
+<td>From base model to assistant</td>
+<td>Pretraining, supervised fine-tuning, RLHF, and Constitutional AI</td>
+<td><a href="https://arxiv.org/abs/2212.08073">Constitutional AI (Bai et al. 2022)</a> · <a href="https://www.anthropic.com/news/core-views-on-ai-safety">Core Views on AI Safety (Anthropic)</a> · <a href="https://arxiv.org/abs/2203.02155">Training language models to follow instructions (InstructGPT, 2022)</a></td>
+</tr>
+<tr>
+<td>Stop 6</td>
+<td>Open weights versus closed models, on your own Mac</td>
+<td>Licences, Llama, Mistral, Qwen, Gemma; run a local model with Ollama on Apple silicon</td>
+<td><a href="https://ollama.com">Ollama</a> · <a href="https://ollama.com/library">Ollama model library</a> · <a href="https://opensource.org/ai/open-source-ai-definition">Open Source AI Definition (OSI)</a> · <a href="https://developer.apple.com/documentation/apple-silicon">Apple silicon and unified memory (Apple)</a></td>
+</tr>
+<tr>
+<td>Stop 7</td>
+<td>What they cannot do, and why</td>
+<td>Hallucination, context windows, tokeniser quirks, and interpretability</td>
+<td><a href="https://transformer-circuits.pub">Transformer Circuits (Anthropic interpretability)</a> · <a href="https://distill.pub">Distill (2016 to 2021 archive)</a> · <a href="https://karpathy.ai/zero-to-hero.html">Karpathy on tokenisation (Zero to Hero)</a></td>
+</tr>
+<tr>
+<td>Stop 8</td>
+<td>Karpathy's ladder</td>
+<td>Build a tiny language model yourself, with Claude as the tutor</td>
+<td><a href="https://github.com/karpathy/makemore">makemore</a> · <a href="https://github.com/karpathy/nn-zero-to-hero">nn-zero-to-hero repo</a> · <a href="https://karpathy.ai/zero-to-hero.html">Zero to Hero course page</a></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Evening 3: From vibes to determinism</strong> on the Sandbox Environment. The sandbox: where you stop trusting and start instrumenting. Dotfiles, tests, hooks, CI, evals.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Stop</th>
+<th>What</th>
+<th>You leave with</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop 1</td>
+<td>The vibe dial</td>
+<td>Karpathy's vibe coding, Cherny's instrumented coding, and knowing which end you are on</td>
+<td><a href="https://x.com/karpathy/status/1886192184808149383">Karpathy's vibe coding post</a> · <a href="https://x.com/bcherny/status/2007179832300581177">How Boris uses Claude Code (thread)</a> · <a href="https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny">Building Claude Code with Boris Cherny (Pragmatic Engineer)</a></td>
+</tr>
+<tr>
+<td>Stop 2</td>
+<td>Dotfiles and dotfolders</td>
+<td>What .git, .gitignore, .env, .venv, .claude, .agents, .github and ~/.config actually are</td>
+<td><a href="https://code.claude.com/docs/en/settings">Claude Code settings and precedence</a> · <a href="https://git-scm.com/docs/gitignore">gitignore documentation</a> · <a href="https://specifications.freedesktop.org/basedir-spec/latest/">XDG base directory spec (why ~/.config)</a></td>
+</tr>
+<tr>
+<td>Stop 3</td>
+<td>Deterministic checks</td>
+<td>Tests, linters and formatters: the cheapest way to make an agent behave</td>
+<td><a href="https://docs.pytest.org/en/stable/getting-started.html">pytest getting started</a> · <a href="https://docs.astral.sh/ruff/">ruff</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices (verification)</a></td>
+</tr>
+<tr>
+<td>Stop 4</td>
+<td>Hooks as gates</td>
+<td>PreToolUse and PostToolUse, permissions, and refusing edits that skip the checks</td>
+<td><a href="https://code.claude.com/docs/en/hooks-guide">Hooks guide</a> · <a href="https://code.claude.com/docs/en/hooks">Hooks reference</a> · <a href="https://code.claude.com/docs/en/permissions">Permissions</a></td>
+</tr>
+<tr>
+<td>Stop 5</td>
+<td>Plan, spec, small changes</td>
+<td>The Cherny workflow: plan mode, a spec, a to-do list, one PR at a time</td>
+<td><a href="https://code.claude.com/docs/en/common-workflows">Common workflows (plan mode, resume, images)</a> · <a href="https://code.claude.com/docs/en/checkpointing">Checkpointing and rewind</a> · <a href="https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it">How to use Claude Code like the people who built it (Every)</a></td>
+</tr>
+<tr>
+<td>Stop 6</td>
+<td>CI: the check that runs without you</td>
+<td>GitHub Actions on every push, so the main branch is always green</td>
+<td><a href="https://docs.github.com/en/actions/quickstart">GitHub Actions quickstart</a> · <a href="https://docs.astral.sh/uv/guides/integration/github/">uv in GitHub Actions</a> · <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">Protected branches</a></td>
+</tr>
+<tr>
+<td>Stop 7</td>
+<td>Repetitive tasks, reliably</td>
+<td>Headless runs, schedules, idempotency, and when a subagent beats a prompt</td>
+<td><a href="https://code.claude.com/docs/en/headless">Headless / programmatic use</a> · <a href="https://code.claude.com/docs/en/sub-agents">Subagents</a> · <a href="https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html">launchd (Apple)</a></td>
+</tr>
+<tr>
+<td>Stop 8</td>
+<td>Evals: measure the agent, not the vibe</td>
+<td>A tiny harness that scores your prompts and skills on fixed cases</td>
+<td><a href="https://docs.claude.com/en/docs/test-and-evaluate/develop-tests">Building evals (Anthropic docs)</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices</a> · <a href="https://github.com/anthropics/anthropic-cookbook">Anthropic cookbook (evals examples)</a></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Evening 4: Terminal, git and the toolbelt, on Apple silicon</strong> on the Production Environment. Production: your machine, set up like someone who does this every day. Mac, Chrome, Ghostty, git, Claude everywhere.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Stop</th>
+<th>What</th>
+<th>You leave with</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stop 1</td>
+<td>The Mac, properly</td>
+<td>Homebrew, Apple silicon, Chrome, and the three settings that save an hour a week</td>
+<td><a href="https://brew.sh">Homebrew</a> · <a href="https://docs.brew.sh/Brew-Bundle-and-Brewfile">Homebrew Bundle (Brewfile)</a> · <a href="https://developer.apple.com/documentation/apple-silicon">Apple silicon developer docs</a></td>
+</tr>
+<tr>
+<td>Stop 2</td>
+<td>A terminal you enjoy</td>
+<td>Ghostty, zsh, starship, fzf, ripgrep, bat, eza, and Tom's configs</td>
+<td><a href="https://ghostty.org">Ghostty</a> · <a href="https://dotfiles.github.io">GitHub: dotfiles guide</a> · <a href="https://starship.rs">starship</a> · <a href="https://github.com/junegunn/fzf">fzf</a> · <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a></td>
+</tr>
+<tr>
+<td>Stop 3</td>
+<td>Git, part one</td>
+<td>Fork, clone, branch, commit, push, pull request, learned by doing it to the template</td>
+<td><a href="https://git-scm.com/docs/gittutorial">Git tutorial (official)</a> · <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">GitHub: fork a repository</a> · <a href="https://cli.github.com/manual/">GitHub CLI manual</a></td>
+</tr>
+<tr>
+<td>Stop 4</td>
+<td>Git, part two</td>
+<td>Revert, reset, rebase, cherry-pick, worktrees, and how Cherny runs five agents at once</td>
+<td><a href="https://git-scm.com/docs/git-rebase">git rebase</a> · <a href="https://git-scm.com/docs/git-worktree">git worktree</a> · <a href="https://infoq.com/news/2026/01/claude-code-creator-workflow/">Cherny on parallel checkouts (InfoQ)</a></td>
+</tr>
+<tr>
+<td>Stop 5</td>
+<td>Claude Code, the power settings</td>
+<td>Plan mode, --continue, /compact, /rewind, permissions, memory, and the surfaces: terminal, web, phone and Chrome</td>
+<td><a href="https://code.claude.com/docs/en/memory">Memory (CLAUDE.md, imports, precedence)</a> · <a href="https://code.claude.com/docs/en/settings">Settings</a> · <a href="https://code.claude.com/docs/en/cli-reference">CLI reference</a> · <a href="https://howborisusesclaudecode.com/">How Boris uses Claude Code (curated tips)</a> · <a href="https://claude.com/chrome">Claude in Chrome</a> · <a href="https://code.claude.com/docs/en/chrome">Claude Code and Chrome</a></td>
+</tr>
+<tr>
+<td>Stop 6</td>
+<td>Fork the game</td>
+<td>Fork it on GitHub and with vibe fork, then four challenges: make it, configure it, add a topic, break it and repair it</td>
+<td><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">Fork a repository (GitHub Docs)</a> · <a href="https://cli.github.com/manual/gh_repo_fork">gh repo fork</a> · <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork">Syncing a fork (GitHub Docs)</a> · <a href="https://github.com/tpetedb/vibe-map">tpetedb/vibe-map, the repository you are forking</a></td>
+</tr>
+<tr>
+<td>Stop 7</td>
+<td>The other agents</td>
+<td>OpenCode, Codex CLI, Gemini CLI: same AGENTS.md, same .agents/skills, different engines</td>
+<td><a href="https://opencode.ai">OpenCode</a> · <a href="https://agents.md">AGENTS.md</a> · <a href="https://agentskills.io">Agent Skills standard</a> · <a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a></td>
+</tr>
+<tr>
+<td>Stop 8</td>
+<td>Your dotfiles repo</td>
+<td>Everything you configured tonight, versioned, so the next Mac is ten minutes</td>
+<td><a href="https://dotfiles.github.io">GitHub: dotfiles guide</a> · <a href="https://docs.brew.sh/Brew-Bundle-and-Brewfile">Homebrew Bundle</a></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="before-the-evening-pre-flight-set-up-the-machine">Before the evening: Pre-flight: set up the machine</h2>
+<p>Twenty minutes, alone, before the night. Everything here is boring on purpose so the evening itself is not.</p>
+<h3 id="1-install-claude-code">1. Install Claude Code</h3>
+<p>Open Terminal (Cmd+Space, type Terminal). Paste this and press Enter. It installs the native build, which updates itself in the background:</p>
+<pre><code>curl -fsSL https://claude.ai/install.sh | bash
+</code></pre>
+<p>Then confirm it worked. It should print a version number followed by (Claude Code):</p>
+<pre><code>claude --version
+</code></pre>
+<h3 id="2-log-in">2. Log in</h3>
+<p>Start it once. Your browser opens, you sign in with your Claude account (Pro, Max, Team or Enterprise), and the credentials are stored. You will not be asked again.</p>
+<pre><code>claude
+</code></pre>
+<p>Type /exit to leave. If you ever need to switch accounts, type /login inside a session.</p>
+<h3 id="3-install-git-and-jq">3. Install git and jq</h3>
+<p>git is the save-point system for workstream 4, jq is a tiny helper the hook uses. On a Mac:</p>
+<pre><code>xcode-select --install
+brew install jq
+</code></pre>
+<p>If brew is not installed, the first line still gives you git; ask Claude to install Homebrew for you on the night, it takes two minutes.</p>
+<h3 id="4-install-obsidian">4. Install Obsidian</h3>
+<p>Download from obsidian.md, open it once, close it. Do not create anything yet.</p>
+<h3 id="5-think-of-a-game">5. Think of a game</h3>
+<p>One small game you would enjoy having on your laptop. A card duel, a dungeon room, a scoring board that ranks the team by coffee consumption. Three sentences, in your head.</p>
+<p><strong>Definition of done.</strong> Terminal shows a version for claude --version, and git --version prints something. That is the whole pre-flight.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/quickstart">Claude Code quickstart</a>, <a href="https://obsidian.md">Obsidian</a></p>
+<h2 id="18-00-ship-an-mvp">18:00: Ship an MVP</h2>
+<p>The goal of this hour is one thing: a playable game exists before the first glass, or cup, is empty. We explain almost nothing. That is the design.</p>
+<h3 id="concept-the-agentic-loop">Concept: the agentic loop</h3>
+<p>Claude Code is not a chat box. You give it a goal in plain language, it reads and writes files in the folder you started it in, runs commands, looks at the result, and keeps going until the goal is met. The folder you start it in is its whole world, so start it in an empty one.</p>
+<h3 id="do-this">Do this</h3>
+<ol>
+<li>Make a folder and step into it:<pre><code>mkdir -p ~/vibe &amp;&amp; cd ~/vibe
+</code></pre>
+</li>
+<li>Start Claude Code:<pre><code>claude
+</code></pre>
+</li>
+<li>On Pro and Max plans the session starts in auto mode: Claude edits files and runs most commands without asking each time, and a classifier reviews risky actions. Press Shift+Tab at any time to cycle to a mode that asks first. Tonight, auto is fine.</li>
+<li>Say your three sentences out loud to Tom first. Then type them, with the one guardrail added. A template:<pre><code>Build a small browser game as a single file called index.html, no external libraries, no frameworks. The game: [your three sentences]. Keep score. When done, tell me how to open it.
+</code></pre>
+</li>
+<li>When it says it is done, open the file:<pre><code>open index.html
+</code></pre>
+</li>
+<li>Play it. Send it to someone. That is the OKR.</li>
+</ol>
+<h3 id="one-more-thing-then-stop">One more thing, then stop</h3>
+<p>Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.</p>
+<p><strong>Definition of done.</strong> index.html exists in ~/vibe, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</p>
+<p><strong>Why it matters.</strong> You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.</p>
+<p><strong>Try this.</strong> If the first result is broken, do not fix it yourself. Paste the error, or describe what you see, and let it iterate. Say what is wrong, not how to fix it.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/quickstart">Quickstart</a>, <a href="https://code.claude.com/docs/en/how-claude-code-works">How Claude Code works</a></p>
+<h2 id="19-00-specificity-claude-md-and-your-first-skill">19:00: Specificity, CLAUDE.md and your first skill</h2>
+<p>This is the hour that separates people who vibe code from people who got lucky once.</p>
+<h3 id="concept-1-the-model-has-no-line-of-sight-into-your-head">Concept 1: the model has no line of sight into your head</h3>
+<p>It only has what is in the folder and what you typed. &quot;Make it more impactful&quot; is a request it will fulfil according to its own idea of impact. &quot;Add a badge next to the title, keep the colour and the columns, do not touch anything else&quot; has a scope, a keep-list and a do-not-touch list. That is the entire craft.</p>
+<h3 id="do-this-break-it-then-fix-it">Do this: break it, then fix it</h3>
+<ol>
+<li>Ask for the vague thing and watch what happens:<pre><code>make it more impactful
+</code></pre>
+</li>
+<li>Now ask for one precise thing. State what to add, what to keep, what not to touch:<pre><code>Add a purple badge to the main character. Keep all stats and the score exactly as they are. Do not change anything else. Reply with one line describing what you changed.
+</code></pre>
+</li>
+<li>Compare. The second one is a change request. The first was a mood.</li>
+</ol>
+<h3 id="concept-2-claude-md-the-note-it-reads-every-session">Concept 2: CLAUDE.md, the note it reads every session</h3>
+<p>Every session starts with a blank memory. CLAUDE.md is a plain markdown file in your project folder that Claude reads at the start of every session. It is where you write down what you would otherwise re-explain: build commands, conventions, &quot;always do X&quot; rules. Target under 200 lines, concrete enough to verify. &quot;Keep it one file&quot; beats &quot;keep it simple&quot;.</p>
+<ol>
+<li>Let Claude draft one from what it sees in the folder:<pre><code>/init
+</code></pre>
+</li>
+<li>Then add your own rules. Ask Claude to add them, or open the file yourself with /memory. A good starting set:<pre><code># Rules for this project
+- Single file: index.html only, no external libraries
+- Readable on a laptop, minimum font size 14px
+- Scores are a system of record: never reset or reformat stored scores without asking
+- After every change, reply with one line saying what changed
+</code></pre>
+</li>
+<li>Confirm it loaded. Start a new session and run:<pre><code>/context
+</code></pre>
+</li>
+<li>Your CLAUDE.md should be listed under Memory files. If it is not there, Claude cannot see it.</li>
+</ol>
+<h3 id="concept-3-skills-procedures-that-load-on-demand">Concept 3: skills, procedures that load on demand</h3>
+<p>CLAUDE.md is for facts that apply every session. A skill is a folder with a SKILL.md for a repeatable procedure, loaded only when it is relevant or when you type /skill-name. Personal skills live in ~/.claude/skills/ and work in every project.</p>
+<ol>
+<li>Create one for adding features to your game:<pre><code>mkdir -p ~/.claude/skills/add-feature
+</code></pre>
+</li>
+<li>Ask Claude to write ~/.claude/skills/add-feature/SKILL.md with this content, or paste it yourself:<pre><code>---
+description: Add a feature to the game safely. Use when the user asks to add, change or extend gameplay.
+---
+
+When adding a feature:
+1. Restate the request in one sentence and list what will NOT change.
+2. Make the change in index.html only.
+3. Open index.html and check it still loads without console errors.
+4. Reply with one line: what changed, and one sentence: what to test.
+</code></pre>
+</li>
+<li>Use it:<pre><code>/add-feature give the enemy a health bar
+</code></pre>
+</li>
+<li>Or just ask normally. Claude loads it automatically when the description matches.</li>
+</ol>
+<h3 id="bonus-auto-memory">Bonus: auto memory</h3>
+<p>If you tell Claude &quot;remember that I prefer British spelling&quot;, it saves that to its own notes for this project and loads them next time. Run /memory to see and edit everything it has saved. Everything is plain markdown you can delete.</p>
+<p><strong>Definition of done.</strong> /context lists your CLAUDE.md. /add-feature appears when you type / in a session. A vague prompt now gets a clarifying question or a scoped change instead of a rewrite.</p>
+<p><strong>Why it matters.</strong> CLAUDE.md for what is always true, skills for how to do a thing, your prompt for what to do right now. Once those three are separated you stop re-onboarding the agent every evening.</p>
+<p><strong>Try this.</strong> Rolinda's test: read your CLAUDE.md to her. Every line she can verify (&quot;is it one file? yes/no&quot;) is a good line. Every line she has to interpret is a bad one.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/memory">How Claude remembers your project</a>, <a href="https://code.claude.com/docs/en/skills">Skills</a>, <a href="https://code.claude.com/docs/en/best-practices">Best practices</a></p>
+<h2 id="20-00-persisted-scores-and-a-dashboard">20:00: Persisted scores and a dashboard</h2>
+<p>Time to feed the spreadsheet person. The game learns to remember, the data gets a home, and the home turns out to matter more than the game.</p>
+<h3 id="concept-a-fixed-home-and-a-fixed-shape">Concept: a fixed home and a fixed shape</h3>
+<p>A browser page cannot write files to your disk on its own, so the pattern is: the game stores every finished round in the browser (localStorage), and offers an Export button that downloads a CSV. Once that CSV has a fixed name and fixed columns, anything can be built on top of it. Rename one column and everything downstream breaks. That is not a bug, that is what a schema is.</p>
+<h3 id="do-this-2">Do this</h3>
+<ol>
+<li>Add persistence with an explicit schema:<pre><code>Every time a round ends, save a record to localStorage with exactly these fields: played_at (ISO timestamp), player (string), score (integer), duration_s (integer). Add an &quot;Export CSV&quot; button that downloads all records as scores.csv with those four columns in that order and a header row. Do not change gameplay.
+</code></pre>
+</li>
+<li>Play three rounds, export, and move the file to the one place the check looks (from your camp folder):<pre><code>mv ~/Downloads/scores.csv workspace/data/scores.csv
+head -1 workspace/data/scores.csv
+</code></pre>
+That header line must read <code>played_at,player,score,duration_s</code>, exactly.</li>
+<li>Now ask for analysis on top of the file, not the game:<pre><code>Write workspace/python/analyze.py that reads workspace/data/scores.csv, prints number of rounds, mean score, best score, longest streak of improving scores, and saves a bar chart of score per round to chart.png. Use only the Python standard library plus matplotlib. Then run it.
+</code></pre>
+</li>
+<li>Open the chart:<pre><code>open chart.png
+</code></pre>
+</li>
+<li>Break the schema on purpose. Rename the score column in <code>workspace/data/scores.csv</code> to points, run analyze.py again, watch it fail. Rename it back.</li>
+</ol>
+<h3 id="what-lotte-will-notice">What Lotte will notice</h3>
+<p>The game is now a front end. The CSV is the thing. Any spreadsheet, script or chart can read it, and Claude can build the next one in a minute because the shape is known. This is the same idea as a table in a database: the columns are a contract.</p>
+<p><strong>Definition of done.</strong> <code>workspace/data/scores.csv</code> has the header row <code>played_at,player,score,duration_s</code> and at least three rows. There is a query in <code>workspace/sql/</code> and a script in <code>workspace/python/</code> that read it. <code>uv run vibe check 3</code> is green.</p>
+<p><strong>Why it matters.</strong> Every useful tool you build for work will be this pattern: something produces a file with a fixed shape, something else reads it. Meeting notes to action list, calendar export to weekly summary. Learn to name the columns first.</p>
+<p><strong>Try this.</strong> Add a fifth column, difficulty, in both the game and the script, in one prompt. Notice you have to say both places.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/common-workflows">Common workflows</a></p>
+<h2 id="21-00-git-rollback-and-one-hook">21:00: Git, rollback, and one hook</h2>
+<p>Fear of breaking things is what stops people from experimenting. This hour removes the fear.</p>
+<h3 id="concept-1-commits-are-named-snapshots">Concept 1: commits are named snapshots</h3>
+<p>git keeps a history of your folder. A commit is a snapshot with a message. You can look at old ones, compare them, and go back. Claude Code makes this conversational, you never have to memorise commands.</p>
+<ol>
+<li>Turn the folder into a repository and take the first snapshot:<pre><code>initialise git in this folder, add a .gitignore that excludes backups/ and .DS_Store, and commit everything with the message &quot;first playable&quot;
+</code></pre>
+</li>
+<li>Make a change (any feature), then:<pre><code>commit my changes with a descriptive message
+</code></pre>
+</li>
+<li>Look at the history:<pre><code>show me the last 5 commits
+</code></pre>
+</li>
+<li>Now break it on purpose. Ask for something destructive: &quot;replace all text in the game with Comic Sans and remove the score&quot;. Confirm it is ruined.</li>
+<li>Roll back:<pre><code>discard all uncommitted changes and restore the last commit
+</code></pre>
+</li>
+<li>Open index.html. It is fine again. Tom can stop pretending to be paged.</li>
+</ol>
+<h3 id="concept-2-two-undo-buttons">Concept 2: two undo buttons</h3>
+<p>Inside a session, Claude Code also keeps its own checkpoints: /rewind takes the files back to an earlier point in the conversation. That is for &quot;the last ten minutes went wrong&quot;. git is for &quot;I want this to survive closing the laptop&quot;. Use both.</p>
+<h3 id="concept-3-hooks-things-that-happen-every-time">Concept 3: hooks, things that happen every time</h3>
+<p>CLAUDE.md is advice. Claude reads it and tries. A hook is a shell command Claude Code runs at a fixed moment in its lifecycle, whether Claude wants to or not. PostToolUse fires after a tool ran, PreToolUse fires before and can block. Hooks live in a settings file, and the /hooks menu shows what is registered.</p>
+<ol>
+<li>Create the project settings file. Ask Claude, or write .claude/settings.json yourself:<pre><code>{
+  &quot;hooks&quot;: {
+    &quot;PostToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Edit|Write&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;mkdir -p backups &amp;&amp; cp scores.csv backups/scores-$(date +%Y%m%d-%H%M%S).csv 2&gt;/dev/null || true&quot;
+          }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+</li>
+<li>The matcher means: only after the Edit or Write tools. The command copies scores.csv into backups/ with a timestamp, and the || true means a missing file does not count as an error.</li>
+<li>Check it registered:<pre><code>/hooks
+</code></pre>
+</li>
+<li>Ask Claude to edit any file. Then look in backups/. A copy appeared without anyone asking for it.</li>
+<li>The other kind: a hook that blocks. Ask Claude to add a PreToolUse hook that refuses any Edit or Write to scores.csv, exits with code 2 and prints a reason. Then ask it to edit scores.csv and watch it get refused and explain why.</li>
+</ol>
+<h3 id="optional-if-the-evening-allows">Optional, if the evening allows</h3>
+<p>Put the folder somewhere other than the laptop: &quot;create a private GitHub repository for this project and push it&quot;. Claude will ask you to sign in to GitHub the first time.</p>
+<p><strong>Definition of done.</strong> git log shows at least three commits. Ruining and restoring works. /hooks lists your PostToolUse hook and backups/ fills up when files change.</p>
+<p><strong>Why it matters.</strong> Advice can be ignored, enforcement cannot. When something must happen every single time, it is a hook, not a sentence in CLAUDE.md. And with git underneath, no experiment is expensive.</p>
+<p><strong>Try this.</strong> Ask Claude to add a Notification hook that shows a macOS notification when it needs your input, so you can walk to the kitchen while it works.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/hooks-guide">Hooks guide</a>, <a href="https://code.claude.com/docs/en/checkpointing">Checkpointing and /rewind</a>, <a href="https://code.claude.com/docs/en/quickstart">Quickstart: git section</a></p>
+<h2 id="21-30-connectors-and-mcp">21:30: Connectors and MCP</h2>
+<p>Until now Claude could only see the folder. This hour it reaches your calendar, your files, your mail. This is the part that quietly changes a work week.</p>
+<h3 id="concept-mcp-is-the-plug">Concept: MCP is the plug</h3>
+<p>The Model Context Protocol is an open standard for giving an AI model tools. An MCP server is a program or a hosted service that exposes tools: search an issue tracker, read a calendar, drive a browser. Claude Code connects to servers; the Claude app calls the same thing connectors. Same idea, different door.</p>
+<h3 id="do-this-a-server-that-needs-no-account">Do this: a server that needs no account</h3>
+<ol>
+<li>From your shell, not inside a session, add the Claude Code documentation server. The name claude-code-docs is one you choose:<pre><code>claude mcp add --transport http claude-code-docs https://code.claude.com/docs/mcp
+</code></pre>
+</li>
+<li>Check it connected:<pre><code>claude mcp list
+</code></pre>
+</li>
+<li>Start a session and force it through the new server so you can see it happen:<pre><code>Use the claude-code-docs server to look up what a PostToolUse hook is
+</code></pre>
+</li>
+<li>The tool call in the output is labelled with the server name. That label is how you know it went out, not from memory.</li>
+</ol>
+<h3 id="scopes-where-it-is-saved">Scopes: where it is saved</h3>
+<p>By default the server is local: only you, only this project. Add --scope user to have it in every project, or --scope project to write it to .mcp.json in the folder so anyone who clones the project gets it too. Inside a session, /mcp shows the panel and lets you authenticate or reconnect.</p>
+<h3 id="do-this-something-you-actually-use">Do this: something you actually use</h3>
+<ol>
+<li>Connectors you add at claude.ai (Settings, Connectors) load automatically in Claude Code when you are signed in with the same account. Connect Google Calendar or Google Drive there.</li>
+<li>Or, for a hosted service with a sign-in, add it and authenticate in the /mcp panel:<pre><code>claude mcp add --transport http notion https://mcp.notion.com/mcp
+# then inside a session: /mcp → notion → Authenticate
+</code></pre>
+</li>
+<li>Then ask something only the connection can answer:<pre><code>What is on my calendar Thursday? Draft an agenda for the 10:00 as a markdown file called thursday-agenda.md
+</code></pre>
+</li>
+<li>When done experimenting, unplug what you do not need. Every connected server uses some of Claude's context window:<pre><code>claude mcp remove claude-code-docs
+</code></pre>
+</li>
+</ol>
+<p><strong>Definition of done.</strong> claude mcp list shows at least one Connected server. A prompt that needs it produces a tool call labelled with the server name.</p>
+<p><strong>Why it matters.</strong> The chat window is not the boundary. Once Claude can read the systems your work lives in, the tools you build stop being toys: a meeting note to action list, a week of calendar to a summary, a thread to three decisions.</p>
+<p><strong>Try this.</strong> Rolinda's question, answered properly: it can only see what you connected, only while it is connected, and claude mcp remove unplugs it. Say that sentence back to her.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/mcp-quickstart">Connect to MCP servers</a>, <a href="https://code.claude.com/docs/en/mcp">MCP reference</a></p>
+<h2 id="22-00-obsidian-and-the-graph">22:00: Obsidian and the graph</h2>
+<p>The last hour is the prettiest, and the one that gives everything before it a place to live.</p>
+<h3 id="concept-a-vault-is-a-folder-of-markdown-links-are-just-text">Concept: a vault is a folder of markdown, links are just text</h3>
+<p>An Obsidian vault is a normal folder on disk. Every note is a .md file. A link from one note to another is the text [[Note name]]. The graph view draws a circle per note and a line per link; the more notes point at a note, the bigger it gets. Because it is all plain files, Claude can read and write the vault directly, and you can read it without any AI at all.</p>
+<h3 id="do-this-3">Do this</h3>
+<ol>
+<li>In Obsidian: bottom left, Vault profile, Manage vaults, Create new vault. Name it vibe-vault, put it in your home folder.</li>
+<li>Start Claude Code inside the vault:<pre><code>cd ~/vibe-vault &amp;&amp; claude
+</code></pre>
+</li>
+<li>Give it the conventions once, as a CLAUDE.md in the vault root:<pre><code>Create CLAUDE.md with these rules: every note is markdown; link related notes with [[wikilinks]]; each note starts with a one-line summary; project notes live in Projects/, people in People/, tools in Tools/.
+</code></pre>
+</li>
+<li>Now capture tonight:<pre><code>Create Projects/Vibe Code Camp game.md summarising what we built tonight (single-file game, scores.csv schema, git, hooks). Create Tools/Claude Code.md, Tools/CLAUDE.md and skills.md, Tools/Hooks.md, Tools/MCP.md, Tools/Obsidian.md, each with a short explanation in my words and a &quot;how to&quot; section. Create People/Tom.md and People/Rolinda.md. Link everything that is related with [[wikilinks]] and make sure every note links to at least two others.
+</code></pre>
+</li>
+<li>Open the graph: click the graph icon in the left ribbon, or Cmd+P and type &quot;graph&quot;. Hover a node to highlight its links. Click one to open it.</li>
+<li>Local graph: with a note open, Cmd+P, &quot;Open local graph&quot;, to see only what connects to that note.</li>
+<li>Colour it: graph settings (cog top right), Groups, New group, search path:Tools, pick a colour. Do the same for Projects and People.</li>
+</ol>
+<h3 id="this-is-your-long-term-memory">This is your long-term memory</h3>
+<p>Next week, when Lotte builds the meeting-note tool, she starts Claude Code in the vault, and it can read Tools/Hooks.md to remember how she likes hooks written. Every project adds notes, every note adds links, the graph grows. Nothing is locked in: it is a folder of text files she owns. Put the vault in git too, and ignore the .obsidian folder.</p>
+<p><strong>Definition of done.</strong> The graph shows at least ten nodes in three colours, and clicking any node opens a note Claude wrote that reads like Lotte, not like a manual.</p>
+<p><strong>Why it matters.</strong> Memory is files with links. You own it, it compounds, and both you and the agent can read it. That is the whole knowledge moat, and it cost one prompt.</p>
+<p><strong>Try this.</strong> Ask Claude, inside the vault: &quot;what did we decide about scores?&quot; and watch it find the answer by reading the notes, not by remembering.</p>
+<p>Sources: <a href="https://help.obsidian.md/plugins/graph">Obsidian: graph view</a>, <a href="https://help.obsidian.md/links">Obsidian: internal links</a>, <a href="https://help.obsidian.md/manage-vaults">Obsidian: manage vaults</a></p>
+<h2 id="22-30-github-and-github-pages-a-real-url">22:30: GitHub and GitHub Pages, a real URL</h2>
+<p>The goal: the game exists somewhere other than your laptop, at an address you can send to anyone.</p>
+<h3 id="concept-remote-and-static-hosting">Concept: remote and static hosting</h3>
+<p>A remote is a copy of your git history on GitHub. GitHub Pages serves the files in a repository as a website. A single-file game needs nothing else: no server, no build step. Claude Code can do every step from the terminal using the GitHub CLI.</p>
+<h3 id="do-this-4">Do this</h3>
+<ol>
+<li>Install the GitHub CLI and log in:<pre><code>brew install gh &amp;&amp; gh auth login
+</code></pre>
+</li>
+<li>In Claude Code: &quot;create a public GitHub repo called vibe from this folder and push it.&quot;</li>
+<li>Then: &quot;enable GitHub Pages for this repo from the main branch, root folder, and tell me the URL.&quot; If Claude cannot flip the setting, open the repo on github.com, Settings, Pages, choose main and root, save.</li>
+<li>Open the URL on your phone. Send it to someone who was not there.</li>
+</ol>
+<p>Definition of done: the game loads on a device that is not your laptop.</p>
+<p>Rolinda's question: &quot;Can my mother open it on her iPad?&quot;</p>
+<p>Pairing: Tokaji Aszú, 5 puttonyos, Roquefort.</p>
+<p>Docs: https://docs.github.com/en/pages/quickstart · https://cli.github.com/manual/gh_repo_create · https://code.claude.com/docs/en/common-workflows</p>
+<h2 id="23-00-headless-claude-on-a-schedule-and-a-subagent">23:00: Headless Claude on a schedule, and a subagent</h2>
+<p>The goal: a note in your vault changes without you at the keyboard.</p>
+<h3 id="concept-headless-mode-and-subagents">Concept: headless mode and subagents</h3>
+<p><code>claude -p &quot;prompt&quot;</code> runs Claude Code non-interactively: it takes the prompt, works in the folder, prints the result, exits. That makes it composable like any command-line tool, so it can run from launchd, cron, CI or a webhook. A subagent is a second Claude the first one delegates to, with its own instructions and context, defined as a markdown file in <code>.claude/agents/</code>. Use it for a job you want done the same way every time.</p>
+<h3 id="do-this-5">Do this</h3>
+<ol>
+<li>From the project folder, once by hand:<pre><code>claude -p &quot;read workspace/data/scores.csv and append a one-paragraph summary of tonight's best runs to vault/Camp/Scores.md&quot;
+</code></pre>
+</li>
+<li>In Claude Code: &quot;create a subagent called scorekeeper that only does that job, and document it in the vault.&quot;</li>
+<li>Then: &quot;schedule the scorekeeper to run every morning at 08:00 with launchd.&quot; Read the plist it writes; it should call <code>claude -p</code> with <code>--output-format text</code>. Load it with <code>launchctl load</code>.</li>
+<li>Tomorrow morning: open the vault. The note updated itself.</li>
+</ol>
+<p>Definition of done: a vault note changed while you slept.</p>
+<p>Rolinda's question: &quot;So it works while you sleep?&quot;</p>
+<p>Pairing: Armagnac, last orders.</p>
+<p>Docs: https://code.claude.com/docs/en/headless · https://code.claude.com/docs/en/sub-agents · https://code.claude.com/docs/en/cli-reference</p>
+<h2 id="provider-agnostic-instructions-agents-md-and-the-agent-skills-standard">Provider-agnostic instructions: AGENTS.md and the Agent Skills standard</h2>
+<p>Two open standards keep your setup portable. AGENTS.md is a plain Markdown file at the repo root that tells any coding agent how to build, test and change the project; 30+ agents read it (Codex, Cursor, Copilot, Gemini CLI, Aider, Zed) and it is stewarded by the Linux Foundation's Agentic AI Foundation: https://agents.md. Claude Code reads CLAUDE.md, so make CLAUDE.md one line, <code>@AGENTS.md</code>, and keep Claude-only extras (hooks, subagents) below it: https://code.claude.com/docs/en/memory.</p>
+<p>Agent Skills is the open format behind skills: a folder with a SKILL.md (name, description, instructions), loaded only when relevant: https://agentskills.io. The cross-tool folder is <code>.agents/skills/</code>; Claude Code reads <code>.claude/skills/</code>, so the template symlinks them. Community packs: https://github.com/wshobson/agents.</p>
+<h2 id="the-camp-the-terminal-companion-and-the-pet">The camp, the terminal companion and the pet</h2>
+<p>You do not fork anything to start. Install the companion once and let it write a camp for you:</p>
+<pre><code>uv tool install git+https://github.com/tpetedb/vibe-map
+vibe new my-camp
+cd my-camp
+vibe play
+</code></pre>
+<p>A camp is about thirty files and no engine: a README, AGENTS.md, a one-line CLAUDE.md, <code>config/camp.toml</code>, a justfile, <code>workspace/</code>, a starter vault, fourteen skills in <code>.agents/skills/</code> (Obsidian notes, Mermaid diagrams, DuckDB SQL, Python for data, camp progress, ADRs, changelogs, semantic versioning, READMEs, the justfile, the council, installing the camp, web app testing, verification before completion), the scorekeeper subagent, a backup hook, and sample scores with tested DuckDB queries. <code>vibe fork</code> copies the game's own source into <code>workspace/forks/vibe-map/</code> on the evening you want to change the game itself. Press <strong>Use this template</strong> on GitHub only if you want the engine.</p>
+<pre><code>vibe status               # where you are, with XP, level and badges
+vibe check 1              # run the checks for a workstream
+vibe done 1 &quot;shipped the coffee scoreboard&quot;
+vibe topics               # the packs of the tech tree
+vibe map                  # Mermaid progress map in vault/Camp/Map.md
+vibe export               # the code to paste into the game (Roadmap, Import)
+</code></pre>
+<p>Progress travels between the game and the camp as a code, never as files: <code>vibe export</code> prints one, the game's Roadmap panel takes it, and <code>vibe import</code> brings the game's own progress back.</p>
+<p><strong>The pet.</strong> A companion lives in the terminal and on the islands: twenty species, six of them drawn as pixel sprites (cat, crab, dog, duck, snail, turtle). <code>vibe pet --species dog</code> picks one, <code>[pet]</code> in <code>config/camp.toml</code> keeps it, and the same sprite follows the walker in the game.</p>
+<p><strong>The Ask panel.</strong> A browser page cannot reach the subscription in your terminal, so <code>vibe chat serve</code> runs a small bridge on 127.0.0.1 that your own agent answers through. It takes a question and never a command to run, it is paired with a code you type into the panel, and it answers only the origins the game is served from. The reasoning is in <a href="https://github.com/tpetedb/vibe-map/blob/main/docs/adr/0009-local-chat-bridge.md">ADR 0009</a>.</p>
+<h2 id="sql-and-python-in-the-20-00-hour">SQL and Python, in the 20:00 hour</h2>
+<p>The data hour now runs on DuckDB (https://duckdb.org/docs/), which reads a CSV as a table with no server. Run <code>workspace/sql/top_runs.sql</code>, then <code>workspace/sql/per_player.sql</code> (group by), then <code>workspace/sql/streaks.sql</code> (window functions, <code>lag()</code>), then <code>python3 workspace/python/scores.py</code>. Zero-to-SQL: https://sqlbolt.com. Analytics SQL: https://mode.com/sql-tutorial/. Python: https://docs.python.org/3/tutorial/ and https://exercism.org/tracks/python.</p>
+<h2 id="the-campaign-four-evenings-four-islands">The campaign: four evenings, four islands</h2>
+<p>Evening 1 is the eight workstreams above. Evenings 2 to 4 are below, one island each in the game. Split them over as many nights as you like; the game, the CLI and the vault keep the state. Two things sit beside the thirty-two stops and are worth half a workstream each: the twelve mentor encounters and the twenty-one artifacts. Both are described after Evening 4.</p>
+<h3 id="evening-2-history-and-how-these-models-actually-work">Evening 2: History, and how these models actually work</h3>
+<p>Cold storage: the archive. Eighty years in eight stops, with the people who did it.</p>
+<h4 id="stop-1-neurons-and-backprop-1943-to-1989">Stop 1: Neurons and backprop (1943 to 1989)</h4>
+<p><em>McCulloch-Pitts, Rosenblatt, Rumelhart-Hinton-Williams, LeCun's zip codes</em></p>
+<p>Everything you use tonight descends from three ideas. In 1943 McCulloch and Pitts described a neuron as a threshold that sums its inputs. In 1958 Rosenblatt built one (the perceptron) and it learned to classify. It stalled for two decades because one layer cannot learn XOR, and nobody knew how to train more layers. In 1986 Rumelhart, Hinton and Williams popularised backpropagation: compute the error at the output, push it backwards through the layers, nudge every weight a little in the direction that reduces it. In 1989 LeCun applied it to real data: handwritten zip codes for the US Postal Service, with a convolutional network. That paper is small enough to reproduce on a laptop in an afternoon, and Karpathy did.</p>
+<p>The concept that survives to today: a model is a pile of numbers (weights), a loss function says how wrong it is, and gradient descent changes the numbers to be less wrong. Nothing you will meet later changes this; it only gets bigger.</p>
+<p>Do this:</p>
+<ol>
+<li>Watch the first 40 minutes of Karpathy's micrograd lecture: a working backprop engine in 100 lines of Python.</li>
+<li>Ask Claude Code: &quot;reproduce LeCun 1989 in a notebook using Karpathy's repo as reference, and explain each cell in one line&quot;.</li>
+<li>Write one vault note: what a weight is, what a loss is, what a gradient is. Three sentences.</li>
+<li>Talk to Hinton and LeCun on this island.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 1</code> looks for a notebook or script in workspace/winter/backprop/.</p>
+<p>Sources: <a href="https://www.nature.com/articles/323533a0">Rumelhart, Hinton, Williams 1986 (Nature)</a> · <a href="https://github.com/karpathy/lecun1989-repro">Karpathy's lecun1989 reproduction</a> · <a href="https://karpathy.ai/zero-to-hero.html">micrograd lecture, Zero to Hero</a></p>
+<p>Rolinda's question: &quot;So it is just numbers being adjusted until they stop being wrong?&quot;</p>
+<h4 id="stop-2-the-imagenet-moment-2012">Stop 2: The ImageNet moment (2012)</h4>
+<p><em>Fei-Fei Li's dataset, AlexNet, and why GPUs mattered</em></p>
+<p>By 2010 the ideas were 20 years old and the field had moved on. What changed was data and hardware. Fei-Fei Li's group built ImageNet: 14 million labelled images, and a yearly competition. In 2012 Krizhevsky, Sutskever and Hinton entered a deep convolutional net trained on two gaming GPUs and beat every other entry by a margin nobody had seen. The paper is AlexNet. Within two years every entry was a neural net, and the same three ingredients (big data, parallel hardware, gradient descent) became the recipe for everything since, including language.</p>
+<p>Why it matters for you: the reason your MacBook can run a decent language model today is that the whole stack, from chips to frameworks, was rebuilt around this recipe. Apple silicon's unified memory is why a 7B model fits on a laptop at all.</p>
+<p>Do this:</p>
+<ol>
+<li>Read the AlexNet abstract and the first figure. Ask Claude: &quot;explain the two-GPU split in this figure as if I run a hotel&quot;.</li>
+<li>Open Apple's Activity Monitor, GPU tab, then run a small local model (Stop 6) and watch the GPU light up. That is the same idea, 14 years later.</li>
+<li>Talk to Fei-Fei Li here.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 2</code> is reading only: your vault note is the deliverable.</p>
+<p>Sources: <a href="https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html">AlexNet paper (NeurIPS 2012)</a> · <a href="https://www.image-net.org">ImageNet</a> · <a href="https://karpathy.ai/">Karpathy on being the ImageNet reference human</a></p>
+<p>Rolinda's question: &quot;Why did it need a competition? Could nobody just say it worked?&quot;</p>
+<h4 id="stop-3-attention-is-all-you-need-2017">Stop 3: Attention Is All You Need (2017)</h4>
+<p><em>Tokens, embeddings, attention, next-token prediction: the transformer, without hand-waving</em></p>
+<p>A language model does one thing: given the text so far, predict a probability for every possible next token. A token is a chunk of text (roughly three quarters of a word). Each token becomes a vector of numbers (an embedding). The transformer's trick, from Vaswani and colleagues at Google in 2017, is attention: every position looks at every other position and decides how much to weigh it, in parallel, on a GPU. Stack that 30 to 100 times, train on trillions of tokens to predict the next one, and you get a base model. Chat happens later (Stop 5). Everything you type to Claude is tokenised, attended over, and answered one token at a time; that is why long context costs money and why the model can lose the thread.</p>
+<p>Deterministic or not: the forward pass is deterministic. Sampling the next token from the probabilities is where randomness enters (temperature). This is why the same prompt gives different answers, and why Evening 3 is about putting checks around the output rather than hoping.</p>
+<p>Do this:</p>
+<ol>
+<li>Watch Karpathy's &quot;Let's build GPT&quot; (2h, worth it) or the general-audience &quot;Deep dive into LLMs&quot; on his channel.</li>
+<li>Paste a paragraph into a tokenizer and count: ask Claude &quot;how many tokens is this and why does 'Rolinda' split into pieces&quot;.</li>
+<li>Ask Claude to draw the transformer block as a Mermaid diagram in your vault (the mermaid skill will do it).</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 3</code> looks for workspace/winter/transformer.md with a mermaid block and your own lines on tokens and attention.</p>
+<p>Sources: <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need (arXiv)</a> · <a href="https://karpathy.ai/zero-to-hero.html">Let's build GPT, Zero to Hero</a> · <a href="https://www.youtube.com/@AndrejKarpathy">Karpathy's channel (general audience track)</a></p>
+<p>Rolinda's question: &quot;So it never knows what it is going to say, only what is likely next?&quot;</p>
+<h4 id="stop-4-scaling-laws-and-the-bitter-lesson">Stop 4: Scaling laws and the Bitter Lesson</h4>
+<p><em>Why bigger kept winning, and why the Claude Code team framed Sutton's essay</em></p>
+<p>In 2019 Rich Sutton wrote a one-page essay: seventy years of AI show that methods which leverage computation (search, learning) beat methods that leverage human cleverness, every time, in the long run. In 2020 Kaplan, Amodei and colleagues measured it: loss falls as a smooth power law in model size, data and compute. Those two documents explain the last six years: labs bought compute and let the model do the work. The Claude Code team keeps a framed copy of the Bitter Lesson on the wall and says it out loud: never bet against the model, build for the model six months from now.</p>
+<p>What it means for your workflow: elaborate scaffolding around a model tends to become debt when the next model arrives. Keep your setup thin: instructions, checks, memory. That is the whole design of the template repo.</p>
+<p>Do this:</p>
+<ol>
+<li>Read the Bitter Lesson. It is one page. Write two sentences in the vault about what it implies for your AGENTS.md.</li>
+<li>Skim the scaling-laws paper's figure 1. Ask Claude: &quot;what is a power law, and why does a straight line on a log-log plot matter&quot;.</li>
+<li>Talk to Sutton and Amodei on this island.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 4</code> is reading only: your vault note is the deliverable.</p>
+<p>Sources: <a href="http://www.incompleteideas.net/IncIdeas/BitterLesson.html">The Bitter Lesson (Sutton, 2019)</a> · <a href="https://arxiv.org/abs/2001.08361">Scaling Laws for Neural Language Models (Kaplan et al. 2020)</a> · <a href="https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works">How the Claude Code team works (Cherny interview notes)</a></p>
+<p>Rolinda's question: &quot;If bigger always wins, why do you keep telling me to write rules for it?&quot;</p>
+<h4 id="stop-5-from-base-model-to-assistant">Stop 5: From base model to assistant</h4>
+<p><em>Pretraining, supervised fine-tuning, RLHF, and Constitutional AI</em></p>
+<p>A base model completes text; it will happily continue a forum post with a worse forum post. Turning it into an assistant takes three more steps. Supervised fine-tuning: show it thousands of good question-answer pairs. Reinforcement learning from human feedback: humans rank answers, a reward model learns the ranking, the model is optimised against it. Anthropic added Constitutional AI: instead of only human rankings, the model critiques and revises its own answers against a written list of principles, which is cheaper, more transparent, and where the word &quot;constitution&quot; in Claude's system comes from. Anthropic's Core Views page explains why they think this ordering (capability, then alignment work in the open) is the responsible bet.</p>
+<p>Why you should care: the assistant behaviour you rely on is trained, not programmed. It is a distribution, not a rule engine. Rules you write (AGENTS.md, hooks) are how you add the rule engine back on top.</p>
+<p>Do this:</p>
+<ol>
+<li>Read the Constitutional AI abstract and the Core Views page.</li>
+<li>Ask Claude: &quot;show me a prompt where a base model and an assistant model would diverge&quot;, then reflect on which one you would want in a hook.</li>
+<li>Talk to Dario Amodei here.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 5</code> is reading only: your vault note is the deliverable.</p>
+<p>Sources: <a href="https://arxiv.org/abs/2212.08073">Constitutional AI (Bai et al. 2022)</a> · <a href="https://www.anthropic.com/news/core-views-on-ai-safety">Core Views on AI Safety (Anthropic)</a> · <a href="https://arxiv.org/abs/2203.02155">Training language models to follow instructions (InstructGPT, 2022)</a></p>
+<p>Rolinda's question: &quot;So somebody wrote down rules it argues with itself about?&quot;</p>
+<h4 id="stop-6-open-weights-versus-closed-models-on-your-own-mac">Stop 6: Open weights versus closed models, on your own Mac</h4>
+<p><em>Licences, Llama, Mistral, Qwen, Gemma; run a local model with Ollama on Apple silicon</em></p>
+<p>&quot;Open source&quot; is doing a lot of work in this field. Most open models are open weights: you can download the numbers and run them, but the training data and code are not published and the licence may restrict use (Llama's is not OSI-approved; Mistral and Qwen ship Apache-2.0 models; Gemma has its own terms). Closed models (Claude, GPT, Gemini) are API-only and generally stronger at the frontier. LeCun is the loudest voice for open weights; Anthropic's position is that frontier models need controlled release. Both positions have serious arguments; you should be able to state each.</p>
+<p>On your MacBook: Apple silicon shares memory between CPU and GPU, so a 7 to 8 billion parameter model in 4-bit runs comfortably on 16 GB. Ollama makes it one command. Once it runs, you can point OpenCode or any AGENTS.md-aware agent at it and see what the gap to a frontier model feels like in practice.</p>
+<p>Do this:</p>
+<ol>
+<li>brew install ollama &amp;&amp; ollama run llama3.2 (or qwen2.5:7b). Ask it the same three questions you asked Claude today. Note the differences in the vault.</li>
+<li>Read one licence: the Llama licence and the Apache-2.0 text. Write one sentence on what you may not do with each.</li>
+<li>Ask Claude: &quot;steelman the open-weights position, then steelman the controlled-release position, 150 words each&quot;.</li>
+<li>Talk to LeCun here.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 6</code> looks for workspace/winter/local-model.md naming ollama and the model you ran.</p>
+<p>Sources: <a href="https://ollama.com">Ollama</a> · <a href="https://ollama.com/library">Ollama model library</a> · <a href="https://opensource.org/ai/open-source-ai-definition">Open Source AI Definition (OSI)</a> · <a href="https://developer.apple.com/documentation/apple-silicon">Apple silicon and unified memory (Apple)</a></p>
+<p>Rolinda's question: &quot;Is the one on your laptop the same thing as Claude, just smaller?&quot;</p>
+<h4 id="stop-7-what-they-cannot-do-and-why">Stop 7: What they cannot do, and why</h4>
+<p><em>Hallucination, context windows, tokeniser quirks, and interpretability</em></p>
+<p>Four failure modes explain most of what goes wrong. Hallucination: the model predicts a plausible token sequence, and plausibility is not truth; a made-up citation is the model doing its job well. Context: it only sees what is in the window, so &quot;remember what we said last week&quot; needs a file (this is the whole point of the vault). Tokeniser quirks: it cannot reliably count letters or do arithmetic because it never sees letters or digits, only chunks. Non-determinism: sampling, plus floating-point on parallel hardware, means the same input can produce different output. Interpretability research (Chris Olah's team at Anthropic, and Distill before it) is the attempt to look inside: find the features and circuits that light up for a concept, so failures become explainable rather than folklore.</p>
+<p>The engineering response is Evening 3: do not trust, instrument. Tests, linters, hooks, evals.</p>
+<p>Do this:</p>
+<ol>
+<li>Ask Claude for a citation on an obscure topic, then verify it. Write in the vault what happened.</li>
+<li>Ask Claude to count the letter r in &quot;strawberry&quot; and then to explain why the answer might have been wrong in older models.</li>
+<li>Skim one Transformer Circuits article (the one on features in a real model). Ask Claude to summarise the method in five lines.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 7</code> is reading only: your vault note is the deliverable.</p>
+<p>Sources: <a href="https://transformer-circuits.pub">Transformer Circuits (Anthropic interpretability)</a> · <a href="https://distill.pub">Distill (2016 to 2021 archive)</a> · <a href="https://karpathy.ai/zero-to-hero.html">Karpathy on tokenisation (Zero to Hero)</a></p>
+<p>Rolinda's question: &quot;So when it is confidently wrong, that is not a bug you can fix?&quot;</p>
+<h4 id="stop-8-karpathy-s-ladder">Stop 8: Karpathy's ladder</h4>
+<p><em>Build a tiny language model yourself, with Claude as the tutor</em></p>
+<p>The best way to make the last seven stops stick is to build the smallest possible version. Karpathy's makemore trains a character-level model on a list of names in a few hundred lines. You do not need to write it: you need to run it, break it, and ask questions. Claude Code is an excellent tutor for this because the code is public and it can explain any line.</p>
+<p>Definition of done for Evening 2: a notebook in your repo that trains makemore on a list of Dutch first names (ask Claude to fetch a public list), and a vault note that explains, in your words, tokens, embeddings, attention, loss and sampling. If you can explain those five words to Rolinda, you understand more than most people using these tools.</p>
+<p>Do this:</p>
+<ol>
+<li>git clone https://github.com/karpathy/makemore into a scratch folder; run it on the bundled names.</li>
+<li>In Claude Code: &quot;swap the dataset for Dutch first names and add a cell that samples ten new names&quot;.</li>
+<li>Write the five-word vault note. Link it to every stop on this island.</li>
+<li>Talk to Karpathy here before you leave.</li>
+</ol>
+<p>Checked by: <code>vibe check --world winter 8</code> looks for workspace/winter/makemore/ with your notebook and samples.txt holding ten names.</p>
+<p>Sources: <a href="https://github.com/karpathy/makemore">makemore</a> · <a href="https://github.com/karpathy/nn-zero-to-hero">nn-zero-to-hero repo</a> · <a href="https://karpathy.ai/zero-to-hero.html">Zero to Hero course page</a></p>
+<p>Rolinda's question: &quot;Can it make up a name that sounds Dutch but is not real? That is a bit spooky.&quot;</p>
+<h3 id="evening-3-from-vibes-to-determinism">Evening 3: From vibes to determinism</h3>
+<p>The sandbox: where you stop trusting and start instrumenting. Dotfiles, tests, hooks, CI, evals.</p>
+<h4 id="stop-1-the-vibe-dial">Stop 1: The vibe dial</h4>
+<p><em>Karpathy's vibe coding, Cherny's instrumented coding, and knowing which end you are on</em></p>
+<p>In February 2025 Karpathy coined &quot;vibe coding&quot;: fully give in to the vibes, forget the code exists, accept all, paste errors back in. It works for throwaway projects and for learning, which is why Evening 1 started there. Boris Cherny, who built Claude Code, describes the other end: start in plan mode, iterate on the plan, then let the model one-shot the implementation; treat CLAUDE.md as an accumulating record of mistakes; and above all give Claude a way to verify its own work, which he says improves quality two to three times. The skill is not choosing a side; it is knowing which end of the dial a task needs and moving deliberately.</p>
+<p>The rule of thumb: if you would be embarrassed to lose it, or someone else depends on it, turn the dial toward checks. Everything on this island is a check.</p>
+<p>Do this:</p>
+<ol>
+<li>Write the dial into your AGENTS.md: which folders are vibe-only (scratch/), which need tests before merge.</li>
+<li>Read Karpathy's original post and Cherny's thread. Note in the vault the one sentence from each you disagree with.</li>
+<li>Talk to Karpathy and Cherny on this island.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 1</code> reads AGENTS.md for both ends of the dial: a vibe-only folder and where tests are required.</p>
+<p>Sources: <a href="https://x.com/karpathy/status/1886192184808149383">Karpathy's vibe coding post</a> · <a href="https://x.com/bcherny/status/2007179832300581177">How Boris uses Claude Code (thread)</a> · <a href="https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny">Building Claude Code with Boris Cherny (Pragmatic Engineer)</a></p>
+<p>Rolinda's question: &quot;So the fun version is allowed, as long as I know it is the fun version?&quot;</p>
+<h4 id="stop-2-dotfiles-and-dotfolders">Stop 2: Dotfiles and dotfolders</h4>
+<p><em>What .git, .gitignore, .env, .venv, .claude, .agents, .github and ~/.config actually are</em></p>
+<p>A leading dot hides a file from ls; that is the entire mechanism. The convention is that dotfiles hold configuration and dotfolders hold machinery. In a project: .git/ is the whole history (never edit by hand), .gitignore lists what git should not track, .env holds secrets and must be in .gitignore, .venv/ is a Python environment, .claude/ is Claude Code's config (settings, hooks, skills, agents), .agents/ is the cross-tool skills folder, .github/workflows/ holds CI. In your home folder: ~/.zshrc runs when a terminal opens, ~/.gitconfig is your git identity, ~/.config/ is where modern tools (Ghostty, starship) keep settings, ~/.claude/ is your personal Claude config across projects.</p>
+<p>Why they matter for consistency: every one of these is text, so every one can be versioned, diffed, and shared. A dotfiles repo is how experienced people make a new Mac feel like the old one in ten minutes (Evening 4, Stop 8).</p>
+<p>Do this:</p>
+<ol>
+<li>Run ls -la in the template repo and in your home folder. Ask Claude to explain every dot entry in one line each; put the list in the vault.</li>
+<li>Check that .env and .venv/ are in .gitignore. Commit a change to .gitignore and read the diff.</li>
+<li>Open ~/.claude/settings.json and the project's .claude/settings.json. Ask Claude which wins when they disagree, then verify in the docs.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 2</code> looks for workspace/desert/dotfiles.md explaining at least six dot entries.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/settings">Claude Code settings and precedence</a> · <a href="https://git-scm.com/docs/gitignore">gitignore documentation</a> · <a href="https://specifications.freedesktop.org/basedir-spec/latest/">XDG base directory spec (why ~/.config)</a></p>
+<p>Rolinda's question: &quot;Why is it all hidden if it is important?&quot;</p>
+<h4 id="stop-3-deterministic-checks">Stop 3: Deterministic checks</h4>
+<p><em>Tests, linters and formatters: the cheapest way to make an agent behave</em></p>
+<p>A model cannot be made deterministic; the checks around it can. Three tools do most of the work. A test runner (pytest) asserts that a function returns what you expect; if the agent breaks it, the test says so, not you. A linter (ruff check) catches unused imports, undefined names, and style drift; a formatter (ruff format) removes every argument about whitespace. Run all three before every commit and the agent's freedom is bounded exactly where you want it. In the template, workspace/python/scores.py gets its first test tonight.</p>
+<p>The habit Cherny recommends: give the agent the command that verifies its work and tell it to run it. Put that command in AGENTS.md under Commands. It will run it without being asked.</p>
+<p>Do this:</p>
+<ol>
+<li>uv pip install pytest ruff. Ask Claude: &quot;write tests for workspace/python/scores.py that cover the mean and the best score, then run them&quot;.</li>
+<li>Ask Claude to introduce a bug on purpose and show the failing test. Then ask it to fix it. Watch the loop.</li>
+<li>Add to AGENTS.md: &quot;Before finishing, run: ruff check &amp;&amp; ruff format &amp;&amp; pytest&quot;. Start a new session and see it obey.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 3</code> runs pytest over every test_*.py under workspace/ and wants it green.</p>
+<p>Sources: <a href="https://docs.pytest.org/en/stable/getting-started.html">pytest getting started</a> · <a href="https://docs.astral.sh/ruff/">ruff</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices (verification)</a></p>
+<p>Rolinda's question: &quot;So the test is the thing that does not have opinions?&quot;</p>
+<h4 id="stop-4-hooks-as-gates">Stop 4: Hooks as gates</h4>
+<p><em>PreToolUse and PostToolUse, permissions, and refusing edits that skip the checks</em></p>
+<p>Evening 1 used a hook to back up data. Tonight hooks become gates. A PreToolUse hook runs before Claude uses a tool and can allow, deny, or ask; a PostToolUse hook runs after and can run your formatter or tests; a Stop hook runs when Claude thinks it is finished and can send it back if the tests fail. Combined with the permissions system (which commands are allowed without asking) you get a policy that does not depend on the model's mood. This is how teams at Anthropic keep dozens of parallel agents from doing damage.</p>
+<p>Design rule: hooks are for things that must happen every time. Instructions in AGENTS.md are for things that should usually happen. Do not write a rule where you need a gate.</p>
+<p>Do this:</p>
+<ol>
+<li>Add a PostToolUse hook on Edit|Write that runs ruff format on the changed file (the hooks guide has the exact shape).</li>
+<li>Add a Stop hook that runs pytest -q and returns a non-zero exit with a message when tests fail. Ask Claude to break a test and watch it get sent back.</li>
+<li>Read the permissions page and add Bash(pytest*) to the allow list so it never asks for that.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 4</code> reads .claude/settings.json for a hook that gates: one that runs ruff or pytest, or a PreToolUse or Stop hook.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/hooks-guide">Hooks guide</a> · <a href="https://code.claude.com/docs/en/hooks">Hooks reference</a> · <a href="https://code.claude.com/docs/en/permissions">Permissions</a></p>
+<p>Rolinda's question: &quot;So this is the part where it is not allowed to be lazy?&quot;</p>
+<h4 id="stop-5-plan-spec-small-changes">Stop 5: Plan, spec, small changes</h4>
+<p><em>The Cherny workflow: plan mode, a spec, a to-do list, one PR at a time</em></p>
+<p>Most bad agent output comes from a bad first prompt. The fix is procedural. Start in plan mode (Shift+Tab twice in Claude Code): the model reads, proposes, and does not edit. Go back and forth until the plan is right. Then switch to auto-accept and let it execute. For anything bigger than a bug fix, ask it to write a spec first, then a plan, then a to-do list, and walk through it. Keep pull requests small enough to review in five minutes; Anthropic runs a first-pass automated review on every PR and a human still approves the merge.</p>
+<p>Two commands to memorise: /compact when the context gets long and slow, /rewind (or checkpoints) to go back to before a bad step without losing the conversation.</p>
+<p>Do this:</p>
+<ol>
+<li>Start a task in plan mode and refuse to leave it until the plan lists every file it will touch.</li>
+<li>Ask Claude to write a spec for &quot;players can have a nickname&quot; in docs/specs/, then implement from the spec in a fresh session.</li>
+<li>Open a PR with the GitHub CLI and ask Claude to review it before you merge: gh pr create, then &quot;review PR #1 for correctness and missing tests&quot;.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 5</code> looks for workspace/specs/<feature>.md with ## sections and twelve lines.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/common-workflows">Common workflows (plan mode, resume, images)</a> · <a href="https://code.claude.com/docs/en/checkpointing">Checkpointing and rewind</a> · <a href="https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it">How to use Claude Code like the people who built it (Every)</a></p>
+<p>Rolinda's question: &quot;So you make it explain the plan first, like a contractor?&quot;</p>
+<h4 id="stop-6-ci-the-check-that-runs-without-you">Stop 6: CI: the check that runs without you</h4>
+<p><em>GitHub Actions on every push, so the main branch is always green</em></p>
+<p>Local checks depend on someone remembering to run them. Continuous integration runs them on a server on every push and shows a red or green mark on the commit. A minimal workflow file in .github/workflows/ci.yml checks out the code, installs Python, runs ruff and pytest. Once it exists, &quot;is main green?&quot; is a fact, not a feeling, and the agent can be told to keep it green. This is also where DuckDB queries can be smoke-tested against the sample data so the schema contract from Evening 1 is enforced.</p>
+<p>Do this:</p>
+<ol>
+<li>Ask Claude: &quot;add a GitHub Actions workflow that runs ruff and pytest on push and pull request, Python 3.12, using uv&quot;. Push it. Watch the Actions tab.</li>
+<li>Break a test, push, see red. Fix, push, see green. Take a screenshot for the vault.</li>
+<li>Add branch protection so main cannot be merged to while red (Settings, Branches).</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 6</code> parses .github/workflows/*.yml and wants one that runs ruff or pytest.</p>
+<p>Sources: <a href="https://docs.github.com/en/actions/quickstart">GitHub Actions quickstart</a> · <a href="https://docs.astral.sh/uv/guides/integration/github/">uv in GitHub Actions</a> · <a href="https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches">Protected branches</a></p>
+<p>Rolinda's question: &quot;So the computer checks the computer's work before you look at it?&quot;</p>
+<h4 id="stop-7-repetitive-tasks-reliably">Stop 7: Repetitive tasks, reliably</h4>
+<p><em>Headless runs, schedules, idempotency, and when a subagent beats a prompt</em></p>
+<p>Evening 1 scheduled one headless job. The engineering questions arrive the second morning: what if it runs twice, what if the input is empty, what if it half-finishes. The answers are old: make jobs idempotent (running twice yields the same result), write output to a temporary file and move it into place, log every run with a timestamp, and fail loudly. A subagent with a narrow system prompt and a fixed tool list is more predictable than a general session for a repetitive job, because it cannot wander. Batch work (&quot;do this for every file in data/&quot;) is where claude -p with --output-format json shines: you get a parsable result per item.</p>
+<p>Do this:</p>
+<ol>
+<li>Rewrite the scorekeeper job so it writes to Scores.md.tmp and renames at the end. Run it twice; diff the vault.</li>
+<li>Ask Claude to add a logs/ line per run with start time, end time, and exit code. Check it after tomorrow's 08:00 run.</li>
+<li>Try one batch: for f in data/*.csv; do claude -p &quot;summarise $f in one line&quot; --output-format text; done.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 7</code> looks for workspace/jobs/ with your script and log.csv holding two recorded runs.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/headless">Headless / programmatic use</a> · <a href="https://code.claude.com/docs/en/sub-agents">Subagents</a> · <a href="https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html">launchd (Apple)</a></p>
+<p>Rolinda's question: &quot;What happens if it runs while I am editing the same file?&quot;</p>
+<h4 id="stop-8-evals-measure-the-agent-not-the-vibe">Stop 8: Evals: measure the agent, not the vibe</h4>
+<p><em>A tiny harness that scores your prompts and skills on fixed cases</em></p>
+<p>Once you have rules, hooks and CI, the last question is whether your instructions are actually improving the output. An eval is a fixed set of inputs with expected outputs, run through the model, scored. It can be five cases in a CSV. The point is not statistics; it is that when you change AGENTS.md or a skill, you can see whether things got better or worse instead of guessing. Anthropic's own guidance on building evals is short and practical. Combine with claude -p and you have a loop: change the instruction, run the five cases, compare.</p>
+<p>Definition of done for Evening 3: tests, a formatter hook, a Stop gate, green CI, an idempotent scheduled job, and a five-case eval for one skill. You now have a system that behaves, with a model inside it that does not.</p>
+<p>Do this:</p>
+<ol>
+<li>Write evals/cases.csv with five prompts and the answer you expect (yes/no or a short string).</li>
+<li>Ask Claude to write evals/run.py that calls claude -p per case and prints a score. Run it before and after changing one rule.</li>
+<li>Record both scores in the vault. That number is your first eval.</li>
+</ol>
+<p>Checked by: <code>vibe check --world desert 8</code> looks for workspace/evals/cases.csv with five cases and workspace/evals/run.py.</p>
+<p>Sources: <a href="https://docs.claude.com/en/docs/test-and-evaluate/develop-tests">Building evals (Anthropic docs)</a> · <a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices</a> · <a href="https://github.com/anthropics/anthropic-cookbook">Anthropic cookbook (evals examples)</a></p>
+<p>Rolinda's question: &quot;So you grade it like homework. Does it know?&quot;</p>
+<h3 id="evening-4-terminal-git-and-the-toolbelt-on-apple-silicon">Evening 4: Terminal, git and the toolbelt, on Apple silicon</h3>
+<p>Production: your machine, set up like someone who does this every day. Mac, Chrome, Ghostty, git, Claude everywhere.</p>
+<h4 id="stop-1-the-mac-properly">Stop 1: The Mac, properly</h4>
+<p><em>Homebrew, Apple silicon, Chrome, and the three settings that save an hour a week</em></p>
+<p>Everything on this island assumes a MacBook with Apple silicon and Chrome as the default browser, because that is what you have and it makes every instruction exact. Homebrew is the package manager; on Apple silicon it lives in /opt/homebrew, which is why some old guides fail. Rosetta is not needed for anything in this course. A Brewfile is a text list of everything you install, so the next Mac is one command away. Chrome is the browser Claude in Chrome and Claude Code's browser tools target, and it is the one whose DevTools you will use in Stop 6.</p>
+<p>Do this:</p>
+<ol>
+<li>Install Homebrew from brew.sh. Then brew bundle dump to write a Brewfile of what you already have; commit it to your dotfiles repo (Stop 8).</li>
+<li>Set Chrome as default. In Chrome, sign in to Claude and pin the tab.</li>
+<li>Ask Claude: &quot;what is in /opt/homebrew/bin and why is it on my PATH&quot;, and put the answer in the vault.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 1</code> looks for workspace/dotfiles/Brewfile with at least five entries.</p>
+<p>Sources: <a href="https://brew.sh">Homebrew</a> · <a href="https://docs.brew.sh/Brew-Bundle-and-Brewfile">Homebrew Bundle (Brewfile)</a> · <a href="https://developer.apple.com/documentation/apple-silicon">Apple silicon developer docs</a></p>
+<p>Rolinda's question: &quot;Is this the part where it stops being a laptop and becomes a workstation?&quot;</p>
+<h4 id="stop-2-a-terminal-you-enjoy">Stop 2: A terminal you enjoy</h4>
+<p><em>Ghostty, zsh, starship, fzf, ripgrep, bat, eza, and Tom's configs</em></p>
+<p>Claude Code lives in a terminal, so the terminal is the room you work in all day. Ghostty (Mitchell Hashimoto, who built Terraform and Vagrant) is fast, native on macOS, GPU-rendered, and configured with one text file in ~/.config/ghostty/config. Around it: zsh with a prompt from starship, fzf for fuzzy history and file search, ripgrep instead of grep, bat instead of cat, eza instead of ls, zoxide for jumping between folders. None of these are required; all of them are the difference between tolerating the terminal and preferring it. Keeping your configs in a repository is the fastest way back to a good setup on a new machine, and reading them is a good way to learn what each tool does.</p>
+<p>Do this:</p>
+<ol>
+<li>brew install --cask ghostty, then brew install starship fzf ripgrep bat eza zoxide.</li>
+<li>Write your own ghostty/config and .zshrc, one setting at a time, and read every line before you keep it. Ask Claude to explain each line you do not understand.</li>
+<li>Open Ghostty, run claude, and try Ctrl+R with fzf. That is the loop for the rest of your life.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 2</code> looks for workspace/dotfiles/ghostty/config and workspace/dotfiles/zshrc, both written.</p>
+<p>Sources: <a href="https://ghostty.org">Ghostty</a> · <a href="https://dotfiles.github.io">GitHub: dotfiles guide</a> · <a href="https://starship.rs">starship</a> · <a href="https://github.com/junegunn/fzf">fzf</a> · <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a></p>
+<p>Rolinda's question: &quot;Why does the terminal need to be pretty?&quot;</p>
+<h4 id="stop-3-git-part-one">Stop 3: Git, part one</h4>
+<p><em>Fork, clone, branch, commit, push, pull request, learned by doing it to the template</em></p>
+<p>Git is a database of snapshots with names. A repository is the database; a commit is a snapshot; a branch is a movable name pointing at a commit; a remote is another copy of the database on another computer; a fork is your own copy on GitHub; a pull request is a request to merge your branch into someone else's. Every command tonight is one of those nouns plus a verb. You will do it by hand once, then let Claude do it, then check that you can still read what it did.</p>
+<p>Do this:</p>
+<ol>
+<li>Fork the template on GitHub, gh repo clone YOUR-USER/vibe, git switch -c feature/nickname.</li>
+<li>Make one change by hand, git add -p (review every hunk), git commit, git push -u origin feature/nickname, gh pr create.</li>
+<li>Ask Claude to do the same for a second change and read git log --oneline --graph afterwards.</li>
+<li>Talk to Torvalds on this island.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 3</code> reads git: an origin remote on github.com and a second branch.</p>
+<p>Sources: <a href="https://git-scm.com/docs/gittutorial">Git tutorial (official)</a> · <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">GitHub: fork a repository</a> · <a href="https://cli.github.com/manual/">GitHub CLI manual</a></p>
+<p>Rolinda's question: &quot;So a branch is just a bookmark that moves?&quot;</p>
+<h4 id="stop-4-git-part-two">Stop 4: Git, part two</h4>
+<p><em>Revert, reset, rebase, cherry-pick, worktrees, and how Cherny runs five agents at once</em></p>
+<p>Undo has flavours. git revert makes a new commit that undoes an old one (safe, shareable). git reset moves the branch name backwards (rewrites your local history; never on shared branches). git rebase replays your commits on top of someone else's, giving a straight line instead of a merge bubble; interactive rebase lets you squash five messy agent commits into one clean one. git cherry-pick copies a single commit across. Worktrees check out several branches into several folders from one repository, which is how you run several agents on the same repo at once; Cherny uses separate checkouts and numbers the tabs.</p>
+<p>Do this:</p>
+<ol>
+<li>On a throwaway branch: make three commits, git rebase -i HEAD~3, squash them into one. Then git reflog to see nothing was lost.</li>
+<li>git worktree add ../vibe-2 feature/second, open a second Ghostty tab, run a second Claude there. Give each a different task.</li>
+<li>Ask Claude to revert a commit by hash and explain the difference from reset in the commit message.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 4</code> reads the reflog for a rebase, revert, cherry-pick or reset.</p>
+<p>Sources: <a href="https://git-scm.com/docs/git-rebase">git rebase</a> · <a href="https://git-scm.com/docs/git-worktree">git worktree</a> · <a href="https://infoq.com/news/2026/01/claude-code-creator-workflow/">Cherny on parallel checkouts (InfoQ)</a></p>
+<p>Rolinda's question: &quot;If you can rewrite history, how do you know what actually happened?&quot;</p>
+<h4 id="stop-5-claude-code-the-power-settings">Stop 5: Claude Code, the power settings</h4>
+<p><em>Plan mode, --continue, /compact, /rewind, permissions, memory, and the surfaces: terminal, web, phone and Chrome</em></p>
+<p>You have used Claude Code for three evenings; tonight you configure it. Personal memory in ~/.claude/CLAUDE.md applies to every project. Project memory in the repo's CLAUDE.md is versioned with the code. claude --continue resumes; /compact summarises a long session; /rewind goes back a step; plan mode keeps it from editing. Sessions can move between the terminal, the web and the iOS app (Cherny starts sessions from his phone in the morning). Set your permissions once so the routine commands never ask, and keep the dangerous ones asking.</p>
+<p>The browser is a surface too. Claude in Chrome is the official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome, so the agent in your terminal can open your own game, take a screenshot and read the console. An agent in your logged-in browser acts as you: use it on tabs you would let a colleague touch, and read the permission prompt every time.</p>
+<p>Do this:</p>
+<ol>
+<li>Write your personal ~/.claude/CLAUDE.md: how you like explanations, which commands are fine, what to never do. Ten lines.</li>
+<li>Configure allowed tools in settings for Bash(pytest*), Bash(ruff*), Bash(git status*). The check wants at least three patterns in .claude/settings.json.</li>
+<li>Try the desktop app and the web session once, so you know they exist when you need them.</li>
+<li>Install Claude in Chrome, give it one repetitive task you did last week, and note in the vault what it got wrong.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 5</code> reads .claude/settings.json for a permissions allow list.</p>
+<p>Sources: <a href="https://code.claude.com/docs/en/memory">Memory (CLAUDE.md, imports, precedence)</a> · <a href="https://code.claude.com/docs/en/settings">Settings</a> · <a href="https://code.claude.com/docs/en/cli-reference">CLI reference</a> · <a href="https://howborisusesclaudecode.com/">How Boris uses Claude Code (curated tips)</a> · <a href="https://claude.com/chrome">Claude in Chrome</a> · <a href="https://code.claude.com/docs/en/chrome">Claude Code and Chrome</a></p>
+<p>Rolinda's question: &quot;So it has a memory now, but only if you write it down for it?&quot;</p>
+<h4 id="stop-6-fork-the-game">Stop 6: Fork the game</h4>
+<p><em>Fork it on GitHub and with vibe fork, then four challenges: make it, configure it, add a topic, break it and repair it</em></p>
+<p>Three evenings you used the tools. Tonight you take one of them apart. A fork is your own copy of somebody else's repository: on GitHub it is a button, on your machine it is a folder. <code>vibe fork</code> writes one into <code>workspace/forks/vibe-map/</code> with the game's source, its vendor files and <code>tools/build.py</code>, so <code>just build</code> there produces your own <code>game/vibe-map.html</code>. Nothing you do in the fork touches the course you are playing, which is the point: it is the copy you are allowed to break.</p>
+<p>Where the settings live. Your camp's <code>config/camp.toml</code> is the journey level: who you are, how hard, which theme. The fork's <code>src/config/</code> is the source level: world scale, island radius, palette. Changing the first changes your game; changing the second changes the game. Knowing which one you are holding is most of what separation of concerns means. <code>docs/CONFIG.md</code> is the full table.</p>
+<p>Do this:</p>
+<ol>
+<li>exists: fork tpetedb/vibe-map on GitHub (or <code>gh repo fork tpetedb/vibe-map</code>), then run <code>vibe fork</code> in your camp. Check it with <code>vibe check --fork exists</code>.</li>
+<li>config: change one value in <code>workspace/forks/vibe-map/src/config/00-config.js</code>, the world scale or a palette colour, then <code>just build</code> in the fork and open the result. Check it with <code>vibe check --fork config</code>.</li>
+<li>topic: take a topic from <code>vibe news</code> or an article you read and have your agent add it to the fork, a stop in <code>tools/generated/campaign.json</code> or a node in <code>tools/generated/tree.js</code>, then rebuild. Check it with <code>vibe check --fork topic</code>.</li>
+<li>repair: break the build on purpose (rename a file in <code>src/game/</code>), run <code>just record</code>, read the error, fix it, and run <code>just record</code> again. The failing run followed by the passing one in <code>repair.json</code> is the evidence. Check it with <code>vibe check --fork repair</code>.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 6</code> runs all four challenges plus the note; <code>vibe check --fork &lt;challenge&gt;</code> runs one of them.</p>
+<p>Sources: <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">Fork a repository (GitHub Docs)</a> · <a href="https://cli.github.com/manual/gh_repo_fork">gh repo fork</a> · <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork">Syncing a fork (GitHub Docs)</a> · <a href="https://github.com/tpetedb/vibe-map">tpetedb/vibe-map, the repository you are forking</a></p>
+<p>Rolinda's question: &quot;If I break my copy, does the real one notice?&quot;</p>
+<h4 id="stop-7-the-other-agents">Stop 7: The other agents</h4>
+<p><em>OpenCode, Codex CLI, Gemini CLI: same AGENTS.md, same .agents/skills, different engines</em></p>
+<p>This course is Anthropic-centric on purpose: one tool, learned deeply. The setup you built is not locked to it. AGENTS.md is read by OpenAI's Codex CLI, Google's Gemini CLI, Cursor, Copilot and OpenCode, an open-source terminal agent that can run against Claude, GPT, Gemini or a local Ollama model. Your skills in .agents/skills/ load in OpenCode and Codex unchanged. Try one alternative tonight, on the same repo, with the same instructions, and see what changes: usually the engine, rarely the workflow.</p>
+<p>Do this:</p>
+<ol>
+<li>brew install opencode (or the install script on opencode.ai). Run it in the template repo; confirm it picked up AGENTS.md and the skills.</li>
+<li>Point it at your local Ollama model from Evening 2 and ask for the same test you asked Claude for in Evening 3. Compare.</li>
+<li>Write the comparison in the vault: speed, correctness, what needed hand-holding.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 7</code> looks for workspace/agents/comparison.md naming two agents over eight lines.</p>
+<p>Sources: <a href="https://opencode.ai">OpenCode</a> · <a href="https://agents.md">AGENTS.md</a> · <a href="https://agentskills.io">Agent Skills standard</a> · <a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a></p>
+<p>Rolinda's question: &quot;So the rules are yours and the robot is replaceable?&quot;</p>
+<h4 id="stop-8-your-dotfiles-repo">Stop 8: Your dotfiles repo</h4>
+<p><em>Everything you configured tonight, versioned, so the next Mac is ten minutes</em></p>
+<p>The graduation project is a repository called dotfiles: your .zshrc, Ghostty config, starship config, .gitconfig, personal ~/.claude/CLAUDE.md, a Brewfile, and an install script that symlinks them into place. Tom's is the reference. When it exists, a new machine is: install Homebrew, clone dotfiles, run install. It is also the most honest record of how you actually work, and a good thing to let Claude read when it sets up a project for you.</p>
+<p>Definition of done for the course: four islands built, a template repo you understand line by line, a vault with your own words in it, and a dotfiles repo. Rolinda can pour the last one.</p>
+<p>Do this:</p>
+<ol>
+<li>mkdir ~/dotfiles &amp;&amp; cd ~/dotfiles &amp;&amp; git init. Move the config files in and symlink them back (ask Claude to write install.sh using ln -sf).</li>
+<li>Add the Brewfile from Stop 1. Push to GitHub, private if you prefer.</li>
+<li>Write the final vault note: what you would tell yourself before Evening 1.</li>
+</ol>
+<p>Checked by: <code>vibe check --world prod 8</code> looks for workspace/dotfiles/ as a git repo with install.sh (ln -s) and a README.md.</p>
+<p>Sources: <a href="https://dotfiles.github.io">GitHub: dotfiles guide</a> · <a href="https://docs.brew.sh/Brew-Bundle-and-Brewfile">Homebrew Bundle</a></p>
+<p>Rolinda's question: &quot;And then you never have to do any of this again?&quot;</p>
+<h3 id="the-mentors-and-how-an-encounter-works">The mentors, and how an encounter works</h3>
+<p>Twelve real people from the field stand on the islands. An encounter is a dialogue of three or four exchanges, walked one question at a time: every line the mentor speaks is a paraphrase of something that person is on record saying, with the link it came from next to it, never an invented quote. The sources are listed with each mentor below.</p>
+<p>Each encounter sets one exercise of under fifteen minutes, offline, in <code>workspace/mentors/&lt;id&gt;/</code>: a small script that must print a particular line, or a note that must hold the sections the exercise asks for, plus <code>notes.md</code> with a <code>## What I learned</code> section of at least twenty-five of your own words.</p>
+<p>Checked by: <code>vibe check --mentor &lt;id&gt;</code>, or <code>--mentor all</code> for the lot. A verified encounter is worth half a workstream in XP, turns the mentor's ring green and raises a plaque on their spot with their one line on it, writes the encounter and the exercise into their vault note, and all twelve earn the <code>mentored</code> badge. <code>vibe mentor &lt;id&gt; deep</code> and <code>vibe mentor &lt;id&gt; skip</code> still record which way you went.</p>
+<p>Twelve real people from the field stand on the islands. Every line a mentor speaks is a paraphrase of something that person is on record saying, with the link it came from, never an invented quote. <code>vibe check --mentor &lt;id&gt;</code> verifies the exercise.</p>
+<p><strong>Boris Cherny</strong>, Creator and head of Claude Code, Anthropic (Innovation Campus). Built Claude Code as an internal experiment at Anthropic in 2024; it became the company's main coding tool and then a product. Previously a principal engineer at Meta and author of Programming TypeScript. Runs five Claude sessions in his terminal and five to ten on the web, each in its own checkout.</p>
+<p>Ask them: <em>How many of your parallel sessions actually finish?</em> Sources: <a href="https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny">Building Claude Code with Boris Cherny (Pragmatic Engineer)</a> · <a href="https://infoq.com/news/2026/01/claude-code-creator-workflow/">Inside the workflow of Claude Code's creator (InfoQ)</a> · <a href="https://x.com/bcherny/status/2007179832300581177">His thread on X</a> · <a href="https://howborisusesclaudecode.com/">How Boris uses Claude Code (curated)</a></p>
+<p><strong>Cat Wu</strong>, Founding engineer and product lead, Claude Code (Innovation Campus). Co-built Claude Code from the first internal prototype and shaped it into a product used far beyond engineering. Talks about the workflows Anthropic's own engineers discovered: slash commands for feature development and first-pass code review, subagents for narrow jobs.</p>
+<p>Ask them: <em>What do the non-engineers at Anthropic use it for?</em> Sources: <a href="https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it">How to use Claude Code like the people who built it (Every, with Cat Wu and Boris Cherny)</a></p>
+<p><strong>Andrej Karpathy</strong>, Researcher, educator; ex OpenAI, ex Tesla AI (Cold Storage Cluster). Founding member of OpenAI, led Tesla Autopilot's AI team, taught Stanford's first deep-learning class, and now teaches the internet: the Zero to Hero series builds neural networks from scratch in code, and the general-audience talks explain LLMs without maths. Coined &quot;vibe coding&quot; in 2025 and &quot;Software 3.0&quot; for programming in natural language.</p>
+<p>Ask them: <em>If the prompt is the program, who is the programmer?</em> Sources: <a href="https://karpathy.ai/">karpathy.ai</a> · <a href="https://karpathy.ai/zero-to-hero.html">Zero to Hero course</a> · <a href="https://github.com/karpathy/nn-zero-to-hero">nn-zero-to-hero on GitHub</a> · <a href="https://x.com/karpathy/status/1886192184808149383">vibe coding post</a></p>
+<p><strong>Yann LeCun</strong>, Turing Award 2018; convolutional networks; Meta AI chief scientist (Cold Storage Cluster). Applied backpropagation to handwritten digits in 1989 and invented the convolutional network that read cheques and zip codes in production in the 1990s. Shared the 2018 Turing Award with Hinton and Bengio. Argues loudly for open-weight models and that autoregressive LLMs are not the road to human-level intelligence; his alternative is JEPA, predicting in representation space.</p>
+<p>Ask them: <em>He does not think the thing I am using is the future?</em> Sources: <a href="https://openreview.net/pdf?id=BZ5a1r-kVsf">A Path Towards Autonomous Machine Intelligence (LeCun 2022, OpenReview)</a> · <a href="https://ieeexplore.ieee.org/document/6795724">Backpropagation applied to handwritten zip code recognition (1989)</a> · <a href="https://github.com/karpathy/lecun1989-repro">Karpathy's reproduction</a> · <a href="https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/">V-JEPA (Meta AI)</a> · <a href="https://time.com/6694432/yann-lecun-meta-ai-interview/">Interview with TIME</a></p>
+<p><strong>Geoffrey Hinton</strong>, Backpropagation, deep learning; Nobel Prize in Physics 2024 (Cold Storage Cluster). Co-author of the 1986 paper that made backpropagation practical, teacher of Sutskever and Krizhevsky (AlexNet), Turing Award 2018, Nobel Prize in Physics 2024 for foundational work on learning in neural networks. Left Google in 2023 to speak freely about risks.</p>
+<p>Ask them: <em>He won a physics prize for this?</em> Sources: <a href="https://www.nature.com/articles/323533a0">Learning representations by back-propagating errors (Nature 1986)</a> · <a href="https://www.nobelprize.org/prizes/physics/2024/hinton/facts/">Nobel Prize 2024, Hinton facts</a> · <a href="https://www.cs.toronto.edu/~hinton/">His page at Toronto</a> · <a href="https://www.cam.ac.uk/research/news/university-of-cambridge-alumnus-awarded-2024-nobel-prize-in-physics">Cambridge on the 2024 Nobel Prize</a></p>
+<p><strong>Fei-Fei Li</strong>, ImageNet; Stanford HAI co-director (Cold Storage Cluster). Built ImageNet from 2007: 14 million hand-labelled images, when most of the field thought data was a solved problem and algorithms were the bottleneck. The 2012 ImageNet competition result started the deep-learning era. Co-founded Stanford's Institute for Human-Centered AI.</p>
+<p>Ask them: <em>So the list of labelled pictures mattered more than the clever maths?</em> Sources: <a href="https://www.image-net.org">ImageNet</a> · <a href="https://hai.stanford.edu">Stanford HAI</a></p>
+<p><strong>Rich Sutton</strong>, Reinforcement learning; the Bitter Lesson; Turing Award 2024 (Cold Storage Cluster). Co-wrote the standard reinforcement learning textbook, shared the 2024 Turing Award with Andrew Barto, and in 2019 wrote the one-page Bitter Lesson that the Claude Code team keeps on the wall.</p>
+<p>Ask them: <em>Bitter for whom?</em> Sources: <a href="http://www.incompleteideas.net/IncIdeas/BitterLesson.html">The Bitter Lesson</a> · <a href="http://incompleteideas.net/book/the-book.html">Reinforcement Learning: An Introduction (free)</a> · <a href="https://en.wikipedia.org/wiki/Bitter_lesson">The bitter lesson, summarised</a> · <a href="https://www.amii.ca/updates-insights/rich-sutton-awarded-a-m-turing-award-for-reinforcement-learning-research">Turing Award 2024 (Amii)</a></p>
+<p><strong>Dario Amodei</strong>, CEO and co-founder, Anthropic (Cold Storage Cluster). Co-author of the 2020 scaling-laws paper, former VP of research at OpenAI, co-founded Anthropic in 2021 with a safety-first thesis. Wrote Core Views on AI Safety and the essay Machines of Loving Grace on what could go right.</p>
+<p>Ask them: <em>Does the man who runs the company think it is dangerous?</em> Sources: <a href="https://arxiv.org/abs/2001.08361">Scaling Laws for Neural Language Models</a> · <a href="https://www.anthropic.com/news/core-views-on-ai-safety">Core Views on AI Safety</a> · <a href="https://darioamodei.com/machines-of-loving-grace">Machines of Loving Grace</a></p>
+<p><strong>Chris Olah</strong>, Interpretability research lead, Anthropic (Sandbox Environment). Co-founder of Anthropic and of Distill, the journal that made machine learning explanations visual. Leads the work on looking inside models: finding features and circuits that correspond to concepts, including in production Claude models.</p>
+<p>Ask them: <em>So someone is actually reading its mind?</em> Sources: <a href="https://transformer-circuits.pub">Transformer Circuits</a> · <a href="https://distill.pub">Distill</a></p>
+<p><strong>Mitchell Hashimoto</strong>, Creator of Ghostty; co-founder of HashiCorp (Production Environment). Co-founded HashiCorp (Vagrant, Terraform), then spent his time building Ghostty: a terminal emulator that is fast, native on macOS, and configured with one plain text file. Writes carefully about how he uses AI agents in his own work.</p>
+<p>Ask them: <em>Why did the Terraform man build a terminal?</em> Sources: <a href="https://ghostty.org">Ghostty</a> · <a href="https://ghostty.org/docs/config">Ghostty configuration reference</a> · <a href="https://mitchellh.com">mitchellh.com</a></p>
+<p><strong>Linus Torvalds</strong>, Creator of Linux and git (Production Environment). Wrote git in 2005 in about two weeks after the Linux kernel lost its previous version-control tool. Designed it around content-addressed snapshots and cheap branching, which is why every command at Stops 3 and 4 makes sense once you know that model.</p>
+<p>Ask them: <em>Two weeks? For the thing everyone uses?</em> Sources: <a href="https://git-scm.com/book/en/v2">Pro Git (free book)</a> · <a href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects">git internals chapter</a></p>
+<p><strong>The OpenCode team</strong>, Open-source terminal coding agent (Production Environment). An open-source agent for the terminal that works with Claude, GPT, Gemini and local models, reads AGENTS.md and the Agent Skills standard. Useful as the second opinion that shows which parts of your setup are yours and which belong to the vendor.</p>
+<p>Ask them: <em>So this one is free and it reads my rules too?</em> Sources: <a href="https://opencode.ai">OpenCode</a> · <a href="https://github.com/sst/opencode">OpenCode on GitHub</a> · <a href="https://opencode.ai/docs/rules/">Rules and AGENTS.md</a></p>
+<h3 id="the-artifacts-and-doing-them-for-real">The artifacts, and doing them for real</h3>
+<p>Twenty-one artifacts stand on the four islands. Walk into the yellow ring and press <strong>Inspect</strong>: the sheet explains one concept, a small terminal demonstrates it, and <strong>Do it for real</strong> sets a task of under twenty minutes written from the official documentation of the thing the artifact stands for. The work goes in <code>workspace/artifacts/&lt;id&gt;/</code> and <code>vibe check --artifact &lt;id&gt;</code> runs it.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Island</th>
+<th>The concept</th>
+<th>Do it for real</th>
+<th>The documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The cafe</td>
+<td>Innovation Campus</td>
+<td>client, server, protocol</td>
+<td>Serve one request and get a 404 on purpose (15 min)</td>
+<td><a href="https://docs.python.org/3/library/http.server.html">Python docs: http.server</a></td>
+</tr>
+<tr>
+<td>The fountain</td>
+<td>Innovation Campus</td>
+<td>a cache</td>
+<td>Put a cache in front of a slow answer (10 min)</td>
+<td><a href="https://docs.python.org/3/library/functools.html#functools.lru_cache">Python docs: functools.lru_cache</a></td>
+</tr>
+<tr>
+<td>The well</td>
+<td>Innovation Campus</td>
+<td>a database</td>
+<td>A table, an index and one transaction (15 min)</td>
+<td><a href="https://docs.python.org/3/library/sqlite3.html">Python docs: sqlite3</a></td>
+</tr>
+<tr>
+<td>The lighthouse</td>
+<td>Innovation Campus</td>
+<td>DNS, names to addresses</td>
+<td>Turn a name into an address, twice over (10 min)</td>
+<td><a href="https://docs.python.org/3/library/socket.html#socket.gethostbyname">Python docs: socket.gethostbyname</a></td>
+</tr>
+<tr>
+<td>The dock</td>
+<td>Innovation Campus</td>
+<td>containers and deployment</td>
+<td>Write a Dockerfile and build the image (20 min)</td>
+<td><a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Docker docs: Writing a Dockerfile</a></td>
+</tr>
+<tr>
+<td>The windmill</td>
+<td>Innovation Campus</td>
+<td>schedules and cron</td>
+<td>A workflow that turns without you (15 min)</td>
+<td><a href="https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows">GitHub Actions docs: Events that trigger workflows</a></td>
+</tr>
+<tr>
+<td>The balloon</td>
+<td>Innovation Campus</td>
+<td>the cloud, rented by the hour</td>
+<td>Put a number on the meter before you launch (15 min)</td>
+<td><a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-on-demand-instances.html">AWS docs: On-Demand Instances</a></td>
+</tr>
+<tr>
+<td>The mountain</td>
+<td>Innovation Campus</td>
+<td>the stack, layer by layer</td>
+<td>Name the six layers under your own keystroke (10 min)</td>
+<td><a href="https://docs.python.org/3/library/platform.html">Python docs: platform</a></td>
+</tr>
+<tr>
+<td>The market stall</td>
+<td>Innovation Campus</td>
+<td>an API and its documentation</td>
+<td>An API with a menu it writes itself (20 min)</td>
+<td><a href="https://fastapi.tiangolo.com/tutorial/first-steps/">FastAPI docs: First Steps</a></td>
+</tr>
+<tr>
+<td>The bridge</td>
+<td>Innovation Campus</td>
+<td>an integration, MCP</td>
+<td>Declare one server on the other side (15 min)</td>
+<td><a href="https://modelcontextprotocol.io/docs/develop/build-server">MCP docs: Build an MCP server</a></td>
+</tr>
+<tr>
+<td>The factory</td>
+<td>Innovation Campus</td>
+<td>a data pipeline</td>
+<td>Raw to bronze to silver to gold, in one file (20 min)</td>
+<td><a href="https://duckdb.org/docs/current/clients/python/overview.html">DuckDB docs: Python API</a></td>
+</tr>
+<tr>
+<td>The post office</td>
+<td>Innovation Campus</td>
+<td>message queues and pub/sub</td>
+<td>A queue, a retry and a dead letter (20 min)</td>
+<td><a href="https://docs.python.org/3/library/queue.html">Python docs: queue</a></td>
+</tr>
+<tr>
+<td>The switchboard</td>
+<td>Innovation Campus</td>
+<td>one named command per task</td>
+<td>Write a justfile with three recipes and let your agent run one (15 min)</td>
+<td><a href="https://just.systems/man/en/recipes.html">just manual: Recipes</a></td>
+</tr>
+<tr>
+<td>The shop</td>
+<td>Sandbox Environment</td>
+<td>a package registry</td>
+<td>Buy a library and keep the receipt (15 min)</td>
+<td><a href="https://docs.astral.sh/uv/guides/projects/">uv docs: Working on projects</a></td>
+</tr>
+<tr>
+<td>The bank</td>
+<td>Sandbox Environment</td>
+<td>secrets and auth</td>
+<td>A safe, and the note that says what is in it (10 min)</td>
+<td><a href="https://git-scm.com/docs/gitignore">Git docs: gitignore</a></td>
+</tr>
+<tr>
+<td>The data centre</td>
+<td>Cold Storage Cluster</td>
+<td>where the model runs</td>
+<td>The same work, one at a time and in a batch (15 min)</td>
+<td><a href="https://docs.python.org/3/library/concurrent.futures.html">Python docs: concurrent.futures</a></td>
+</tr>
+<tr>
+<td>The energy grid</td>
+<td>Cold Storage Cluster</td>
+<td>compute and cost</td>
+<td>Back off the way the docs tell you to (15 min)</td>
+<td><a href="https://platform.claude.com/docs/en/api/rate-limits">Claude API docs: Rate limits</a></td>
+</tr>
+<tr>
+<td>The library</td>
+<td>Cold Storage Cluster</td>
+<td>RAG and embeddings</td>
+<td>Retrieve three notes and cite the one you used (20 min)</td>
+<td><a href="https://docs.python.org/3/library/collections.html#collections.Counter">Python docs: collections.Counter</a></td>
+</tr>
+<tr>
+<td>The office</td>
+<td>Production Environment</td>
+<td>a team of agents</td>
+<td>Hire one subagent with a narrow brief (15 min)</td>
+<td><a href="https://code.claude.com/docs/en/sub-agents">Claude Code docs: Create Custom Subagents</a></td>
+</tr>
+<tr>
+<td>The households</td>
+<td>Production Environment</td>
+<td>users and privacy</td>
+<td>Export one person's rows, then erase them (15 min)</td>
+<td><a href="https://docs.python.org/3/library/csv.html">Python docs: csv</a></td>
+</tr>
+<tr>
+<td>The school</td>
+<td>Production Environment</td>
+<td>training a model</td>
+<td>Split the data, train, and read the honest number (20 min)</td>
+<td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html">scikit-learn docs: train_test_split</a></td>
+</tr>
+</tbody>
+</table></div>
+<p>Checked by: <code>vibe check --artifact &lt;id&gt;</code>, or <code>--artifact all</code>. The check reads what you wrote and runs it, offline: a Dockerfile whose instructions all parse, a SQLite file with an indexed table holding rows, an app that answers 200 to its own test client, a workflow file that parses and has a schedule and a job with steps. A check that needs a tool this machine does not have says so with the install command instead of failing, so a missing Docker never blocks you. An artifact built for real is worth half a workstream in XP, reads &quot;built for real&quot; on the sheet, and all twenty-one earn the <code>builder</code> badge.</p>
+<h2 id="the-tech-tree-shelf-by-shelf">The tech tree: shelf by shelf</h2>
+<p>The tree is the second way through the course: the thirty-two stops are a night, the tree is the year after it. It ships as packs of topics, and a topic carries what it is, the history that explains why it looks like that, a five-minute try, its sources and what it unlocks. The full text of every topic is in <a href="https://github.com/tpetedb/vibe-map/blob/main/docs/ROADMAP.md">ROADMAP.md</a>, in the vault under Tech tree and in the game under Tree; your level (Intern to Expert) is the XP ladder, not the tree.</p>
+<p>Seventy topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. <code>vibe topics</code> lists them, <code>vibe topic &lt;id&gt;</code> opens one, <code>vibe check --topic &lt;id&gt;</code> marks it done, and <a href="https://github.com/tpetedb/vibe-map/blob/main/docs/ROADMAP.md">ROADMAP.md</a> is the same tree in full.</p>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>Age</th>
+<th>Level</th>
+<th>What it covers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dark Age</td>
+<td>Intern</td>
+<td>The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier.</td>
+</tr>
+<tr>
+<td>Feudal Age</td>
+<td>Junior</td>
+<td>Languages and data. You can now make the machine do a specific thing and keep the result.</td>
+</tr>
+<tr>
+<td>Castle Age</td>
+<td>Medior</td>
+<td>Networks and shipping. Your thing runs somewhere other than your laptop, repeatably.</td>
+</tr>
+<tr>
+<td>Imperial Age</td>
+<td>Senior</td>
+<td>The AI harness. You stop typing code and start directing agents, with guardrails you wrote.</td>
+</tr>
+<tr>
+<td>Future Age</td>
+<td>Expert</td>
+<td>What is coming, what stays the same, and what a knowledge worker or founder should actually do about it.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="the-packs-two">The packs (two)</h3>
+<p><strong>The core map</strong> (fifty-four topics, first shelf shell). Everything the four evenings lean on, intern to expert: the terminal, git, the formats, the languages, data, the web, shipping, the agent harness, the docs and the vault.</p>
+<p><strong>The data engineering pack</strong> (sixteen topics, first shelf data). Sixteen topics that read as one path: the file formats data arrives in, the table formats it rests in, the tools that ingest it, transform it, schedule it and test it, and the map that says which of those three any tool is doing. Everything runs on a laptop with uv, with no account and no paid service.</p>
+<h3 id="the-shelves">The shelves</h3>
+<p><strong>Terminal and shell.</strong> Where every command starts: the terminal, files, the shell and its config, ports, remote machines. Unix and the terminal (Basics), Bash and shell scripts (Working knowledge), zsh and your shell config (Working knowledge), Files, folders and paths (Basics), Dotfiles (Working knowledge), Justfiles and task running (Working knowledge), localhost and ports (Working knowledge), SSH and remote machines (Deep), Interfaces: GUI, TUI, CLI, API (Basics).</p>
+<p><strong>Git and GitHub.</strong> Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. Git (Basics), GitHub, pull requests, Pages (Working knowledge), CI/CD and automation (Deep), Git hooks (Working knowledge).</p>
+<p><strong>Config and formats.</strong> The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env. Config formats: JSON, YAML, TOML, Markdown (Basics), .env files and secrets (Basics), TOML in practice: pyproject.toml (Working knowledge), Markdown and Obsidian (Basics), YAML in practice: CI and Compose (Working knowledge).</p>
+<p><strong>Languages and code.</strong> Python first, then the web, the other languages and how to know the code works. Python (Basics), Python libraries: what they are for (Working knowledge), HTML, CSS and JavaScript (Working knowledge), Other languages and what they are for (Deep), Separation of concerns (Working knowledge), Tests and evals (Deep).</p>
+<p><strong>Data.</strong> Files, schemas, warehouses and SQL over all of it. SQL and DuckDB (Working knowledge), Data: files, schemas, warehouses (Basics), CSV done properly (Basics), JSON Lines (Basics), Parquet (Working knowledge), Apache Arrow (Deep), Schemas and schema evolution (Working knowledge), DuckDB beyond the basics (Working knowledge), Apache Iceberg (Deep), dlt, ingestion as code (Working knowledge), Kafka concepts (Working knowledge), Polars (Working knowledge), dbt (Working knowledge), Apache Airflow (Working knowledge), Dagster and Prefect (Deep), Data quality and contracts (Working knowledge), The medallion layering (Working knowledge), Ingestion, transformation, orchestration (Basics).</p>
+<p><strong>Web, networks and APIs.</strong> How programs talk over HTTP and how to build and consume an API. HTTP and APIs (Basics), Building and consuming APIs (Working knowledge).</p>
+<p><strong>Ship and run.</strong> Containers, the cloud, platforms and agents that run without you. Docker and containers (Working knowledge), Cloud and servers (Working knowledge), Headless agents and scheduling (Deep), Kubernetes and platforms (Deep).</p>
+<p><strong>Agents and the harness.</strong> What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost. LLM versus harness (Basics), Context window and prompts (Basics), Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents (Working knowledge), AGENTS.md (Basics), Skills (Agent Skills standard) (Working knowledge), Hooks (Working knowledge), Agent hooks (Deep), Prompting: task, goal, hard constraints (Basics), Structure: XML tags and Markdown blocks (Working knowledge), The symbols: slash, at, bang, hash (Basics), Building the builder (Working knowledge), MCP (Model Context Protocol) (Working knowledge), Subagents and multi-agent (Deep), Security and permissions (Working knowledge), Cost, tokens and model choice (Working knowledge).</p>
+<p><strong>Docs and versioning.</strong> The README, semantic versioning, changelogs and decision records. Semantic Versioning (Working knowledge), Changelogs (Keep a Changelog) (Working knowledge), Architecture decision records (Deep), README and the quickstart (Basics).</p>
+<p><strong>Knowledge and Obsidian.</strong> Obsidian feature by feature and the vault as long-term memory. Obsidian features (Basics), Memory: the vault as long-term memory (Working knowledge).</p>
+<p><strong>What is coming.</strong> What stays the same, what changes, and what to do about it. The future perspective (Basics).</p>
+<h3 id="choosing-what-you-want-to-learn">Choosing what you want to learn</h3>
+<p>Eleven shelves is more than anyone wants at once, so you pick. The title screen
+asks after the difficulty (&quot;What do you want to learn?&quot;), Settings changes it
+later, and in the terminal it is <code>vibe interests</code> to see the shelves,
+<code>vibe interests set data,shell,agents</code> to narrow, <code>vibe interests all</code> to go
+back. The choice lives in <code>config/camp.toml</code> under <code>[learner] interests</code> and
+travels in the progress code, so the game and the camp agree. Each persona has
+a preset the title screen offers: the data engineer picks data, terminal and
+shell, git and agents; the teacher educator picks agents, docs and knowledge.
+Everything is the default.</p>
+<p>Nothing is hidden or locked by a choice, and the thirty-two stops are the same
+course for everyone. What changes is the order things are offered in: the tree
+and the search put your shelves in front and dim the rest, the Roadmap has a
+&quot;What you want to learn&quot; card with where to start, grow mode opens the basics
+of your shelves from the first evening, an artifact, a mentor or a collectible
+on one of your shelves gets a small coloured dot, the dashboard counts what you
+found per shelf, and <code>vibe status</code> prints your shelves and the next topic.</p>
+<p>Tom is available for one panicked message per week. Rolinda is available for wine.</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li>Claude Code docs: https://code.claude.com/docs/en/overview</li>
+<li>Extending Claude Code (CLAUDE.md, skills, hooks, MCP, plugins): https://code.claude.com/docs/en/features-overview</li>
+<li>Obsidian help: https://help.obsidian.md</li>
+</ul>
+
+</main>
+<footer>
+<p>Generated from <code>docs/SYLLABUS.md</code> and <code>vibemap/data/</code> by
+<code>tools/gen_syllabus.py</code>. Never hand-edited.
+<a href="https://tpetedb.github.io/vibe-map/">Play the game</a>.</p>
+</footer>
+</div>
+</body>
+</html>

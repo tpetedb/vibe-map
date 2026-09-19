@@ -20,6 +20,7 @@ dependencies = [
   "python-dotenv>=1.0",  # .env files for tokens, never committed
   "pyyaml>=6.0",         # read the CI workflow back, YAML in practice
   "textual>=0.80",       # the `just start` onboarding screen
+  "markdown-it-py>=3.0",  # the syllabus page, rendered from the Markdown
 ]
 
 [project.urls]
