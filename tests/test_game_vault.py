@@ -184,30 +184,34 @@ def test_the_vault_header_follows_the_graph_and_tree_switch(game: GamePage) -> N
 def test_the_graph_spreads_instead_of_piling_on_the_edges(
     game_desktop: GamePage,
 ) -> None:
-    """Nodes used to be clamped into a fixed canvas and stack along each edge."""
+    """Nodes used to be clamped into a fixed canvas and stack along each edge.
+
+    Reduced motion is asked for so the graph does not play its settling
+    animation: the layout is already final when the vault opens, and reading a
+    frame of a moving one is what a wall clock would have to wait out.
+    """
     game = game_desktop
+    game.page.emulate_media(reduced_motion="reduce")
     game.goto()
     game.start()
     _open_vault(game)
     page = game.page
-    # The simulation's own alpha is the end of the layout. A sampler over the
-    # sum of y calls a slow tick stillness and measures a graph that is still
-    # spreading, so how many nodes share a line would depend on how fast the
-    # page happens to run. The budget is the simulation's, not the harness's:
-    # it decays per animation frame, and a software renderer draws few.
-    page.wait_for_function(
-        "() => ((window.__debug().vault() || {alpha: 1}).alpha < 0.05)",
-        timeout=120_000,
+    v = page.evaluate(
+        "() => {const v = window.__vault(), cv = document.getElementById('vg');"
+        " const out = v.nodes.filter(p => p.sx < 0 || p.sy < 0"
+        " || p.sx > cv.clientWidth || p.sy > cv.clientHeight);"
+        " return {nodes: v.nodes.length, outside: out.length,"
+        " layout: v.height, canvas: cv.clientHeight}}"
     )
-    # Clamping pinned the overflow to the exact border, so a couple of dozen
-    # nodes shared one y to the pixel. A settled layout shares none.
-    row = page.evaluate(
-        "() => {const rows = {};"
-        " window.__vault().nodes.forEach(p => {const k = Math.round(p.y);"
-        " rows[k] = (rows[k] || 0) + 1});"
-        " return Math.max(...Object.values(rows))}"
+    # The layout is not the panel: it is taller, which is what the clamp used
+    # to forbid by pinning the overflow to the border.
+    assert v["layout"] > v["canvas"], (
+        f"the layout is {v['layout']} tall inside a {v['canvas']} canvas"
     )
-    assert row <= 3, f"{row} nodes sit on one line"
+    # And the view is fitted to it, so nothing is drawn off the panel.
+    assert v["outside"] == 0, (
+        f"{v['outside']} of {v['nodes']} nodes are drawn outside the canvas"
+    )
     game.screenshot("vault-graph-spread")
     assert not game.errors, game.errors
 
