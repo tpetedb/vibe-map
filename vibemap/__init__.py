@@ -11,7 +11,7 @@ import tomllib
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
-UNKNOWN_VERSION = "0.0.0+unknown"
+UNKNOWN_VERSION = "0+unknown"
 
 
 def _version() -> str:

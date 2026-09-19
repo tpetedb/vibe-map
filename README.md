@@ -17,6 +17,8 @@ From intern to expert in one evening, with wine. A 3D island you walk across, ei
 
 **[tpetedb.github.io/vibe-map](https://tpetedb.github.io/vibe-map/)** opens the game in your browser. Nothing to install, no account, no key: the progress lives in that browser and comes out as a code you can paste elsewhere.
 
+Supported browsers: Chrome is the one the game is built and fixed for, on desktop and on Android. On an iPhone it is best effort, because every iPhone browser runs Apple's WebKit; the game is tested against a WebKit iPhone profile and gets no Safari-only polish. Firefox and desktop Safari should work and are not tested beyond that.
+
 Offline instead? It is one file, with three.js embedded and no CDN, so it runs from your downloads folder on a Mac, a phone or a locked-down laptop:
 
 ```bash
