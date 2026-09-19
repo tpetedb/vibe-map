@@ -4096,7 +4096,10 @@ window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md
   cv.onpointermove=e=>{const [sx,sy]=pos(e);if(vdrag){if(!moved){moved=true;VSIM.alphaTarget(.25).restart()}const [x,y]=vToWorld(sx,sy);vdrag.fx=x;vdrag.fy=y}else if(pan){moved=true;vtx=pan.tx+(sx-pan.sx);vty=pan.ty+(sy-pan.sy);vdraw()}};
   cv.onpointerup=e=>{if(vdrag){if(!moved)vrender(vdrag.id);else VSIM.alphaTarget(0);vdrag.fx=vdrag.fy=null;vdrag=null}pan=null};
   cv.onwheel=e=>{e.preventDefault();const [sx,sy]=pos(e);const f=Math.exp(-e.deltaY*.0015);const nz=Math.max(.4,Math.min(3,vz*f));const k=nz/vz;vtx=sx-(sx-vtx)*k;vty=sy-(sy-vty)*k;vz=nz;vdraw()};
-  vrender("Tonight");VSIM.alpha(.6).restart()};
+  // buildGraph already ran the layout to a stop, so the reheat is only the
+  // settling animation. Reduced motion asks for no animation, and the graph
+  // drifting for several seconds is exactly that.
+  vrender("Tonight");if(!reducedMotion())VSIM.alpha(.6).restart()};
 let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
 window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");$("vcount").textContent=vhint();if(treeOn)renderTree()};
@@ -4119,7 +4122,7 @@ window.openNote=function(title){openVault();vrender(title)};
 // Read-only seam for the tests: the graph is a canvas, so its selection, its
 // unlocked set and where its nodes landed have no DOM to assert on.
 window.__vault=()=>({sel:vsel,unlocked:VN.length,total:Object.keys(NOTES).length,
-  has:t=>!!(UNLOCKED&&UNLOCKED.has(t)),nodes:VN.map(n=>({x:n.x,y:n.y})),width:vSW,height:vSH});
+  has:t=>!!(UNLOCKED&&UNLOCKED.has(t)),nodes:VN.map(n=>({x:n.x,y:n.y,sx:n.x*vz+vtx,sy:n.y*vz+vty})),width:vSW,height:vSH});
 window.closeVault=function(){const was=$("vault").classList.contains("on");$("vault").classList.remove("on");if(VSIM)VSIM.stop();if(was)window.scrollTo({top:0,behavior:"smooth"})};
 
 /* ---------------- workstream logic ---------------- */
