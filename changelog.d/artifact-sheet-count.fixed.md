@@ -1,1 +1,0 @@
-- The artifact sheet says what its number counts ("3 of 20 artifacts found") instead of reading as an index.
