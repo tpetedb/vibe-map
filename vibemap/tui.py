@@ -35,12 +35,22 @@ from textual.widgets import (
 
 from vibemap import campaign, dotfiles, pet, project
 from vibemap.config import CONFIG_PATH, DIFFICULTIES, Config
-from vibemap.palette import BLACK, BLUE, GREEN, MUTED, RED, SURFACE, TEXT, YELLOW
+from vibemap.palette import (
+    BLACK,
+    BLUE,
+    GREEN,
+    MUTED,
+    ORANGE,
+    RED,
+    SURFACE,
+    TEXT,
+    YELLOW,
+)
 from vibemap.personas import PERSONAS
 from vibemap.providers import PROVIDERS
 from vibemap.quests import level_for
 from vibemap.state import PLACEHOLDER, STATE_PATH, State
-from vibemap.themes import THEMES
+from vibemap.themes import THEMES, load_theme
 from vibemap.toolbelt import TOOLS, Tool
 
 ROOT = project.root()
@@ -87,14 +97,29 @@ ACTIONS: dict[str, tuple[str, str]] = {
     "claude": ("Claude Code here", "start claude in this folder"),
     "yolo": ("Claude, YOLO mode", "claude --dangerously-skip-permissions"),
     "zed": ("Zed with Claude over ACP", "zed . then the agent panel, Claude Code"),
-    "obsidian": ("Obsidian vault", "open vault/ as a vault"),
+    "obsidian": ("Obsidian vault", "open the camp's vault folder as a vault"),
     "tests": ("Run the tests", "just test"),
     "map": ("Campaign map", "the four islands and 32 stops, in this screen"),
     "dotfiles": ("Terminal setup", "zsh, tmux, Ghostty, Starship, the R2-D2 themes"),
-    "status": ("Campaign status", "uv run vibe status"),
+    "status": ("Campaign status", "vibe status: stops, XP and what comes next"),
     "news": ("Pull the world feed", "vibe news: the sources into the vault note News"),
     "quit": ("Quit", ""),
 }
+
+
+def theme_options(preset: str) -> list[tuple[str, str]]:
+    """The presets, and the camp's own theme when it named one of its own.
+
+    A name that is not a preset is a themes/<name>.toml file, or a typo; either
+    way the select offers it, so pressing Continue cannot quietly replace it.
+    """
+    options = [(t.label, t.id) for t in THEMES.values()]
+    if preset not in THEMES:
+        try:
+            options.append((f"{load_theme(preset).label} (your own)", preset))
+        except ValueError:
+            options.append((f"{preset} (not a preset, not in themes/)", preset))
+    return options
 
 
 # Ticks the pet spends being pleased to see you before it settles.
@@ -174,6 +199,7 @@ class Welcome(Screen[None]):
                 id="name",
                 placeholder=PLACEHOLDER,
             )
+            yield Static("", id="nameproblem", classes="problem")
             yield Label("Your field (persona)")
             yield Select(
                 [(f"{p.label}: {p.field}", p.id) for p in PERSONAS.values()],
@@ -213,10 +239,8 @@ class Welcome(Screen[None]):
             )
             yield Label("Theme")
             yield Select(
-                [(t.label, t.id) for t in THEMES.values()],
-                value=self.cfg.theme.preset
-                if self.cfg.theme.preset in THEMES
-                else "wine-night",
+                theme_options(self.cfg.theme.preset),
+                value=self.cfg.theme.preset,
                 id="theme",
                 allow_blank=False,
             )
@@ -229,20 +253,37 @@ class Welcome(Screen[None]):
     def quit_app(self) -> None:
         self.app.exit("quit")
 
+    @on(Input.Submitted, "#name")
+    def submit_name(self) -> None:
+        """Enter in the last field is Continue, as in any other form."""
+        self.save_and_continue()
+
     @on(Button.Pressed, "#next")
     def save_and_continue(self) -> None:
+        name = self.query_one("#name", Input).value.strip()
+        if not name:
+            # The placeholder is the state's word for "nobody has said yet";
+            # storing it would greet the learner by it on the next screen.
+            self.query_one("#nameproblem", Static).update(
+                "Type your name first. It goes in camp.toml and can change "
+                "later with vibe name."
+            )
+            self.set_focus(self.query_one("#name", Input))
+            return
         data = self.cfg.model_dump()
         data["learner"]["persona"] = self.query_one("#persona", Select).value
         data["learner"]["difficulty"] = self.query_one("#difficulty", Select).value
         data["learner"]["provider"] = self.query_one("#provider", Select).value
         data["theme"]["preset"] = self.query_one("#theme", Select).value
         data["vault"]["mode"] = self.query_one("#vaultmode", Select).value
-        name = self.query_one("#name", Input).value.strip() or PLACEHOLDER
         data["learner"]["name"] = name
         cfg = Config.model_validate(data)
         app = self.app
         assert isinstance(app, VibeApp)
         cfg.save(app.config_path)
+        # The app carries the config the learner just saved; the launchers
+        # read it after the screens close.
+        app.cfg = cfg
         self.state.name = name
         self.state.save(app.state_path)
         app.push_screen(Checks(cfg, self.state))
@@ -353,7 +394,7 @@ class Launch(Screen[None]):
     def compose(self) -> ComposeResult:
         age, label, nxt = level_for(self.state.xp)
         yield Header(show_clock=False)
-        with Vertical(id="launch"):
+        with VerticalScroll(id="launch"):
             yield Static(
                 f"{self.state.name}, {PERSONAS[self.cfg.learner.persona].label}, "
                 f"{DIFFICULTIES[self.cfg.learner.difficulty].label}. Level {label} "
@@ -390,16 +431,17 @@ class Map(Screen[None]):
         super().__init__()
         self.state = state
 
+    def _cell(self, world: str, n: int, nxt: int | None) -> str:
+        """One square, in the same language as the grid of `vibe status`."""
+        if not self.state.is_done(world, n):
+            return f"[{YELLOW}]>[/]" if n == nxt else f"[{MUTED}].[/]"
+        if self.state.is_verified(world, n):
+            return f"[{GREEN}]x[/]"
+        return f"[{ORANGE}]i[/]"
+
     def _row(self, world: str, ev: campaign.Evening) -> str:
         nxt = next((i for i in range(1, 9) if not self.state.is_done(world, i)), None)
-        cells = []
-        for i in range(1, 9):
-            if self.state.is_done(world, i):
-                cells.append(f"[{GREEN}]x[/]")
-            elif i == nxt:
-                cells.append(f"[{YELLOW}]>[/]")
-            else:
-                cells.append(f"[{MUTED}].[/]")
+        cells = [self._cell(world, i, nxt) for i in range(1, 9)]
         done = len(self.state.done_w.get(world, []))
         label = f"{ev.short} · {ev.island}"
         return f"[{BLUE}]{label:<34}[/] " + " ".join(cells) + f"  [{MUTED}]{done}/8[/]"
@@ -415,7 +457,8 @@ class Map(Screen[None]):
             for world, ev in campaign.evenings().items():
                 yield Static(self._row(world, ev), classes="maprow", markup=True)
             yield Static(
-                f"[{GREEN}]x[/] done   [{YELLOW}]>[/] next   [{MUTED}].[/] to do",
+                f"[{GREEN}]x[/] checked   [{ORANGE}]i[/] claimed, not verified   "
+                f"[{YELLOW}]>[/] next   [{MUTED}].[/] to do",
                 classes="legend",
                 markup=True,
             )
@@ -464,6 +507,7 @@ class Dotfiles(Screen[None]):
                     )
                     yield Static(
                         f"{m.name}: {self._state(m)}",
+                        id=f"dothint-{m.id}",
                         classes="hint",
                     )
             yield Log(id="dotlog")
@@ -494,7 +538,18 @@ class Dotfiles(Screen[None]):
         if m.brew:
             log.write_line(f"deps: {dotfiles.brew_command(m)}")
         log.write_line(m.after)
-        event.button.variant = "success"
+        self.refresh_rows()
+
+    def refresh_rows(self) -> None:
+        """Every row says what the disk says, after an install as before it."""
+        for m in dotfiles.MODULES.values():
+            installed = self._state(m) == "installed"
+            self.query_one(f"#dothint-{m.id}", Static).update(
+                f"{m.name}: {self._state(m)}"
+            )
+            self.query_one(f"#dot-{m.id}", Button).variant = (
+                "success" if installed else "primary"
+            )
 
 
 class VibeApp(App[str]):
@@ -510,16 +565,17 @@ class VibeApp(App[str]):
     Input, Select {{ margin: 0 1; }}
     .row {{ height: auto; margin: 1 1; }}
     .row Button {{ margin: 0 1 0 0; }}
-    .action {{ height: 3; margin: 0 1; }}
+    .action {{ height: auto; margin: 0 1; }}
     .action Button {{ width: 34; margin: 0 2 0 0; }}
-    .hint {{ color: {MUTED}; padding: 1 0; }}
-    DataTable {{ height: 1fr; margin: 0 1; border: round {GREEN}; }}
-    Log {{ height: 10; margin: 0 1; border: round {BLUE}; }}
+    .hint {{ color: {MUTED}; width: 1fr; padding: 1 0; }}
+    .problem {{ color: {RED}; margin: 0 1; }}
+    DataTable {{ height: 1fr; min-height: 10; margin: 0 1; border: round {GREEN}; }}
+    Log {{ height: 6; margin: 0 1; border: round {BLUE}; }}
     #welcome, #checks, #launch, #map, #dotfiles {{ padding: 0 1; }}
     #dotfiles .action Button {{ width: 26; }}
     #dotlog {{ height: 8; }}
     .maprow {{ margin: 0 1; }}
-    PetWidget {{ height: 12; width: 60; margin: 0 1 1 1; }}
+    PetWidget {{ height: auto; width: 60; margin: 0 1 1 1; }}
     .legend {{ color: {MUTED}; margin: 1 1 0 1; }}
     """
 
@@ -538,7 +594,8 @@ class VibeApp(App[str]):
 
 def run() -> None:
     """Run the screens, then act on the choice in the real terminal."""
-    choice = VibeApp().run() or "quit"
+    app = VibeApp()
+    choice = app.run() or "quit"
     if choice == "quit":
         return
     if choice == "play":
@@ -556,12 +613,15 @@ def run() -> None:
             "pick Claude Code from the plus menu, and sign in with /login."
         )
     elif choice == "obsidian":
-        subprocess.run(["open", "-a", "Obsidian", str(ROOT / "vault")])
-        print("Obsidian: Manage vaults, Open folder as vault, pick vault/.")
+        vault = app.cfg.vault.path
+        subprocess.run(["open", "-a", "Obsidian", str(ROOT / vault)])
+        print(f"Obsidian: Manage vaults, Open folder as vault, pick {vault}/.")
     elif choice == "tests":
         os.execvp("just", ["just", "test"])
     elif choice == "status":
-        os.execvp("uv", ["uv", "run", "--no-sync", "vibe", "status"])
+        # This interpreter already has the CLI; `uv run` in a camp without a
+        # project only earns a warning.
+        os.execvp(sys.executable, [sys.executable, "-m", "vibemap.cli", "status"])
     elif choice == "news":
         os.execvp(sys.executable, [sys.executable, "-m", "vibemap.cli", "news"])
     else:
