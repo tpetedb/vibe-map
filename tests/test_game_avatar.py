@@ -152,6 +152,42 @@ def test_an_achievement_unlocks_a_hat_you_can_wear(island: GamePage) -> None:
     island.assert_clean()
 
 
+def test_x_sits_the_walker_down_at_the_end_of_a_walk(island: GamePage) -> None:
+    """The speed left from the last step must not stand the walker back up.
+
+    Walking to the seat and pressing x is how a player sits down, so the key
+    is released and pressed in the same breath: the walker still carries the
+    speed of the walk when the sit arrives.
+    """
+    island.page.keyboard.down("ArrowUp")
+    island.frames(4)
+    island.page.keyboard.up("ArrowUp")
+    _sit(island)
+    assert _avatar(island)["laptop"], "the laptop did not open on the lap"
+    island.assert_clean()
+
+
+def test_the_walker_keeps_his_seat_when_the_name_rebuilds_him(
+    island: GamePage,
+) -> None:
+    """Typing the name rebuilds the walker, and the rebuild lands whenever.
+
+    The name box rebuilds the body a moment after typing stops, so on a fast
+    machine that rebuild arrives after the game has started and after the
+    walker has sat down. The new body has to take over the pose.
+    """
+    _sit(island)
+    # The handler the name box calls on every keystroke, and with it the
+    # rebuild it schedules; the new plate over the walker is the page's own
+    # signal that the new body is in the scene.
+    island.page.evaluate("window.nameTyped('Rolinda')")
+    island.until("((window.__debug().label || {}).text || '').startsWith('Rolinda')")
+    state = _avatar(island)
+    assert state["pose"] == "sit"
+    assert state["laptop"], "the laptop did not come back to the lap"
+    island.assert_clean()
+
+
 def test_an_imported_code_brings_the_avatar_across(island: GamePage) -> None:
     code = encode_progress(name="Lotte")
     padded = json.loads(

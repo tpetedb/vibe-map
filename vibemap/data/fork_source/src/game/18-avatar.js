@@ -210,7 +210,11 @@ function tickAvatar(dt,t,sp){
   wireAvatar();
   const L=chars.lotte;if(!L)return;
   if(wantSit){wantSit=false;if(started)toggleSit()}
-  if(isSitting(L)&&(sp>.35||wantJump||L.jy>0))setPose(L,"stand");
+  // Standing again is decided on the speed the frame ends with, not the speed
+  // it began with: sitting down is a full stop, so the walk that carried the
+  // walker to the seat must not stand him straight back up in the same frame.
+  const speed=L.vel?Math.hypot(L.vel.x,L.vel.z):sp;
+  if(isSitting(L)&&(speed>.35||wantJump||L.jy>0))setPose(L,"stand");
   // Mentors work at their spot: the animation loop moves them, so their pose
   // is applied here, where the loop has not yet touched them this frame.
   (props.mentors||[]).forEach(c=>{if(isSitting(c))poseChar(c,dt,t)});
