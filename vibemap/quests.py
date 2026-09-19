@@ -12,10 +12,12 @@ import datetime as dt
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from importlib.util import find_spec
 from pathlib import Path
 from typing import Literal
 
@@ -24,7 +26,7 @@ import yaml
 from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
 from vibemap.state import State
-from vibemap.vault import learner_sections, safe_title
+from vibemap.vault import DATED, learner_sections, safe_title
 
 ROOT = project.root()
 XP_BASE = 100
@@ -52,6 +54,14 @@ def level_for(xp: int) -> tuple[str, str, int | None]:
     return current[0], current[1], nxt
 
 
+class Refused(ValueError):
+    """A refusal the learner has to read: an unknown version, a broken file.
+
+    Versioned formats fail loudly, so the message is the answer of the check
+    and never a traceback behind "check crashed".
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class CheckResult:
     name: str
@@ -71,6 +81,8 @@ class Check:
     def run(self, cfg: Config) -> CheckResult:
         try:
             ok, detail = self.fn(cfg)
+        except Refused as e:  # a refusal is the answer, not a broken check
+            ok, detail = False, str(e)
         except Exception as e:  # reason: a check must never crash the CLI
             ok, detail = False, f"check crashed: {type(e).__name__}: {e}"
         return CheckResult(self.name, ok, detail, self.hint, self.level)
@@ -118,6 +130,67 @@ def _git(*args: str) -> str:
         ).stdout.strip()
     except (OSError, subprocess.TimeoutExpired):
         return ""
+
+
+def _git_ok(*args: str) -> bool:
+    """A git question whose answer is the exit code (is this path ignored?)."""
+    try:
+        return (
+            subprocess.run(
+                ["git", *args], cwd=ROOT, capture_output=True, timeout=20
+            ).returncode
+            == 0
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
+# Where the learner's pytest comes from. `vibe` is installed as a tool, whose
+# environment holds this package's dependencies and nothing else, so pytest is
+# looked for where a learner would have put it and is never a dependency of
+# the product just to make a check pass.
+PYTEST_INSTALL = "uv tool install pytest, or uv add --dev pytest in a project"
+
+
+def _declares_pytest() -> bool:
+    """True when this camp's own project declares pytest, so `uv run` has it."""
+    p = ROOT / "pyproject.toml"
+    return p.is_file() and "pytest" in p.read_text(encoding="utf-8", errors="ignore")
+
+
+def _pytest_runner() -> list[str] | None:
+    """The command that runs pytest here, or None when this machine has none."""
+    if _declares_pytest() and shutil.which("uv"):
+        # --no-sync once the environment is there: a check installs nothing
+        # behind the learner's back, and never rebuilds what is already built.
+        synced = ("--no-sync",) if (ROOT / ".venv").is_dir() else ()
+        return ["uv", "run", *synced, "pytest"]
+    if find_spec("pytest") is not None:
+        return [sys.executable, "-m", "pytest"]
+    if shutil.which("pytest"):
+        return ["pytest"]
+    return None
+
+
+def _run_pytest(paths: list[Path]) -> tuple[bool, str]:
+    """Run these tests with the learner's own tooling, one runner for every stop.
+
+    A machine without pytest is told which command installs one, the way an
+    artifact check does for a library it cannot import: work that is there is
+    never marked wrong because the tool to run it is missing.
+    """
+    runner = _pytest_runner()
+    if runner is None:
+        return True, (
+            f"{len(paths)} test file(s) written; no pytest on this machine, so "
+            f"they were not run ({PYTEST_INSTALL}, then run this again)"
+        )
+    out = subprocess.run(
+        [*runner, "-q", *PYTEST_PLAIN, *[str(p) for p in paths]],
+        cwd=ROOT, capture_output=True, text=True, timeout=600,
+    )  # fmt: skip
+    lines = _plain(out.stdout or out.stderr).splitlines()
+    return out.returncode == 0, lines[-1] if lines else "no output"
 
 
 def _count_lines(p: Path) -> int:
@@ -168,6 +241,11 @@ def _vault_report(cfg: Config):
 # ---- campus checks (the original eight workstreams) ---------------------------
 
 
+# A page with a script, a score and some markup around them clears this; a
+# stub does not. The number is in every message, so it is never a guess.
+GAME_BYTES = 800
+
+
 def _c1_game(cfg: Config) -> tuple[bool, str]:
     p = ROOT / "workspace" / "game" / "index.html"
     if not p.exists():
@@ -175,7 +253,9 @@ def _c1_game(cfg: Config) -> tuple[bool, str]:
     text = p.read_text(encoding="utf-8")
     if "Workstream 1 starts here" in text:
         return False, "workspace/game/index.html is still the placeholder"
-    return len(text) > 800, f"workspace/game/index.html has {len(text)} bytes"
+    return len(text) > GAME_BYTES, (
+        f"workspace/game/index.html has {len(text)} bytes (needs {GAME_BYTES})"
+    )
 
 
 def _c1_game_strict(cfg: Config) -> tuple[bool, str]:
@@ -411,18 +491,13 @@ def _extra_tests(cfg: Config) -> tuple[bool, str]:
     """Expert: tests exist and pass. The product runs its own gates; a camp runs
     whatever pytest finds under workspace/ (the learner's tests for their work)."""
     if _is_product():
-        cmd = [
-            "uv", "run", "--no-sync", "pytest", "-q", *PYTEST_PLAIN,
-            "tests/test_repo.py", "tests/test_build.py",
-        ]  # fmt: skip
-    else:
-        found = sorted((ROOT / "workspace").rglob("test_*.py"))
-        if not found:
-            return False, "no test_*.py under workspace/ (write one for your game)"
-        cmd = ["python3", "-m", "pytest", "-q", *PYTEST_PLAIN, *[str(p) for p in found]]
-    out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, timeout=600)
-    lines = _plain(out.stdout or out.stderr).splitlines()
-    return out.returncode == 0, lines[-1] if lines else "no output"
+        return _run_pytest(
+            [ROOT / "tests" / "test_repo.py", ROOT / "tests" / "test_build.py"]
+        )
+    found = sorted((ROOT / "workspace").rglob("test_*.py"))
+    if not found:
+        return False, "no test_*.py under workspace/ (write one for your game)"
+    return _run_pytest(found)
 
 
 def _extra_verify(cfg: Config) -> tuple[bool, str]:
@@ -453,18 +528,23 @@ def _generic_links() -> set[str]:
 
 
 OWN_WORDS = 40  # the learner's own words a note needs before a stop counts
+NOTE_LINKS_STRICT = 3  # links of their own, from hard up
 
 
 def _own_content(text: str, ws: campaign.Workstream) -> tuple[int, set[str], bool]:
-    """(words, links, a dated entry of their own) for the learner's part of a note."""
+    """(words, links, a dated entry of their own) for the learner's part of a note.
+
+    The words are the ones inside a dated section, where the hint sends the
+    learner; prose under another heading is not an account of this stop.
+    """
     sections = learner_sections(text, tuple(u for _, u in ws.sources))
     own = [line for _, lines in sections for line in lines]
-    words = sum(len(line.split()) for line in own)
+    dated_lines = [
+        line for head, lines in sections if DATED.match(head) for line in lines
+    ]
+    words = sum(len(line.split()) for line in dated_lines)
     links = {m.strip() for line in own for m in re.findall(r"\[\[([^\]|#]+)", line)}
-    dated = any(
-        re.fullmatch(r"\d{4}-\d{2}-\d{2}", head) and lines for head, lines in sections
-    )
-    return words, links - _generic_links(), dated
+    return words, links - _generic_links(), bool(dated_lines)
 
 
 def _note_check(world: str, n: int, reading_only: bool = False) -> Check:
@@ -514,18 +594,22 @@ def _note_strict(world: str, n: int) -> Check:
             if "http" in line
         ]
         _, links, _ = _own_content(text, ws)
-        ok = bool(own_sources) and len(links) >= 3
-        return ok, (
-            f"{len(own_sources)} source(s) you added, {len(links)} links"
-            if ok
-            else "needs a Sources line you added and three links of your own"
-        )
+        if own_sources and len(links) >= NOTE_LINKS_STRICT:
+            return True, f"{len(own_sources)} source(s) you added, {len(links)} links"
+        missing = []
+        if not own_sources:
+            missing.append("a ## Sources line of your own with a link on it")
+        if len(links) < NOTE_LINKS_STRICT:
+            missing.append(
+                f"{NOTE_LINKS_STRICT} links of your own (it has {len(links)})"
+            )
+        return False, "needs " + " and ".join(missing)
 
     return Check(
         f"sources for {ws.name}",
         fn,
-        "Add a line under ## Sources with something you actually read, and a "
-        "third [[link]].",
+        "Add a line under ## Sources with the link to something you actually "
+        "read, and a third [[link]].",
         "strict",
     )
 
@@ -535,6 +619,10 @@ def _note_strict(world: str, n: int) -> Check:
 # The exercise a mentor sets is small and offline: a file with a marker, a
 # script that prints one expected line, or a note with a required section.
 MENTORS_DIR = ROOT / "workspace" / "mentors"
+# The sentence every scaffolded stub carries (vibemap/cli.py writes it). A file
+# that still holds it is the scaffold, whatever was appended to it, so its
+# lines can never count toward the lines an exercise asks for.
+STUB_MARK = "the check fails until you do"
 MENTOR_XP_SHARE = 2  # a mentor exercise is worth half a workstream
 MENTOR_NOTE = "notes.md"
 MENTOR_SECTION = "## What I learned"
@@ -593,6 +681,11 @@ def _exercise_check(m: dict) -> Check:
         if not p.exists():
             return False, f"{ex['dir']}/{ex['file']} does not exist"
         text = p.read_text(encoding="utf-8")
+        if STUB_MARK in text:
+            return False, (
+                f"{ex['file']} still holds the stub vibe scaffolded; replace "
+                "those lines with your own"
+            )
         missing = [s for s in ex.get("sections", ()) if s.lower() not in text.lower()]
         missing += [s for s in ex.get("contains", ()) if s not in text]
         if missing:
@@ -659,9 +752,10 @@ def mentor_quest(mentor_id: str, cfg: Config) -> Quest:
 CAMPUS_CHECKS: dict[int, tuple[Check, ...]] = {
     1: (
         Check(
-            "your game exists",
+            "your game is a page, not a stub",
             _c1_game,
-            "Ask the agent for one file, workspace/game/index.html, no libraries.",
+            "Ask the agent for one file, workspace/game/index.html, no "
+            f"libraries, more than {GAME_BYTES} bytes of real page.",
         ),
         Check(
             "it is a game",
@@ -785,6 +879,28 @@ def _body(p: Path) -> list[str]:
     return [line for line in text.splitlines() if line.strip()]
 
 
+def _says(text: str, word: str) -> bool:
+    """True when the text uses this word, not when a longer word contains it.
+
+    A name is named at the start of a word: "ollama" is not "llama", so a file
+    that names no model can never pass by spelling the tool that runs one.
+    """
+    return re.search(rf"(?<![a-z0-9]){re.escape(word.lower())}", text) is not None
+
+
+def _fenced_block(lines: list[str], lang: str) -> bool:
+    """True when a ```lang block opens, holds at least one line and closes."""
+    opened: int | None = None
+    for i, line in enumerate(lines):
+        text = line.strip()
+        if opened is None:
+            if text.lower().startswith(f"```{lang}"):
+                opened = i
+        elif text.startswith("```"):
+            return i - opened > 1
+    return False
+
+
 def _file_check(
     name: str,
     rel: str,
@@ -792,6 +908,7 @@ def _file_check(
     *,
     contains: tuple[str, ...] = (),
     any_of: tuple[str, ...] = (),
+    fenced: str = "",
     min_lines: int = 1,
 ) -> Check:
     """One file is the deliverable: it exists, it says these things, it has body."""
@@ -805,8 +922,12 @@ def _file_check(
         missing = [w for w in contains if w.lower() not in text]
         if missing:
             return False, f"{rel} does not mention: {', '.join(missing)}"
-        if any_of and not any(w.lower() in text for w in any_of):
-            return False, f"{rel} mentions none of: {', '.join(any_of)}"
+        if any_of and not any(_says(text, w) for w in any_of):
+            return False, f"{rel} names none of: {', '.join(any_of)}"
+        if fenced and not _fenced_block(lines, fenced):
+            return False, (
+                f"{rel} has no ```{fenced} block that closes with a diagram in it"
+            )
         if len(lines) < min_lines:
             return False, f"{rel} has {len(lines)} lines, needs {min_lines}"
         return True, f"{rel}: {len(lines)} lines"
@@ -884,43 +1005,59 @@ def _d3_tests(_: Config) -> tuple[bool, str]:
     found = sorted(_at("workspace").rglob("test_*.py"))
     if not found:
         return False, "no test_*.py under workspace/"
-    out = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", *PYTEST_PLAIN, *map(str, found)],
-        cwd=ROOT, capture_output=True, text=True, timeout=600,
-    )  # fmt: skip
-    lines = _plain(out.stdout or out.stderr).splitlines()
-    return out.returncode == 0, lines[-1] if lines else "no output"
+    written = [
+        p for p in found if "def test" in p.read_text(encoding="utf-8", errors="ignore")
+    ]
+    if not written:
+        return False, (
+            f"{len(found)} test file(s) under workspace/, none with a test in it"
+        )
+    return _run_pytest(written)
 
 
 def _d4_gate(_: Config) -> tuple[bool, str]:
-    """A gate, not a bookkeeping hook: it runs a check, or it stands before one."""
+    """A gate, not a bookkeeping hook: the command it runs is a check."""
     hooks = _settings().get("hooks", {})
     checkers = ("ruff", "pytest", "lint", "format", "test")
-    gates = {k for k in ("PreToolUse", "Stop", "SubagentStop") if hooks.get(k)}
-    for event, blocks in hooks.items():
-        for b in blocks:
-            for h in b.get("hooks", []):
-                if any(w in h.get("command", "") for w in checkers):
-                    gates.add(event)
+    gates = {
+        event
+        for event, blocks in hooks.items()
+        for b in blocks
+        for h in b.get("hooks", [])
+        if any(w in h.get("command", "") for w in checkers)
+    }
     if gates:
         return True, f"gates: {', '.join(sorted(gates))}"
-    return False, f"hooks configured ({', '.join(hooks) or 'none'}) but none is a gate"
+    return False, (
+        f"hooks configured ({', '.join(hooks) or 'none'}), none of them runs "
+        "ruff, a formatter or the tests"
+    )
+
+
+SPEC_LINES = 12  # a spec shorter than this is a sentence, not a spec
 
 
 def _d5_spec(_: Config) -> tuple[bool, str]:
     d = _at("workspace/specs")
     if not d.is_dir():
         return False, "workspace/specs/ does not exist"
-    good = [
-        p
-        for p in sorted(d.glob("*.md"))
-        if len(_body(p)) >= 12 and any(ln.startswith("## ") for ln in _body(p))
-    ]
-    return bool(good), (
-        f"{good[0].name}: a spec with sections"
-        if good
-        else f"{len(list(d.glob('*.md')))} file(s), none with sections and 12 lines"
-    )
+    files = sorted(d.glob("*.md"))
+    if not files:
+        return False, "no .md file in workspace/specs/"
+    bodies = {p: _body(p) for p in files}
+    for p in files:
+        lines = bodies[p]
+        if len(lines) >= SPEC_LINES and any(ln.startswith("## ") for ln in lines):
+            return True, f"{p.name}: a spec with sections"
+    # The longest file is the one the learner meant; say what it still needs.
+    best = max(files, key=lambda p: len(bodies[p]))
+    lines = bodies[best]
+    missing = []
+    if not any(ln.startswith("## ") for ln in lines):
+        missing.append("## sections")
+    if len(lines) < SPEC_LINES:
+        missing.append(f"{SPEC_LINES} lines (it has {len(lines)})")
+    return False, f"{best.name} needs " + " and ".join(missing)
 
 
 def _d6_ci(_: Config) -> tuple[bool, str]:
@@ -971,6 +1108,8 @@ def _d8_evals(_: Config) -> tuple[bool, str]:
         return False, "no workspace/evals/cases.csv"
     if not runner.is_file():
         return False, "no workspace/evals/run.py"
+    if not _body(runner):
+        return False, "workspace/evals/run.py is empty; it scores the cases"
     rows = max(len(_body(cases)) - 1, 0)
     return rows >= 5, f"{rows} eval case(s) (needs 5)"
 
@@ -994,19 +1133,45 @@ def _p2_terminal(_: Config) -> tuple[bool, str]:
 
 
 def _p3_github(_: Config) -> tuple[bool, str]:
+    """A remote, a second branch, and one of them pushed: the hint says push it."""
     url = _git("remote", "get-url", "origin")
     if "github.com" not in url:
         return False, "no origin remote on github.com"
     names = [b for b in _git("branch", "--format=%(refname:short)").splitlines() if b]
-    return len(names) >= 2, (
-        f"{url} with {len(names)} branch(es): {', '.join(names[:4]) or 'none'} "
-        "(needs a second branch)"
+    if len(names) < 2:
+        return False, (
+            f"{url} with {len(names)} branch(es): {', '.join(names[:4]) or 'none'} "
+            "(needs a second branch)"
+        )
+    remote = [
+        r
+        for r in _git(
+            "for-each-ref", "--format=%(refname:short)", "refs/remotes/"
+        ).splitlines()
+        if r and not r.endswith("/HEAD")
+    ]
+    if not remote:
+        return False, (
+            f"{url} has {len(names)} branches here and none on the remote: "
+            "git push -u origin <branch>"
+        )
+    return True, (
+        f"{url} with {len(names)} branch(es), pushed: {', '.join(remote[:3])}"
     )
 
 
+# What a rewrite looks like in the reflog's operation field ("reset: moving
+# to HEAD~1"), which is everything before the first colon of `%gs`. A commit
+# whose message names one of these words is not a rewrite.
+REWRITES = ("rebase", "revert", "cherry-pick", "reset")
+
+
 def _p4_history(_: Config) -> tuple[bool, str]:
-    log = _git("reflog", "-n", "300")
-    found = sorted(w for w in ("rebase", "revert", "cherry-pick", "reset") if w in log)
+    ops = [
+        line.split(":", 1)[0].lower()
+        for line in _git("reflog", "-n", "300", "--format=%gs").splitlines()
+    ]
+    found = sorted({w for w in REWRITES for op in ops if w in op})
     return bool(found), (
         f"the reflog remembers: {', '.join(found)}"
         if found
@@ -1032,9 +1197,25 @@ def _p7_other_agents(_: Config) -> tuple[bool, str]:
 
 
 def _p8_dotfiles_repo(_: Config) -> tuple[bool, str]:
+    """A repository of their own that the camp keeps out of its own index.
+
+    A repository inside the camp with no commit stops `git add -A` dead, and a
+    committed one hides the work in a gitlink. The camp's own AGENTS.md tells
+    the learner to run `git add -A`, so the stop asks for the ignore line too.
+    """
     d = _at("workspace/dotfiles")
     if not (d / ".git").exists():
         return False, "workspace/dotfiles is not a git repository"
+    if not _git("-C", str(d), "rev-parse", "--verify", "-q", "HEAD"):
+        return False, (
+            "workspace/dotfiles has no commit yet, and an empty repository "
+            "inside the camp stops git add -A: commit in it first"
+        )
+    if not _git_ok("check-ignore", "-q", "workspace/dotfiles"):
+        return False, (
+            "the camp does not ignore workspace/dotfiles, so git add -A files "
+            "it as a gitlink: add workspace/dotfiles/ to .gitignore"
+        )
     install = d / "install.sh"
     if not install.is_file():
         return False, "no workspace/dotfiles/install.sh"
@@ -1068,12 +1249,20 @@ def config_fingerprint(config_dir: Path) -> str:
     return h.hexdigest()
 
 
+def _read_manifest_file(p: Path, name: str) -> dict:
+    """A manifest as data. A file that will not parse is refused, with the line."""
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise Refused(f"{name} is not valid JSON: {e.msg} on line {e.lineno}") from e
+
+
 def read_manifest(base: Path | None = None) -> dict:
     """The fork's fork.json. An unknown version is refused, not patched around."""
     p = fork_dir(base) / FORK_MANIFEST
-    data = json.loads(p.read_text(encoding="utf-8"))
+    data = _read_manifest_file(p, FORK_MANIFEST)
     if data.get("version") != FORK_VERSION:
-        raise ValueError(
+        raise Refused(
             f"{FORK_MANIFEST} version {data.get('version')} is not {FORK_VERSION}; "
             "run vibe fork --force to make a fresh fork"
         )
@@ -1159,9 +1348,9 @@ def _fork_repaired(_: Config) -> tuple[bool, str]:
     d = fork_dir()
     marker = d / FORK_REPAIR
     if marker.is_file():
-        data = json.loads(marker.read_text(encoding="utf-8"))
+        data = _read_manifest_file(marker, FORK_REPAIR)
         if data.get("version") != FORK_REPAIR_VERSION:
-            raise ValueError(
+            raise Refused(
                 f"{FORK_REPAIR} version {data.get('version')} is not "
                 f"{FORK_REPAIR_VERSION}; delete it and record the runs again"
             )
@@ -1274,7 +1463,8 @@ STOP_CHECKS: dict[tuple[str, int], tuple[Check, ...]] = {
             "workspace/winter/transformer.md",
             "workspace/winter/transformer.md: a ```mermaid block of the "
             "transformer block, and your own lines on tokens and attention.",
-            contains=("```mermaid", "token", "attention"),
+            contains=("token", "attention"),
+            fenced="mermaid",
             min_lines=8,
         ),
     ),
@@ -1413,8 +1603,9 @@ STOP_CHECKS: dict[tuple[str, int], tuple[Check, ...]] = {
         Check(
             "a dotfiles repository",
             _p8_dotfiles_repo,
-            "workspace/dotfiles/: git init, install.sh that symlinks with ln -s, "
-            "and a README.md.",
+            "workspace/dotfiles/: git init, a first commit, and the line "
+            "workspace/dotfiles/ in the camp's .gitignore so git add -A still "
+            "works; install.sh that symlinks with ln -s, and a README.md.",
         ),
     ),
 }
@@ -1455,7 +1646,7 @@ BADGES: dict[str, str] = {
     "streak-3": "Streak: three stops in one day",
     "linked": "Linked: twenty wikilinks of your own in the vault",
     "shipped": "Shipped: GitHub Pages is live",
-    "collector": "Collector: found every artifact on the island",
+    "collector": "Collector: every artifact inspected",
     "builder": "Builder: every artifact built for real, not just inspected",
     "mentored": "Mentored: every mentor's exercise done for real",
 }

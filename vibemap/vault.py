@@ -20,7 +20,9 @@ from vibemap.config import DIFFICULTIES, Config
 from vibemap.palette import (
     BLUE,
     CATEGORY_COLOURS,
+    CSS_TOKENS,
     GREEN,
+    MUTED,
     ORANGE,
     RED,
     YELLOW,
@@ -40,10 +42,12 @@ GRAPH_GROUPS: tuple[tuple[str, str], ...] = (
     ("tag:#tech", YELLOW),
     ("tag:#decision", RED),
     ("tag:#concept", ORANGE),
-    ("tag:#recipe", "#D1477D"),
-    ("tag:#persona", "#22D3EE"),
-    ("tag:#council", "#C084FC"),
-    ("tag:#overview", "#CCCCCC"),
+    # The dim variants of the palette: docs/DESIGN.md bans the cyan, violet
+    # and pink these groups used to carry.
+    ("tag:#recipe", CSS_TOKENS["orange-dim"]),
+    ("tag:#persona", CSS_TOKENS["blue-dim"]),
+    ("tag:#council", CSS_TOKENS["red-dim"]),
+    ("tag:#overview", MUTED),
 )
 
 MERMAID_CLASSES = (
@@ -254,16 +258,7 @@ class Vault:
         if not sep:
             p.write_text(text.rstrip("\n") + "\n\n" + entry, encoding="utf-8")
             return p
-        sections = _sections(sep + rest)
-        # A dropped stub section may carry the note's tag line; keep that.
-        loose = [
-            ln
-            for s in sections
-            if _is_stub_section(s)
-            for ln in s[1]
-            if ln.strip().startswith("#")
-        ]
-        sections = [s for s in sections if not _is_stub_section(s)]
+        sections, loose = _without_stubs(_sections(sep + rest))
         if loose and sections:
             sections[-1][1].extend(loose)
         merged = False
@@ -840,16 +835,47 @@ def _is_stub_section(section: tuple[str, list[str]]) -> bool:
     heading, lines = section
     if not DATED.match(heading):
         return False
-    body = [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
-    stub = [ln for ln in body if _is_stub_line(ln)]
-    return bool(stub) and all(
-        ln in stub or ln.lstrip("- ").startswith("links:") for ln in body
-    )
+    body = _own_body(lines)
+    return any(_is_stub_line(ln) for ln in body) and not [
+        ln for ln in body if not _is_scaffold_line(ln)
+    ]
+
+
+def _own_body(lines: list[str]) -> list[str]:
+    """The lines of a section that say something: no blanks, no tag line."""
+    return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
 
 
 def _is_stub_line(line: str) -> bool:
     text = line.strip().lstrip("-").strip()
     return text == STUB_BULLET or bool(STUB_RE.match(text))
+
+
+def _is_scaffold_line(line: str) -> bool:
+    """A line vibe wrote into a fresh stop note: the stub, or its links line."""
+    return _is_stub_line(line) or line.strip().lstrip("- ").startswith("links:")
+
+
+def _without_stubs(
+    sections: list[tuple[str, list[str]]],
+) -> tuple[list[tuple[str, list[str]]], list[str]]:
+    """The sections without their stub lines, and the tag lines those carried.
+
+    A stop that is done never keeps the line saying it is not, not even when
+    the learner wrote their own words into that same dated section.
+    """
+    kept: list[tuple[str, list[str]]] = []
+    loose: list[str] = []
+    for heading, lines in sections:
+        if not DATED.match(heading) or not any(_is_stub_line(ln) for ln in lines):
+            kept.append((heading, lines))
+            continue
+        rest = [ln for ln in lines if not _is_stub_line(ln)]
+        if [ln for ln in _own_body(rest) if not _is_scaffold_line(ln)]:
+            kept.append((heading, rest))
+        else:
+            loose += [ln for ln in rest if ln.strip().startswith("#")]
+    return kept, loose
 
 
 def _section(p: Path, heading: str) -> str:
