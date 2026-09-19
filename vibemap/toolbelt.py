@@ -7,6 +7,7 @@ it, or has chosen YOLO mode, which installs everything missing at once.
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -14,6 +15,15 @@ from pathlib import Path
 from typing import Literal
 
 Tier = Literal["core", "evening", "toolbelt", "provider"]
+
+# A version line goes into a table cell and is printed under NO_COLOR, so the
+# escape sequences a tool writes have to come off before anything measures it.
+_ESCAPE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-_~]")
+
+
+def _plain(text: str) -> str:
+    """One line of tool output as text: no escapes, no control characters."""
+    return "".join(c for c in _ESCAPE.sub("", text) if c == " " or c.isprintable())
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,8 +57,8 @@ class Tool:
         if out.returncode != 0:
             # Some apps ship a CLI without a version flag; the binary is proof.
             return "installed"
-        line = (out.stdout or out.stderr).strip().split("\n")[0]
-        return line[:60] or "installed"
+        line = _plain((out.stdout or out.stderr).strip().split("\n")[0])
+        return line.strip()[:60] or "installed"
 
 
 TOOLS: tuple[Tool, ...] = (
