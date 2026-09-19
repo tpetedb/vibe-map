@@ -359,7 +359,12 @@ def test_the_setup_guide_gives_every_command_it_offers(game: GamePage) -> None:
     assert game.errors == []
 
 
-def test_a_chosen_look_alone_offers_resume(game: GamePage) -> None:
+def test_resume_is_offered_only_when_there_is_a_name_to_resume_with(
+    game: GamePage,
+) -> None:
+    """A saved look is not a saved game: start() refuses an empty name."""
+    page = game.goto(state={"look": "own", "name": "", "doneW": {"campus": []}}).page
+    assert not page.is_visible("#btn-continue")
     page = game.goto(state={"name": "Max", "look": "max", "doneW": {"campus": []}}).page
     assert page.is_visible("#btn-continue")
     # Nothing is done yet, so the five steps stay on screen.
@@ -384,3 +389,143 @@ def test_workstreams_seven_and_eight_fold_their_commands(game: GamePage) -> None
     assert page.locator("#s-7 details.cmds[open]").count() == 0
     assert page.locator("#s-8 details.cmds[open]").count() == 0
     assert game.errors == []
+
+
+# A stop done, so the steps are folded and the resume button is offered.
+RETURNING = {"name": "Tom", "look": "own", "done": [1], "doneW": {"campus": [1]}}
+
+
+def _title_box_holds(page, selector: str) -> bool:
+    """Is the element inside the visible part of the scrolling title box?"""
+    return bool(
+        page.evaluate(
+            """sel => { const box = document.querySelector('#title .box');
+              const r = document.querySelector(sel).getBoundingClientRect();
+              const b = box.getBoundingClientRect();
+              return r.top >= b.top - 0.5 && r.bottom <= b.bottom + 0.5; }""",
+            selector,
+        )
+    )
+
+
+def test_the_go_row_stays_on_screen_when_the_setup_guide_opens(
+    game_desktop: GamePage,
+) -> None:
+    """The row the copy points at is sticky at both ends, so it cannot leave."""
+    page = game_desktop.goto().page
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_selector("#ob-setup", state="visible")
+    game_desktop.still("document.querySelector('#title .box').scrollTop")
+    assert _title_box_holds(page, "#name"), "the name field scrolled out of the box"
+    assert _title_box_holds(page, GO_BUTTON), "Start scrolled out of the box"
+    page.fill("#name", "Tom")
+    page.click(GO_BUTTON)
+    page.wait_for_selector("#title.off", state="attached")
+    assert game_desktop.state()["name"] == "Tom"
+    game_desktop.screenshot("title-full-experience")
+    assert game_desktop.errors == []
+
+
+def test_the_sticky_row_does_not_cover_the_text_below_it(
+    game_desktop: GamePage,
+) -> None:
+    page = game_desktop.goto(state=RETURNING).page
+    overlap = page.evaluate(
+        """() => { const go = document.querySelector('#title .row.go');
+          const intro = document.getElementById('intro');
+          return go.getBoundingClientRect().bottom
+            - intro.getBoundingClientRect().top; }"""
+    )
+    assert overlap <= 0.5, f"the go row prints over the intro by {overlap} px"
+    game_desktop.screenshot("title-returning")
+    assert game_desktop.errors == []
+
+
+def test_the_campus_is_covered_and_deaf_until_start(game_desktop: GamePage) -> None:
+    """The title is modal: no tab stop, no click and no key reaches the HUD."""
+    page = game_desktop.goto().page
+    assert not page.is_visible("#hud")
+    assert not page.is_visible("#talk")
+    for _ in range(4):
+        page.keyboard.press("Tab")
+        assert page.evaluate(
+            "() => document.getElementById('title').contains(document.activeElement)"
+        ), "focus reached the campus behind the title"
+    page.keyboard.press("c")
+    assert not page.evaluate(
+        "() => document.getElementById('sheet').classList.contains('on')"
+    )
+    page.keyboard.press("Meta+k")
+    assert not page.evaluate(
+        "() => document.getElementById('pal').classList.contains('on')"
+    )
+    # The same keys work the moment the game has started.
+    game_desktop.start("Tom")
+    assert page.is_visible("#hud")
+    page.keyboard.press("Meta+k")
+    page.wait_for_selector("#pal.on", state="attached")
+    assert game_desktop.errors == []
+
+
+def test_enter_in_the_name_field_starts_the_game(game: GamePage) -> None:
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('Your own name')")
+    page.fill("#name", "Tom")
+    page.dispatch_event("#name", "input")
+    page.press("#name", "Enter")
+    page.wait_for_selector("#title.off", state="attached")
+    assert game.state()["name"] == "Tom"
+    assert game.errors == []
+
+
+def test_your_own_name_keeps_a_name_that_was_typed(game: GamePage) -> None:
+    page = game.goto().page
+    page.fill("#name", "Tom")
+    page.dispatch_event("#name", "input")
+    page.click("#onboard button.choice:has-text('Your own name')")
+    assert page.input_value("#name") == "Tom"
+    assert game.state()["name"] == "Tom"
+    # A preset's label was never typed, so that one is cleared.
+    page.click("#onboard button.choice:has-text('Frank')")
+    page.click("#onboard button.choice:has-text('Your own name')")
+    assert page.input_value("#name") == ""
+    assert game.errors == []
+
+
+def test_a_returning_player_can_open_the_steps_again(game: GamePage) -> None:
+    """ "You can switch to this later" has a later: the steps fold, not vanish."""
+    page = game.goto(state=RETURNING).page
+    assert not page.is_visible("#onboard")
+    page.click("#obfold > summary")
+    page.wait_for_selector("#onboard", state="visible")
+    page.click("#onboard button.choice:has-text('Just the game')")
+    assert game.state()["mode"] == "online"
+    assert game.errors == []
+
+
+def test_the_setup_guide_sends_you_to_the_roadmap_for_sync(game: GamePage) -> None:
+    page = game.goto().page
+    page.click("#onboard button.choice:has-text('The full experience')")
+    guide = page.inner_text("#ob-setup")
+    assert "under Roadmap, Sync" in guide, guide
+    assert "World, Sync" not in guide, guide
+    assert game.errors == []
+
+
+def test_the_title_form_fits_an_iphone(game_webkit_iphone: GamePage) -> None:
+    """Every control of the form is reachable on the smallest screen."""
+    page = game_webkit_iphone.goto().page
+    assert not page.is_visible("#hud")
+    page.click("#onboard button.choice:has-text('The full experience')")
+    page.wait_for_selector("#ob-setup", state="visible")
+    game_webkit_iphone.still("document.querySelector('#title .box').scrollTop")
+    assert _title_box_holds(page, "#name")
+    assert _title_box_holds(page, GO_BUTTON)
+    assert page.evaluate(
+        "() => document.documentElement.scrollWidth <= window.innerWidth + 1"
+    ), "the title form scrolls sideways"
+    game_webkit_iphone.screenshot("title-iphone")
+    page.fill("#name", "Tom")
+    page.press("#name", "Enter")
+    page.wait_for_selector("#title.off", state="attached")
+    assert game_webkit_iphone.errors == []

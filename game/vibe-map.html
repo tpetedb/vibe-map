@@ -167,6 +167,13 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    until start), so the panel sits left on wide screens and leaves the
    right half of the stage clear. */
 #title{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;padding:16px;background:rgba(0,0,0,.22)}
+/* The title is modal: the island keeps turning behind it, but the HUD, the
+   walk hint and the speech bubble are covered by the panel and dead to a
+   click, so they are hidden rather than half readable under it. Hidden, not
+   removed: the stage keeps its size, so the camera does not jump at Start.
+   This is also what takes the HUD out of the tab order until then. */
+body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
+body:has(#title:not(.off)) #talk{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -199,8 +206,14 @@ details.brief p{margin-top:8px}
 .setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
 .setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
 /* The primary row stays on screen however long the form gets, and the setup
-   guide is rendered below it rather than between two steps. */
-#title .box .row.go{position:sticky;bottom:-18px;z-index:2;margin:14px -22px -18px;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
+   guide is rendered below it rather than between two steps. Both offsets: a
+   sticky bottom alone lets the row scroll off the top once the guide is open,
+   and the field and the button must never be out of reach. The top offset is
+   the box's own padding, so the held row covers that strip instead of leaving
+   a clipped line of text above itself. The row's own
+   padding fills the box's bottom padding when it rests at the end, so it takes
+   no negative margin, which would print the opaque row over the text below. */
+#title .box .row.go{position:sticky;top:-22px;bottom:-18px;z-index:2;margin:14px -22px 0;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
 #title .box .row.go #name{flex:1;min-width:150px;width:auto}
 #title .box .row.go #namehint{flex-basis:100%;margin:-2px 0 0;font-size:13px}
 #title .box .row.go+.setup{margin-top:18px}
@@ -209,7 +222,12 @@ details.brief p{margin-top:8px}
   #name.shake{animation:shake 320ms var(--ease)}
   @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-4px)}}
 }
-#title.returning #onboard{display:none}
+/* First visit: the steps are the screen, so the disclosure is invisible and
+   only a returning player gets the line that opens them again. */
+#title:not(.returning) #obfold>summary{display:none}
+#obfold>summary{cursor:pointer;font-size:13px;color:var(--blue-bright);list-style:none;font-family:var(--font-mono);margin:12px 0 0}
+#obfold>summary::-webkit-details-marker{display:none}
+#obfold>summary::before{content:"> "}#obfold[open]>summary::before{content:"v "}
 #title.returning details.brief{margin-top:10px}
 /* Lesson commands fold at hard and above; the summary is the only thing
    that changes with the difficulty, the commands are always one click away. */
@@ -477,11 +495,14 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
-    <div id="onboard"></div>
+    <!-- The five steps fold rather than disappear for a returning player, so
+         the look, the difficulty and the play mode stay changeable on every
+         later evening. 90-boot.js closes it once a stop is done. -->
+    <details id="obfold" open><summary>Change your setup</summary><div id="onboard"></div></details>
     <!-- The field and the button the copy points at travel together: both live
          in the sticky row, so neither can be below the fold while the other is
          on screen. -->
-    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
+    <div class="row go"><input type="text" id="name" value="" aria-label="Your name" placeholder="&lt;your_name&gt;" oninput="nameTyped(this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();start()}"><button class="primary" id="btn-go" data-icon="rocket" onclick="start()">Start</button><button id="btn-continue" data-icon="play" style="display:none" onclick="start()">Resume</button><p class="small muted" id="namehint">Type your name plainly.</p></div>
     <div id="ob-setup" class="setup" style="display:none"></div>
     <p id="intro">Dear Chief of Staff. Welcome to your greenfield, cloud-agnostic, future-proof Innovation Campus. As of today the only asset on the balance sheet is Rolinda's Hospitality Hub, which is admittedly best in class. Over one evening of high-bandwidth synchronous co-creation, one workstream per hour, we will stand up eight strategic capabilities, unlock eight OKRs, operationalise a repeatable AI delivery framework and drive end-to-end, top-to-bottom value realisation at scale. On the final slide, and I cannot stress this enough, we will align on a go-live date.</p>
     <p id="roles">Tom is your Site Reliability Engineer, Executive Sponsor, and single-threaded owner of this initiative. Rolinda is Head of Hospitality Operations (Beverages) and, per the RACI, the only stakeholder empowered to speak like a person. On the subject of wine, however, she is insufferable, and the evening is paired accordingly, beginning with a Chardonnay from Bourgogne die, in her words, lekker arrogant aan de wang hangt en goed tegen de huig galoppeert.</p>
@@ -4502,9 +4523,9 @@ const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
   ["easy","Easy","Commands open, a little less hand-holding."],
   ["normal","Normal","Commands open. Checks look at what you built."],
-  ["hard","Hard","Commands folded (one click opens them). Strict checks."],
-  ["expert","Expert","Commands folded. Tests must exist and pass."],
-  ["god","God","Commands folded. just verify must be green to claim."]
+  ["hard","Hard","Command blocks folded (one click opens them). Strict checks."],
+  ["expert","Expert","Command blocks folded. Tests must exist and pass."],
+  ["god","God","Command blocks folded. just verify must be green to claim."]
 ];
 // The walker spec for the current player. Unknown or missing looks fall back
 // to Lotte for a saved game that was played as her, else to your own look.
@@ -4564,7 +4585,7 @@ vibe vault build</code></pre>
 <p class="small muted">You should see: <code>vault/Camp/Tonight.md</code> on disk, and a graph with notes in it in Obsidian.</p>
 <h4>5. Keep the two in sync</h4>
 <p class="small">Progress here and progress in the terminal are one code. After a session in either place, carry it across:</p>
-<pre><code>vibe export                                # prints a code; paste it in the game under World, Sync
+<pre><code>vibe export                                # prints a code; paste it in the game under Roadmap, Sync
 vibe import &lt;code from the game&gt;           # the other way round</code></pre>
 <p class="small muted">You should see: a long code on export, and a line naming the stops that were added on import.</p>
 <h4>6. Confirm the whole thing</h4>
@@ -4574,7 +4595,12 @@ vibe import &lt;code from the game&gt;           # the other way round</code></p
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+// A preset's label is the picker's own writing, never something the player
+// typed, so it is the one value "Your own name" is allowed to clear.
+function presetLabel(v){return Object.keys(LOOKS).some(k=>k!=="own"&&LOOKS[k].label===v)}
+window.pickLook=function(id){S.look=id;const nm=$("name");
+  if(id!=="own")nm.value=LOOKS[id].label;else{if(presetLabel(nm.value))nm.value="";nm.focus()}
+  S.name=nm.value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
 // The walker carries the name on a sprite, so it is rebuilt after typing
@@ -4614,6 +4640,15 @@ ${presetRow()}
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
+// The title is modal: until Start the campus behind it is not there. The
+// stylesheet takes away the HUD's tab stops and its clicks; this takes away the
+// global keys, so c, Cmd K and Escape cannot open a panel over the form or
+// claim a stop before the game has begun. A key aimed at the form is swallowed
+// on its way out, after the field or the button it was aimed at has had it; a
+// key aimed at nothing is swallowed on the window, before the handlers there.
+function swallowKey(e){if(!$("title").classList.contains("off"))e.stopPropagation()}
+$("title").addEventListener("keydown",swallowKey);
+addEventListener("keydown",e=>{if(!$("title").contains(e.target))swallowKey(e)},true);
 /* ---------------- chat (your own subscription, answering about the game) ---------------- */
 // A browser page cannot reach a terminal subscription, so the answers come from
 // a loopback bridge the player starts themselves: vibe chat serve --pair CODE.
@@ -4931,9 +4966,12 @@ setInterval(()=>{if(typeof started!=="undefined"&&started&&!document.hidden)trac
 // Test seam: the derived numbers, so a test can assert on them without
 // re-deriving the shapes by hand.
 window.__dash=()=>{const st=dashStats();return {events:st.ev.length,stops:st.stops,xp:st.xp,streak:st.streak,played:st.played,dwell:st.dwell,claims:st.claims.length}};
-// Resume is offered to anyone who has been here before, not only to someone
-// with a stop done; the steps only fold away once the campaign has started.
-if(load()){$("name").value=S.name;if(S.done.length||S.look||S.name)$("btn-continue").style.display="";if(S.done.length)$("title").classList.add("returning")}
+// Resume is offered to anyone who has been here before, but only when there is
+// something to resume with: start() refuses an empty name, so a saved look on
+// its own would be a button that turns you down. Once a stop is done the five
+// steps fold into their disclosure and the resume button is the first thing.
+if(load()){$("name").value=S.name;if(S.name)$("btn-continue").style.display="";
+  if(S.done.length){$("title").classList.add("returning");$("obfold").open=false}}
 // ?reset must run after load(), or it saves the defaults over the real record.
 if(new URLSearchParams(location.search).has("reset"))resetProgress();
 // Pairings are written for wine. Any other theme gets its own one-line pairing
