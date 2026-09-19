@@ -95,6 +95,10 @@ def test_the_contents_is_sticky_on_a_wide_screen_and_gone_on_a_phone(
     # No horizontal page scroll: a table scrolls inside its own box instead.
     assert p2.evaluate("document.documentElement.scrollWidth") <= 390
     p2.screenshot(path=str(OUT / "syllabus-phone.png"), full_page=False)
+    # Narrower than any phone, because how wide a long URL or a path in code
+    # gets is a question about the reader's fonts, not about our layout.
+    p2.set_viewport_size({"width": 320, "height": 800})
+    assert p2.evaluate("document.documentElement.scrollWidth") <= 320
     phone.close()
 
 

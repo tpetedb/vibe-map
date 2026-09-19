@@ -24,9 +24,12 @@
 html{scroll-behavior:smooth;scroll-padding-top:1.5rem}
 body{margin:0;background:var(--paper);color:var(--ink);
   font-family:var(--font-body);font-size:17px;line-height:1.65;
-  -webkit-text-size-adjust:100%}
+  overflow-wrap:break-word;-webkit-text-size-adjust:100%}
+/* minmax(0,...), never a bare 1fr: an auto grid minimum is the column's
+   min-content, so one long unbreakable token would widen the whole page
+   and give a phone a horizontal scroll. */
 .wrap{max-width:68rem;margin:0 auto;padding:0 16px 6rem;
-  display:grid;grid-template-columns:1fr;gap:0 2.5rem}
+  display:grid;grid-template-columns:minmax(0,1fr);gap:0 2.5rem}
 header.top{grid-column:1/-1;padding:3.5rem 0 1.5rem;
   border-bottom:1px solid var(--rule)}
 header.top .kicker{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;
