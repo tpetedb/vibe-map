@@ -377,8 +377,9 @@ def test_skills_are_counted_once() -> None:
 
     paths = _skills()
     assert len(paths) == len({p.resolve() for p in paths})
+    # Only a skill the camp did not ship counts; develop-camp is the product's.
     ok, detail = _c2_skill(Config())
-    assert ok and detail.startswith(f"{len(paths)} skill")
+    assert ok and detail == "1 skill(s) of your own: develop-camp"
 
 
 def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:

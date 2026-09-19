@@ -15,12 +15,13 @@ from pathlib import Path
 
 from click.testing import CliRunner
 
+from tests.conftest import encode_progress
 from vibemap import campaign
 from vibemap.cli import cli
 from vibemap.config import Config
 from vibemap.quests import quest_for
 from vibemap.state import State
-from vibemap.vault import Vault, learner_sections, safe_title
+from vibemap.vault import Vault, learner_sections, safe_title, stub_bullet
 
 OWN_NOTE = """Today I built the thing myself and it took two evenings of
 reading and swearing. The agent wrote the first draft, I rewrote the half that
@@ -80,7 +81,7 @@ def test_a_note_in_the_learners_own_words_passes(tmp_path: Path) -> None:
     assert "not done yet" in text
     note.write_text(
         text.replace(
-            "- not done yet; run `vibe check` when it is",
+            f"- {stub_bullet('winter', ws.n)}",
             "\n".join(f"- {line}" for line in OWN_NOTE.strip().splitlines()),
         ),
         encoding="utf-8",
@@ -98,7 +99,7 @@ def test_generated_lines_never_count_as_the_learners_words(tmp_path: Path) -> No
         ws.name,
         summary=f"{ws.hour}, [[Evening 2]]. Outcome: {ws.outcome}.",
         bullets=[
-            "not done yet; run `vibe check` when it is",
+            stub_bullet("winter", ws.n),
             "links: [[Tonight]], [[Map]]",
         ],
         tags=["workstream"],
@@ -124,9 +125,7 @@ def test_a_claim_replaces_the_stub_instead_of_contradicting_it(tmp_path: Path) -
         "tags": ["workstream"],
         "sources": [u for _, u in ws.sources],
     }
-    v.upsert_dated(
-        ws.name, bullets=["not done yet; run `vibe check` when it is"], **common
-    )
+    v.upsert_dated(ws.name, bullets=[stub_bullet("campus", ws.n)], **common)
     v.upsert_dated(ws.name, bullets=["done at 19:10", "built the game"], **common)
     text = v.path(ws.name).read_text(encoding="utf-8")
     assert "not done yet" not in text
@@ -183,3 +182,53 @@ def test_the_linked_badge_counts_only_the_learners_own_links(tmp_path: Path) -> 
     )
     assert Vault(cfg, st).lint().own_link_count() >= OWN_LINKS_BADGE
     assert "linked" in new_badges(st, cfg)
+
+
+def test_the_stub_names_the_command_that_checks_that_stop(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    ws = campaign.evenings()["winter"].workstreams[7]
+    note = camp / "vault" / "Camp" / f"{safe_title(ws.name)}.md"
+    assert "run `vibe check -w winter 8` when it is" in note.read_text("utf-8")
+    first = campaign.evenings()["campus"].workstreams[0]
+    campus = camp / "vault" / "Camp" / f"{safe_title(first.name)}.md"
+    assert "run `vibe check 1` when it is" in campus.read_text("utf-8")
+
+
+def test_an_imported_stop_stops_saying_it_is_not_done(tmp_path: Path) -> None:
+    camp = _camp(tmp_path)
+    ws = campaign.evenings()["winter"].workstreams[7]
+    note = camp / "vault" / "Camp" / f"{safe_title(ws.name)}.md"
+    assert "not done yet" in note.read_text(encoding="utf-8")
+    code = encode_progress(name="T", done_w={"winter": list(range(1, 9))})
+    env = dict(os.environ, VIBE_HOME=str(camp))
+    out = subprocess.run(
+        [sys.executable, "-m", "vibemap.cli", "import", code],
+        cwd=camp,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert out.returncode == 0, out.stdout + out.stderr
+    text = note.read_text(encoding="utf-8")
+    assert "not done yet" not in text, text
+    assert "imported" in text, text
+
+
+def test_a_links_line_of_the_learners_own_counts(tmp_path: Path) -> None:
+    """Only the links line vibe writes is generated; the learner's is theirs."""
+    camp = _camp(tmp_path)
+    ws = campaign.evenings()["winter"].workstreams[1]
+    note = camp / "vault" / "Camp" / f"{safe_title(ws.name)}.md"
+    text = note.read_text(encoding="utf-8")
+    own = "\n".join(f"- {line}" for line in OWN_NOTE.strip().splitlines())
+    own = own.replace("See [[Git]] and\n- [[Docker and containers]]", "See them")
+    note.write_text(
+        text.replace(
+            f"- {stub_bullet('winter', ws.n)}",
+            own + "\n- links: [[Git]], [[Docker and containers]], [[Tonight]]",
+        ),
+        encoding="utf-8",
+    )
+    output = _check(camp, "winter", 2)
+    assert "pass" in output, output
+    assert "fail" not in output, output

@@ -138,6 +138,22 @@ def _skills() -> list[Path]:
     return out
 
 
+def _shipped(rel: str) -> str | None:
+    """The file `vibe new` wrote at this path, or None when it ships none.
+
+    A check has to tell the learner's work from the camp's scaffolding, and
+    the template inside the package is the only record of what was scaffolded.
+    """
+    with project.data_dir("template") as d:
+        p = Path(d) / rel
+        return p.read_text(encoding="utf-8") if p.is_file() else None
+
+
+def _is_shipped(p: Path, rel: str) -> bool:
+    """True when this file is still byte for byte the one the camp came with."""
+    return p.is_file() and p.read_text(encoding="utf-8") == _shipped(rel)
+
+
 def _settings() -> dict:
     p = ROOT / ".claude" / "settings.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
@@ -181,19 +197,27 @@ def _c2_agents_md(cfg: Config) -> tuple[bool, str]:
     if not p.exists():
         return False, "AGENTS.md is missing"
     n = _count_lines(p)
-    return n >= 8, f"AGENTS.md has {n} lines"
+    if _is_shipped(p, "AGENTS.md"):
+        return False, f"AGENTS.md has {n} lines, still the ones `vibe new` wrote"
+    return n >= 8, f"AGENTS.md has {n} lines of your own"
 
 
 def _c2_skill(cfg: Config) -> tuple[bool, str]:
     good = []
     for p in _skills():
         head = p.read_text(encoding="utf-8")
-        if head.startswith("---") and "name:" in head and "description:" in head:
-            good.append(p.parent.name)
+        if not (head.startswith("---") and "name:" in head and "description:" in head):
+            continue
+        if _is_shipped(p, f"_agents/skills/{p.parent.name}/SKILL.md"):
+            continue
+        good.append(p.parent.name)
     if not good:
-        return False, "no skill with name and description in its frontmatter"
+        return False, (
+            f"{len(_skills())} skill(s), every one of them a skill the camp "
+            "shipped with; write one of your own"
+        )
     shown = ", ".join(good[:3]) + (", ..." if len(good) > 3 else "")
-    return True, f"{len(good)} skill(s) with valid frontmatter: {shown}"
+    return True, f"{len(good)} skill(s) of your own: {shown}"
 
 
 def _c2_strict(cfg: Config) -> tuple[bool, str]:
@@ -250,6 +274,24 @@ def _c4_strict(cfg: Config) -> tuple[bool, str]:
     return n >= 8, f"{n} commits (8 needed on strict)"
 
 
+def _local_mcp_servers() -> list[str]:
+    """Servers added without a scope: ~/.claude.json, under this camp's path.
+
+    `claude mcp add` defaults to the local scope, so the lesson's command
+    writes there and never to .mcp.json.
+    See https://code.claude.com/docs/en/mcp#find-your-configuration-on-disk
+    """
+    p = Path.home() / ".claude.json"
+    if not p.is_file():
+        return []
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    project_ = data.get("projects", {}).get(str(ROOT), {})
+    return list(project_.get("mcpServers", {}))
+
+
 def _c5_mcp(cfg: Config) -> tuple[bool, str]:
     p = ROOT / ".mcp.json"
     if p.exists():
@@ -258,13 +300,20 @@ def _c5_mcp(cfg: Config) -> tuple[bool, str]:
             return True, f".mcp.json servers: {', '.join(servers)}"
     if _settings().get("mcpServers"):
         return True, "mcpServers in .claude/settings.json"
-    return False, "no .mcp.json with servers"
+    local = _local_mcp_servers()
+    if local:
+        return True, f"local scope servers for this camp: {', '.join(local)}"
+    return False, "no MCP server for this camp, in any scope"
 
 
 def _c6_vault(cfg: Config) -> tuple[bool, str]:
     r = _vault_report(cfg)
-    ok = r.notes >= 6 and r.link_count() >= 12
-    return ok, f"{r.notes} notes, {r.link_count()} wikilinks"
+    ok = r.own_notes >= 3 and r.own_link_count() >= 6
+    return ok, (
+        f"{r.own_notes} note(s) you wrote (needs 3) and "
+        f"{r.own_link_count()} wikilink(s) of your own (needs 6), "
+        f"in a vault of {r.notes} notes"
+    )
 
 
 def _c6_strict(cfg: Config) -> tuple[bool, str]:
@@ -273,9 +322,19 @@ def _c6_strict(cfg: Config) -> tuple[bool, str]:
 
 
 def _c7_pages(cfg: Config) -> tuple[bool, str]:
-    wf = list((ROOT / ".github" / "workflows").glob("*.yml"))
-    if any("pages" in p.read_text(encoding="utf-8") for p in wf):
-        return True, "a Pages workflow exists"
+    """A workflow of the learner's own, else the site itself.
+
+    The camp ships `.github/workflows/pages.yml`, so its presence proves
+    nothing; either the learner wrote the publishing or the site answers.
+    """
+    own = [
+        p
+        for p in (ROOT / ".github" / "workflows").glob("*.yml")
+        if "pages" in p.read_text(encoding="utf-8")
+        and not _is_shipped(p, f"_github/workflows/{p.name}")
+    ]
+    if own:
+        return True, f"{own[0].name}, a Pages workflow of your own"
     return _c7_strict(cfg)
 
 
@@ -322,10 +381,25 @@ def _c8_schedule(cfg: Config) -> tuple[bool, str]:
         cron = ""
     if "claude" in cron:
         return True, "crontab runs claude"
+    plist = _launchd_agent()
+    if plist:
+        return True, f"a launchd agent runs it: {plist}"
     return (
         False,
-        "no schedule found (workflow schedule:, crontab, or a print-mode script)",
+        "no schedule found (workflow schedule:, launchd, crontab, "
+        "or a print-mode script)",
     )
+
+
+def _launchd_agent() -> str:
+    """A launchd agent that runs an agent: the route stop 8 teaches on macOS."""
+    folders = [Path.home() / "Library" / "LaunchAgents", ROOT, ROOT / "scripts"]
+    for d in folders:
+        for p in sorted(d.glob("*.plist")) if d.is_dir() else []:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+            if "claude" in text or str(ROOT) in text:
+                return p.name
+    return ""
 
 
 def _is_product() -> bool:
@@ -760,7 +834,9 @@ def _dir_check(
 
 def _w8_makemore(_: Config) -> tuple[bool, str]:
     d = _at("workspace/winter/makemore")
-    code = [p for p in sorted(d.glob("*")) if p.suffix in (".py", ".ipynb")]
+    if not d.is_dir():
+        return False, "workspace/winter/makemore/ does not exist"
+    code = [p for p in sorted(d.rglob("*")) if p.suffix in (".py", ".ipynb")]
     if not code:
         return False, "no .py or .ipynb in workspace/winter/makemore/"
     samples = d / "samples.txt"
@@ -790,11 +866,17 @@ def _d2_dotfolders(_: Config) -> tuple[bool, str]:
     p = _at("workspace/desert/dotfiles.md")
     if not p.is_file():
         return False, "workspace/desert/dotfiles.md does not exist"
-    entries = {
-        m.group(0)
-        for m in re.finditer(r"(?<![\w.])\.[a-z][a-z0-9_-]{1,20}", p.read_text("utf-8"))
-    }
-    return len(entries) >= 6, f"{len(entries)} dot entries explained (needs 6)"
+    entries = set()
+    for line in _body(p):
+        m = re.search(r"(?<![\w.])\.[a-z][a-z0-9_-]{1,20}", line)
+        if not m:
+            continue
+        rest = (line[: m.start()] + line[m.end() :]).strip(" -*`:|#")
+        if len(rest.split()) >= 3:
+            entries.add(m.group(0))
+    return len(entries) >= 6, (
+        f"{len(entries)} dot entries with a line explaining them (needs 6)"
+    )
 
 
 def _d3_tests(_: Config) -> tuple[bool, str]:
@@ -851,17 +933,31 @@ def _d6_ci(_: Config) -> tuple[bool, str]:
             wf = yaml.safe_load(p.read_text(encoding="utf-8"))
         except yaml.YAMLError as e:
             return False, f"{p.name} is not valid YAML: {_plain(str(e))[:80]}"
-        body = json.dumps(wf)
-        if "pytest" in body or "ruff" in body:
-            return True, f"{p.name} parses and runs the checks"
-    return False, f"{len(files)} workflow(s) parse, none runs pytest or ruff"
+        if not isinstance(wf, dict):
+            continue
+        for job_id, job in (wf.get("jobs") or {}).items():
+            if not isinstance(job, dict):
+                continue
+            for step in job.get("steps") or []:
+                run = str(step.get("run", "")) if isinstance(step, dict) else ""
+                found = next((w for w in ("pytest", "ruff") if w in run), "")
+                if found:
+                    return True, f"{p.name}: job {job_id} runs {found}"
+    return False, (
+        f"{len(files)} workflow(s) parse, no step of any job runs pytest or ruff"
+    )
 
 
 def _d7_job(_: Config) -> tuple[bool, str]:
     d = _at("workspace/jobs")
-    scripts = [p for p in sorted(d.glob("*")) if p.suffix in (".sh", ".py")]
+    found = [p for p in sorted(d.glob("*")) if p.suffix in (".sh", ".py")]
+    scripts = [p for p in found if len(_body(p)) >= 2]
     if not scripts:
-        return False, "no .sh or .py in workspace/jobs/"
+        return False, (
+            f"{len(found)} script(s) in workspace/jobs/, none with a job in it"
+            if found
+            else "no .sh or .py in workspace/jobs/"
+        )
     log = d / "log.csv"
     if not log.is_file():
         return False, "no workspace/jobs/log.csv; the job records every run"
@@ -1076,7 +1172,11 @@ def _fork_repaired(_: Config) -> tuple[bool, str]:
         return False, (
             f"{len(runs)} recorded run(s); needs a broken one, then a green one"
         )
-    if not (d / ".git").exists():
+    inside = subprocess.run(
+        ["git", "-C", str(d), "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True, timeout=20,
+    )  # fmt: skip
+    if inside.returncode != 0:
         return False, f"no {FORK_DIR.as_posix()}/{FORK_REPAIR} and no git history"
     log = subprocess.run(
         ["git", "log", "--format=%s", "-n", "50"],
