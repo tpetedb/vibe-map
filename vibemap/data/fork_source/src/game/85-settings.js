@@ -29,6 +29,8 @@ function applySettings(){const s=settings();
   // stylesheet hides every element marked live-feed, loadNews checks the same.
   if(typeof liveNews==="function"){document.body.classList.toggle("no-live",!liveNews());if(liveNews())renderNews()}
   if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
+  // Difficulty gates the bridges, so the island answers the setting at once.
+  if(typeof refreshBridges==="function")refreshBridges();
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
 window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};

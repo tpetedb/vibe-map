@@ -223,6 +223,9 @@ def _config_js() -> str:
         "theme": theme,
         "dates": cfg.finale.dates,
         "repo": cfg.game.repo_url,
+        # Where the product is published, so the game can link to a document
+        # that lives beside it there from a camp that has no copy of one.
+        "site": cfg.game.site_url,
         "shadowMap": cfg.game.shadow_map,
         "difficulty": cfg.learner.difficulty,
         "persona": cfg.learner.persona,

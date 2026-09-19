@@ -34,6 +34,7 @@ GENERATED = (
     "docs/RESOURCES.md",
     "docs/OBSIDIAN.md",
     "docs/COOKBOOK.md",
+    "docs/site/syllabus.html",
     "vibemap/data/fork_source/",
     "vibemap/data/template/_agents/",
     "vibemap/data/template/_claude/",
@@ -45,6 +46,7 @@ GENERATED = (
 REGENERATE = (
     ("python", "tools/regen_tree.py"),
     ("python", "tools/gen_cookbook.py"),
+    ("python", "tools/gen_syllabus.py"),
     ("python", "tools/sync_template.py"),
     ("python", "tools/build.py"),
     ("python", "tools/sync_fork_source.py"),
@@ -59,6 +61,7 @@ GATES = (
     ("python", "tools/checks.py", "style"),
     ("python", "tools/regen_tree.py", "--check"),
     ("python", "tools/gen_cookbook.py", "--check"),
+    ("python", "tools/gen_syllabus.py", "--check"),
     ("python", "tools/sync_template.py", "--check"),
     ("python", "tools/build.py", "--check"),
     ("python", "tools/sync_fork_source.py", "--check"),

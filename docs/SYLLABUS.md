@@ -10,6 +10,74 @@ Every workstream ends the same way: Lotte explains what just happened to Rolinda
 
 18:00 Bourgogne Chardonnay, unoaked, 11°C, gougères. 19:00 same bottle opening up, Marcona almonds. 20:00 Sancerre, chèvre by ash content. 21:00 Barolo decanted at 19:30, charcuterie. 21:30 Grüner Veltliner, truffle crisps. 22:00 grower Champagne, zero dosage, 72% chocolate. 22:30 Tokaji Aszú with Roquefort. 23:00 Armagnac, last orders. Rolinda's note on the Chardonnay, verbatim: "lekker arrogant aan de wang hangt en goed tegen de huig galoppeert."
 
+## Before you start: what you need
+
+A Mac with Apple silicon and Chrome is what these evenings were written on. You need a coding agent in your terminal with a paid plan behind it: the course is written for Claude Code on a Claude Pro, Max, Team or Enterprise plan, and `config/camp.toml` under `[learner] provider` points the companion at `codex`, `gemini`, `copilot` or `opencode` instead. The instructions still read the same either way, because AGENTS.md and the Agent Skills standard are what the rest of the setup speaks, not a vendor.
+
+You also need a GitHub account for the evening that publishes your game, Obsidian, which is free, and about twenty minutes for the pre-flight below.
+
+Nothing to install, if you would rather not: the whole course runs in a browser on GitHub Codespaces. Open the repository, press **Code**, **Codespaces**, **Create codespace on main**, and the container arrives with the tools in it. Compute is charged to the account that owns the codespace, so one you create runs on your own free monthly hours. [QUICKSTART.md](QUICKSTART.md) has all four ways in, including this one.
+
+## The course at a glance
+
+<!-- generated:course-map. Do not edit inside; run `just syllabus`. -->
+
+Four evenings, thirty-two stops, one island each. Every stop has a definition of done the terminal companion can check, so the parts a night does not reach can be done alone later.
+
+**Evening 1: Ship first, then discipline** on the Innovation Campus. Eight workstreams, one island, from an MVP to headless automation.
+
+| Stop | What | You leave with | Sources |
+|---|---|---|---|
+| 18:00 | Innovation Hub | a playable single-file game | [Docs](https://code.claude.com/docs/en/quickstart) |
+| 19:00 | Centre of Excellence | AGENTS.md rules and a first skill | [Docs](https://agents.md) |
+| 20:00 | Data Warehouse | scores.csv, DuckDB queries, a Python chart | [Docs](https://duckdb.org/docs/) |
+| 21:00 | Business Continuity | git history, one rollback, one hook | [Docs](https://code.claude.com/docs/en/hooks-guide) |
+| 21:30 | Stakeholder Bridge | one MCP integration | [Docs](https://code.claude.com/docs/en/mcp) |
+| 22:00 | Knowledge Tree | a linked vault and its graph | [Docs](https://help.obsidian.md/plugins/graph) |
+| 22:30 | Go-to-Market | the game at a public URL | [Docs](https://docs.github.com/en/pages/quickstart) |
+| 23:00 | Autonomous Operations | headless Claude on a schedule | [Docs](https://code.claude.com/docs/en/headless) |
+
+**Evening 2: History, and how these models actually work** on the Cold Storage Cluster. Cold storage: the archive. Eighty years in eight stops, with the people who did it.
+
+| Stop | What | You leave with | Sources |
+|---|---|---|---|
+| Stop 1 | Neurons and backprop (1943 to 1989) | McCulloch-Pitts, Rosenblatt, Rumelhart-Hinton-Williams, LeCun's zip codes | [Rumelhart, Hinton, Williams 1986 (Nature)](https://www.nature.com/articles/323533a0) · [Karpathy's lecun1989 reproduction](https://github.com/karpathy/lecun1989-repro) · [micrograd lecture, Zero to Hero](https://karpathy.ai/zero-to-hero.html) |
+| Stop 2 | The ImageNet moment (2012) | Fei-Fei Li's dataset, AlexNet, and why GPUs mattered | [AlexNet paper (NeurIPS 2012)](https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html) · [ImageNet](https://www.image-net.org) · [Karpathy on being the ImageNet reference human](https://karpathy.ai/) |
+| Stop 3 | Attention Is All You Need (2017) | Tokens, embeddings, attention, next-token prediction: the transformer, without hand-waving | [Attention Is All You Need (arXiv)](https://arxiv.org/abs/1706.03762) · [Let's build GPT, Zero to Hero](https://karpathy.ai/zero-to-hero.html) · [Karpathy's channel (general audience track)](https://www.youtube.com/@AndrejKarpathy) |
+| Stop 4 | Scaling laws and the Bitter Lesson | Why bigger kept winning, and why the Claude Code team framed Sutton's essay | [The Bitter Lesson (Sutton, 2019)](http://www.incompleteideas.net/IncIdeas/BitterLesson.html) · [Scaling Laws for Neural Language Models (Kaplan et al. 2020)](https://arxiv.org/abs/2001.08361) · [How the Claude Code team works (Cherny interview notes)](https://engineeredintelligence.substack.com/p/how-the-claude-code-team-works) |
+| Stop 5 | From base model to assistant | Pretraining, supervised fine-tuning, RLHF, and Constitutional AI | [Constitutional AI (Bai et al. 2022)](https://arxiv.org/abs/2212.08073) · [Core Views on AI Safety (Anthropic)](https://www.anthropic.com/news/core-views-on-ai-safety) · [Training language models to follow instructions (InstructGPT, 2022)](https://arxiv.org/abs/2203.02155) |
+| Stop 6 | Open weights versus closed models, on your own Mac | Licences, Llama, Mistral, Qwen, Gemma; run a local model with Ollama on Apple silicon | [Ollama](https://ollama.com) · [Ollama model library](https://ollama.com/library) · [Open Source AI Definition (OSI)](https://opensource.org/ai/open-source-ai-definition) · [Apple silicon and unified memory (Apple)](https://developer.apple.com/documentation/apple-silicon) |
+| Stop 7 | What they cannot do, and why | Hallucination, context windows, tokeniser quirks, and interpretability | [Transformer Circuits (Anthropic interpretability)](https://transformer-circuits.pub) · [Distill (2016 to 2021 archive)](https://distill.pub) · [Karpathy on tokenisation (Zero to Hero)](https://karpathy.ai/zero-to-hero.html) |
+| Stop 8 | Karpathy's ladder | Build a tiny language model yourself, with Claude as the tutor | [makemore](https://github.com/karpathy/makemore) · [nn-zero-to-hero repo](https://github.com/karpathy/nn-zero-to-hero) · [Zero to Hero course page](https://karpathy.ai/zero-to-hero.html) |
+
+**Evening 3: From vibes to determinism** on the Sandbox Environment. The sandbox: where you stop trusting and start instrumenting. Dotfiles, tests, hooks, CI, evals.
+
+| Stop | What | You leave with | Sources |
+|---|---|---|---|
+| Stop 1 | The vibe dial | Karpathy's vibe coding, Cherny's instrumented coding, and knowing which end you are on | [Karpathy's vibe coding post](https://x.com/karpathy/status/1886192184808149383) · [How Boris uses Claude Code (thread)](https://x.com/bcherny/status/2007179832300581177) · [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny) |
+| Stop 2 | Dotfiles and dotfolders | What .git, .gitignore, .env, .venv, .claude, .agents, .github and ~/.config actually are | [Claude Code settings and precedence](https://code.claude.com/docs/en/settings) · [gitignore documentation](https://git-scm.com/docs/gitignore) · [XDG base directory spec (why ~/.config)](https://specifications.freedesktop.org/basedir-spec/latest/) |
+| Stop 3 | Deterministic checks | Tests, linters and formatters: the cheapest way to make an agent behave | [pytest getting started](https://docs.pytest.org/en/stable/getting-started.html) · [ruff](https://docs.astral.sh/ruff/) · [Claude Code best practices (verification)](https://code.claude.com/docs/en/best-practices) |
+| Stop 4 | Hooks as gates | PreToolUse and PostToolUse, permissions, and refusing edits that skip the checks | [Hooks guide](https://code.claude.com/docs/en/hooks-guide) · [Hooks reference](https://code.claude.com/docs/en/hooks) · [Permissions](https://code.claude.com/docs/en/permissions) |
+| Stop 5 | Plan, spec, small changes | The Cherny workflow: plan mode, a spec, a to-do list, one PR at a time | [Common workflows (plan mode, resume, images)](https://code.claude.com/docs/en/common-workflows) · [Checkpointing and rewind](https://code.claude.com/docs/en/checkpointing) · [How to use Claude Code like the people who built it (Every)](https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it) |
+| Stop 6 | CI: the check that runs without you | GitHub Actions on every push, so the main branch is always green | [GitHub Actions quickstart](https://docs.github.com/en/actions/quickstart) · [uv in GitHub Actions](https://docs.astral.sh/uv/guides/integration/github/) · [Protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches) |
+| Stop 7 | Repetitive tasks, reliably | Headless runs, schedules, idempotency, and when a subagent beats a prompt | [Headless / programmatic use](https://code.claude.com/docs/en/headless) · [Subagents](https://code.claude.com/docs/en/sub-agents) · [launchd (Apple)](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPSystemStartup/Chapters/CreatingLaunchdJobs.html) |
+| Stop 8 | Evals: measure the agent, not the vibe | A tiny harness that scores your prompts and skills on fixed cases | [Building evals (Anthropic docs)](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Claude Code best practices](https://code.claude.com/docs/en/best-practices) · [Anthropic cookbook (evals examples)](https://github.com/anthropics/anthropic-cookbook) |
+
+**Evening 4: Terminal, git and the toolbelt, on Apple silicon** on the Production Environment. Production: your machine, set up like someone who does this every day. Mac, Chrome, Ghostty, git, Claude everywhere.
+
+| Stop | What | You leave with | Sources |
+|---|---|---|---|
+| Stop 1 | The Mac, properly | Homebrew, Apple silicon, Chrome, and the three settings that save an hour a week | [Homebrew](https://brew.sh) · [Homebrew Bundle (Brewfile)](https://docs.brew.sh/Brew-Bundle-and-Brewfile) · [Apple silicon developer docs](https://developer.apple.com/documentation/apple-silicon) |
+| Stop 2 | A terminal you enjoy | Ghostty, zsh, starship, fzf, ripgrep, bat, eza, and Tom's configs | [Ghostty](https://ghostty.org) · [GitHub: dotfiles guide](https://dotfiles.github.io) · [starship](https://starship.rs) · [fzf](https://github.com/junegunn/fzf) · [ripgrep](https://github.com/BurntSushi/ripgrep) |
+| Stop 3 | Git, part one | Fork, clone, branch, commit, push, pull request, learned by doing it to the template | [Git tutorial (official)](https://git-scm.com/docs/gittutorial) · [GitHub: fork a repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) · [GitHub CLI manual](https://cli.github.com/manual/) |
+| Stop 4 | Git, part two | Revert, reset, rebase, cherry-pick, worktrees, and how Cherny runs five agents at once | [git rebase](https://git-scm.com/docs/git-rebase) · [git worktree](https://git-scm.com/docs/git-worktree) · [Cherny on parallel checkouts (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/) |
+| Stop 5 | Claude Code, the power settings | Plan mode, --continue, /compact, /rewind, permissions, memory, and the surfaces: terminal, web, phone and Chrome | [Memory (CLAUDE.md, imports, precedence)](https://code.claude.com/docs/en/memory) · [Settings](https://code.claude.com/docs/en/settings) · [CLI reference](https://code.claude.com/docs/en/cli-reference) · [How Boris uses Claude Code (curated tips)](https://howborisusesclaudecode.com/) · [Claude in Chrome](https://claude.com/chrome) · [Claude Code and Chrome](https://code.claude.com/docs/en/chrome) |
+| Stop 6 | Fork the game | Fork it on GitHub and with vibe fork, then four challenges: make it, configure it, add a topic, break it and repair it | [Fork a repository (GitHub Docs)](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) · [gh repo fork](https://cli.github.com/manual/gh_repo_fork) · [Syncing a fork (GitHub Docs)](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) · [tpetedb/vibe-map, the repository you are forking](https://github.com/tpetedb/vibe-map) |
+| Stop 7 | The other agents | OpenCode, Codex CLI, Gemini CLI: same AGENTS.md, same .agents/skills, different engines | [OpenCode](https://opencode.ai) · [AGENTS.md](https://agents.md) · [Agent Skills standard](https://agentskills.io) · [Gemini CLI](https://github.com/google-gemini/gemini-cli) |
+| Stop 8 | Your dotfiles repo | Everything you configured tonight, versioned, so the next Mac is ten minutes | [GitHub: dotfiles guide](https://dotfiles.github.io) · [Homebrew Bundle](https://docs.brew.sh/Brew-Bundle-and-Brewfile) |
+
+<!-- /generated:course-map -->
+
 ## Before the evening: Pre-flight: set up the machine
 
 Twenty minutes, alone, before the night. Everything here is boring on purpose so the evening itself is not.
@@ -447,17 +515,33 @@ Two open standards keep your setup portable. AGENTS.md is a plain Markdown file 
 
 Agent Skills is the open format behind skills: a folder with a SKILL.md (name, description, instructions), loaded only when relevant: https://agentskills.io. The cross-tool folder is `.agents/skills/`; Claude Code reads `.claude/skills/`, so the template symlinks them. Community packs: https://github.com/wshobson/agents.
 
-## The template repo and the terminal companion
+## The camp, the terminal companion and the pet
 
-Fork the template with "Use this template" on GitHub. It ships AGENTS.md, a one-line CLAUDE.md, five skills (Obsidian notes, Mermaid diagrams, DuckDB SQL, Python for data, Vibe Code Camp progress), the scorekeeper subagent, a data-backup hook, sample scores with tested DuckDB queries, a starter vault, and `vibemap/cli.py`.
+You do not fork anything to start. Install the companion once and let it write a camp for you:
 
 ```
-bash scripts/setup.sh                 # gh, uv, DuckDB, Obsidian, skill links, vault
-uv run vibe status        # which of the eight are done
-uv run vibe done 1 "shipped the coffee scoreboard"
-uv run vibe map           # Mermaid progress map in vault/Camp/Map.md
-uv run vibe export        # code to paste into the game (Roadmap, Import)
+uv tool install git+https://github.com/tpetedb/vibe-map
+vibe new my-camp
+cd my-camp
+vibe play
 ```
+
+A camp is about thirty files and no engine: a README, AGENTS.md, a one-line CLAUDE.md, `config/camp.toml`, a justfile, `workspace/`, a starter vault, fourteen skills in `.agents/skills/` (Obsidian notes, Mermaid diagrams, DuckDB SQL, Python for data, camp progress, ADRs, changelogs, semantic versioning, READMEs, the justfile, the council, installing the camp, web app testing, verification before completion), the scorekeeper subagent, a backup hook, and sample scores with tested DuckDB queries. `vibe fork` copies the game's own source into `workspace/forks/vibe-map/` on the evening you want to change the game itself. Press **Use this template** on GitHub only if you want the engine.
+
+```
+vibe status               # where you are, with XP, level and badges
+vibe check 1              # run the checks for a workstream
+vibe done 1 "shipped the coffee scoreboard"
+vibe topics               # the packs of the tech tree
+vibe map                  # Mermaid progress map in vault/Camp/Map.md
+vibe export               # the code to paste into the game (Roadmap, Import)
+```
+
+Progress travels between the game and the camp as a code, never as files: `vibe export` prints one, the game's Roadmap panel takes it, and `vibe import` brings the game's own progress back.
+
+**The pet.** A companion lives in the terminal and on the islands: twenty species, six of them drawn as pixel sprites (cat, crab, dog, duck, snail, turtle). `vibe pet --species dog` picks one, `[pet]` in `config/camp.toml` keeps it, and the same sprite follows the walker in the game.
+
+**The Ask panel.** A browser page cannot reach the subscription in your terminal, so `vibe chat serve` runs a small bridge on 127.0.0.1 that your own agent answers through. It takes a question and never a command to run, it is paired with a code you type into the panel, and it answers only the origins the game is served from. The reasoning is in [ADR 0009](adr/0009-local-chat-bridge.md).
 
 ## SQL and Python, in the 20:00 hour
 
@@ -935,41 +1019,142 @@ Each encounter sets one exercise of under fifteen minutes, offline, in `workspac
 
 Checked by: `vibe check --mentor <id>`, or `--mentor all` for the lot. A verified encounter is worth half a workstream in XP, turns the mentor's ring green and raises a plaque on their spot with their one line on it, writes the encounter and the exercise into their vault note, and all twelve earn the `mentored` badge. `vibe mentor <id> deep` and `vibe mentor <id> skip` still record which way you went.
 
-**Boris Cherny**, Creator and head of Claude Code, Anthropic (Innovation Campus). Built Claude Code as an internal experiment at Anthropic in 2024; it became the company's main coding tool and then a product. Previously a principal engineer at Meta and author of Programming TypeScript. Runs five Claude sessions in his terminal and five to ten on the web, each in its own checkout. Sources: [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny) · [Inside the workflow of Claude Code's creator (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/) · [His thread on X](https://x.com/bcherny/status/2007179832300581177) · [How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/)
+<!-- generated:mentors. Do not edit inside; run `just syllabus`. -->
 
-**Cat Wu**, Founding engineer and product lead, Claude Code (Innovation Campus). Co-built Claude Code from the first internal prototype and shaped it into a product used far beyond engineering. Talks about the workflows Anthropic's own engineers discovered: slash commands for feature development and first-pass code review, subagents for narrow jobs. Sources: [How to use Claude Code like the people who built it (Every, with Cat Wu and Boris Cherny)](https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it)
+Twelve real people from the field stand on the islands. Every line a mentor speaks is a paraphrase of something that person is on record saying, with the link it came from, never an invented quote. `vibe check --mentor <id>` verifies the exercise.
 
-**Andrej Karpathy**, Researcher, educator; ex OpenAI, ex Tesla AI (Cold Storage Cluster). Founding member of OpenAI, led Tesla Autopilot's AI team, taught Stanford's first deep-learning class, and now teaches the internet: the Zero to Hero series builds neural networks from scratch in code, and the general-audience talks explain LLMs without maths. Coined "vibe coding" in 2025 and "Software 3.0" for programming in natural language. Sources: [karpathy.ai](https://karpathy.ai/) · [Zero to Hero course](https://karpathy.ai/zero-to-hero.html) · [nn-zero-to-hero on GitHub](https://github.com/karpathy/nn-zero-to-hero) · [vibe coding post](https://x.com/karpathy/status/1886192184808149383)
+**Boris Cherny**, Creator and head of Claude Code, Anthropic (Innovation Campus). Built Claude Code as an internal experiment at Anthropic in 2024; it became the company's main coding tool and then a product. Previously a principal engineer at Meta and author of Programming TypeScript. Runs five Claude sessions in his terminal and five to ten on the web, each in its own checkout.
 
-**Yann LeCun**, Turing Award 2018; convolutional networks; Meta AI chief scientist (Cold Storage Cluster). Applied backpropagation to handwritten digits in 1989 and invented the convolutional network that read cheques and zip codes in production in the 1990s. Shared the 2018 Turing Award with Hinton and Bengio. Argues loudly for open-weight models and that autoregressive LLMs are not the road to human-level intelligence; his alternative is JEPA, predicting in representation space. Sources: [A Path Towards Autonomous Machine Intelligence (LeCun 2022, OpenReview)](https://openreview.net/pdf?id=BZ5a1r-kVsf) · [Backpropagation applied to handwritten zip code recognition (1989)](https://ieeexplore.ieee.org/document/6795724) · [Karpathy's reproduction](https://github.com/karpathy/lecun1989-repro)
+Ask them: *How many of your parallel sessions actually finish?* Sources: [Building Claude Code with Boris Cherny (Pragmatic Engineer)](https://newsletter.pragmaticengineer.com/p/building-claude-code-with-boris-cherny) · [Inside the workflow of Claude Code's creator (InfoQ)](https://infoq.com/news/2026/01/claude-code-creator-workflow/) · [His thread on X](https://x.com/bcherny/status/2007179832300581177) · [How Boris uses Claude Code (curated)](https://howborisusesclaudecode.com/)
 
-**Geoffrey Hinton**, Backpropagation, deep learning; Nobel Prize in Physics 2024 (Cold Storage Cluster). Co-author of the 1986 paper that made backpropagation practical, teacher of Sutskever and Krizhevsky (AlexNet), Turing Award 2018, Nobel Prize in Physics 2024 for foundational work on learning in neural networks. Left Google in 2023 to speak freely about risks. Sources: [Learning representations by back-propagating errors (Nature 1986)](https://www.nature.com/articles/323533a0) · [Nobel Prize 2024, Hinton facts](https://www.nobelprize.org/prizes/physics/2024/hinton/facts/)
+**Cat Wu**, Founding engineer and product lead, Claude Code (Innovation Campus). Co-built Claude Code from the first internal prototype and shaped it into a product used far beyond engineering. Talks about the workflows Anthropic's own engineers discovered: slash commands for feature development and first-pass code review, subagents for narrow jobs.
 
-**Fei-Fei Li**, ImageNet; Stanford HAI co-director (Cold Storage Cluster). Built ImageNet from 2007: 14 million hand-labelled images, when most of the field thought data was a solved problem and algorithms were the bottleneck. The 2012 ImageNet competition result started the deep-learning era. Co-founded Stanford's Institute for Human-Centered AI. Sources: [ImageNet](https://www.image-net.org) · [Stanford HAI](https://hai.stanford.edu)
+Ask them: *What do the non-engineers at Anthropic use it for?* Sources: [How to use Claude Code like the people who built it (Every, with Cat Wu and Boris Cherny)](https://every.to/podcast/how-to-use-claude-code-like-the-people-who-built-it)
 
-**Rich Sutton**, Reinforcement learning; the Bitter Lesson; Turing Award 2024 (Cold Storage Cluster). Co-wrote the standard reinforcement learning textbook, shared the 2024 Turing Award with Andrew Barto, and in 2019 wrote the one-page Bitter Lesson that the Claude Code team keeps on the wall. Sources: [The Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html) · [Reinforcement Learning: An Introduction (free)](http://incompleteideas.net/book/the-book.html)
+**Andrej Karpathy**, Researcher, educator; ex OpenAI, ex Tesla AI (Cold Storage Cluster). Founding member of OpenAI, led Tesla Autopilot's AI team, taught Stanford's first deep-learning class, and now teaches the internet: the Zero to Hero series builds neural networks from scratch in code, and the general-audience talks explain LLMs without maths. Coined "vibe coding" in 2025 and "Software 3.0" for programming in natural language.
 
-**Dario Amodei**, CEO and co-founder, Anthropic (Cold Storage Cluster). Co-author of the 2020 scaling-laws paper, former VP of research at OpenAI, co-founded Anthropic in 2021 with a safety-first thesis. Wrote Core Views on AI Safety and the essay Machines of Loving Grace on what could go right. Sources: [Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361) · [Core Views on AI Safety](https://www.anthropic.com/news/core-views-on-ai-safety) · [Machines of Loving Grace](https://darioamodei.com/machines-of-loving-grace)
+Ask them: *If the prompt is the program, who is the programmer?* Sources: [karpathy.ai](https://karpathy.ai/) · [Zero to Hero course](https://karpathy.ai/zero-to-hero.html) · [nn-zero-to-hero on GitHub](https://github.com/karpathy/nn-zero-to-hero) · [vibe coding post](https://x.com/karpathy/status/1886192184808149383)
 
-**Chris Olah**, Interpretability research lead, Anthropic (Sandbox Environment). Co-founder of Anthropic and of Distill, the journal that made machine learning explanations visual. Leads the work on looking inside models: finding features and circuits that correspond to concepts, including in production Claude models. Sources: [Transformer Circuits](https://transformer-circuits.pub) · [Distill](https://distill.pub)
+**Yann LeCun**, Turing Award 2018; convolutional networks; Meta AI chief scientist (Cold Storage Cluster). Applied backpropagation to handwritten digits in 1989 and invented the convolutional network that read cheques and zip codes in production in the 1990s. Shared the 2018 Turing Award with Hinton and Bengio. Argues loudly for open-weight models and that autoregressive LLMs are not the road to human-level intelligence; his alternative is JEPA, predicting in representation space.
 
-**Mitchell Hashimoto**, Creator of Ghostty; co-founder of HashiCorp (Production Environment). Co-founded HashiCorp (Vagrant, Terraform), then spent his time building Ghostty: a terminal emulator that is fast, native on macOS, and configured with one plain text file. Writes carefully about how he uses AI agents in his own work. Sources: [Ghostty](https://ghostty.org) · [Ghostty configuration reference](https://ghostty.org/docs/config) · [mitchellh.com](https://mitchellh.com)
+Ask them: *He does not think the thing I am using is the future?* Sources: [A Path Towards Autonomous Machine Intelligence (LeCun 2022, OpenReview)](https://openreview.net/pdf?id=BZ5a1r-kVsf) · [Backpropagation applied to handwritten zip code recognition (1989)](https://ieeexplore.ieee.org/document/6795724) · [Karpathy's reproduction](https://github.com/karpathy/lecun1989-repro) · [V-JEPA (Meta AI)](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/) · [Interview with TIME](https://time.com/6694432/yann-lecun-meta-ai-interview/)
 
-**Linus Torvalds**, Creator of Linux and git (Production Environment). Wrote git in 2005 in about two weeks after the Linux kernel lost its previous version-control tool. Designed it around content-addressed snapshots and cheap branching, which is why every command at Stops 3 and 4 makes sense once you know that model. Sources: [Pro Git (free book)](https://git-scm.com/book/en/v2) · [git internals chapter](https://git-scm.com/book/en/v2/Git-Internals-Git-Objects)
+**Geoffrey Hinton**, Backpropagation, deep learning; Nobel Prize in Physics 2024 (Cold Storage Cluster). Co-author of the 1986 paper that made backpropagation practical, teacher of Sutskever and Krizhevsky (AlexNet), Turing Award 2018, Nobel Prize in Physics 2024 for foundational work on learning in neural networks. Left Google in 2023 to speak freely about risks.
 
-**The OpenCode team**, Open-source terminal coding agent (Production Environment). An open-source agent for the terminal that works with Claude, GPT, Gemini and local models, reads AGENTS.md and the Agent Skills standard. Useful as the second opinion that shows which parts of your setup are yours and which belong to the vendor. Sources: [OpenCode](https://opencode.ai) · [OpenCode on GitHub](https://github.com/sst/opencode)
+Ask them: *He won a physics prize for this?* Sources: [Learning representations by back-propagating errors (Nature 1986)](https://www.nature.com/articles/323533a0) · [Nobel Prize 2024, Hinton facts](https://www.nobelprize.org/prizes/physics/2024/hinton/facts/) · [His page at Toronto](https://www.cs.toronto.edu/~hinton/) · [Cambridge on the 2024 Nobel Prize](https://www.cam.ac.uk/research/news/university-of-cambridge-alumnus-awarded-2024-nobel-prize-in-physics)
+
+**Fei-Fei Li**, ImageNet; Stanford HAI co-director (Cold Storage Cluster). Built ImageNet from 2007: 14 million hand-labelled images, when most of the field thought data was a solved problem and algorithms were the bottleneck. The 2012 ImageNet competition result started the deep-learning era. Co-founded Stanford's Institute for Human-Centered AI.
+
+Ask them: *So the list of labelled pictures mattered more than the clever maths?* Sources: [ImageNet](https://www.image-net.org) · [Stanford HAI](https://hai.stanford.edu)
+
+**Rich Sutton**, Reinforcement learning; the Bitter Lesson; Turing Award 2024 (Cold Storage Cluster). Co-wrote the standard reinforcement learning textbook, shared the 2024 Turing Award with Andrew Barto, and in 2019 wrote the one-page Bitter Lesson that the Claude Code team keeps on the wall.
+
+Ask them: *Bitter for whom?* Sources: [The Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html) · [Reinforcement Learning: An Introduction (free)](http://incompleteideas.net/book/the-book.html) · [The bitter lesson, summarised](https://en.wikipedia.org/wiki/Bitter_lesson) · [Turing Award 2024 (Amii)](https://www.amii.ca/updates-insights/rich-sutton-awarded-a-m-turing-award-for-reinforcement-learning-research)
+
+**Dario Amodei**, CEO and co-founder, Anthropic (Cold Storage Cluster). Co-author of the 2020 scaling-laws paper, former VP of research at OpenAI, co-founded Anthropic in 2021 with a safety-first thesis. Wrote Core Views on AI Safety and the essay Machines of Loving Grace on what could go right.
+
+Ask them: *Does the man who runs the company think it is dangerous?* Sources: [Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361) · [Core Views on AI Safety](https://www.anthropic.com/news/core-views-on-ai-safety) · [Machines of Loving Grace](https://darioamodei.com/machines-of-loving-grace)
+
+**Chris Olah**, Interpretability research lead, Anthropic (Sandbox Environment). Co-founder of Anthropic and of Distill, the journal that made machine learning explanations visual. Leads the work on looking inside models: finding features and circuits that correspond to concepts, including in production Claude models.
+
+Ask them: *So someone is actually reading its mind?* Sources: [Transformer Circuits](https://transformer-circuits.pub) · [Distill](https://distill.pub)
+
+**Mitchell Hashimoto**, Creator of Ghostty; co-founder of HashiCorp (Production Environment). Co-founded HashiCorp (Vagrant, Terraform), then spent his time building Ghostty: a terminal emulator that is fast, native on macOS, and configured with one plain text file. Writes carefully about how he uses AI agents in his own work.
+
+Ask them: *Why did the Terraform man build a terminal?* Sources: [Ghostty](https://ghostty.org) · [Ghostty configuration reference](https://ghostty.org/docs/config) · [mitchellh.com](https://mitchellh.com)
+
+**Linus Torvalds**, Creator of Linux and git (Production Environment). Wrote git in 2005 in about two weeks after the Linux kernel lost its previous version-control tool. Designed it around content-addressed snapshots and cheap branching, which is why every command at Stops 3 and 4 makes sense once you know that model.
+
+Ask them: *Two weeks? For the thing everyone uses?* Sources: [Pro Git (free book)](https://git-scm.com/book/en/v2) · [git internals chapter](https://git-scm.com/book/en/v2/Git-Internals-Git-Objects)
+
+**The OpenCode team**, Open-source terminal coding agent (Production Environment). An open-source agent for the terminal that works with Claude, GPT, Gemini and local models, reads AGENTS.md and the Agent Skills standard. Useful as the second opinion that shows which parts of your setup are yours and which belong to the vendor.
+
+Ask them: *So this one is free and it reads my rules too?* Sources: [OpenCode](https://opencode.ai) · [OpenCode on GitHub](https://github.com/sst/opencode) · [Rules and AGENTS.md](https://opencode.ai/docs/rules/)
+
+<!-- /generated:mentors -->
 
 ### The artifacts, and doing them for real
 
-Twenty-one artifacts stand on the four islands: the cafe, the fountain, the well, the lighthouse, the dock, the windmill, the balloon, the mountain, the market stall, the bridge, the factory, the post office, the switchboard, the shop, the bank, the data centre, the energy grid, the library, the office, the households and the school. Walk into the yellow ring and press **Inspect**: the sheet explains one concept and a small terminal demonstrates it.
+<!-- generated:artifacts. Do not edit inside; run `just syllabus`. -->
 
-Every sheet also carries a **Do it for real** section: a task of under twenty minutes written from the official documentation of the thing the artifact stands for, with that page linked and the commands it gives behind the same Commands disclosure the lessons use. The cafe is `http.server`, the well is `sqlite3`, the dock is Docker's Writing a Dockerfile page, the windmill is the GitHub Actions events reference, the market stall is FastAPI's First Steps, the bridge is the MCP build-a-server quickstart, the factory is the DuckDB Python API, and the switchboard is the just manual's Recipes chapter. The work goes in `workspace/artifacts/<id>/`.
+Twenty-one artifacts stand on the four islands. Walk into the yellow ring and press **Inspect**: the sheet explains one concept, a small terminal demonstrates it, and **Do it for real** sets a task of under twenty minutes written from the official documentation of the thing the artifact stands for. The work goes in `workspace/artifacts/<id>/` and `vibe check --artifact <id>` runs it.
+
+| Artifact | Island | The concept | Do it for real | The documentation |
+|---|---|---|---|---|
+| The cafe | Innovation Campus | client, server, protocol | Serve one request and get a 404 on purpose (15 min) | [Python docs: http.server](https://docs.python.org/3/library/http.server.html) |
+| The fountain | Innovation Campus | a cache | Put a cache in front of a slow answer (10 min) | [Python docs: functools.lru_cache](https://docs.python.org/3/library/functools.html#functools.lru_cache) |
+| The well | Innovation Campus | a database | A table, an index and one transaction (15 min) | [Python docs: sqlite3](https://docs.python.org/3/library/sqlite3.html) |
+| The lighthouse | Innovation Campus | DNS, names to addresses | Turn a name into an address, twice over (10 min) | [Python docs: socket.gethostbyname](https://docs.python.org/3/library/socket.html#socket.gethostbyname) |
+| The dock | Innovation Campus | containers and deployment | Write a Dockerfile and build the image (20 min) | [Docker docs: Writing a Dockerfile](https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/) |
+| The windmill | Innovation Campus | schedules and cron | A workflow that turns without you (15 min) | [GitHub Actions docs: Events that trigger workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows) |
+| The balloon | Innovation Campus | the cloud, rented by the hour | Put a number on the meter before you launch (15 min) | [AWS docs: On-Demand Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-on-demand-instances.html) |
+| The mountain | Innovation Campus | the stack, layer by layer | Name the six layers under your own keystroke (10 min) | [Python docs: platform](https://docs.python.org/3/library/platform.html) |
+| The market stall | Innovation Campus | an API and its documentation | An API with a menu it writes itself (20 min) | [FastAPI docs: First Steps](https://fastapi.tiangolo.com/tutorial/first-steps/) |
+| The bridge | Innovation Campus | an integration, MCP | Declare one server on the other side (15 min) | [MCP docs: Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) |
+| The factory | Innovation Campus | a data pipeline | Raw to bronze to silver to gold, in one file (20 min) | [DuckDB docs: Python API](https://duckdb.org/docs/current/clients/python/overview.html) |
+| The post office | Innovation Campus | message queues and pub/sub | A queue, a retry and a dead letter (20 min) | [Python docs: queue](https://docs.python.org/3/library/queue.html) |
+| The switchboard | Innovation Campus | one named command per task | Write a justfile with three recipes and let your agent run one (15 min) | [just manual: Recipes](https://just.systems/man/en/recipes.html) |
+| The shop | Sandbox Environment | a package registry | Buy a library and keep the receipt (15 min) | [uv docs: Working on projects](https://docs.astral.sh/uv/guides/projects/) |
+| The bank | Sandbox Environment | secrets and auth | A safe, and the note that says what is in it (10 min) | [Git docs: gitignore](https://git-scm.com/docs/gitignore) |
+| The data centre | Cold Storage Cluster | where the model runs | The same work, one at a time and in a batch (15 min) | [Python docs: concurrent.futures](https://docs.python.org/3/library/concurrent.futures.html) |
+| The energy grid | Cold Storage Cluster | compute and cost | Back off the way the docs tell you to (15 min) | [Claude API docs: Rate limits](https://platform.claude.com/docs/en/api/rate-limits) |
+| The library | Cold Storage Cluster | RAG and embeddings | Retrieve three notes and cite the one you used (20 min) | [Python docs: collections.Counter](https://docs.python.org/3/library/collections.html#collections.Counter) |
+| The office | Production Environment | a team of agents | Hire one subagent with a narrow brief (15 min) | [Claude Code docs: Create Custom Subagents](https://code.claude.com/docs/en/sub-agents) |
+| The households | Production Environment | users and privacy | Export one person's rows, then erase them (15 min) | [Python docs: csv](https://docs.python.org/3/library/csv.html) |
+| The school | Production Environment | training a model | Split the data, train, and read the honest number (20 min) | [scikit-learn docs: train_test_split](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html) |
+
+<!-- /generated:artifacts -->
 
 Checked by: `vibe check --artifact <id>`, or `--artifact all`. The check reads what you wrote and runs it, offline: a Dockerfile whose instructions all parse, a SQLite file with an indexed table holding rows, an app that answers 200 to its own test client, a workflow file that parses and has a schedule and a job with steps. A check that needs a tool this machine does not have says so with the install command instead of failing, so a missing Docker never blocks you. An artifact built for real is worth half a workstream in XP, reads "built for real" on the sheet, and all twenty-one earn the `builder` badge.
 
 ## The tech tree: shelf by shelf
 
-Fifty-four topics on eleven shelves: terminal and shell; version control and GitHub; config and formats; languages and code; data; web, networks and APIs; ship and run; agents and the harness; docs and versioning; knowledge and Obsidian; what is coming. Every topic has a depth of its own (basics, working knowledge, deep), so a shelf is something you come back to rather than a rank you pass. The full tree, with what each topic is, its real history, a five-minute try, docs and what it unlocks, is generated from `vibemap/tech.py` into [ROADMAP.md](ROADMAP.md); the same notes sit in the vault under Tech tree and in the game under Tree. Your level (Intern to Expert) is the XP ladder, not the tree.
+The tree is the second way through the course: the thirty-two stops are a night, the tree is the year after it. It ships as packs of topics, and a topic carries what it is, the history that explains why it looks like that, a five-minute try, its sources and what it unlocks. The full text of every topic is in [ROADMAP.md](ROADMAP.md), in the vault under Tech tree and in the game under Tree; your level (Intern to Expert) is the XP ladder, not the tree.
+
+<!-- generated:tech-tree. Do not edit inside; run `just syllabus`. -->
+
+Seventy topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. `vibe topics` lists them, `vibe topic <id>` opens one, `vibe check --topic <id>` marks it done, and [ROADMAP.md](ROADMAP.md) is the same tree in full.
+
+| Age | Level | What it covers |
+|---|---|---|
+| Dark Age | Intern | The terminal and files. Everything else is built on this; nobody skips it, everybody wishes they had learned it earlier. |
+| Feudal Age | Junior | Languages and data. You can now make the machine do a specific thing and keep the result. |
+| Castle Age | Medior | Networks and shipping. Your thing runs somewhere other than your laptop, repeatably. |
+| Imperial Age | Senior | The AI harness. You stop typing code and start directing agents, with guardrails you wrote. |
+| Future Age | Expert | What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. |
+
+### The packs (two)
+
+**The core map** (fifty-four topics, first shelf shell). Everything the four evenings lean on, intern to expert: the terminal, git, the formats, the languages, data, the web, shipping, the agent harness, the docs and the vault.
+
+**The data engineering pack** (sixteen topics, first shelf data). Sixteen topics that read as one path: the file formats data arrives in, the table formats it rests in, the tools that ingest it, transform it, schedule it and test it, and the map that says which of those three any tool is doing. Everything runs on a laptop with uv, with no account and no paid service.
+
+
+### The shelves
+
+**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. Unix and the terminal (Basics), Bash and shell scripts (Working knowledge), zsh and your shell config (Working knowledge), Files, folders and paths (Basics), Dotfiles (Working knowledge), Justfiles and task running (Working knowledge), localhost and ports (Working knowledge), SSH and remote machines (Deep), Interfaces: GUI, TUI, CLI, API (Basics).
+
+**Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. Git (Basics), GitHub, pull requests, Pages (Working knowledge), CI/CD and automation (Deep), Git hooks (Working knowledge).
+
+**Config and formats.** The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env. Config formats: JSON, YAML, TOML, Markdown (Basics), .env files and secrets (Basics), TOML in practice: pyproject.toml (Working knowledge), Markdown and Obsidian (Basics), YAML in practice: CI and Compose (Working knowledge).
+
+**Languages and code.** Python first, then the web, the other languages and how to know the code works. Python (Basics), Python libraries: what they are for (Working knowledge), HTML, CSS and JavaScript (Working knowledge), Other languages and what they are for (Deep), Separation of concerns (Working knowledge), Tests and evals (Deep).
+
+**Data.** Files, schemas, warehouses and SQL over all of it. SQL and DuckDB (Working knowledge), Data: files, schemas, warehouses (Basics), CSV done properly (Basics), JSON Lines (Basics), Parquet (Working knowledge), Apache Arrow (Deep), Schemas and schema evolution (Working knowledge), DuckDB beyond the basics (Working knowledge), Apache Iceberg (Deep), dlt, ingestion as code (Working knowledge), Kafka concepts (Working knowledge), Polars (Working knowledge), dbt (Working knowledge), Apache Airflow (Working knowledge), Dagster and Prefect (Deep), Data quality and contracts (Working knowledge), The medallion layering (Working knowledge), Ingestion, transformation, orchestration (Basics).
+
+**Web, networks and APIs.** How programs talk over HTTP and how to build and consume an API. HTTP and APIs (Basics), Building and consuming APIs (Working knowledge).
+
+**Ship and run.** Containers, the cloud, platforms and agents that run without you. Docker and containers (Working knowledge), Cloud and servers (Working knowledge), Headless agents and scheduling (Deep), Kubernetes and platforms (Deep).
+
+**Agents and the harness.** What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost. LLM versus harness (Basics), Context window and prompts (Basics), Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents (Working knowledge), AGENTS.md (Basics), Skills (Agent Skills standard) (Working knowledge), Hooks (Working knowledge), Agent hooks (Deep), Prompting: task, goal, hard constraints (Basics), Structure: XML tags and Markdown blocks (Working knowledge), The symbols: slash, at, bang, hash (Basics), Building the builder (Working knowledge), MCP (Model Context Protocol) (Working knowledge), Subagents and multi-agent (Deep), Security and permissions (Working knowledge), Cost, tokens and model choice (Working knowledge).
+
+**Docs and versioning.** The README, semantic versioning, changelogs and decision records. Semantic Versioning (Working knowledge), Changelogs (Keep a Changelog) (Working knowledge), Architecture decision records (Deep), README and the quickstart (Basics).
+
+**Knowledge and Obsidian.** Obsidian feature by feature and the vault as long-term memory. Obsidian features (Basics), Memory: the vault as long-term memory (Working knowledge).
+
+**What is coming.** What stays the same, what changes, and what to do about it. The future perspective (Basics).
+
+<!-- /generated:tech-tree -->
 
 ### Choosing what you want to learn
 

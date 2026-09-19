@@ -71,7 +71,7 @@ function animate(){
   if(P.tumble){const a=t*.35;P.tumble.position.set(Math.cos(a)*11*WS,.6,Math.sin(a)*11*WS);P.tumble.rotation.x+=adt*3;P.tumble.rotation.z+=adt*2}
   if(P.snow&&!calm){const a=P.snow.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*2.2;a[i-1]+=Math.sin(t+i)*dt*.6;if(a[i]<0)a[i]=20}P.snow.geometry.attributes.position.needsUpdate=true}
   if(P.embers&&!calm){const a=P.embers.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]+=dt*(1.5+(i%5)*.3);a[i-1]+=Math.sin(t*2+i)*dt*.8;if(a[i]>16)a[i]=6}P.embers.geometry.attributes.position.needsUpdate=true}
-  if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.35+Math.sin(t*.7)*.1:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
+  if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.6+Math.sin(t*.7)*.15:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
   if(P.volcano)P.volcano.userData.smoke.forEach(m=>{const u=(t*.25+m.userData.o*.125)%1;m.position.set(Math.sin(u*6+m.userData.o)*u*2,7.5+u*7,Math.cos(u*5)*u*2);m.scale.setScalar(.5+u*2);m.material.opacity=.55*(1-u)});
   // Every path lamp shares one material, so the whole path lights at once.
   if(P.lamps)P.lamps.emissiveIntensity=skyN>=3?1.4+Math.sin(t*3)*.3:0;
@@ -79,8 +79,9 @@ function animate(){
   if(P.bridgeLamps)P.bridgeLamps.emissiveIntensity=skyN>=3?1.4+Math.sin(t*2)*.3:0;
   // plots pulse & buildings
   plots.forEach((p,i)=>{const k=i+1,locked=k>1&&!S.done.includes(k-1);p.userData.ring.material.opacity=locked?.15:.55+Math.sin(t*3+i)*.3;p.userData.ring.scale.setScalar(1+Math.sin(t*3+i)*.04)});
-  annexes.forEach(a=>{tickPop(a.g,dt);a.g.userData.flag.rotation.y=Math.sin(t*4+a.k)*.35});
-  for(const k in builds){const g=builds[k];tickPop(g,dt);
+  tickPops(dt);
+  annexes.forEach(a=>{a.g.userData.flag.rotation.y=Math.sin(t*4+a.k)*.35});
+  for(const k in builds){const g=builds[k];
     if(g.userData.spin){g.userData.spin.rotation.y+=adt;g.userData.spin.position.y=1.6+Math.sin(t*2)*.2}
     if(g.userData.flag)g.userData.flag.rotation.y=Math.sin(t*4)*.35;
     if(g.userData.orbs&&!calm)g.userData.orbs.forEach((o,j)=>{o.position.y+=Math.sin(t*2+j)*.004});
