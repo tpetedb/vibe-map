@@ -23,6 +23,7 @@ from vibemap.vault import safe_title
 
 if TYPE_CHECKING:
     from vibemap.cli import Ctx
+    from vibemap.state import State
 
 MAX_MENTORS = 4
 GROUNDING = (
@@ -70,20 +71,38 @@ def _chair_prompt(
     )
 
 
-def convene(
-    ctx: Ctx, topic: str, *, mentor_ids: list[str], dry_run: bool = False
-) -> Path | None:
-    """Run the three stages and write the minutes to the vault.
+def seated(state: State, mentor_ids: list[str]) -> tuple[list[dict], list[str]]:
+    """Who sits at the table, and the names that did not fit on it.
 
-    Returns:
-        The path of the minutes note, or None on a dry run.
+    With no ids the island the learner is on picks the mentors, the same
+    island `vibe status` calls next; the table seats MAX_MENTORS.
+
+    Raises:
+        ValueError: when an id names nobody.
     """
     mentors = campaign.mentors()
     if mentor_ids:
         chosen = [campaign.mentor(i) for i in mentor_ids]
     else:
-        chosen = [m for m in mentors if m["world"] == "campus"] or mentors
-    chosen = chosen[:MAX_MENTORS]
+        here = campaign.current_world(state)
+        chosen = [m for m in mentors if m["world"] == here] or mentors
+    return chosen[:MAX_MENTORS], [m["name"] for m in chosen[MAX_MENTORS:]]
+
+
+def convene(
+    ctx: Ctx, topic: str, *, mentors: list[dict], dry_run: bool = False
+) -> Path | None:
+    """Run the three stages and write the minutes to the vault.
+
+    Returns:
+        The path of the minutes note, or None on a dry run.
+
+    Raises:
+        ValueError: on an empty topic or an empty council.
+    """
+    if not topic.strip():
+        raise ValueError("the council needs a question")
+    chosen = mentors
     if not chosen:
         raise ValueError("no mentors selected")
     provider = ctx.cfg.learner.provider

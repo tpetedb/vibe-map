@@ -25,6 +25,7 @@ import yaml
 
 from vibemap import campaign, project
 from vibemap.config import DIFFICULTIES, Config
+from vibemap.palette import plain
 from vibemap.state import State
 from vibemap.vault import DATED, learner_sections, safe_title
 
@@ -115,12 +116,6 @@ def xp_for(difficulty: str) -> int:
 
 # A check detail goes into a table, so the runner must not colour or wrap it.
 PYTEST_PLAIN = ("--color=no", "-p", "no:cacheprovider")
-ANSI = re.compile(r"\x1b\[[0-9;]*m")
-
-
-def _plain(text: str) -> str:
-    """Terminal output without escape codes, fit for one table cell."""
-    return ANSI.sub("", text).strip()
 
 
 def _git(*args: str) -> str:
@@ -189,7 +184,7 @@ def _run_pytest(paths: list[Path]) -> tuple[bool, str]:
         [*runner, "-q", *PYTEST_PLAIN, *[str(p) for p in paths]],
         cwd=ROOT, capture_output=True, text=True, timeout=600,
     )  # fmt: skip
-    lines = _plain(out.stdout or out.stderr).splitlines()
+    lines = plain(out.stdout or out.stderr).splitlines()
     return out.returncode == 0, lines[-1] if lines else "no output"
 
 
@@ -508,7 +503,7 @@ def _extra_verify(cfg: Config) -> tuple[bool, str]:
             ["just", "verify-quiet"],
             cwd=ROOT, capture_output=True, text=True, timeout=1200,
         )  # fmt: skip
-        lines = _plain(out.stdout or out.stderr).splitlines()
+        lines = plain(out.stdout or out.stderr).splitlines()
         return out.returncode == 0, lines[-1] if lines else "no output"
     from vibemap.vault import Vault
 
@@ -667,9 +662,9 @@ def _run_exercise(path: Path) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return False, f"{path.name} did not finish in 60 seconds"
     if out.returncode != 0:
-        first = _plain(out.stderr).splitlines()
+        first = plain(out.stderr).splitlines()
         return False, f"{path.name} failed: {first[-1] if first else 'no output'}"
-    return True, _plain(out.stdout)
+    return True, plain(out.stdout)
 
 
 def _exercise_check(m: dict) -> Check:
@@ -1069,7 +1064,7 @@ def _d6_ci(_: Config) -> tuple[bool, str]:
         try:
             wf = yaml.safe_load(p.read_text(encoding="utf-8"))
         except yaml.YAMLError as e:
-            return False, f"{p.name} is not valid YAML: {_plain(str(e))[:80]}"
+            return False, f"{p.name} is not valid YAML: {plain(str(e))[:80]}"
         if not isinstance(wf, dict):
             continue
         for job_id, job in (wf.get("jobs") or {}).items():
@@ -1303,7 +1298,7 @@ def _fork_builds(_: Config) -> tuple[bool, str]:
         timeout=180,
     )
     if r.returncode != 0:
-        return False, _plain(r.stderr or r.stdout)[-160:]
+        return False, plain(r.stderr or r.stdout)[-160:]
     if not out.exists() or out.stat().st_mtime == before:
         return False, "the build wrote no game/vibe-map.html"
     return True, f"{out.stat().st_size // 1024} KB from your own src/"

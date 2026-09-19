@@ -57,6 +57,7 @@ from vibemap.config import (
     deprecation_note,
     toml_str,
 )
+from vibemap.council import MAX_MENTORS
 from vibemap.interests import (
     label as shelf_label,
 )
@@ -156,11 +157,24 @@ def cli(ctx: click.Context) -> None:
 # ---- status -------------------------------------------------------------------
 
 
-def _stop_cell(st: State, world: str, n: int) -> str:
-    """One square of the status grid: done, claimed but not checked, or to do."""
-    if not st.is_done(world, n):
-        return "[todo].[/]"
-    return "[done]x[/]" if st.is_verified(world, n) else "[warn]i[/]"
+# The grid's four marks, painted in this console's theme. The marks themselves
+# live in campaign.MARKS, so the status table and the TUI map cannot drift.
+MARK_STYLE = {"done": "done", "claimed": "warn", "next": "accent", "todo": "todo"}
+
+
+def _stop_cell(mark: str) -> str:
+    """One square of the status grid, in the theme's colours."""
+    glyph, _ = campaign.MARKS[mark]
+    return f"[{MARK_STYLE[mark]}]{glyph}[/]"
+
+
+def _legend(marks: set[str]) -> str:
+    """What the squares mean, in the order the grid reads them."""
+    return "   ".join(
+        f"{_stop_cell(m)} {meaning}"
+        for m, (_, meaning) in campaign.MARKS.items()
+        if m in marks
+    )
 
 
 @cli.command()
@@ -200,7 +214,7 @@ def status(ctx: Ctx, as_json: bool) -> None:
         f"theme [path]{cfg.theme.preset}[/]\n"
         f"Level [ok]{label}[/] ({age} age) · [xp]{st.xp} XP[/]"
         + (f" · {nxt - st.xp} to the next level" if nxt else " · top level")
-        + f" · {st.total_done()}/32 stops"
+        + f" · {st.total_done()}/{campaign.total_stops()} stops"
         + f" · {len(st.artifacts)}/{len(campaign.artifacts())} artifacts"
         + f" ({len(st.artifacts_built)} built for real)"
         # "Met" is the verified encounter, not a hello on the island.
@@ -232,17 +246,25 @@ def status(ctx: Ctx, as_json: bool) -> None:
         console.print(panel)
     t = Table(header_style="path", box=None, padding=(0, 1))
     t.add_column("evening")
-    for i in range(1, 9):
+    for i in range(1, max(campaign.stop_count(w) for w in campaign.evenings()) + 1):
         t.add_column(str(i), justify="center")
     t.add_column("done", justify="right")
+    seen: set[str] = set()
     for w, ev in campaign.evenings().items():
-        cells = [_stop_cell(st, w, i) for i in range(1, 9)]
-        t.add_row(f"{ev.short} · {ev.island}", *cells, f"{len(st.done_w.get(w, []))}/8")
+        marks = campaign.stop_marks(st, w)
+        seen.update(marks)
+        cells = [_stop_cell(m) for m in marks]
+        t.add_row(
+            f"{ev.short} · {ev.island}",
+            *cells,
+            f"{len(st.done_w.get(w, []))}/{campaign.stop_count(w)}",
+        )
     console.print(t)
-    if st.imported_stops():
+    console.print(f"[muted]{_legend(seen)}[/]")
+    if "claimed" in seen:
         console.print(
-            "[muted]i = claimed in the game, not verified here; "
-            "vibe check pays the other half.[/]"
+            "[muted]A stop claimed in the game or with --force carries half the "
+            "XP; vibe check pays the other half.[/]"
         )
     if st.badges:
         console.print(
@@ -272,6 +294,13 @@ def status(ctx: Ctx, as_json: bool) -> None:
     )
 
 
+def _stop_or_fail(world: str, n: int) -> None:
+    """Refuse a stop number the evening does not have: the campaign decides."""
+    stops = campaign.stop_count(world)
+    if not 1 <= n <= stops:
+        _fail(f"workstream is 1 to {stops}")
+
+
 def _next_workstream(st: State, world: str):
     for ws in campaign.evenings()[world].workstreams:
         if not st.is_done(world, ws.n):
@@ -280,6 +309,18 @@ def _next_workstream(st: State, world: str):
 
 
 # ---- check and done -----------------------------------------------------------
+
+
+def _hint_line(hint: str, hints: str) -> str:
+    """The hint at this difficulty: the whole of it, or its first sentence.
+
+    "full" is the promise the beginner and easy presets make, so every command
+    stays copy-pastable; "short" stops after the first sentence.
+    """
+    if hints == "full":
+        return hint
+    head, sep, rest = hint.partition(". ")
+    return f"{head}." if sep and rest else hint
 
 
 def _print_results(results, quest, cfg: Config) -> bool:
@@ -296,8 +337,17 @@ def _print_results(results, quest, cfg: Config) -> bool:
     failed = [r for r in results if not r.ok]
     if failed and hints != "none":
         for r in failed:
-            console.print(f"  [warn]hint[/] {escape(r.hint)}")
+            console.print(f"  [warn]hint[/] {escape(_hint_line(r.hint, hints))}")
     return not failed
+
+
+def _top_up(st: State, world: str, n: int, full_xp: int) -> int:
+    """What a passing check still owes a stop that was claimed without one.
+
+    A verified stop is paid in full at the difficulty it was checked at, so
+    raising the difficulty afterwards never re-pays work already done.
+    """
+    return 0 if st.is_verified(world, n) else st.owed(world, n, full_xp)
 
 
 def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) -> None:
@@ -309,7 +359,7 @@ def _claim(ctx: Ctx, world: str, n: int, note: str, results, *, forced: bool) ->
     # is topped up to full the first time its checks actually pass.
     topped = 0
     if not fresh and not forced and all(r.ok for r in results):
-        topped = ctx.state.owed(world, n, full)
+        topped = _top_up(ctx.state, world, n, full)
         if topped:
             ctx.state.log.append(LogEntry(world=world, n=n, note=note, xp=topped))
             ctx.state.xp += topped
@@ -415,26 +465,29 @@ def check(
     Exit code 0 when every check passed, 1 when any failed, so the command can
     be a step in a pipeline. --no-claim changes what is recorded, never the code.
     """
-    if mentor_id:
+    # Each target ends the command with its own exit code, so two of them would
+    # silently drop one: the combination is refused rather than half-run.
+    targets_given = {
+        "--mentor": mentor_id,
+        "--artifact": artifact_id,
+        "--topic": topic_id,
+        "--fork": fork_,
+    }
+    named = [flag for flag, value in targets_given.items() if value is not None]
+    if len(named) > 1:
+        _fail(f"pick one of {', '.join(named)}; they are separate checks")
+    if mentor_id is not None:
         _exit_code(_check_mentors(ctx, mentor_id, claim=claim))
-    if artifact_id:
+    if artifact_id is not None:
         _exit_code(_check_artifacts(ctx, artifact_id, claim=claim))
-    if topic_id:
+    if topic_id is not None:
         _exit_code(_check_topic(ctx, topic_id, claim=claim))
     if fork_ is not None:
-        try:
-            quest = fork_quest(ctx.cfg, fork_)
-        except ValueError as e:
-            _fail(str(e))
-        ok = _print_results(run_quest(quest, ctx.cfg), quest, ctx.cfg)
-        if ok:
-            console.print("[ok]your fork builds and is yours[/]")
-        else:
-            console.print("[warn]not yet.[/] Fix the failed checks and run it again.")
-        _exit_code(ok)
+        _exit_code(_check_fork(ctx, fork_, claim=claim))
     world = world or "campus"
+    stops = campaign.stop_count(world)
     if all_:
-        targets = list(range(1, 9))
+        targets = list(range(1, stops + 1))
     elif n is None:
         nxt = _next_workstream(ctx.state, world)
         if nxt is None:
@@ -442,8 +495,8 @@ def check(
             return
         targets = [nxt.n]
     else:
-        if not 1 <= n <= 8:
-            _fail("workstream is 1 to 8")
+        if not 1 <= n <= stops:
+            _fail(f"workstream is 1 to {stops}")
         targets = [n]
     every = True
     for k in targets:
@@ -453,7 +506,7 @@ def check(
         every = every and ok
         # A stop claimed in the game or forced carries half the XP; passing the
         # checks later is what buys the other half (ADR 0004).
-        owed = ctx.state.owed(world, k, xp_for(ctx.cfg.learner.difficulty))
+        owed = _top_up(ctx.state, world, k, xp_for(ctx.cfg.learner.difficulty))
         if ok and claim and (not ctx.state.is_done(world, k) or owed):
             _claim(ctx, world, k, "verified by vibe check", results, forced=False)
         elif ok:
@@ -474,8 +527,7 @@ def check(
 @pass_ctx
 def done(ctx: Ctx, n: int, note: str, world: str, force: bool) -> None:
     """Mark workstream N done, after running its checks."""
-    if not 1 <= n <= 8:
-        _fail("workstream is 1 to 8")
+    _stop_or_fail(world, n)
     if force and ctx.state.is_done(world, n):
         ws = campaign.evenings()[world].workstreams[n - 1]
         console.print(
@@ -499,8 +551,7 @@ def done(ctx: Ctx, n: int, note: str, world: str, force: bool) -> None:
 @pass_ctx
 def undo(ctx: Ctx, n: int, world: str) -> None:
     """Un-claim workstream N: the XP goes back and the note loses the entry."""
-    if not 1 <= n <= 8:
-        _fail("workstream is 1 to 8")
+    _stop_or_fail(world, n)
     if not ctx.state.is_done(world, n):
         _fail(f"{world} {n} is not done; nothing to undo")
     ws = campaign.evenings()[world].workstreams[n - 1]
@@ -718,9 +769,10 @@ def import_(ctx: Ctx, code: str) -> None:
     """Take a progress code from the game and update state and vault."""
     before = {(w, n) for w, lst in ctx.state.done_w.items() for n in lst}
     try:
-        ctx.state.merge_code(code)
+        payload = ctx.state.merge_code(code)
     except ValueError as e:
         _fail(str(e))
+    _carry_pet_from_the_game(ctx, str(payload.get("pet") or ""))
     # A claim in the game is self-report, so it earns half the XP a verified
     # check does (ADR 0004); `vibe check` can top it up later.
     half = xp_for(ctx.cfg.learner.difficulty) // 2
@@ -734,8 +786,8 @@ def import_(ctx: Ctx, code: str) -> None:
     ctx.save()
     ctx.vault.build(ctx.persona)
     console.print(
-        f"[ok]imported[/]: {len(fresh)} new stops, {ctx.state.total_done()}/32 "
-        f"in total, {ctx.state.xp} XP"
+        f"[ok]imported[/]: {len(fresh)} new stops, {ctx.state.total_done()}"
+        f"/{campaign.total_stops()} in total, {ctx.state.xp} XP"
     )
     waiting = ctx.state.imported_stops()
     if waiting:
@@ -747,6 +799,37 @@ def import_(ctx: Ctx, code: str) -> None:
         for w, n in waiting:
             flag = "" if w == "campus" else f" -w {w}"
             console.print(f"  [accent]vibe check{flag} {n}[/]")
+
+
+def _check_fork(ctx: Ctx, challenge: str, *, claim: bool) -> bool:
+    """Run the fork challenges, and claim the stop when all four pass.
+
+    One challenge is evidence for part of the stop, never for the stop, so
+    only `--fork all` claims it; the closing line says which of the two ran.
+    """
+    try:
+        quest = fork_quest(ctx.cfg, challenge)
+    except ValueError as e:
+        _fail(str(e))
+    results = run_quest(quest, ctx.cfg)
+    ok = _print_results(results, quest, ctx.cfg)
+    if not ok:
+        console.print("[warn]not yet.[/] Fix the failed checks and run it again.")
+        return ok
+    if challenge != "all":
+        console.print(
+            f"[ok]{challenge} passes[/]. Run [accent]vibe check --fork all[/] "
+            "to claim the stop."
+        )
+        return ok
+    console.print("[ok]your fork builds and is yours[/]")
+    full = xp_for(ctx.cfg.learner.difficulty)
+    done = ctx.state.is_done(quest.world, quest.n)
+    if claim and (not done or _top_up(ctx.state, quest.world, quest.n, full)):
+        _claim(ctx, quest.world, quest.n, "the fork challenges", results, forced=False)
+    elif done:
+        console.print("[muted]the forking stop was already claimed.[/]")
+    return ok
 
 
 def _mentor_or_fail(mentor_id: str) -> dict:
@@ -1269,7 +1352,12 @@ def scores(sql_name: str | None) -> None:
     )
 
     if not SCORES.exists():
-        _fail("no scores yet; workstream 3 creates workspace/data/scores.csv")
+        # Nothing has played yet: that is the normal day-one state, not a
+        # broken recipe, so `just scores` must not report a failure.
+        console.print(
+            "[muted]no scores yet; workstream 3 creates workspace/data/scores.csv[/]"
+        )
+        return
     if sql_name:
         try:
             console.print(frame_table(run_sql(sql_name), f"workspace/sql/{sql_name}"))
@@ -1307,7 +1395,7 @@ def dashboard(ctx: Ctx, as_json: bool, open_it: bool, out: Path | None) -> None:
         f"[xp]{data['xp']} XP[/], {data['notes']} notes, {data['scores']['runs']} runs."
     )
     if open_it:
-        click.launch(str(path))
+        launch(str(path))
 
 
 # ---- configuration --------------------------------------------------------------
@@ -1658,7 +1746,13 @@ def dotfiles_install(
 
 
 @cli.command("news")
-@click.option("--limit", default=40, show_default=True, help="items to keep")
+@click.option(
+    "--limit",
+    type=click.IntRange(min=1),
+    default=40,
+    show_default=True,
+    help="items to keep",
+)
 @click.option("--dry-run", is_flag=True, help="print, write nothing")
 @click.option("--json", "as_json", is_flag=True, help="print the items as JSON")
 @pass_ctx
@@ -1695,6 +1789,9 @@ def news_cmd(ctx: Ctx, limit: int, dry_run: bool, as_json: bool) -> None:
     written = target / "news.json"
     news.write_json(items, written)
     ctx.vault.write("News", news.note_body(items, problems), tags=["concept"])
+    # Tonight links News only once the note exists, so the hub is rebuilt after
+    # the write: `vibe vault lint` is the check and every note is reachable.
+    ctx.vault.build(ctx.persona)
     console.print(
         f"[ok]news[/]: {len(items)} items in {written.relative_to(ROOT)} and vault/"
         f"{ctx.cfg.vault.folder}/News.md"
@@ -1758,7 +1855,20 @@ def pet_cmd(
     species keeps the ASCII art. Overrides live in config/camp.toml under
     [pet]; --species picks one and writes it there.
     """
+    writes = {
+        "--species": species,
+        "--name": pet_name,
+        "--eye": eye,
+        "--hat": hat,
+        "--style": style,
+        "--on/--off": enabled,
+    }
     if gallery:
+        also = [flag for flag, value in writes.items() if value is not None] + (
+            ["--reset"] if reset else []
+        )
+        if also:
+            _fail(f"--all only shows the gallery; run {', '.join(also)} on its own")
         for name, rows in pet.gallery():
             console.print(f"[path]{name}[/]")
             console.print("\n".join(rows))
@@ -1849,6 +1959,28 @@ def _carry_pet_to_the_game(ctx: Ctx, species: str, *, enabled: bool) -> None:
     ctx.save()
 
 
+def _carry_pet_from_the_game(ctx: Ctx, species: str) -> None:
+    """The other half of _carry_pet_to_the_game: a code brings a choice home.
+
+    config/camp.toml is the camp's own truth, so a companion picked in the
+    game is written there rather than living only in the imported state.
+    """
+    mine = ctx.cfg.pet.species if ctx.cfg.pet.enabled else "none"
+    if not species or species == mine:
+        return
+    data = ctx.cfg.model_dump()
+    data["pet"]["enabled"] = species != "none"
+    data["pet"]["species"] = "" if species == "none" else species
+    cfg = Config.model_validate(data)
+    cfg.save(CONFIG_PATH)
+    ctx.cfg = cfg
+    # The table name is square-bracketed, so it has to be escaped for rich.
+    console.print(
+        f"[muted]companion from the game: {config_label()} \\[pet] "
+        f"species = {species}[/]"
+    )
+
+
 def _pet_cheer(ctx: Ctx) -> None:
     """The happy state, once, whenever a stop is claimed.
 
@@ -1885,9 +2017,29 @@ def _pet_credit(p: pet.Pet, style: str) -> None:
 # ---- explain, council, toolbelt ------------------------------------------------
 
 
+# git's name for "before the first commit": the tree with nothing in it.
+EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
+
+def _diff_base(commits: int) -> str:
+    """What `git diff` compares against, clamped to the history that exists."""
+    rev = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"HEAD~{commits}"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    return rev or EMPTY_TREE
+
+
 @cli.command()
 @click.option(
-    "--commits", "-n", default=3, show_default=True, help="how many commits back"
+    "--commits",
+    "-n",
+    type=click.IntRange(min=1),
+    default=3,
+    show_default=True,
+    help="how many commits back",
 )
 @pass_ctx
 def explain(ctx: Ctx, commits: int) -> None:
@@ -1898,22 +2050,23 @@ def explain(ctx: Ctx, commits: int) -> None:
         capture_output=True,
         text=True,
     ).stdout
-    diff = subprocess.run(
-        [
-            "git",
-            "diff",
-            f"HEAD~{commits}",
-            "--",
-            ".",
-            ":!game/vibe-map.html",
-            ":!uv.lock",
-        ],
+    if not log:
+        _fail("no git history to explain")
+    base = _diff_base(commits)
+    if base == EMPTY_TREE:
+        console.print(
+            f"[muted]the history is shorter than {commits} commits; "
+            "diffing from the first one[/]"
+        )
+    out = subprocess.run(
+        ["git", "diff", base, "--", ".", ":!game/vibe-map.html", ":!uv.lock"],
         cwd=ROOT,
         capture_output=True,
         text=True,
-    ).stdout
-    if not log:
-        _fail("no git history to explain")
+    )
+    if out.returncode != 0:
+        _fail(f"git diff {base} failed: {out.stderr.strip()[:200]}")
+    diff = out.stdout
     prompt = (
         "You are explaining a git history to someone learning to code with an AI "
         "agent. In plain words, no jargon, at most ten sentences: what changed, "
@@ -1924,7 +2077,7 @@ def explain(ctx: Ctx, commits: int) -> None:
     try:
         console.print(
             Panel(
-                ask(ctx.cfg.learner.provider, prompt),
+                escape(ask(ctx.cfg.learner.provider, prompt)),
                 title="explain",
                 border_style="accent",
             )
@@ -1940,7 +2093,8 @@ def explain(ctx: Ctx, commits: int) -> None:
     "--mentors",
     "-m",
     default="",
-    help="comma-separated mentor ids (default: all on the current island)",
+    help=f"comma-separated mentor ids, at most {MAX_MENTORS} "
+    "(default: the mentors of the island you are on)",
 )
 @click.option(
     "--dry-run", is_flag=True, help="print the prompts instead of calling the provider"
@@ -1948,11 +2102,21 @@ def explain(ctx: Ctx, commits: int) -> None:
 @pass_ctx
 def council(ctx: Ctx, topic: str, mentors: str, dry_run: bool) -> None:
     """Convene the mentors: each answers, they review each other, a chairman decides."""
-    from vibemap.council import convene
+    from vibemap.council import convene, seated
 
+    if not topic.strip():
+        _fail('say what the council is about: vibe council "your question"')
     ids = [m.strip() for m in mentors.split(",") if m.strip()]
     try:
-        path = convene(ctx, topic, mentor_ids=ids, dry_run=dry_run)
+        chosen, dropped = seated(ctx.state, ids)
+    except ValueError as e:
+        _fail(str(e))
+    if dropped:
+        console.print(
+            f"[warn]the council seats {MAX_MENTORS}[/]: {', '.join(dropped)} not called"
+        )
+    try:
+        path = convene(ctx, topic, mentors=chosen, dry_run=dry_run)
     except (ProviderMissing, RuntimeError, ValueError) as e:
         _fail(str(e))
     if path:
@@ -2104,15 +2268,21 @@ def chat_ask(
 def toolbelt(tier: str | None, install_id: str | None, dry_run: bool) -> None:
     """What is installed, what is missing, and the documented command for each."""
     if install_id:
-        targets = (
-            [
+        if install_id == "missing":
+            targets = [
                 t
                 for t in TOOLS
                 if not t.is_installed() and (tier is None or t.tier == tier)
             ]
-            if install_id == "missing"
-            else [get_tool(install_id)]
-        )
+            if not targets:
+                where = f" in {tier}" if tier else ""
+                console.print(f"[ok]nothing missing{where}[/]")
+                return
+        else:
+            try:
+                targets = [get_tool(install_id)]
+            except ValueError as e:
+                _fail(str(e))
         for t in targets:
             console.print(f"[title]{t.label}[/] ({t.size}) {t.what}")
             rc = install(t, dry_run=dry_run)
@@ -2325,8 +2495,17 @@ def fork(ctx: Ctx, source: str | None, force: bool) -> None:
     No clone and no network: an installed vibe ships the source it copies.
     """
     dest = quests.fork_dir()
-    if dest.exists() and any(dest.iterdir()) and not force:
-        _fail(f"{dest} exists; pass --force to replace it")
+    if dest.exists() and any(dest.iterdir()):
+        if not force:
+            _fail(f"{dest} exists; pass --force to replace it")
+        # The four challenges are checked against what is inside the fork, so
+        # replacing it throws the evidence away with it.
+        console.print(
+            f"[warn]--force replaces {dest}[/]: your src/config edits, "
+            f"tools/generated, {quests.FORK_MANIFEST} and repair.json go with "
+            "it, and the four fork challenges start again."
+        )
+        click.confirm("Replace it?", abort=True)
     with _fork_source(source) as src_root:
         if dest.exists():
             shutil.rmtree(dest)
@@ -2534,23 +2713,42 @@ HOSTED_GAME = "https://tpetedb.github.io/vibe-map/"
 RAW_GAME = "https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html"
 
 
+def launch(target: str) -> None:
+    """Hand a file or a URL to the desktop, and print it when nothing can.
+
+    A container, a Codespace or a stripped PATH has no opener at all, so the
+    line on screen has to be enough on its own.
+    """
+    try:
+        click.launch(target)
+    except OSError:
+        console.print(f"[muted]open it yourself:[/] [path]{target}[/]")
+
+
 def open_game(offline: bool = False) -> str:
     """Open the game and say what was opened: the build, the cache, the host."""
     local = ROOT / "game" / "vibe-map.html"
     cached = ROOT / ".vibe" / "vibe-map.html"
-    if offline and not local.exists():
+    if offline and not local.exists() and not cached.exists():
+        import urllib.error
         import urllib.request
 
         cached.parent.mkdir(parents=True, exist_ok=True)
         console.print(f"[muted]fetching {RAW_GAME}[/]")
-        urllib.request.urlretrieve(RAW_GAME, cached)
-        console.print(f"[ok]cached[/] {cached.relative_to(ROOT)}")
+        try:
+            urllib.request.urlretrieve(RAW_GAME, cached)
+            console.print(f"[ok]cached[/] {cached.relative_to(ROOT)}")
+        except (OSError, urllib.error.URLError) as e:
+            # The point of --offline is preparing for no network, so failing to
+            # reach it is an outcome to report, not a traceback.
+            cached.unlink(missing_ok=True)
+            console.print(f"[warn]no copy to cache[/]: {escape(str(e))}")
     for p in (local, cached):
         if p.exists():
-            subprocess.run(["open", str(p)])
+            launch(str(p))
             return str(p)
     console.print(f"[muted]opening the hosted game[/] {HOSTED_GAME}")
-    subprocess.run(["open", HOSTED_GAME])
+    launch(HOSTED_GAME)
     return HOSTED_GAME
 
 
@@ -2566,6 +2764,9 @@ def play(offline: bool) -> None:
 @cli.command()
 def start() -> None:
     """The onboarding screen: checks, choices, launchers."""
+    if not sys.stdin.isatty():
+        # Textual waits for keys that a pipe never sends, so it would hang.
+        _fail("vibe start needs a terminal; try vibe status or vibe check")
     from vibemap.tui import run
 
     run()

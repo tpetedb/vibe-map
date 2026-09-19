@@ -78,7 +78,9 @@ def test_each_fork_challenge_is_checked_on_its_own(tmp_path: Path) -> None:
     script_fork(camp, ROOT)
     for challenge in quests.FORK_CHALLENGES:
         output = _vibe(camp, "check", "--fork", challenge)
-        assert "your fork builds and is yours" in output, (challenge, output)
+        # One challenge is evidence for part of the stop, never for the stop.
+        assert f"{challenge} passes" in output, (challenge, output)
+    assert "your fork builds and is yours" in _vibe(camp, "check", "--fork", "all")
     unknown = _vibe(camp, "check", "--fork", "sideways")
     assert "unknown fork challenge" in unknown, unknown
 

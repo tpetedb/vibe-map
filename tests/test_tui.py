@@ -15,6 +15,7 @@ from textual.widgets import Button, DataTable, Input, Static
 
 from vibemap import dotfiles, toolbelt
 from vibemap.config import Config
+from vibemap.palette import plain
 from vibemap.state import PLACEHOLDER, CheckRecord, State
 from vibemap.themes import THEMES
 from vibemap.tui import Checks, Dotfiles, Launch, Map, VibeApp, Welcome
@@ -297,7 +298,7 @@ def test_a_version_string_arrives_without_escape_codes() -> None:
         "core", version_args=("-c", "print('\\x1b[1m1.4.7\\x1b[0m')"),
     )  # fmt: skip
     assert loud.version() == "1.4.7"
-    assert toolbelt._plain("btop version: \x1b[1m1.4.7\x1b[0m") == "btop version: 1.4.7"
+    assert plain("btop version: \x1b[1m1.4.7\x1b[0m") == "btop version: 1.4.7"
 
 
 def test_launchers_grey_out_what_a_camp_cannot_run(tmp_path: Path, monkeypatch) -> None:

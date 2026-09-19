@@ -426,6 +426,10 @@ class Launch(Screen[None]):
             self.app.exit(event.button.id[4:])
 
 
+# The grid's four marks in the app's colours; the marks live in campaign.MARKS.
+MARK_COLOURS = {"done": GREEN, "claimed": ORANGE, "next": YELLOW, "todo": MUTED}
+
+
 class Map(Screen[None]):
     """The campaign grid: four evenings, eight stops each, like `vibe status`."""
 
@@ -433,20 +437,20 @@ class Map(Screen[None]):
         super().__init__()
         self.state = state
 
-    def _cell(self, world: str, n: int, nxt: int | None) -> str:
+    def _cell(self, mark: str) -> str:
         """One square, in the same language as the grid of `vibe status`."""
-        if not self.state.is_done(world, n):
-            return f"[{YELLOW}]>[/]" if n == nxt else f"[{MUTED}].[/]"
-        if self.state.is_verified(world, n):
-            return f"[{GREEN}]x[/]"
-        return f"[{ORANGE}]i[/]"
+        glyph, _ = campaign.MARKS[mark]
+        return f"[{MARK_COLOURS[mark]}]{glyph}[/]"
 
     def _row(self, world: str, ev: campaign.Evening) -> str:
-        nxt = next((i for i in range(1, 9) if not self.state.is_done(world, i)), None)
-        cells = [self._cell(world, i, nxt) for i in range(1, 9)]
+        cells = [self._cell(m) for m in campaign.stop_marks(self.state, world)]
         done = len(self.state.done_w.get(world, []))
         label = f"{ev.short} · {ev.island}"
-        return f"[{BLUE}]{label:<34}[/] " + " ".join(cells) + f"  [{MUTED}]{done}/8[/]"
+        return (
+            f"[{BLUE}]{label:<34}[/] "
+            + " ".join(cells)
+            + f"  [{MUTED}]{done}/{campaign.stop_count(world)}[/]"
+        )
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
@@ -459,8 +463,10 @@ class Map(Screen[None]):
             for world, ev in campaign.evenings().items():
                 yield Static(self._row(world, ev), classes="maprow", markup=True)
             yield Static(
-                f"[{GREEN}]x[/] checked   [{ORANGE}]i[/] claimed, not verified   "
-                f"[{YELLOW}]>[/] next   [{MUTED}].[/] to do",
+                "   ".join(
+                    f"{self._cell(m)} {meaning}"
+                    for m, (_, meaning) in campaign.MARKS.items()
+                ),
                 classes="legend",
                 markup=True,
             )
