@@ -1,1 +1,0 @@
-- The export message names the camp, not the repo, and no longer cuts the command with an ellipsis; it says the code is on the clipboard when it is.
