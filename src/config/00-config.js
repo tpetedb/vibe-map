@@ -32,3 +32,11 @@ const PALETTE={
   greenBright:"#00D084",blueBright:"#0088CC",orangeBright:"#F04923",
   black:"#000000",surface:"#0A0A0A",text:"#F1F1F8",muted:"#8B93A7",
 };
+
+// The pixel companion that follows the walker (src/game/19b-pet.js). The
+// frames are the vendored sets the terminal paints, so only its placement is
+// a number here. FOLLOW and LAG are what make it a companion rather than a
+// shadow: it settles that far behind the walker, and reaches the spot with an
+// exponential ease of that rate per second. HEIGHT is in world units against
+// a walker about 2.4 units tall.
+const PET={FOLLOW:2.2,LAG:4.5,HEIGHT:1.05,BOB:.06,WALK_AT:.55,FPS:8};

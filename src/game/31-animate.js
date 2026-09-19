@@ -29,6 +29,7 @@ function animate(){
   if(walking&&L.jy===0&&Math.random()<dt*14){const m=new T.Mesh(new T.SphereGeometry(.09,5,5),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
   if(props.shadow){props.shadow.position.set(pos.x,.02,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
   tickAvatar(dt,t,sp);
+  tickPet(dt,t);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
   const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;

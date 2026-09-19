@@ -14,9 +14,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from vibemap import project
+from vibemap import project, sprites
 
 STATE_VERSION = 2
 CODE_VERSION = 2
@@ -27,6 +27,18 @@ STATE_PATH = ROOT / ".vibe" / "state.json"
 
 def _now() -> str:
     return dt.datetime.now().isoformat(timespec="minutes")
+
+
+def check_pet(value: str) -> str:
+    """A companion with no pixels is refused by name, never defaulted.
+
+    Raises:
+        ValueError: when the id is neither "none" nor a vendored set.
+    """
+    if value and value != "none" and value not in sprites.available():
+        known = ", ".join(("none", *sprites.available()))
+        raise ValueError(f"unknown pet {value!r}; one of {known}")
+    return value
 
 
 class LogEntry(BaseModel):
@@ -82,10 +94,16 @@ class State(BaseModel):
     items: list[str] = Field(default_factory=list)
     ach: list[str] = Field(default_factory=list)
     wear: list[str] = Field(default_factory=list)
+    # The pixel companion the game shows, an id of a vendored set or "none".
+    # config/camp.toml [pet] is the camp's own choice; this is the game's copy,
+    # so the progress code carries it both ways. Empty means no choice made.
+    pet: str = ""
     # Shelves of the tech tree chosen in the game; empty means everything.
     # config/camp.toml is the source of truth, this is the game's copy so the
     # progress code can carry the choice both ways.
     interests: list[str] = Field(default_factory=list)
+
+    _known_pet = field_validator("pet")(check_pet)
 
     @property
     def done(self) -> list[int]:
@@ -187,6 +205,7 @@ class State(BaseModel):
             "ach": list(self.ach),
             "wear": list(self.wear),
             "interests": list(self.interests),
+            "pet": self.pet,
             "topics": list(self.roadmap_done),
         }
         raw = json.dumps(payload, separators=(",", ":")).encode()
@@ -229,7 +248,10 @@ class State(BaseModel):
             for value in payload.get(key) or []:
                 if str(value) not in mine:
                     mine.append(str(value))
-        # An interest is a set, so a code adds a shelf and never removes one:
+        # The companion is one choice, not a set, so the code overwrites it.
+        if payload.get("pet"):
+            self.pet = check_pet(str(payload["pet"]))
+                # An interest is a set, so a code adds a shelf and never removes one:
         # a choice made on the other machine is news, not a correction.
         for shelf in payload.get("interests") or []:
             if str(shelf) not in self.interests:
