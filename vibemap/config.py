@@ -82,6 +82,11 @@ class Finale(_Strict):
 
 class GameConfig(_Strict):
     repo_url: str = "https://github.com/tpetedb/vibe-map"
+    # Where the product is published. The game links to documents that live
+    # beside it there (the syllabus), and a camp keeps this pointing at the
+    # product so its own copy of the game never links into a folder it has
+    # not got.
+    site_url: str = "https://tpetedb.github.io/vibe-map/"
     shadow_map: int = 2048
     show_pairings: bool | None = None
 
@@ -189,6 +194,8 @@ class Config(_Strict):
             "",
             "[game]",
             f"repo_url = {toml_str(self.game.repo_url)}",
+            f"site_url = {toml_str(self.game.site_url)}"
+            "  # where the product is published",
             f"shadow_map = {self.game.shadow_map}  # drop to 1024 if a phone stutters",
             "",
             "[vault]",

@@ -36,6 +36,7 @@ command in the last column; nothing needs a build.
 | Your own agent rules | `AGENTS.md`, `CLAUDE.md`, `.agents/skills/` | nothing; your agent reads them next time |
 | Your own work | `workspace/` | `vibe check` |
 | What an artifact asked you to build | `workspace/artifacts/<id>/` | `vibe check --artifact <id>` |
+| Where the product is published (the syllabus the game links to) | `config/camp.toml` `[game] site_url` | a rebuild; the game links to `syllabus.html` beside it on that site, and to the site itself from anywhere else |
 | The game itself | `workspace/forks/vibe-map/src/config/00-config.js` | `vibe fork` first, then `just build` there and `vibe check --fork config` |
 | A stop or a tree node of your own | `workspace/forks/vibe-map/tools/generated/campaign.json` or `tree.js` | `just build` there, then `vibe check --fork topic` |
 | The record of a build you broke and repaired | `workspace/forks/vibe-map/repair.json` | `just record` in the fork writes it; `vibe check --fork repair` reads it |

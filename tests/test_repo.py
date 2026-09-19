@@ -175,3 +175,22 @@ def test_every_skill_has_a_row_in_the_skills_doc() -> None:
     assert not missing, f"no row in docs/SKILLS.md for: {', '.join(missing)}"
     listed = set(re.findall(r"^\| `([a-z0-9-]+)` \|", doc, re.MULTILINE))
     assert listed - set(folders) == set(), "docs/SKILLS.md names a skill that is gone"
+
+
+def test_no_claude_artifact_link_survives_anywhere() -> None:
+    """The syllabus is published from this repository, not from an artifact.
+
+    A page in a personal claude.ai account cannot be versioned or reviewed, so
+    the product may not point at one; `tools/gen_syllabus.py` owns the page it
+    points at instead.
+    """
+    roots = [ROOT / "src", ROOT / "docs", ROOT / "vibemap", ROOT / "README.md"]
+    offenders = [
+        path.relative_to(ROOT)
+        for root in roots
+        for path in ([root] if root.is_file() else sorted(root.rglob("*")))
+        if path.is_file()
+        and path.suffix in {".md", ".js", ".html", ".css", ".py", ".json", ".toml"}
+        and "claude.ai/artifact" in path.read_text(encoding="utf-8", errors="ignore")
+    ]
+    assert offenders == []
