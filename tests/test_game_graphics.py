@@ -158,3 +158,76 @@ def test_every_shadow_setting_still_renders_the_island(
     assert gfx["blobs"] > 10, gfx["blobs"]
     assert game.page.evaluate("window.__debug().draws") > 0
     game.assert_clean()
+
+
+def test_the_lava_reads_as_lava(game_desktop: GamePage) -> None:
+    """Production's river, lake and flows are orange, not snow.
+
+    The island's own tag promises volcano, lava and ash, so this counts the
+    pixels rather than the materials: a bright albedo under a bright emissive
+    lands past the top of the tone curve and comes out white, which is a
+    render fault no material check would catch.
+    """
+    from PIL import Image
+
+    game_desktop.goto(
+        state={"name": "Lotte", "world": "prod", "doneW": {"campus": [], "prod": [1]}}
+    )
+    game_desktop.resume()
+    game_desktop.frames(8)
+    shot = game_desktop.screenshot("gfx_prod_lava")
+    raw = Image.open(shot).convert("RGB").tobytes()
+    lava = sum(
+        1
+        for i in range(0, len(raw), 3)
+        if raw[i] > 110 and raw[i] - raw[i + 1] > 55 and raw[i] - raw[i + 2] > 80
+    )
+    assert lava > 2000, f"only {lava} lava-coloured pixels on production"
+    game_desktop.assert_clean()
+
+
+def test_the_aurora_is_in_frame_at_night(game_desktop: GamePage) -> None:
+    """Winter promises an aurora at night, so the band has to be on screen."""
+    game_desktop.goto(
+        state={
+            "name": "Lotte",
+            "world": "winter",
+            "doneW": {"campus": [], "winter": ALL_DONE},
+        }
+    )
+    game_desktop.resume()
+    game_desktop.page.wait_for_function(
+        "() => { const a = window.__gfx().aurora; return a && a.opacity > 0.2; }",
+        timeout=WAIT_MS,
+    )
+    for width, height in [(1440, 900), (393, 852)]:
+        game_desktop.page.set_viewport_size({"width": width, "height": height})
+        game_desktop.page.wait_for_function(
+            """([w]) => document.getElementById('stage').clientWidth === w
+               && window.__gfx().cam.off < 1.5""",
+            arg=[width, height],
+            timeout=WAIT_MS,
+        )
+        band = game_desktop.page.evaluate("window.__gfx().aurora")
+        assert abs(band["y"]) < 1 and abs(band["x"]) < 1, (width, band)
+    game_desktop.page.set_viewport_size({"width": 1440, "height": 900})
+    game_desktop.frames(4)
+    game_desktop.screenshot("gfx_winter_aurora")
+    game_desktop.assert_clean()
+
+
+def test_a_day_island_shows_no_aurora(game: GamePage) -> None:
+    """Nothing done is broad daylight, and the band is off."""
+    game.goto(
+        state={
+            "name": "Lotte",
+            "world": "winter",
+            "done": [],
+            "doneW": {"campus": [], "winter": []},
+        }
+    )
+    game.resume()
+    game.frames(6)
+    assert game.page.evaluate("window.__gfx().stage") == 0
+    assert game.page.evaluate("window.__gfx().aurora")["opacity"] == 0
+    game.assert_clean()

@@ -24,14 +24,21 @@ function mmBuild(){
   // On a phone the map would cover a quarter of the screen, so it stays shut
   // behind a button of its own until it is asked for.
   mmBtn=document.createElement("button");mmBtn.id="minimap-btn";mmBtn.type="button";
-  mmBtn.textContent="Map";mmBtn.setAttribute("aria-label","Show the map of the archipelago");
+  mmBtn.textContent="Map";
   mmBtn.style.cssText="position:fixed;right:10px;z-index:6;display:none;padding:6px 10px;font-size:12px;"+
     "border-radius:10px;background:rgba(0,0,0,.55);color:#F1F1F8;border:1px solid rgba(241,241,248,.18)";
   // Opening the map paints it on the next frame instead of waiting out the
   // throttle, so it is never shown blank.
   mmBtn.addEventListener("click",()=>{mmOpen=!mmOpen;mmT=1;mmLayout()});
-  document.body.appendChild(mmBtn);
+  document.body.appendChild(mmBtn);mmBtnState();
   addEventListener("resize",mmLayout);mmLayout()}
+// A toggle says whether it is on: the button carries its own state rather
+// than leaving a screen reader to guess from the canvas it controls.
+function mmBtnState(){if(!mmBtn)return;
+  mmBtn.setAttribute("aria-pressed",mmOpen?"true":"false");
+  mmBtn.setAttribute("aria-expanded",mmOpen?"true":"false");
+  mmBtn.setAttribute("aria-controls","minimap");
+  mmBtn.setAttribute("aria-label",(mmOpen?"Hide":"Show")+" the map of the archipelago")}
 function mmLayout(){
   if(!mmCv)return;
   // Under everything the HUD has already put at the top, whatever it holds.
@@ -42,7 +49,7 @@ function mmLayout(){
   const busy=!!document.querySelector("#sheet.on, #vault.on"),
     phone=mmPhone(),show=!busy&&(!phone||mmOpen);
   mmCv.style.display=show?"block":"none";
-  mmBtn.style.display=phone&&!busy?"block":"none";
+  mmBtn.style.display=phone&&!busy?"block":"none";mmBtnState();
   if(phone&&show)mmCv.style.top=(top+34)+"px"}
 // Archipelago coordinates to canvas pixels. The square of four origins plus
 // the widest island is what has to fit, whichever island is active.

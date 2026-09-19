@@ -78,3 +78,34 @@ def test_a_mentor_note_in_the_vault_holds_the_exercise(game: GamePage) -> None:
     assert "vibe check --mentor hinton" in note
     game.close_vault()
     game.assert_clean()
+
+
+def test_a_plaque_pops_into_view_and_keeps_its_distance(game: GamePage) -> None:
+    """The plaque is the advertised consequence, so it has to be visible.
+
+    It arrives with the progress code, grows in like every other new thing on
+    the island, and stands the same distance from its mentor whatever the
+    world is scaled to.
+    """
+    game.goto()
+    game.start()
+    game.import_code(encode_progress(mentors=["cherny"]))
+    game.page.wait_for_function(
+        "() => (window.__plaques().cherny || {scale: {x: 0}}).scale.x > 0.95",
+        timeout=20_000,
+    )
+    scale = game.page.evaluate("window.__data().scale")
+    mentor = next(
+        m for m in game.page.evaluate("window.__data().mentors") if m["id"] == "cherny"
+    )
+    at = game.page.evaluate(
+        "() => [window.__plaques().cherny.position.x,"
+        " window.__plaques().cherny.position.z]"
+    )
+    away = ((at[0] - mentor["pos"][0]) ** 2 + (at[1] - mentor["pos"][1]) ** 2) ** 0.5
+    assert abs(away - 2.15 * scale) < 0.2, (away, scale)
+    game.page.click("#sheet button.x")
+    game.walk_to(mentor["pos"][0], mentor["pos"][1] + 3, tol=2.0, steps=250)
+    game.frames(4)
+    game.screenshot("mentor_plaque_in_view", clip_height=700)
+    game.assert_clean()
