@@ -24,6 +24,7 @@ dates = [
 
 [game]
 repo_url = "https://github.com/tpetedb/vibe-map"
+site_url = "https://tpetedb.github.io/vibe-map/"  # where the product is published
 shadow_map = 2048  # drop to 1024 if a phone stutters
 
 [vault]

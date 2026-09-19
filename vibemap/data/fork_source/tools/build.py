@@ -92,21 +92,6 @@ def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
 
 
-def site_url(repo_url: str) -> str:
-    """Where this camp publishes its game, derived from its repository URL.
-
-    GitHub serves a project's Pages at https://<owner>.github.io/<repo>/, so
-    the repository URL already in config/camp.toml is the whole answer and a
-    fork's page never advertises ours. Anything that is not a GitHub URL falls
-    back to the repository itself, which is always a real address.
-    """
-    tail = repo_url.rstrip("/").removeprefix("https://github.com/")
-    owner, _, repo = tail.partition("/")
-    if tail == repo_url or not owner or not repo or "/" in repo:
-        return repo_url.rstrip("/") + "/"
-    return f"https://{owner}.github.io/{repo}/"
-
-
 def _icon_data_uri() -> str:
     """src/icon.svg as an inline data URI: the tab icon costs no request.
 
@@ -120,7 +105,7 @@ def _icon_data_uri() -> str:
 
 def _head_html() -> str:
     """head.html with its placeholders filled; an unfilled one is a build fault."""
-    site = site_url(_camp().game.repo_url)
+    site = _camp().game.site_url
     text = _read("head.html")
     for key, value in (("{{SITE}}", site), ("{{ICON}}", _icon_data_uri())):
         text = text.replace(key, value)
@@ -271,9 +256,9 @@ def _config_js() -> str:
         "theme": theme,
         "dates": cfg.finale.dates,
         "repo": cfg.game.repo_url,
-        # Where this camp publishes: the one absolute address a page needs
-        # when a relative link will not do (a share card, a link home).
-        "site": site_url(cfg.game.repo_url),
+        # Where the product is published, so the game can link to a document
+        # that lives beside it there from a camp that has no copy of one.
+        "site": cfg.game.site_url,
         "shadowMap": cfg.game.shadow_map,
         "difficulty": cfg.learner.difficulty,
         "persona": cfg.learner.persona,
