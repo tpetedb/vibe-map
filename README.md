@@ -113,7 +113,7 @@ These six are real pixel sprites, painted two pixels to a cell with half blocks 
 
 The other fourteen species (goose, blob, dragon, octopus, owl, penguin, ghost, axolotl, capybara, cactus, robot, rabbit, mushroom, chonk) keep the ASCII art, and so does any terminal without truecolor or with `NO_COLOR` set: `style = "ascii"` in `[pet]` makes that the rule everywhere.
 
-It also strolls across the launch screen of `just start`, sits next to `vibe status`, and does a happy little turn whenever `vibe check` or `vibe done` claims a stop. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, including `style = "pixel" | "ascii"`, or switch it off with `--off`.
+The six with pixels are in the browser game too, hosted build included: pick one in the onboarding or under Settings, Companion, and it follows you across the islands and over the bridges. The choice travels in the progress code both ways, so a companion chosen in the terminal arrives in the game. It also strolls across the launch screen of `just start`, sits next to `vibe status`, and does a happy little turn whenever `vibe check` or `vibe done` claims a stop. Same name, same creature: the roll is the one from claude-buddy, so a name that hatched a snail in Claude Code hatches the same snail here. Everything is overridable in `config/camp.toml` under `[pet]`, including `style = "pixel" | "ascii"`, or switch it off with `--off`.
 
 ## Your terminal, Tom's way
 
