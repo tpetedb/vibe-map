@@ -198,7 +198,11 @@ def test_an_imported_code_brings_the_avatar_across(island: GamePage) -> None:
     padded = json.loads(
         __import__("base64").urlsafe_b64decode(code + "=" * (-len(code) % 4))
     )
-    padded.update({"items": ["campus-commit"], "ach": ["first-light"], "wear": ["cap"]})
+    # The glasses are what first-light unlocks: a code only dresses the walker
+    # in what its own badges have earned.
+    padded.update(
+        {"items": ["campus-commit"], "ach": ["first-light"], "wear": ["shades"]}
+    )
     raw = json.dumps(padded).encode()
     with_avatar = __import__("base64").urlsafe_b64encode(raw).decode().rstrip("=")
     island.import_code(with_avatar)
@@ -206,5 +210,43 @@ def test_an_imported_code_brings_the_avatar_across(island: GamePage) -> None:
     state = _avatar(island)
     assert state["items"] == ["campus-commit"]
     assert "campus-commit" not in [i["id"] for i in state["onGround"]]
-    assert state["wear"] == ["cap"]
+    assert state["wear"] == ["shades"]
+    island.assert_clean()
+
+
+def test_a_code_cannot_dress_the_walker_in_a_locked_wearable(
+    island: GamePage,
+) -> None:
+    """The Wardrobe and a progress code answer to the same ownership rule."""
+    code = island.page.evaluate(
+        "d => btoa(unescape(encodeURIComponent(JSON.stringify(d))))"
+        ".replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'')",
+        {"v": 2, "name": "Lotte", "wear": ["backpack", "lanyard"]},
+    )
+    island.import_code(code)
+    island.frames()
+    state = _avatar(island)
+    assert state["wear"] == [], "a locked wearable was put on the walker"
+    assert state["wearing"] == 0
+    island.assert_clean()
+
+
+def test_a_rebuilt_walker_keeps_walking(island: GamePage) -> None:
+    """A look changed mid-stride must not stop the walker dead.
+
+    The name box rebuilds the body; the walk is state, so the new body takes
+    over the speed the old one carried.
+    """
+    speed = "Math.hypot(window.__debug().vel[0], window.__debug().vel[2])"
+    island.page.keyboard.down("ArrowUp")
+    try:
+        island.until(f"{speed} > 1")
+        island.page.evaluate("window.nameTyped('Rolinda')")
+        island.until(
+            "((window.__debug().label || {}).text || '').startsWith('Rolinda')"
+        )
+        moving = island.page.evaluate(f"() => {speed}")
+    finally:
+        island.page.keyboard.up("ArrowUp")
+    assert moving > 1, f"the rebuild stopped the walker: {moving}"
     island.assert_clean()

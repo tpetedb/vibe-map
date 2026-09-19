@@ -92,7 +92,17 @@ lint:
     uv run ruff check . && uv run ruff format --check .
 
 # what CI runs: lint + tests + build check
-verify: lint test
+verify: lint generated test
+
+# every generator agrees with its sources (what CI's lint job checks)
+generated:
+    uv run python tools/checks.py style
+    uv run python tools/regen_tree.py --check
+    uv run python tools/gen_cookbook.py --check
+    uv run python tools/gen_syllabus.py --check
+    uv run python tools/build.py --check
+    uv run python tools/sync_template.py --check
+    uv run python tools/sync_fork_source.py --check
 
 # render the screenshots and the gameplay GIF in docs/media from the built game
 media:
@@ -109,6 +119,10 @@ pets source:
 # regenerate docs/COOKBOOK.md from the personas
 cookbook:
     uv run python tools/gen_cookbook.py
+
+# regenerate the generated blocks of docs/SYLLABUS.md and docs/site/syllabus.html
+syllabus:
+    uv run python tools/gen_syllabus.py
 
 # fetch the claude-obsidian skill set (MIT) and print how to load it on this vault
 obsidian-plugin:
