@@ -194,7 +194,8 @@ class Config(_Strict):
             "",
             "[game]",
             f"repo_url = {toml_str(self.game.repo_url)}",
-            f"site_url = {toml_str(self.game.site_url)}  # where the product is published",
+            f"site_url = {toml_str(self.game.site_url)}"
+            "  # where the product is published",
             f"shadow_map = {self.game.shadow_map}  # drop to 1024 if a phone stutters",
             "",
             "[vault]",
