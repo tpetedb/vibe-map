@@ -70,7 +70,12 @@ const SKY_RIG=[
 // frames are the vendored sets the terminal paints, so only its placement is
 // a number here. FOLLOW and LAG are what make it a companion rather than a
 // shadow: it settles that far behind the walker, and reaches the spot with an
-// exponential ease of that rate per second. HEIGHT is in world units against
-// a walker about 2.4 units tall.
-const PET={FOLLOW:2.2,LAG:4.5,HEIGHT:1.05,BOB:.06,WALK_AT:.55,FPS:8};
+// exponential ease of that rate per second. SIDE keeps it off to the walker's
+// right, because straight behind is straight under his nameplate from this
+// camera and the companion would spend the walk hidden by his back. PX is
+// world units per sprite
+// pixel, so the packs keep their sizes against each other and against a
+// walker about 2.4 units tall: a duck of sixteen pixels stands 1.2 high, a
+// turtle of eight stands 0.6.
+const PET={FOLLOW:1.8,SIDE:1.9,LAG:4.5,PX:.075,BOB:.06,WALK_AT:.55,FPS:8};
 
