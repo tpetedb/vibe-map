@@ -1851,7 +1851,7 @@ def _pet_cheer(ctx: Ctx) -> None:
 
 def _pet_credit(p: pet.Pet, style: str) -> None:
     """Say who drew the sprites whenever they are the thing on screen."""
-    line = pet.credit(p, style)
+    line = pet.footnote(p, style)
     if line:
         console.print(f"[muted]{line}[/]")
 
