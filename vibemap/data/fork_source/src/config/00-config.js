@@ -35,6 +35,7 @@ const PALETTE={
   stone:"#9CA3AF",snow:"#F8FAFC",ink:"#1F2937",
 };
 
+
 // The camera. The diorama only reads when the whole island is inside the
 // frame, so the distance is derived from the island's radius and the field of
 // view rather than fixed: a narrow window pushes the camera back instead of
@@ -64,3 +65,17 @@ const SKY_RIG=[
   {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320"},
   {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A"},
 ];
+
+// The pixel companion that follows the walker (src/game/19b-pet.js). The
+// frames are the vendored sets the terminal paints, so only its placement is
+// a number here. FOLLOW and LAG are what make it a companion rather than a
+// shadow: it settles that far behind the walker, and reaches the spot with an
+// exponential ease of that rate per second. SIDE keeps it off to the walker's
+// right, because straight behind is straight under his nameplate from this
+// camera and the companion would spend the walk hidden by his back. PX is
+// world units per sprite
+// pixel, so the packs keep their sizes against each other and against a
+// walker about 2.4 units tall: a duck of sixteen pixels stands 1.2 high, a
+// turtle of eight stands 0.6.
+const PET={FOLLOW:1.8,SIDE:1.9,LAG:4.5,PX:.075,BOB:.06,WALK_AT:.55,FPS:8};
+

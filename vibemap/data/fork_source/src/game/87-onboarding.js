@@ -112,6 +112,7 @@ function renderOnboarding(){const box=$("onboard");if(!box)return;const look=LOO
 <div class="choices">${Object.keys(LOOKS).map(k=>`<button class="choice${look===k?" on":""}" onclick="pickLook('${k}')" title="${LOOKS[k].blurb}"><i style="background:${LOOKS[k].body}"></i>${LOOKS[k].label}</button>`).join("")}</div>
 <p class="small muted">${LOOKS[look].blurb}</p>
 ${wardrobeRow()}
+${petPicker('ob-pet')}
 <div class="step"><b>2</b><span>How hard?</span></div>
 <div class="choices">${DIFFS.map(([k,l])=>`<button class="choice${diff===k?" on":""}" onclick="pickDifficulty('${k}')">${l}</button>`).join("")}</div>
 <p class="small muted">${(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]} You can change this any time under Settings.</p>

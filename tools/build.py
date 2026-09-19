@@ -59,6 +59,8 @@ GAME_ORDER = [
     "@items",
     "18-avatar.js",
     "19-items.js",
+    "@pets",
+    "19b-pet.js",
     "20-worlds.js",
     "21-world-build.js",
     "22-archipelago.js",
@@ -116,6 +118,24 @@ def _items_js() -> str:
 
         data = json.loads(data_text("items.json"))
     return "const ITEMS=" + json.dumps(data, ensure_ascii=False) + ";\n"
+
+
+def _pets_js() -> str:
+    """The vendored pixel sets, the same packed frames the terminal paints.
+
+    One source: vibemap/data/pets is read here, so nothing is redrawn for the
+    game and a fork built from the installed package gets them too.
+    """
+    sys.path.insert(0, str(ROOT))
+    from vibemap import sprites  # noqa: PLC0415
+
+    data = {
+        name: json.loads(
+            (sprites.PETS / name / "frames.json").read_text(encoding="utf-8")
+        )
+        for name in sprites.available()
+    }
+    return "const PETS=" + json.dumps(data, ensure_ascii=False) + ";\n"
 
 
 def _notes_js() -> str:
@@ -211,6 +231,9 @@ def _config_js() -> str:
         # the game offers the preset and stores the answer in S.interests.
         "interests": cfg.learner.interests,
         "personaInterests": _persona_interests(cfg.learner.persona),
+        # The camp's companion: a published game ships the camp's choice, the
+        # way it ships the theme, and the player can change it in Settings.
+        "pet": {"species": cfg.pet.species, "enabled": cfg.pet.enabled},
         "vault": {"mode": cfg.vault.mode},
         "news": {"live": cfg.news.live},
     }
@@ -365,6 +388,8 @@ def _game_script() -> str:
                 parts.append(_part(f"src/config/{f.name}", f.read_text("utf-8")))
         elif name == "@campaign":
             parts.append(_part("the campaign", _campaign_js()))
+        elif name == "@pets":
+            parts.append(_part("the pixel pets", _pets_js()))
         elif name == "@items":
             parts.append(_part("the items", _items_js()))
         elif name == "@notes":
