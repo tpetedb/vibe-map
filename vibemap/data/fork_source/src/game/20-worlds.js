@@ -68,13 +68,28 @@ const BRIDGE_CHAIN=[["campus",33,"winter",192],["winter",63,"desert",253],["dese
 // A bridge opens once the island before it has its first stop done, and is
 // always open on beginner, where nothing is gated. Either end counts, so an
 // imported campaign that starts on winter can walk back to the campus.
-function bridgeOpen(a,b){return CONFIG.difficulty==="beginner"||(S.doneW[a]||[]).length>0||(S.doneW[b]||[]).length>0}
+// The difficulty in force, whichever place it was chosen in: the setting when
+// there is one, the camp's config when there is not.
+function bridgeOpen(a,b){const d=typeof difficulty==="function"?difficulty():CONFIG.difficulty;
+  return d==="beginner"||(S.doneW[a]||[]).length>0||(S.doneW[b]||[]).length>0}
 // The three bridges in the active island's coordinates: each a straight deck
 // between two shore points, with a rest platform at the middle. `near` is the
 // two that touch the active island and are built in full.
+// How far the landmass reaches along a bearing: the furthest point any of the
+// island's blobs still covers, not the main disc's radius. An island is a
+// cluster of blobs, so a satellite on that bearing is what the deck has to
+// meet; measuring the main disc alone starts the deck several metres inland,
+// in among the props.
+function landReach(w,deg){const ux=Math.cos(deg*Math.PI/180),uz=Math.sin(deg*Math.PI/180);
+  let out=0;
+  w.land.forEach(([bx,bz,br])=>{const t=bx*ux+bz*uz;if(t<0)return;
+    const h=Math.hypot(bx-t*ux,bz-t*uz);if(h>=br)return;
+    out=Math.max(out,t+Math.sqrt(br*br-h*h))});
+  return out}
 function bridgesFor(from){
   const shore=(id,deg)=>worldOffset(id,from).add(
-    new T.Vector3(Math.cos(deg*Math.PI/180),0,Math.sin(deg*Math.PI/180)).multiplyScalar(WORLDS[id].land[0][2]-1.5));
+    new T.Vector3(Math.cos(deg*Math.PI/180),0,Math.sin(deg*Math.PI/180))
+      .multiplyScalar(landReach(WORLDS[id],deg)-1.5));
   return BRIDGE_CHAIN.map(([a,aa,b,ba])=>{
     const pa=shore(a,aa),pb=shore(b,ba),dir=new T.Vector3().subVectors(pb,pa),len=dir.length();dir.normalize();
     return {a,b,pa,pb,dir,len,mid:pa.clone().addScaledVector(dir,len/2),

@@ -43,6 +43,7 @@ flowchart LR
 |---|---|---|
 | `src/config/` (world scale, palette) or `src/` (the game) | `just build`, `just verify`, PR, release | the hosted game after Pages deploys; `vibe play --offline` caches a copy from `main` |
 | `vibemap/` (the CLI, the checks, the vault) | `just verify`, PR, release, tag | `uv tool install --force git+https://github.com/tpetedb/vibe-map@vX.Y.Z` |
+| `docs/SYLLABUS.md` outside a generated marker, or anything under `vibemap/data/` the syllabus counts | `just syllabus` (rewrites the generated blocks and `docs/site/syllabus.html`), `just verify` | the page `pages.yml` publishes at `/syllabus.html`, which the game's Roadmap links to |
 | `vibemap/tech.py` (the roadmap) | `just tree` (regenerates the notes, the tree JS, `docs/ROADMAP.md`), `just build` | both of the above |
 | an artifact's `real` block in `vibemap/data/campaign.json` (the Do it for real walkthrough, the doc link, the check spec) | `just build` (the campaign is injected into the game), `just verify` | the hosted game for the walkthrough, `uv tool install` for the check |
 | `vibemap/artifact_checks.py` (a check kind, one function per kind, named from the `real` block) | `just verify` (`tests/test_artifact_tasks.py`), PR, release, tag | `uv tool install`, as any CLI change |

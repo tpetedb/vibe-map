@@ -27,12 +27,16 @@ function buildSilhouettes(from){
 // count of bridges costs nothing. A bridge that touches the active island
 // gets its planks, railings, lamps and rest platform; a far one is a single
 // stretched deck, because at that distance it is a line in the fog.
+// One plank, laid along the deck. A far bridge is the same plank stretched to
+// the whole span, so the stretch is the span divided by the plank, not the
+// span itself.
+const PLANK_L=.5;
 function buildBridges(){
-  const deck=[],rail=[],post=[],lampPost=[],bulb=[],rest=[],slab=[],leg=[],barrier=[];
-  props.bridgeLamps=null;
+  const deck=[],rail=[],post=[],lampPost=[],bulb=[],rest=[],barrier=[],signs=[];
+  props.bridgeLamps=null;props.bridgeSeats=[];
   bridges.forEach(b=>{
     const ry=-Math.atan2(b.dir.z,b.dir.x),at=d=>b.pa.clone().addScaledVector(b.dir,d);
-    if(!b.near){const c=at(b.len/2);deck.push(xform(c.x,-.02,c.z,0,ry,0,new T.Vector3(b.len,1,1)));return}
+    if(!b.near){const c=at(b.len/2);deck.push(xform(c.x,-.02,c.z,0,ry,0,new T.Vector3(b.len/PLANK_L,1,1)));return}
     const n=Math.max(2,Math.round(b.len/.62));
     for(let i=0;i<n;i++){const p=at((i+.5)*b.len/n);deck.push(xform(p.x,-.02,p.z,0,ry,0))}
     // Railings run the whole deck; the posts under them are every few paces.
@@ -50,29 +54,45 @@ function buildBridges(){
       bulb.push(xform(p.x+o.x,2.1,p.z+o.z,0,ry,0))}
     // The rest platform at the middle: somewhere to stop, with a bench.
     rest.push(xform(b.mid.x,-.04,b.mid.z,0,ry,0));
+    // The bench is a seat like every other bench on the island, so it is handed
+    // to placeSeats rather than drawn here; that is what makes x sit on it.
     const bo=new T.Vector3(-b.dir.z,0,b.dir.x).multiplyScalar(2.1);
-    slab.push(xform(b.mid.x+bo.x,.54,b.mid.z+bo.z,0,ry,0));
-    [[-.6,.2],[.6,.2],[-.6,-.2],[.6,-.2]].forEach(([u,v])=>{
-      const p=b.mid.clone().addScaledVector(b.dir,u).addScaledVector(bo.clone().normalize(),2.1+v);
-      leg.push(xform(p.x,.28,p.z,0,ry,0))});
-    // A closed bridge says so with a barrier across both shores.
+    props.bridgeSeats.push({id:"seat:"+b.a+"-"+b.b,x:b.mid.x+bo.x,z:b.mid.z+bo.z,face:ry,w:1.6});
+    // A closed bridge says so with a barrier across both shores and a sign on
+    // it, so the cue is a word and not only a red slab.
     if(!b.open)[0,b.len].forEach(d=>{const p=at(d===0?1.2:b.len-1.2);
-      barrier.push(xform(p.x,.45,p.z,0,ry,0))})});
-  const plank=shape("plank",()=>new T.BoxGeometry(.5,.16,BRIDGE_W*2));
-  const decks=instOf(plank,mat(PALETTE.deck),deck,false);
-  instOf(shape("rail",()=>new T.BoxGeometry(1,.14,.14)),mat(PALETTE.timber),rail,false);
-  instOf(shape("post",()=>new T.BoxGeometry(.14,.9,.14)),mat(PALETTE.timber),post,false);
-  instOf(shape("lamppost",()=>new T.CylinderGeometry(.05,.07,2,5)),mat("#334155"),lampPost,false);
-  const lamps=instOf(shape("bulb",()=>new T.SphereGeometry(.2,6,6)),
-    mat(PALETTE.lamp,{emissive:PALETTE.yellow,emissiveIntensity:0}),bulb,false);
+      barrier.push(xform(p.x,.45,p.z,0,ry,0));signs.push(p)})});
+  // Every part this build owns, so reopening a bridge can take them away again.
+  const own=[],put=im=>{if(im)own.push(im);return im};
+  const plank=shape("plank",()=>new T.BoxGeometry(PLANK_L,.16,BRIDGE_W*2));
+  const decks=put(instOf(plank,mat(PALETTE.deck),deck,false));
+  put(instOf(shape("rail",()=>new T.BoxGeometry(1,.14,.14)),mat(PALETTE.timber),rail,false));
+  put(instOf(shape("post",()=>new T.BoxGeometry(.14,.9,.14)),mat(PALETTE.timber),post,false));
+  put(instOf(shape("lamppost",()=>new T.CylinderGeometry(.05,.07,2,5)),mat("#334155"),lampPost,false));
+  const lamps=put(instOf(shape("bulb",()=>new T.SphereGeometry(.2,6,6)),
+    mat(PALETTE.lamp,{emissive:PALETTE.yellow,emissiveIntensity:0}),bulb,false));
   if(lamps)props.bridgeLamps=lamps.material;
-  const platform=instOf(shape("rest",()=>new T.CylinderGeometry(BRIDGE_REST_R,BRIDGE_REST_R,.2,12)),
-    mat("#C8A882"),rest,false);
-  instOf(shape("bench",()=>new T.BoxGeometry(1.6,.14,.55)),mat(W.bank),slab,false);
-  instOf(shape("benchleg",()=>new T.BoxGeometry(.1,.55,.1)),mat(PALETTE.muted),leg,false);
-  instOf(shape("barrier",()=>new T.BoxGeometry(.2,.9,BRIDGE_W*2)),mat(PALETTE.red),barrier,false);
+  const platform=put(instOf(shape("rest",()=>new T.CylinderGeometry(BRIDGE_REST_R,BRIDGE_REST_R,.2,12)),
+    mat("#C8A882"),rest,false));
+  put(instOf(shape("barrier",()=>new T.BoxGeometry(.2,1.3,BRIDGE_W*2)),mat(PALETTE.red),barrier,false));
+  signs.forEach(p=>{const sp=label(BRIDGE_SHUT,.5);sp.position.set(p.x,1.9,p.z);scene.add(sp);own.push(sp)});
+  props.bridgeParts=own;
   // Tap to walk aims at the ground; a deck and a platform are ground.
   if(island)[decks,platform].forEach(m=>{if(m)island.userData.parts.push(m)})}
+// Why a deck you can see is not a deck you can walk on. The plate only shows
+// when the walker is near it, which is when the question is asked.
+const BRIDGE_SHUT="Closed. Finish a stop on either island";
+// A bridge opens because a stop was claimed or the difficulty changed, and
+// both happen while the island stands. The bridges are derived from that
+// state, so they are recomputed and, when one has changed, rebuilt in place.
+function refreshBridges(){
+  if(!scene||!bridges.length)return;
+  const was=bridges.map(b=>b.open);
+  bridges=bridgesFor(S.world||"campus");
+  if(bridges.every((b,i)=>b.open===was[i]))return;
+  (props.bridgeParts||[]).forEach(m=>{scene.remove(m);
+    if(island)island.userData.parts=island.userData.parts.filter(p=>p!==m)});
+  buildBridges()}
 
 // The bridge under a point, if it is open and the point is on its deck or its
 // rest platform. One helper, because onLandW, the crossing and the minimap

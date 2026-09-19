@@ -39,7 +39,7 @@ function buildWorld(id,carry){
   // the island you left had put in it. Before the first start() it is the
   // title's line, which start() writes itself.
   if(started)say(S.done.length>=stopCount()?"fin":"walk");
-  plots.length=0;clouds.length=0;parts.length=0;plates.length=0;for(const k in builds)delete builds[k];for(const k in props)delete props[k];obstacles=[];annexes=[];
+  plots.length=0;clouds.length=0;parts.length=0;plates.length=0;pops.length=0;for(const k in builds)delete builds[k];for(const k in props)delete props[k];obstacles=[];annexes=[];
   PLOT_POS=W.plots.map(p=>new T.Vector3(p[0],0,p[1]));
   // The bridges are ground, so they exist before anything asks onLandW.
   bridges=bridgesFor(id);
@@ -61,7 +61,11 @@ function buildWorld(id,carry){
   water=new T.Mesh(new T.PlaneGeometry(220*WS,220*WS,64,64).rotateX(-Math.PI/2),seaMaterial());
   water.position.y=-1.6;water.receiveShadow=true;scene.add(water);
   const lava=id==="prod";
-  const wmat=new T.MeshStandardMaterial({color:W.river,transparent:!lava,opacity:.9,roughness:.25,flatShading:true,emissive:lava?PALETTE.lava:"#000",emissiveIntensity:lava?1.1:0});
+  // Lava is its own light, not a bright surface: a dark crust with the glow in
+  // the emissive. A bright albedo plus a bright emissive lands past the top of
+  // the tone curve, where every hue desaturates and lava comes out white.
+  const wmat=new T.MeshStandardMaterial({color:lava?"#5A1B08":W.river,transparent:!lava,opacity:.9,
+    roughness:lava?.6:.25,flatShading:true,emissive:lava?PALETTE.lava:"#000",emissiveIntensity:lava?.55:0});
   if(lava)props.lava=wmat;
   if(W.river){for(let i=0;i<W.river.length-1;i++){const a=W.river[i],b=W.river[i+1],dx=b[0]-a[0],dz=b[1]-a[1],len=Math.hypot(dx,dz);const m=new T.Mesh(new T.BoxGeometry(len+.6,.12,2.2),wmat);m.position.set((a[0]+b[0])/2,.04,(a[1]+b[1])/2);m.rotation.y=-Math.atan2(dz,dx);scene.add(m);const bank=new T.Mesh(new T.BoxGeometry(len+.8,.06,3),mat(W.bank));bank.position.set(m.position.x,.01,m.position.z);bank.rotation.y=m.rotation.y;scene.add(bank)}}
   const lakeM=new T.Mesh(new T.CylinderGeometry(2.8,2.8,.12,10),id==="winter"?new T.MeshStandardMaterial({color:"#D8EEFB",roughness:.15,metalness:.2,flatShading:true}):wmat);lakeM.position.set(W.lake[0],.05,W.lake[1]);scene.add(lakeM);scene.add(cyl(3.3,3.3,.06,W.bank,W.lake[0],.01,W.lake[1],10));obstacles.push([W.lake[0],W.lake[1],3.1]);
@@ -89,7 +93,7 @@ function buildWorld(id,carry){
   if(ex("stall")){const stall=new T.Group();stall.add(box(2,.9,1,"#A9743F",0,.45,0));stall.add(box(2.4,.1,1.4,"#E11D48",0,2,0));[-1,1].forEach(x=>stall.add(cyl(.05,.05,2,PALETTE.timber,x,1,.5,4)));[[PALETTE.yellow,-.6],["#22C55E",0],["#F87171",.6]].forEach(([c,x])=>stall.add(sph(.22,c,x,1.05,.2,6)));const sp=P(4.5,2);stall.position.set(sp[0],0,sp[1]);stall.rotation.y=-.6;mergeStatic(stall);scene.add(stall);obstacles.push([sp[0],sp[1],1.3]);blobAdd(sp[0],sp[1],1.5)}
   if(ex("well")){const well=new T.Group();well.add(cyl(.7,.75,.8,PALETTE.stone,0,.4,0,8));well.add(cone(.9,.6,PALETTE.timber,0,1.9,0,6));[-.5,.5].forEach(x=>well.add(box(.1,1.4,.1,PALETTE.timber,x,1,0)));const wp=P(-3,-4);well.position.set(wp[0],0,wp[1]);mergeStatic(well);scene.add(well);obstacles.push([wp[0],wp[1],.9]);blobAdd(wp[0],wp[1],1.1)}
   if(ex("mountain")){const mt=new T.Group();mt.add(cone(6,7,id==="winter"?"#B8C4CF":"#8B7355",0,3.5,0,7));mt.add(cone(2.3,2.6,PALETTE.snow,0,5.7,0,7));const mp=P(-9,-14);mt.position.set(mp[0],0,mp[1]);mt.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(mt);scene.add(mt);obstacles.push([mp[0],mp[1],4.5])}
-  if(ex("volcano")){const v=new T.Group();v.add(cyl(2,6.5,7,"#2E2E38",0,3.5,0,8));v.add(cyl(1.4,2.1,.5,PALETTE.lava,0,7.1,0,8).material.emissive.set(PALETTE.lava)?cyl(1.4,2.1,.5,"#FF6A1A",0,7.1,0,8):null);const glow=new T.PointLight(PALETTE.lava,2.5,18);glow.position.y=8;v.add(glow);const sm=[];for(let i=0;i<8;i++){const m=new T.Mesh(new T.SphereGeometry(.7,6,6),new T.MeshStandardMaterial({color:"#4B4B55",transparent:true,opacity:.6}));m.userData.o=i;v.add(m);sm.push(m)}v.userData.smoke=sm;const vp=P(-9,-14);v.position.set(vp[0],0,vp[1]);mergeStatic(v);scene.add(v);props.volcano=v;obstacles.push([vp[0],vp[1],5.5]);
+  if(ex("volcano")){const v=new T.Group();v.add(cyl(2,6.5,7,"#2E2E38",0,3.5,0,8));const crater=cyl(1.4,2.1,.5,"#5A1B08",0,7.1,0,8);crater.material.emissive.set(PALETTE.lava).convertSRGBToLinear();crater.material.emissiveIntensity=.8;v.add(crater);v.userData.crater=crater;const glow=new T.PointLight(PALETTE.lava,2.5,18);glow.position.y=8;v.add(glow);const sm=[];for(let i=0;i<8;i++){const m=new T.Mesh(new T.SphereGeometry(.7,6,6),new T.MeshStandardMaterial({color:"#4B4B55",transparent:true,opacity:.6}));m.userData.o=i;v.add(m);sm.push(m)}v.userData.smoke=sm;const vp=P(-9,-14);v.position.set(vp[0],0,vp[1]);mergeStatic(v);scene.add(v);props.volcano=v;obstacles.push([vp[0],vp[1],5.5]);
     for(let i=0;i<4;i++){const l=new T.Mesh(new T.BoxGeometry(1.5,.15,4+i),wmat);l.position.set(vp[0]+i*1.5,.06,vp[1]+4.5+i*.5);l.rotation.y=.4-i*.25;scene.add(l)}}
   if(ex("harbour")){const dock=new T.Group();for(let i=0;i<9;i++)dock.add(box(.5,.12,2,PALETTE.deck,i*.55,.1,0));[0,2.2,4.4].forEach(x=>{dock.add(cyl(.1,.12,1.4,PALETTE.timber,x,-.4,-1));dock.add(cyl(.1,.12,1.4,PALETTE.timber,x,-.4,1))});const hp=id==="winter"?P(15,-5):P(15,-8);dock.position.set(hp[0],0,hp[1]);mergeStatic(dock);scene.add(dock);
     const boat=(c)=>{const g=new T.Group();g.add(box(2.6,.6,1.1,c,0,-.1,0));g.add(box(2.0,.3,.9,PALETTE.snow,0,.25,0));g.add(cyl(.05,.05,2.6,PALETTE.timber,.2,1.5,0,4));const sail=new T.Mesh(new T.ConeGeometry(.9,2.2,3),new T.MeshStandardMaterial({color:PALETTE.snow,side:T.DoubleSide,flatShading:true}));sail.position.set(.4,1.6,0);sail.rotation.z=-.15;g.add(sail);g.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(g);return g};
@@ -142,13 +146,17 @@ function buildWorld(id,carry){
   if(ex("mesas")){[[-8,-14,4,3.5],[12,-13,3,2.5],[-16,8,2.5,2]].forEach(([x,z,r,h])=>{[x,z]=P(x,z);const m=new T.Group();m.add(cyl(r*.8,r,h,"#B45309",0,h/2,0,8));m.add(cyl(r*.75,r*.8,.4,"#D97706",0,h+.2,0,8));m.position.set(x,0,z);m.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(m);scene.add(m);obstacles.push([x,z,r])})}
   if(ex("dunes")){[[6,8],[-6,9],[8,-9],[-11,-4]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{const d=sph(3,"#F1DDA2",x,-2.2,z,10);d.scale.set(1,.5,1);scene.add(d)})}
   if(ex("tumbleweed")){const tw=new T.Mesh(new T.IcosahedronGeometry(.6,1),new T.MeshStandardMaterial({color:"#A16207",wireframe:true}));scene.add(tw);props.tumble=tw}
-  if(ex("snowmen")){[[6,-4],[-7,9]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{const g=new T.Group();g.add(sph(.7,PALETTE.snow,0,.6,0,9));g.add(sph(.5,PALETTE.snow,0,1.55,0,9));g.add(sph(.36,PALETTE.snow,0,2.25,0,9));g.add(cone(.1,.4,"#F97316",0,2.25,.5,5).rotateX(Math.PI/2)?cone(.1,.4,"#F97316",0,2.25,.5,5):null);g.add(box(.6,.1,.6,PALETTE.ink,0,2.55,0));g.add(box(.4,.35,.4,PALETTE.ink,0,2.75,0));g.position.set(x,0,z);mergeStatic(g);scene.add(g);obstacles.push([x,z,.9]);blobAdd(x,z,1)})}
+  if(ex("snowmen")){[[6,-4],[-7,9]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{const g=new T.Group();g.add(sph(.7,PALETTE.snow,0,.6,0,9));g.add(sph(.5,PALETTE.snow,0,1.55,0,9));g.add(sph(.36,PALETTE.snow,0,2.25,0,9));const nose=cone(.1,.4,"#F97316",0,2.25,.5,5);nose.rotation.x=Math.PI/2;g.add(nose);g.add(box(.6,.1,.6,PALETTE.ink,0,2.55,0));g.add(box(.4,.35,.4,PALETTE.ink,0,2.75,0));g.position.set(x,0,z);mergeStatic(g);scene.add(g);obstacles.push([x,z,.9]);blobAdd(x,z,1)})}
   if(ex("icefloes")){for(let i=0;i<10;i++){const a=i/10*Math.PI*2,r=(24+(i%3)*3)*WS,s=1+(i%3)*.5;
     batchAdd("floe",()=>new T.CylinderGeometry(1,1.2,.3,6),"#E8F3FA",
       xform(Math.cos(a)*r,-1.5,Math.sin(a)*r,0,0,0,new T.Vector3(s,1,s)))}}
   if(ex("snow")){const g=new T.BufferGeometry();const v=[];for(let i=0;i<500;i++)v.push((Math.random()-.5)*60*WS,Math.random()*20,(Math.random()-.5)*60*WS);g.setAttribute("position",new T.Float32BufferAttribute(v,3));const pts=new T.Points(g,new T.PointsMaterial({color:"#fff",size:.25,transparent:true,opacity:.9}));scene.add(pts);props.snow=pts}
   if(ex("embers")){const g=new T.BufferGeometry();const v=[];const ep=P(-9,-14);for(let i=0;i<250;i++)v.push(ep[0]+(Math.random()-.5)*10,Math.random()*16,ep[1]+(Math.random()-.5)*10);g.setAttribute("position",new T.Float32BufferAttribute(v,3));const pts=new T.Points(g,new T.PointsMaterial({color:"#FF7A1A",size:.22,transparent:true,opacity:.9}));scene.add(pts);props.embers=pts}
-  if(ex("aurora")){const ag=new T.PlaneGeometry(90*WS,14,40,4);const am=new T.MeshBasicMaterial({color:PALETTE.greenBright,transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending});const au=new T.Mesh(ag,am);au.position.set(0,26*WS,-45*WS);scene.add(au);props.aurora=au;props.auroraBase=ag.attributes.position.array.slice()}
+  if(ex("aurora")){const ag=new T.PlaneGeometry(90*WS,14,40,4);const am=new T.MeshBasicMaterial({color:PALETTE.greenBright,transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending});const au=new T.Mesh(ag,am);
+    // Low over the far water and tilted towards the camera: the follow camera
+    // looks down at the island, so a band high in the sky sits behind the top
+    // of the frame and the island's own tag promises what is never seen.
+    au.position.set(0,8*WS,-25*WS);au.rotation.x=-.5;scene.add(au);props.aurora=au;props.auroraBase=ag.attributes.position.array.slice()}
   batchFlush();
   // plots
   buildArtifactProps();placeArtifacts();
@@ -197,7 +205,9 @@ function buildArtifactProps(){props.artProps=[];props.artR={};(typeof ARTIFACTS=
 function addPlaque(m){const g=new T.Group();
   g.add(box(1.4,.8,.12,"#C9C9D2",0,.95,0));g.add(box(1.5,.1,.2,PALETTE.muted,0,1.4,0));
   [-.55,.55].forEach(x=>g.add(cyl(.07,.09,1,"#5A3C22",x,.5,0,5)));
-  g.position.set(m.pos[0]+1.7,0,m.pos[1]+1.3);g.rotation.y=-.3;g.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(g);
+  // The offset is in the units the layout is in, so the board keeps its
+  // distance from the mentor at every world scale.
+  const off=P(1.7,1.3);g.position.set(m.pos[0]+off[0],0,m.pos[1]+off[1]);g.rotation.y=-.3;g.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(g);
   const lb=label(m.encounter.plaque,.45);lb.position.y=1.75;g.add(lb);
   fixColors(g);scene.add(g);props.plaques[m.id]=g;obstacles.push([g.position.x,g.position.z,.7]);return g}
 function placePlaques(pop){MENTORS.filter(m=>m.world===(S.world||"campus")).forEach(m=>{
@@ -224,6 +234,8 @@ function placeBuilding(k,pop){
   fixColors(g);scene.add(g);builds[k]=g;
   if(pop)popIn(g);else g.scale.set(1,1,1);
   placeAnnex(k,pop);
+  // A stop done on this island is what opens the bridge off it.
+  refreshBridges();
 }
 // The annex of stop k: a land blob at W.annex[k-1], a causeway with a slab
 // path back to the plot, and a flag with the stop's hour at its end. Built in
@@ -251,7 +263,12 @@ function placeAnnex(k,pop){
 }
 // The pop every new thing on the island gets: it grows from nothing (the
 // animation loop eases popT) under a burst of forty confetti cubes.
-function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+// Everything that pops in is on this list, so one loop in the frame grows a
+// building, an annex and a mentor's plaque alike.
+const pops=[];
+function tickPops(dt){for(let i=pops.length-1;i>=0;i--){const g=pops[i];tickPop(g,dt);
+  if(g.userData.popT===undefined||!g.parent)pops.splice(i,1)}}
 function tickPop(g,dt){if(g.userData.popT===undefined)return;g.userData.popT+=dt;const x=Math.min(1,g.userData.popT/.9);const s=1+Math.sin(x*Math.PI*1.5)*(1-x)*.35;g.scale.setScalar(x<1?Math.max(.01,x*x*(3-2*x))*s:1);if(x>=1)delete g.userData.popT}
 
 /* ---------------- sky, sea and the light rig ---------------- */
@@ -344,6 +361,11 @@ function tickRig(k){const r=SKY_RIG[skyN],WS=WORLD_SCALE;
 // frame right now (the rim in normalised device coordinates, so a value over
 // one means the island is being cropped).
 window.__scene=()=>scene;
+// The aurora in normalised device coordinates: inside one on both axes is the
+// band the winter island's tag promises, actually in frame.
+function auroraNDC(){if(!props.aurora)return null;
+  const v=props.aurora.position.clone().project(camera);
+  return {x:v.x,y:v.y,opacity:props.aurora.material.opacity}}
 window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
   for(let i=0;i<48;i++){const a=i/48*Math.PI*2;v.set(Math.cos(a)*r,0,Math.sin(a)*r).project(camera);
     rim.push(Math.max(Math.abs(v.x),Math.abs(v.y)))}
@@ -354,7 +376,7 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     hemi:hemiL.intensity,amb:ambL.intensity,
     sky:!!props.sky,sun_disc:!!(sunM&&sunM.visible),moon_disc:!!(moonM&&moonM.visible),
     sea:!!(water&&water.material.userData.u),
-    blobs:props.blobs?props.blobs.count:0,
+    blobs:props.blobs?props.blobs.count:0,aurora:auroraNDC(),
     plates:{total:plates.length,shown:plates.filter(p=>p.visible).length},
     // off is how far the camera still is from the height the fit asks for, so
     // a test can ask whether the frame has landed instead of counting frames.
@@ -370,6 +392,9 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
 // the walker has sat down.
 function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
   scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  // The walk is state as much as the pose: a look changed mid-stride keeps its
+  // speed and its jump instead of stopping the walker dead.
+  chars.lotte.vel=old.vel||new T.Vector3();chars.lotte.jy=old.jy||0;chars.lotte.jv=old.jv||0;
   // The limbs are put where the pose says in the same tick, so a rebuild never
   // shows one frame of a standing body with the laptop gone.
   setPose(chars.lotte,old.pose,old.seatH);poseChar(chars.lotte,0,0);scene.add(chars.lotte.g)}
