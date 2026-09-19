@@ -227,6 +227,27 @@ def test_a_pasted_code_is_refused_on_the_iphone_profile_too(
     game.assert_clean()
 
 
+def test_a_link_from_camp_toml_is_held_to_http(game: GamePage) -> None:
+    """repo_url and site_url are typed by the camp's owner and become hrefs."""
+    game.goto()
+    game.page.evaluate(
+        "() => { const c = window.__data().config;"
+        " c.repo = 'javascript:window.__pwned=1';"
+        " c.site = 'javascript:window.__pwned=1//'; }"
+    )
+    assert game.page.evaluate("() => window.__siteDoc('syllabus.html')") == (
+        "syllabus.html"
+    )
+    game.start("Lotte")
+    game.open_roadmap()
+    game.page.click("#s-map button:has-text('Setup guide')")
+    game.page.wait_for_selector("#s-setup pre", state="attached")
+    hrefs = game.page.eval_on_selector_all("#s-setup a", "as => as.map(a => a.href)")
+    assert hrefs and all(h.startswith("https://") for h in hrefs), hrefs
+    assert "javascript:" not in (game.page.text_content("#s-setup") or "")
+    game.assert_clean()
+
+
 def test_state_that_already_holds_markup_is_drawn_as_text(game: GamePage) -> None:
     """The sinks hold on their own: a state poisoned before the import learnt
     to refuse (or edited by hand) still reaches every panel as words."""

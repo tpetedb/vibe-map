@@ -1115,7 +1115,9 @@ function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,6
 // syllabus.html next to the game; a camp, a fork and file:// do not, so
 // anywhere but that site the link goes to the product rather than to a 404.
 // base is the folder the page is in, and is a parameter so it can be checked.
-function siteDoc(name,base){const site=String((typeof CONFIG!=="undefined"&&CONFIG.site)||"").replace(/\/*$/,"/");
+// The site comes from config/camp.toml and becomes an href, so it is a link
+// like any other: not http or https means there is no site.
+function siteDoc(name,base){const site=safeUrl(typeof CONFIG!=="undefined"?CONFIG.site:"").replace(/\/*$/,"/").replace(/^\/$/,"");
   const here=base===undefined?location.origin+location.pathname.replace(/[^/]*$/,""):base;
   return !site?name:(here===site?name:site+name)}
 const T=THREE;
