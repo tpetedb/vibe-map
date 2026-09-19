@@ -5,23 +5,40 @@ const CAT_COL={shell:"#0067A5",git:"#FF8C1A",formats:"#FFBF00",code:"#00A86B",da
 // same rules as vibemap/grow.py. Locked notes keep their place in NOTES;
 // they just do not enter the graph yet.
 function vaultMode(){const q=new URLSearchParams(location.search).get("vault");if(q)return q;const s=(S.settings&&S.settings.vault)||"config";return s!=="config"?s:((CONFIG.vault&&CONFIG.vault.mode)||"full")}
+// The same head start as vibemap/grow.py ALWAYS, minus the two notes only the
+// written vault has (Map, Your field) and plus the two only the game has
+// (Lotte, Beverage stack). Every other title is shared.
 const ALWAYS_NOTES=["Tonight","Workstreams","Your path","Artifacts","Tech tree","Resources","Template repo","Terminal companion","Tom","Rolinda","Rolinda's questions","Lotte","Beverage stack"];
 let UNLOCKED=null;
 function linksOf(md){const out=[];const re=/\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;let m;while((m=re.exec(md.replace(/```[\s\S]*?```/g,"").replace(/`[^`\n]*`/g,""))))out.push(m[1].trim());return out}
+// Which note a claimed stop unlocks. Every evening but the campus names its
+// note after the workstream; the campus stops carry the theme's own names, so
+// they map by position to the notes written by hand in 50-notes.js.
+function stopNote(w,n,byLower){if(w==="campus")return NOTES[CAMPUS_STOP_NOTES[n-1]]?CAMPUS_STOP_NOTES[n-1]:null;
+  const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;return(ws&&byLower[ws.n.toLowerCase()])||null}
 function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
   const byLower={};keys.forEach(k=>byLower[k.toLowerCase()]=k);
-  Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;const title=ws&&byLower[ws.n.toLowerCase()];if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
+  Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const title=stopNote(w,n,byLower);if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
   MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
-  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(S.artifacts.includes(a.id))a.links.forEach(t=>{if(NOTES[t])set.add(t)})});
+  (typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).forEach(a=>{if(S.artifacts.includes(a.id))a.links.forEach(t=>{const k=noteId(t);if(NOTES[k])set.add(k)})});
   // A head start on what you chose: the basics of your shelves are open from
   // the first evening. Everything else still has to be earned.
   if(typeof TREE!=="undefined"&&!interestsAll())Object.keys(TREE).forEach(c=>{
     if(wantsShelf(c))TREE[c].filter(t=>t.d===1).forEach(t=>{if(NOTES[t.n])set.add(t.n)})});
   return set}
-let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vctxScale=1,vz=1,vtx=0,vty=0;
+let VN=[],VL=[],vsel=null,vdrag=null,VSIM=null,vctx,vW,vH,vSW=0,vSH=0,vctxScale=1,vz=1,vtx=0,vty=0;
 // A node's label hangs under it and is centred on it, so the simulation keeps
 // half a label's width from the sides and a label's height from the bottom.
 const VMX=54,VMY=30;
+// The simulation runs unbounded and the view is fitted to where the nodes
+// landed, labels included. Clamping them into the canvas instead piled a
+// large vault into a solid row along the top and the bottom edge.
+let vX0=0,vY0=0,vAR=1;
+function vbounds(){let x0=0,y0=0,x1=vW,y1=vH;
+  VN.forEach((n,i)=>{if(!i){x0=x1=n.x;y0=y1=n.y}
+    x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x);y1=Math.max(y1,n.y)});
+  vX0=x0-VMX;vY0=y0-16;vSW=Math.max(1,x1-x0+VMX*2);vSH=Math.max(1,y1-y0+16+VMY)}
+function vfit(){vbounds();vz=Math.min(1,vW/vSW,vH/vSH);vtx=(vW-vSW*vz)/2-vX0*vz;vty=(vH-vSH*vz)/2-vY0*vz}
 const vToWorld=(sx,sy)=>[(sx-vtx)/vz,(sy-vty)/vz];
 // The layout is a d3-force simulation: charge, links, a weak pull to the
 // centre and collision. It cools and stops on its own; a drag or a fresh
@@ -29,17 +46,19 @@ const vToWorld=(sx,sy)=>[(sx-vtx)/vz,(sy-vty)/vz];
 function buildGraph(){
   UNLOCKED=computeUnlocked();VN=Object.keys(NOTES).filter(id=>UNLOCKED.has(id)).map((id,i)=>({id,t:NOTES[id].t,x:0,y:0,vx:0,vy:0,deg:0}));const idx={};VN.forEach((n,i)=>idx[n.id]=i);VL=[];
   VN.forEach(n=>{const re=/\[\[([^\]]+)\]\]/g;let m;const seen={};while((m=re.exec(NOTES[n.id].md))){const to=m[1];if(idx[to]!==undefined&&to!==n.id&&!seen[to]){seen[to]=1;VL.push([idx[n.id],idx[to]]);n.deg++;VN[idx[to]].deg++}}});
-  const cv=$("vg");vW=cv.clientWidth;vH=cv.clientHeight;vctxScale=Math.min(2,devicePixelRatio||1);cv.width=vW*vctxScale;cv.height=vH*vctxScale;vctx=cv.getContext("2d");
+  const cv=$("vg");vW=cv.clientWidth;vH=cv.clientHeight;vAR=Math.sqrt(Math.max(vW,1)/Math.max(vH,1));vctxScale=Math.min(2,devicePixelRatio||1);cv.width=vW*vctxScale;cv.height=vH*vctxScale;vctx=cv.getContext("2d");
   VN.forEach((n,i)=>{const a=i/VN.length*Math.PI*2;n.x=vW/2+Math.cos(a)*Math.min(vW,vH)*.35;n.y=vH/2+Math.sin(a)*Math.min(vW,vH)*.35});
   if(VSIM)VSIM.stop();
   const r=n=>4+Math.min(10,n.deg*1.1);
   VSIM=d3.forceSimulation(VN)
     .force("link",d3.forceLink(VL.map(([source,target])=>({source,target}))).distance(l=>56+Math.min(40,(l.source.deg+l.target.deg)*2)).strength(.5))
     .force("charge",d3.forceManyBody().strength(n=>-90-n.deg*12).distanceMax(360))
-    .force("x",d3.forceX(vW/2).strength(.045)).force("y",d3.forceY(vH/2).strength(.06))
+    // The pull to the centre follows the canvas shape, so a wide panel gets a
+    // wide cloud rather than a disc with empty margins on both sides.
+    .force("x",d3.forceX(vW/2).strength(.045/vAR)).force("y",d3.forceY(vH/2).strength(.06*vAR))
     .force("collide",d3.forceCollide(n=>r(n)+9).iterations(2))
     .velocityDecay(.45).alphaDecay(.028)
-    .on("tick",()=>{VN.forEach(n=>{n.x=Math.max(VMX,Math.min(vW-VMX,n.x));n.y=Math.max(16,Math.min(vH-VMY,n.y))});vdraw()})
+    .on("tick",vdraw)
     .stop();
   VSIM.tick(160);
 }
@@ -67,33 +86,63 @@ function vdraw(){
   const order=VN.map((n,i)=>i).sort((a,b)=>{
     const pa=a===vsel?2:nb.has(a)?1:0,pb=b===vsel?2:nb.has(b)?1:0;
     return pb-pa||VN[b].deg-VN[a].deg});
+  // Labels are drawn in screen space, so the type stays readable and two of
+  // them collide when the reader sees them collide, not when the layout does.
+  c.setTransform(vctxScale,0,0,vctxScale,0,0);
   order.forEach(i=>{const n=VN[i];const r=4+Math.min(10,n.deg*1.1);const dim=vsel!==null&&i!==vsel&&!nb.has(i);
     const near=i===vsel||nb.has(i);
     if(!near&&(dim||r*vz<(small?9:5.5)||n.deg<minDeg))return;
     c.font=(i===vsel?"600 ":"")+"11px Inter,sans-serif";c.textAlign="center";
     // Keep the whole label on the canvas, whatever the pan and the zoom.
-    const w=c.measureText(n.id).width,lo=(-vtx)/vz+w/2+4,hi=(vW-vtx)/vz-w/2-4;
-    const x=Math.max(lo,Math.min(hi,n.x)),y=n.y+r+13;
-    if(!free(x,y,w,13)&&!near)return;
+    const w=c.measureText(n.id).width,lo=w/2+4,hi=vW-w/2-4;
+    const x=Math.max(lo,Math.min(hi,n.x*vz+vtx)),y=n.y*vz+vty+r*vz+13;
+    // Only the selection is worth a label on top of another one; a neighbour
+    // that cannot be placed is dropped like any other.
+    if(!free(x,y,w,13)&&i!==vsel)return;
     c.globalAlpha=dim?.3:1;c.fillStyle="#dcddde";c.fillText(n.id,x,y);c.globalAlpha=1});
 }
 function vpick(x,y){let best=null,bd=22/vz;VN.forEach((n,i)=>{const d=Math.hypot(n.x-x,n.y-y);if(d<bd){bd=d;best=i}});return best}
-function vrender(id){
-  vsel=VN.findIndex(n=>n.id===id);const md=NOTES[id].md;
+// A handful of topics are covered by a note written by hand under a shorter
+// name (NOTE_ALIAS, from the tree generator). The campaign data and the tech
+// tree name the topic; every way into the vault goes through this.
+function noteId(t){return(typeof NOTE_ALIAS!=="undefined"&&NOTE_ALIAS[t])||t}
+// A note that grow mode has not earned yet. The one rule for the whole vault:
+// a wikilink, a graph node and a tech tree button all ask this.
+const LOCK_WHY="Not unlocked yet: finish the stop, meet the mentor or inspect the artifact that leads here";
+function noteLocked(id){return !!(UNLOCKED&&NOTES[id]&&!UNLOCKED.has(id))}
+// A link into the vault: a real one, or a dead end that says so rather than
+// throwing. Both are keyboard reachable, so the vault is not mouse-only.
+function wlSpan(t){return noteLocked(t)?'<span class="wl locked" title="'+LOCK_WHY+'">'+t+"</span>"
+  :'<span class="wl" role="link" tabindex="0" data-n="'+esc(t)+'">'+t+"</span>"}
+// The panel the vault shows when there is no note to render.
+function vcard(title,body){vsel=null;$("vnote").innerHTML="<h1>"+esc(title)+'</h1><p class="muted">'+body+"</p>";$("vnote").scrollTop=0;if(vctx)vdraw()}
+function vrender(raw){
+  const id=noteId(raw);
+  // A title no note carries is a dead link in the data, not a crash.
+  if(!NOTES[id])return vcard(id,"No note by that name in this vault yet.");
+  if(noteLocked(id))return vcard(id,LOCK_WHY+".");
+  const i=VN.findIndex(n=>n.id===id);vsel=i<0?null:i;const md=NOTES[id].md;
   let html=md.split("\n").map(l=>{
     if(l.startsWith("# "))return "<h1>"+l.slice(2)+"</h1>";
     if(l.startsWith("- "))return "<li>"+l.slice(2)+"</li>";
-    if(l.startsWith("#")&&!l.includes(" "))return '<span class="tag">'+l+"</span>";
+    // A tag line is one or more tags, so "#tech #shell" renders like "#tech".
+    if(/^#[^\s#]+(\s+#[^\s#]+)*$/.test(l))return l.split(/\s+/).map(t=>'<span class="tag">'+t+"</span>").join("");
     return l?"<p>"+l+"</p>":""}).join("").replace(/<\/li><li>/g,"</li><li>").replace(/(<li>.*?<\/li>)+/g,m=>"<ul>"+m+"</ul>");
-  html=html.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`(.+?)`/g,"<code>$1</code>").replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[\[([^\]]+)\]\]/g,(m,t)=>NOTES[t]?(UNLOCKED&&!UNLOCKED.has(t)?'<span class="wl locked" title="Not unlocked yet: finish the stop, meet the mentor or inspect the artifact that leads here">'+t+'</span>':'<span class="wl" data-n="'+t+'">'+t+'</span>'):t);
-  const back=VN.filter(n=>n.id!==id&&NOTES[n.id].md.includes("[["+id+"]]")).map(n=>'<span class="wl" data-n="'+n.id+'">'+n.id+'</span>').join("");
+  html=html.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\*([^*\n]+)\*/g,"<i>$1</i>").replace(/`(.+?)`/g,"<code>$1</code>").replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[\[([^\]]+)\]\]/g,(m,t)=>{const k=noteId(t);return NOTES[k]?wlSpan(k):t});
+  const back=VN.filter(n=>n.id!==id&&NOTES[n.id].md.includes("[["+id+"]]")).map(n=>wlSpan(n.id)).join("");
   html+='<div class="bl"><h2>Linked from</h2>'+(back||'<span class="muted">nothing yet</span>')+'</div>';
-  $("vnote").innerHTML=html;$("vnote").scrollTop=0;$("vnote").querySelectorAll(".wl:not(.locked)").forEach(e=>e.onclick=()=>vrender(e.dataset.n));
+  $("vnote").innerHTML=html;$("vnote").scrollTop=0;
+  $("vnote").querySelectorAll(".wl:not(.locked)").forEach(e=>{const go=()=>vrender(e.dataset.n);
+    e.onclick=go;e.onkeydown=ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();go()}}});
   if(vctx)vdraw();
 }
-window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=(vaultMode()==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked · ":VN.length+" notes · ")+VL.length+" links · tap a node, drag to arrange";
+// The header line describes what is on screen, so it follows the Graph and
+// Tech tree switch rather than the moment the vault opened.
+function vhint(){const n=vaultMode()==="grow"?VN.length+" of "+Object.keys(NOTES).length+" notes unlocked":VN.length+" notes";
+  return n+" · "+VL.length+" links · "+(treeOn?"pick a topic to read it":"tap a node, drag to arrange")}
+window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md=artifactsMd();MENTORS.forEach(m=>{NOTES[m.name].md=mentorMd(m)});$("sheet").classList.remove("on");$("vault").classList.add("on");fx($("vault"));buildGraph();setTimeout(()=>$("vault").scrollIntoView({behavior:"smooth",block:"start"}),30);$("vcount").textContent=vhint();
   const cv=$("vg");const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]};let moved=false;
-  let pan=null;vz=1;vtx=0;vty=0;
+  let pan=null;vfit();
   cv.onpointerdown=e=>{const [sx,sy]=pos(e);const [x,y]=vToWorld(sx,sy);const i=vpick(x,y);moved=false;cv.setPointerCapture(e.pointerId);if(i!==null){vdrag=VN[i];vdrag.fx=vdrag.x;vdrag.fy=vdrag.y}else pan={sx,sy,tx:vtx,ty:vty}};
   cv.onpointermove=e=>{const [sx,sy]=pos(e);if(vdrag){if(!moved){moved=true;VSIM.alphaTarget(.25).restart()}const [x,y]=vToWorld(sx,sy);vdrag.fx=x;vdrag.fy=y}else if(pan){moved=true;vtx=pan.tx+(sx-pan.sx);vty=pan.ty+(sy-pan.sy);vdraw()}};
   cv.onpointerup=e=>{if(vdrag){if(!moved)vrender(vdrag.id);else VSIM.alphaTarget(0);vdrag.fx=vdrag.fy=null;vdrag=null}pan=null};
@@ -101,14 +150,14 @@ window.openVault=function(){NOTES["Your path"].md=pathMd();NOTES["Artifacts"].md
   vrender("Tonight");VSIM.alpha(.6).restart()};
 let treeOn=false;
 window.openTree=function(){openVault();if(!treeOn)toggleTree();vrender("Tech tree");renderTree()};
-window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");if(treeOn)renderTree()};
+window.toggleTree=function(){treeOn=!treeOn;$("vtree").classList.toggle("on",treeOn);$("vg").style.display=treeOn?"none":"block";$("vmode").innerHTML=icon(treeOn?"book-open":"git-branch")+(treeOn?"Graph":"Tech tree");$("vcount").textContent=vhint();if(treeOn)renderTree()};
 window.treeScroll=function(d){const el=$("vtree");el.scrollBy({left:d*el.clientWidth*.8,behavior:motionOff()?"auto":"smooth"})};
 // Chosen shelves come first and keep their colour; the rest stay in the same
 // list, dimmed. Nothing is hidden or locked: an interest is an order, not a gate.
 function treeShelves(){const cats=CATS.slice();if(interestsAll())return cats;
   return cats.filter(([c])=>wantsShelf(c)).concat(cats.filter(([c])=>!wantsShelf(c)))}
 function renderTree(){const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
-  $("vtree").innerHTML='<div class="treenav"><button onclick="treeScroll(-1)" aria-label="Earlier ages">Earlier</button><button onclick="treeScroll(1)" aria-label="Later ages">Later</button><span class="small muted">'+(interestsAll()?"Eleven shelves, side by side. Scroll or use the buttons.":"Your shelves first, the rest dimmed and still open. Settings changes them.")+'</span></div><div class="ages">'+treeShelves().map(([c,cn,d])=>`<div class="age${wantsShelf(c)?"":" faded"}"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}" data-n="${t.n}"><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
+  $("vtree").innerHTML='<div class="treenav"><button onclick="treeScroll(-1)" aria-label="Earlier ages">Earlier</button><button onclick="treeScroll(1)" aria-label="Later ages">Later</button><span class="small muted">'+(interestsAll()?"Eleven shelves, side by side. Scroll or use the buttons.":"Your shelves first, the rest dimmed and still open. Settings changes them.")+'</span></div><div class="ages">'+treeShelves().map(([c,cn,d])=>`<div class="age${wantsShelf(c)?"":" faded"}"><div class="lvl">${TREE[c].length} topics</div><h4>${cn}</h4><p>${d}</p>${TREE[c].map(t=>`<button class="tech${t.n===cur?' sel':''}${noteLocked(t.n)?' locked':''}" data-n="${t.n}"${noteLocked(t.n)?` title="${LOCK_WHY}"`:""}><i style="background:${CAT_COL[c]}"></i>${t.n}<em class="d d${t.d}">${DEPTHS[t.d]}</em></button>`).join("")}</div>`).join("")+'</div>';
   $("vtree").querySelectorAll(".tech").forEach(b=>b.onclick=()=>{vrender(b.dataset.n);renderTree();$("vnote").scrollIntoView({behavior:"smooth",block:"start"})})}
 // Only a file:// game knows where the vault folder is; over http the button
 // sends you to the same notes on GitHub, and says so.
@@ -118,6 +167,10 @@ window.openObsidian=function(){
   window.open((CONFIG.repo||"https://github.com/tpetedb/vibe-map")+"/tree/main/vault/Camp","_blank","noopener")};
 // Open the vault on a note; inline handlers and tests reach it by name.
 window.openNote=function(title){openVault();vrender(title)};
+// Read-only seam for the tests: the graph is a canvas, so its selection, its
+// unlocked set and where its nodes landed have no DOM to assert on.
+window.__vault=()=>({sel:vsel,unlocked:VN.length,total:Object.keys(NOTES).length,
+  has:t=>!!(UNLOCKED&&UNLOCKED.has(t)),nodes:VN.map(n=>({x:n.x,y:n.y})),width:vSW,height:vSH});
 window.closeVault=function(){const was=$("vault").classList.contains("on");$("vault").classList.remove("on");if(VSIM)VSIM.stop();if(was)window.scrollTo({top:0,behavior:"smooth"})};
 
 /* ---------------- workstream logic ---------------- */
