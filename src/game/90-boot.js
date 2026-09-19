@@ -1,6 +1,9 @@
-// Resume is offered to anyone who has been here before, not only to someone
-// with a stop done; the steps only fold away once the campaign has started.
-if(load()){$("name").value=S.name;if(S.done.length||S.look||S.name)$("btn-continue").style.display="";if(S.done.length)$("title").classList.add("returning")}
+// Resume is offered to anyone who has been here before, but only when there is
+// something to resume with: start() refuses an empty name, so a saved look on
+// its own would be a button that turns you down. Once a stop is done the five
+// steps fold into their disclosure and the resume button is the first thing.
+if(load()){$("name").value=S.name;if(S.name)$("btn-continue").style.display="";
+  if(S.done.length){$("title").classList.add("returning");$("obfold").open=false}}
 // ?reset must run after load(), or it saves the defaults over the real record.
 if(new URLSearchParams(location.search).has("reset"))resetProgress();
 // Pairings are written for wine. Any other theme gets its own one-line pairing

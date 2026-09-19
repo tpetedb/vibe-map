@@ -1,1 +1,0 @@
-- The scene and the speech bubble fill the window: the stage takes the height the talk band does not, so the black letterbox under the island at 1440x900 is gone. The hint line carries its own backing pill instead of light grey on bright grass, and the joystick and the jump button are hidden on a fine pointer, where the ground, the arrow keys and WASD already do the work.

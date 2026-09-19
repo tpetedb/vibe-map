@@ -160,6 +160,13 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    until start), so the panel sits left on wide screens and leaves the
    right half of the stage clear. */
 #title{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;padding:16px;background:rgba(0,0,0,.22)}
+/* The title is modal: the island keeps turning behind it, but the HUD, the
+   walk hint and the speech bubble are covered by the panel and dead to a
+   click, so they are hidden rather than half readable under it. Hidden, not
+   removed: the stage keeps its size, so the camera does not jump at Start.
+   This is also what takes the HUD out of the tab order until then. */
+body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
+body:has(#title:not(.off)) #talk{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -192,8 +199,14 @@ details.brief p{margin-top:8px}
 .setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
 .setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
 /* The primary row stays on screen however long the form gets, and the setup
-   guide is rendered below it rather than between two steps. */
-#title .box .row.go{position:sticky;bottom:-18px;z-index:2;margin:14px -22px -18px;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
+   guide is rendered below it rather than between two steps. Both offsets: a
+   sticky bottom alone lets the row scroll off the top once the guide is open,
+   and the field and the button must never be out of reach. The top offset is
+   the box's own padding, so the held row covers that strip instead of leaving
+   a clipped line of text above itself. The row's own
+   padding fills the box's bottom padding when it rests at the end, so it takes
+   no negative margin, which would print the opaque row over the text below. */
+#title .box .row.go{position:sticky;top:-22px;bottom:-18px;z-index:2;margin:14px -22px 0;padding:12px 22px 18px;background:var(--surface-1);border-top:1px solid var(--line)}
 #title .box .row.go #name{flex:1;min-width:150px;width:auto}
 #title .box .row.go #namehint{flex-basis:100%;margin:-2px 0 0;font-size:13px}
 #title .box .row.go+.setup{margin-top:18px}
@@ -202,7 +215,12 @@ details.brief p{margin-top:8px}
   #name.shake{animation:shake 320ms var(--ease)}
   @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-4px)}}
 }
-#title.returning #onboard{display:none}
+/* First visit: the steps are the screen, so the disclosure is invisible and
+   only a returning player gets the line that opens them again. */
+#title:not(.returning) #obfold>summary{display:none}
+#obfold>summary{cursor:pointer;font-size:13px;color:var(--blue-bright);list-style:none;font-family:var(--font-mono);margin:12px 0 0}
+#obfold>summary::-webkit-details-marker{display:none}
+#obfold>summary::before{content:"> "}#obfold[open]>summary::before{content:"v "}
 #title.returning details.brief{margin-top:10px}
 /* Lesson commands fold at hard and above; the summary is the only thing
    that changes with the difficulty, the commands are always one click away. */

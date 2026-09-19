@@ -1,1 +1,0 @@
-- `main` is protected on GitHub: pull requests only, both CI jobs green and up to date, no force pushes or deletion, enforced for admins; release tags are immutable; merged branches are deleted automatically; secret scanning with push protection and Dependabot security updates are on. `docs/MAINTAINERS.md` and `AGENTS.md` say so.
