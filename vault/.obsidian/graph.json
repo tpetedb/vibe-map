@@ -123,28 +123,28 @@
       "query": "tag:#recipe",
       "color": {
         "a": 1,
-        "rgb": 13715325
+        "rgb": 12741140
       }
     },
     {
       "query": "tag:#persona",
       "color": {
         "a": 1,
-        "rgb": 2282478
+        "rgb": 675450
       }
     },
     {
       "query": "tag:#council",
       "color": {
         "a": 1,
-        "rgb": 12616956
+        "rgb": 10103338
       }
     },
     {
       "query": "tag:#overview",
       "color": {
         "a": 1,
-        "rgb": 13421772
+        "rgb": 9147303
       }
     }
   ],

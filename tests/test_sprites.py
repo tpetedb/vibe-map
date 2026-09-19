@@ -109,6 +109,19 @@ def test_the_pet_paints_pixels_or_art_depending_on_the_style() -> None:
     assert pet.credit(pet.resolve("tom", species="owl"), "pixel") == ""
 
 
+def test_a_terminal_without_truecolor_is_told_why_the_pixels_look_flat() -> None:
+    p = pet.resolve("tom", species="crab")
+    colourful = {"TERM": "xterm-256color", "COLORTERM": "truecolor"}
+    assert pet.footnote(p, "pixel", env=colourful) == pet.credit(p, "pixel")
+    # A forced pixel is still honoured, but the smear is explained.
+    flat = pet.footnote(p, "pixel", env={"NO_COLOR": "1"})
+    assert flat.startswith(pet.credit(p, "pixel"))
+    assert "truecolor" in flat and "vibe pet --style ascii" in flat
+    # The art says nothing, and neither does auto, which already stepped aside.
+    assert pet.footnote(p, "ascii", env=colourful) == ""
+    assert pet.footnote(p, "auto", env={"TERM": "dumb"}) == ""
+
+
 def test_the_gait_walks_only_while_the_stroll_moves() -> None:
     assert pet.gait(4, 40, sprite_width=20) == "walk"
     assert pet.gait(5, 20, sprite_width=20) == "idle"  # nowhere to go, so it idles
