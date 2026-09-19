@@ -27,8 +27,9 @@ You should see `brew` finishing without red lines. Then the camp:
 
 ```bash
 uv tool install git+https://github.com/tpetedb/vibe-map
-vibe new                     # makes ~/vibe-map-<you>-<today>: workspace, vault, config; no engine
-cd vibe-map-*
+cd ~                         # camps live in your home folder in this document; anywhere you own works
+vibe new                     # makes vibe-map-<you>-<today> here: workspace, vault, config; no engine
+cd ~/vibe-map-*
 just setup                   # links the skills for Claude Code; the vault was built by vibe new
 ```
 

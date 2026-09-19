@@ -1,48 +1,85 @@
 # Vibe Code Camp
 
-From intern to expert in one evening, with wine. A 3D island you walk across, eight workstreams that each leave something real on your machine, a terminal companion that checks your work and awards XP, and an Obsidian vault that grows as you go. .
+[![CI](https://github.com/tpetedb/vibe-map/actions/workflows/ci.yml/badge.svg)](https://github.com/tpetedb/vibe-map/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/tpetedb/vibe-map?label=release)](https://github.com/tpetedb/vibe-map/releases)
+[![Licence MIT](https://img.shields.io/badge/licence-MIT-0067A5)](LICENSE)
+[![Play it in the browser](https://img.shields.io/badge/play-in%20the%20browser-00A86B)](https://tpetedb.github.io/vibe-map/)
+
+From intern to expert in one evening, with wine. A 3D island you walk across, eight workstreams that each leave something real on your machine, a terminal companion that checks your work and awards XP, and an Obsidian vault that grows as you go.
+
+**What it is.** A course you play. Four evenings, four islands, thirty-two stops. Every stop ends with something on your disk that a command can verify, so "done" is a green check and not a feeling.
+
+**Who it is for.** People who are not (yet) engineers and want to start with AI coding agents properly: a chief of staff, the CEO of a cleaning company, a university managing director, a teacher, an interior stylist, a data engineer. No terminal experience is assumed. An evening is.
 
 ![The Innovation Campus at dusk, five of eight OKRs lit](docs/media/island-campus.png)
 
-## Play now, nothing to install
+## Play it now
 
-Download or clone, then double-click `game/vibe-map.html`. One file, three.js embedded, no CDN, works offline on a Mac, a phone or a locked-down laptop. It is also served at https://tpetedb.github.io/vibe-map/ once GitHub Pages is switched on.
+**[tpetedb.github.io/vibe-map](https://tpetedb.github.io/vibe-map/)** opens the game in your browser. Nothing to install, no account, no key: the progress lives in that browser and comes out as a code you can paste elsewhere.
+
+Offline instead? It is one file, with three.js embedded and no CDN, so it runs from your downloads folder on a Mac, a phone or a locked-down laptop:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html -o vibe-map.html
+open vibe-map.html        # macOS; anywhere else, double-click it
+```
 
 ![Walking to the 18:00 signpost, opening the workstream, unlocking the OKR](docs/media/gameplay.gif)
 
-## The whole thing, in three commands
+## The full evening: the game, your terminal and your notes
 
-Step by step, with what you should see after each command: [docs/QUICKSTART.md](docs/QUICKSTART.md).
+The game is the map and the manual. The `vibe` command is the part that looks at what you actually built, awards the XP and writes the notes. Install it once, then make a camp of your own:
 
 ```bash
-brew install just
-just setup     # Homebrew tools, uv and the Python env, Playwright browsers, skills, the vault
-just start     # the onboarding screen: who you are, what the machine has, where to go
+brew install uv git                                        # macOS; uv and git are the whole prerequisite
+uv tool install git+https://github.com/tpetedb/vibe-map    # puts `vibe` on your PATH, no clone needed
+vibe new                                                   # your camp, in the current folder: vibe-map-<you>-<today>
+cd vibe-map-*
+vibe status                                                # your name, level, XP and the four-by-eight grid
+vibe play                                                  # the game, with your camp behind it
 ```
 
-![just start: name, field, difficulty, provider and theme, in the house palette](docs/media/tui-welcome.png)
+Step by step, with what you should see after each command: [docs/QUICKSTART.md](docs/QUICKSTART.md). The three windows and one loop over weeks: [docs/LONG-GAME.md](docs/LONG-GAME.md). The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing. `VIBE_HOME` points the command at a camp from elsewhere.
 
-`just start` asks for your name, your field, a difficulty from beginner to god, your model provider (Claude Code, Codex, Gemini, Copilot or OpenCode) and a theme, checks the toolbelt with one-key installs (or a YOLO button that installs everything), and launches the game, Claude Code, Claude in YOLO mode, Zed with Claude over ACP, the vault in Obsidian or the tests.
+### What you need, honestly
+
+- **A terminal.** Every instruction is written for macOS on Apple silicon, which is what the course was built on. Linux works. Windows is untested.
+- **uv and git.** That is the whole install. `vibe` carries the campaign, the tech tree, the resources and the camp template inside the package.
+- **Your own coding agent, on your own account.** From workstream 2 onwards the course assumes one: Claude Code, Codex, Gemini CLI, Copilot CLI or OpenCode. You bring your own subscription and you pay for your own usage; nothing here is billed to this project or its owner, and no key of ours is in the game or the CLI. `vibe provider <id>` tells the CLI which one you have, and it is only ever run in print mode, by you, on your machine.
+- **A camp of your own.** `vibe new` writes one into a folder you own. If you want the engine as well, press **Use this template** on GitHub and work in your own repository. Nothing you do reaches this repository unless you open a pull request.
+- **Optional, and only per workstream.** GitHub CLI (`gh`), DuckDB, Obsidian and `just`. `vibe toolbelt` says what is missing and gives the install command; nothing installs itself.
+
+![just start: name, field, difficulty, provider and theme, in the house palette](docs/media/tui-welcome.png)
 
 The game onboards on its own too. A first visit asks who you are (Lotte, Frank, Max, Rolinda or your own name), how hard, and whether you want just the game or the full experience; the last one prints the exact terminal commands with your name and today's date filled in, folder convention included: `vibe-map-<name>-<YYYY-MM-DD>`.
 
 ![The title screen on a first visit: character, difficulty, how to play](docs/media/onboarding-start.png)
 
-The three windows, one loop, over weeks: [docs/LONG-GAME.md](docs/LONG-GAME.md) spells it out command by command.
-
-## Or install the CLI once, anywhere
+### A few more ways to start a camp
 
 ```bash
-uv tool install git+https://github.com/tpetedb/vibe-map   # `vibe` on your PATH, no clone needed
-vibe new                          # a slim camp, no engine: vibe-map-<you>-<today>
-vibe new ~/camp --github you/camp # a named folder, pushed to a new GitHub repo
-cd vibe-map-* && vibe status      # the CLI finds the camp from any subfolder
-vibe play                         # the hosted game; --offline caches a copy
+vibe new ~/camp --github you/camp # a named folder, pushed to a new GitHub repository
+vibe new ~/camp --github you/camp --private   # the same, private (Pages needs GitHub Pro)
+vibe play --offline               # cache the game next to the camp and open that copy
 ```
 
-`vibe` carries the campaign, the tech tree and the resources inside the package. `VIBE_HOME` points it at a camp from elsewhere.
+`vibe` finds the camp from any subfolder, so `vibe status` works wherever you are inside it.
 
-The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
+## What is in the box
+
+Three zones, on purpose. The **product** is the engine and lives here. The **template** is what a camp starts from and ships inside the `vibe` command. Your **workspace** is the folder that is yours. A learner never needs the first one: `vibe new` writes a slim camp (the template's files and a built vault, no engine, and it prints the count as it copies), the game is hosted, the command is installed. [docs/MAINTAINERS.md](docs/MAINTAINERS.md) has the map and how a change in one zone reaches the others.
+
+| Path | Zone | What |
+|---|---|---|
+| `game/vibe-map.html`, `src/` | product | The game, built from `src/` by `just build`. |
+| `vibemap/` | product | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
+| `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, `config/camp.toml`, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
+| `workspace/` | workspace | The learner's own zone: the game from workstream 1, the scores and their queries. Here it holds the worked example. |
+| `vault/` | product | An Obsidian vault, pre-configured and lint-clean, over 130 notes on day one. |
+| `.agents/skills/` | configuration | Fifteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
+| `docs/` | product | [The brief](docs/BRIEF.md) (every request, what happened, the plan), [Maintainers](docs/MAINTAINERS.md), [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md), [Media](docs/media/README.md) (what each image shows and what renders it). |
+| `tests/` | product | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
+| `justfile` | configuration | Every task, for people and for agents. `just` lists them. |
 
 ## What one evening leaves behind
 
@@ -69,12 +106,12 @@ Walk up to a yellow ring and press **Inspect**. On the campus, the cafe serves a
 
 ![The winter island with the data centre, the library and the energy grid](docs/media/island-winter-artifacts.png)
 
-The second wave is spread over the four islands, and each one is a small building the walker has to go round. Campus: the factory (a data pipeline, raw to bronze to silver to gold, a failed run that reruns cleanly) and the post office (queues and pub/sub, a subscriber that was offline, at-least-once delivery, the dead-letter shelf). Sandbox: the shop (a package registry, `uv add` as buying, `uv.lock` as the receipt, a yanked version) and the bank (secrets and auth, a token is a key, `.env` is the safe, a leaked key revoked and rotated). Cold storage: the data centre (where the model runs, an inference request's path, latency by region, a cold start, batch versus interactive), the energy grid (tokens as watts, a rate limit as a fuse, autoscaling, a budget alarm) and the library (RAG, a question becomes a vector, the nearest shelves, a citation, a stale index). Production: the office (a team of agents, planner, worker and reviewer, `AGENTS.md` as the handbook, a review gate that rejects, subagents as departments), the households (users and privacy, data minimisation, anonymisation, a GDPR request answered) and the school (training a model, train and test split, overfitting caught by the test, a benchmark score).
+The second wave is spread over the four islands, and each one is a small building the walker has to go round. Campus: the factory (a data pipeline, raw to bronze to silver to gold, a failed run that reruns cleanly), the post office (queues and pub/sub, a subscriber that was offline, at-least-once delivery, the dead-letter shelf) and the switchboard (a justfile, the labels behind `just --list`, a parameter with a default, a dependency that runs first, a confirm guard on the switch that cuts the power). Sandbox: the shop (a package registry, `uv add` as buying, `uv.lock` as the receipt, a yanked version) and the bank (secrets and auth, a token is a key, `.env` is the safe, a leaked key revoked and rotated). Cold storage: the data centre (where the model runs, an inference request's path, latency by region, a cold start, batch versus interactive), the energy grid (tokens as watts, a rate limit as a fuse, autoscaling, a budget alarm) and the library (RAG, a question becomes a vector, the nearest shelves, a citation, a stale index). Production: the office (a team of agents, planner, worker and reviewer, `AGENTS.md` as the handbook, a review gate that rejects, subagents as departments), the households (users and privacy, data minimisation, anonymisation, a GDPR request answered) and the school (training a model, train and test split, overfitting caught by the test, a benchmark score).
 
 ## Make it yours
 
 - **Persona.** `uv run vibe persona data-engineer` tunes the example game, the dataset, Rolinda's questions and the recipes to your field. Six presets: chief of staff, cleaning-company CEO, university managing director, pabo teacher, data engineer, interior stylist.
-- **Difficulty.** `uv run vibe difficulty hard`: beginner and easy spell every command out, hard and expert add strict and extra checks, god needs `just verify` green to claim.
+- **Difficulty.** `uv run vibe difficulty hard`: beginner and easy spell every command out, hard and expert add strict and extra checks, god adds the whole gate on top: `just verify` in a checkout of this repository, the vault lint plus your own tests in a camp.
 - **Theme.** `uv run vibe theme boardroom` swaps the wine-night jargon for a serious voice; `--create` asks your provider to write a new one into `themes/`.
 - **Provider.** Everything that talks to a model (`explain`, `council`, custom themes) uses the CLI you chose, in print mode.
 - **Obsidian, feature by feature.** `uv run vibe vault feature --all` writes one note per Obsidian feature (links, properties, callouts, canvas, bases, templates, daily notes, bookmarks, search, hotkeys, workspaces, slides, URI, CLI, Sync, Publish and more) with the exact commands and a five-minute try from the official help, plus working example files: a canvas, a base, a template, a deck, a CSS snippet. The table: [docs/OBSIDIAN.md](docs/OBSIDIAN.md).
@@ -124,7 +161,7 @@ uv run vibe dotfiles install zsh --brew    # completion dropdown, fzf, highlight
 uv run vibe dotfiles install --all         # tmux bar, Ghostty theme, Starship prompt, AeroSpace, the R2-D2 Obsidian theme
 ```
 
-Adapted from [Tom's toolbox](https://github.com/tpetedb/toms-toolbox) (MIT). Anything that already exists and differs is backed up next to itself first. The same screen lives in `just start` under Terminal setup.
+Adapted from Tom's own toolbox (MIT), which is not a public repository, so the modules travel with this one in `vibemap/data/dotfiles/` with their licence. Anything that already exists and differs is backed up next to itself first. The same screen lives in `just start` under Terminal setup.
 
 ## Break things on purpose
 
@@ -132,32 +169,25 @@ Adapted from [Tom's toolbox](https://github.com/tpetedb/toms-toolbox) (MIT). Any
 just break sandbox          # a play/sandbox branch, a sandbox
 uv run vibe explain     # your provider explains the last commits in plain words
 just rescue                 # back on main, nothing lost
-uv run vibe council "Should I learn git before Python?"   # four mentors answer, review each other, a chairman decides
+uv run vibe council "Should I learn git before Python?"   # the island's mentors answer, review each other, a chairman decides
 ```
 
-## What is in the box
+## Work on the engine itself
 
-Three zones, on purpose. The **product** is the engine and lives here. The **template** is what a camp starts from and ships inside the `vibe` command. Your **workspace** is the folder that is yours. A learner never needs the first one: `vibe new` writes a slim camp (about twenty files, no engine), the game is hosted, the command is installed. [docs/MAINTAINERS.md](docs/MAINTAINERS.md) has the map and how a change in one zone reaches the others.
+Most people do not need to: `uv tool install git+https://github.com/tpetedb/vibe-map` and `vibe new` give you a camp without the engine. Press **Use this template** on GitHub when you want the engine (to change the game, the checks or the course), then work in your own repository:
 
-| Path | Zone | What |
-|---|---|---|
-| `game/vibe-map.html`, `src/` | product | The game, built from `src/` by `just build`. |
-| `vibemap/` | product | The terminal companion: quests and XP, personas, themes, toolbelt, providers, council, the vault builder, the onboarding screen. |
-| `vibemap/data/template/` | template | The camp skeleton `vibe new` copies: README, AGENTS.md, `config/camp.toml`, justfile, the learner skills, the hook, the Pages workflow, an empty `workspace/`. |
-| `workspace/` | workspace | The learner's own zone: the game from workstream 1, the scores and their queries. Here it holds the worked example. |
-| `vault/` | product | An Obsidian vault, pre-configured and lint-clean, 100 notes on day one. |
-| `.agents/skills/` | configuration | Fifteen skills in the Agent Skills standard, linked into `.claude/skills/` by `just setup`. |
-| `docs/` | product | [The brief](docs/BRIEF.md) (every request, what happened, the plan), [Maintainers](docs/MAINTAINERS.md), [Quickstart](docs/QUICKSTART.md), [About](docs/ABOUT.md), [Syllabus](docs/SYLLABUS.md), [Roadmap](docs/ROADMAP.md) (the tech tree, every date sourced), [Cookbook](docs/COOKBOOK.md), [Design](docs/DESIGN.md), [Ecosystem](docs/ECOSYSTEM.md), [Vault](docs/VAULT.md), [Note methods](docs/NOTE-METHODS.md), [Skills](docs/SKILLS.md), [Age of Epochs study](docs/AOE-STUDY.md), [ADRs](docs/adr/README.md). |
-| `tests/` | product | Pytest: CLI, build, Chromium and WebKit iPhone smoke tests, the onboarding screen, and a full play-through of every path. |
-| `justfile` | configuration | Every task, for people and for agents. `just` lists them. |
+```bash
+brew install just
+just setup     # Homebrew tools, uv and the Python env, Playwright browsers, skills, the vault
+just start     # the onboarding screen: who you are, what the machine has, where to go
+just verify    # ruff, the pytest battery with Playwright, the build check: the gate before a commit
+```
 
-## Use it as a template
-
-Most people should not: `uv tool install git+https://github.com/tpetedb/vibe-map` and `vibe new` give you a camp without the engine. Press **Use this template** on GitHub when you want the engine itself (to change the game, the checks or the course); then clone, `just setup`, `just start`, and the checkout is also a valid camp. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repo practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, versions in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
+A checkout is also a valid camp, which is how the tests and the played instance work. To see what a finished campaign looks like, open [vibe-map-played](https://github.com/tpetedb/vibe-map-played): the same template after every island, stop and mentor was played, with its state, vault and progress code committed. The repository practises what it teaches: [CHANGELOG.md](CHANGELOG.md) in Keep a Changelog form, decisions in `docs/adr/`, the version in `pyproject.toml`, CI and Pages as GitHub Actions in `.github/workflows/`, secrets in a gitignored `.env` next to `env.example`.
 
 ## For agents
 
-Read [HANDOVER.md](HANDOVER.md), then [AGENTS.md](AGENTS.md). `just verify` is the gate before a commit.
+Read [AGENTS.md](AGENTS.md) for the conventions and the test loop, [docs/MAINTAINERS.md](docs/MAINTAINERS.md) for the three zones and how a change travels, and [docs/BRIEF.md](docs/BRIEF.md) for what was asked for and why. `just verify` is the gate before a commit.
 
 ## Credits and licences
 

@@ -16,4 +16,4 @@ One file per decision, in Michael Nygard's form (Title, Status, Context, Decisio
 | [0010](0010-real-names-and-live-content.md) | Real organisations and people appear by name as plain text, and everything they say is a link to their own words | Accepted, 2026-09-18 |
 | [0013](0013-topics-as-data.md) | A topic of the tech tree is one TOML file in a pack, not a row in a Python list | Accepted, 2026-09-18 |
 
-Next number: 0014 (0011 and 0012 are taken by the changes landing beside this one). The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+Next number: 0014. 0011 and 0012 were reserved for work that did not land and are never reused: a number names one decision, forever. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions

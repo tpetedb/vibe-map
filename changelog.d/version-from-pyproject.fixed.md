@@ -1,0 +1,1 @@
+- `vibemap.__version__` now reads `pyproject.toml` when the package is not installed, instead of a pin that was four releases behind. An installed copy still reads its metadata, so there is one source for the number and nothing to keep in agreement. The `semver` skill says so too: the old "the number lives in two places" rule would have reintroduced the drift it describes.

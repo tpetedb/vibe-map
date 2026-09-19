@@ -28,4 +28,4 @@ Each mentor has an `encounter` in `vibemap/data/campaign.json` with a dialogue a
 - The encounters are the part of the game where being wrong is a reputational matter, not a bug. Review of a mentor line is review of the source, and a new line without a source does not ship.
 - Exercises run the learner's own code, offline and under a timeout, which is the same contract `vibemap/artifact_checks.py` uses. The mentor checks stay in `vibemap/quests.py` because they share the note check and the difficulty levels with the workstreams.
 - `vibe mentor <id> deep|skip` still records a path, so the old choice survives as the thing that colours the vault; the encounter is what earns the plaque.
-- Twelve encounters and twenty artifacts at half a workstream each are a large share of the XP a learner can earn outside the thirty-two stops. Any future family of side work is held to the same share, so the ladder does not drift.
+- Twelve encounters and every artifact at half a workstream each are a large share of the XP a learner can earn outside the thirty-two stops. Any future family of side work is held to the same share, so the ladder does not drift.

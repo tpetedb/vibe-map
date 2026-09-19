@@ -1,8 +1,8 @@
 """iOS Safari proxy: WebKit with iPhone metrics and touch events.
 
 Playwright's WebKit is the same engine as Safari, so this is the closest a
-headless test gets to the phone. HANDOVER asks for tap-to-move, the joystick,
-sheet scrolling and WebGL with the shadow map; each has a test here.
+headless test gets to the phone. Tap-to-move, the joystick, sheet scrolling
+and WebGL with the shadow map each have a test here.
 """
 
 from __future__ import annotations

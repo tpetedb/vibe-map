@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from datetime import date
+from importlib import metadata
 from pathlib import Path
 
 import pytest
@@ -649,3 +650,21 @@ def test_the_terminal_names_a_wearable_the_way_the_game_does(tmp_path: Path) -> 
     html = (ROOT / "game" / "vibe-map.html").read_text(encoding="utf-8")
     for wear_id, name in names.items():
         assert f'"{wear_id}"' in html and name in html
+
+
+def test_the_version_comes_from_pyproject_without_an_install(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A bare checkout has no installed metadata; the number must still be the
+    # one in pyproject.toml, never a pin that drifts a release behind.
+    import tomllib
+
+    import vibemap
+
+    def _missing(_: str) -> str:
+        raise metadata.PackageNotFoundError(_)
+
+    monkeypatch.setattr(vibemap, "version", _missing)
+    want = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert vibemap._version() == want["project"]["version"]
+    assert vibemap.__version__ == want["project"]["version"]

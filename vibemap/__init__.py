@@ -7,11 +7,30 @@ a progress code with the game in game/vibe-map.html.
 
 from __future__ import annotations
 
+import tomllib
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 
-# One source for the version: pyproject.toml, through the installed metadata.
-# A checkout that is not installed (a bare `python -c`) falls back to the pin.
-try:
-    __version__ = version("vibe-map")
-except PackageNotFoundError:  # reason: running from source without an install
-    __version__ = "0.5.0"
+UNKNOWN_VERSION = "0.0.0+unknown"
+
+
+def _version() -> str:
+    """The version, from one source: pyproject.toml.
+
+    An installed package reads it from the metadata built out of that file. A
+    bare checkout has no metadata, so it reads the file itself rather than a
+    pin that would drift every release.
+    """
+    try:
+        return version("vibe-map")
+    except PackageNotFoundError:  # reason: running from source without an install
+        pass
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    try:
+        data = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        return str(data["project"]["version"])
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        return UNKNOWN_VERSION
+
+
+__version__ = _version()

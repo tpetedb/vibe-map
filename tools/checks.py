@@ -54,7 +54,6 @@ EMOJI = _emoji_pattern()
 URL = re.compile(r"https?://[^\s)\]\"'<>`]+")
 LINK_SOURCES = (
     "README.md",
-    "HANDOVER.md",
     "docs/SYLLABUS.md",
     "docs/RESOURCES.md",
     "docs/ROADMAP.md",

@@ -33,7 +33,7 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    vibe --version
    ```
 
-   Prints the version, for example `vibe, version 0.3.0`. The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
+   Prints `vibe, version X.Y.Z`, the number in `pyproject.toml` at the commit you installed. That one file is the only place the version is written; everything else reads it. The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
 
 2. Start a camp.
 
