@@ -74,8 +74,13 @@ def render() -> tuple[dict[str, dict[str, str]], str, str]:
     overview += "- See also: [[Resources]], [[Template repo]], [[Tonight]]\n#overview"
     notes["Tech tree"] = {"t": "future", "md": overview}
 
+    # A few topics are covered by a note written by hand under a shorter name.
+    # The data names the topic, so the game needs the same map to find the note.
+    alias = {n: EXIST[i] for i, _a, n, *_ in T if i in EXIST}
     tree_js = (
-        "const CATS="
+        "const NOTE_ALIAS="
+        + json.dumps(alias)
+        + ";const CATS="
         + json.dumps([[c, cn, d] for c, cn, d in CATEGORIES])
         + ";const DEPTHS="
         + json.dumps({str(k): v for k, v in DEPTHS.items()})
