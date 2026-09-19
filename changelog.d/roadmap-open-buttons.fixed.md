@@ -1,1 +1,0 @@
-- The thirty-two "Open" buttons in the Roadmap and the "Go" buttons under the campaign carry an `aria-label` naming their row, so a screen reader hears the mentor or the artifact rather than "Open" thirty-two times.
