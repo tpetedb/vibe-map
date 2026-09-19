@@ -21,7 +21,7 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
 // any other theme swaps it and rewrites the pairings. Difficulty and persona
 // are exposed on <body> for CSS.
 function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;document.body.dataset.difficulty=CONFIG.difficulty;document.body.dataset.persona=CONFIG.persona;
-  const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=CONFIG.repo;tp.textContent=CONFIG.repo.replace(/^https?:\/\//,"")}
+  const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=repoUrl();tp.textContent=repoUrl().replace(/^https?:\/\//,"")}
   // The title screen and the HUD speak the theme's language: the second line
   // of the tagline, the two buttons, the word for a stop, the four KPIs.
   $("tagline").textContent="From intern to expert in one evening. "+th.taglineSuffix;

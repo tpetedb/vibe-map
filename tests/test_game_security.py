@@ -12,6 +12,7 @@ this file talks to the open internet.
 
 from __future__ import annotations
 
+import base64
 import json
 import threading
 from collections.abc import Iterator
@@ -153,6 +154,97 @@ def test_an_imported_name_with_markup_stays_text(game: GamePage) -> None:
     assert game.page.locator("#web img").count() == 0
     labels = game.page.locator("#web text").all_text_contents()
     assert hostile in labels
+    game.assert_clean()
+
+
+# One payload for every field of a progress code and of the stored state: it
+# closes a single and a double quoted attribute first, so a value that lands
+# inside an attribute is caught as well as one that lands between tags.
+BREAKOUT = '\'"><img src=x onerror="window.__pwned=1">'
+NO_MARKUP = "() => document.querySelectorAll('img[src=\"x\"]').length"
+
+
+def _code(payload: dict[str, Any]) -> str:
+    """A progress code with any payload, the way another machine would send it."""
+    raw = json.dumps(payload).encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["interests", "path", "artifacts", "mentors", "items", "topics", "doneW"],
+)
+def test_a_pasted_progress_code_cannot_carry_markup(game: GamePage, field: str) -> None:
+    """A code is pasted from a chat or a mail, so every id in it is outside data."""
+    values: dict[str, Any] = {
+        "interests": [BREAKOUT],
+        "path": {"karpathy": BREAKOUT},
+        "doneW": {BREAKOUT: [1]},
+    }
+    payload = {"v": 2, "name": "Lotte", "doneW": {"campus": [1]}}
+    payload[field] = values.get(field, [BREAKOUT])
+    game.goto()
+    game.start("Lotte")
+    before = game.state()
+    message = game.import_code(_code(payload))
+    # The Roadmap is on screen and has just been redrawn from the state.
+    assert game.page.evaluate("() => window.__pwned") is None
+    assert game.page.evaluate(NO_MARKUP) == 0
+    # Refused whole, by name: nothing of a code that fails is merged.
+    assert "cannot read" in message and field in message, message
+    after = game.state()
+    assert after["doneW"] == before["doneW"]
+    assert after.get("interests") == before.get("interests")
+    assert after["path"] == before["path"]
+    # Settings and the title screen draw the same state again after a reload.
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Settings')")
+    game.page.wait_for_selector("#s-settings .setting", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.reload()
+    game.page.wait_for_function("typeof window.__S === 'function'")
+    assert game.page.evaluate("() => window.__pwned") is None
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.assert_clean()
+
+
+def test_state_that_already_holds_markup_is_drawn_as_text(game: GamePage) -> None:
+    """The sinks hold on their own: a state poisoned before the import learnt
+    to refuse (or edited by hand) still reaches every panel as words."""
+    game.goto(
+        state={
+            "name": "Lotte",
+            "mode": "full",
+            "interests": [BREAKOUT],
+            "path": {"karpathy": BREAKOUT},
+            "settings": {"difficulty": BREAKOUT},
+            "chat": {"code": BREAKOUT, "port": BREAKOUT, "hist": []},
+            "events": [
+                {"ts": 1, "kind": BREAKOUT, "id": BREAKOUT, "world": BREAKOUT},
+                {"ts": 2, "kind": "claim", "id": 1, "world": BREAKOUT},
+            ],
+        }
+    )
+    # The title screen: the shelves line and the setup commands.
+    game.page.wait_for_selector("#onboard .choice", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert BREAKOUT in (game.page.text_content("#onboard") or "")
+    game.resume()
+    game.open_roadmap()
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.click("#s-map button:has-text('Setup guide')")
+    game.page.wait_for_selector("#s-setup pre", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Stats')")
+    game.page.wait_for_selector("#s-dash .tile", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert BREAKOUT in (game.page.text_content("#s-dash .feed") or "")
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Settings')")
+    game.page.wait_for_selector("#s-settings .setting", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert game.page.evaluate("() => window.__pwned") is None
     game.assert_clean()
 
 

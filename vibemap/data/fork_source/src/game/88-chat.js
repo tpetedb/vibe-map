@@ -9,7 +9,10 @@ const CHAT_PORT=7717,CHAT_MAX=20,CHAT_ABC="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 // one; Math.random is the fallback for a browser that has none.
 function chatCode(){const n=8;const out=[];if(window.crypto&&crypto.getRandomValues){const b=new Uint8Array(n);crypto.getRandomValues(b);for(let i=0;i<n;i++)out.push(CHAT_ABC[b[i]%CHAT_ABC.length])}
   else for(let i=0;i<n;i++)out.push(CHAT_ABC[Math.floor(Math.random()*CHAT_ABC.length)]);return out.join("")}
-function chatState(){if(!S.chat)S.chat={};const c=S.chat;if(!c.code)c.code=chatCode();if(!c.port)c.port=CHAT_PORT;if(!Array.isArray(c.hist))c.hist=[];return c}
+// The record comes back out of localStorage, so its shape is checked here:
+// the port goes into a URL and the code into a command the player copies.
+function chatState(){if(!isMap(S.chat))S.chat={};const c=S.chat;if(typeof c.code!=="string"||!/^[A-Z2-9]{4,16}$/.test(c.code))c.code=chatCode();
+  const port=parseInt(c.port,10);c.port=port>0&&port<65536?port:CHAT_PORT;if(!Array.isArray(c.hist))c.hist=[];return c}
 function chatBase(){return "http://127.0.0.1:"+chatState().port}
 // What the question is about: the stop whose sheet is open, else the mentor,
 // artifact or plot the walker is standing next to. Identifiers only; the
@@ -61,11 +64,11 @@ function renderChatLog(){const el=$("chatlog");if(!el)return;const c=chatState()
   el.querySelectorAll(".wl").forEach(e=>e.onclick=()=>openNote(e.dataset.n));
   el.scrollTop=el.scrollHeight}
 function chatHelp(){const c=chatState();
-  return `<div class="card" id="chathelp"><h3>No bridge answered on port ${c.port}</h3>
+  return `<div class="card" id="chathelp"><h3>No bridge answered on port ${esc(c.port)}</h3>
    <p class="small">Three lines, in the folder of your camp. Your subscription stays on your machine; the bridge only takes questions, never commands.</p>
-   <ol class="small"><li>Open a terminal in your camp.</li><li>Run <code>uv run vibe chat serve --pair ${c.code}</code></li><li>Ask again here.</li></ol>
-   <div class="row"><label class="small muted" for="chatport">Port</label><input type="number" id="chatport" value="${c.port}" style="width:100px" onchange="chatSetPort(this.value)"><button onclick="chatRetry()">Try again</button></div>
-   <p class="small muted">Pairing code <b>${c.code}</b>. The bridge only answers a page that knows it, so a hosted copy cannot talk to someone else's terminal.</p></div>`}
+   <ol class="small"><li>Open a terminal in your camp.</li><li>Run <code>uv run vibe chat serve --pair ${esc(c.code)}</code></li><li>Ask again here.</li></ol>
+   <div class="row"><label class="small muted" for="chatport">Port</label><input type="number" id="chatport" value="${esc(c.port)}" style="width:100px" onchange="chatSetPort(this.value)"><button onclick="chatRetry()">Try again</button></div>
+   <p class="small muted">Pairing code <b>${esc(c.code)}</b>. The bridge only answers a page that knows it, so a hosted copy cannot talk to someone else's terminal.</p></div>`}
 window.chatSetPort=function(v){const c=chatState();const n=parseInt(v,10);if(n>0&&n<65536){c.port=n;save()}};
 window.chatRetry=function(){const c=chatState();const last=c.hist.length?c.hist[c.hist.length-1]:null;if(last)chatAsk(last.q);else $("chatmsg").textContent="Type a question first."};
 function renderChat(){const sug=chatSuggest(chatWhere);

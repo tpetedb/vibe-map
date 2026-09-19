@@ -2,12 +2,20 @@
 // from the bridge, an imported name. One helper, early, so every module can
 // reach it; the page is built from strings, so escaping is the rule and raw
 // interpolation is the exception that has to be one of our own constants.
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // A link from data we did not write. Only an absolute http or https URL may
 // become an anchor; javascript:, data: and anything else give "" and the row
 // is rendered without a link rather than with a dangerous one.
 function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
-  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
+  // A name and a password in front of the host is how a link to one site is
+  // made to read like another, so such a link is no link either.
+  try{const p=new URL(s);return (p.protocol==="http:"||p.protocol==="https:")&&!p.username&&!p.password?p.href:""}catch(e){return ""}}
+// An identifier from data we did not write (a progress code): a short word of
+// letters, digits, dot, dash, underscore and colon, which is every id the
+// course data uses. Anything else is not an id, whatever it claims to be.
+// A plain object, which is what JSON calls a map: not null, not a list.
+function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
+function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(v)}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},

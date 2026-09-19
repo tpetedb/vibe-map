@@ -24,7 +24,7 @@ function shelfOfTopic(title){if(typeof TREE==="undefined")return null;
 function matchedShelf(titles){if(interestsAll())return null;
   for(let i=0;i<titles.length;i++){const c=shelfOfTopic(titles[i]);if(c&&wantsShelf(c))return c}
   return null}
-function interestDot(c){return c?`<span class="idot" title="On your shelf: ${shelfName(c)}" style="background:${CAT_COL[c]||"var(--accent)"}"></span>`:""}
+function interestDot(c){return c?`<span class="idot" title="On your shelf: ${esc(shelfName(c))}" style="background:${CAT_COL[c]||"var(--accent)"}"></span>`:""}
 function setInterests(list){S.interests=list.slice();save();track("interests",list.join(",")||"all");
   if(typeof renderOnboarding==="function"&&$("onboard"))renderOnboarding();
   if($("s-settings")&&$("s-settings").classList.contains("on"))renderSettings();
@@ -40,9 +40,9 @@ function interestChips(){const all=interestsAll();
     (typeof CATS==="undefined"?[]:CATS).map(([c,n])=>`<button class="choice${!all&&wantsShelf(c)?" on":""}" onclick="toggleInterest('${c}')" title="${esc(n)}"><i style="background:${CAT_COL[c]}"></i>${esc(n)}</button>`).join("")+
     `</div>`}
 function interestSummary(){return interestsAll()?"Everything. Nothing is hidden either way; a choice only changes what comes first.":
-  interestList().map(shelfName).join(", ")+". The rest stays open, just dimmed."}
+  interestList().map(c=>esc(shelfName(c))).join(", ")+". The rest stays open, just dimmed."}
 function presetRow(){const p=(CONFIG&&CONFIG.personaInterests)||[];if(!p.length)return "";
-  return `<p class="small muted">Your persona (${esc(CONFIG.persona)}) usually picks ${p.map(shelfName).join(", ")}. <button class="link" onclick="presetInterests()">Use that preset</button></p>`}
+  return `<p class="small muted">Your persona (${esc(CONFIG.persona)}) usually picks ${p.map(c=>esc(shelfName(c))).join(", ")}. <button class="link" onclick="presetInterests()">Use that preset</button></p>`}
 // Where to start on the shelves you chose: the shallowest topics first, six
 // at most. Derived from TREE every time, so a new topic appears here by itself.
 // The Roadmap card: what you chose and where to start on it. Every button
