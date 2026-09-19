@@ -4,7 +4,7 @@ The evening, in one note. Eight [[Workstreams]], one [[Playbook]], one [[Data wa
 - The rule: every chapter ends when [[Rolinda's questions]] get a one-sentence answer.
 - This is Evening 1 of [[The campaign]]. Mentors: [[Your path]]
 - The full roadmap, intern to expert: [[Tech tree]] · Artifacts on the island: [[Artifacts]]
-- Written version: [Syllabus](https://claude.ai/artifact/SKSiMuyZHAPQZbZGFj54fG) · Fork the [[Template repo]] · Track it with the [[Terminal companion]] · All links: [[Resources]]
+- Written version: [Syllabus](${siteDoc("syllabus.html")}) · Fork the [[Template repo]] · Track it with the [[Terminal companion]] · All links: [[Resources]]
 #overview`},
 "Workstreams":{t:"ws",md:`# Workstreams
 The six hours of the evening, each a note of its own.

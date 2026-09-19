@@ -94,8 +94,9 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Meeting cost dashboard",
                 "A chart of minutes per decision by meeting.",
-                "Using workspace/data/meetings.csv, write workspace/sql/cost_per_decision.sql in "
-                "DuckDB and a Python script that draws a bar chart to "
+                "Using workspace/data/examples/meetings.csv, write "
+                "workspace/sql/cost_per_decision.sql in DuckDB and a Python "
+                "script that draws a bar chart to "
                 "workspace/python/out/. Explain the one SQL construct I have not seen.",
                 "The chart opens and the worst meeting is obvious.",
                 3,
@@ -150,7 +151,8 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Rain plan",
                 "Reschedule tomorrow's jobs when the forecast says rain.",
-                "Read workspace/data/jobs.csv and the weather in weather.json; list the "
+                "Read workspace/data/examples/jobs.csv and the weather in "
+                "weather.json; list the "
                 "jobs to move, who to call, and draft the message in Dutch. "
                 "Do not send anything.",
                 "A draft per client, nothing sent.",
@@ -205,8 +207,9 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Students per staff trend",
                 "A line chart per programme, 2023 to 2026.",
-                "Using workspace/data/enrolments.csv, write workspace/sql/ratio.sql in DuckDB and a "
-                "Python chart. One sentence on what the trend implies.",
+                "Using workspace/data/examples/enrolments.csv, write "
+                "workspace/sql/ratio.sql in DuckDB and a Python chart. One "
+                "sentence on what the trend implies.",
                 "Chart in workspace/python/out/, sentence in the vault.",
                 3,
             ),
@@ -270,7 +273,7 @@ PERSONAS: dict[str, Persona] = {
                 "Attention chart",
                 "Attention by subject and group from lessons.csv.",
                 "Write workspace/sql/attention.sql and a Python chart from "
-                "workspace/data/lessons.csv. Explain group by in one comment.",
+                "workspace/data/examples/lessons.csv. Explain group by in one comment.",
                 "The chart matches your gut feeling, or you learned something.",
                 3,
             ),
@@ -325,7 +328,8 @@ PERSONAS: dict[str, Persona] = {
                 "Nightly run report",
                 "Headless agent summarises last night's runs into the vault.",
                 "Write a script that runs the provider in print mode over "
-                "workspace/data/pipeline_runs.csv and writes vault/Camp/Runs.md with a "
+                "workspace/data/examples/pipeline_runs.csv and writes "
+                "vault/Camp/Runs.md with a "
                 "table and one paragraph. Schedule it at 07:00.",
                 "Runs.md is updated by the schedule, not by you.",
                 8,
@@ -371,8 +375,9 @@ PERSONAS: dict[str, Persona] = {
             Recipe(
                 "Budget tracker",
                 "Spent versus budget per client and style, with a chart.",
-                "Using workspace/data/projects.csv, write workspace/sql/over_budget.sql and a Python "
-                "chart of spent versus budget per style. One sentence on the "
+                "Using workspace/data/examples/projects.csv, write "
+                "workspace/sql/over_budget.sql and a Python chart of spent "
+                "versus budget per style. One sentence on the "
                 "worst offender.",
                 "The chart shows the style that overruns.",
                 3,

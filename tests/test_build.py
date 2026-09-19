@@ -110,6 +110,26 @@ def test_the_build_refuses_javascript_it_cannot_read(tmp_path) -> None:
     assert not (root / "game" / "vibe-map.html").exists(), "it wrote the broken game"
 
 
+def test_no_game_source_throws_away_the_object_it_just_built() -> None:
+    """A ternary on a side effect keeps the wrong half of the pair.
+
+    `cone(...).rotateX(a) ? cone(...) : null` and
+    `cyl(...).material.emissive.set(c) ? cyl(...) : null` both read as one
+    object with a tweak applied and both build two, add the untouched one and
+    drop the one that was tweaked. Neither the browser nor the type checker
+    says a word, so the shape is banned here.
+    """
+    import re
+
+    pattern = re.compile(r"\.(rotate[XYZ]|set|setScalar|translate[XYZ])\([^)]*\)\s*\?")
+    bad = []
+    for path in sorted((ROOT / "src" / "game").glob("*.js")):
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            if pattern.search(line):
+                bad.append(f"{path.name}:{n}")
+    assert bad == [], f"a built object is thrown away by a ternary: {bad}"
+
+
 # What the build writes into the script element is data from a camp's own
 # config and from other people's feeds. Inside a script element the HTML parser
 # looks for the closing tag and for a comment opener before JavaScript sees a

@@ -48,7 +48,8 @@ SALT = "friend-2026-401"
 WIDTH = 12
 
 # Three idle frames per species, five rows of twelve columns; {E} is the eye.
-# Row 0 is the hat row: a hat replaces it when the frame leaves it blank.
+# Row 0 is the hat row: a hat is drawn over it, so no frame may put the body
+# there; a fidget may, and keeps whatever the hat does not cover.
 BODIES: dict[str, tuple[tuple[str, ...], ...]] = {
     "duck": (
         ("            ", "    __      ", "  <({E} )___  ", "   (  ._>   ", "    `--´    "),
@@ -88,7 +89,7 @@ BODIES: dict[str, tuple[tuple[str, ...], ...]] = {
     "penguin": (
         ("            ", "  .---.     ", "  ({E}>{E})     ", " /(   )\\    ", "  `---´     "),
         ("            ", "  .---.     ", "  ({E}>{E})     ", " |(   )|    ", "  `---´     "),
-        ("  .---.     ", "  ({E}>{E})     ", " /(   )\\    ", "  `---´     ", "   ~ ~      "),
+        ("            ", "  .---.     ", "  ({E}>{E})     ", " \\(   )/    ", "  `---´ ~ ~ "),
     ),
     "turtle": (
         ("            ", "   _,--._   ", "  ( {E}  {E} )  ", " /[______]\\ ", "  ``    ``  "),
@@ -310,13 +311,22 @@ def resolve(
     )
 
 
+def _wear(row: str, hat: str) -> str:
+    """The hat over the top row: its ink wins, the row keeps the rest."""
+    # strict: a hat line and a body row are both WIDTH columns, or the art
+    # is wrong and should say so here.
+    return "".join(
+        h if h != " " else r for h, r in zip(HAT_LINES[hat], row, strict=True)
+    )
+
+
 def sprite(pet: Pet, index: int = 0, *, blink: bool = False) -> list[str]:
     """One frame, five rows of twelve columns, hat applied."""
     frames = BODIES[pet.species]
     eye = "-" if blink else pet.eye
     rows = [row.replace("{E}", eye) for row in frames[index % len(frames)]]
-    if pet.hat != "none" and not rows[0].strip():
-        rows[0] = HAT_LINES[pet.hat]
+    if pet.hat != "none":
+        rows[0] = _wear(rows[0], pet.hat)
     return rows
 
 
@@ -411,11 +421,29 @@ def happy_frames(pet: Pet, style: str = "auto") -> int:
     return len(sprites.sheet(pet.species).frames("happy"))
 
 
-def credit(pet: Pet, style: str = "auto") -> str:
+def credit(pet: Pet, style: str = "auto", *, env: dict[str, str] | None = None) -> str:
     """Who drew what is on screen, empty when it is the ASCII art."""
-    if sprites.style_for(style, pet.species) != "pixel":
+    if sprites.style_for(style, pet.species, env=env) != "pixel":
         return ""
     return sprites.sheet(pet.species).credit
+
+
+def footnote(
+    pet: Pet, style: str = "auto", *, env: dict[str, str] | None = None
+) -> str:
+    """The line under the creature: the credit, and why the pixels look wrong.
+
+    A configured `pixel` is honoured on any terminal, so on one that cannot
+    paint 24-bit colour the half blocks arrive grey; say so and name the way
+    out instead of leaving a smear unexplained.
+    """
+    line = credit(pet, style, env=env)
+    if line and not sprites.truecolor(env):
+        line += (
+            ". This terminal paints no truecolor, so the pixels come out flat: "
+            "run vibe pet --style ascii for the art."
+        )
+    return line
 
 
 def gallery() -> list[tuple[str, list[str]]]:

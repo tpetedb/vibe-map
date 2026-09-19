@@ -209,3 +209,22 @@ def test_the_required_context_is_its_own_job_and_keeps_its_name() -> None:
     assert jobs["browser"]["needs"] == ["browser-shard"]
     assert "matrix" not in jobs["browser"].get("strategy", {})
     assert jobs["browser"]["if"] == "always()"
+
+
+def test_no_claude_artifact_link_survives_anywhere() -> None:
+    """The syllabus is published from this repository, not from an artifact.
+
+    A page in a personal claude.ai account cannot be versioned or reviewed, so
+    the product may not point at one; `tools/gen_syllabus.py` owns the page it
+    points at instead.
+    """
+    roots = [ROOT / "src", ROOT / "docs", ROOT / "vibemap", ROOT / "README.md"]
+    offenders = [
+        path.relative_to(ROOT)
+        for root in roots
+        for path in ([root] if root.is_file() else sorted(root.rglob("*")))
+        if path.is_file()
+        and path.suffix in {".md", ".js", ".html", ".css", ".py", ".json", ".toml"}
+        and "claude.ai/artifact" in path.read_text(encoding="utf-8", errors="ignore")
+    ]
+    assert offenders == []

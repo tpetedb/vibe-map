@@ -16,6 +16,13 @@ function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test
 // A plain object, which is what JSON calls a map: not null, not a list.
 function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
 function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(v)}
+// A document published beside the game on the product's site. The site has
+// syllabus.html next to the game; a camp, a fork and file:// do not, so
+// anywhere but that site the link goes to the product rather than to a 404.
+// base is the folder the page is in, and is a parameter so it can be checked.
+function siteDoc(name,base){const site=String((typeof CONFIG!=="undefined"&&CONFIG.site)||"").replace(/\/*$/,"/");
+  const here=base===undefined?location.origin+location.pathname.replace(/[^/]*$/,""):base;
+  return !site?name:(here===site?name:site+name)}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
