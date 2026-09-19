@@ -35,6 +35,10 @@ function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id
 function buildWorld(id,carry){
   const prevBg=scene&&scene.background?scene.background.clone():null;
   W=WORLDS[id]||WORLDS.campus;S.world=id;if(!S.doneW[id])S.doneW[id]=[];S.done=S.doneW[id];CH=CAMPAIGN[id].ws;save();
+  // The bubble is about the island you are on, so arriving replaces whatever
+  // the island you left had put in it. Before the first start() it is the
+  // title's line, which start() writes itself.
+  if(started)say(S.done.length>=stopCount()?"fin":"walk");
   plots.length=0;clouds.length=0;parts.length=0;plates.length=0;for(const k in builds)delete builds[k];for(const k in props)delete props[k];obstacles=[];annexes=[];
   PLOT_POS=W.plots.map(p=>new T.Vector3(p[0],0,p[1]));
   // The bridges are ground, so they exist before anything asks onLandW.
