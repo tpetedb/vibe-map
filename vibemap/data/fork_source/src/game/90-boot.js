@@ -25,6 +25,10 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
 // are exposed on <body> for CSS.
 function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;document.body.dataset.difficulty=CONFIG.difficulty;document.body.dataset.persona=CONFIG.persona;
   const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=CONFIG.repo;tp.textContent=CONFIG.repo.replace(/^https?:\/\//,"")}
+  const sy=$("syllabuslink");if(sy)sy.href=siteDoc("syllabus.html");
+  // The same resolver the link uses, so a test can ask it about a base it is
+  // not being served from.
+  window.__siteDoc=siteDoc;
   // The title screen and the HUD speak the theme's language: the second line
   // of the tagline, the two buttons, the word for a stop, the four KPIs.
   $("tagline").textContent="From intern to expert in one evening. "+th.taglineSuffix;

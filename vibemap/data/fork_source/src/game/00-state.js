@@ -8,6 +8,13 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
 // is rendered without a link rather than with a dangerous one.
 function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
   try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
+// A document published beside the game on the product's site. The site has
+// syllabus.html next to the game; a camp, a fork and file:// do not, so
+// anywhere but that site the link goes to the product rather than to a 404.
+// base is the folder the page is in, and is a parameter so it can be checked.
+function siteDoc(name,base){const site=String((typeof CONFIG!=="undefined"&&CONFIG.site)||"").replace(/\/*$/,"/");
+  const here=base===undefined?location.origin+location.pathname.replace(/[^/]*$/,""):base;
+  return !site?name:(here===site?name:site+name)}
 // One copy helper for every Copy button, early so every module can reach it.
 // A refused clipboard is not silence: the text is selected so it can be copied
 // by hand, and the button says so. srcEl is the element holding the text, so

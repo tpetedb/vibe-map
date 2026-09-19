@@ -11,6 +11,7 @@ on:
     paths:
       - "game/**"
       - "workspace/game/**"
+      - "docs/site/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -40,6 +41,9 @@ jobs:
           # from its own origin and never from a third party.
           cp game/news.json site/news.json
           cp workspace/game/index.html site/your-game.html
+          # The written course, generated from docs/SYLLABUS.md and the package
+          # data by tools/gen_syllabus.py. One file, no third-party request.
+          cp docs/site/syllabus.html site/syllabus.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
