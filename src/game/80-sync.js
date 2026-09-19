@@ -26,12 +26,12 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
-      S.done.length+"/8 workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
+      S.done.length+"/"+stopCount()+" workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
 const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.isSprite);return sp?{text:sp.userData.text,fs:sp.userData.fs}:null};
 window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
-window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,config:CONFIG,scale:WORLD_SCALE});
+window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,campaign:CAMPAIGN,config:CONFIG,scale:WORLD_SCALE});
 // Test seam: the demo scripts behind the artifact terminal, so a test can wait
 // for the last line a demo types instead of guessing how long typing takes.
 window.__demos=()=>ART_DEMOS;

@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Vibe Code Camp</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Design tokens: docs/DESIGN.md. Black is the brand; each hue means one thing
    (red action, green done, blue paths, yellow curiosity, orange XP). Base red
@@ -21,8 +19,11 @@
   --blue:#0067A5; --blue-dim:#0A4E7A; --blue-bright:#0088CC;
   --radius-s:8px; --radius-m:12px; --radius-l:16px; --radius-pill:999px;
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px;
-  --font-display:Sora,system-ui,sans-serif; --font-body:Inter,system-ui,sans-serif;
-  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  /* Fonts are the ones the device already has: the game is one file with no
+     CDN and it must work offline, so nothing here asks a third party. */
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --edge:inset 0 0 0 1px rgba(255,255,255,.08); --lift:0 10px 30px rgba(0,0,0,.6);
   --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
   --t-fast:150ms; --t-base:240ms; --t-slow:400ms;
@@ -38,7 +39,7 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
-body{font-family:Inter,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
 /* The map: big by default; Settings offers compact and the whole window. Big
    is the window minus the talk band, so the scene and the bubble together fill
    the screen and nothing is left over as a black letterbox. */
@@ -57,7 +58,7 @@ body.no-motion *{animation:none!important;transition:none!important}
    drives, so a new one only has to carry live-feed to obey it. */
 body.no-live .live-feed{display:none!important}
 #c{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:pan-y}
-h1,h2,h3{font-family:Sora,"Segoe UI",system-ui,sans-serif;font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
 h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
 h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
 p{margin:0 0 .9em;max-width:38em}
@@ -71,7 +72,7 @@ button:disabled{opacity:.35;cursor:default;transform:none}
 /* Danger is the bright red as text and border, never a red fill (docs/DESIGN.md). */
 button.danger{color:var(--red-bright);border-color:var(--red-bright)}
 input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:12px 14px;width:100%}
-textarea{min-height:120px;resize:vertical;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.55}
+textarea{min-height:120px;resize:vertical;font-family:var(--font-mono);font-size:13.5px;line-height:1.55}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
 .card{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:14px 0}
 .muted{color:var(--muted)}.small{font-size:14px}.num{font-variant-numeric:tabular-nums}
@@ -220,9 +221,9 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 .pairing b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
 .pairing i{color:var(--muted)}
 .lesson{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-.lesson h4{font-family:Sora,sans-serif;font-size:15px;margin:18px 0 6px;letter-spacing:-.01em}
+.lesson h4{font-family:var(--font-display);font-size:15px;margin:18px 0 6px;letter-spacing:-.01em}
 .lesson ol{padding-left:22px;margin:6px 0 10px}.lesson li{margin:4px 0}
-.lesson pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;overflow-x:auto;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.lesson pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .callout{border-radius:14px;padding:12px 14px;margin:12px 0;font-size:14.5px;border:1px solid var(--line)}
 .callout b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
 .callout.ok{border-color:rgba(0,208,132,.4);background:rgba(0,208,132,.08)}.callout.ok b{color:var(--grass)}
@@ -242,10 +243,10 @@ details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
 .demo-card td{padding:3px 12px 3px 0;color:var(--ink)}
 .stats{display:grid;grid-template-columns:auto 1fr;gap:1px 14px;font-size:14px}
 .stats b{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-top:3px}
-.prompt{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:13px}
+.prompt{display:block;width:100%;text-align:left;padding:14px 16px;margin:8px 0;font-family:var(--font-mono);font-size:13px}
 /* The workstream 3 schema demo, and the workstream 1 prompt it writes out. */
 .schema{margin-top:10px}
-table.csv{border-collapse:collapse;width:100%;font-size:13px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+table.csv{border-collapse:collapse;width:100%;font-size:13px;font-family:var(--font-mono)}
 table.csv th{text-align:left;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 10px 4px 0;white-space:nowrap}
 table.csv th.changed{color:var(--red-bright)}
 table.csv td{padding:2px 10px 2px 0;color:var(--ink);white-space:nowrap}
@@ -264,13 +265,13 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 @keyframes draw{to{stroke-dashoffset:0}}@keyframes fade{from{opacity:0}to{opacity:1}}
 .date{display:block;width:100%;text-align:left;padding:14px 18px;margin:8px 0;font-weight:600;font-size:15px;border-radius:16px}
 .date.pick,.wine.pick{background:var(--accent);border-color:transparent;color:#fff}
-.msg{white-space:pre-wrap;font-size:14px;font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:14px}
+.msg{white-space:pre-wrap;font-size:14px;font-family:var(--font-mono);background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:14px}
 
 /* vault */
-#vault{display:none;flex-direction:column;background:#1e1e1e;color:#dcddde;font-family:Inter,sans-serif;border-top:1px solid #333}
+#vault{display:none;flex-direction:column;background:#1e1e1e;color:#dcddde;font-family:var(--font-body);border-top:1px solid #333}
 #vault.on{display:flex}
 #vtop{display:flex;align-items:center;gap:10px;padding:10px 12px 8px;border-bottom:1px solid var(--hairline);background:var(--surface-2);flex-wrap:wrap}
-#vtop b{font-family:Sora,sans-serif;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--yellow)}
+#vtop b{font-family:var(--font-display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--yellow)}
 #vtop span{font-size:12px;color:var(--muted);flex:1;min-width:120px}
 #vtop button{padding:6px 12px;font-size:12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--hairline-2);color:var(--text);box-shadow:none}
 #vg{touch-action:none;cursor:grab}
@@ -285,7 +286,7 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .treenav button{padding:5px 12px;font-size:12px;border-radius:999px;background:var(--surface-2);border:1px solid var(--hairline-2);color:var(--text);box-shadow:none}
 .ages{display:flex;gap:10px;min-width:max-content}
 .age{width:190px;flex:0 0 190px;background:#222;border:1px solid #333;border-radius:14px;padding:10px}
-.age h4{margin:0 0 2px;font-family:Sora,sans-serif;font-size:13px;color:#fff}
+.age h4{margin:0 0 2px;font-family:var(--font-display);font-size:13px;color:#fff}
 .age .lvl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange-bright);margin-bottom:4px}
 .age p{font-size:11px;color:#999;margin:0 0 8px;line-height:1.35}
 .tech{display:block;width:100%;text-align:left;font-size:12px;padding:7px 9px;margin:4px 0;border-radius:9px;background:#2a2a2a;border:1px solid #3a3a3a;color:#ddd;box-shadow:none}
@@ -321,7 +322,7 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 #vnote .bl{border-top:1px solid #333;margin-top:16px;padding-top:10px}
 #vnote .bl .wl{display:inline-block;margin:2px 8px 2px 0}
 #vnote a{color:var(--blue-bright);border-bottom:1px solid rgba(0,136,204,.4)}
-#vnote code{background:#2a2a2a;border-radius:4px;padding:1px 5px;font-family:"JetBrains Mono",Menlo,monospace;font-size:13px}
+#vnote code{background:#2a2a2a;border-radius:4px;padding:1px 5px;font-family:var(--font-mono);font-size:13px}
 /* The command palette: one box over everything, the same spacing scale. */
 #pal{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);padding:max(8vh,24px) var(--space-4) var(--space-4);justify-content:center;align-items:flex-start}
 #pal.on{display:flex}
@@ -374,7 +375,7 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 .evening{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a2);margin-bottom:4px}
 .worlds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px}
 .world{border-radius:14px;padding:10px 12px;text-align:left;font-size:13px;line-height:1.35}
-.world b{display:block;font-family:Sora,sans-serif;font-size:14px}
+.world b{display:block;font-family:var(--font-display);font-size:14px}
 .world.pick{border-color:var(--a1);box-shadow:0 0 0 2px rgba(0,136,204,.35)}
 .world i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 @media (prefers-reduced-motion:reduce){#enter,#sheet{transition:none;animation:none}}
@@ -396,7 +397,7 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
    a message and never state, so nothing below it depends on one being there. */
 #toast{position:fixed;top:14px;right:14px;left:auto;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 28px));pointer-events:none}
 .tst{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);backdrop-filter:blur(8px)}
-.tst b{display:flex;align-items:center;gap:6px;font-family:Sora,sans-serif;font-size:13px;color:var(--yellow)}
+.tst b{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;color:var(--yellow)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}
 .packtabs button.pick{border-color:var(--a1);color:var(--text)}
@@ -1071,6 +1072,16 @@ const SKY_RIG=[
 // turtle of eight stands 0.6.
 const PET={FOLLOW:1.8,SIDE:1.9,LAG:4.5,PX:.075,BOB:.06,WALK_AT:.55,FPS:8};
 
+// Text that is not ours goes into the page through here: the feed, an answer
+// from the bridge, an imported name. One helper, early, so every module can
+// reach it; the page is built from strings, so escaping is the rule and raw
+// interpolation is the exception that has to be one of our own constants.
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+// A link from data we did not write. Only an absolute http or https URL may
+// become an anchor; javascript:, data: and anything else give "" and the row
+// is rendered without a link rather than with a dangerous one.
+function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
+  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
@@ -1086,7 +1097,7 @@ let CH=[
 // every other theme uses. Rolinda asks the simple question in both.
 const SAY_WINE={
   title:["tom","Welcome aboard, and thank you for prioritising this. Confirm your preferred name, then we kick off. I have blocked four hours, one bottle, and a contingency bottle."],
-  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the 18:00 signpost before it warms up."],
+  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the {stop1} signpost before it warms up."],
   near:["rolinda","Go on then. Tap Enter. Swirl first, it needs air, like most of your MVP."],
   1:["tom","Let's not boil the ocean here. Three sentences, press the button, ship it. Zero enablement this hour, that is a feature, not a gap."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Also this Chardonnay is opening up. Notes of hazelnut and mild regret."],
@@ -1102,7 +1113,7 @@ const SAY_WINE={
 };
 const SAY_PLAIN={
   title:["tom","Welcome. Confirm your name and we start. Four hours are blocked, the coffee is on, and nothing on this island can break in a way we cannot undo."],
-  walk:["rolinda","Coffee is poured. Walk to the 18:00 signpost; the first stop is the one where you build something."],
+  walk:["rolinda","Coffee is poured. Walk to the {stop1} signpost; the first stop is the one where you build something."],
   near:["rolinda","Go on, tap Enter. Read the definition of done first, then do the thing, then tell me in one sentence what happened."],
   1:["tom","Three sentences, one file, ship it. We fix the loop before we fix the game."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Write that down; that is the whole lesson."],
@@ -1117,6 +1128,18 @@ const SAY_PLAIN={
   fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
 };
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
+// SAY is the campus voice. An island that is not the campus has no hub and no
+// date to pick, and production ends the campaign, so their closing lines and
+// their walk line are overrides on the same keys.
+const SAY_WORLD={
+  winter:{fin:["rolinda","Every stop on this island is done. The next environment is one bridge away; take it when you are ready."]},
+  desert:{fin:["rolinda","Every stop on this island is done. One environment left, and it is the one you cannot break gently."]},
+  prod:{fin:["rolinda","Every stop on production is done, which is the whole campaign. Nothing left to deploy tonight; go and tell somebody what you built."]}
+};
+// The one place a line is chosen: the island's override, else the campus line,
+// with the first signpost of this island filled in.
+function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
+  return [l[0],l[1].replace("{stop1}",CH[0]?CH[0].h:"first")]}
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
 // topics: the tech tree ids the terminal has verified. The game shows the tree
@@ -1125,8 +1148,10 @@ const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:""};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+// S.done is a view: the array doneW[world] under another name. Only the map is
+// written, so a reload can never copy one island's stops onto another.
+function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);delete S.done;if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 /* ---------------- the event log ---------------- */
 // One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
 // number of seconds when the event measures time. The log is local to this
@@ -1165,7 +1190,23 @@ const FACE={
 };
 // Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
-function say(k){const [who,t]=SAY[k];$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").textContent=t}}
+// Every line in the bubble goes through here: the face, the role the theme
+// gives the speaker, and the running type-out that a new line must cancel.
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+  if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
+function say(k){const [who,t]=line(k);bubble(who,t)}
+// A mentor is known by their last name; a team is not a person, so a name that
+// starts with "The" keeps all of it.
+function shortName(n){return /^The\s/.test(n)?n.charAt(0).toLowerCase()+n.slice(1):n.split(" ").slice(-1)[0]}
+// The stops of the island the player is on. CH is the island's ws, so a camp
+// that adds a ninth stop has nine, and the stop after the last one is the
+// finale on the campus and the end of the island everywhere else.
+function stopCount(){return CH.length}
+function finaleStop(){return CH.length+1}
+// The KPI says Streak, so the number is the one the CLI counts under that
+// name (vibemap/quests.py, badge streak-3): stops claimed today.
+function streakToday(){const day=new Date().toDateString();
+  return (S.events||[]).filter(e=>e.kind==="claim"&&new Date(e.ts).toDateString()===day).length}
 
 /* ---------------- 3D ---------------- */
 // Lucide icons, ISC licence, https://lucide.dev (see src/vendor/LUCIDE-LICENSE.txt).
@@ -2268,6 +2309,10 @@ function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id
 function buildWorld(id,carry){
   const prevBg=scene&&scene.background?scene.background.clone():null;
   W=WORLDS[id]||WORLDS.campus;S.world=id;if(!S.doneW[id])S.doneW[id]=[];S.done=S.doneW[id];CH=CAMPAIGN[id].ws;save();
+  // The bubble is about the island you are on, so arriving replaces whatever
+  // the island you left had put in it. Before the first start() it is the
+  // title's line, which start() writes itself.
+  if(started)say(S.done.length>=stopCount()?"fin":"walk");
   plots.length=0;clouds.length=0;parts.length=0;plates.length=0;pops.length=0;for(const k in builds)delete builds[k];for(const k in props)delete props[k];obstacles=[];annexes=[];
   PLOT_POS=W.plots.map(p=>new T.Vector3(p[0],0,p[1]));
   // The bridges are ground, so they exist before anything asks onLandW.
@@ -2770,7 +2815,11 @@ function setupInput(){
   c.addEventListener("pointerup",e=>{if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()});
+  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+    // Enter is the keyboard twin of the proximity button, so it only fires
+    // while the page itself has focus and nothing is standing in front of it:
+    // a form field and an open panel keep their own Enter.
+    if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
   const j=$("joy"),kn=$("knob");let jid=null;
   j.addEventListener("pointerdown",e=>{jid=e.pointerId;j.setPointerCapture(jid);joy.on=true;jm(e)});
@@ -2900,15 +2949,21 @@ function animate(){
   tickPlates(pos);
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
-    const allDone=S.done.length===8,nearInn=Math.hypot(pos.x,pos.z)<4.2;
+    // The inn radius reaches over its terrace, so the last walk back ends at
+    // the finale rather than at the cafe standing on that terrace.
+    const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+MENTORS.find(m=>m.id===nm.id).name.split(" ").slice(-1)[0];$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=9;$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
+    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
     else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
     else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    // A signpost that is not open yet is a question the island answers once,
+    // after the artifacts have had their turn: a locked plot is not a target.
+    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+      if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
     else{nearK=0;$("enter").classList.remove("on")}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
@@ -2925,8 +2980,8 @@ function animChar(c,walking,dt,t){
 }
 
 /* ---------------- UI ---------------- */
-function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=[1,2,3,4,5,6,7,8].map(k=>`<i class="${S.done.includes(k)?'on':''}"></i>`).join("");
-  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),Math.round(S.done.length/8*100),v=>Math.round(v)+"%");countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
+function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).length);const who=typeof playerLabel==="function"?playerLabel():S.name;$("hud-name").textContent=(who?who+" · ":"")+CAMPAIGN[S.world||"campus"].title.split(":")[0];$("hud-okrs").innerHTML=CH.map((c,i)=>`<i class="${S.done.includes(i+1)?'on':''}"></i>`).join("");
+  countUp($("k1"),S.done.length*13+S.versions.length*2,v=>String(Math.round(v)));countUp($("k2"),streakToday(),v=>String(Math.round(v)));countUp($("k3"),Object.values(S.bridges).filter(Boolean).length,v=>String(Math.round(v)))}
 // The minimap: the four islands, the bridges, you, and the next stop. It is a
 // 2D canvas rather than a second camera, so it costs no draw call in the
 // scene. Like everything else on screen it is derived: it reads S, WORLDS and
@@ -3013,7 +3068,7 @@ function tickMinimap(dt){
   mmBuild();mmT+=dt;if(mmT<.16)return;mmT=0;mmLayout();drawMinimap()}
 window.__minimap=()=>({open:mmCv?mmCv.style.display!=="none":false,phone:mmPhone(),
   islands:WORLD_IDS.length,bridges:bridges.length,size:MM_SIZE,painted:mmPaints});
-window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length===8?"fin":"walk")};
+window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line
 // their own headline and their own words with the link next to it. Never a
 // logo, never a sentence written for them (docs/adr/0010). NEWS is baked in at
@@ -3026,8 +3081,11 @@ let newsLoaded=false;
 // Settings dropdown wins, config/camp.toml [news] live is the default.
 function liveNews(){const v=(typeof settings==="function"?settings().live:"config");
   if(v==="off")return false;if(v==="on")return true;return !(CONFIG.news&&CONFIG.news.live===false)}
-function newsRow(i){const tag=i.kind==="release"?"release":"";
-  return `<div class="pathrow"><span><a href="${i.link}" target="_blank" rel="noopener">${i.title}</a><br><span class="muted small">${i.name}${tag?" · "+tag:""}</span>${i.summary?`<br><span class="muted small">${i.summary}</span>`:""}</span><span class="st">${(i.date||"").slice(0,10)}</span></div>`}
+// The feed comes from other people's machines, so every string in a row is
+// text and the link is checked: an item with no usable link keeps its title
+// as plain words rather than becoming an anchor we cannot vouch for.
+function newsRow(i){const tag=i.kind==="release"?"release":"";const t=esc(i.title),u=safeUrl(i.link);
+  return `<div class="pathrow"><span>${u?`<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`:t}<br><span class="muted small">${esc(i.name)}${tag?" · "+tag:""}</span>${i.summary?`<br><span class="muted small">${esc(i.summary)}</span>`:""}</span><span class="st">${esc((i.date||"").slice(0,10))}</span></div>`}
 function renderNews(){const msg=$("newsmsg"),list=$("newslist");if(!msg||!liveNews())return;
   const items=(newsData.items||[]).slice(0,12);
   if(!items.length){msg.textContent="Nothing pulled yet. Run uv run vibe news, then just build; a forked repo does it every day.";list.innerHTML="";return}
@@ -3083,18 +3141,35 @@ addEventListener("pointerdown",e=>{if(!$("hud-more").classList.contains("open"))
 $("hud-menu").addEventListener("click",e=>{if(e.target.closest("button"))closeHudMenu()});
 window.enterNear=function(){if(typeof nearK==="string"&&nearK.startsWith("m:"))openMentor(nearK.slice(2));else if(typeof nearK==="string"&&nearK.startsWith("a:"))openArtifact(nearK.slice(2));else if(nearK)open(nearK)};
 window.openCh=open;
-function renderEveningDone(){const t=CAMPAIGN[S.world||"campus"];$("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>Island complete</h2><p>All eight stops on this island are done. Rolinda is opening something. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. Pick another environment from the World button to continue the campaign, or export your progress to the CLI so the vault on your Mac catches up.</p><div class="row"><button class="primary" onclick="nextWorld();closeSheet()">Next environment</button><button onclick="openSheet('s-map')">Roadmap</button></div>`}
+function renderEveningDone(){const id=S.world||"campus",t=CAMPAIGN[id],ids=Object.keys(WORLDS),last=ids.indexOf(id)===ids.length-1;
+  $("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>${last?"Campaign complete":"Island complete"}</h2><p>Every stop on this island is done. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. ${last?"That was the last environment of the campaign, so there is nothing left to deploy tonight.":"Pick the next environment from the World button, or walk the bridge."} Export your progress to the CLI so the vault on your Mac catches up.</p><div class="row">${last?"":`<button class="primary" onclick="nextWorld();closeSheet()">Next environment</button>`}<button class="${last?"primary":""}" onclick="openSheet('s-map')">Roadmap</button></div>`}
+// The way back out of a stop, in the words of the island you are on.
+const backLabel=()=>(S.world||"campus")==="campus"?"Back to the campus":"Back to the island";
+// The claim row is a view over S.done: a delivered stop offers one way back,
+// so no two buttons in the row ever carry the same name and the primary is
+// never a button that does nothing.
+function syncClaimRow(sc,n){const b=sc.querySelector('button[onclick^="claim("]');
+  if(!b||!S.done.includes(n))return;
+  const row=b.closest(".row"),others=row?[...row.querySelectorAll("button")].filter(x=>x!==b):[];
+  b.textContent=others.length?others[0].textContent:backLabel();
+  b.removeAttribute("onclick");b.onclick=closeSheet;others.forEach(x=>x.remove());
+  if(row)row.classList.add("actions")}
+
 // The encounter: the dialogue the learner walks through one exchange at a
 // time, then the exercise. Every mentor line paraphrases a recorded idea and
 // carries the link it came from; nothing here is a quote. The summary list of
 // ideas stays in the vault note, so the screen says each thing once.
 function mentorTalk(m){const d=m.encounter.dialogue;const seen=Math.min(d.length,S.met[m.id]||1);
   return d.slice(0,seen).map(x=>`<div class="mturn"><p class="you">${x.you}</p><p class="them"><b>${m.name}:</b> ${x.m} <a class="cite" href="${m.src[x.src][1]}" target="_blank" rel="noopener">${m.src[x.src][0]}</a></p></div>`).join("")}
+// The second check of a mentor quest, mirrored from vibemap/quests.py: it runs
+// at a strict difficulty, so the card only promises it there.
+const MENTOR_NOTE="notes.md",MENTOR_SECTION="## What I learned",MENTOR_WORDS=25;
+const strictChecks=()=>["hard","expert","god"].indexOf(typeof difficulty==="function"?difficulty():CONFIG.difficulty)>=0;
 function mentorExercise(m){const ex=m.encounter.exercise;const done=S.mentors.includes(m.id);
   return `<div class="card"><h3>${icon("compass")}Your exercise: ${ex.title}</h3>
    <p class="small muted">About ${ex.minutes} minutes, in <code>${ex.dir}/</code> in your camp.</p>
    <ol class="small">${ex.steps.map(s=>`<li>${s}</li>`).join("")}</ol>
-   <p class="small"><b>Checked by</b> <code>vibe check --mentor ${m.id}</code>: ${ex.done}.</p>
+   <p class="small"><b>Checked by</b> <code>vibe check --mentor ${m.id}</code>: ${ex.done}${strictChecks()?`, and your note in <code>${ex.dir}/${MENTOR_NOTE}</code> with a ${MENTOR_SECTION} section of at least ${MENTOR_WORDS} words`:""}.</p>
    <p class="small ${done?"":"muted"}">${done?"Verified. The plaque on their spot reads: "+m.encounter.plaque:"Not verified yet. Run the check in your camp, then bring the progress code back here."}</p></div>`}
 window.talkMore=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;const d=m.encounter.dialogue;
   S.met[id]=Math.min(d.length,(S.met[id]||1)+1);save();$("mtalk").innerHTML=mentorTalk(m);
@@ -3110,32 +3185,42 @@ window.openMentor=function(id){const m=MENTORS.find(x=>x.id===id);if(!m)return;c
    <div class="rolinda"><b>Rolinda asks</b>${m.ask}</div>
    <div class="row"><button class="primary" onclick="choosePath('${id}','deep')">${st==="deep"?"Keep on my path":"Tell me more"}</button><button onclick="choosePath('${id}','skip')">${st==="skip"?"Still not now":"Not interested for now"}</button><button onclick="closeSheet()">Back</button></div>
    <p class="small muted">Your choice is saved to your path (Roadmap) and to the vault. You can come back and change it.</p>`;
-  $("bub-face").innerHTML=FACE.tom;$("bub-who").textContent="Tom, Site Reliability Engineer";$("bub-text").textContent=m.name+" is on the island. Ask, or walk on. Either is a valid product decision.";openSheet("s-mentor")};
+  bubble("tom",m.name+" is on the island. Ask, or walk on. Either is a valid product decision.");openSheet("s-mentor")};
 window.choosePath=function(id,v){S.path[id]=v;save();if(props.mentors&&!S.mentors.includes(id)){const c=props.mentors.find(x=>x.id===id);if(c)c.ring.material.color.set(v==="deep"?"#0088CC":"#F04923")}if(v==="deep"){$("deep").classList.add("on");$("deep").scrollIntoView({behavior:"smooth",block:"nearest"})}else closeSheet();hud()};
 function mentorFace(lk){return `<svg viewBox="0 0 40 40"><rect x="6" y="8" width="28" height="28" rx="6" fill="#F5D7BC"/><rect x="4" y="4" width="32" height="10" rx="4" fill="${lk.hair}"/>${lk.glasses?'<rect x="9" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/><rect x="22" y="19" width="9" height="5" rx="2" fill="none" stroke="#111" stroke-width="1.5"/>':'<circle cx="14" cy="21" r="2" fill="#333"/><circle cx="26" cy="21" r="2" fill="#333"/>'}${lk.beard?'<rect x="10" y="27" width="20" height="8" rx="3" fill="'+lk.hair+'"/>':'<path d="M15 29 Q20 33 25 29" stroke="#B0534B" stroke-width="2" fill="none"/>'}</svg>`}
 function open(n){
   track("open",n);
   if(n===0){openSheet("s-0");return}
-  if((S.world||"campus")!=="campus"){if(n===9){renderEveningDone();say("fin");openSheet("s-gen");return}const w=CH[n-1];const done=S.done.includes(n);
-    $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html}<div class="row"><button class="primary" onclick="claim(${n})">${done?"Back to the island":"Mark as done and unlock the OKR"}</button><button onclick="closeSheet()">Back to the island</button></div>`;
-    $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, Head of Hospitality Operations";$("bub-text").textContent="Same rule as always: explain it to me in one sentence when you are done.";openSheet("s-gen");return}
-  if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
-  if(n===5)renderBridges();if(n===6)weave();if(n===9)renderFinale();
-  say(n);openSheet("s-"+n);
+  const sc=$("s-"+n);
+  // The campus lessons are sections written into the page; every other stop,
+  // including one a camp adds to an island, is rendered from the island's ws.
+  if((S.world||"campus")==="campus"&&sc){
+    if(n===1)renderPitch();if(n===2)renderCard();if(n===3)renderSchema();if(n===4)renderVersions();
+    if(n===5)renderBridges();if(n===6)weave();if(n===finaleStop())renderFinale();
+    say(n);openSheet("s-"+n);syncClaimRow(sc,n);return}
+  const w=CH[n-1];
+  if(!w){renderEveningDone();say("fin");openSheet("s-gen");return}
+  const done=S.done.includes(n);
+  $("s-gen").innerHTML=`<div class="evening">${CAMPAIGN[S.world||"campus"].title}</div><div class="hour">${w.h}</div><h2>${w.n}</h2>${w.html||`<p>${w.d}</p>`}<div class="row"><button class="primary" onclick="claim(${n})">Mark as done and unlock the OKR</button><button onclick="closeSheet()">${backLabel()}</button></div>`;
+  bubble("rolinda","Same rule as always: explain it to me in one sentence when you are done.");
+  openSheet("s-gen");syncClaimRow($("s-gen"),n);
 }
-function renderMap(){const ok=S.done.length===8;const ev=CAMPAIGN[S.world||"campus"];
+function renderMap(){const ok=S.done.length>=stopCount();const ev=CAMPAIGN[S.world||"campus"];
   // Pre-flight (workstream 0) only exists on the campus; the other islands start at stop 1.
   const preflight=(S.world||"campus")==="campus"?`<button class="date" onclick="openCh(0)">Before the evening, Pre-flight<br><span class="small" style="opacity:.75">Install Claude Code, git, Obsidian. 20 minutes, alone.</span></button>`:"";
   $("plotlist").innerHTML=`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
     return `<button class="date${done?' pick':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
-    ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(9)">${icon("milestone")}Calendar alignment${ok?"":" (pending eight OKRs)"}</button>`:"")+
+    ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(${finaleStop()})">${icon("milestone")}Calendar alignment${ok?"":" (pending "+stopCount()+" OKRs)"}</button>`:"")+
     interestCard()+
-    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span>${interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)}<b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
+    `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span>${interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)}<b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st||''}">${st==="deep"?"on path":st==="skip"?"skipped":S.met[m.id]?"met":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+
     `<div class="card"><h3>${icon("compass")}Artifacts on the islands</h3><p class="small muted">Twenty-one things across the four islands that each explain one idea. Walk up to a yellow ring, or open one here.</p>`+ARTIFACTS.map(a=>`<div class="pathrow"><span>${interestDot(matchedShelf(a.links))}<b>${a.name}</b> <span class="muted">· ${a.concept}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${S.artifacts.includes(a.id)?'deep':''}">${S.artifacts.includes(a.id)?"found":"not yet"}</span><button onclick="openArtifact('${a.id}')" aria-label="Open ${a.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`).join("")+`</div>`+
-    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length===8?'deep':''}">${(S.doneW[k]||[]).length}/8</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
+    `<div class="card"><h3>${icon("flag")}The campaign</h3>`+Object.keys(CAMPAIGN).map(k=>`<div class="pathrow"><span><b>${CAMPAIGN[k].title}</b><br><span class="muted small">${WORLDS[k].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${(S.doneW[k]||[]).length>=CAMPAIGN[k].ws.length?'deep':''}">${(S.doneW[k]||[]).length}/${CAMPAIGN[k].ws.length}</span><button onclick="setWorld('${k}');closeSheet()" aria-label="Go to ${WORLDS[k].name}" style="padding:4px 10px;font-size:12px">Go</button></span></div>`).join("")+`</div>`;
 }
 window.claim=function(n){
-  if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length===8?"fin":"done");lastSay="done";return}
+  if(!S.done.includes(n)){S.done.push(n);save();track("claim",n);
+    // A stop a camp added has data but no plot of its own on the island, so
+    // there is nothing to build on it.
+    if(PLOT_POS[n-1])placeBuilding(n,true);applySky(S.done.length,false);hud();closeSheet();say(S.done.length>=stopCount()?"fin":"done");lastSay="done";return}
   closeSheet()};
 
 
@@ -4277,7 +4362,7 @@ window.commit=function(){const t=$("release").value.trim();
   releaseMsg("");S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
-function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${v.t.slice(0,44)}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
+function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${esc(v.t.slice(0,44))}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
 
 /* ---- Workstream 5: a connector is a plug, and unplugging is the point ---- */
 const B={cal:"Integrated. It can now read Thursday and pre-populate the 10:00 agenda.",files:"Integrated. It can now surface the deck you lost in March.",mail:"Integrated. It can now distil a 40-message thread into three action items."};
@@ -4285,7 +4370,9 @@ window.bridge=function(k){S.bridges[k]=!S.bridges[k];save();renderBridges();hud(
 function renderBridges(){for(const k in B){const el=$("b-"+k),sp=el.querySelector("span");el.classList.toggle("on",!!S.bridges[k]);sp.textContent=S.bridges[k]?B[k]:"Not integrated";sp.className=S.bridges[k]?"":"muted"}}
 
 /* ---- Workstream 6: notes with links are a graph ---- */
-window.weave=function(){const nodes=[["Tonight",200,150],[playerLabel()||"You",90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
+// The player's name is the one node here that is not ours: it can arrive in
+// an imported progress code, so it is text like any other field.
+window.weave=function(){const nodes=[["Tonight",200,150],[esc(playerLabel()||"You"),90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
   const links=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,2],[3,4],[4,7],[2,7],[5,7],[6,2]];const svg=$("web");svg.classList.remove("woven");
   svg.innerHTML=links.map(([a,b])=>`<line x1="${nodes[a][1]}" y1="${nodes[a][2]}" x2="${nodes[b][1]}" y2="${nodes[b][2]}"/>`).join("")+nodes.map((n,i)=>`<g style="animation-delay:${i*.12}s"><circle cx="${n[1]}" cy="${n[2]}" r="${i===0?13:8}"/><text x="${n[1]}" y="${n[2]+(i===6?-16:22)}" text-anchor="middle">${n[0]}</text></g>`).join("");
   requestAnimationFrame(()=>svg.classList.add("woven"))};
@@ -4347,12 +4434,12 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
-      S.done.length+"/8 workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
+      S.done.length+"/"+stopCount()+" workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
 const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.isSprite);return sp?{text:sp.userData.text,fs:sp.userData.fs}:null};
 window.__S=()=>S;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
-window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,config:CONFIG,scale:WORLD_SCALE});
+window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,campaign:CAMPAIGN,config:CONFIG,scale:WORLD_SCALE});
 // Test seam: the demo scripts behind the artifact terminal, so a test can wait
 // for the last line a demo types instead of guessing how long typing takes.
 window.__demos=()=>ART_DEMOS;
@@ -4529,7 +4616,6 @@ function slug(s){return fold(s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-
 // a space in it cannot end the argument.
 function shq(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 // The setup guide: the exact commands for the full experience. Rendered on the
 // title screen (step 3) and on its own screen from the Roadmap, from one
@@ -4626,7 +4712,6 @@ function chatCode(){const n=8;const out=[];if(window.crypto&&crypto.getRandomVal
   else for(let i=0;i<n;i++)out.push(CHAT_ABC[Math.floor(Math.random()*CHAT_ABC.length)]);return out.join("")}
 function chatState(){if(!S.chat)S.chat={};const c=S.chat;if(!c.code)c.code=chatCode();if(!c.port)c.port=CHAT_PORT;if(!Array.isArray(c.hist))c.hist=[];return c}
 function chatBase(){return "http://127.0.0.1:"+chatState().port}
-function chatEsc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 // What the question is about: the stop whose sheet is open, else the mentor,
 // artifact or plot the walker is standing next to. Identifiers only; the
 // bridge looks the lesson up in the course data itself.
@@ -4673,7 +4758,7 @@ function chatOfflineAnswer(q){const hits=chatSearch(q);
 // from it, newest last, capped so a long evening does not fill localStorage.
 function chatPush(entry){const c=chatState();c.hist.push(entry);while(c.hist.length>CHAT_MAX)c.hist.shift();save();return entry}
 function renderChatLog(){const el=$("chatlog");if(!el)return;const c=chatState();
-  el.innerHTML=c.hist.length?c.hist.map(h=>`<div class="cturn"><p class="you">${chatEsc(h.q)}</p><p class="them">${chatEsc(h.a||"...")}</p>${(h.links||[]).map(t=>`<span class="wl" data-n="${chatEsc(t)}">${chatEsc(t)}</span>`).join("")}<span class="src">${h.src==="offline"?"from the notes in this file":h.src==="error"?"not answered":"your "+chatEsc(h.provider||"provider")}</span></div>`).join(""):`<p class="small muted">No questions yet. Pick one below, or type your own.</p>`;
+  el.innerHTML=c.hist.length?c.hist.map(h=>`<div class="cturn"><p class="you">${esc(h.q)}</p><p class="them">${esc(h.a||"...")}</p>${(h.links||[]).map(t=>`<span class="wl" data-n="${esc(t)}">${esc(t)}</span>`).join("")}<span class="src">${h.src==="offline"?"from the notes in this file":h.src==="error"?"not answered":"your "+esc(h.provider||"provider")}</span></div>`).join(""):`<p class="small muted">No questions yet. Pick one below, or type your own.</p>`;
   el.querySelectorAll(".wl").forEach(e=>e.onclick=()=>openNote(e.dataset.n));
   el.scrollTop=el.scrollHeight}
 function chatHelp(){const c=chatState();
@@ -4686,9 +4771,9 @@ window.chatSetPort=function(v){const c=chatState();const n=parseInt(v,10);if(n>0
 window.chatRetry=function(){const c=chatState();const last=c.hist.length?c.hist[c.hist.length-1]:null;if(last)chatAsk(last.q);else $("chatmsg").textContent="Type a question first."};
 function renderChat(){const sug=chatSuggest(chatWhere);
   $("s-chat").innerHTML=`<h2>Ask about this</h2>
-   <p class="chip" id="chatchip">${chatEsc(chatChip(chatWhere))}</p>
+   <p class="chip" id="chatchip">${esc(chatChip(chatWhere))}</p>
    <div id="chatlog" class="chatlog"></div>
-   <div class="row" id="chatsug">${sug.map(q=>`<button class="small" onclick="chatAsk(this.dataset.q)" data-q="${chatEsc(q)}">${chatEsc(q)}</button>`).join("")}</div>
+   <div class="row" id="chatsug">${sug.map(q=>`<button class="small" onclick="chatAsk(this.dataset.q)" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
    <div class="row"><input type="text" id="chatq" placeholder="Ask a question about this stop" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')chatSend()"><button class="primary" data-icon="message-circle" onclick="chatSend()">Ask</button></div>
    <p class="small muted" id="chatmsg"></p>
    <div id="chatwhy"></div>`;
@@ -4779,8 +4864,7 @@ function dashStats(){
 }
 
 // ---- chart primitives: viewBox only, so every one of them is fluid --------
-function svgWrap(w,h,label,inner){return `<svg class="ch" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escAttr(label)}">${inner}</svg>`}
-function escAttr(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function svgWrap(w,h,label,inner){return `<svg class="ch" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${esc(label)}">${inner}</svg>`}
 function dashEmpty(msg){return `<p class="small muted dash-empty">${msg}</p>`}
 
 // A sparkline is a shape, not a reading: no axis, no dots, one hue.
@@ -4866,7 +4950,7 @@ function dashPath(st){
   if(!st.claims.length)return dashEmpty("Deliver a stop and the path starts here.");
   const name=e=>(WORLDS[e.world]||{name:e.world}).name;
   return `<div class="path">`+st.claims.map(e=>
-    `<span class="step" title="${escAttr(name(e)+", stop "+e.id+", "+fmtDay(e.ts)+" "+fmtClock(e.ts))}">${name(e).split(" ")[0]} ${e.id}</span>`).join(`<span class="arrow" aria-hidden="true">&rsaquo;</span>`)+
+    `<span class="step" title="${esc(name(e)+", stop "+e.id+", "+fmtDay(e.ts)+" "+fmtClock(e.ts))}">${name(e).split(" ")[0]} ${e.id}</span>`).join(`<span class="arrow" aria-hidden="true">&rsaquo;</span>`)+
     `</div><p class="small muted legend">Island and stop, in the order you delivered them.</p>`;
 }
 
@@ -4874,7 +4958,7 @@ function dashFeed(st){
   const recent=st.ev.slice(-12).reverse();
   if(!recent.length)return dashEmpty("The feed fills as you play.");
   return `<ul class="feed">`+recent.map(e=>
-    `<li><i style="background:${DASH_HUE[e.kind]||"var(--muted)"}"></i><span>${DASH_LABEL[e.kind]||e.kind}${e.id&&e.kind!=="session"?" <b>"+escAttr(e.id)+"</b>":""}${typeof e.v==="number"?" <span class='muted'>"+fmtDur(e.v)+"</span>":""}</span><span class="when">${fmtDay(e.ts)} ${fmtClock(e.ts)}</span></li>`).join("")+`</ul>`;
+    `<li><i style="background:${DASH_HUE[e.kind]||"var(--muted)"}"></i><span>${DASH_LABEL[e.kind]||e.kind}${e.id&&e.kind!=="session"?" <b>"+esc(e.id)+"</b>":""}${typeof e.v==="number"?" <span class='muted'>"+fmtDur(e.v)+"</span>":""}</span><span class="when">${fmtDay(e.ts)} ${fmtClock(e.ts)}</span></li>`).join("")+`</ul>`;
 }
 
 // Progress on the shelves you chose. The collectibles are the tree's own
@@ -4891,9 +4975,9 @@ function dashShelves(){
   if(!rows.length)return dashEmpty("Pick a shelf under Settings and this fills with what you found on it.");
   const w=320,rh=22,l=124;
   const bars=rows.map((c,i)=>{const y=i*rh,frac=per[c].of?per[c].n/per[c].of:0;
-    return `<text x="0" y="${y+14}" class="at">${escAttr(byId[c]||c).slice(0,18)}</text>`+
+    return `<text x="0" y="${y+14}" class="at">${esc(byId[c]||c).slice(0,18)}</text>`+
       `<rect x="${l}" y="${y+3}" width="${(w-l-34)}" height="12" rx="4" fill="var(--hairline-2)"/>`+
-      `<rect x="${l}" y="${y+3}" width="${((w-l-34)*frac).toFixed(1)}" height="12" rx="4" fill="${CAT_COL[c]}"><title>${escAttr(byId[c]||c)}: ${per[c].n} of ${per[c].of}</title></rect>`+
+      `<rect x="${l}" y="${y+3}" width="${((w-l-34)*frac).toFixed(1)}" height="12" rx="4" fill="${CAT_COL[c]}"><title>${esc(byId[c]||c)}: ${per[c].n} of ${per[c].of}</title></rect>`+
       `<text x="${w}" y="${y+14}" text-anchor="end" class="at v">${per[c].n}/${per[c].of}</text>`}).join("");
   return svgWrap(w,rows.length*rh,"Things found on the shelves you chose",bars)+
     `<p class="small muted legend">Collectibles on your shelves, found of what is out there. Nothing is locked; the other shelves are simply not counted here.</p>`;

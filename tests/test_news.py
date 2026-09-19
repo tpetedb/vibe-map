@@ -166,13 +166,67 @@ def test_a_summary_is_the_feeds_own_words_without_markup() -> None:
     # A body longer than the cap ends in an ellipsis on a word boundary.
     lwn = news.parse(fixture("lwn-headlines.xml"), APPLE)[0]
     assert lwn.summary.startswith("Version 5.6 of the Systemtap")
-    long = news.summarise("<p>" + "word " * 200 + "</p>")
+    long = news.plain("<p>" + "word " * 200 + "</p>")
     assert long.endswith("...") and " wor..." not in long
 
 
 def test_a_summary_of_a_short_body_is_left_whole() -> None:
-    assert news.summarise("<b>Short.</b> Two sentences.") == "Short. Two sentences."
-    assert news.summarise("") == ""
+    assert news.plain("<b>Short.</b> Two sentences.") == "Short. Two sentences."
+    assert news.plain("") == ""
+
+
+# ---- what a hostile feed cannot do -------------------------------------------
+# The feeds are other people's machines and the card renders what they send,
+# so the writer hands the game plain text and a link a browser may follow.
+
+
+def test_markup_never_survives_a_field() -> None:
+    assert news.plain('<img src=x onerror="alert(1)">Title') == "Title"
+    # Escaped markup is unescaped first, so an escaped tag is stripped too and
+    # what it wrapped stays behind as the words it always was.
+    assert news.plain("&lt;script&gt;alert(1)&lt;/script&gt;Hi") == "alert(1) Hi"
+    # A tag nested inside a tag is stripped until no angle bracket is left,
+    # so a strip that opens a new tag cannot leave one behind.
+    assert "<" not in news.plain("<<b>b>bold</<b>b>")
+    assert "&" in news.plain("Odd &amp; even")
+
+
+def test_a_title_and_a_name_are_stripped_and_capped() -> None:
+    src = news.Source(
+        "hostile",
+        "organisation",
+        "Odd & <b>bold</b> name",
+        "https://x.test/f.xml",
+        "x.test",
+        "test",
+    )
+    xml = (
+        "<rss><channel><item>"
+        '<title>&lt;img src=x onerror="window.pwned=1"&gt;' + "T" * 300 + "</title>"
+        "<link>https://x.test/p</link>"
+        "<description>&lt;b&gt;Body&lt;/b&gt;</description>"
+        "</item></channel></rss>"
+    )
+    item = news.parse(xml, src)[0]
+    assert "<" not in item.title and "onerror" not in item.title
+    assert len(item.title) <= news.TITLE_CHARS + 3
+    assert item.name == "Odd & bold name"
+    assert item.summary == "Body"
+
+
+def test_a_link_that_is_not_http_drops_the_item() -> None:
+    assert news.safe_link("javascript:alert(1)") == ""
+    assert news.safe_link("data:text/html,<script>") == ""
+    assert news.safe_link("/relative/path") == ""
+    assert news.safe_link(" https://x.test/p ") == "https://x.test/p"
+    xml = (
+        "<rss><channel>"
+        "<item><title>Bad</title><link>javascript:alert(1)</link></item>"
+        "<item><title>Good</title><link>https://x.test/p</link></item>"
+        "</channel></rss>"
+    )
+    items = news.parse(xml, APPLE)
+    assert [i.title for i in items] == ["Good"]
 
 
 def test_every_fixture_parses_into_items() -> None:

@@ -76,7 +76,7 @@ window.commit=function(){const t=$("release").value.trim();
   releaseMsg("");S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
-function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${v.t.slice(0,44)}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
+function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${esc(v.t.slice(0,44))}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
 
 /* ---- Workstream 5: a connector is a plug, and unplugging is the point ---- */
 const B={cal:"Integrated. It can now read Thursday and pre-populate the 10:00 agenda.",files:"Integrated. It can now surface the deck you lost in March.",mail:"Integrated. It can now distil a 40-message thread into three action items."};
@@ -84,7 +84,9 @@ window.bridge=function(k){S.bridges[k]=!S.bridges[k];save();renderBridges();hud(
 function renderBridges(){for(const k in B){const el=$("b-"+k),sp=el.querySelector("span");el.classList.toggle("on",!!S.bridges[k]);sp.textContent=S.bridges[k]?B[k]:"Not integrated";sp.className=S.bridges[k]?"":"muted"}}
 
 /* ---- Workstream 6: notes with links are a graph ---- */
-window.weave=function(){const nodes=[["Tonight",200,150],[playerLabel()||"You",90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
+// The player's name is the one node here that is not ours: it can arrive in
+// an imported progress code, so it is text like any other field.
+window.weave=function(){const nodes=[["Tonight",200,150],[esc(playerLabel()||"You"),90,60],["Playbook",310,60],["Data warehouse",60,220],["Releases",200,275],["Integrations",340,220],["Rolinda's questions",200,25],["Q4 roadmap",330,275]];
   const links=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,2],[3,4],[4,7],[2,7],[5,7],[6,2]];const svg=$("web");svg.classList.remove("woven");
   svg.innerHTML=links.map(([a,b])=>`<line x1="${nodes[a][1]}" y1="${nodes[a][2]}" x2="${nodes[b][1]}" y2="${nodes[b][2]}"/>`).join("")+nodes.map((n,i)=>`<g style="animation-delay:${i*.12}s"><circle cx="${n[1]}" cy="${n[2]}" r="${i===0?13:8}"/><text x="${n[1]}" y="${n[2]+(i===6?-16:22)}" text-anchor="middle">${n[0]}</text></g>`).join("");
   requestAnimationFrame(()=>svg.classList.add("woven"))};
