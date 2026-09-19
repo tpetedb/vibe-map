@@ -1,1 +1,0 @@
-- The minimap test waits for a painted map rather than for three frames. The map is drawn on its own throttle, so a fast frame loop could pass the wait with the canvas still blank; opening the map now also paints it on the next frame instead of waiting the throttle out.
