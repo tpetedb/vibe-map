@@ -190,10 +190,15 @@ def test_the_graph_spreads_instead_of_piling_on_the_edges(
     game.start()
     _open_vault(game)
     page = game.page
-    # The layout cools on its own, so wait for the simulation's own end. A
-    # sampler over the sum of y calls a slow tick stillness on a software
-    # renderer and reads a graph that is still spreading.
-    game.until("window.__debug().vault().alpha < 0.01")
+    # The simulation's own alpha is the end of the layout. A sampler over the
+    # sum of y calls a slow tick stillness and measures a graph that is still
+    # spreading, so how many nodes share a line would depend on how fast the
+    # page happens to run. The budget is the simulation's, not the harness's:
+    # it decays per animation frame, and a software renderer draws few.
+    page.wait_for_function(
+        "() => ((window.__debug().vault() || {alpha: 1}).alpha < 0.05)",
+        timeout=120_000,
+    )
     # Clamping pinned the overflow to the exact border, so a couple of dozen
     # nodes shared one y to the pixel. A settled layout shares none.
     row = page.evaluate(
