@@ -15,6 +15,7 @@ RSS 2.0 and Atom are both small enough to parse by hand.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 import re
 import xml.etree.ElementTree as ET
@@ -35,6 +36,10 @@ FEED_VERSION = 2
 SOURCES_PATH = Path(__file__).resolve().parent / "data" / "sources.json"
 
 SUMMARY_CHARS = 220
+# A headline and a publisher name are one line each; a feed that sends more
+# is cut here rather than in the card.
+TITLE_CHARS = 160
+NAME_CHARS = 80
 KINDS = ("organisation", "person", "project")
 ITEM_KINDS = ("release", "post", "talk")
 
@@ -154,17 +159,36 @@ _TAGS = re.compile(r"<[^>]+>")
 _SPACE = re.compile(r"\s+")
 
 
-def summarise(raw: str, *, limit: int = SUMMARY_CHARS) -> str:
-    """The feed's own words: markup out, whitespace collapsed, tail cut.
+def plain(raw: str, *, limit: int = SUMMARY_CHARS) -> str:
+    """A feed's own words as text: entities resolved, markup out, tail cut.
 
-    Never generated. A cut lands on a word boundary so the sentence reads as
+    Never generated. A feed is somebody else's machine, so nothing it sends
+    may reach the page as markup: the entities are resolved first, so an
+    escaped tag cannot survive the strip, and the strip runs until nothing is
+    left to remove. A cut lands on a word boundary so the sentence reads as
     an opening rather than as a broken word.
     """
-    text = _SPACE.sub(" ", _TAGS.sub(" ", raw or "")).strip()
+    text = html.unescape(raw or "")
+    while True:
+        stripped = _TAGS.sub(" ", text)
+        if stripped == text:
+            break
+        text = stripped
+    text = _SPACE.sub(" ", text).strip()
     if len(text) <= limit:
         return text
     cut = text[:limit].rsplit(" ", 1)[0].rstrip(" ,;:.")
     return (cut or text[:limit].rstrip()) + "..."
+
+
+def safe_link(url: str) -> str:
+    """The item's link, or "" when it is not an absolute http or https URL.
+
+    A card renders a link as an anchor, so a `javascript:` or `data:` link in
+    a feed is script injection. An item without a usable link is dropped.
+    """
+    link = (url or "").strip()
+    return link if urlparse(link).scheme in ("http", "https") else ""
 
 
 def _text(el: ET.Element | None) -> str:
@@ -188,15 +212,16 @@ def _date(raw: str) -> str:
 
 
 def _item(src: Source, title: str, link: str, when: str, body: str) -> Item:
+    """One item, sanitised: the game is handed text and a checked link."""
     return Item(
         id=item_id(link),
         source=src.id,
-        name=src.name,
+        name=plain(src.name, limit=NAME_CHARS),
         kind=src.item_kind,
-        title=title,
-        link=link,
+        title=plain(title, limit=TITLE_CHARS),
+        link=safe_link(link),
         date=_date(when),
-        summary=summarise(body),
+        summary=plain(body),
         tags=src.tags,
     )
 
@@ -208,7 +233,7 @@ def parse(xml: bytes | str, src: Source | str, *, limit: int = 8) -> list[Item]:
     root = ET.fromstring(xml)
     items: list[Item] = []
     for it in root.iter("item"):
-        title, link = _text(it.find("title")), _text(it.find("link"))
+        title, link = _text(it.find("title")), safe_link(_text(it.find("link")))
         if title and link:
             items.append(
                 _item(
@@ -225,7 +250,7 @@ def parse(xml: bytes | str, src: Source | str, *, limit: int = 8) -> list[Item]:
             link_el = en.find(f"{ATOM}link[@rel='alternate']")
             if link_el is None:
                 link_el = en.find(f"{ATOM}link")
-            link = (link_el.get("href") or "").strip() if link_el is not None else ""
+            link = safe_link(link_el.get("href") or "") if link_el is not None else ""
             when = _text(en.find(f"{ATOM}published")) or _text(
                 en.find(f"{ATOM}updated")
             )

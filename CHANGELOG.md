@@ -176,7 +176,28 @@ Nothing here between releases: an entry lives in its own file under
   closing follows the camp's pairing instead of always talking about wine, and
   one release reads as one release.
 
+- The vault graph does not play its settling animation when the machine asks
+  for reduced motion. The layout is already final when the vault opens, so the
+  drift was animation for its own sake.
+
 - Sitting down with `x` sticks. Typing your name schedules a rebuild of the walker a moment after the last keystroke, so that it carries the finished name on its plate; on a fast machine that rebuild landed after the game had started and after you had sat down, and the new body came up standing with the laptop gone, because the rebuild carried only the position and the rotation over. The pose is state, so the new body takes it over, and its limbs are put where the pose says in the same tick. The same rule also decided standing up from the speed the frame started with, so `x` pressed with the speed of the last step still in the legs, which is how you sit down on a bench you just walked to, unlocked the achievement and left you standing. It reads the speed the frame ends with, and a sit sets that to zero.
+
+### Security
+
+- The news card shows a feed item as text: a title, a name or a summary
+  carrying markup is read literally instead of becoming elements, and a link
+  that is not an absolute http or https URL is shown without an anchor. Feed
+  content travels from public RSS sources into the hosted game, so this was
+  stored script injection for every player of a published camp.
+- `vibe news` writes plain text: titles, names and summaries are unescaped,
+  stripped of markup and capped, and an item whose link is not http or https
+  is dropped. The daily workflow therefore cannot put markup in `news.json`.
+- Answers from the chat bridge, an imported progress code's player name and
+  the release notes of workstream 4 go through the same one escaper, which
+  now also escapes quotes, so a value cannot break out of an attribute.
+- The game asks nothing of a third party: the Google Fonts stylesheet is gone
+  and the type is the system stack the device already has, so "no CDN, works
+  offline" is true of the page and of every report the CLI generates.
 
 ## [0.9.0] - 2026-09-17
 

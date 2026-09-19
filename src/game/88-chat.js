@@ -11,7 +11,6 @@ function chatCode(){const n=8;const out=[];if(window.crypto&&crypto.getRandomVal
   else for(let i=0;i<n;i++)out.push(CHAT_ABC[Math.floor(Math.random()*CHAT_ABC.length)]);return out.join("")}
 function chatState(){if(!S.chat)S.chat={};const c=S.chat;if(!c.code)c.code=chatCode();if(!c.port)c.port=CHAT_PORT;if(!Array.isArray(c.hist))c.hist=[];return c}
 function chatBase(){return "http://127.0.0.1:"+chatState().port}
-function chatEsc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 // What the question is about: the stop whose sheet is open, else the mentor,
 // artifact or plot the walker is standing next to. Identifiers only; the
 // bridge looks the lesson up in the course data itself.
@@ -58,7 +57,7 @@ function chatOfflineAnswer(q){const hits=chatSearch(q);
 // from it, newest last, capped so a long evening does not fill localStorage.
 function chatPush(entry){const c=chatState();c.hist.push(entry);while(c.hist.length>CHAT_MAX)c.hist.shift();save();return entry}
 function renderChatLog(){const el=$("chatlog");if(!el)return;const c=chatState();
-  el.innerHTML=c.hist.length?c.hist.map(h=>`<div class="cturn"><p class="you">${chatEsc(h.q)}</p><p class="them">${chatEsc(h.a||"...")}</p>${(h.links||[]).map(t=>`<span class="wl" data-n="${chatEsc(t)}">${chatEsc(t)}</span>`).join("")}<span class="src">${h.src==="offline"?"from the notes in this file":h.src==="error"?"not answered":"your "+chatEsc(h.provider||"provider")}</span></div>`).join(""):`<p class="small muted">No questions yet. Pick one below, or type your own.</p>`;
+  el.innerHTML=c.hist.length?c.hist.map(h=>`<div class="cturn"><p class="you">${esc(h.q)}</p><p class="them">${esc(h.a||"...")}</p>${(h.links||[]).map(t=>`<span class="wl" data-n="${esc(t)}">${esc(t)}</span>`).join("")}<span class="src">${h.src==="offline"?"from the notes in this file":h.src==="error"?"not answered":"your "+esc(h.provider||"provider")}</span></div>`).join(""):`<p class="small muted">No questions yet. Pick one below, or type your own.</p>`;
   el.querySelectorAll(".wl").forEach(e=>e.onclick=()=>openNote(e.dataset.n));
   el.scrollTop=el.scrollHeight}
 function chatHelp(){const c=chatState();
@@ -71,9 +70,9 @@ window.chatSetPort=function(v){const c=chatState();const n=parseInt(v,10);if(n>0
 window.chatRetry=function(){const c=chatState();const last=c.hist.length?c.hist[c.hist.length-1]:null;if(last)chatAsk(last.q);else $("chatmsg").textContent="Type a question first."};
 function renderChat(){const sug=chatSuggest(chatWhere);
   $("s-chat").innerHTML=`<h2>Ask about this</h2>
-   <p class="chip" id="chatchip">${chatEsc(chatChip(chatWhere))}</p>
+   <p class="chip" id="chatchip">${esc(chatChip(chatWhere))}</p>
    <div id="chatlog" class="chatlog"></div>
-   <div class="row" id="chatsug">${sug.map(q=>`<button class="small" onclick="chatAsk(this.dataset.q)" data-q="${chatEsc(q)}">${chatEsc(q)}</button>`).join("")}</div>
+   <div class="row" id="chatsug">${sug.map(q=>`<button class="small" onclick="chatAsk(this.dataset.q)" data-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
    <div class="row"><input type="text" id="chatq" placeholder="Ask a question about this stop" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter')chatSend()"><button class="primary" data-icon="message-circle" onclick="chatSend()">Ask</button></div>
    <p class="small muted" id="chatmsg"></p>
    <div id="chatwhy"></div>`;
