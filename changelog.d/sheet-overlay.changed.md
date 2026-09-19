@@ -1,1 +1,0 @@
-- The sheet is a real overlay: one panel, its own scroll container, the page behind it never moves, and the row that closes a lesson (Mark as done, and the way back) sticks to the bottom of that container. The reading column is framed rather than floating on black, and the Close button sits with the text instead of eight hundred pixels away from it.

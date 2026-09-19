@@ -15,9 +15,9 @@ const DIFFS=[
   ["beginner","Beginner","Every command spelled out and open. Lenient checks."],
   ["easy","Easy","Commands open, a little less hand-holding."],
   ["normal","Normal","Commands open. Checks look at what you built."],
-  ["hard","Hard","Commands folded (one click opens them). Strict checks."],
-  ["expert","Expert","Commands folded. Tests must exist and pass."],
-  ["god","God","Commands folded. just verify must be green to claim."]
+  ["hard","Hard","Command blocks folded (one click opens them). Strict checks."],
+  ["expert","Expert","Command blocks folded. Tests must exist and pass."],
+  ["god","God","Command blocks folded. just verify must be green to claim."]
 ];
 // The walker spec for the current player. Unknown or missing looks fall back
 // to Lotte for a saved game that was played as her, else to your own look.
@@ -43,7 +43,6 @@ function slug(s){return fold(s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-
 // a space in it cannot end the argument.
 function shq(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
 function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 // The setup guide: the exact commands for the full experience. Rendered on the
 // title screen (step 3) and on its own screen from the Roadmap, from one
@@ -77,7 +76,7 @@ vibe vault build</code></pre>
 <p class="small muted">You should see: <code>vault/Camp/Tonight.md</code> on disk, and a graph with notes in it in Obsidian.</p>
 <h4>5. Keep the two in sync</h4>
 <p class="small">Progress here and progress in the terminal are one code. After a session in either place, carry it across:</p>
-<pre><code>vibe export                                # prints a code; paste it in the game under World, Sync
+<pre><code>vibe export                                # prints a code; paste it in the game under Roadmap, Sync
 vibe import &lt;code from the game&gt;           # the other way round</code></pre>
 <p class="small muted">You should see: a long code on export, and a line naming the stops that were added on import.</p>
 <h4>6. Confirm the whole thing</h4>
@@ -87,7 +86,12 @@ vibe import &lt;code from the game&gt;           # the other way round</code></p
 window.openSetup=function(){$("s-setup").innerHTML=`<h2>Setup guide</h2><p class="small muted">The full experience: this game, your terminal and Obsidian on one desk.</p>`+setupHtml();openSheet("s-setup")};
 // The title form. Re-rendered on every choice so the highlighted buttons and
 // the setup commands (which carry the name and the difficulty) stay current.
-window.pickLook=function(id){S.look=id;if(id!=="own")$("name").value=LOOKS[id].label;else{$("name").value="";$("name").focus()}S.name=$("name").value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
+// A preset's label is the picker's own writing, never something the player
+// typed, so it is the one value "Your own name" is allowed to clear.
+function presetLabel(v){return Object.keys(LOOKS).some(k=>k!=="own"&&LOOKS[k].label===v)}
+window.pickLook=function(id){S.look=id;const nm=$("name");
+  if(id!=="own")nm.value=LOOKS[id].label;else{if(presetLabel(nm.value))nm.value="";nm.focus()}
+  S.name=nm.value.trim();clearNameError();save();renderOnboarding();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()};
 window.pickDifficulty=function(d){if(!S.settings)S.settings={};S.settings.difficulty=d;save();applySettings();renderOnboarding()};
 window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){const el=$("ob-setup");if(el)el.scrollIntoView({block:"start",behavior:motionOff()?"auto":"smooth"})}};
 // The walker carries the name on a sprite, so it is rebuilt after typing
@@ -127,3 +131,12 @@ ${presetRow()}
   const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
   document.body.dataset.mode=mode}
+// The title is modal: until Start the campus behind it is not there. The
+// stylesheet takes away the HUD's tab stops and its clicks; this takes away the
+// global keys, so c, Cmd K and Escape cannot open a panel over the form or
+// claim a stop before the game has begun. A key aimed at the form is swallowed
+// on its way out, after the field or the button it was aimed at has had it; a
+// key aimed at nothing is swallowed on the window, before the handlers there.
+function swallowKey(e){if(!$("title").classList.contains("off"))e.stopPropagation()}
+$("title").addEventListener("keydown",swallowKey);
+addEventListener("keydown",e=>{if(!$("title").contains(e.target))swallowKey(e)},true);

@@ -1,3 +1,13 @@
+// Text that is not ours goes into the page through here: the feed, an answer
+// from the bridge, an imported name. One helper, early, so every module can
+// reach it; the page is built from strings, so escaping is the rule and raw
+// interpolation is the exception that has to be one of our own constants.
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+// A link from data we did not write. Only an absolute http or https URL may
+// become an anchor; javascript:, data: and anything else give "" and the row
+// is rendered without a link rather than with a dangerous one.
+function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
+  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
@@ -13,7 +23,7 @@ let CH=[
 // every other theme uses. Rolinda asks the simple question in both.
 const SAY_WINE={
   title:["tom","Welcome aboard, and thank you for prioritising this. Confirm your preferred name, then we kick off. I have blocked four hours, one bottle, and a contingency bottle."],
-  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the 18:00 signpost before it warms up."],
+  walk:["rolinda","Chardonnay is poured, 11 degrees, arrogant on the cheek, galloping nicely against the uvula. Walk to the {stop1} signpost before it warms up."],
   near:["rolinda","Go on then. Tap Enter. Swirl first, it needs air, like most of your MVP."],
   1:["tom","Let's not boil the ocean here. Three sentences, press the button, ship it. Zero enablement this hour, that is a feature, not a gap."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Also this Chardonnay is opening up. Notes of hazelnut and mild regret."],
@@ -29,7 +39,7 @@ const SAY_WINE={
 };
 const SAY_PLAIN={
   title:["tom","Welcome. Confirm your name and we start. Four hours are blocked, the coffee is on, and nothing on this island can break in a way we cannot undo."],
-  walk:["rolinda","Coffee is poured. Walk to the 18:00 signpost; the first stop is the one where you build something."],
+  walk:["rolinda","Coffee is poured. Walk to the {stop1} signpost; the first stop is the one where you build something."],
   near:["rolinda","Go on, tap Enter. Read the definition of done first, then do the thing, then tell me in one sentence what happened."],
   1:["tom","Three sentences, one file, ship it. We fix the loop before we fix the game."],
   2:["rolinda","So why did 'more impactful' break it? It did what you said, no? Write that down; that is the whole lesson."],
@@ -44,6 +54,18 @@ const SAY_PLAIN={
   fin:["rolinda","All eight built. Come back to the hub; we still need a date, and I want it in writing."]
 };
 const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
+// SAY is the campus voice. An island that is not the campus has no hub and no
+// date to pick, and production ends the campaign, so their closing lines and
+// their walk line are overrides on the same keys.
+const SAY_WORLD={
+  winter:{fin:["rolinda","Every stop on this island is done. The next environment is one bridge away; take it when you are ready."]},
+  desert:{fin:["rolinda","Every stop on this island is done. One environment left, and it is the one you cannot break gently."]},
+  prod:{fin:["rolinda","Every stop on production is done, which is the whole campaign. Nothing left to deploy tonight; go and tell somebody what you built."]}
+};
+// The one place a line is chosen: the island's override, else the campus line,
+// with the first signpost of this island filled in.
+function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
+  return [l[0],l[1].replace("{stop1}",CH[0]?CH[0].h:"first")]}
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
 // topics: the tech tree ids the terminal has verified. The game shows the tree
@@ -52,8 +74,10 @@ const SAY=CONFIG.theme.pairing==="wine"?SAY_WINE:SAY_PLAIN;
 let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:""};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!S.doneW.campus.length&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+// S.done is a view: the array doneW[world] under another name. Only the map is
+// written, so a reload can never copy one island's stops onto another.
+function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);delete S.done;if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
 /* ---------------- the event log ---------------- */
 // One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
 // number of seconds when the event measures time. The log is local to this
@@ -92,6 +116,22 @@ const FACE={
 };
 // Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
-function say(k){const [who,t]=SAY[k];$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").textContent=t}}
+// Every line in the bubble goes through here: the face, the role the theme
+// gives the speaker, and the running type-out that a new line must cancel.
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+  if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
+function say(k){const [who,t]=line(k);bubble(who,t)}
+// A mentor is known by their last name; a team is not a person, so a name that
+// starts with "The" keeps all of it.
+function shortName(n){return /^The\s/.test(n)?n.charAt(0).toLowerCase()+n.slice(1):n.split(" ").slice(-1)[0]}
+// The stops of the island the player is on. CH is the island's ws, so a camp
+// that adds a ninth stop has nine, and the stop after the last one is the
+// finale on the campus and the end of the island everywhere else.
+function stopCount(){return CH.length}
+function finaleStop(){return CH.length+1}
+// The KPI says Streak, so the number is the one the CLI counts under that
+// name (vibemap/quests.py, badge streak-3): stops claimed today.
+function streakToday(){const day=new Date().toDateString();
+  return (S.events||[]).filter(e=>e.kind==="claim"&&new Date(e.ts).toDateString()===day).length}
 
 /* ---------------- 3D ---------------- */

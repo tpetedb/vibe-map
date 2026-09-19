@@ -13,6 +13,11 @@ GREEN = "#00A86B"
 BLUE = "#0067A5"
 YELLOW = "#FFBF00"
 ORANGE = "#FF8C1A"
+# The fonts a device already has. The game is one file with no CDN and
+# every generated page must read the same offline as online, so nothing
+# here asks a third party for a typeface.
+SYSTEM_SANS = 'system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif'
+SYSTEM_MONO = 'ui-monospace,"SF Mono",Menlo,Consolas,monospace'
 BLACK = "#000000"
 SURFACE = "#0A0A0A"
 TEXT = "#F1F1F8"
@@ -108,9 +113,9 @@ CSS_TOKENS: dict[str, str] = {
     "space-4": "16px",
     "space-6": "24px",
     "space-8": "32px",
-    "font-display": "Sora,system-ui,sans-serif",
-    "font-body": "Inter,system-ui,sans-serif",
-    "font-mono": '"JetBrains Mono",ui-monospace,Menlo,monospace',
+    "font-display": SYSTEM_SANS,
+    "font-body": SYSTEM_SANS,
+    "font-mono": SYSTEM_MONO,
 }
 
 
