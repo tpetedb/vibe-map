@@ -11,7 +11,10 @@
 - A quiet setting for the toasts. What a toast would have said is still
   recorded, so the achievements and the numbers are whole.
 - Settings is grouped under five headings, and a row the browser cannot obey
-  (the buzz, the screen wake lock) is not offered at all.
+  (the buzz, the screen wake lock) is not offered at all. Above Normal a row's
+  value takes the whole width, and the control's own size is capped where its
+  longest option still fits the narrowest phone: a select cannot wrap, so the
+  value is either whole or lost.
 - The disclosure chevron on a command block keeps its space before the word on
   a phone, where the summary is laid out as a flex row and the trailing space
   in the marker collapsed: "vCommands" read as one word.

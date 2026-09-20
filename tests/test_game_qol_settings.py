@@ -73,23 +73,31 @@ CONTROLS = """() => {
           width: document.documentElement.clientWidth};
 }"""
 
-# A select too narrow for the option it is showing. The browser hides the
-# overflow rather than scrolling it, so scrollWidth says nothing: the text is
-# measured in the select's own font and compared with the room it has, less
-# the padding and the drop-down arrow.
+# A select too narrow for the longest option it can show, which is the one
+# that decides whether the control holds its value: the selected one only says
+# what this player happens to have picked. A select hides the overflow rather
+# than scrolling it, so scrollWidth says nothing; the text is measured in the
+# select's own font and compared with the room it has, less its padding and
+# the drop-down arrow.
 NARROW = """() => {
   const probe = document.createElement('span');
   probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre';
   document.body.appendChild(probe);
-  const tight = [...document.querySelectorAll('#s-settings select')].filter(s => {
+  const tight = [];
+  for (const s of document.querySelectorAll('#s-settings select')) {
     const cs = getComputedStyle(s);
     probe.style.font = cs.font;
     probe.style.letterSpacing = cs.letterSpacing;
-    probe.textContent = s.options[s.selectedIndex].text;
-    const need = probe.getBoundingClientRect().width +
+    let widest = 0, text = '';
+    for (const option of s.options) {
+      probe.textContent = option.text;
+      const w = probe.getBoundingClientRect().width;
+      if (w > widest) { widest = w; text = option.text; }
+    }
+    const need = widest +
       parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 24;
-    return need > s.getBoundingClientRect().width + 1;
-  }).map(s => s.id + ': ' + s.options[s.selectedIndex].text);
+    if (need > s.getBoundingClientRect().width + 1) tight.push(s.id + ': ' + text);
+  }
   probe.remove();
   return tight;
 }"""
@@ -196,9 +204,16 @@ def test_the_text_size_leaves_the_hud_and_the_stick_where_they_were(
     game.assert_clean()
 
 
-def test_larger_text_still_fits_the_panel_on_a_phone(game_android: GamePage) -> None:
-    """Bigger type must not clip an option or push the page sideways."""
-    game = _started(game_android)
+def _fits_at_larger(game: GamePage, shot: str) -> None:
+    """Bigger type must not clip an option or push the page sideways.
+
+    Whether a value fits beside its label is a question about font metrics,
+    which differ between one device and the next, so the answer must not come
+    from this machine's fonts: the row gives the select the whole width above
+    Normal, and the check measures the option's own text in the select's own
+    font against the room the select has.
+    """
+    _started(game)
     _set(game, "text", "larger")
     assert game.page.evaluate(NARROW) == [], game.page.evaluate(NARROW)
     wide = game.page.evaluate(
@@ -210,8 +225,18 @@ def test_larger_text_still_fits_the_panel_on_a_phone(game_android: GamePage) -> 
            }"""
     )
     assert wide[0] <= 1 and wide[1] <= 1, wide
-    game.screenshot("qol1-android-settings-larger", clip_height=900)
+    game.screenshot(shot, clip_height=900)
     game.assert_clean()
+
+
+def test_larger_text_still_fits_the_panel_on_android(game_android: GamePage) -> None:
+    _fits_at_larger(game_android, "qol1-android-settings-larger")
+
+
+def test_larger_text_still_fits_the_panel_on_iphone(
+    game_webkit_iphone: GamePage,
+) -> None:
+    _fits_at_larger(game_webkit_iphone, "qol1-iphone-settings-larger")
 
 
 # ---- line spacing -------------------------------------------------------------
