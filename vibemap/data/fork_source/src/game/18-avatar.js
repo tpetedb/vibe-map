@@ -164,7 +164,7 @@ function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"
         const mine=list.filter(i=>got.includes(i.id));
         return `<div class="card"><h3>${WORLDS[w].name}</h3><p class="small muted">${mine.length} of ${list.length}</p>`+
           mine.map(i=>`<div class="pathrow"><span><b>${i.name}</b><br><span class="muted small">${i.concept}</span></span><button onclick="openTopic('${i.topic}')" style="padding:4px 10px;font-size:12px">Topic</button></div>`).join("")+
-          (mine.length<list.length?`<div class="pathrow"><span class="muted small">${list.length-mine.length} still out there, along the paths and on the annexes.</span></div>`:"")+`</div>`}).join("")}
+          (mine.length<list.length?`<div class="pathrow"><span class="muted small">${list.length-mine.length} still out there, along the paths and on the annexes.</span></div>`:"")+`</div>`}).join("")+bottlesCard()}
   else if(packTab==="achievements"){
     body=`<p class="small muted">${ach.length} of ${ACH.length} unlocked. Six of them are the badges the terminal hands out, so a progress code keeps the two in step.</p>`+
       ACH.map(a=>`<div class="pathrow"><span><b>${a.name}</b><br><span class="muted small">${a.what}</span></span><span class="st ${ach.includes(a.id)?"deep":""}">${ach.includes(a.id)?"unlocked":"locked"}</span></div>`).join("")}

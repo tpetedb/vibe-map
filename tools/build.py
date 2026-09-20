@@ -64,6 +64,7 @@ GAME_ORDER = [
     "19-items.js",
     "@pets",
     "19b-pet.js",
+    "19c-bottles.js",
     "20-worlds.js",
     "21-world-build.js",
     "22-archipelago.js",

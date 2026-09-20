@@ -1,5 +1,5 @@
 {
-  "note": "Collectibles and seats. Every spot is relative to a plot, an annex or the path of its island, never a world coordinate, so a new layout carries them along. Colours name a key of PALETTE in src/config/00-config.js. topic is a tech tree id in vibemap/tech.py.",
+  "note": "Collectibles and seats. Every spot is relative to a plot, an annex or the path of its island, never a world coordinate, so a new layout carries them along. Colours name a key of PALETTE in src/config/00-config.js. topic is a tech tree id in vibemap/tech.py. bottles are messages washed up on the shore, each a lesson from the building of this game; deg is a bearing from the island's centre, and they are deliberately not part of the forty collectibles, so no count, badge or progress code knows them.",
   "kinds": {
     "commit": {"model": "octa", "colour": "greenBright"},
     "branch": {"model": "ring", "colour": "blue"},
@@ -85,5 +85,15 @@
     {"id": "prod-bench-2", "world": "prod", "kind": "bench", "at": {"plot": 5, "d": 2.8, "a": -1.9}},
     {"id": "prod-chair-1", "world": "prod", "kind": "chair", "at": {"plot": 3, "d": 2.6, "a": -2.5}},
     {"id": "prod-chair-2", "world": "prod", "kind": "chair", "at": {"annex": 2, "d": 1.6, "a": 2.0}}
+  ],
+  "bottles": [
+    {"id": "campus-bottle-cause", "world": "campus", "deg": 200, "topic": "tests", "title": "Three red tests, one cause", "lesson": "Three tests in one file went red within an hour and looked like three flaky tests. It was one bug: a delayed rebuild of the walker stood him up after he had sat down. When failures cluster, ask for the cause they share."},
+    {"id": "campus-bottle-log", "world": "campus", "deg": 320, "topic": "subagents", "title": "Read the log, not the summary", "lesson": "The orchestrator briefed an agent that a test had timed out. The agent read the log: it was a failed assertion, and the fix was a different one. Check the claim, also when the claim is your own."},
+    {"id": "winter-bottle-birthday", "world": "winter", "deg": 150, "topic": "tests", "title": "A flaky test can be plain arithmetic", "lesson": "A test allowed three of 146 graph nodes to share a pixel row. Four do that by coincidence now and then, which is the birthday problem. Assert facts that cannot happen by chance, not thresholds that usually hold."},
+    {"id": "winter-bottle-exit", "world": "winter", "deg": 290, "topic": "bash", "title": "Test a script against its exit", "lesson": "The conductor of the pull request queue looped for ever on one that had already landed: the sed on macOS has no word boundary, so the line was never removed. A script that runs unattended needs its stop conditions tested, not only its happy path."},
+    {"id": "desert-bottle-armed", "world": "desert", "deg": 40, "topic": "github", "title": "Armed first, in first", "lesson": "Automatic landing stayed armed on a pull request after a release was put ahead of it. It went green and jumped the release. Keep one thing armed: whatever is at the front."},
+    {"id": "desert-bottle-cars", "world": "desert", "deg": 250, "topic": "ci", "title": "One queue, then cars", "lesson": "Five pull requests under strict up-to-date checks starved the largest one for three hours. Landing one at a time fixed that; joining green ones into a single branch cut six test cycles to two."},
+    {"id": "prod-bottle-budget", "world": "prod", "deg": 110, "topic": "cost", "title": "It did not crash, it ran out of budget", "lesson": "An overnight run stopped and the machine got the blame. The timeline said otherwise: the monthly spend limit. Read the record before you suspect sleep, memory or the network."},
+    {"id": "prod-bottle-sink", "world": "prod", "deg": 340, "topic": "security", "title": "Escape at the sink, clean at the source", "lesson": "A feed title went into the page as HTML. Thirty hunters found it before a release shipped it. One escape helper where text meets the page, and a writer that strips markup before anything is stored."}
   ]
 }
