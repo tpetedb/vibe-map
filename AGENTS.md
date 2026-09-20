@@ -29,7 +29,7 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 | `tools/new_topic.py` | Scaffolds a topic file, or a whole pack, under `vibemap/data/topics/`. The way to start one; `docs/TOPICS.md` is the rest. |
 | `tests/` | The pytest battery: CLI and quest unit tests, build check, Playwright smoke tests in Chromium and WebKit. |
 | `workspace/data/scores.csv` | The system of record for scores. Columns `played_at,player,score,duration_s`; never rename without changing `workspace/sql/` and `workspace/python/`. |
-| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course; the blocks between its generated markers come from the package data), `site/syllabus.html` (generated, published), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us), `TOPICS.md` (how to write a topic of the tech tree). |
+| `docs/` | `MAINTAINERS.md` (the zones and how a change travels), `CONFIG.md` (the three configuration levels), `SYLLABUS.md` (the course; the blocks between its generated markers come from the package data), `site/syllabus.html` (generated, published), `ROADMAP.md` (generated), `RESOURCES.md` (curated links), `AOE-STUDY.md` (what sokrypton/aoe taught us), `TOPICS.md` (how to write a topic of the tech tree), `SECURITY-MODEL.md` (what is trusted, what is not, and the one helper per sink). |
 | `vault/` | The Obsidian vault. `vault/Camp/Tonight.md` is the hot cache; every note is reachable from it. `.obsidian/` is pre-configured. |
 | `.agents/skills/` | Skills in the Agent Skills standard. `.claude/skills/` holds symlinks to them. |
 | `justfile`, `agents.just` | Every task a human or an agent runs. `just` lists them; `just start` onboards. |
@@ -40,6 +40,7 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 - The game stays one file with no CDN and three.js embedded. Edit `src/`, run `just build`, test the built file.
 - State is data, the view is derived. Everything persisted lives in the game's `S` object or the CLI's `state.json`; the DOM, the 3D scene and the vault notes are rebuilt from it, never the other way round.
 - One helper per concept (`mat()`, `fixColors()`, `onLandW()`, `Vault.write()`). Never re-spell the raw check at a call site.
+- A value that did not come from our own package data is text: `esc()` into HTML, `safeUrl()` into a link, `js_json()` into the build. `docs/SECURITY-MODEL.md` has the table; `just sinks-check` fails on a new raw value.
 - Comments state constraints and why, in one or two lines. Never narrate changes ("replaced the old X"), never date a comment, never reference line numbers in other files.
 - Versioned formats fail loudly. The progress code and `state.json` carry a version; an unknown version is refused with a clear message, not patched around.
 - Scores are a system of record. Never reset or rewrite `workspace/data/scores.csv` without asking.

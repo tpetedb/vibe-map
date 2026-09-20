@@ -12,6 +12,7 @@ this file talks to the open internet.
 
 from __future__ import annotations
 
+import base64
 import json
 import threading
 from collections.abc import Iterator
@@ -153,6 +154,137 @@ def test_an_imported_name_with_markup_stays_text(game: GamePage) -> None:
     assert game.page.locator("#web img").count() == 0
     labels = game.page.locator("#web text").all_text_contents()
     assert hostile in labels
+    game.assert_clean()
+
+
+# One payload for every field of a progress code and of the stored state: it
+# closes a single and a double quoted attribute first, so a value that lands
+# inside an attribute is caught as well as one that lands between tags.
+BREAKOUT = '\'"><img src=x onerror="window.__pwned=1">'
+NO_MARKUP = "() => document.querySelectorAll('img[src=\"x\"]').length"
+
+
+def _code(payload: dict[str, Any]) -> str:
+    """A progress code with any payload, the way another machine would send it."""
+    raw = json.dumps(payload).encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["interests", "path", "artifacts", "mentors", "items", "topics", "doneW"],
+)
+def test_a_pasted_progress_code_cannot_carry_markup(game: GamePage, field: str) -> None:
+    """A code is pasted from a chat or a mail, so every id in it is outside data."""
+    values: dict[str, Any] = {
+        "interests": [BREAKOUT],
+        "path": {"karpathy": BREAKOUT},
+        "doneW": {BREAKOUT: [1]},
+    }
+    payload = {"v": 2, "name": "Lotte", "doneW": {"campus": [1]}}
+    payload[field] = values.get(field, [BREAKOUT])
+    game.goto()
+    game.start("Lotte")
+    before = game.state()
+    message = game.import_code(_code(payload))
+    # The Roadmap is on screen and has just been redrawn from the state.
+    assert game.page.evaluate("() => window.__pwned") is None
+    assert game.page.evaluate(NO_MARKUP) == 0
+    # Refused whole, by name: nothing of a code that fails is merged.
+    assert "cannot read" in message and field in message, message
+    after = game.state()
+    assert after["doneW"] == before["doneW"]
+    assert after.get("interests") == before.get("interests")
+    assert after["path"] == before["path"]
+    # Settings and the title screen draw the same state again after a reload.
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Settings')")
+    game.page.wait_for_selector("#s-settings .setting", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.reload()
+    game.page.wait_for_function("typeof window.__S === 'function'")
+    assert game.page.evaluate("() => window.__pwned") is None
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.assert_clean()
+
+
+def test_a_pasted_code_is_refused_on_the_iphone_profile_too(
+    game_webkit_iphone: GamePage,
+) -> None:
+    """The refusal is a line of text the phone player reads, in another engine."""
+    game = game_webkit_iphone
+    game.goto()
+    game.start("Lotte")
+    message = game.import_code(
+        _code({"v": 2, "name": "Lotte", "interests": [BREAKOUT]})
+    )
+    assert "cannot read" in message and "interests" in message, message
+    assert game.page.evaluate(NO_MARKUP) == 0
+    box = game.page.locator("#syncmsg").bounding_box()
+    assert box and box["x"] >= 0 and box["x"] + box["width"] <= 393 + 1, box
+    game.page.locator("#syncmsg").scroll_into_view_if_needed()
+    game.screenshot("import_refused_iphone")
+    game.assert_clean()
+
+
+def test_a_link_from_camp_toml_is_held_to_http(game: GamePage) -> None:
+    """repo_url and site_url are typed by the camp's owner and become hrefs."""
+    game.goto()
+    game.page.evaluate(
+        "() => { const c = window.__data().config;"
+        " c.repo = 'javascript:window.__pwned=1';"
+        " c.site = 'javascript:window.__pwned=1//'; }"
+    )
+    assert game.page.evaluate("() => window.__siteDoc('syllabus.html')") == (
+        "syllabus.html"
+    )
+    game.start("Lotte")
+    game.open_roadmap()
+    game.page.click("#s-map button:has-text('Setup guide')")
+    game.page.wait_for_selector("#s-setup pre", state="attached")
+    hrefs = game.page.eval_on_selector_all("#s-setup a", "as => as.map(a => a.href)")
+    assert hrefs and all(h.startswith("https://") for h in hrefs), hrefs
+    assert "javascript:" not in (game.page.text_content("#s-setup") or "")
+    game.assert_clean()
+
+
+def test_state_that_already_holds_markup_is_drawn_as_text(game: GamePage) -> None:
+    """The sinks hold on their own: a state poisoned before the import learnt
+    to refuse (or edited by hand) still reaches every panel as words."""
+    game.goto(
+        state={
+            "name": "Lotte",
+            "mode": "full",
+            "interests": [BREAKOUT],
+            "path": {"karpathy": BREAKOUT},
+            "settings": {"difficulty": BREAKOUT},
+            "chat": {"code": BREAKOUT, "port": BREAKOUT, "hist": []},
+            "events": [
+                {"ts": 1, "kind": BREAKOUT, "id": BREAKOUT, "world": BREAKOUT},
+                {"ts": 2, "kind": "claim", "id": 1, "world": BREAKOUT},
+            ],
+        }
+    )
+    # The title screen: the shelves line and the setup commands.
+    game.page.wait_for_selector("#onboard .choice", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert BREAKOUT in (game.page.text_content("#onboard") or "")
+    game.resume()
+    game.open_roadmap()
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.click("#s-map button:has-text('Setup guide')")
+    game.page.wait_for_selector("#s-setup pre", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Stats')")
+    game.page.wait_for_selector("#s-dash .tile", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert BREAKOUT in (game.page.text_content("#s-dash .feed") or "")
+    game.page.keyboard.press("Escape")
+    game.hud_action("#hud button:has-text('Settings')")
+    game.page.wait_for_selector("#s-settings .setting", state="attached")
+    assert game.page.evaluate(NO_MARKUP) == 0
+    assert game.page.evaluate("() => window.__pwned") is None
     game.assert_clean()
 
 

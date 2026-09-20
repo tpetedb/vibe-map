@@ -299,3 +299,43 @@ def test_every_registered_feed_answers_and_parses() -> None:
         except Exception as e:  # reason: report every dead feed, not the first
             dead.append(f"{src.id}: {type(e).__name__}: {str(e)[:120]}")
     assert not dead, "\n".join(dead)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "Notes <!-- <script x",
+        "Half a tag <img src=x onerror=alert(1) ",
+        "&lt;!--&lt;script ",
+        "<<b>script>alert(1)<</b>/script>",
+        "a < b and b > c",
+    ],
+)
+def test_no_angle_bracket_survives_the_writer(raw: str) -> None:
+    """A tag the feed never closes is still a tag to the browser that reads it."""
+    out = news.plain(raw)
+    assert "<" not in out and ">" not in out, out
+
+
+def test_the_words_around_markup_survive() -> None:
+    assert news.plain("a < b and b > c") == "a b and b c"
+    assert news.plain("R&amp;D <b>ships</b> v2") == "R&D ships v2"
+    # Escaped twice at the source: one level comes off, as text.
+    assert news.plain("&amp;lt;b&amp;gt; tags") == "&lt;b&gt; tags"
+
+
+def test_a_link_cannot_end_the_markdown_or_the_attribute_it_lands_in() -> None:
+    link = news.safe_link('https://example.com/a_(b)?q="x"&r=<y> z')
+    assert link == "https://example.com/a_%28b%29?q=%22x%22&r=%3Cy%3E%20z"
+    assert news.safe_link("https:///no-host") == ""
+    assert news.safe_link("HTTPS://Example.com/ok") == "HTTPS://Example.com/ok"
+    for bad in [
+        "javascript:alert(1)",
+        " JaVaScRiPt:alert(1)",
+        "data:text/html,x",
+        "vbscript:x",
+        "//example.com/x",
+        "/relative",
+        "java\\tscript:x",
+    ]:
+        assert news.safe_link(bad) == "", bad

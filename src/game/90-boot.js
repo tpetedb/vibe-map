@@ -24,7 +24,7 @@ function themePairings(){const th=CONFIG.theme;if(th.pairing==="wine")return;
 // any other theme swaps it and rewrites the pairings. Difficulty and persona
 // are exposed on <body> for CSS.
 function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;document.body.dataset.difficulty=CONFIG.difficulty;document.body.dataset.persona=CONFIG.persona;
-  const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=CONFIG.repo;tp.textContent=CONFIG.repo.replace(/^https?:\/\//,"")}
+  const tp=$("tplink");if(tp&&CONFIG.repo){tp.href=repoUrl();tp.textContent=repoUrl().replace(/^https?:\/\//,"")}
   const sy=$("syllabuslink");if(sy)sy.href=siteDoc("syllabus.html");
   // The same resolver the link uses, so a test can ask it about a base it is
   // not being served from.

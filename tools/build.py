@@ -88,6 +88,26 @@ GAME_ORDER = [
 ]
 
 
+# Data goes into a script element, and the HTML parser reads that element
+# before JavaScript does: a closing tag ends it and a comment opener followed
+# by a script opener makes the real closing tag stop closing. A JSON string may
+# spell any character as an escape, so the three that HTML reads, and the two
+# line separators older engines end a string on, never appear as themselves.
+_JS_UNSAFE = {
+    "<": "\\u003c",
+    ">": "\\u003e",
+    "&": "\\u0026",
+    "\u2028": "\\u2028",
+    "\u2029": "\\u2029",
+}
+
+
+def js_json(data: object) -> str:
+    """JSON that is safe inside a script element. The one way data gets in."""
+    text = json.dumps(data, ensure_ascii=False)
+    return "".join(_JS_UNSAFE.get(c, c) for c in text)
+
+
 def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
 
@@ -125,11 +145,10 @@ def _campaign_js() -> str:
         from vibemap.project import data_text  # noqa: PLC0415
 
         data = json.loads(data_text("campaign.json"))
-    dump = functools.partial(json.dumps, ensure_ascii=False)
     return (
-        "const CAMPAIGN=" + dump(data["evenings"]) + ";\n"
-        "const MENTORS=" + dump(data["mentors"]) + ";\n"
-        "const ARTIFACTS=" + dump(data.get("artifacts", [])) + ";\n"
+        "const CAMPAIGN=" + js_json(data["evenings"]) + ";\n"
+        "const MENTORS=" + js_json(data["mentors"]) + ";\n"
+        "const ARTIFACTS=" + js_json(data.get("artifacts", [])) + ";\n"
     )
 
 
@@ -143,7 +162,7 @@ def _items_js() -> str:
         from vibemap.project import data_text  # noqa: PLC0415
 
         data = json.loads(data_text("items.json"))
-    return "const ITEMS=" + json.dumps(data, ensure_ascii=False) + ";\n"
+    return "const ITEMS=" + js_json(data) + ";\n"
 
 
 def _pets_js() -> str:
@@ -161,7 +180,7 @@ def _pets_js() -> str:
         )
         for name in sprites.available()
     }
-    return "const PETS=" + json.dumps(data, ensure_ascii=False) + ";\n"
+    return "const PETS=" + js_json(data) + ";\n"
 
 
 def _notes_js() -> str:
@@ -206,7 +225,7 @@ def news_json() -> str:
 
 def _news_js() -> str:
     """The baked copy, so a file:// game shows the feed without a fetch."""
-    return "const NEWS=" + json.dumps(_news_payload(), ensure_ascii=False) + ";\n"
+    return "const NEWS=" + js_json(_news_payload()) + ";\n"
 
 
 def _version() -> str:
@@ -274,7 +293,7 @@ def _config_js() -> str:
         "vault": {"mode": cfg.vault.mode},
         "news": {"live": cfg.news.live},
     }
-    return "const CONFIG=" + json.dumps(data, ensure_ascii=False) + ";\n"
+    return "const CONFIG=" + js_json(data) + ";\n"
 
 
 # Every part of the script is a whole unit of JavaScript, so its brackets
@@ -408,10 +427,32 @@ def _regex_end(text: str, i: int) -> int | None:
     return None
 
 
+# The last net under js_json: whatever a part is made of (a module, a generated
+# file, a vendored library), it may not spell the two things that end or
+# swallow the script element it is written into.
+_ENDS_ELEMENT = re.compile(r"</script|<!--", re.IGNORECASE)
+
+
 def _part(name: str, text: str) -> str:
     fault = _js_fault(text)
     if fault:
         raise SystemExit(f"{name} is not JavaScript the browser can read: {fault}")
+    hit = _ENDS_ELEMENT.search(text)
+    if hit:
+        line = text.count("\n", 0, hit.start()) + 1
+        raise SystemExit(
+            f"{name} line {line} spells {hit.group(0)!r}, which would end or swallow"
+            " the script element the game is written into. Split the string"
+            ' ("<" + "/script>") or write the bracket as \\u003c.'
+        )
+    return text
+
+
+def _element(rel: str) -> str:
+    """A file that is a script element of its own: only the element net."""
+    text = _read(rel)
+    if _ENDS_ELEMENT.search(text):
+        raise SystemExit(f"src/{rel} would end the script element it is written into")
     return text
 
 
@@ -447,21 +488,21 @@ def build() -> str:
         + "</style>\n</head>\n"
         + _read("body.html")
         + "<script>"
-        + _read("errors.js").rstrip("\n")
+        + _element("errors.js").rstrip("\n")
         + "</script>\n"
         + "<script>\n"
-        + _read("vendor/three.min.js")
+        + _element("vendor/three.min.js")
         + "</script>\n"
         # Motion (MIT, https://motion.dev) is optional: the game checks for
         # window.Motion and degrades to instant transitions without it.
         + "<script>\n"
         + "/* motion 12.43.0, MIT, https://github.com/motiondivision/motion */\n"
-        + _read("vendor/motion.min.js").rstrip("\n")
+        + _element("vendor/motion.min.js").rstrip("\n")
         + "\n</script>\n"
         # d3-force (ISC) runs the vault graph: a simulation that cools
         # and stops, the same physics as Obsidian's graph view.
         + "<script>\n"
-        + _read("vendor/d3-force.min.js").rstrip("\n")
+        + _element("vendor/d3-force.min.js").rstrip("\n")
         + "\n</script>\n"
         + "<script>\n"
         + _game_script()

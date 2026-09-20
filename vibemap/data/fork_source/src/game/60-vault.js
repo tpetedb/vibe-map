@@ -167,7 +167,7 @@ function renderTree(){const cur=vsel!==null&&VN[vsel]?VN[vsel].id:"";
 window.openObsidian=function(){
   if(location.protocol==="file:"){const dir=decodeURIComponent(location.pathname).replace(/\/game\/[^/]*$/,"");location.href="obsidian://open?path="+encodeURIComponent(dir+"/vault/Camp/Tonight.md");
     $("vcount").textContent="Opening Obsidian. First time: Open folder as vault, pick vault/.";return}
-  window.open((CONFIG.repo||"https://github.com/tpetedb/vibe-map")+"/tree/main/vault/Camp","_blank","noopener")};
+  window.open(repoUrl().replace(/\/$/,"")+"/tree/main/vault/Camp","_blank","noopener")};
 // Open the vault on a note; inline handlers and tests reach it by name.
 window.openNote=function(title){openVault();vrender(title)};
 // Read-only seam for the tests: the graph is a canvas, so its selection, its

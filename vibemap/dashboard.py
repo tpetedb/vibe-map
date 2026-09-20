@@ -363,7 +363,8 @@ def score_bars(data: dict[str, Any]) -> str:
     for i, p in enumerate(players):
         y = i * row_h
         length = max(3, (w - left - right) * p["best"] / peak)
-        name = _esc(p["player"])[:12]
+        # Cut, then escape: a cut after it can land inside an entity.
+        name = _esc(str(p["player"])[:12])
         out.append(
             f'<text x="0" y="{y + 14}" class="at">{name}</text>'
             f'<rect x="{left}" y="{y + 3}" width="{length:.1f}" height="12" rx="4"'

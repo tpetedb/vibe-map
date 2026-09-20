@@ -43,12 +43,14 @@ function slug(s){return fold(s||"player").toLowerCase().replace(/[^a-z0-9]+/g,"-
 // a space in it cannot end the argument.
 function shq(s){return "'"+String(s).replace(/'/g,"'\\''")+"'"}
 function campDir(){const d=new Date();const ymd=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");return "~/vibe-map-"+slug(S.name)+"-"+ymd}
-function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
+// The camp's own repository, from config/camp.toml. It becomes an anchor and a
+// command, so it is held to the same rule as any other link: http or https.
+function repoUrl(){return safeUrl(CONFIG.repo)||"https://github.com/tpetedb/vibe-map"}
 // The setup guide: the exact commands for the full experience. Rendered on the
 // title screen (step 3) and on its own screen from the Roadmap, from one
 // template so the two never drift. The commands are always open here,
 // whatever the difficulty: setup is not the game.
-function setupHtml(){const dir=campDir();const repo=repoUrl();return `
+function setupHtml(){const dir=campDir();const repo=esc(repoUrl());return `
 <p class="small">Three windows side by side: this game, a terminal, Obsidian. The game is where you get the story and claim stops. The terminal is where the work happens and the checks run. Obsidian is where the notes land. Fifteen minutes to set up, then <code>just start</code> every session.</p>
 <h4>1. Get the tools</h4>
 <p class="small">Open <a href="${repo}" target="_blank" rel="noopener">${repo.replace(/^https?:\/\//,"")}</a> and press <b>Use this template</b> if you want your own copy on GitHub. You do not need one to play: step 2 installs the command and makes your camp. Then open a terminal (on a Mac: Cmd+Space, type Terminal, or install Ghostty).</p>
@@ -66,7 +68,7 @@ just setup</code></pre>
 <pre><code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code></pre>
 <h4>3. Tell it who you are</h4>
 <pre><code>vibe name ${esc(shq(playerLabel()||"player"))}
-vibe difficulty ${difficulty()}
+vibe difficulty ${esc(difficulty())}
 just start</code></pre>
 <p class="small muted">You should see: the camp menu, with your name at the top and 0 of 8 stops done.</p>
 <p class="small muted"><code>just start</code> is the terminal menu: checks, the pet, the launchers. It stays open in one terminal tab; open a second tab for Claude Code.</p>

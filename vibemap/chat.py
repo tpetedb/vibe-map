@@ -322,6 +322,8 @@ def handler_for(bridge: Bridge) -> type[http.server.BaseHTTPRequestHandler]:
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
+            # The answer is data for fetch(); no browser gets to guess it is a page.
+            self.send_header("X-Content-Type-Options", "nosniff")
             if origin:
                 self._cors(origin)
             self.end_headers()
@@ -384,7 +386,12 @@ def handler_for(bridge: Bridge) -> type[http.server.BaseHTTPRequestHandler]:
                 bridge.lock.release()
 
         def _body(self) -> Any:
-            length = int(self.headers.get("Content-Length") or 0)
+            # A negative length would make read() wait for the peer to hang
+            # up, so a length is a plain count of bytes or the request is over.
+            declared = (self.headers.get("Content-Length") or "0").strip()
+            if not (declared.isascii() and declared.isdigit()):
+                raise Refused(400, "Content-Length is a number of bytes")
+            length = int(declared)
             if length > MAX_BODY:
                 raise Refused(413, f"the body is at most {MAX_BODY} bytes")
             raw = self.rfile.read(length) if length else b""

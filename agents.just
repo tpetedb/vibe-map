@@ -19,6 +19,12 @@ fmt:
 style-check *paths:
     @uv run python tools/checks.py style {{paths}}
 
+# example: just sinks-check
+# every value the game writes into the page as HTML is escaped or registered (docs/SECURITY-MODEL.md)
+[group('check')]
+sinks-check:
+    @uv run python tools/checks.py sinks
+
 # every http(s) link in docs/ and the tech tree answers with 2xx or 3xx
 [group('check')]
 links-check:

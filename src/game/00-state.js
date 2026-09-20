@@ -2,17 +2,27 @@
 // from the bridge, an imported name. One helper, early, so every module can
 // reach it; the page is built from strings, so escaping is the rule and raw
 // interpolation is the exception that has to be one of our own constants.
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // A link from data we did not write. Only an absolute http or https URL may
 // become an anchor; javascript:, data: and anything else give "" and the row
 // is rendered without a link rather than with a dangerous one.
 function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
-  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
+  // A name and a password in front of the host is how a link to one site is
+  // made to read like another, so such a link is no link either.
+  try{const p=new URL(s);return (p.protocol==="http:"||p.protocol==="https:")&&!p.username&&!p.password?p.href:""}catch(e){return ""}}
+// A plain object, which is what JSON calls a map: not null, not a list.
+function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
+// An identifier from data we did not write (a progress code): a short word of
+// letters, digits, dot, dash, underscore and colon, which is every id the
+// course data uses. Anything else is not an id, whatever it claims to be.
+function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(v)}
 // A document published beside the game on the product's site. The site has
 // syllabus.html next to the game; a camp, a fork and file:// do not, so
 // anywhere but that site the link goes to the product rather than to a 404.
 // base is the folder the page is in, and is a parameter so it can be checked.
-function siteDoc(name,base){const site=String((typeof CONFIG!=="undefined"&&CONFIG.site)||"").replace(/\/*$/,"/");
+// The site comes from config/camp.toml and becomes an href, so it is a link
+// like any other: not http or https means there is no site.
+function siteDoc(name,base){const site=safeUrl(typeof CONFIG!=="undefined"?CONFIG.site:"").replace(/\/*$/,"/").replace(/^\/$/,"");
   const here=base===undefined?location.origin+location.pathname.replace(/[^/]*$/,""):base;
   return !site?name:(here===site?name:site+name)}
 const T=THREE;
