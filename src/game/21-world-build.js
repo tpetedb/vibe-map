@@ -440,8 +440,10 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
       dist:camera.position.distanceTo(camLook)},
     lost:gfxLost,
     // What the GPU holds. It has to come back down after an island is left.
+    // parts is what is in the air right now (dust, confetti): a test waits for
+    // it to be nothing again rather than counting frames.
     mem:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
-      programs:renderer.info.programs?renderer.info.programs.length:0},
+      programs:renderer.info.programs?renderer.info.programs.length:0,parts:parts.length},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 

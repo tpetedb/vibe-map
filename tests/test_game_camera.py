@@ -408,13 +408,23 @@ def test_leaving_an_island_gives_its_memory_back(game_desktop: GamePage) -> None
 
 
 def test_a_walk_leaves_no_dust_behind_on_the_gpu(game_desktop: GamePage) -> None:
+    """A walk throws dust and takes every mote back.
+
+    The walk is held until the walker has covered ground and the motes are
+    gone, both facts the page reports: a software renderer draws a handful of
+    frames a second, so a count of frames is a wall clock in disguise.
+    """
     game = _island(game_desktop)
     before = _gfx(game)["mem"]["geometries"]
     for key in ("ArrowRight", "ArrowLeft"):
+        start = game.page.evaluate("window.__debug().pos")
         game.page.keyboard.down(key)
-        game.frames(30)
+        game.until(
+            f"Math.hypot(window.__debug().pos[0] - {start[0]},"
+            f" window.__debug().pos[2] - {start[2]}) > 2"
+        )
         game.page.keyboard.up(key)
-    game.frames(40)
+    game.until("window.__gfx().mem.parts === 0")
     assert _gfx(game)["mem"]["geometries"] <= before + 2
     game.assert_clean()
 

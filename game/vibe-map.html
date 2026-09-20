@@ -230,7 +230,7 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    removed: the stage keeps its size, so the camera does not jump at Start.
    This is also what takes the HUD out of the tab order until then. */
 body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
-body:has(#title:not(.off)) #talk{visibility:hidden}
+body:has(#title:not(.off)) #talk,body:has(#title:not(.off)) #zoom{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -3010,8 +3010,10 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
       dist:camera.position.distanceTo(camLook)},
     lost:gfxLost,
     // What the GPU holds. It has to come back down after an island is left.
+    // parts is what is in the air right now (dust, confetti): a test waits for
+    // it to be nothing again rather than counting frames.
     mem:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
-      programs:renderer.info.programs?renderer.info.programs.length:0},
+      programs:renderer.info.programs?renderer.info.programs.length:0,parts:parts.length},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 
