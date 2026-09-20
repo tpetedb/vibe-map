@@ -11,8 +11,8 @@ function init3d(){
   buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
 }
 // The browser may take the WebGL context back: a phone short of memory, a tab
-// that slept, a driver reset. three.js stops drawing and says nothing, which
-// left a flat blue stage with a HUD that carried on. The loop stops with it,
+// that slept, a driver reset. three.js stops drawing and says nothing, and a
+// flat blue stage under a HUD that carries on is no answer. The loop stops,
 // the stage says what happened, and the Roadmap, which needs no 3D, opens the
 // way it does when 3D fails at the start. three.js rebuilds its own state when
 // the context returns, so the island comes back without a reload.

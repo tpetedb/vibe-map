@@ -77,9 +77,9 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   return g}
 // After dark the screen is what lights the face, which is the joke. The light
 // is the island's and not the laptop's: three.js compiles every lit material
-// again when the number of lights changes, so a light that came and went with
-// the laptop cost a second of frozen frame on every sit and every stand. This
-// one is always there, dark until somebody opens a laptop under it.
+// again when the number of lights changes, so a light that comes and goes with
+// the laptop would stall the frame on every sit and every stand. This one is
+// always there, dark until somebody opens a laptop under it.
 const LAP_GLOW={at:new T.Vector3(0,1.24,.34),power:.9,reach:3.2};
 function lapGlow(){const l=new T.PointLight(PALETTE.blueBright,0,LAP_GLOW.reach);return l}
 function tickLapGlow(l,c){if(!l)return;const on=isSitting(c)&&c.lap&&c.lap.visible;l.intensity=on?LAP_GLOW.power:0;
