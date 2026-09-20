@@ -196,12 +196,18 @@ def test_the_lava_reads_as_lava(game_desktop: GamePage) -> None:
 
 
 def test_the_aurora_is_in_frame_at_night(game_desktop: GamePage) -> None:
-    """Winter promises an aurora at night, so the band has to be on screen."""
+    """Winter promises an aurora at night, so the band has to be on screen.
+
+    The band is sky behind the island, so the frame it has to be in is the
+    fitted one, the same whole-island view the rest of these tests use. A
+    camera close on the walker looks at the ground and leaves the sky out.
+    """
     game_desktop.goto(
         state={
             "name": "Lotte",
             "world": "winter",
             "doneW": {"campus": [], "winter": ALL_DONE},
+            "settings": {"zoom": 0},
         }
     )
     game_desktop.resume()
