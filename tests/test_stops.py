@@ -240,10 +240,9 @@ def _syllabus_steps() -> dict[tuple[str, int], list[str]]:
         section = text.split(f"### {title}\n", 1)[1].split("\n### ", 1)[0]
         parts = re.split(r"^#### Stop (\d+): .*$", section, flags=re.M)
         for n, body in zip(parts[1::2], parts[2::2], strict=True):
-            steps = re.search(r"^Do this:\n((?:\d+\..*\n)+)", body, re.M)
-            out[(world, int(n))] = [
-                _plain(s) for s in re.findall(r"^\d+\.\s*(.*)$", steps.group(1), re.M)
-            ] if steps else []  # fmt: skip
+            block = re.search(r"^Do this:\n((?:\d+\..*\n)+)", body, re.M)
+            steps = re.findall(r"^\d+\.\s*(.*)$", block.group(1), re.M) if block else []
+            out[(world, int(n))] = [_plain(s) for s in steps]
     return out
 
 
