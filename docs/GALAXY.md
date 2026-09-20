@@ -279,6 +279,32 @@ Each phase is one pull request that can ship alone, and islands must be pixel-st
 | 5 | Build: structures on finished sites, by shelf and depth. The remaining packs sourced. | Expression, and a full map. |
 | 6 | Review: the section 5 and 6 tables re-run against the real thing, agents play both experiences, a person tries a screen reader. Then, and only then, a decision on whether Galaxy is offered on the title screen. | It earned its place. |
 
+## 8. Playing together, prepared for and not yet built
+
+Asked after the first draft: "prepare it so people can play together", on the players' own GitHub resources or some other sync, without saying how. This is the how, and what to keep open now so it stays cheap later.
+
+The constraint that decides it is the one from P1: your repo, your bill. Nothing may run on Tom's account, and a camp must keep working alone and offline.
+
+| Option | How it works | Cost and who pays | Verdict |
+|---|---|---|---|
+| **A crew over GitHub, not live** | Each player's own camp repo publishes one small file, `crew/me.json` (name, where they are, what is done, what they built, when). A crew is a list of repo addresses in `config/camp.toml`. The game fetches each file and draws the others: their ships on the journey line, their structures as ghosts on the planets, "Sam finished Git at Helsinki yesterday". | Nothing new. Public repos and Pages are free, and both answer browsers from any origin (checked: `access-control-allow-origin: *` on `raw.githubusercontent.com` and on `github.io`, cached 5 to 10 minutes). | **Do this first.** It is the vault idea between people: files in git, no server, works for a class or two friends. |
+| Live, browser to browser | WebRTC data channels. Needs a way for two browsers to find each other: either paste a code to each other (no server, clumsy) or a public signalling service (a third party the game would depend on). | Free, but a dependency outside the repo, against the no-CDN habit. | Later, and only as an optional layer on top of the crew file, for seeing each other move. |
+| A hosted game server | The usual way. | Somebody's bill and somebody's uptime. | No. |
+
+Why not live first: a course is played over evenings, not at the same minute. What people want from "together" here is to see where friends are, what they built and who is ahead, and that is all in a file that changes a few times a night. Ten minutes of cache delay does not matter for that.
+
+What it needs, all small, and where each part lives in the layers of section 4:
+
+- **Backend**: `vibe crew publish` writes `crew/me.json` from `state.json` and commits it; the player pushes with their own git. `vibe crew add <repo>` edits `config/camp.toml`. Opt-in, and the file holds a display name and progress only: no email, no paths, no scores file.
+- **Core**: one module, `presence`, with one function, `crew()`, returning a list of `{name, where, done, built, at}`. It is the only place that fetches. An experience reads the list and draws it; it never fetches.
+- **Experience**: `listing()` includes the crew, so the non-3D twin says who is where before any ship is drawn.
+- **Security**: a crew file is someone else's text. It goes through `esc()` and `safeUrl()` like the news feed, it is size-limited and schema-checked with a version that fails loudly, and a repo address must match `owner/name`. `docs/SECURITY-MODEL.md` gets a row for it.
+- **Versioned format**: `crew/me.json` carries `v: 1`. An unknown version is skipped with a message, never guessed at.
+
+What to keep open now so this stays cheap: the experience contract takes a list of other players from core from the first version (empty for now), and a structure on a planet records who built it rather than assuming "me". Both are one field each in phase 3 and 5, and neither costs anything if multiplayer never ships.
+
+Limits to be honest about: a private repo cannot be read this way, so a crew needs public repos or Pages; there is no cheating protection, and none is needed for a course; and rate limits on raw files are generous but real, so the game fetches a crew at most once per ten minutes, matching the cache.
+
 ## Sources
 
 - Hunicke, LeBlanc, Zubek, "MDA: A Formal Approach to Game Design and Game Research" (2004): https://users.cs.northwestern.edu/~hunicke/MDA.pdf
