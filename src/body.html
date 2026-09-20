@@ -27,6 +27,10 @@
 </div>
 <div id="joy" aria-hidden="true"><div id="knob"></div></div>
 <button id="jump" aria-label="Jump" data-icon="arrow-up"></button>
+<!-- The zoom control: the same three actions the wheel, a pinch and the
+     plus, minus and 0 keys have, for a hand that has none of those. -->
+<div class="ui" id="zoom" role="group" aria-label="Zoom"><button id="zoom-in" data-icon="plus" aria-label="Zoom in" title="Zoom in (+)" onclick="zoomStep(1)"></button><button id="zoom-fit" data-icon="maximize" aria-label="Show the whole island" title="Show the whole island (0)" onclick="zoomFit()"></button><button id="zoom-out" data-icon="minus" aria-label="Zoom out" title="Zoom out (-)" onclick="zoomStep(-1)"></button></div>
+<div id="gfxlost" role="alert" hidden><div class="card"><h3>The 3D view stopped</h3><p class="small">The browser took the graphics away from this tab, which happens when a phone runs short of memory or the tab has slept. Your progress is safe. The Roadmap has every stop, and the island comes back by itself when the browser allows it.</p><div class="row"><button class="primary" onclick="location.reload()">Reload the island</button><button onclick="openSheet('s-map')">Open the Roadmap</button></div></div></div>
 </div><!-- /stage -->
 <div id="talk"><div class="bubble"><div id="bub-face"></div><div><b id="bub-who">Tom</b><span id="bub-text"></span></div></div></div>
 
@@ -36,6 +40,10 @@
     <h1>Vibe Code Camp</h1>
     <p class="muted small" id="tagline" style="margin-top:-4px">From intern to expert in one evening, with wine. FY26 H2 · Confidential</p>
     <div class="tstats" aria-label="The campaign at a glance"><div><b>8</b><span>Workstreams</span></div><div><b>4</b><span>Islands</span></div><div><b>12</b><span>Mentors</span></div><div class="done"><b id="t-done">0</b><span>Done</span></div></div>
+    <!-- Coming back: where you were, what is next and the one command for it,
+         above the resume row. Filled by renderContinue() from S, empty on a
+         first visit. -->
+    <div id="cont" style="display:none"></div>
     <!-- The five steps fold rather than disappear for a returning player, so
          the look, the difficulty and the play mode stay changeable on every
          later evening. 90-boot.js closes it once a stop is done. -->
@@ -74,6 +82,9 @@
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
+      <!-- The same Continue card the title carries, filled by renderMap(). It
+           sits outside #plotlist so the list stays the list of stops. -->
+      <div id="mapcont"></div>
       <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
@@ -523,4 +534,6 @@ gh auth login</code></pre>
 </section>
   </div>
 </div>
-
+<!-- What a copy button just did, for a screen reader: the button says it too,
+     and this is the same words spoken politely. -->
+<p id="copysay" class="sr" role="status" aria-live="polite"></p>

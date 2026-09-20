@@ -1,0 +1,362 @@
+{
+ "00-state.js": {
+  "sinks": 1,
+  "raw": {
+   "[[8,8],[14,4],[20,3],[26,4],[32,8],[6,15],[34,15]].map(p=>`<circle cx=\"${p[0]}\" cy=\"${p[1]}\" r=\"5\" fill=\"#F2CF6F\"/>`).join(\"\")": 1,
+   "p[0]": 1,
+   "p[1]": 1
+  }
+ },
+ "05-icons.js": {
+  "sinks": 1,
+  "raw": {
+   "ICONS[k]": 1,
+   "cls?' '+cls:''": 1
+  }
+ },
+ "16-artifacts.js": {
+  "sinks": 2,
+  "raw": {
+   "JSON.stringify(n)": 1,
+   "a.concept": 1,
+   "a.id": 1,
+   "a.links.map(n=>`<span class=\"wl\" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(\" · \")": 1,
+   "a.name": 1,
+   "a.prop": 1,
+   "a.rolinda": 1,
+   "a.what": 1,
+   "d.l": 1,
+   "demos.map((d,i)=>`<button data-demo=\"${i}\" onclick=\"runDemo('${id}',${i})\">${icon(\"play\")}${d.l}</button>`).join(\"\")": 1,
+   "i": 2,
+   "id": 1,
+   "n": 1,
+   "r.commands.map(esc).join(\"\\n\")": 1,
+   "r.dir": 1,
+   "r.doc.url": 1,
+   "r.minutes": 1,
+   "r.steps.map(s=>`<li>${esc(s)}</li>`).join(\"\")": 1,
+   "r.title": 1
+  }
+ },
+ "18-avatar.js": {
+  "sinks": 2,
+  "raw": {
+   "(ACH.find(a=>a.id===w.by)||{}).name": 1,
+   "WORLDS[w].name": 1,
+   "a.name": 1,
+   "a.what": 1,
+   "body": 2,
+   "i.concept": 1,
+   "i.name": 1,
+   "i.topic": 1,
+   "k": 1,
+   "l": 1,
+   "tabs": 1,
+   "title": 1,
+   "w.id": 1,
+   "w.name": 1,
+   "w.slot": 1
+  }
+ },
+ "19-items.js": {
+  "sinks": 0,
+  "raw": {
+   "data.topic": 1
+  }
+ },
+ "19b-pet.js": {
+  "sinks": 0,
+  "raw": {
+   "PET_LABEL[k]||k": 1,
+   "el": 3,
+   "k": 1,
+   "k===\"none\"?\"No companion\":PET_LABEL[k]||k": 1,
+   "petCredits()": 1,
+   "s.author": 1,
+   "s.author_url||s.url": 1,
+   "s.licence": 1,
+   "s.project": 1,
+   "s.url": 1
+  }
+ },
+ "21-world-build.js": {
+  "sinks": 1,
+  "raw": {
+   "CAMPAIGN[k].title.split(\": \")[1]": 1,
+   "CAMPAIGN[k].title.split(\":\")[0]": 1,
+   "WORLDS[k].name": 1,
+   "WORLDS[k].swatch": 1,
+   "k": 1
+  }
+ },
+ "31-animate.js": {
+  "sinks": 5,
+  "raw": {}
+ },
+ "40-sheet.js": {
+  "sinks": 9,
+  "raw": {
+   "CAMPAIGN[S.world||\"campus\"].title": 1,
+   "CAMPAIGN[k].title": 1,
+   "MENTOR_NOTE": 1,
+   "MENTOR_SECTION": 1,
+   "MENTOR_WORDS": 1,
+   "S.met[id]>=m.encounter.dialogue.length?\"\":`<button id=\"talkmore\" onclick=\"talkMore('${id}')\">Ask the next question</button>`": 1,
+   "WORLDS[k].name": 2,
+   "WORLDS[m.world].name": 1,
+   "a.concept": 1,
+   "a.id": 1,
+   "a.name": 2,
+   "backLabel()": 1,
+   "c.d": 1,
+   "c.h": 1,
+   "c.n": 1,
+   "done?\"Verified. The plaque on their spot reads: \"+m.encounter.plaque:\"Not verified yet. Run the check in your camp, then bring the progress code back here.\"": 1,
+   "done?icon(\"check\"):\"\"": 1,
+   "ev.blurb": 1,
+   "ev.title": 1,
+   "ex.dir": 2,
+   "ex.done": 1,
+   "ex.minutes": 1,
+   "ex.steps.map(s=>`<li>${s}</li>`).join(\"\")": 1,
+   "ex.title": 1,
+   "finaleStop()": 1,
+   "i.summary?`<br><span class=\"muted small\">${esc(i.summary)}</span>`:\"\"": 1,
+   "id": 3,
+   "interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)": 1,
+   "interestDot(matchedShelf(a.links))": 1,
+   "k": 2,
+   "last?\"\":`<button class=\"primary\" onclick=\"nextWorld();closeSheet()\">Next environment</button>`": 1,
+   "lk.beard?'<rect x=\"10\" y=\"27\" width=\"20\" height=\"8\" rx=\"3\" fill=\"'+lk.hair+'\"/>':'<path d=\"M15 29 Q20 33 25 29\" stroke=\"#B0534B\" stroke-width=\"2\" fill=\"none\"/>'": 1,
+   "lk.hair": 1,
+   "m.ask": 1,
+   "m.bio": 1,
+   "m.deep": 1,
+   "m.id": 2,
+   "m.name": 4,
+   "m.role": 1,
+   "m.src[x.src][0]": 1,
+   "m.src[x.src][1]": 1,
+   "mentorExercise(m)": 1,
+   "mentorFace(m.look)": 1,
+   "mentorTalk(m)": 1,
+   "n": 1,
+   "ok?\"\":\" (pending \"+stopCount()+\" OKRs)\"": 1,
+   "s": 1,
+   "src": 1,
+   "st===\"deep\"||st===\"skip\"?st:\"\"": 1,
+   "strictChecks()?`, and your note in <code>${ex.dir}/${MENTOR_NOTE}</code> with a ${MENTOR_SECTION} section of at least ${MENTOR_WORDS} words`:\"\"": 1,
+   "t": 2,
+   "t.title": 1,
+   "tag?\" · \"+tag:\"\"": 1,
+   "u": 1,
+   "u?`<a href=\"${esc(u)}\" target=\"_blank\" rel=\"noopener noreferrer\">${t}</a>`:t": 1,
+   "w.d": 1,
+   "w.h": 1,
+   "w.html||`<p>${w.d}</p>`": 1,
+   "w.n": 1,
+   "x.m": 1,
+   "x.you": 1
+  }
+ },
+ "41-search.js": {
+  "sinks": 2,
+  "raw": {
+   "i": 1,
+   "i===palSel": 1,
+   "palShelf(r)===0?interestDot(r.c):\"\"": 1
+  }
+ },
+ "51-notes-dynamic.js": {
+  "sinks": 1,
+  "raw": {}
+ },
+ "60-vault.js": {
+  "sinks": 4,
+  "raw": {
+   "CAT_COL[c]": 1,
+   "DEPTHS[t.d]": 1,
+   "TREE[c].map(t=>`<button class=\"tech${t.n===cur?' sel':''}${noteLocked(t.n)?' locked':''}\" data-n=\"${t.n}\"${noteLocked(t.n)?` title=\"${LOCK_WHY}\"`:\"\"}><i style=\"background:${CAT_COL[c]}\"></i>${t.n}<em class=\"d d${t.d}\">${DEPTHS[t.d]}</em></button>`).join(\"\")": 1,
+   "cn": 1,
+   "d": 1,
+   "noteLocked(t.n)?` title=\"${LOCK_WHY}\"`:\"\"": 1,
+   "t.d": 1,
+   "t.n": 2
+  }
+ },
+ "70-minigames.js": {
+  "sinks": 4,
+  "raw": {
+   "QUERY": 1,
+   "ROWS.map(r=>`<tr>${r.map(v=>`<td>${v}</td>`).join(\"\")}</tr>`).join(\"\")": 1,
+   "[[\"Lotte\",1240],[\"Frank\",980],[\"Rolinda\",1810]].map(r=>`<tr>${card.cols.map((c,i)=>`<td>${r[i]}</td>`).join(\"\")}</tr>`).join(\"\")": 1,
+   "broken\n  ?`Binder Error: Referenced column \"score\" not found in FROM clause!\\nCandidate bindings: \"${scoreCol}\"`\n  :\"player    best\\nRolinda   1810\\nLotte     1240\\nFrank      980\"": 1,
+   "c": 2,
+   "card.accent": 2,
+   "card.cols.map((c,i)=>`<td>${r[i]}</td>`).join(\"\")": 1,
+   "card.cols.map(c=>`<th>${c}</th>`).join(\"\")": 1,
+   "card.title": 1,
+   "cols.map(c=>`<th${c===scoreCol&&broken?' class=\"changed\"':\"\"}>${c}</th>`).join(\"\")": 1,
+   "i": 1,
+   "i*.12": 1,
+   "i+1": 1,
+   "i===0?13:8": 1,
+   "n[0]": 1,
+   "n[1]": 2,
+   "n[2]": 1,
+   "n[2]+(i===6?-16:22)": 1,
+   "nodes[a][1]": 1,
+   "nodes[a][2]": 1,
+   "nodes[b][1]": 1,
+   "nodes[b][2]": 1,
+   "r.map(v=>`<td>${v}</td>`).join(\"\")": 1,
+   "r[i]": 1,
+   "v": 1
+  }
+ },
+ "71-finale.js": {
+  "sinks": 1,
+  "raw": {}
+ },
+ "85-settings.js": {
+  "sinks": 1,
+  "raw": {
+   "SETTINGS_LABELS[k]": 1,
+   "SETTINGS_OPTIONS[k].map(([v,l])=>`<option value=\"${v}\"${s[k]===v?\" selected\":\"\"}>${l}</option>`).join(\"\")": 1,
+   "interestChips()": 1,
+   "interestSummary()": 1,
+   "k": 3,
+   "l": 1,
+   "presetRow()": 1,
+   "v": 1
+  }
+ },
+ "86-interests.js": {
+  "sinks": 0,
+  "raw": {
+   "CAT_COL[c]": 1,
+   "CAT_COL[c]||\"var(--accent)\"": 1,
+   "CAT_COL[t.c]": 1,
+   "c": 1,
+   "interestSummary()": 1,
+   "p.map(c=>esc(shelfName(c))).join(\", \")": 1,
+   "t.n.replace(/'/g,\"\\\\'\")": 1
+  }
+ },
+ "87-onboarding.js": {
+  "sinks": 5,
+  "raw": {
+   "(DIFFS.find(d=>d[0]===diff)||DIFFS[2])[2]": 1,
+   "DIFFS.map(([k,l])=>`<button class=\"choice${diff===k?\" on\":\"\"}\" onclick=\"pickDifficulty('${k}')\">${l}</button>`).join(\"\")": 1,
+   "LOOKS[k].blurb": 1,
+   "LOOKS[k].body": 1,
+   "LOOKS[k].label": 1,
+   "LOOKS[look].blurb": 1,
+   "Object.keys(LOOKS).map(k=>`<button class=\"choice${look===k?\" on\":\"\"}\" onclick=\"pickLook('${k}')\" title=\"${LOOKS[k].blurb}\"><i style=\"background:${LOOKS[k].body}\"></i>${LOOKS[k].label}</button>`).join(\"\")": 1,
+   "dir": 4,
+   "interestChips()": 1,
+   "interestSummary()": 1,
+   "k": 2,
+   "l": 1,
+   "owned.map(w=>`<button class=\"choice${worn.includes(w.id)?\" on\":\"\"}\" onclick=\"toggleWear('${w.id}')\" title=\"${w.slot}\">${w.name}</button>`).join(\"\")": 1,
+   "petPicker('ob-pet')": 1,
+   "presetRow()": 1,
+   "repo": 3,
+   "repo.replace(/^https?:\\/\\//,\"\")": 1,
+   "slug(playerLabel())": 1,
+   "w.id": 1,
+   "w.name": 1,
+   "w.slot": 1,
+   "wardrobeRow()": 1
+  }
+ },
+ "88-chat.js": {
+  "sinks": 4,
+  "raw": {
+   "(h.links||[]).map(t=>`<span class=\"wl\" data-n=\"${esc(t)}\">${esc(t)}</span>`).join(\"\")": 1,
+   "h.src===\"offline\"?\"from the notes in this file\":h.src===\"error\"?\"not answered\":\"your \"+esc(h.provider||\"provider\")": 1,
+   "sug.map(q=>`<button class=\"small\" onclick=\"chatAsk(this.dataset.q)\" data-q=\"${esc(q)}\">${esc(q)}</button>`).join(\"\")": 1
+  }
+ },
+ "89-dashboard.js": {
+  "sinks": 1,
+  "raw": {
+   "(typeof ARTIFACTS!==\"undefined\"?ARTIFACTS.length:21)": 1,
+   "(typeof MENTORS!==\"undefined\"?MENTORS.length:12)": 1,
+   "(w-l-34)": 1,
+   "CAT_COL[c]": 1,
+   "DASH_HUE[e.kind]||\"var(--muted)\"": 1,
+   "String(hr).padStart(2,\"0\")": 2,
+   "area": 1,
+   "caption": 1,
+   "ch": 1,
+   "dashBars(st)": 1,
+   "dashFeed(st)": 1,
+   "dashHeat(st)": 1,
+   "dashPath(st)": 1,
+   "dashShelves()": 1,
+   "dashXpLine(st)": 1,
+   "done": 2,
+   "dots": 1,
+   "e.id&&e.kind!==\"session\"?\" <b>\"+esc(e.id)+\"</b>\":\"\"": 1,
+   "fmtClock(e.ts)": 1,
+   "fmtDay(d)": 1,
+   "fmtDay(e.ts)": 1,
+   "fmtDay(s[0])": 1,
+   "fmtDay(series[0][0])": 1,
+   "fmtDay(series[series.length-1][0])": 1,
+   "fmtDur(r.v)": 2,
+   "frac>0?arc:\"\"": 1,
+   "h": 1,
+   "h-6": 2,
+   "h-b": 2,
+   "h-b+4": 1,
+   "hue": 3,
+   "inner": 1,
+   "l": 6,
+   "l-6": 3,
+   "label": 1,
+   "line": 2,
+   "max": 1,
+   "msg": 1,
+   "n": 1,
+   "n?`<title>${fmtDay(d)} ${String(hr).padStart(2,\"0\")}:00, ${n} events</title>`:\"\"": 1,
+   "name": 1,
+   "new Date(d).toLocaleDateString(undefined,{weekday:\"short\"})": 1,
+   "per[c].n": 2,
+   "per[c].of": 2,
+   "r": 2,
+   "r.n": 2,
+   "rings": 1,
+   "row*(ch+gap)": 1,
+   "row*(ch+gap)+ch-3": 1,
+   "s[1]": 1,
+   "spark||\"\"": 1,
+   "st.artifacts": 1,
+   "st.days.length*(ch+gap)+12": 1,
+   "st.mentors": 1,
+   "st.stops": 1,
+   "st.total": 1,
+   "svg": 1,
+   "tiles": 1,
+   "total": 1,
+   "typeof e.v===\"number\"?\" <span class='muted'>\"+fmtDur(e.v)+\"</span>\":\"\"": 1,
+   "value": 1,
+   "w": 3,
+   "w-r": 3,
+   "y(max)": 2,
+   "y(max)+4": 1,
+   "y+14": 4,
+   "y+3": 3
+  }
+ },
+ "90-boot.js": {
+  "sinks": 2,
+  "raw": {
+   "CH[i]?CH[i].h:\"go-live\"": 1,
+   "kind": 2,
+   "stack": 1,
+   "th.pairings[i]": 1
+  }
+ }
+}

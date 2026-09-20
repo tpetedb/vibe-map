@@ -1,7 +1,7 @@
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
 // config/camp.toml still sets the defaults for a fresh browser; these override them.
-const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start};
 const SETTINGS_OPTIONS={
   difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
@@ -19,7 +19,10 @@ function motionOff(){return settings().motion==="off"}
 function applySettings(){const s=settings();
   const st=$("stage");st.classList.remove("map-compact","map-big","map-tall");st.classList.add("map-"+s.map);
   if(typeof renderer!=="undefined"&&renderer){renderer.shadowMap.enabled=s.shadows!=="off";if(typeof dirL!=="undefined"&&dirL){dirL.castShadow=s.shadows!=="off";dirL.shadow.mapSize.set(s.shadows==="high"?CONFIG.shadowMap:1024,s.shadows==="high"?CONFIG.shadowMap:1024);if(dirL.shadow.map){dirL.shadow.map.dispose();dirL.shadow.map=null}}
-    const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
+    fitRenderer()}
+  // The zoom is a setting without a dropdown: the wheel, a pinch and the
+  // buttons on the stage write it, and the defaults reset it with the rest.
+  if(typeof syncZoom==="function")syncZoom();
   const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
   document.body.classList.toggle("no-motion",s.motion==="off");
   // Off means nothing from the feeds appears and nothing is fetched: the
@@ -58,4 +61,4 @@ window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;cons
   const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{},interests:S.interests,pet:S.pet};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
   S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings,interests:keep.interests,pet:keep.pet};save();
   location.replace(location.pathname)};
-document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
+document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer)fitRenderer()});

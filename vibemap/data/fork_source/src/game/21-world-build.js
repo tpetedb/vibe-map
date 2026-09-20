@@ -1,19 +1,33 @@
 function init3d(){
-  const st=$("stage");renderer=new T.WebGLRenderer({canvas:$("c"),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(st.clientWidth,st.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputEncoding=T.sRGBEncoding;
+  const st=$("stage");renderer=new T.WebGLRenderer({canvas:$("c"),antialias:true});renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputEncoding=T.sRGBEncoding;
   // Filmic roll-off instead of a linear clip: without it a lit window at
   // night and grass at noon land on the same flat value.
   renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=EXPOSURE;
-  camera=new T.PerspectiveCamera(CAM.fov,st.clientWidth/st.clientHeight,.1,300*WORLD_SCALE);camera.position.set(0,22*WORLD_SCALE,26*WORLD_SCALE);
-  clock=new T.Clock();
-  addEventListener("resize",()=>{const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()});
-  buildWorld(S.world||"campus");setupInput();inited=true;animate();
+  camera=new T.PerspectiveCamera(CAM.fov,st.clientWidth/st.clientHeight,.5,CAM.far*WORLD_SCALE);camera.position.set(0,22*WORLD_SCALE,26*WORLD_SCALE);
+  clock=new T.Clock();fitRenderer();
+  addEventListener("resize",fitRenderer);watchContext($("c"));
+  // The zoom listens before the walk does, so a pinch is known to be a pinch
+  // by the time the tap handler sees the same finger lift.
+  buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
 }
+// The browser may take the WebGL context back: a phone short of memory, a tab
+// that slept, a driver reset. three.js stops drawing and says nothing, and a
+// flat blue stage under a HUD that carries on is no answer. The loop stops,
+// the stage says what happened, and the Roadmap, which needs no 3D, opens the
+// way it does when 3D fails at the start. three.js rebuilds its own state when
+// the context returns, so the island comes back without a reload.
+let gfxLost=false;
+function watchContext(c){
+  c.addEventListener("webglcontextlost",e=>{e.preventDefault();gfxLost=true;gfxNotice()});
+  c.addEventListener("webglcontextrestored",()=>{gfxLost=false;clock.getDelta();fitRenderer();gfxNotice()})}
+function gfxNotice(){const n=$("gfxlost");if(n)n.hidden=!gfxLost;
+  $("stage").classList.toggle("lost",gfxLost);
+  if(gfxLost&&started){enterHide();openSheet("s-map")}}
 // The frame the island needs: the distance that makes a disc of the island's
 // radius fit inside both the vertical and the horizontal field of view. A
 // narrow window pushes the camera back rather than cropping the diorama, and
 // the drift allowance covers how far the follow pulls the island off centre.
-function camFitDist(){const st=$("stage");
-  const asp=Math.max(.35,st.clientWidth/Math.max(1,st.clientHeight));
+function camFitDist(){const asp=Math.max(.35,VIEW.w/VIEW.h);
   const r=(W.land[0][2]+2.6+CAM.drift*.5)*CAM.margin;
   const vf=camera.fov*Math.PI/360,hf=Math.atan(Math.tan(vf)*asp),p=CAM.pitch;
   // The island is a disc on the ground, not a sphere: the near edge is what
@@ -30,6 +44,9 @@ function landBlob(group,x,z,r,seg){
   d.position.set(x,-2.6,z);d.castShadow=d.receiveShadow=true;
   group.add(g,d);return g}
 function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id==="desert"?"#C9A24E":"#E9D9B5")}
+// A scene that has been replaced, waiting for the frame that follows it.
+const trash=[];
+function emptyTrash(){while(trash.length)release(trash.pop())}
 // `carry` hands the walker across a bridge: a position already converted into
 // the new island's coordinates, so the crossing does not interrupt the walk.
 function buildWorld(id,carry){
@@ -46,6 +63,7 @@ function buildWorld(id,carry){
   const WS=WORLD_SCALE;
   // The fog has to reach across the archipelago: a neighbour island is a
   // silhouette in the haze, not a wall of sky colour.
+  if(scene)trash.push(scene);
   scene=new T.Scene();scene.fog=new T.Fog(W.fog,80*WS,280*WS);
   hemiL=new T.HemisphereLight("#cfe9ff","#4a7a3a",.7);scene.add(hemiL);ambL=new T.AmbientLight("#fff",.15);scene.add(ambL);
   dirL=new T.DirectionalLight("#fff5d6",1.1);dirL.position.set(14*WS,24*WS,10*WS);dirL.castShadow=true;dirL.shadow.mapSize.set(CONFIG.shadowMap,CONFIG.shadowMap);dirL.shadow.bias=-.0008;dirL.shadow.normalBias=.02;Object.assign(dirL.shadow.camera,{left:-28*WS,right:28*WS,top:28*WS,bottom:-28*WS,near:1,far:80*WS});scene.add(dirL);
@@ -58,7 +76,8 @@ function buildWorld(id,carry){
   island=mergeStatic(land);island.userData.parts=[island];
   buildSilhouettes(id);buildBridges();
   // sea
-  water=new T.Mesh(new T.PlaneGeometry(220*WS,220*WS,64,64).rotateX(-Math.PI/2),seaMaterial());
+  // Wide enough that its edge is behind the haze from the farthest zoom.
+  water=new T.Mesh(new T.PlaneGeometry(SEA_SIZE*WS,SEA_SIZE*WS,64,64).rotateX(-Math.PI/2),seaMaterial());
   water.position.y=-1.6;water.receiveShadow=true;scene.add(water);
   const lava=id==="prod";
   // Lava is its own light, not a bright surface: a dark crust with the glow in
@@ -138,6 +157,7 @@ function buildWorld(id,carry){
   [[7,7],[-8,-6],[2,-6],[-14,4],[10,-2]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{if(!onLandW(x,z))return;
     batchAdd("rock",()=>new T.SphereGeometry(.45,5,5),id==="prod"?"#1F1F27":PALETTE.stone,xform(x,.2,z));blobAdd(x,z,.7)});
   if(ex("flowers")){const fl=new T.InstancedMesh(new T.BoxGeometry(.18,.18,.18),new T.MeshStandardMaterial({color:"#fff",flatShading:true}),160);const colr=new T.Color();for(let i=0;i<160;i++){const a=Math.random()*Math.PI*2,r=(3+Math.random()*11)*WS;dummy.position.set(Math.cos(a)*r,.12,Math.sin(a)*r);dummy.rotation.set(0,Math.random(),0);dummy.updateMatrix();fl.setMatrixAt(i,dummy.matrix);colr.set([PALETTE.orange,PALETTE.yellow,PALETTE.snow,"#FFA94D"][i%4]);fl.setColorAt(i,colr)}scene.add(fl)}
+  buildTufts();
   if(ex("cacti")){[[6,-6],[-5,-7],[10,5],[-9,1],[3,-15],[14,-4]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{if(!onLandW(x,z))return;
     batchAdd("cactus",()=>new T.CylinderGeometry(.3,.35,2,7),"#2F855A",xform(x,1,z));
     batchAdd("cactus-arm",()=>new T.CylinderGeometry(.18,.2,.9,6),"#2F855A",xform(x+.5,1.5,z));
@@ -172,8 +192,8 @@ function buildWorld(id,carry){
   const lp=carry?new T.Vector3(carry.x,0,carry.z):chars.lotte?chars.lotte.g.position.clone():new T.Vector3(2.8,0,5.2);
   chars.lotte=character(playerSpec());chars.lotte.g.position.copy(carry||onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
   if(carry){chars.lotte.g.rotation.y=carry.rot;chars.lotte.vel=carry.vel||new T.Vector3()}
-  chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:"Tom, SRE"});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
-  chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:"Rolinda, Ops"});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
+  chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:roleName("tom")});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
+  chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:roleName("rolinda")});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
   // mentors (NPC scientists) for this world
   props.mentors=[];MENTORS.filter(m=>m.world===id).forEach(m=>{const c=character({kind:"mentor",body:m.look.shirt,legs:"#374151",arms:"#F5D7BC",label:m.name,look:m.look});c.g.position.set(m.pos[0],0,m.pos[1]);c.g.rotation.y=Math.PI;scene.add(c.g);c.id=m.id;props.mentors.push(c);obstacles.push([m.pos[0],m.pos[1],.6]);blobAdd(m.pos[0],m.pos[1],.7);
     const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.mentors.includes(m.id)?PALETTE.greenBright:S.path[m.id]==="deep"?PALETTE.blueBright:S.path[m.id]==="skip"?PALETTE.orangeBright:"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
@@ -185,6 +205,7 @@ function buildWorld(id,carry){
   blobFlush();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.PlaneGeometry(1.4,1.4),new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.05;props.shadow.renderOrder=1;props.shadow.material.userData.cs=1;scene.add(props.shadow);
+  props.lapGlow=lapGlow();scene.add(props.lapGlow);
   // The ring that says which of the three figures you are steering.
   props.you=new T.Mesh(new T.RingGeometry(.62,.8,24),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:.75,side:T.DoubleSide}));props.you.rotation.x=-Math.PI/2;props.you.position.y=.07;props.you.renderOrder=2;props.you.material.userData.cs=1;scene.add(props.you);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -193,6 +214,22 @@ function buildWorld(id,carry){
   if(carry&&prevBg){scene.background=prevBg;scene.fog.color.copy(prevBg)}
   S.done.forEach(k=>placeBuilding(k,false));applySky(S.done.length,!carry);fixColors(scene);hud();
 }
+// Tufts: a few hundred low lumps a shade darker than the ground, in one
+// instanced draw. From the fitted view they are texture; from the close view
+// they are what stops the ground being one flat sheet of colour under the
+// walker's feet. They keep off the path, the plots, the inn and the lake, and
+// they are seeded, so the island is the same island on every visit.
+function buildTufts(){if(!GROUND.tufts)return;const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let i=0;i<GROUND.tufts*3&&mats.length<GROUND.tufts;i++){
+    const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*R,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.7+rnd()*.9,ry=rnd()*Math.PI;
+    if(!W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-1.4))continue;
+    if(Math.hypot(x,z)<6.2||Math.hypot(x-W.lake[0],z-W.lake[1])<4.2)continue;
+    if(PLOT_POS.some(p=>Math.hypot(x-p.x,z-p.z)<3)||path.some(p=>Math.hypot(x-p.x,z-p.z)<1.5))continue;
+    mats.push(xform(x,.05*s,z,0,ry,0,new T.Vector3(s,s,s)))}
+  const c=new T.Color(W.grass).multiplyScalar(GROUND.shade);
+  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.2,.13,5)),mat("#"+c.getHexString()),mats,false);
+  if(im)im.receiveShadow=true;props.tufts=im}
 // One building per artifact of this world that names a model in ART_PROPS;
 // the group is an obstacle so the walker goes round it, and the ring stays.
 function buildArtifactProps(){props.artProps=[];props.artR={};(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world&&a.model&&ART_PROPS[a.model]).forEach(a=>{const g=ART_PROPS[a.model]();const r=g.userData.r||1.4;
@@ -230,7 +267,7 @@ window.setWorld=function(id){
   startFlight(id)};
 function renderWorldPicker(){const el=$("worlds");if(!el)return;el.innerHTML=Object.keys(WORLDS).map(k=>`<button class="world${(S.world||"campus")===k?' pick':''}" onclick="setWorld('${k}')"><b><i style="background:${WORLDS[k].swatch}"></i>${CAMPAIGN[k].title.split(":")[0]}</b>${WORLDS[k].name}. ${CAMPAIGN[k].title.split(": ")[1]}</button>`).join("")}
 function placeBuilding(k,pop){
-  const g=building(k);g.position.copy(PLOT_POS[k-1]);const p=plots[k-1];p.userData.ring.visible=false;p.userData.post.visible=false;p.userData.sign.visible=false;p.userData.lb.visible=false;
+  const g=building(k);g.position.copy(PLOT_POS[k-1]);const p=plots[k-1];p.userData.ring.visible=false;p.userData.post.visible=false;p.userData.sign.visible=false;p.userData.lb.userData.off=1;
   fixColors(g);scene.add(g);builds[k]=g;
   if(pop)popIn(g);else g.scale.set(1,1,1);
   placeAnnex(k,pop);
@@ -263,7 +300,10 @@ function placeAnnex(k,pop){
 }
 // The pop every new thing on the island gets: it grows from nothing (the
 // animation loop eases popT) under a burst of forty confetti cubes.
-function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+function popIn(g){
+  // Reduced motion: the thing is simply there, with no growth and no confetti.
+  if(reducedMotion()){g.scale.set(1,1,1);return}
+  g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(shape("confetti",()=>new T.BoxGeometry(.18,.18,.18)),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
 // Everything that pops in is on this list, so one loop in the frame grows a
 // building, an annex and a mentor's plaque alike.
 const pops=[];
@@ -283,13 +323,14 @@ function buildSky(){
   geo.setAttribute("color",new T.BufferAttribute(c,3));
   const m=new T.MeshBasicMaterial({color:"#ffffff",vertexColors:true,side:T.BackSide,fog:false,depthWrite:false});
   m.userData.cs=1;
-  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d}
+  // A new dome has no colours yet, whatever the last one was painted with.
+  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d;skyPainted=-1}
 // The ramp, repainted whenever the stage moves. Height runs from the horizon
 // to the zenith over the top half of the dome; below the horizon it holds the
 // horizon colour, which is also the fog, so the two meet with no seam.
-const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted="";
+const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted=-1;
 function paintSky(bottom,top){const d=props.sky;if(!d)return;
-  const key=bottom.getHexString()+top.getHexString();if(key===skyPainted)return;skyPainted=key;
+  const key=bottom.getHex()*16777216+top.getHex();if(key===skyPainted)return;skyPainted=key;
   _skyBot.copy(bottom).convertSRGBToLinear();_skyTop.copy(top).convertSRGBToLinear();
   const p=d.geometry.attributes.position,c=d.geometry.attributes.color,r=140*WORLD_SCALE;
   for(let i=0;i<p.count;i++){const t=Math.max(0,Math.min(1,p.getY(i)/r*1.35+.06));
@@ -299,7 +340,11 @@ function paintSky(bottom,top){const d=props.sky;if(!d)return;
 // The sea: one mesh, animated on the GPU. Two crossing swells and a slow
 // diagonal carry the surface, the water reads shallow inside the island's
 // radius with a foam line at the shore, and the roughness scrolls so the sun
-// leaves a moving highlight instead of a flat sheet of colour.
+// leaves a moving highlight instead of a flat sheet of colour. The swell moves
+// the vertices, but the normal is worked out per pixel from the same function:
+// the mesh is coarse, and a normal interpolated across an eleven unit quad
+// shows the grid as a checkerboard in the highlight.
+const SEA_SIZE=520;
 const SEA_GLSL=`
 float seaH(vec2 p,float t){return sin(p.x*.35+t*1.3)*.16+cos(p.y*.30+t*1.1)*.16+sin((p.x+p.y)*.12-t*.7)*.10;}
 vec3 seaN(vec2 p,float t){float e=.7;
@@ -315,11 +360,11 @@ function seaMaterial(){
   m.userData.u=u;
   m.onBeforeCompile=s=>{Object.assign(s.uniforms,u);
     s.vertexShader="uniform float uTime;varying vec2 vSea;"+SEA_GLSL+"\n"+s.vertexShader
-      .replace("#include <beginnormal_vertex>","vec3 objectNormal=seaN(position.xz,uTime);")
       .replace("#include <begin_vertex>",
         "vec3 transformed=vec3(position);transformed.y+=seaH(position.xz,uTime);vSea=position.xz;");
-    s.fragmentShader="uniform float uTime;uniform vec3 uShallow;uniform float uCoast;varying vec2 vSea;\n"+
+    s.fragmentShader="uniform float uTime;uniform vec3 uShallow;uniform float uCoast;uniform mat3 normalMatrix;varying vec2 vSea;\n"+SEA_GLSL+"\n"+
       s.fragmentShader
+      .replace("#include <normal_fragment_maps>","normal=normalize(normalMatrix*seaN(vSea,uTime));")
       .replace("#include <color_fragment>",
         "#include <color_fragment>\nfloat sd=length(vSea);"+
         "float shallow=1.0-smoothstep(uCoast*0.98,uCoast*1.3,sd);"+
@@ -333,7 +378,7 @@ function seaMaterial(){
   return m}
 
 let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
-const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3();
+const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3(),_far=new T.Vector3();
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
   if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}
   if(instant)tickRig(1)}
@@ -351,10 +396,12 @@ function tickRig(k){const r=SKY_RIG[skyN],WS=WORLD_SCALE;
   hemiL.intensity+=(r.hemi-hemiL.intensity)*k;
   ambL.intensity+=(r.amb-ambL.intensity)*k;
   // The discs ride the same bearing, far out past the fog.
-  const far=_dir.clone().normalize().multiplyScalar(90*WS);
-  sunM.position.copy(far);sunM.visible=skyN<4;
-  moonM.position.copy(far);moonM.visible=skyN>=4;
-  rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen)}
+  _far.copy(_dir).normalize().multiplyScalar(90*WS);
+  sunM.position.copy(_far);sunM.visible=skyN<4;
+  moonM.position.copy(_far);moonM.visible=skyN>=4;
+  rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen);
+  // The people's share of their own colour, up as the light goes down.
+  FIG_LIFT.value+=(r.fig-FIG_LIFT.value)*k}
 
 // What the graphics tests read: the renderer's colour pipeline, the rig of
 // this stage, the camera's fit, and how much of the island is inside the
@@ -377,11 +424,26 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     sky:!!props.sky,sun_disc:!!(sunM&&sunM.visible),moon_disc:!!(moonM&&moonM.visible),
     sea:!!(water&&water.material.userData.u),
     blobs:props.blobs?props.blobs.count:0,aurora:auroraNDC(),
-    plates:{total:plates.length,shown:plates.filter(p=>p.visible).length},
+    // Each drawn plate with its pill's box on the canvas in CSS pixels, so a
+    // test can ask whether it is legible and whether two of them collide.
+    plates:{total:plates.length,shown:plates.filter(p=>p.visible).length,
+      list:plates.filter(p=>p.visible).map(p=>{const u=p.userData;
+        return {text:u.text,x:u.cx,y:u.cy,w:(u.hw-PLATE.gap)*2,h:(u.hh-PLATE.gap)*2,o:u.o,want:u.want}})},
+    // Something that only ambient motion moves: the first cloud.
+    ambient:clouds.length?clouds[0].position.x:0,
     // off is how far the camera still is from the height the fit asks for, so
     // a test can ask whether the frame has landed instead of counting frames.
     cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov,
-      off:Math.abs(camera.position.y-Math.sin(CAM.pitch)*camFitDist())},
+      off:camOff()},
+    // level is where the eased camera is, target is the state it is easing to.
+    zoom:{level:camZoom(),target:zoomTo,min:CAM.zoom.min,max:CAM.zoom.max,start:CAM.zoom.start,
+      dist:camera.position.distanceTo(camLook)},
+    lost:gfxLost,
+    // What the GPU holds. It has to come back down after an island is left.
+    // parts is what is in the air right now (dust, confetti): a test waits for
+    // it to be nothing again rather than counting frames.
+    mem:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
+      programs:renderer.info.programs?renderer.info.programs.length:0,parts:parts.length},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 
@@ -391,7 +453,7 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
 // old one was doing; the name is rebuilt on a timer, which can land long after
 // the walker has sat down.
 function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
-  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  discard(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
   // The walk is state as much as the pose: a look changed mid-stride keeps its
   // speed and its jump instead of stopping the walker dead.
   chars.lotte.vel=old.vel||new T.Vector3();chars.lotte.jy=old.jy||0;chars.lotte.jv=old.jv||0;

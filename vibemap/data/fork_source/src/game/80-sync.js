@@ -1,8 +1,22 @@
 window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList(),topics:sl("topics"),pet:petId()})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;const paste="Code is in the box. In your camp: vibe import, then paste it.";
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. In your camp: vibe import, then paste it."},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
+// A code is pasted from a mail or a chat, so it is outside data. Every id in
+// it is checked before anything is merged: the name of the first field that
+// is not what the format says, or "" when the code is sound.
+const CODE_ID_LISTS=["artifacts","mentors","artifactsBuilt","items","ach","wear","topics","interests"];
+function progressFault(d){
+  const bad=CODE_ID_LISTS.find(k=>d[k]!==undefined&&!(Array.isArray(d[k])&&d[k].every(plainId)));if(bad)return bad;
+  if(d.name!==undefined&&typeof d.name!=="string")return "name";
+  if(d.pet!==undefined&&typeof d.pet!=="string")return "pet";
+  if(d.done!==undefined&&!Array.isArray(d.done))return "done";
+  if(d.doneW!==undefined&&!(isMap(d.doneW)&&Object.keys(d.doneW).every(w=>plainId(w)&&Array.isArray(d.doneW[w]))))return "doneW";
+  if(d.path!==undefined&&!(isMap(d.path)&&Object.keys(d.path).every(m=>plainId(m)&&(d.path[m]==="deep"||d.path[m]==="skip"))))return "path";
+  return ""}
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));
     // The progress code is versioned: an unknown version is refused loudly.
     if(d.v!==2){$("syncmsg").textContent="That code is version "+(d.v===undefined?"1 or older":d.v)+"; this game reads version 2. Run uv run vibe export again with an up-to-date vibe.";return}
+    // Refused whole and by name: a code that fails here merges nothing.
+    const fault=progressFault(d);if(fault){$("syncmsg").textContent="That code carries a value this game cannot read, in \""+fault+"\". Nothing was imported. Run uv run vibe export again and paste the whole code.";return}
     // The companion is a single choice, not a set, so a code overwrites it;
     // an id this game has no pixels for is refused by name, never defaulted.
     if(d.pet!==undefined&&d.pet!==""){if(!petKnown(d.pet)){$("syncmsg").textContent="That code carries a companion this game does not have: \""+d.pet+"\". This game knows "+petOptions().join(", ")+".";return}S.pet=d.pet}
@@ -22,8 +36,8 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // choice made in the terminal is news here rather than a correction.
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();
       d.interests.forEach(c=>{if(cur.indexOf(c)<0)cur.push(c)});S.interests=cur}
-    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{scene.remove(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
-    if(d.name)S.name=d.name;save();hud();renderMap();if(started)applySky(S.done.length,false);
+    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
+    if(d.name)S.name=d.name.trim().slice(0,80);save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
       S.done.length+"/"+stopCount()+" workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};

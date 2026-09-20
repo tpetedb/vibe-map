@@ -8,12 +8,13 @@ the vendor's documentation (URL per entry, checked 2026-09-16).
 from __future__ import annotations
 
 import os
-import re
 import shutil
 import subprocess
 import threading
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+
+from vibemap.palette import plain
 
 
 class ProviderMissing(RuntimeError):
@@ -106,8 +107,7 @@ def ask(provider_id: str, prompt: str, *, timeout: int = 600) -> str:
             )
     if result.returncode != 0:
         raise RuntimeError(
-            f"{provider.label} exited {result.returncode}: "
-            f"{_strip_ansi(result.stderr).strip()[:500]}"
+            f"{provider.label} exited {result.returncode}: {plain(result.stderr)[:500]}"
         )
     return result.stdout.strip()
 
@@ -147,7 +147,7 @@ def stream(provider_id: str, prompt: str, *, timeout: int = 600) -> Iterator[str
         assert proc.stdout is not None
         yield from proc.stdout
         proc.wait()
-        err = _strip_ansi(proc.stderr.read() if proc.stderr else "").strip()[:500]
+        err = plain(proc.stderr.read() if proc.stderr else "")[:500]
     finally:
         alarm.cancel()
         if proc.stdout:
@@ -169,7 +169,3 @@ def _clean_env() -> dict[str, str]:
         for k, v in os.environ.items()
         if not (k.startswith("CLAUDE_CODE_") or k in {"CLAUDECODE", "CLAUDE_PID"})
     }
-
-
-def _strip_ansi(text: str) -> str:
-    return re.sub(r"\x1b\[[0-9;]*m", "", text)

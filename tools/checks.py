@@ -3,6 +3,7 @@
 Usage:
     uv run python tools/checks.py style [paths...]   em dashes and emoji
     uv run python tools/checks.py links              every https link answers
+    uv run python tools/checks.py sinks [--write]    values the game writes as HTML
 
 Each check prints one line per finding and exits 1 when there is any, so an
 agent can run it after every edit instead of rediscovering the failure in
@@ -23,6 +24,7 @@ import urllib.request
 from pathlib import Path
 
 from rich.console import Console
+from rich.markup import escape
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXT_SUFFIXES = {
@@ -194,14 +196,217 @@ def check_links() -> int:
     return broken
 
 
+# ---- sinks: what the game writes into the page as HTML -----------------------
+# The page is built from strings, so a value that reaches innerHTML is markup
+# unless it went through esc(). docs/SECURITY-MODEL.md is the rule; this is
+# the ratchet: every interpolation inside an HTML template that is not wrapped
+# in a helper of SAFE_CALLS and is not harmless on its face (a choice between
+# literals, a length), and every sink, is counted in a register somebody has
+# looked at. A new one fails until it is escaped or added with a reason to
+# believe it is build-time data of ours.
+GAME_SRC = ROOT / "src" / "game"
+SINK_REGISTER = ROOT / "tools" / "reviewed_sinks.json"
+SINK = re.compile(r"\.innerHTML\s*\+?=|\.insertAdjacentHTML\s*\(")
+FORBIDDEN_SINKS = {
+    "eval": re.compile(r"(?<![\w.])eval\s*\("),
+    "new Function": re.compile(r"new\s+Function\s*\("),
+    "document.write": re.compile(r"document\.write(ln)?\s*\("),
+    "outerHTML": re.compile(r"\.outerHTML\s*="),
+    "srcdoc": re.compile(r"\.srcdoc\s*="),
+    "a timer given a string": re.compile(r"set(Timeout|Interval)\s*\(\s*[\"'`]"),
+}
+SAFE_CALLS = ("esc", "icon")
+
+
+def _template(text: str, i: int, found: list[tuple[str, list[str]]]) -> int:
+    """Read the template literal that opens at i; record it and what it holds."""
+    static: list[str] = []
+    holes: list[str] = []
+    i += 1
+    while i < len(text) and text[i] != "`":
+        if text[i] == "\\":
+            i += 2
+        elif text.startswith("${", i):
+            end = _code(text, i + 2, found, until="}")
+            holes.append(text[i + 2 : end].strip())
+            i = end + 1
+        else:
+            static.append(text[i])
+            i += 1
+    found.append(("".join(static), holes))
+    return i + 1
+
+
+def _code(text: str, i: int, found: list[tuple[str, list[str]]], until: str) -> int:
+    """Walk JavaScript from i to the closing brace of a hole, or to the end.
+
+    Strings, comments and regular expressions are told apart the way the
+    build tells them apart, so a quote inside a regex is not a string.
+    """
+    sys.path.insert(0, str(ROOT))
+    from tools.build import _DIVIDE_AFTER, _regex_end, _string_end  # noqa: PLC0415
+
+    depth, prev = 0, ""
+    while i < len(text):
+        c = text[i]
+        if c.isspace():
+            i += 1
+            continue
+        if c in "\"'":
+            i = _string_end(text, i) or len(text)
+        elif c == "`":
+            i = _template(text, i, found)
+        elif text.startswith("//", i):
+            i = text.find("\n", i) % (len(text) + 1)
+            continue
+        elif text.startswith("/*", i):
+            i = text.find("*/", i) % (len(text) + 1) + 2
+            continue
+        elif c == "/" and prev not in _DIVIDE_AFTER and _regex_end(text, i):
+            i = _regex_end(text, i) or len(text)
+        elif c == "}" and until == "}" and depth == 0:
+            return i
+        else:
+            depth += (c == "{") - (c == "}")
+            i += 1
+        prev = c if c not in "\"'`/" else ("/" if c == "/" else "x")
+    return i
+
+
+def _top_level(expr: str, marks: str) -> list[tuple[int, str]]:
+    """Where these characters stand outside every string and bracket."""
+    out: list[tuple[int, str]] = []
+    depth, i = 0, 0
+    while i < len(expr):
+        c = expr[i]
+        if c in "\"'`":
+            end = expr.find(c, i + 1)
+            while end > 0 and expr[end - 1] == "\\":
+                end = expr.find(c, end + 1)
+            i = len(expr) if end < 0 else end
+        elif c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        elif depth == 0 and c in marks:
+            out.append((i, c))
+        i += 1
+    return out
+
+
+def _harmless(expr: str) -> bool:
+    """True when whatever this evaluates to was spelled out in the source.
+
+    A quoted literal, a choice between harmless things (the condition yields
+    nothing, so it may read anything), a length, or a fixed-point number.
+    """
+    expr = expr.strip()
+    if len(expr) >= 2 and expr[0] in "\"'" and expr[-1] == expr[0]:
+        return not _top_level(expr[1:-1], expr[0])
+    # A plus can join a string on, and an or can hand back its left side.
+    if _top_level(expr, "+|"):
+        return False
+    marks = _top_level(expr, "?:")
+    if not marks:
+        return bool(re.search(r"(\.length|\.toFixed\(\d*\))$", expr))
+    ask = marks[0][0]
+    if marks[0][1] != "?" or expr[ask : ask + 2] == "?." or expr[ask : ask + 2] == "??":
+        return False
+    # The colon that belongs to this question mark: skip one per nested choice.
+    nested = 0
+    for at, c in marks[1:]:
+        nested += c == "?"
+        if c == ":":
+            if nested == 0:
+                return _harmless(expr[ask + 1 : at]) and _harmless(expr[at + 1 :])
+            nested -= 1
+    return False
+
+
+def _wrapped(expr: str) -> bool:
+    """True when the whole expression is one call to a helper of SAFE_CALLS."""
+    for name in SAFE_CALLS:
+        if not expr.startswith(name + "("):
+            continue
+        depth = 0
+        for k, c in enumerate(expr):
+            depth += c == "("
+            depth -= c == ")"
+            if depth == 0 and c == ")":
+                return k == len(expr) - 1
+    return False
+
+
+def scan_sinks(src: Path = GAME_SRC) -> dict[str, dict[str, object]]:
+    """Per module: the sinks, and the raw interpolations inside HTML templates."""
+    out: dict[str, dict[str, object]] = {}
+    for path in sorted(src.glob("*.js")):
+        text = path.read_text(encoding="utf-8")
+        found: list[tuple[str, list[str]]] = []
+        _code(text, 0, found, until="")
+        raw: dict[str, int] = {}
+        for static, holes in found:
+            if "<" not in static:
+                continue
+            for expr in holes:
+                if not (_wrapped(expr) or _harmless(expr)):
+                    raw[expr] = raw.get(expr, 0) + 1
+        sinks = len(SINK.findall(text))
+        if sinks or raw:
+            out[path.name] = {"sinks": sinks, "raw": dict(sorted(raw.items()))}
+    return out
+
+
+def check_sinks(write: bool = False, src: Path = GAME_SRC) -> int:
+    findings = 0
+    for path in [*sorted(src.glob("*.js")), ROOT / "src" / "errors.js"]:
+        text = path.read_text(encoding="utf-8")
+        for name, rx in FORBIDDEN_SINKS.items():
+            if rx.search(text):
+                console.print(f"[red]{path.name}[/]: {name} is never used in the game")
+                findings += 1
+    now = scan_sinks(src)
+    if write:
+        SINK_REGISTER.write_text(
+            json.dumps(now, indent=1, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+        console.print(f"wrote {SINK_REGISTER.relative_to(ROOT)}")
+        return findings
+    seen = json.loads(SINK_REGISTER.read_text(encoding="utf-8"))
+    for name, entry in now.items():
+        old = seen.get(name, {"sinks": 0, "raw": {}})
+        if entry["sinks"] > old["sinks"]:
+            console.print(
+                f"[red]{name}[/]: {entry['sinks']} HTML sinks, the register has"
+                f" {old['sinks']}. Prefer textContent; see docs/SECURITY-MODEL.md."
+            )
+            findings += 1
+        for expr, count in entry["raw"].items():  # type: ignore[union-attr]
+            if count > old["raw"].get(expr, 0):
+                console.print(
+                    f"[red]{name}[/]: ${{{escape(expr)}}} goes into HTML without esc()."
+                    " Wrap it, or if it is build-time data of ours, run"
+                    " tools/checks.py sinks --write and say why in the PR."
+                )
+                findings += 1
+    return findings
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(prog="checks")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("style", help="em dashes and emoji")
     s.add_argument("paths", nargs="*")
     sub.add_parser("links", help="every https link answers")
+    k = sub.add_parser("sinks", help="values written into the page as HTML")
+    k.add_argument("--write", action="store_true", help="accept what is there now")
     a = ap.parse_args()
-    findings = check_style(a.paths) if a.cmd == "style" else check_links()
+    if a.cmd == "style":
+        findings = check_style(a.paths)
+    elif a.cmd == "sinks":
+        findings = check_sinks(a.write)
+    else:
+        findings = check_links()
     sys.exit(1 if findings else 0)
 
 

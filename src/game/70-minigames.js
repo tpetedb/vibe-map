@@ -8,17 +8,6 @@
 // lesson cannot drift apart.
 const GUARDRAIL = "Keep it to a single file called index.html, no external libraries, no frameworks. Keep score. When you are done, tell me how to open it.";
 window.pitchTyped=function(v){S.pitch=v;save();renderPitch()};
-// One copy helper for every Copy button. A refused clipboard is not silence:
-// the text is selected so it can be copied by hand, and the button says so.
-// srcEl is the element holding the text, so the fallback can select it.
-function copyText(text,btn,label,srcEl){
-  const done=msg=>{btn.textContent=msg;setTimeout(()=>{btn.textContent=label},2500)};
-  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
-      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
-    done("Selected, press Cmd C")};
-  if(navigator.clipboard&&navigator.clipboard.writeText)
-    navigator.clipboard.writeText(text).then(()=>done("Copied"),fallback);
-  else fallback()}
 window.copyPitch=function(){copyText($("pitch-out").textContent,$("pitch-copy"),"Copy the prompt",$("pitch-out"))};
 function renderPitch(){const out=$("pitch-out");if(!out)return;const box=$("pitch");if(box&&box.value!==(S.pitch||""))box.value=S.pitch||"";
   const v=(S.pitch||"").trim();
@@ -76,7 +65,7 @@ window.commit=function(){const t=$("release").value.trim();
   releaseMsg("");S.versions.push({t,at:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});save();renderVersions();hud()};
 window.ruin=function(){$("release").value="A smal scorng board that rnks the team by cofee consmption and also everything is now in Comic Sans. Sev 1. Paging Tom."};
 window.revert=function(i){$("release").value=S.versions[i].t};
-function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${v.at}: ${esc(v.t.slice(0,44))}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
+function renderVersions(){$("versions").innerHTML=S.versions.length?S.versions.map((v,i)=>`<li><span class="muted">v${i+1}, ${esc(v.at)}: ${esc(String(v.t).slice(0,44))}${v.t.length>44?"…":""}</span><button onclick="revert(${i})">Roll back</button></li>`).join(""):`<li class="muted small">No releases tagged yet. Commit one, trigger a P1, then roll back.</li>`}
 
 /* ---- Workstream 5: a connector is a plug, and unplugging is the point ---- */
 const B={cal:"Integrated. It can now read Thursday and pre-populate the 10:00 agenda.",files:"Integrated. It can now surface the deck you lost in March.",mail:"Integrated. It can now distil a 40-message thread into three action items."};

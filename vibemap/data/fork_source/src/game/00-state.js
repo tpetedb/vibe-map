@@ -2,19 +2,47 @@
 // from the bridge, an imported name. One helper, early, so every module can
 // reach it; the page is built from strings, so escaping is the rule and raw
 // interpolation is the exception that has to be one of our own constants.
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 // A link from data we did not write. Only an absolute http or https URL may
 // become an anchor; javascript:, data: and anything else give "" and the row
 // is rendered without a link rather than with a dangerous one.
 function safeUrl(u){const s=String(u==null?"":u).trim();if(!/^https?:\/\//i.test(s))return "";
-  try{const p=new URL(s);return p.protocol==="http:"||p.protocol==="https:"?p.href:""}catch(e){return ""}}
+  // A name and a password in front of the host is how a link to one site is
+  // made to read like another, so such a link is no link either.
+  try{const p=new URL(s);return (p.protocol==="http:"||p.protocol==="https:")&&!p.username&&!p.password?p.href:""}catch(e){return ""}}
+// A plain object, which is what JSON calls a map: not null, not a list.
+function isMap(o){return !!o&&typeof o==="object"&&!Array.isArray(o)}
+// An identifier from data we did not write (a progress code): a short word of
+// letters, digits, dot, dash, underscore and colon, which is every id the
+// course data uses. Anything else is not an id, whatever it claims to be.
+function plainId(v){return typeof v==="string"&&/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$/.test(v)}
 // A document published beside the game on the product's site. The site has
 // syllabus.html next to the game; a camp, a fork and file:// do not, so
 // anywhere but that site the link goes to the product rather than to a 404.
 // base is the folder the page is in, and is a parameter so it can be checked.
-function siteDoc(name,base){const site=String((typeof CONFIG!=="undefined"&&CONFIG.site)||"").replace(/\/*$/,"/");
+// The site comes from config/camp.toml and becomes an href, so it is a link
+// like any other: not http or https means there is no site.
+function siteDoc(name,base){const site=safeUrl(typeof CONFIG!=="undefined"?CONFIG.site:"").replace(/\/*$/,"/").replace(/^\/$/,"");
   const here=base===undefined?location.origin+location.pathname.replace(/[^/]*$/,""):base;
   return !site?name:(here===site?name:site+name)}
+// One copy helper for every Copy button, early so every module can reach it.
+// A refused clipboard is not silence: the text is selected so it can be copied
+// by hand, and the button says so. srcEl is the element holding the text, so
+// the fallback can select it; msg is what a copy that worked should say.
+// The button is the visible confirmation and #copysay is the spoken one, so a
+// screen reader hears the same words a sighted player reads.
+// navigator.clipboard.writeText has to be called inside the click handler
+// (MDN, Clipboard: writeText), which is why the text is resolved by the caller.
+function copyKey(){return /Mac|iPhone|iPad|iPod/.test(navigator.platform||navigator.userAgent||"")?"Cmd C":"Ctrl C"}
+function copySay(msg){const el=document.getElementById("copysay");if(el)el.textContent=msg}
+function copyText(text,btn,label,srcEl,msg){
+  const done=m=>{btn.textContent=m;copySay(m);setTimeout(()=>{btn.textContent=label},2500)};
+  const fallback=()=>{if(srcEl&&window.getSelection){const r=document.createRange();r.selectNodeContents(srcEl);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r)}
+    done("Selected, press "+copyKey())};
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(text).then(()=>done(msg||"Copied"),fallback);
+  else fallback()}
 const T=THREE;
 let CH=[
   {h:"18:00",n:"Innovation Hub",d:"Ship an MVP before the first glass is empty"},
@@ -112,7 +140,11 @@ const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just
 // appear. Springs are stiff so nothing takes longer than about 400 ms.
-const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches||(typeof motionOff==="function"&&motionOff());
+// Asked several times a frame, so the media query is made once and read live.
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)");
+const reducedMotion=()=>REDUCED.matches||(typeof motionOff==="function"&&motionOff());
+// How the hosts are named wherever they are named: the role is the theme's.
+const roleName=who=>who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
 function fx(el){if(!window.Motion||reducedMotion())return;Motion.animate(el,{opacity:[0,1],transform:["translateY(16px)","translateY(0px)"]},{type:"spring",stiffness:420,damping:34,mass:.8})}
 function countUp(el,to,fmt){if(!window.Motion||reducedMotion()){el.textContent=fmt(to);return}const from=parseFloat(el.textContent)||0;if(from===to){el.textContent=fmt(to);return}Motion.animate(from,to,{duration:.4,ease:"easeOut",onUpdate:v=>{el.textContent=fmt(v)}})}
 
@@ -125,7 +157,7 @@ const FACE={
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
-function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);
   if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
 function say(k){const [who,t]=line(k);bubble(who,t)}
 // A mentor is known by their last name; a team is not a person, so a name that

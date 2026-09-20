@@ -10,9 +10,12 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import cache
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from vibemap import project, tech
+
+if TYPE_CHECKING:
+    from vibemap.state import State
 
 WORLD_NAMES = {
     "campus": "Innovation Campus",
@@ -85,6 +88,47 @@ def evenings() -> dict[str, Evening]:
             workstreams=ws,
         )
     return out
+
+
+def stop_count(world: str) -> int:
+    """How many stops that evening has: the campaign says, nothing hard-codes it."""
+    return len(evenings()[world].workstreams)
+
+
+def total_stops() -> int:
+    """Every stop of every evening: the denominator of the progress line."""
+    return sum(stop_count(w) for w in evenings())
+
+
+# The progress grid speaks one language: the status table, the TUI map and
+# their legends all read these four marks, and each view paints them itself.
+MARKS: dict[str, tuple[str, str]] = {
+    "done": ("x", "checked"),
+    "claimed": ("i", "claimed, not verified"),
+    "next": (">", "next"),
+    "todo": (".", "to do"),
+}
+
+
+def stop_marks(state: State, world: str) -> list[str]:
+    """One row of the grid: the mark every stop of this evening carries."""
+    stops = range(1, stop_count(world) + 1)
+    nxt = next((i for i in stops if not state.is_done(world, i)), None)
+    marks = []
+    for i in stops:
+        if not state.is_done(world, i):
+            marks.append("next" if i == nxt else "todo")
+        else:
+            marks.append("done" if state.is_verified(world, i) else "claimed")
+    return marks
+
+
+def current_world(state: State) -> str:
+    """The island the learner is on: the first evening with a stop left."""
+    return next(
+        (w for w in evenings() if "next" in stop_marks(state, w)),
+        list(evenings())[-1],
+    )
 
 
 @cache

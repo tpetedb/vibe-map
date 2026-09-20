@@ -155,7 +155,10 @@ def item_id(link: str) -> str:
     return hashlib.sha1(link.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
 
 
-_TAGS = re.compile(r"<[^>]+>")
+# A tag opens with a letter, a slash, a bang or a question mark; "a < b" is
+# arithmetic. What is left of either bracket after the strip goes too.
+_TAGS = re.compile(r"<[A-Za-z/!?][^<>]*>")
+_BRACKETS = re.compile(r"[<>]")
 _SPACE = re.compile(r"\s+")
 
 
@@ -165,8 +168,11 @@ def plain(raw: str, *, limit: int = SUMMARY_CHARS) -> str:
     Never generated. A feed is somebody else's machine, so nothing it sends
     may reach the page as markup: the entities are resolved first, so an
     escaped tag cannot survive the strip, and the strip runs until nothing is
-    left to remove. A cut lands on a word boundary so the sentence reads as
-    an opening rather than as a broken word.
+    left to remove. A tag the feed never closed, or a comment opener, is
+    markup to whatever reads the text next (the script element the build
+    writes it into, the vault note Obsidian renders), so no angle bracket is
+    left at all. A cut lands on a word boundary so the sentence reads as an
+    opening rather than as a broken word.
     """
     text = html.unescape(raw or "")
     while True:
@@ -174,11 +180,15 @@ def plain(raw: str, *, limit: int = SUMMARY_CHARS) -> str:
         if stripped == text:
             break
         text = stripped
+    text = _BRACKETS.sub(" ", text)
     text = _SPACE.sub(" ", text).strip()
     if len(text) <= limit:
         return text
     cut = text[:limit].rsplit(" ", 1)[0].rstrip(" ,;:.")
     return (cut or text[:limit].rstrip()) + "..."
+
+
+_LINK_UNSAFE = frozenset("<>()[]\"'`\\")
 
 
 def safe_link(url: str) -> str:
@@ -188,7 +198,15 @@ def safe_link(url: str) -> str:
     a feed is script injection. An item without a usable link is dropped.
     """
     link = (url or "").strip()
-    return link if urlparse(link).scheme in ("http", "https") else ""
+    parts = urlparse(link)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        return ""
+    # The link is written into a Markdown link and an href. The characters
+    # that end either one are encoded, which a URL allows and no server minds.
+    return "".join(
+        f"%{ord(c):02X}" if c in _LINK_UNSAFE or c <= " " or c == "\x7f" else c
+        for c in link
+    )
 
 
 def _text(el: ET.Element | None) -> str:
