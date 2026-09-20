@@ -1,0 +1,6 @@
+- The stats panel and the `vibe dashboard` report count the same things: XP follows the difficulty multiplier the terminal uses, inspecting an artifact pays nothing, and a day streak is a day something was delivered in both places.
+- Time per stop counts every island instead of the campus alone, and a row is coloured by that island's own stops.
+- The panel's feed names screens, islands and shelves instead of printing internal ids, and says "1 event recorded".
+- A chosen shelf with nothing on it shows 0 of 0, and a shelf name is no longer cut mid-word.
+- Every sparkline states its reading, on the panel and in the report.
+- The report survives an empty `workspace/data/scores.csv`, plots stops on its stops sparkline, gives a verified mentor or a built artifact the time its check recorded or no time at all, and names a badge the way `vibe status` names it.

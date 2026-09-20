@@ -16,7 +16,9 @@ from playwright.sync_api import Browser
 from tests.conftest import OUT, ROOT
 from vibemap import dashboard
 from vibemap.cli import cli
+from vibemap.config import DIFFICULTIES
 from vibemap.palette import CSS_TOKENS, css_tokens
+from vibemap.quests import XP_BASE
 from vibemap.state import CheckRecord, State
 
 
@@ -42,10 +44,85 @@ def _state() -> State:
 def test_events_keep_the_shape_the_game_uses() -> None:
     events = dashboard.events_from_state(_state())
     assert events, "a state with a log has events"
-    assert [e.ts for e in events] == sorted(e.ts for e in events)
+    dated = [e.ts for e in events if e.ts is not None]
+    assert dated == sorted(dated)
+    assert [e.ts is None for e in events] == sorted(e.ts is None for e in events)
     first = events[0].as_dict()
     assert set(first) >= {"ts", "kind", "id", "world"}
     assert {e.kind for e in events} >= {"claim", "check", "verified", "built"}
+
+
+def test_a_mentor_carries_the_time_its_check_recorded() -> None:
+    """R16: a verified mentor borrowed the last claim's clock; now it has none."""
+    st = _state()
+    events = dashboard.events_from_state(st)
+    verified = next(e for e in events if e.kind == "verified")
+    assert verified.ts is None, "nothing verified it here, so there is no time"
+    assert "ts" not in verified.as_dict()
+    # A mentor the CLI verified files a check record; that is its time.
+    at = "2026-01-02T03:04"
+    st.checks["mentor:karpathy"] = CheckRecord(ok=True, at=at)
+    events = dashboard.events_from_state(st)
+    verified = next(e for e in events if e.kind == "verified")
+    assert verified.ts == dt.datetime.fromisoformat(at)
+    # The encounter's record is that one event, never a second "check" line.
+    assert [e.id for e in events if e.kind == "check"] == ["3"]
+
+
+def test_an_empty_scores_file_reads_as_no_runs(tmp_path: Path) -> None:
+    """R13: an empty CSV raised polars NoDataError out of `vibe dashboard`."""
+    scores = tmp_path / "workspace" / "data"
+    scores.mkdir(parents=True)
+    (scores / "scores.csv").write_text("", encoding="utf-8")
+    data = dashboard.numbers(_state(), tmp_path)
+    assert data["scores"]["runs"] == 0
+    assert "No runs yet" in dashboard.render(data)
+
+
+def test_the_report_names_a_badge_the_way_the_terminal_does(tmp_path: Path) -> None:
+    """R17: the card printed the raw id."""
+    st = _state()
+    st.badges.append("first-light")
+    html = dashboard.render(dashboard.numbers(st, tmp_path))
+    assert "First light" in html and ">first-light<" not in html
+
+
+def test_the_stops_sparkline_counts_stops(tmp_path: Path) -> None:
+    """R15: it plotted every event, so it matched the streak line exactly."""
+    data = dashboard.numbers(_state(), tmp_path)
+    assert sum(data["claims_per_day"]) < sum(data["per_day"])
+    # Neither line is the activity line any more: a check is activity, not a
+    # stop delivered and not a streak day.
+    assert data["claims_per_day"] != data["per_day"]
+    assert data["delivered_per_day"] != data["per_day"]
+    html = dashboard.render(data)
+    assert "Stops delivered per day, last seven days:" in html
+    assert 'aria-label="Last seven days"' not in html, "a spark states its reading"
+
+
+def test_a_player_name_is_cut_before_it_is_escaped() -> None:
+    """R14: a cut after escaping lands inside an entity."""
+    bars = dashboard.score_bars(
+        {"scores": {"players": [{"player": "Bob <b> and Jerry", "best": 9, "runs": 1}]}}
+    )
+    assert "Bob &lt;b&gt; and" in bars
+    assert "&lt;b&gt;" in bars and "&lt;b&gt<" not in bars
+
+
+def test_the_panel_and_the_report_share_their_definitions() -> None:
+    """One XP rule and one streak behind one label, in both languages."""
+    js = (ROOT / "src" / "game" / "89-dashboard.js").read_text(encoding="utf-8")
+    base = re.search(r"const DASH_XP_BASE=(\d+);", js)
+    assert base and int(base.group(1)) == XP_BASE
+    table = re.search(r"const DASH_XP_MULT=\{(.+?)\};", js)
+    assert table
+    in_game = dict(
+        (m.group(1), float(m.group(2)))
+        for m in re.finditer(r"(\w+):([\d.]+)", table.group(1))
+    )
+    assert in_game == {k: v.xp_multiplier for k, v in DIFFICULTIES.items()}
+    kinds = re.search(r"const DASH_DELIVERED=\[(.+?)\];", js)
+    assert kinds and re.findall(r'"(\w+)"', kinds.group(1)) == list(dashboard.DELIVERED)
 
 
 def test_numbers_are_derived_from_the_state(tmp_path: Path) -> None:
