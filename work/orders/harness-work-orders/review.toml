@@ -1,0 +1,161 @@
+# A review of one order, by someone who did not build it. Every experiment
+# below ran in scratch git repositories under $TMPDIR, never in this worktree.
+v = 1
+order = "harness-work-orders"
+by = "reviewer-fable-1"
+reviewed = "52efbbe471f3902bb090ee81c8cec93fa0401ae6"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_work.py`: 29 passed. Mapped the tests to the sentence: schema 6 (version, globs, cross, shared tests, no command, check xor judge), ownership 4 (stray, generated files and fragment, failing command shown, result per tree), collisions 1 across two real worktrees, plan groups 2, review currency 4 (own work, lapse, every criterion ruled, sign-off), hooks 4 (pre-tool 2, stop 2). Every subject the sentence names has a test that fails when the behaviour breaks, so the command proves the sentence. It proves it below the entry point only: no test names main(), cmd_hook, cmd_ci, cmd_new or cmd_sweep (I listed the functions of tools/work.py that tests/test_work.py never mentions), and that is where most findings are.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Cloned the branch to $TMPDIR/wo-tpl. Baseline: `python3 tools/sync_template.py --check` exit 0, and grep counts 0 mentions of tools/work.py in vibemap/data/template/_claude/settings.json, which holds only the PostToolUse backup hook. Pasted a Stop hook that calls tools/work.py into that file: `--check` prints `stale: vibemap/data/template/_claude/settings.json`, exit 1. Appended a single newline instead: same, exit 1. The template has no work-order skill and no builder, reviewer or team-manager agent (ls of _agents/skills and _claude/agents). `git diff --stat origin/main...HEAD` does not list the camp's settings.json, so it is unchanged, as the pull request says. Limit: filter and grep both key on the substring tools/work.py; a hook spelled `just work-validate` added to .claude/settings.json was synced into the camp and the grep of c2 still exited 0.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+`python3 tools/work.py validate`: `1 orders read, 0 collisions among the active ones`, exit 0; `board` shows 1 active, 0 landed. The collision path is real: the test builds a second worktree and gets one clash. Two limits seen in a scratch repository: the result depends on other sessions (a fresh `work.py new` in a second worktree made validate in the first exit 2 with `owns is empty`), and two orders that name the same branch pass validate without a word.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Packet run: c4 pass in 126.7s; ruff check, ruff format and checks.py style are also green in CI run 35542270516. The command proves its sentence. It is narrower than the change: I ran what that CI run skipped, `uv run pytest -m "not browser and not integration"`: 1 failed, 521 passed, and the failure is caused by this change (first finding).
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = '''
+Scratch repository $TMPDIR/wo-c5 with tools/work.py, tools/sync_main.py, work/teams.toml, work/templates and work/README.md. I reached `first-order: checked, reviewed, signed off. Ready to land.`, but not without guessing. (1) The order that `work.py new` writes is refused by the loader (`owns is empty, so the order may touch nothing`), and an Edit event for that very order.toml piped into `hook pre-tool` exits 2 with `work order unreadable, fix it first`; I filled the file in from a shell script, which neither text mentions and which the skill's rule `Fix the order or the work, never the hook` does not cover. (2) Builder step 5 and builder.md say done means CI green, but `work.py ci` fails with `no review yet` until a reviewer, who comes after the builder, has accepted; pull request 144 shows exactly that. (3) Nothing says who commits review.toml, or that committing it does not lapse it. (4) The keys `issue` and `timeout` exist only in the code and in one error message. (5) No command answers which team a path belongs to; `owns = ["src/"]` answered `belongs to team None`. (6) `just work-new` cannot set the goal, and adding the order to the goal's list is not mentioned. (7) `then a train car` is explained in neither text.
+'''
+
+[[criteria]]
+id = "c6"
+verdict = "fail"
+evidence = '''
+Piped events into `python3 tools/work.py hook pre-tool` and `hook stop` in scratch repositories. Holds: malformed JSON and empty stdin exit 0; a list, null, a string tool_input and a numeric file_path end in a traceback with exit 1, which the hooks reference says does not block; a path outside any repository, a `..` path out of the repository and a symlink out of the worktree exit 0; a relative path, `src/../vibemap/cli.py` and a symlink onto another team's file exit 2 and name the owner; stop_hook_active true exits 0 where false exits 2; an unknown order id exits 0; `sleep 12; true` with timeout = 2 ends after 2.0s as FAIL. Does not hold: with an order.toml that is broken TOML, or one that was just scaffolded, every Edit and Write in that checkout exits 2, including the edit of that order.toml, on any branch whose working tree has the folder. The way out is the shell, which the message does not say and a tool-restricted agent does not have. The same file makes `hook stop` exit 2 for a report that names a different or a nonexistent order, from any worktree, until the second try. The two clauses of the sentence are true; its headline is not.
+'''
+
+[[findings]]
+severity = "high"
+file = "tests/test_cli.py"
+text = '''
+The non-browser battery fails on this branch and passes on main (ci success at 1cc63b8). `uv run pytest -m "not browser and not integration"`: `1 failed, 521 passed`. `tests/test_cli.py::test_skills_are_counted_once` expects `1 skill(s) of your own: develop-camp` and gets `2 skill(s) of your own: develop-camp, work-order`: the new skill is product-only, so vibemap/quests.py `_c2_skill` counts it as the learner's own. Neither file is in this order's owns (team cli, not in cross), no criterion runs this test, and CI never reached it: in run 35542270516 step 13 (work orders) failed and step 14 (pytest) was skipped. The pull request cannot go green as it is.
+'''
+
+[[findings]]
+severity = "high"
+file = "tools/work.py"
+text = '''
+The scaffold is an order the tool refuses, and the hook then refuses the repair. `python3 tools/work.py new first-order --team panels --title "..."` writes `owns = []`, `text = ""`, `check = ""`; straight after, `work.py validate` exits 2 (`owns is empty, so the order may touch nothing`). `printf '{"tool_input":{"file_path":"<repo>/work/orders/first-order/order.toml"}}' | python3 tools/work.py hook pre-tool` prints `work order unreadable, fix it first: ...` and exits 2; so does an Edit of src/head.html, and so does the same event after `git checkout main`, because hook_pre_tool loads every order in the checkout before it looks at the branch. Broken TOML behaves the same. Because active() guards load_teams but not orders_in, the half-written order also breaks other sessions: from a second worktree it made `validate` (criterion c3 of this order), `board` and `hook stop` in the first worktree exit 2. A title with a double quote (`--title 'Say "hi"'`) makes `new` write invalid TOML and lands in the same state.
+'''
+
+[[findings]]
+severity = "high"
+file = ".claude/settings.json"
+text = '''
+The SubagentStop hook cannot see a subagent's report on the Claude Code installed here. hook_stop reads `last_assistant_message`. The hooks reference (https://code.claude.com/docs/en/hooks.md, SubagentStop input) says: on v2.1.271 or later a subagent that runs with the SubagentHandback tool delivers its report through that tool, and `last_assistant_message` "holds the subagent's closing text, if any, which is not the delivered report"; the report is `tool_input.message` of a PreToolUse or PostToolUse hook matched on SubagentHandback. `claude --version` here: 2.1.278, and this review session is such a subagent. So a builder's `order: <id>` line never reaches the hook, ORDER_LINE finds nothing and the hook exits 0: the sentence in AGENTS.md, CLAUDE.md, builder.md and the ADR that a hook holds a builder to its order is not true for the agents it was written for. tests/test_work.py feeds the text in as last_assistant_message, so it cannot notice.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/work.py"
+text = '''
+A review can be kept current without being current (_signed, load_review). Each reproduced in $TMPDIR/wo-c5 and ended in `first-order: checked, reviewed, signed off. Ready to land.`, exit 0: (a) after the accepted review, order.toml's criterion was changed from `grep -q hello src/head.html` to `true` and committed; files under the order's folder are exempt from the lapse, and that includes the criteria the reviewer ruled on. (b) `reviewed = "HEAD"` (and `reviewed = "feat/first"`), then an owned file changed and was committed; any ref passes `merge-base --is-ancestor`, and `git diff HEAD..HEAD` is always empty. (c) `builder = ""` in order.toml with `by = "builder-x"`, the name the builder reports under; the own-work rule only fires when builder is filled in, and nothing requires it at accept.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/work.py"
+text = '''
+The CI door has three ways round it (cmd_ci), reproduced in $TMPDIR/wo-c8. (a) The order landed on main through a planning pull request; the build branch changes src/body.html, docs/GUIDE.md and a stray src/head.html and touches nothing under work/orders/: `work: 0 orders in this pull request, 0 problems`, exit 0, with no review and no sign-off. ci never matches an order by its branch. (b) With an accepted review and `cross = ["docs"]` unsigned: `work.py ci` exit 0 while `work.py accept` says `team docs has not signed off on its files`, exit 1. That is this pull request once its review says accept. (c) In a depth 1 clone `git diff --name-only origin/main...HEAD` fails (`fatal: origin/main...HEAD: no merge base`, exit 128); git() drops the exit code, so ci prints `0 orders in this pull request, 0 problems` and exits 0. CI sees the order today only because the changelog step before it ran `git fetch --deepen=200`. The same swallowed failure makes strays() empty for a mistyped --base.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/work.py"
+text = '''
+Ownership has two holes, reproduced in $TMPDIR/wo-c7 with this repository's teams.toml. (a) A panels order with `owns = ["src/game/"]` and `cross = []` loads, because teams.of("src/game/") is panels, yet the folder holds scene's and state's files: teams.of("src/game/10-world.js") is scene, may_touch is True, the pre-tool hook exits 0, and `work.py check` prints OK after the edit was committed. `owns = ["vibemap/"]` does the same to state.py and the topics. The sign-off rule is bypassed by naming the parent folder. (b) `git mv vibemap/cli.py src/game/cli.py`: `git diff --name-only origin/main...HEAD` lists only src/game/cli.py, so removing another team's file is not a stray and check prints OK, committed or staged (dirty() keeps only the new name of `R  old -> new`). --no-renames would show `D vibemap/cli.py`.
+'''
+
+[[findings]]
+severity = "medium"
+file = ".github/workflows/ci.yml"
+text = '''
+The work step sits before pytest, so while an order waits for its review CI never runs the unit tests: run 35542270516, step 13 failure, step 14 `uv run pytest -m "not browser and not integration"` skipped. That hid the first finding from the builder and from me until I ran it by hand. It also contradicts the texts: SKILL.md builder step 5 (`watch CI to green`), builder.md (`done when ... your pull request is green, not before`) and work/templates/report.md ask the builder for a green pull request at a point where this step cannot be green.
+'''
+
+[[findings]]
+severity = "medium"
+file = "work/README.md"
+text = '''
+Sentences that are not true of the code. `Both let go on anything they cannot read, so they cannot trap a session` (README, the ADR, the pull request body): hook_pre_tool returns 2 on an unreadable order or teams.toml, and hook_stop ends in exit 2 through main()'s Bad handler when any worktree holds an unreadable order. `reads the first line of a report` (ADR) and `whose report starts with` (README, CLAUDE.md): ORDER_LINE is searched with re.M over the whole message; `{"last_assistant_message":"Here is the plan.\n\nnext I will look at\norder: first-order\nthen stop"}` ran the checks and exited 2. `until just work-check <id> passes` (CLAUDE.md): released on the second try, and for `role: reviewer` the check is never run.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/work.py"
+text = '''
+The landing gate trusts a file the builder may write. run_check serves work/orders/<id>/result.json when `tree` matches and `ok` is true; the file is gitignored, unversioned, inside the order's folder (so the pre-tool hook allows it), and `accept` and `hook stop` both read it without --force. With c1 = `false` (check exit 1), I wrote `{"order","tree": work.tree_key(root),"strays":[],"criteria":[],"ok":true}`: `work.py check first-order` printed `order first-order  (cached)  OK`, exit 0, and `hook stop` exit 0. accept should measure, not read.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_work.py"
+text = '''
+AGENTS.md: test the entry point, not the mechanism. No test goes through `python3 tools/work.py ...`: main(), cmd_hook (the stdin parsing that c6 rests on), cmd_ci (the whole CI door), cmd_new and cmd_sweep are never called, and the findings above are in exactly those. No test covers an unreadable order in the hooks, `reviewed` that is not a sha, a rename, or the file that `new` writes.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+Pre-tool gaps. The matcher lists NotebookEdit, but the hook reads only tool_input.file_path and that tool sends notebook_path: `{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"<repo>/vibemap/x.ipynb"}}` exits 0 on another team's path. Two orders that name one branch: `len(mine) != 1`, so an edit of vibemap/cli.py exits 0 and validate says nothing. A JSON list, null, a string tool_input or a numeric file_path raise AttributeError or TypeError: a traceback on stderr, exit 1. A folder that spans teams, or one written without the slash, is refused as `belongs to team None`.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+`sweep` unlinks every entry of a landed order's folder; with work/orders/body-order/research/notes.md (the skill's stage table allows `a file under the order's folder`) it raised `PermissionError: ... /research` after deleting order.toml, leaving the folder half swept, and `just release` runs it after the changelog was already cut. `landed()` also counts a review.toml whose verdict is improve.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+The issue side. cmd_post takes the first comment that starts with the marker, whoever wrote it: with a stranger's `<!-- work:harness-work-orders -->` comment first, `mine[0]` is the stranger's (author_association NONE), so the tool patches that comment or fails on it for good. trusted() counts such a comment as ours: for four comments with two untrusted ones it reported 1 held back, and it hides an OWNER comment that begins with `<!-- work:`. MEMBER means a member of the owning organisation, not someone who can push here. `thread` prints comments only, never the issue's own text, which is where a task usually is.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+Smaller correctness points. Non-ASCII names: git C-quotes them (`"vibemap/caf\303\251.py"`), dirty() only strips the quotes, so tree_key did not change when that untracked file changed (a stale cached OK) and the stray is printed under a name that does not exist. A timed-out criterion leaves its children running: after the timeout `pgrep -fl "sleep 7"` still showed the process. The Stop hook's timeout is 1800s while each criterion may take 1500s and this order has four. The docstring says a bare python3 will do, but tomllib needs 3.11: `/usr/bin/python3` (3.9.6) on this machine dies with `ModuleNotFoundError: No module named 'tomllib'`, exit 1, which in a hook means enforcement is silently off.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+A clean sync with main lapses the review. In $TMPDIR/wo-c9 the order owns AGENTS.md, the review is accepted, someone else's change to line 1 of AGENTS.md lands on main and merges cleanly into the branch: `accept` then says `AGENTS.md changed after the reviewer looked`, though `git diff origin/main...HEAD` is unchanged. main only takes up-to-date branches and this order owns AGENTS.md, justfile, .gitignore, ci.yml and docs/adr/README.md, so this review will lapse on the next landing that touches one of them. The ADR names train-car fixes as the intended friction, not this.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+One helper per concept: result.json is read and parsed in three places (run_check, cmd_board, cmd_post), cmd_ci re-spells `git diff --name-only base...HEAD` next to changed() and the order.toml path next to Order.dir, and _signed and dirty() each call subprocess.run beside git().
+'''
