@@ -17,14 +17,17 @@ copy of src/ and this file in workspace/forks/ builds on its own (`vibe fork`).
 
 from __future__ import annotations
 
+import functools
 import importlib.util
 import json
 import os
 import re
 import shutil
 import sys
+import urllib.parse
 from pathlib import Path
 from string import ascii_letters, digits
+from typing import Any
 
 
 def _root(argv: list[str] | None = None) -> Path:
@@ -107,6 +110,29 @@ def js_json(data: object) -> str:
 
 def _read(rel: str) -> str:
     return (SRC / rel).read_text(encoding="utf-8")
+
+
+def _icon_data_uri() -> str:
+    """src/icon.svg as an inline data URI: the tab icon costs no request.
+
+    Single quotes inside, so the URI can sit in a double-quoted attribute; the
+    hash of every colour has to be escaped or the browser reads it as the
+    start of a fragment.
+    """
+    svg = " ".join(_read("icon.svg").split()).replace('"', "'")
+    return "data:image/svg+xml," + urllib.parse.quote(svg, safe="/:=;,' ")
+
+
+def _head_html() -> str:
+    """head.html with its placeholders filled; an unfilled one is a build fault."""
+    site = _camp().game.site_url
+    text = _read("head.html")
+    for key, value in (("{{SITE}}", site), ("{{ICON}}", _icon_data_uri())):
+        text = text.replace(key, value)
+    left = re.search(r"\{\{[A-Z]+\}\}", text)
+    if left:
+        raise SystemExit(f"src/head.html has no value for {left.group(0)}")
+    return text
 
 
 def _campaign_js() -> str:
@@ -224,14 +250,22 @@ def _persona_interests(persona_id: str) -> list[str]:
     return list(p.interests) if p else []
 
 
-def _config_js() -> str:
-    """The journey values (config/camp.toml) the game exposes as a constant."""
+@functools.cache
+def _camp() -> Any:
+    """This camp's config/camp.toml: the one read, shared by everything here."""
     sys.path.insert(0, str(ROOT))
     from vibemap import project  # noqa: PLC0415
     from vibemap.config import Config  # noqa: PLC0415
+
+    return Config.load(project.nearest_config(ROOT))
+
+
+def _config_js() -> str:
+    """The journey values (config/camp.toml) the game exposes as a constant."""
+    sys.path.insert(0, str(ROOT))
     from vibemap.themes import load_theme, theme_for_game  # noqa: PLC0415
 
-    cfg = Config.load(project.nearest_config(ROOT))
+    cfg = _camp()
     version = _version()
     theme = theme_for_game(
         load_theme(cfg.theme.preset), show_pairings=cfg.game.show_pairings
@@ -448,7 +482,7 @@ def _game_script() -> str:
 def build() -> str:
     """Return the full HTML document as a string."""
     return (
-        _read("head.html")
+        _head_html()
         + "<style>\n"
         + _read("style.css")
         + "</style>\n</head>\n"
