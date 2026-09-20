@@ -500,7 +500,8 @@ def run_check(
         )
     result["criteria"] = rows
     result["ok"] = not result["strays"] and all(r.get("exit", 0) == 0 for r in rows)
-    out_path.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
+    if budget is None:
+        out_path.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8")
     return result
 
 
@@ -544,20 +545,21 @@ def contribution(order: Order, base: str, rev: str) -> str:
         ["git", "-C", str(order.root), "diff", "--no-renames", f"{base}...{rev}", "--"]
         + paths,
         capture_output=True,
-        text=True,
         check=False,
     )
     if diff.returncode != 0:
-        raise Bad(f"git diff {base}...{rev}: {diff.stderr.strip()[:300]}")
+        raise Bad(
+            f"git diff {base}...{rev}: {diff.stderr.decode(errors='replace')[:300]}"
+        )
+    # Bytes in and out: an owned file does not have to be UTF-8. Verbatim,
+    # because indentation is meaning in Python and in YAML.
     ident = subprocess.run(
-        # Verbatim, because indentation is meaning in Python and in YAML.
         ["git", "patch-id", "--verbatim"],
         input=diff.stdout,
         capture_output=True,
-        text=True,
         check=False,
     )
-    return ident.stdout.split(" ")[0].strip()
+    return ident.stdout.split(b" ")[0].strip().decode()
 
 
 def _signed(order: Order, path: Path, who: str, base: str) -> dict:
@@ -796,8 +798,9 @@ def _repo_of(path: Path) -> Path | None:
 
 
 def _who(event: dict) -> str:
-    """The agent behind a hook event: a subagent has an id, a session is itself."""
-    return str(event.get("agent_id") or event.get("session_id") or "")
+    """The subagent behind a hook event, or nothing for a session: a session is
+    held by what its report says, so nothing would ever read its id."""
+    return str(event.get("agent_id") or "")
 
 
 def _touched(order: Order) -> dict:
@@ -875,10 +878,7 @@ def hook_stop(
     if event.get("stop_hook_active"):
         return 0, ""
     orders = {o.id: o for o in active(root)}
-    who, text = (
-        str(event.get("agent_id") or ""),
-        str(event.get("last_assistant_message", "")),
-    )
+    who, text = _who(event), str(event.get("last_assistant_message", ""))
     roles = {o.id: _touched(o)[who] for o in orders.values() if who in _touched(o)}
     named = ORDER_LINE.search(text)
     if named and named.group(1) in orders and named.group(1) not in roles:
@@ -1040,7 +1040,10 @@ def cmd_ci(a: argparse.Namespace) -> int:
         or os.environ.get("GITHUB_HEAD_REF")
         or git(ROOT, "branch", "--show-current")
     )
-    carried |= {o.id for o in orders.values() if head and o.branch == head}
+    done = landed()
+    carried |= {
+        o.id for o in orders.values() if head and o.branch == head and o.id not in done
+    }
     carried &= set(orders)
     ships_code = any(not n.startswith("work/") for n in names)
     bad = []

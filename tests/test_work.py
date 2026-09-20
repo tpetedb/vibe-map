@@ -68,6 +68,9 @@ def no_git_config_of_this_machine(monkeypatch: pytest.MonkeyPatch) -> None:
     a global ignore once hid a stray that the tool itself had written."""
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", "/dev/null")
     monkeypatch.setenv("GIT_CONFIG_SYSTEM", "/dev/null")
+    # A pull request's runner names its own branch for the whole job, and the
+    # tool would believe it inside a scratch repository too.
+    monkeypatch.delenv("GITHUB_HEAD_REF", raising=False)
 
 
 @pytest.fixture
@@ -705,6 +708,37 @@ def test_a_sign_off_is_for_its_team_and_not_by_the_reviewer(repo: Path) -> None:
 def test_a_path_no_team_covers_is_said_plainly(repo: Path) -> None:
     with pytest.raises(work.Bad, match="no team in work/teams.toml covers"):
         put_order(repo, "one", order_text("one", "feat/x", ["docs/x.md"]))
+
+
+# ------------------------------------------------------------ the third review
+
+
+def test_an_owned_file_need_not_be_utf8(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / "src" / "panel.js").write_bytes(b"// caf\xe9 in latin-1\n")
+    sha = commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    commit(repo, "the review")
+    assert work.load_review(order)["verdict"] == "accept"
+
+
+def test_a_landed_order_is_not_judged_again_by_its_branch_name(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    sha = commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "landed"))
+    (repo / "src" / "scene.js").write_text("// later work on a reused branch name\n")
+    commit(repo, "not this order's business")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/x")
+    assert ran.returncode == 0 and "0 orders" in ran.stdout
+
+
+def test_a_hurried_run_is_not_kept_as_the_measurement(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    work.run_check(order, "origin/main", budget=30)
+    assert not (order.dir / "result.json").exists()
+    work.run_check(order, "origin/main")
+    assert (order.dir / "result.json").exists()
 
 
 # ------------------------------------------------------------ the issue

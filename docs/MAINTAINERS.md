@@ -63,7 +63,7 @@ People who want the engine press **Use this template** on GitHub or clone this r
 
 ## How agents share the work
 
-Several agents build at once, so a task is a work order and not a prompt: `work/orders/<id>/order.toml` names the files it owns and its acceptance as commands, a different agent reviews it, and another team's files need that team's sign-off. `work/teams.toml` has the teams, `just work-plan <goal>` the launch groups, `just work-board` what is running. Hooks hold an agent to its order and CI checks the review on the pull request. `work/README.md` is the short version, ADR 0016 the reasons, the skill `work-order` the how-to.
+Several agents build at once, so a task is a work order and not a prompt: `work/orders/<id>/order.toml` names the files it owns and its acceptance as commands, a different agent reviews it, and another team's files need that team's sign-off. `work/teams.toml` has the teams, `just work-plan <goal>` the launch groups, `just work-board` what is running. Hooks remind an agent of its order; `work-check`, `work-accept` and the CI step on the pull request decide. `work/README.md` is the short version, ADR 0016 the reasons, the skill `work-order` the how-to.
 
 ## Branch protection
 
