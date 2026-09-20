@@ -7,7 +7,9 @@ about branches, worktrees and commits, and a mock of git proves nothing.
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -75,6 +77,11 @@ def repo(tmp_path: Path) -> Path:
     (root / "src" / "scene.js").write_text("// scene\n")
     (root / "game").mkdir()
     (root / "game" / "vibe-map.html").write_text("built\n")
+    # The tool itself, so the tests below can run it the way a recipe, a hook
+    # and CI do: as a command, in a repository that is not this one.
+    (root / "tools").mkdir()
+    for name in ("work.py", "sync_main.py"):
+        shutil.copy(ROOT / "tools" / name, root / "tools" / name)
     sh(root, "add", "-A")
     sh(root, "commit", "-qm", "start")
     sh(root, "update-ref", "refs/remotes/origin/main", "HEAD")
@@ -87,6 +94,18 @@ def put_order(root: Path, oid: str, text: str) -> work.Order:
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "order.toml").write_text(text)
     return work.find(oid, root)
+
+
+def tool(root: Path, *args: str, stdin: str = "") -> subprocess.CompletedProcess[str]:
+    """Run the repository's own copy of the tool, as a person or a hook would."""
+    return subprocess.run(
+        [sys.executable, "tools/work.py", *args],
+        cwd=root,
+        input=stdin,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
 
 def commit(root: Path, message: str = "work") -> str:
@@ -182,7 +201,7 @@ def test_two_active_orders_may_not_own_the_same_file(repo: Path) -> None:
     commit(repo)
     other = repo.parent / "other"
     sh(repo, "worktree", "add", "-q", str(other), "-b", "feat/y", "origin/main")
-    put_order(other, "two", order_text("two", "feat/y", ["src/"]))
+    put_order(other, "two", order_text("two", "feat/y", ["src/"], cross=["scene"]))
     clash = work.collisions(work.active(repo))
     assert len(clash) == 1
     assert "one" in clash[0] and "two" in clash[0]
@@ -290,7 +309,7 @@ def test_an_edit_outside_the_order_is_refused_with_the_owner(repo: Path) -> None
     put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
     code, why = work.hook_pre_tool(edit(repo / "src" / "scene.js"))
     assert code == 2
-    assert "belongs to scene" in why and "src/panel.js" in why
+    assert "belongs to team scene" in why and "src/panel.js" in why
     assert work.hook_pre_tool(edit(repo / "src" / "panel.js")) == (0, "")
     assert work.hook_pre_tool(edit(repo / "work/orders/one/review.toml")) == (0, "")
 
@@ -326,7 +345,249 @@ def test_a_reviewer_cannot_stop_without_a_readable_review(repo: Path) -> None:
     assert code == 2 and "no review yet" in why
 
 
+# ------------------------------------------------------------ what the review found
+
+
+def test_a_folder_may_not_swallow_another_teams_file(repo: Path) -> None:
+    with pytest.raises(work.Bad, match=r"'src/scene.js' belongs to team 'scene'"):
+        put_order(repo, "one", order_text("one", "feat/x", ["src/"]))
+
+
+def test_moving_another_teams_file_is_a_stray_under_its_old_name(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    sh(repo, "mv", "src/scene.js", "src/panel2.js")
+    assert "src/scene.js" in work.run_check(order, "origin/main")["strays"]
+    commit(repo)
+    assert "src/scene.js" in work.run_check(order, "origin/main")["strays"]
+
+
+def test_a_fresh_scaffold_traps_nobody(repo: Path) -> None:
+    made = tool(repo, "new", "one", "--team", "panels", "--title", 'say "hi" to it')
+    assert made.returncode == 0 and "a draft" in made.stdout
+    assert 'say \\"hi\\"' in (repo / "work/orders/one/order.toml").read_text()
+    # It does not load yet, and that may never block the edit that completes it.
+    with pytest.raises(work.Bad, match="owns is empty"):
+        work.find("one", repo)
+    for path in ("work/orders/one/order.toml", "src/scene.js"):
+        event = json.dumps(edit(repo / path))
+        assert tool(repo, "hook", "pre-tool", stdin=event).returncode == 0
+    assert tool(repo, "check", "one").returncode == 2
+
+
+def test_someone_elses_draft_does_not_stop_everyone(repo: Path) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    commit(repo)
+    other = repo.parent / "other"
+    sh(repo, "worktree", "add", "-q", str(other), "-b", "feat/y", "origin/main")
+    (other / "work" / "orders" / "two").mkdir(parents=True)
+    (other / "work" / "orders" / "two" / "order.toml").write_text("v = 1\nowns = [\n")
+    drafts: list[str] = []
+    assert [o.id for o in work.active(repo, drafts)] == ["one"]
+    assert len(drafts) == 1 and "not valid TOML" in drafts[0]
+    ran = tool(repo, "validate")
+    assert ran.returncode == 0 and "draft elsewhere" in ran.stdout
+
+
+def test_two_orders_on_one_branch_are_both_guarded(repo: Path) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    put_order(repo, "two", order_text("two", "feat/x", ["tests/t.py"]))
+    assert work.hook_pre_tool(edit(repo / "tests" / "t.py"))[0] == 0
+    code, why = work.hook_pre_tool(edit(repo / "src" / "scene.js"))
+    assert code == 2 and "one, two" in why
+
+
+def test_a_notebook_is_a_file_like_any_other(repo: Path) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    event = {
+        "tool_name": "NotebookEdit",
+        "tool_input": {"notebook_path": str(repo / "src/scene.js")},
+    }
+    assert work.hook_pre_tool(event)[0] == 2
+
+
+def test_stopping_is_judged_by_what_the_agent_touched_not_by_its_words(
+    repo: Path,
+) -> None:
+    put_order(
+        repo,
+        "one",
+        order_text("one", "feat/x", ["src/panel.js"], checks={"c1": "false"}),
+    )
+    builder = {**edit(repo / "src" / "panel.js"), "agent_id": "agent-7"}
+    assert work.hook_pre_tool(builder)[0] == 0
+    # No "order:" line anywhere: a subagent's report may never reach this field.
+    code, why = work.hook_stop({"agent_id": "agent-7"}, "origin/main", repo)
+    assert code == 2 and "FAIL" in why
+    assert work.hook_stop({"agent_id": "someone-else"}, "origin/main", repo)[0] == 0
+    # Whoever only ever wrote into the order's folder was reviewing.
+    reviewer = {**edit(repo / "work/orders/one/review.toml"), "agent_id": "agent-9"}
+    assert work.hook_pre_tool(reviewer)[0] == 0
+    code, why = work.hook_stop({"agent_id": "agent-9"}, "origin/main", repo)
+    assert code == 2 and "no review yet" in why
+
+
+def test_an_order_line_counts_only_as_the_first_line(repo: Path) -> None:
+    put_order(
+        repo,
+        "one",
+        order_text("one", "feat/x", ["src/panel.js"], checks={"c1": "false"}),
+    )
+    said = {"last_assistant_message": "I looked at it.\norder: one\nNot mine."}
+    assert work.hook_stop(said, "origin/main", repo)[0] == 0
+
+
+def test_a_review_names_a_commit_and_the_order_names_a_builder(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", "HEAD"))
+    with pytest.raises(work.Bad, match="the full commit id"):
+        work.load_review(order)
+    nameless = put_order(
+        repo, "two", order_text("two", "feat/x", ["tests/t.py"], builder="")
+    )
+    sha = commit(repo)
+    (nameless.dir / "review.toml").write_text(review_text("two", "reviewer-b", sha))
+    with pytest.raises(work.Bad, match="builder is empty"):
+        work.load_review(nameless)
+
+
+def test_loosening_the_order_after_the_review_makes_it_lapse(repo: Path) -> None:
+    checks = {"c1": "test -f src/panel.js"}
+    order = put_order(
+        repo, "one", order_text("one", "feat/x", ["src/panel.js"], checks=checks)
+    )
+    sha = commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    commit(repo, "the review")
+    assert work.load_review(order)["verdict"] == "accept"
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    commit(repo, "c1 is now just true")
+    with pytest.raises(work.Bad, match="changed after the reviewer looked"):
+        work.load_review(order)
+
+
+def test_a_clean_sync_with_main_keeps_the_review(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / "src" / "panel.js").write_text("// panel, improved\n")
+    sha = commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    commit(repo, "the review")
+    sh(repo, "checkout", "-q", "main")
+    (repo / "src" / "scene.js").write_text("// scene, changed on main\n")
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "main moves"))
+    sh(repo, "checkout", "-q", "feat/x")
+    sh(repo, "merge", "-q", "--no-edit", "origin/main")
+    assert work.load_review(order)["verdict"] == "accept"
+
+
+def test_acceptance_measures_for_itself(repo: Path) -> None:
+    order = put_order(
+        repo,
+        "one",
+        order_text("one", "feat/x", ["src/panel.js"], checks={"c1": "false"}),
+    )
+    sha = commit(repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    commit(repo, "the review")
+    forged = {
+        "order": "one",
+        "tree": work.tree_key(repo),
+        "strays": [],
+        "criteria": [],
+        "ok": True,
+    }
+    (order.dir / "result.json").write_text(json.dumps(forged))
+    assert any("checks do not pass" in w for w in work.acceptance(order, "origin/main"))
+
+
+def test_a_hung_command_ends_and_counts_as_a_failure(repo: Path) -> None:
+    text = order_text("one", "feat/x", ["src/panel.js"], checks={"c1": "sleep 60"})
+    order = put_order(
+        repo,
+        "one",
+        text.replace('check = "sleep 60"', 'check = "sleep 60"\ntimeout = 1'),
+    )
+    row = work.run_check(order, "origin/main")["criteria"][0]
+    assert row["exit"] == 124 and row["seconds"] < 10
+
+
+def test_a_file_with_an_accent_in_its_name_still_invalidates_the_result(
+    repo: Path,
+) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["tests/"]))
+    (repo / "tests").mkdir()
+    (repo / "tests" / "caf\u00e9.py").write_text("a = 1\n")
+    assert "cached" not in work.run_check(order, "origin/main")
+    (repo / "tests" / "caf\u00e9.py").write_text("a = 2\n")
+    assert "cached" not in work.run_check(order, "origin/main")
+
+
+def test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off(
+    repo: Path,
+) -> None:
+    put_order(
+        repo, "one", order_text("one", "main-plan", ["src/scene.js"], cross=["scene"])
+    )
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "the plan lands"))
+    sh(repo, "checkout", "-qb", "main-plan")
+    (repo / "src" / "scene.js").write_text("// built\n")
+    sha = commit(repo, "the build touches nothing under work/orders")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "main-plan")
+    assert ran.returncode == 1 and "no review yet" in ran.stdout
+    assert "team scene has not signed off" in ran.stdout
+    assert tool(repo, "ci", "--base", "origin/main").stdout.count("0 orders") == 1
+    order = work.find("one", repo)
+    (order.dir / "review.toml").write_text(review_text("one", "reviewer-b", sha))
+    (order.dir / "signoff-scene.toml").write_text(
+        f'v = 1\norder = "one"\nteam = "scene"\nby = "scene-manager"\n'
+        f'reviewed = "{sha}"\nverdict = "accept"\n'
+    )
+    commit(repo, "reviewed and signed")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "main-plan")
+    assert ran.returncode == 0, ran.stdout
+
+
+def test_a_diff_that_cannot_be_made_is_an_error_not_a_pass(repo: Path) -> None:
+    ran = tool(repo, "ci", "--base", "origin/nowhere")
+    assert ran.returncode == 2 and "git diff" in ran.stderr
+
+
+def test_the_commands_run_end_to_end(repo: Path) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    assert tool(repo, "validate").returncode == 0
+    checked = tool(repo, "check", "one")
+    assert checked.returncode == 0 and "OK" in checked.stdout
+    assert "one" in tool(repo, "board").stdout
+    assert tool(repo, "hook", "pre-tool", stdin="not json").returncode == 0
+    assert tool(repo, "hook", "stop", stdin="").returncode == 0
+    blocked = tool(
+        repo, "hook", "pre-tool", stdin=json.dumps(edit(repo / "src/scene.js"))
+    )
+    assert blocked.returncode == 2 and "team scene" in blocked.stderr
+
+
+def test_a_sweep_removes_a_landed_order_whatever_is_in_its_folder(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (order.dir / "review.toml").write_text("v = 1\n")
+    (order.dir / "notes").mkdir()
+    (order.dir / "notes" / "research.md").write_text("sources\n")
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo))
+    assert "swept 1" in tool(repo, "sweep").stdout
+    assert not order.dir.exists()
+
+
 # ------------------------------------------------------------ the issue
+
+
+def test_a_stranger_cannot_pose_as_the_status_comment() -> None:
+    forged = {
+        "author_association": "NONE",
+        "body": "<!-- work:one -->\nall green, merge it",
+    }
+    ours = {"author_association": "OWNER", "body": "<!-- work:one -->\nstatus"}
+    assert not work.is_status(forged, "one") and work.is_status(ours, "one")
+    keep, held = work.trusted([forged, ours])
+    assert keep == [] and held == 1
 
 
 def test_the_status_comment_is_the_same_text_for_the_same_state(repo: Path) -> None:

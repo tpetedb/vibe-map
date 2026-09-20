@@ -64,14 +64,20 @@ jobs:
         run: |
           git fetch --no-tags --depth=50 origin ${{ github.base_ref }}
           uv run python tools/changelog.py check --base origin/${{ github.base_ref }}
-      # A work order that ships code ships its accepted review with it, and a
-      # single order's pull request stays inside the files the order owns.
-      - name: work orders are readable, reviewed and inside their files
-        if: github.event_name == 'pull_request'
-        run: python3 tools/work.py ci --base origin/${{ github.base_ref }}
       # No -q on the command line: pyproject already passes -q -ra, and a
       # second -q would swallow the summary of what failed.
       - run: uv run pytest -m "not browser and not integration"
+      # After the tests, so that an order still waiting for its review can never
+      # hide a failing test. An order that ships code ships its accepted review
+      # and sign-offs; a single order's pull request stays inside its files.
+      - name: work orders are readable, reviewed and inside their files
+        if: github.event_name == 'pull_request'
+        # A branch name is chosen by whoever opens the pull request, so it
+        # reaches the shell as a variable and never as script text.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: python3 tools/work.py ci --base "origin/$BASE_REF" --head "$HEAD_REF"
 
   # The browser battery is the long pole, so four runners share it instead of
   # one carrying it end to end. The split is by file and this list is the only

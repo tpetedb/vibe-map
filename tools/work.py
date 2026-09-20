@@ -29,13 +29,22 @@ import argparse
 import fnmatch
 import hashlib
 import json
+import os
 import re
+import shutil
+import signal
 import subprocess
 import sys
 import time
-import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # the system python on a Mac is older than 3.11
+    if sys.argv[1:2] == ["hook"]:
+        raise SystemExit(0) from None
+    raise SystemExit("tools/work.py needs Python 3.11 or newer") from None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sync_main import GENERATED  # noqa: E402  one list of what nobody owns
@@ -47,7 +56,8 @@ JUDGES = ("reviewer", "manager")
 # What any order may touch besides what it owns: outputs that are regenerated,
 # and the fragment CI demands for a change to the product.
 ANYONE = (*GENERATED, "changelog.d/")
-ORDER_LINE = re.compile(r"^\s*order:\s*([a-z0-9-]+)\s*$", re.M)
+# A report's first line names its order; "order: x" further down is prose.
+ORDER_LINE = re.compile(r"\A\s*order:\s*([a-z0-9-]+)\s*$", re.M)
 ROLE_LINE = re.compile(r"^\s*role:\s*([a-z-]+)\s*$", re.M)
 # A criterion may take a browser battery; a hung one must still end.
 CHECK_TIMEOUT = 1500
@@ -69,15 +79,25 @@ def overlap(a: str, b: str) -> bool:
     return covers(a, b) or covers(b, a)
 
 
-def git(root: Path, *args: str) -> str:
+def git(root: Path, *args: str, must: bool = False) -> str:
+    """One git call. `must` is for an answer the verdict depends on: an empty
+    string from a failed diff would read as "nothing changed"."""
     out = subprocess.run(
-        ["git", "-C", str(root), *args], capture_output=True, text=True, check=False
+        ["git", "-c", "core.quotepath=false", "-C", str(root), *args],
+        capture_output=True,
+        text=True,
+        check=False,
     )
+    if must and out.returncode != 0:
+        raise Bad(f"git {' '.join(args)}: {out.stderr.strip()[:300]}")
     return out.stdout.strip()
 
 
 # What the tool writes next to an order is a measurement, not part of the work.
-NOT_RESULTS = ":(exclude)work/orders/*/result.json"
+NOT_OURS = (
+    ":(exclude)work/orders/*/result.json",
+    ":(exclude)work/orders/*/touched.json",
+)
 
 
 def dirty(root: Path) -> list[str]:
@@ -85,14 +105,20 @@ def dirty(root: Path) -> list[str]:
     column of a status line is a space for an unstaged change, so the output is
     read unstripped."""
     out = subprocess.run(
-        ["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"]
-        + ["--", ".", NOT_RESULTS],
+        ["git", "-C", str(root), "status", "--porcelain", "-z"]
+        + ["--untracked-files=all", "--", ".", *NOT_OURS],
         capture_output=True,
         text=True,
         check=False,
     )
-    lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
-    return [ln[3:].split(" -> ")[-1].strip('"') for ln in lines]
+    names, fields = [], [f for f in out.stdout.split("\0") if f]
+    while fields:
+        entry = fields.pop(0)
+        names.append(entry[3:])
+        # A rename is two paths, and the one that went away matters as much.
+        if entry[0] in "RC" and fields:
+            names.append(fields.pop(0))
+    return names
 
 
 def _toml(path: Path) -> dict:
@@ -225,12 +251,18 @@ def load_order(folder: Path, teams: Teams, root: Path) -> Order:
     for entry in owns:
         if any(ch in entry for ch in "*?["):
             raise Bad(f"{path}: owns {entry!r}: name files or folders/, not globs")
-        home = teams.of(entry)
-        if home not in (data["team"], "shared", *cross):
-            raise Bad(
-                f"{path}: owns {entry!r}, which belongs to team {home!r}; "
-                f"add it to cross and get that team's sign-off, or leave it"
-            )
+        inside = (
+            git(root, "ls-files", "--", entry).splitlines()
+            if entry.endswith("/")
+            else []
+        )
+        for name in (entry, *inside):
+            home = teams.of(name)
+            if home not in (data["team"], "shared", *cross):
+                raise Bad(
+                    f"{path}: owns {entry!r}, but {name!r} belongs to team {home!r}; "
+                    f"add it to cross and get that team's sign-off, or leave it"
+                )
     criteria = []
     for raw in data.get("criteria", []):
         cid = str(raw.get("id", ""))
@@ -281,6 +313,19 @@ def orders_in(root: Path, teams: Teams) -> list[Order]:
     ]
 
 
+def readable(root: Path, teams: Teams) -> tuple[list[Order], list[str]]:
+    """The orders that load, and one sentence for each that does not. Reading
+    across worktrees has to survive a draft somebody else has just started."""
+    base, good, drafts = root / "work" / "orders", [], []
+    for d in sorted(base.iterdir()) if base.is_dir() else []:
+        if (d / "order.toml").is_file():
+            try:
+                good.append(load_order(d, teams, root))
+            except Bad as e:
+                drafts.append(str(e))
+    return good, drafts
+
+
 def worktrees(root: Path = ROOT) -> list[tuple[Path, str]]:
     """Every checkout of this repository with the branch it is on."""
     out, path = [], None
@@ -298,15 +343,18 @@ def landed(root: Path = ROOT) -> set[str]:
     return {n.split("/")[2] for n in names.splitlines() if n.endswith("/review.toml")}
 
 
-def active(root: Path = ROOT) -> list[Order]:
-    """Orders being worked on now: their branch is checked out in some worktree."""
+def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
+    """Orders being worked on now: their branch is checked out in some worktree.
+    Unreadable ones are skipped, and named in `drafts` when the caller asks."""
     done, found = landed(root), {}
     for path, branch in worktrees(root):
         try:
-            teams = load_teams(path)
+            orders, bad = readable(path, load_teams(path))
         except (Bad, FileNotFoundError):
             continue
-        for order in orders_in(path, teams):
+        if drafts is not None:
+            drafts += bad
+        for order in orders:
             if order.branch == branch and order.id not in done:
                 found[order.id] = order
     return list(found.values())
@@ -338,8 +386,18 @@ def find(oid: str, root: Path = ROOT) -> Order:
 
 def changed(root: Path, base: str) -> list[str]:
     """What this branch changes against base, committed or not."""
-    names = set(git(root, "diff", "--name-only", f"{base}...HEAD").splitlines())
-    return sorted(n for n in names | set(dirty(root)) if n)
+    return sorted(n for n in set(diff_names(root, base)) | set(dirty(root)) if n)
+
+
+def diff_names(root: Path, base: str, rev: str = "HEAD") -> list[str]:
+    """Paths that differ between the merge base and rev. A shallow clone may
+    lack the merge base, so deepen once; after that, not knowing is an error."""
+    args = ("diff", "--name-only", "--no-renames", f"{base}...{rev}")
+    try:
+        return git(root, *args, must=True).splitlines()
+    except Bad:
+        git(root, "fetch", "--no-tags", "--deepen=500", "origin")
+        return git(root, *args, must=True).splitlines()
 
 
 def strays(order: Order, base: str) -> list[str]:
@@ -357,14 +415,44 @@ def tree_key(root: Path) -> str:
     return hashlib.sha1("\n".join(parts).encode()).hexdigest()
 
 
+def last_result(order: Order) -> dict | None:
+    path = order.dir / "result.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    except json.JSONDecodeError:
+        return None
+
+
+def _run(cmd: str, cwd: Path, timeout: int) -> tuple[int, str]:
+    """A criterion's command in its own process group, so that a timeout ends
+    the browsers and servers it started and not only the shell."""
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        out, _ = proc.communicate(timeout=timeout)
+        return proc.returncode, out[-1200:]
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        proc.communicate()
+        return 124, f"timed out after {timeout}s"
+
+
 def run_check(order: Order, base: str, force: bool = False) -> dict:
+    """Ownership, then every command. The cache is the builder's convenience:
+    it is a file the builder can write, so acceptance always passes force."""
     out_path = order.dir / "result.json"
     key = tree_key(order.root)
-    if not force and out_path.is_file():
-        old = json.loads(out_path.read_text(encoding="utf-8"))
-        if old.get("tree") == key and old.get("ok"):
-            old["cached"] = True
-            return old
+    old = None if force else last_result(order)
+    if old and old.get("tree") == key and old.get("ok"):
+        old["cached"] = True
+        return old
     result: dict = {"order": order.id, "tree": key, "strays": strays(order, base)}
     rows = []
     for c in order.criteria:
@@ -372,19 +460,7 @@ def run_check(order: Order, base: str, force: bool = False) -> dict:
             rows.append({"id": c.id, "judge": c.judge, "text": c.text})
             continue
         start = time.monotonic()
-        try:
-            proc = subprocess.run(
-                c.check,
-                shell=True,
-                cwd=order.root,
-                capture_output=True,
-                text=True,
-                timeout=c.timeout,
-                check=False,
-            )
-            code, tail = proc.returncode, (proc.stdout + proc.stderr)[-1200:]
-        except subprocess.TimeoutExpired:
-            code, tail = 124, f"timed out after {c.timeout}s"
+        code, tail = _run(c.check, order.root, c.timeout)
         rows.append(
             {
                 "id": c.id,
@@ -422,7 +498,33 @@ def show(result: dict) -> str:
 # ---------------------------------------------------------------- review
 
 
-def _signed(order: Order, path: Path, who: str) -> dict:
+SHA = re.compile(r"^[0-9a-f]{40}$")
+
+
+def contribution(order: Order, base: str, rev: str) -> str:
+    """What the branch adds to the files the order owns, and to the order itself,
+    as a patch id: the same after a clean merge of main, different after an edit."""
+    paths = [*order.owns, order.rel + "order.toml"]
+    diff = subprocess.run(
+        ["git", "-C", str(order.root), "diff", "--no-renames", f"{base}...{rev}", "--"]
+        + paths,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if diff.returncode != 0:
+        raise Bad(f"git diff {base}...{rev}: {diff.stderr.strip()[:300]}")
+    ident = subprocess.run(
+        ["git", "patch-id", "--stable"],
+        input=diff.stdout,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return ident.stdout.split(" ")[0].strip()
+
+
+def _signed(order: Order, path: Path, who: str, base: str) -> dict:
     """A review or a sign-off: by someone else, about this order, still current."""
     data = _toml(path)
     _version(data, path)
@@ -431,37 +533,38 @@ def _signed(order: Order, path: Path, who: str) -> dict:
     by = str(data.get("by", "")).strip()
     if not by:
         raise Bad(f"{path}: by is missing: a {who} has a name")
-    if order.builder and by == order.builder:
+    if not order.builder:
+        raise Bad(
+            f"{order.dir / 'order.toml'}: builder is empty, so nobody can tell "
+            f"whether {by!r} is someone else"
+        )
+    if by == order.builder:
         raise Bad(f"{path}: by = {by!r} is the builder; nobody accepts their own work")
     if data.get("verdict") not in ("accept", "improve"):
         raise Bad(f"{path}: verdict is accept or improve")
     sha = str(data.get("reviewed", ""))
-    contained = sha and subprocess.run(
+    if not SHA.match(sha):
+        raise Bad(f"{path}: reviewed = {sha!r}: the full commit id, not a name for it")
+    contained = subprocess.run(
         ["git", "-C", str(order.root), "merge-base", "--is-ancestor", sha, "HEAD"],
         capture_output=True,
         check=False,
     )
-    if not contained or contained.returncode != 0:
+    if contained.returncode != 0:
         raise Bad(f"{path}: reviewed = {sha!r} is not a commit this branch contains")
-    later = git(order.root, "diff", "--name-only", f"{sha}..HEAD").splitlines()
-    moved = [
-        p
-        for p in later
-        if any(covers(o, p) for o in order.owns) and not p.startswith(order.rel)
-    ]
-    if moved:
+    if contribution(order, base, sha) != contribution(order, base, "HEAD"):
         raise Bad(
-            f"{path}: {', '.join(moved[:3])} changed after the {who} looked; "
+            f"{path}: the order or a file it owns changed after the {who} looked; "
             f"review again and update reviewed"
         )
     return data
 
 
-def load_review(order: Order) -> dict:
+def load_review(order: Order, base: str = "origin/main") -> dict:
     path = order.dir / "review.toml"
     if not path.is_file():
         raise Bad(f"{path}: no review yet")
-    data = _signed(order, path, "reviewer")
+    data = _signed(order, path, "reviewer", base)
     ruled = {str(r.get("id")): r for r in data.get("criteria", [])}
     for c in order.criteria:
         row = ruled.get(c.id)
@@ -472,14 +575,15 @@ def load_review(order: Order) -> dict:
     return data
 
 
-def acceptance(order: Order, base: str) -> list[str]:
-    """Everything between this order and main, as sentences. Empty means land it."""
+def acceptance(order: Order, base: str, run: bool = True) -> list[str]:
+    """Everything between this order and main, as sentences. Empty means land it.
+    With `run` the commands are measured afresh; CI passes False because the
+    battery next to it runs the same tests."""
     why = []
-    result = run_check(order, base)
-    if not result["ok"]:
+    if run and not run_check(order, base, force=True)["ok"]:
         why.append("the checks do not pass (just work-check)")
     try:
-        review = load_review(order)
+        review = load_review(order, base)
         if review["verdict"] != "accept":
             why.append("the reviewer asked for improvements")
         failed = [r["id"] for r in review["criteria"] if r["verdict"] == "fail"]
@@ -492,7 +596,7 @@ def acceptance(order: Order, base: str) -> list[str]:
         try:
             if not path.is_file():
                 raise Bad(f"{path}: team {team} has not signed off on its files")
-            if _signed(order, path, f"{team} manager")["verdict"] != "accept":
+            if _signed(order, path, f"{team} manager", base)["verdict"] != "accept":
                 why.append(f"team {team} did not accept the change to its files")
         except Bad as e:
             why.append(str(e))
@@ -593,15 +697,22 @@ def status_comment(order: Order, result: dict | None, review: dict | None) -> st
     return "\n".join(lines) + "\n"
 
 
+def is_status(comment: dict, oid: str = "") -> bool:
+    """A status comment of this tool: the marker, from someone who can push. A
+    stranger who pastes the marker has written an ordinary untrusted comment."""
+    body = str(comment.get("body", ""))
+    mark = MARK.format(id=oid) if oid else "<!-- work:"
+    return body.startswith(mark) and comment.get("author_association") in TRUSTED
+
+
 def trusted(comments: list[dict]) -> tuple[list[dict], int]:
     """The comments an agent may read, and how many were held back."""
     keep = [
         c
         for c in comments
-        if c.get("author_association") in TRUSTED
-        and not str(c.get("body", "")).startswith("<!-- work:")
+        if c.get("author_association") in TRUSTED and not is_status(c)
     ]
-    ours = sum(1 for c in comments if str(c.get("body", "")).startswith("<!-- work:"))
+    ours = sum(1 for c in comments if is_status(c))
     return keep, len(comments) - len(keep) - ours
 
 
@@ -639,68 +750,107 @@ def _repo_of(path: Path) -> Path | None:
     return None
 
 
+def _who(event: dict) -> str:
+    """The agent behind a hook event: a subagent has an id, a session is itself."""
+    return str(event.get("agent_id") or event.get("session_id") or "")
+
+
+def _touched(order: Order) -> dict:
+    path = order.dir / "touched.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+def _remember(order: Order, who: str, rel: str) -> None:
+    """Note which agent worked on which order, so that stopping can be judged by
+    what an agent did and not by how it words its report. Someone who only ever
+    wrote into the order's folder is reviewing, not building."""
+    if not who:
+        return
+    seen = _touched(order)
+    role = "builder" if not rel.startswith(order.rel) else seen.get(who, "reviewer")
+    if seen.get(who) != role:
+        seen[who] = role
+        (order.dir / "touched.json").write_text(json.dumps(seen), encoding="utf-8")
+
+
 def hook_pre_tool(event: dict) -> tuple[int, str]:
-    """Refuse an edit outside what the order on this branch owns."""
-    raw = (event.get("tool_input") or {}).get("file_path")
+    """Refuse an edit outside what the orders on this branch own. Anything this
+    cannot read lets the edit through: a broken order has to stay repairable,
+    and `check` refuses it later anyway."""
+    given = event.get("tool_input") or {}
+    raw = given.get("file_path") or given.get("notebook_path")
     if not raw:
         return 0, ""
     target = Path(raw).resolve()
     root = _repo_of(target.parent)
     if not root or not (root / "work" / "teams.toml").is_file():
         return 0, ""
-    branch = git(root, "branch", "--show-current")
     try:
-        mine = [o for o in orders_in(root, load_teams(root)) if o.branch == branch]
-    except Bad as e:
-        return 2, f"work order unreadable, fix it first: {e}"
-    if len(mine) != 1:
+        teams = load_teams(root)
+        orders, _ = readable(root, teams)
+        rel = target.relative_to(root.resolve()).as_posix()
+    except (Bad, ValueError):
         return 0, ""
-    order, rel = mine[0], target.relative_to(root).as_posix()
-    if order.may_touch(rel):
+    branch = git(root, "branch", "--show-current")
+    mine = [o for o in orders if o.branch == branch]
+    if not mine:
         return 0, ""
-    home = load_teams(root).of(rel) or "nobody"
+    for order in mine:
+        if order.may_touch(rel):
+            _remember(order, _who(event), rel)
+            return 0, ""
+    home = teams.of(rel) or "nobody"
+    names = ", ".join(o.id for o in mine)
+    owns = ", ".join(x for o in mine for x in o.owns)
     return 2, (
-        f"{rel} is outside order {order.id} (team {order.team}); it belongs to "
-        f"{home}. Leave it and report it, or have the order's owns and cross "
-        f"changed by the manager. This order owns: {', '.join(order.owns)}"
+        f"{rel} is outside order {names}; it belongs to team {home}. Leave it and "
+        f"report it, or have the manager change owns and cross. Owned here: {owns}"
     )
 
 
 def hook_stop(
     event: dict, base: str = "origin/main", root: Path = ROOT
 ) -> tuple[int, str]:
-    """An agent that reports on an order may only stop when the order holds."""
+    """An agent that worked on an order may only stop when the order holds. It
+    blocks once: on the second try it lets go, because a hook that always
+    blocks never ends."""
     if event.get("stop_hook_active"):
         return 0, ""
-    text = str(event.get("last_assistant_message", ""))
-    found = ORDER_LINE.search(text)
-    if not found:
-        return 0, ""
-    role = ROLE_LINE.search(text)
-    here = {o.id: o for o in active(root)}
-    order = here.get(found.group(1))
-    if not order:
-        return 0, ""
-    try:
-        if role and role.group(1) == "reviewer":
-            load_review(order)
-            return 0, ""
-        result = run_check(order, base)
-    except Bad as e:
-        return 2, str(e)
-    if result["ok"]:
-        return 0, ""
-    return 2, "The order does not hold yet, so this is not done:\n" + show(result)
+    orders = {o.id: o for o in active(root)}
+    who, text = _who(event), str(event.get("last_assistant_message", ""))
+    roles = {o.id: _touched(o)[who] for o in orders.values() if who in _touched(o)}
+    named = ORDER_LINE.search(text)
+    if named and named.group(1) in orders and named.group(1) not in roles:
+        said = ROLE_LINE.search(text)
+        roles[named.group(1)] = said.group(1) if said else "builder"
+    for oid, role in roles.items():
+        order = orders[oid]
+        try:
+            if role == "reviewer":
+                load_review(order, base)
+                continue
+            result = run_check(order, base)
+        except Bad as e:
+            return 2, str(e)
+        if not result["ok"]:
+            return 2, "The order does not hold yet, so this is not done:\n" + show(
+                result
+            )
+    return 0, ""
 
 
 # ---------------------------------------------------------------- commands
 
 TEMPLATE = """v = 1
-id = "{id}"
-title = "{title}"
-team = "{team}"
-branch = "{branch}"
-goal = "{goal}"
+id = {id}
+title = {title}
+team = {team}
+branch = {branch}
+goal = {goal}
+# Whoever builds this writes their name here; a review by the same name does not count.
 builder = ""
 
 # Files, or folders ending in /. No globs: two orders may never own the same file.
@@ -725,6 +875,11 @@ check = ""
 """
 
 
+def _q(text: str) -> str:
+    """A TOML basic string: JSON's escapes are a subset of TOML's."""
+    return json.dumps(text, ensure_ascii=False)
+
+
 def cmd_new(a: argparse.Namespace) -> int:
     if not ID.match(a.id):
         raise Bad(f"{a.id!r}: an id is lowercase letters, digits and dashes")
@@ -737,19 +892,29 @@ def cmd_new(a: argparse.Namespace) -> int:
     branch = a.branch or git(ROOT, "branch", "--show-current")
     (folder / "order.toml").write_text(
         TEMPLATE.format(
-            id=a.id, title=a.title, team=a.team, branch=branch, goal=a.goal or ""
+            id=_q(a.id),
+            title=_q(a.title),
+            team=_q(a.team),
+            branch=_q(branch),
+            goal=_q(a.goal or ""),
         ),
         encoding="utf-8",
     )
-    print(f"wrote {folder.relative_to(ROOT)}/order.toml: fill in owns and criteria")
+    print(
+        f"wrote {folder.relative_to(ROOT)}/order.toml, a draft: it loads once owns, "
+        f"builder and a criterion are filled in, and guards nothing until then"
+    )
     return 0
 
 
 def cmd_validate(_: argparse.Namespace) -> int:
     orders = orders_in(ROOT, load_teams())
-    clash = collisions(active())
+    drafts: list[str] = []
+    clash = collisions(active(ROOT, drafts))
     for line in clash:
         print("collision:", line)
+    for line in drafts:
+        print("draft elsewhere, not judged:", line)
     print(f"{len(orders)} orders read, {len(clash)} collisions among the active ones")
     return 1 if clash else 0
 
@@ -791,8 +956,7 @@ def cmd_board(_: argparse.Namespace) -> int:
     done = landed()
     rows = []
     for order in active():
-        result = order.dir / "result.json"
-        ok = json.loads(result.read_text())["ok"] if result.is_file() else None
+        ok = (last_result(order) or {}).get("ok")
         checks = {True: "pass", False: "FAIL", None: "not run"}[ok]
         review = "yes" if (order.dir / "review.toml").is_file() else "no"
         rows.append((order.id, order.team, order.branch, checks, review))
@@ -804,48 +968,54 @@ def cmd_board(_: argparse.Namespace) -> int:
 
 
 def cmd_ci(a: argparse.Namespace) -> int:
-    """On a pull request: every order it carries is readable, and one that ships
-    code ships its accepted review with it. A pull request without an order is
-    left alone, and so is the ownership of a train car, which carries several:
-    each of those was checked where it was built."""
-    names = git(ROOT, "diff", "--name-only", f"{a.base}...HEAD").splitlines()
-    touched = sorted({n.split("/")[2] for n in names if n.startswith("work/orders/")})
-    code = [n for n in names if not n.startswith("work/")]
+    """On a pull request. The orders it carries are those whose folder it touches
+    and those written for its branch, so leaving the folder alone hides nothing.
+    Each has to be readable, and one that ships code ships its accepted review
+    and every sign-off. Ownership is judged when there is exactly one order: a
+    train car carries several, each checked where it was built. A pull request
+    that carries no order is left alone."""
+    names = diff_names(ROOT, a.base)
+    orders = {o.id: o for o in orders_in(ROOT, load_teams())}
+    carried = {n.split("/")[2] for n in names if n.startswith("work/orders/")}
+    carried |= {o.id for o in orders.values() if a.head and o.branch == a.head}
+    carried &= set(orders)
+    ships_code = any(not n.startswith("work/") for n in names)
     bad = []
-    for oid in touched:
-        if not (ROOT / "work" / "orders" / oid / "order.toml").is_file():
-            continue
-        order = find(oid)
-        if not code:
-            continue
-        try:
-            review = load_review(order)
-            if review["verdict"] != "accept":
-                bad.append(f"{oid}: reviewed, not accepted")
-        except Bad as e:
-            bad.append(str(e))
-        if len(touched) == 1:
+    for oid in sorted(carried):
+        if ships_code:
+            bad += [f"{oid}: {w}" for w in acceptance(orders[oid], a.base, run=False)]
+        if len(carried) == 1:
             bad += [
-                f"{oid}: {p} is outside what it owns" for p in strays(order, a.base)
+                f"{oid}: {s} is outside what it owns"
+                for s in strays(orders[oid], a.base)
             ]
     for line in bad:
         print("work:", line)
-    print(f"work: {len(touched)} orders in this pull request, {len(bad)} problems")
+    print(f"work: {len(carried)} orders in this pull request, {len(bad)} problems")
     return 1 if bad else 0
+
+
+def cmd_sweep(_: argparse.Namespace) -> int:
+    """Remove the orders that have landed: main has their review, git has the rest."""
+    gone = []
+    for oid in sorted(landed()):
+        folder = ROOT / "work" / "orders" / oid
+        if folder.is_dir():
+            shutil.rmtree(folder)
+            gone.append(oid)
+    print(f"swept {len(gone)} landed orders: {', '.join(gone) or 'none'}")
+    return 0
 
 
 def cmd_post(a: argparse.Namespace) -> int:
     order = find(a.id)
     issue = _issue_of(order)
-    result_path = order.dir / "result.json"
-    result = json.loads(result_path.read_text()) if result_path.is_file() else None
     try:
         review = load_review(order)
     except Bad:
         review = None
-    body = status_comment(order, result, review)
-    mark = MARK.format(id=order.id)
-    mine = [c for c in _comments(issue) if str(c.get("body", "")).startswith(mark)]
+    body = status_comment(order, last_result(order), review)
+    mine = [c for c in _comments(issue) if is_status(c, order.id)]
     if mine and mine[0]["body"].strip() == body.strip():
         print(f"#{issue}: status of {order.id} is current")
     elif mine:
@@ -882,20 +1052,6 @@ def cmd_say(a: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_sweep(_: argparse.Namespace) -> int:
-    """Remove the orders that have landed: main has their review, git has the rest."""
-    gone = []
-    for oid in sorted(landed()):
-        folder = ROOT / "work" / "orders" / oid
-        if folder.is_dir():
-            for f in sorted(folder.iterdir()):
-                f.unlink()
-            folder.rmdir()
-            gone.append(oid)
-    print(f"swept {len(gone)} landed orders: {', '.join(gone) or 'none'}")
-    return 0
-
-
 def cmd_hook(a: argparse.Namespace) -> int:
     try:
         event = json.loads(sys.stdin.read() or "{}")
@@ -925,7 +1081,9 @@ def main() -> int:
     sub.add_parser("plan").add_argument("goal")
     sub.add_parser("board")
     sub.add_parser("sweep")
-    sub.add_parser("ci").add_argument("--base", default="origin/main")
+    ci = sub.add_parser("ci")
+    ci.add_argument("--base", default="origin/main")
+    ci.add_argument("--head", default="", help="the pull request's branch")
     for name in ("post", "thread"):
         sub.add_parser(name).add_argument("id")
     say = sub.add_parser("say")
