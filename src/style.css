@@ -61,10 +61,7 @@ body.no-fullscreen .fs-only{display:none}
 .setting{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .setting:first-of-type{border-top:0}
 .setting label{font-size:.875em}
-/* The basis is in em, so a bigger text size wraps the select onto its own
-   row instead of ellipsising the value, which is the only thing an option
-   adds to its label. */
-.setting select{font:inherit;font-size:.81em;color:var(--text);background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px;padding:8px 10px;flex:1 1 15em;min-width:0;max-width:100%;text-overflow:ellipsis}
+.setting select{font:inherit;font-size:min(.81em,15px);color:var(--text);background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px;padding:8px 10px;flex:1 1 200px;min-width:0;max-width:100%;text-overflow:ellipsis}
 body.no-motion *{animation:none!important;transition:none!important}
 /* The off switch for the live world: one class hides every element the feed
    drives, so a new one only has to carry live-feed to obey it. */
@@ -589,6 +586,13 @@ details.cmds .cmdbar{margin-top:-8px}
 body[data-text="large"]{--type-scale:1.2}
 body[data-text="larger"]{--type-scale:1.45}
 #sheet .inner,#title .box{font-size:calc(16px*var(--type-scale))}
+/* Above Normal the value gets the whole row rather than sharing it with
+   the label. A select cannot wrap or fold, so the value is either whole
+   or lost, and how much of it fits beside a label is a question about
+   font metrics, which differ between one device and the next. The same
+   constraint caps the control size above: the longest option has to fit
+   the narrowest phone at every text size. */
+body[data-text="large"] .setting select,body[data-text="larger"] .setting select{flex-basis:100%}
 /* Line spacing, the numbers XAG 101 names: 1.5 line, 0.12em letter, 0.16em
    word. It is spacing and not a font, so nothing is downloaded and the game
    stays one file. A command block keeps its own tracking: a monospace block
