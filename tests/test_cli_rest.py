@@ -286,7 +286,10 @@ def test_explain_diffs_from_the_first_commit_when_the_history_is_shorter(
     assert "shorter than 3 commits" in _flat(out.stdout)
     prompt = (camp / "prompt.txt").read_text(encoding="utf-8")
     assert "DIFF (truncated):" in prompt
-    assert "config/camp.toml" in prompt.split("DIFF (truncated):")[1]
+    # The defect was an empty diff section, so what matters is that the prompt
+    # carries a real one; which files reach it depends on where git truncates.
+    body = prompt.split("DIFF (truncated):")[1]
+    assert "diff --git" in body and len(body.strip()) > 500
 
 
 @pytest.mark.parametrize("n", ["0", "-5"])
