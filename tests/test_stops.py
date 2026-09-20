@@ -118,3 +118,40 @@ def test_the_production_island_shows_the_forking_stop(game) -> None:
         assert word in text, word
     game.screenshot("stops_prod_fork", clip_height=860)
     game.assert_clean()
+
+
+def test_every_production_lesson_names_the_path_its_check_reads() -> None:
+    """A learner who follows the lesson literally must land where the check looks.
+
+    The deliverable paths were only in the hints: the lessons said ~/dotfiles
+    and "in the vault", so the stop went red on work that was really done.
+    """
+    import json
+
+    data = json.loads(
+        (ROOT / "vibemap" / "data" / "campaign.json").read_text(encoding="utf-8")
+    )
+    stops = data["evenings"]["prod"]["ws"]
+    want = {
+        1: ("workspace/dotfiles/Brewfile",),
+        2: ("workspace/dotfiles/ghostty/config", "workspace/dotfiles/zshrc"),
+        7: ("workspace/agents/comparison.md",),
+        8: ("workspace/dotfiles",),
+    }
+    for n, paths in want.items():
+        html = stops[n - 1]["html"]
+        for path in paths:
+            assert path in html, f"prod stop {n} never names {path}"
+        assert "~/dotfiles" not in html, f"prod stop {n} still sends you to ~/dotfiles"
+
+
+def test_the_agent_comparison_lesson_asks_for_two_agents_the_check_counts() -> None:
+    """The check counts agents other than Claude Code, so the lesson must too."""
+    import json
+
+    data = json.loads(
+        (ROOT / "vibemap" / "data" / "campaign.json").read_text(encoding="utf-8")
+    )
+    html = data["evenings"]["prod"]["ws"][6]["html"].lower()
+    named = [a for a in quests.OTHER_AGENTS if a in html]
+    assert len(named) >= 2, f"the lesson names {named}; the check needs two"

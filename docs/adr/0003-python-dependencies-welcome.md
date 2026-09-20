@@ -16,7 +16,7 @@ We will declare the package in `pyproject.toml` and manage it with uv: `uv sync`
 
 We will commit `uv.lock` and pin `requires-python`. Each dependency line in `pyproject.toml` carries a comment saying what it is for, so the file teaches.
 
-We will keep `python/scores.py` and the `sql/` queries runnable without the package, because workstream 3 uses them before the learner has met uv.
+We will keep `workspace/python/scores.py` and the `workspace/sql/` queries runnable without the package, because workstream 3 uses them before the learner has met uv.
 
 ## Consequences
 

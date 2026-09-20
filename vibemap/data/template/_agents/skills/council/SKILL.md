@@ -7,8 +7,10 @@ allowed-tools: Bash(uv run vibe *) Read
 
 The pattern is Andrej Karpathy's llm-council (https://github.com/karpathy/llm-council):
 several answers, anonymised peer review, one chairman synthesis. Here the
-"models" are the mentors in `vibemap/data/campaign.json`, each grounded in their
-recorded ideas and sources, so nobody invents a quote.
+"models" are the twelve mentors the `vibe` command carries, each grounded in
+their recorded ideas and sources, so nobody invents a quote. `vibe council
+--dry-run` prints them; their vault notes in `vault/Camp/` hold the same ideas
+and sources.
 
 ## Fast path (one command)
 
@@ -18,7 +20,9 @@ uv run vibe council "How do I keep an agent from deleting my data?" --mentors ch
 ```
 
 It writes `vault/Camp/Council - <topic>.md` with Verdict, Where they agree,
-Where they disagree, What to do tonight, Ranking, and every answer. It uses the
+Where they disagree, What to do tonight, Ranking, and every answer. Without
+`--mentors` it convenes the mentors of the island you are on, which on the
+campus is two. It uses the
 provider in `config/camp.toml` (claude, codex, gemini, copilot or opencode).
 Add `--dry-run` to see the prompts without calling anything.
 
@@ -26,8 +30,9 @@ Add `--dry-run` to see the prompts without calling anything.
 
 When you are the agent and the user wants it live in the session:
 
-1. Read the mentors from `vibemap/data/campaign.json`; pick at most four whose
-   `ideas` touch the question.
+1. Read the mentors from `vibe council "<question>" --dry-run`, which prints one
+   prompt per mentor with their ideas and sources; pick at most four whose ideas
+   touch the question. Their vault notes say the same thing in prose.
 2. Spawn one subagent per mentor with this brief: "You are NAME, ROLE. Answer
    only with positions attributable to these recorded ideas and sources: IDEAS,
    SOURCES. If they do not cover the question, say so in character. At most

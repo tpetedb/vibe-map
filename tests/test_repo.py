@@ -1,4 +1,4 @@
-"""Repo hygiene: the facts HANDOVER.md asks every session to re-verify."""
+"""Repo hygiene: the facts AGENTS.md asks every session to re-verify."""
 
 from __future__ import annotations
 
@@ -153,6 +153,29 @@ def test_the_required_context_is_its_own_job_and_keeps_its_name() -> None:
     assert jobs["browser"]["needs"] == ["browser-shard"]
     assert "matrix" not in jobs["browser"].get("strategy", {})
     assert jobs["browser"]["if"] == "always()"
+
+
+def test_the_design_doc_prints_the_tokens_that_ship() -> None:
+    """docs/DESIGN.md quotes :root; a copy that drifts documents nothing."""
+    css = (ROOT / "src" / "style.css").read_text(encoding="utf-8")
+    root = css[css.index(":root{") :]
+    root = root[: root.index("\n}\n") + 3]
+    design = (ROOT / "docs" / "DESIGN.md").read_text(encoding="utf-8")
+    assert f"```css\n{root}```" in design, (
+        "docs/DESIGN.md no longer quotes :root from src/style.css verbatim"
+    )
+
+
+def test_every_skill_has_a_row_in_the_skills_doc() -> None:
+    """docs/SKILLS.md is the index; a skill missing from it is invisible."""
+    doc = (ROOT / "docs" / "SKILLS.md").read_text(encoding="utf-8")
+    folders = sorted(
+        d.name for d in (ROOT / ".agents" / "skills").iterdir() if d.is_dir()
+    )
+    missing = [n for n in folders if f"| `{n}` |" not in doc]
+    assert not missing, f"no row in docs/SKILLS.md for: {', '.join(missing)}"
+    listed = set(re.findall(r"^\| `([a-z0-9-]+)` \|", doc, re.MULTILINE))
+    assert listed - set(folders) == set(), "docs/SKILLS.md names a skill that is gone"
 
 
 def test_no_claude_artifact_link_survives_anywhere() -> None:

@@ -26,16 +26,33 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
   --blue:#0067A5; --blue-dim:#0A4E7A; --blue-bright:#0088CC;
   --radius-s:8px; --radius-m:12px; --radius-l:16px; --radius-pill:999px;
   --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-6:24px; --space-8:32px;
+  /* Fonts are the ones the device already has: the game is one file with no
+     CDN and it must work offline, so nothing here asks a third party. */
   --font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
   --font-body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
   --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-  --text-xs:10px; --text-sm:13px; --text-md:16px; --text-lg:22px; --text-xl:clamp(28px,7vw,40px);
   --edge:inset 0 0 0 1px rgba(255,255,255,.08); --lift:0 10px 30px rgba(0,0,0,.6);
   --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
-  --t-fast:150ms; --t-base:240ms; --t-slow:400ms; --t-sky:2s;
+  --t-fast:150ms; --t-base:240ms; --t-slow:400ms;
+  /* The talk band under the stage: one number, so the stage can take the rest
+     of the window and no black strip is left between them. The band also
+     carries the bottom safe-area inset, so the stage never pays for it. */
+  --talk-h:104px;
+  --talk-band:calc(var(--talk-h) + env(safe-area-inset-bottom,0px));
   --ease:cubic-bezier(.4,1,.75,.9); --ease-out:cubic-bezier(.2,.8,.2,1);
+  /* Names the older rules below still use, mapped onto the tokens. */
+  --bg2:var(--surface-1); --panel:rgba(10,10,10,.78); --panel2:var(--surface-2); --ink:var(--text);
+  --grass:var(--green-bright); --gold:var(--yellow); --line:var(--hairline); --line2:var(--hairline-2);
+  --a1:var(--blue-bright); --a2:var(--orange); --accent:var(--yellow);
+  --ring:var(--edge);
 }
 ```
+
+This block is `:root` in `src/style.css`, copied, not paraphrased: if the two
+ever disagree the stylesheet is right. There is no type scale in it on purpose.
+Sizes are written where they are used, because the game's few text sizes are
+tied to the panel they sit in rather than to a ladder, and a token nobody uses
+is worse than no token.
 
 The type is the stack the device already has: the game is one file with no
 CDN and it must work offline, so no page here asks a third party for a

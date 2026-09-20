@@ -1,6 +1,6 @@
 # The brief: what Tom asked for, what happened, what is next
 
-One document that gathers every request Tom made over the first day (2026-09-16 to 2026-09-17), in the order they escalated, weighted so that later requests win over earlier ones. It records what was delivered against each, what is still thin, and the plan for the next cycle: professionalize. Every agent working on this repository reads this first, then `AGENTS.md` and `docs/MAINTAINERS.md`.
+One document that gathers every request Tom made over the first day (2026-09-16 to 2026-09-17), in the order they escalated, weighted so that later requests win over earlier ones. It records what was delivered against each, what is still thin, and the decisions that later cycles inherit. Every agent working on this repository reads this first, then `AGENTS.md` and `docs/MAINTAINERS.md`.
 
 ## 1. The ask, as one coherent thing
 
@@ -8,7 +8,7 @@ It started as a joke for a wine evening and escalated into a product. The escala
 
 ### The product (what it is)
 
-A gamified course on agentic coding for people who are not (yet) engineers, with three faces that stay in sync: a single-file 3D browser game (the story, the map, the lessons), a terminal companion `vibe` (the checks, the XP, the vault builder, the terminal menu), and an Obsidian vault (the notes that grow as you play). Four islands, thirty-two stops, twelve mentors from the field with their real ideas and sources, twenty artifacts on the island that each explain one concept. Professional look, R2-D2 palette (red, orange, yellow, green, blue on OLED black, no gradients), a playful wine mode kept as a theme. Semantic versions, a changelog, ADRs, a quickstart, an installable CLI that works with Claude Max or Codex. No fantasy, no emoji, no em dashes.
+A gamified course on agentic coding for people who are not (yet) engineers, with three faces that stay in sync: a single-file 3D browser game (the story, the map, the lessons), a terminal companion `vibe` (the checks, the XP, the vault builder, the terminal menu), and an Obsidian vault (the notes that grow as you play). Four islands, thirty-two stops, twelve mentors from the field with their real ideas and sources, twenty-one artifacts on the islands that each explain one concept. Professional look, R2-D2 palette (red, orange, yellow, green, blue on OLED black, no gradients), a playful wine mode kept as a theme. Semantic versions, a changelog, ADRs, a quickstart, an installable CLI that works with Claude Max or Codex. No fantasy, no emoji, no em dashes.
 
 ### The learner's journey (how it is played)
 
@@ -50,7 +50,6 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 | Obsidian feature modules from the official docs | v0.4.0 (35 features) | done |
 | Toolbox terminal configs installable, hooks (git and agent), interfaces topic | v0.4.0 | done |
 | Artifacts that do something (cafe = client and server, then factories, post offices, shops, companies, households, energy grid, data centre) | v0.4.0, v0.5.0 (20 artifacts with demos), v0.9.0 (tasks with checks) | done; see the professionalize cycle below |
-| Heartbeat for handover to Opus if limits run out | HANDOVER.md, memory | done (launchd blocked by permissions) |
 | Tree grouped by category with depth, not ranks | v0.5.0 | done |
 | Grow mode: empty vault that fills as you play, claude-obsidian where fitting | v0.5.0 | done |
 | More dropdowns and configs in the game, bigger map, RSS news reader, dummy-proof long-term setup for terminal plus game plus Obsidian | v0.5.0, v0.6.0 (settings, 1.6x map with annexes, news, LONG-GAME.md) | done |
@@ -61,7 +60,7 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 | `<your_name>` as the default everywhere, explain to type it plainly | v0.7.0, hardened in v0.8.0 | done |
 | Separation of concerns: config, source, workspace; a slim camp; maintainer doc; roadmap topics on separation of concerns and building the builder with real sources | v0.7.0 (three zones, `vibe new` writes a camp, MAINTAINERS.md), v0.9.0 (three config levels, `vibe fork`) | done |
 | Review all branches, merge so nothing is lost, test with Opus in ephemeral envs | v0.7.0 review pass (PR #28) | done |
-| New test repo, play the whole game, find bugs, Opus agents fix them | v0.8.0 (PRs #29 to #31, test camp `tpetedb/test-20260917-1404`) | done |
+| New test repo, play the whole game, find bugs, Opus agents fix them | v0.8.0 (PRs #29 to #31, played in a disposable test camp) | done |
 | **Professionalize cycle** (one issue and one worktree per workstream) | | |
 | W1: config levels and the vibe fork | PR #44 | done |
 | W2: artifacts become tasks | PR #46 | done |
@@ -75,7 +74,7 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 
 What the professionalize cycle closed:
 
-- Artifacts are tasks. Each of the twenty keeps its demo and carries a "Do it for real" walkthrough written from the official documentation of the thing, a home in `workspace/artifacts/<id>/` and a deterministic offline check (`vibe check --artifact <id>`). A check that needs a tool this machine does not have says so with the install command instead of failing.
+- Artifacts are tasks. Each of them keeps its demo and carries a "Do it for real" walkthrough written from the official documentation of the thing, a home in `workspace/artifacts/<id>/` and a deterministic offline check (`vibe check --artifact <id>`). A check that needs a tool this machine does not have says so with the install command instead of failing.
 - Mentors are encounters. Each of the twelve has a dialogue of three or four exchanges, every line a paraphrase with its source next to it, one exercise of under fifteen minutes in `workspace/mentors/<id>/`, a check (`vibe check --mentor <id>`), a plaque on the island and a line in their vault note.
 - Every winter, desert and production stop with a deliverable is checked on disk, with the note as the floor underneath. Four winter stops are genuinely reading only and say so in the check name: stops 2, 4, 5 and 7 (`quests.READING_ONLY`).
 - Configuration has three nested levels with `docs/CONFIG.md` as the table. The journey level is `config/camp.toml`; `vibe.toml` is read for one release and says so on every command. `vibe fork` puts the source level in the learner's hands, and the production island's stop 6 is Fork the game with four challenges.
@@ -89,9 +88,9 @@ Still open:
 - Palette literals remain in several game modules (`12-buildings.js`, `17-artifact-props.js`, `21-world-build.js`, `60-vault.js`, `70-minigames.js`, `87-onboarding.js`) rather than reading `src/config/00-config.js`.
 - The product checkout is a valid camp but does not satisfy the new winter, desert and production checks: its `workspace/` holds the campus deliverables only. The played instance has to script those deliverables before it plays, or the played camp will show red where the course expects green.
 
-## 4. The next cycle: professionalize
+## 4. Cycle 2: professionalize (delivered in 0.9.0)
 
-Decisions taken here so that agents do not re-litigate them:
+Delivered and released as 0.9.0 on 2026-09-17. The decisions are kept here because they still bind, not because the work is pending; the cycles since (labels `cycle-3` onwards on the issue tracker) build on them. The current cycle's scope lives in its issues, never in this document.
 
 - **Config levels.** Three levels, nested, each flat inside:
   - Repository configuration, where the tools demand it: `pyproject.toml`, `justfile`, `.github/`, `.claude/`, `.agents/`. Documented, never moved.
