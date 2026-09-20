@@ -43,6 +43,7 @@ try:
     import tomllib
 except ModuleNotFoundError:  # the system python on a Mac is older than 3.11
     if sys.argv[1:2] == ["hook"]:
+        print("work hooks are off: python3 is older than 3.11", file=sys.stderr)
         raise SystemExit(0) from None
     raise SystemExit("tools/work.py needs Python 3.11 or newer") from None
 
@@ -61,6 +62,9 @@ ORDER_LINE = re.compile(r"\A\s*order:\s*([a-z0-9-]+)\s*$", re.M)
 ROLE_LINE = re.compile(r"^\s*role:\s*([a-z-]+)\s*$", re.M)
 # A criterion may take a browser battery; a hung one must still end.
 CHECK_TIMEOUT = 1500
+# All of an order's criteria together when a stop hook runs them: under the
+# hook's own timeout in .claude/settings.json, so the tool ends it, with a reason.
+STOP_BUDGET = 1500
 
 
 class Bad(Exception):
@@ -258,6 +262,10 @@ def load_order(folder: Path, teams: Teams, root: Path) -> Order:
         )
         for name in (entry, *inside):
             home = teams.of(name)
+            if home is None:
+                raise Bad(
+                    f"{path}: owns {name!r}, which no team in work/teams.toml covers"
+                )
             if home not in (data["team"], "shared", *cross):
                 raise Bad(
                     f"{path}: owns {entry!r}, but {name!r} belongs to team {home!r}; "
@@ -338,9 +346,18 @@ def worktrees(root: Path = ROOT) -> list[tuple[Path, str]]:
 
 
 def landed(root: Path = ROOT) -> set[str]:
-    """Orders whose review is on main: the review travels with the work it accepts."""
+    """Orders whose accepting review is on main: it travels with the work."""
     names = git(root, "ls-tree", "-r", "--name-only", "origin/main", "work/orders/")
-    return {n.split("/")[2] for n in names.splitlines() if n.endswith("/review.toml")}
+    done = set()
+    for name in names.splitlines():
+        if name.endswith("/review.toml"):
+            try:
+                ruling = tomllib.loads(git(root, "show", f"origin/main:{name}"))
+            except tomllib.TOMLDecodeError:
+                continue
+            if ruling.get("verdict") == "accept":
+                done.add(name.split("/")[2])
+    return done
 
 
 def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
@@ -361,9 +378,13 @@ def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
 
 
 def collisions(orders: list[Order]) -> list[str]:
+    """Two orders that cannot both be built as written: they own the same file,
+    or they share a branch, where each would count the other's files as strays."""
     out = []
     for i, a in enumerate(orders):
         for b in orders[i + 1 :]:
+            if a.branch == b.branch:
+                out.append(f"{a.id} and {b.id} share the branch {a.branch}")
             hit = [(x, y) for x in a.owns for y in b.owns if overlap(x, y)]
             if hit:
                 x, y = hit[0]
@@ -444,7 +465,9 @@ def _run(cmd: str, cwd: Path, timeout: int) -> tuple[int, str]:
         return 124, f"timed out after {timeout}s"
 
 
-def run_check(order: Order, base: str, force: bool = False) -> dict:
+def run_check(
+    order: Order, base: str, force: bool = False, budget: int | None = None
+) -> dict:
     """Ownership, then every command. The cache is the builder's convenience:
     it is a file the builder can write, so acceptance always passes force."""
     out_path = order.dir / "result.json"
@@ -454,13 +477,17 @@ def run_check(order: Order, base: str, force: bool = False) -> dict:
         old["cached"] = True
         return old
     result: dict = {"order": order.id, "tree": key, "strays": strays(order, base)}
-    rows = []
+    rows, began = [], time.monotonic()
     for c in order.criteria:
         if not c.check:
             rows.append({"id": c.id, "judge": c.judge, "text": c.text})
             continue
         start = time.monotonic()
-        code, tail = _run(c.check, order.root, c.timeout)
+        spent = int(start - began)
+        allowed = (
+            c.timeout if budget is None else max(1, min(c.timeout, budget - spent))
+        )
+        code, tail = _run(c.check, order.root, allowed)
         rows.append(
             {
                 "id": c.id,
@@ -503,8 +530,16 @@ SHA = re.compile(r"^[0-9a-f]{40}$")
 
 def contribution(order: Order, base: str, rev: str) -> str:
     """What the branch adds to the files the order owns, and to the order itself,
-    as a patch id: the same after a clean merge of main, different after an edit."""
-    paths = [*order.owns, order.rel + "order.toml"]
+    as a patch id: the same after a clean merge of main, different after any
+    edit, whitespace included."""
+    # The rulings are about the contribution, not part of it: an order that owns
+    # work/ would otherwise end its own review by committing it.
+    paths = [
+        *order.owns,
+        order.rel + "order.toml",
+        f":(exclude){order.rel}review.toml",
+        f":(exclude){order.rel}signoff-*.toml",
+    ]
     diff = subprocess.run(
         ["git", "-C", str(order.root), "diff", "--no-renames", f"{base}...{rev}", "--"]
         + paths,
@@ -515,7 +550,8 @@ def contribution(order: Order, base: str, rev: str) -> str:
     if diff.returncode != 0:
         raise Bad(f"git diff {base}...{rev}: {diff.stderr.strip()[:300]}")
     ident = subprocess.run(
-        ["git", "patch-id", "--stable"],
+        # Verbatim, because indentation is meaning in Python and in YAML.
+        ["git", "patch-id", "--verbatim"],
         input=diff.stdout,
         capture_output=True,
         text=True,
@@ -579,11 +615,12 @@ def acceptance(order: Order, base: str, run: bool = True) -> list[str]:
     """Everything between this order and main, as sentences. Empty means land it.
     With `run` the commands are measured afresh; CI passes False because the
     battery next to it runs the same tests."""
-    why = []
+    why, reviewer = [], ""
     if run and not run_check(order, base, force=True)["ok"]:
         why.append("the checks do not pass (just work-check)")
     try:
         review = load_review(order, base)
+        reviewer = str(review["by"]).strip()
         if review["verdict"] != "accept":
             why.append("the reviewer asked for improvements")
         failed = [r["id"] for r in review["criteria"] if r["verdict"] == "fail"]
@@ -596,7 +633,15 @@ def acceptance(order: Order, base: str, run: bool = True) -> list[str]:
         try:
             if not path.is_file():
                 raise Bad(f"{path}: team {team} has not signed off on its files")
-            if _signed(order, path, f"{team} manager", base)["verdict"] != "accept":
+            signed = _signed(order, path, f"{team} manager", base)
+            if signed.get("team") != team:
+                raise Bad(f"{path}: team = {signed.get('team')!r}, expected {team!r}")
+            if str(signed["by"]).strip() == reviewer:
+                raise Bad(
+                    f"{path}: by = {reviewer!r} also wrote the review; a team's "
+                    f"manager speaks for the team, not for the review"
+                )
+            if signed["verdict"] != "accept":
                 why.append(f"team {team} did not accept the change to its files")
         except Bad as e:
             why.append(str(e))
@@ -658,7 +703,7 @@ def plan(gid: str, root: Path = ROOT) -> list[list[Order]]:
 MARK = "<!-- work:{id} -->"
 # Anyone can comment on a public issue. What an agent reads as instructions
 # comes only from people who can already push here.
-TRUSTED = ("OWNER", "MEMBER", "COLLABORATOR")
+TRUSTED = ("OWNER", "COLLABORATOR")
 
 
 def status_comment(order: Order, result: dict | None, review: dict | None) -> str:
@@ -782,7 +827,7 @@ def hook_pre_tool(event: dict) -> tuple[int, str]:
     and `check` refuses it later anyway."""
     given = event.get("tool_input") or {}
     raw = given.get("file_path") or given.get("notebook_path")
-    if not raw:
+    if not raw or not isinstance(raw, str):
         return 0, ""
     target = Path(raw).resolve()
     root = _repo_of(target.parent)
@@ -798,6 +843,13 @@ def hook_pre_tool(event: dict) -> tuple[int, str]:
     mine = [o for o in orders if o.branch == branch]
     if not mine:
         return 0, ""
+    if rel.startswith("work/orders/") and rel.endswith(
+        ("/result.json", "/touched.json")
+    ):
+        return (
+            2,
+            f"{rel} is a measurement tools/work.py writes, not yours to edit",
+        )
     for order in mine:
         if order.may_touch(rel):
             _remember(order, _who(event), rel)
@@ -814,13 +866,19 @@ def hook_pre_tool(event: dict) -> tuple[int, str]:
 def hook_stop(
     event: dict, base: str = "origin/main", root: Path = ROOT
 ) -> tuple[int, str]:
-    """An agent that worked on an order may only stop when the order holds. It
-    blocks once: on the second try it lets go, because a hook that always
-    blocks never ends."""
+    """Send an agent back once when the order it worked on does not hold. A
+    subagent is known by the edits the other hook saw; a session only by a
+    report whose first line names the order, because Stop fires at the end of
+    every turn and a check can take minutes. This is a reminder for a
+    cooperative agent, not the gate: edits made through a shell are never seen
+    here. What decides is check, accept and CI."""
     if event.get("stop_hook_active"):
         return 0, ""
     orders = {o.id: o for o in active(root)}
-    who, text = _who(event), str(event.get("last_assistant_message", ""))
+    who, text = (
+        str(event.get("agent_id") or ""),
+        str(event.get("last_assistant_message", "")),
+    )
     roles = {o.id: _touched(o)[who] for o in orders.values() if who in _touched(o)}
     named = ORDER_LINE.search(text)
     if named and named.group(1) in orders and named.group(1) not in roles:
@@ -832,7 +890,7 @@ def hook_stop(
             if role == "reviewer":
                 load_review(order, base)
                 continue
-            result = run_check(order, base)
+            result = run_check(order, base, budget=STOP_BUDGET)
         except Bad as e:
             return 2, str(e)
         if not result["ok"]:
@@ -977,7 +1035,12 @@ def cmd_ci(a: argparse.Namespace) -> int:
     names = diff_names(ROOT, a.base)
     orders = {o.id: o for o in orders_in(ROOT, load_teams())}
     carried = {n.split("/")[2] for n in names if n.startswith("work/orders/")}
-    carried |= {o.id for o in orders.values() if a.head and o.branch == a.head}
+    head = (
+        a.head
+        or os.environ.get("GITHUB_HEAD_REF")
+        or git(ROOT, "branch", "--show-current")
+    )
+    carried |= {o.id for o in orders.values() if head and o.branch == head}
     carried &= set(orders)
     ships_code = any(not n.startswith("work/") for n in names)
     bad = []
@@ -1034,7 +1097,14 @@ def cmd_post(a: argparse.Namespace) -> int:
 
 def cmd_thread(a: argparse.Namespace) -> int:
     order = find(a.id)
-    keep, held = trusted(_comments(_issue_of(order)))
+    number = _issue_of(order)
+    issue = json.loads(_gh(f"repos/{{owner}}/{{repo}}/issues/{number}"))
+    if issue.get("author_association") in TRUSTED:
+        print(
+            f"=== #{number} {issue.get('title', '')}\n"
+            + str(issue.get("body") or "").strip()
+        )
+    keep, held = trusted(_comments(number))
     for c in keep:
         print(f"--- {c['user']['login']} at {c['created_at']}")
         print(c["body"].strip())
@@ -1053,11 +1123,18 @@ def cmd_say(a: argparse.Namespace) -> int:
 
 
 def cmd_hook(a: argparse.Namespace) -> int:
+    """Whatever arrives, a hook answers 0 or 2. A traceback would read as a
+    broken harness to every agent in the session."""
     try:
         event = json.loads(sys.stdin.read() or "{}")
-    except json.JSONDecodeError:
+        if not isinstance(event, dict):
+            return 0
+        if not isinstance(event.get("tool_input") or {}, dict):
+            return 0
+        code, why = (hook_pre_tool if a.which == "pre-tool" else hook_stop)(event)
+    except Exception as e:  # noqa: BLE001  a hook must not fall over
+        print(f"work hook let go: {type(e).__name__}: {e}", file=sys.stderr)
         return 0
-    code, why = (hook_pre_tool if a.which == "pre-tool" else hook_stop)(event)
     if why:
         print(why, file=sys.stderr)
     return code
