@@ -6,7 +6,7 @@ Vibe Code Camp is Tom Peters' answer to a question his family kept asking: how d
 
 One evening, one island, eight workstreams. Every workstream leaves something real on the machine: a game, a rules file, a dataset with queries, a git history, one integration, a vault, a public URL, an agent on a schedule. The game is the map and the manual; the terminal companion checks the work and keeps score; the Obsidian vault is the memory. Nothing is simulated: `vibe check 3` opens the real CSV and runs the real query.
 
-The tone is corporate satire with one honest voice. Tom speaks like a steering committee; Rolinda, Head of Operations, asks the question everyone else is too polite to ask. Done is a green check and one sentence you can explain to Rolinda.
+The tone is corporate satire with one honest voice. Tom speaks like a steering committee; Rolinda asks the question everyone else is too polite to ask. Her job title follows the theme, so she is Head of Operations in `studio` and Head of Hospitality Operations (Beverages) in `wine-night`; the voice is the same either way. Done is a green check and one sentence you can explain to Rolinda.
 
 ## Why it looks like this
 
@@ -22,6 +22,18 @@ The design follows Tom's own machine. Black is the background, always; five hues
 
 The same palette runs the game (`src/style.css`), the terminal output (rich), the onboarding screen (Textual) and the vault (`vault/.obsidian/snippets/vibe.css`). The choice of hues is R2-D2's: a small robot that reports state with four colours and never needs a manual. The rules are in [DESIGN.md](DESIGN.md): no gradients, one glow per view, one motion per component, nothing over 400 ms.
 
+## The four islands
+
+Four evenings, four islands, eight stops each. `just media` renders these from the built game.
+
+| Evening | Island | |
+|---|---|---|
+| 2 | Cold Storage Cluster | ![The winter island](media/island-winter.png) |
+| 3 | Sandbox Environment | ![The desert island](media/island-desert.png) |
+| 4 | Production Environment | ![The production island](media/island-prod.png) |
+
+The campus, evening 1, is the picture at the top of the [README](../README.md). The roadmap, the vault graph and the tech tree, all from the same render: [roadmap](media/roadmap.png), [vault](media/vault.png), [tree](media/tree.png). On a phone the whole HUD fits 393 points wide: [phone](media/phone.png).
+
 ## The toolbelt is Tom's
 
 The tools the onboarding screen offers are the ones on Tom's Mac: Ghostty for the terminal, Zed as the editor with Claude Code over ACP, AeroSpace for windows, tmux, Starship, fzf, ripgrep, bat, btop, DuckDB, uv, just. The toolbelt verifies each install command against the tool's own documentation before it is offered. `vibe toolbelt` shows what is present; `vibe toolbelt --install missing` installs the rest.
@@ -30,7 +42,7 @@ Tom's own conventions travel with the repo as skills: the mermaid diagrams in th
 
 ## The people on the islands
 
-Twelve mentors stand on the four islands, each grounded in their recorded ideas and sources so nobody invents a quote: Andrej Karpathy, Yann LeCun, Geoffrey Hinton, Fei-Fei Li, Rich Sutton, Dario Amodei, Chris Olah, Boris Cherny, Cat Wu, Mitchell Hashimoto, Linus Torvalds and the OpenCode team. `vibe council "<question>"` convenes four of them in the llm-council pattern: separate answers, anonymised peer review, one chairman's synthesis, minutes in the vault.
+Twelve mentors stand on the four islands, each grounded in their recorded ideas and sources so nobody invents a quote: Andrej Karpathy, Yann LeCun, Geoffrey Hinton, Fei-Fei Li, Rich Sutton, Dario Amodei, Chris Olah, Boris Cherny, Cat Wu, Mitchell Hashimoto, Linus Torvalds and the OpenCode team. `vibe council "<question>"` convenes the mentors of the island you are on in the llm-council pattern: separate answers, anonymised peer review, one chairman's synthesis, minutes in the vault. `--mentors <ids>` picks your own, up to four.
 
 ## Lineage
 

@@ -8,6 +8,8 @@ just start        # the terminal menu: who you are, what the machine has, where 
 
 You should see a screen with your name, your field and a difficulty, then a launcher list. From there: the game in the browser, the vault in Obsidian, your status in this terminal.
 
+Supported browsers: Chrome is the one the game is built and fixed for, on desktop and on Android. On an iPhone it is best effort, because every iPhone browser runs Apple's WebKit; the game is tested against a WebKit iPhone profile and gets no Safari-only polish. Firefox and desktop Safari should work and are not tested beyond that.
+
 `just` does not come with a Mac: `brew install just` puts it there. Most recipes are one line that calls the `vibe` command, so `just check 1` and `vibe check 1` do the same thing, and you never need `just` for those. Five do more: `setup` also links the skills into `.claude/`, `camp` opens Obsidian next to the game, `scores` picks a query file, and `break` and `rescue` are git recipes with no `vibe` equivalent. `just` on its own lists them all.
 
 ## What you get

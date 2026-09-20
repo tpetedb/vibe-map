@@ -18,6 +18,8 @@ Four ways in, from nothing installed to a full camp. Every step is a command you
 
    You should see the island turning behind the title panel. One file, three.js embedded, no CDN, works on a phone and offline.
 
+   Supported browsers: Chrome is the one the game is built and fixed for, on desktop and on Android. On an iPhone it is best effort, because every iPhone browser runs Apple's WebKit; the game is tested against a WebKit iPhone profile and gets no Safari-only polish. Firefox and desktop Safari should work and are not tested beyond that.
+
 3. Type a name, press **Start**, walk to the 18:00 signpost. The first workstream opens with a full lesson, a definition of done and one question from Rolinda.
 
 Progress lives in the browser. When you later install the CLI, **Roadmap, Export progress** gives a code you paste into `vibe import`.
@@ -33,7 +35,7 @@ Needs [uv](https://docs.astral.sh/uv/) and git. Homebrew has both: `brew install
    vibe --version
    ```
 
-   Prints the version, for example `vibe, version 0.3.0`. The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
+   Prints `vibe, version X.Y.Z`, the number in `pyproject.toml` at the commit you installed. That one file is the only place the version is written; everything else reads it. The repository is the install source until the package is published; once it is on PyPI, `uv tool install vibe-map` is the short form of the same thing.
 
 2. Start a camp.
 

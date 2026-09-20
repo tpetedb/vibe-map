@@ -8,7 +8,7 @@ allowed-tools: Bash(uv run vibe *) Bash(just *)
 The CLI is the source of truth: `uv run vibe <command>` (`uv run vibe --help` lists them; `just status`, `just check` and `just vault` wrap the common ones).
 
 - `status`: where the user is in the campaign, with XP and quests
-- `check [n]`: verify the definition of done for workstream n (1 to 8) and award the XP; all workstreams when n is omitted
+- `check [n]`: verify the definition of done for workstream n (1 to 8) and award the XP; the next unfinished one when n is omitted, every one with `--all`. `-w <island>` picks the island; `--no-claim` checks without awarding.
 - `done <n> "what I built"`: mark workstream n done and write its vault note
 - `map`: rebuild `vault/Camp/Map.md` (Mermaid) from the state
 - `vault build` and `vault lint`: rebuild the vault notes and the map, then report orphans and dead links

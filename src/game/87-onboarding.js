@@ -88,7 +88,7 @@ function repoUrl(){return CONFIG.repo||"https://github.com/tpetedb/vibe-map"}
 function setupHtml(){const dir=campDir();const repo=repoUrl();return `
 <p class="small">Three windows side by side: this game, a terminal, Obsidian. The game is where you get the story and claim stops. The terminal is where the work happens and the checks run. Obsidian is where the notes land. Fifteen minutes to set up, then <code>just start</code> every session.</p>
 <h4>1. Get the tools</h4>
-<p class="small">Open <a href="${repo}" target="_blank" rel="noopener">${repo.replace(/^https?:\/\//,"")}</a> and press <b>Use this template</b> if you want your own copy on GitHub, or skip that and clone below. Then open a terminal (on a Mac: Cmd+Space, type Terminal, or install Ghostty).</p>
+<p class="small">Open <a href="${repo}" target="_blank" rel="noopener">${repo.replace(/^https?:\/\//,"")}</a> and press <b>Use this template</b> if you want your own copy on GitHub. You do not need one to play: step 2 installs the command and makes your camp. Then open a terminal (on a Mac: Cmd+Space, type Terminal, or install Ghostty).</p>
 <pre><code>brew install uv git just gh
 brew install --cask obsidian</code></pre>
 <p class="small muted">You should see: a list of installed formulae, and <code>uv --version</code> printing a number.</p>
@@ -99,7 +99,8 @@ vibe new ${dir}
 cd ${dir}
 just setup</code></pre>
 <p class="small muted">You should see: <code>Installed 1 executable: vibe</code>, then a new folder with <code>config/camp.toml</code>, <code>workspace/</code> and <code>vault/</code> in it.</p>
-<p class="small muted">Own GitHub copy instead? <code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code> (needs <code>gh auth login</code> first).</p>
+<p class="small muted">Own GitHub copy instead? Needs <code>gh auth login</code> first.</p>
+<pre><code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code></pre>
 <h4>3. Tell it who you are</h4>
 <pre><code>vibe name ${playerLabel()?esc(shq(playerLabel())):esc(NAME_SLOT)}
 vibe difficulty ${difficulty()}

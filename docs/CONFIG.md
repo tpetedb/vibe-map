@@ -58,7 +58,7 @@ and the warning goes away.
 | Three.js, Motion, d3-force | `src/vendor/` (never edited by hand) | `just build` |
 | The campaign: evenings, stops, mentors, artifacts | `vibemap/data/campaign.json` | `just build` |
 | An artifact's Do it for real walkthrough and its check | `vibemap/data/campaign.json` `real` block, kinds in `vibemap/artifact_checks.py` | `just build` |
-| The roadmap and the tech tree | `vibemap/tech.py` | `just tree`, then `just build` |
+| The roadmap and the tech tree | one TOML file per topic in `vibemap/data/topics/<pack>/` (`tools/new_topic.py` scaffolds one; see `docs/TOPICS.md`) | `just tree`, then `just build` |
 | Themes, personas, difficulties | `vibemap/themes.py`, `personas.py`, `config.py` | `just verify` |
 | The camp skeleton `vibe new` writes | `vibemap/data/template/` | `just verify` |
 | The skills, the hook, the subagent a camp gets | `.agents/skills/`, `.claude/` | `uv run python tools/sync_template.py` |
