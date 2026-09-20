@@ -92,7 +92,8 @@ function placeItems(){
     const k=ITEMS.kinds[i.kind];if(!k)return;
     const m=new T.Mesh(P.geo[k.model]||P.geo.cube,itemMat(k.colour));
     m.position.set(sp.x,.75,sp.z);m.castShadow=true;scene.add(m);
-    props.items.push({id:i.id,m,x:sp.x,z:sp.z,p:props.items.length})})}
+    props.items.push({id:i.id,m,x:sp.x,z:sp.z,p:props.items.length})});
+  placeBottles()}
 // Walking over one collects it: a small burst, a line in the backpack, and the
 // concept with the tech tree topic it belongs to.
 function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
@@ -109,4 +110,5 @@ function tickItems(dt,t){
   const pos=chars.lotte&&chars.lotte.g.position;if(!pos)return;
   (props.items||[]).slice().forEach(it=>{
     it.m.rotation.y+=dt*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
-    if(Math.hypot(pos.x-it.x,pos.z-it.z)<1.1)collect(it)})}
+    if(Math.hypot(pos.x-it.x,pos.z-it.z)<1.1)collect(it)});
+  tickBottles(dt,t)}

@@ -85,7 +85,7 @@ jobs:
           - shard: smoke
             files: >-
               tests/test_game_smoke.py tests/test_stops.py
-              tests/test_grow_game.py
+              tests/test_grow_game.py tests/test_game_bottles.py
           - shard: ui
             files: >-
               tests/test_game_ui.py tests/test_interests.py
