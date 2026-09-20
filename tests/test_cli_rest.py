@@ -42,6 +42,25 @@ def camp(tmp_path: Path) -> Path:
     return here
 
 
+def _flat(text: str) -> str:
+    """The output as one line of words: a narrow console wraps a long message."""
+    return " ".join(text.split())
+
+
+def _a_camp_with_history(camp: Path) -> None:
+    """A commit of the camp's own, without asking the machine for an identity.
+
+    `vibe new` commits only where git already knows a name and an email, which
+    a fresh CI runner does not, so the tests that read a history make one.
+    """
+    git = ["git", "-c", "user.name=Camp", "-c", "user.email=camp@example.com"]
+    subprocess.run([*git, "init", "-q"], cwd=camp, check=True)
+    subprocess.run([*git, "add", "-A"], cwd=camp, check=True)
+    subprocess.run(
+        [*git, "commit", "-q", "--allow-empty", "-m", "the camp"], cwd=camp, check=True
+    )
+
+
 def _state(camp: Path) -> State:
     return State.load(camp / ".vibe" / "state.json")
 
@@ -69,15 +88,15 @@ def test_the_status_grid_marks_the_next_stop_and_prints_its_legend(
 ) -> None:
     out = _run(camp, "status")
     assert out.returncode == 0, out.stdout
-    assert ">" in out.stdout and "next" in out.stdout
-    assert "to do" in out.stdout
+    assert ">" in _flat(out.stdout) and "next" in _flat(out.stdout)
+    assert "to do" in _flat(out.stdout)
 
 
 def test_a_forced_claim_draws_an_i_and_the_legend_explains_it(camp: Path) -> None:
     assert _run(camp, "done", "1", "x", "--force").returncode == 0
     out = _run(camp, "status")
-    assert "claimed, not verified" in out.stdout, out.stdout
-    assert "pays the other half" in out.stdout
+    assert "claimed, not verified" in _flat(out.stdout), out.stdout
+    assert "pays the other half" in _flat(out.stdout)
 
 
 def test_the_status_table_and_the_tui_map_read_the_same_marks() -> None:
@@ -93,7 +112,7 @@ def test_the_campaign_says_how_many_stops_an_evening_has(camp: Path) -> None:
     stops = campaign.stop_count("campus")
     out = _run(camp, "check", str(stops + 1))
     assert out.returncode == 1
-    assert f"workstream is 1 to {stops}" in out.stdout
+    assert f"workstream is 1 to {stops}" in _flat(out.stdout)
     assert campaign.total_stops() == sum(
         campaign.stop_count(w) for w in campaign.evenings()
     )
@@ -105,16 +124,16 @@ def test_the_campaign_says_how_many_stops_an_evening_has(camp: Path) -> None:
 def test_two_targets_are_refused_instead_of_running_the_first(camp: Path) -> None:
     out = _run(camp, "check", "--mentor", "cherny", "--artifact", "cafe")
     assert out.returncode == 1, out.stdout
-    assert "pick one of --mentor, --artifact" in out.stdout
-    assert "Boris Cherny" not in out.stdout
+    assert "pick one of --mentor, --artifact" in _flat(out.stdout)
+    assert "Boris Cherny" not in _flat(out.stdout)
 
 
 @pytest.mark.parametrize("flag", ["--mentor", "--artifact", "--topic"])
 def test_an_empty_target_is_refused_like_an_unknown_one(camp: Path, flag: str) -> None:
     out = _run(camp, "check", flag, "")
     assert out.returncode == 1, out.stdout
-    assert "Innovation Hub" not in out.stdout
-    assert "unknown" in out.stdout
+    assert "Innovation Hub" not in _flat(out.stdout)
+    assert "unknown" in _flat(out.stdout)
 
 
 # ---- check --fork --------------------------------------------------------------
@@ -126,8 +145,8 @@ def test_one_fork_challenge_says_what_it_proved_and_claims_nothing(
     assert _run(camp, "fork").returncode == 0
     out = _run(camp, "check", "--fork", "exists")
     assert out.returncode == 0, out.stdout
-    assert "exists passes" in out.stdout
-    assert "your fork builds and is yours" not in out.stdout
+    assert "exists passes" in _flat(out.stdout)
+    assert "your fork builds and is yours" not in _flat(out.stdout)
     assert not _state(camp).is_done("prod", 6)
 
 
@@ -137,7 +156,7 @@ def test_the_four_fork_challenges_claim_the_forking_stop(camp: Path) -> None:
     script_fork(camp)
     out = _run(camp, "check", "--fork", "all")
     assert out.returncode == 0, out.stdout + out.stderr
-    assert "your fork builds and is yours" in out.stdout
+    assert "your fork builds and is yours" in _flat(out.stdout)
     st = _state(camp)
     assert st.is_done("prod", 6) and st.is_verified("prod", 6)
     # Running it again re-checks and says so, instead of paying twice.
@@ -170,7 +189,7 @@ def test_raising_the_difficulty_does_not_re_pay_a_verified_stop(camp: Path) -> N
     assert _run(camp, "difficulty", "hard").returncode == 0
     out = _run(camp, "check", "1")
     assert out.returncode == 0, out.stdout
-    assert "claimed without a check" not in out.stdout
+    assert "claimed without a check" not in _flat(out.stdout)
     assert _state(camp).xp == paid
 
 
@@ -179,7 +198,7 @@ def test_a_stop_claimed_without_a_check_is_still_topped_up(camp: Path) -> None:
     half = _state(camp).xp
     _passing_game(camp)
     out = _run(camp, "check", "1")
-    assert "claimed without a check" in out.stdout, out.stdout
+    assert "claimed without a check" in _flat(out.stdout), out.stdout
     assert _state(camp).xp > half
 
 
@@ -195,7 +214,7 @@ def test_full_hints_and_short_hints_are_not_the_same_text(camp: Path) -> None:
     # A one-sentence hint has no tail to drop, so both spellings keep it whole.
     assert _hint_line("one line only", "short") == "one line only"
     assert _run(camp, "difficulty", "beginner").returncode == 0
-    assert "hint" in _run(camp, "check", "8").stdout
+    assert "hint" in _flat(_run(camp, "check", "8").stdout)
 
 
 # ---- council -------------------------------------------------------------------
@@ -216,15 +235,15 @@ def test_the_council_says_who_did_not_fit_at_the_table(camp: Path) -> None:
     ids = "cherny,wu,karpathy,lecun,hinton,li,sutton"
     out = _run(camp, "council", "z", "-m", ids, "--dry-run")
     assert out.returncode == 0, out.stdout
-    assert f"the council seats {MAX_MENTORS}" in out.stdout
+    assert f"the council seats {MAX_MENTORS}" in _flat(out.stdout)
     assert out.stdout.count("--- ") == MAX_MENTORS
-    assert f"at most {MAX_MENTORS}" in _run(camp, "council", "--help").stdout
+    assert f"at most {MAX_MENTORS}" in _flat(_run(camp, "council", "--help").stdout)
 
 
 def test_the_council_refuses_a_question_that_is_not_there(camp: Path) -> None:
     out = _run(camp, "council", "   ", "--dry-run")
     assert out.returncode == 1, out.stdout
-    assert "say what the council is about" in out.stdout
+    assert "say what the council is about" in _flat(out.stdout)
     assert not list((camp / "vault" / "Camp").glob("Council*.md"))
 
 
@@ -232,6 +251,7 @@ def test_the_council_refuses_a_question_that_is_not_there(camp: Path) -> None:
 
 
 def test_explain_escapes_what_the_provider_wrote(camp: Path) -> None:
+    _a_camp_with_history(camp)
     env = _stub_provider(camp, "print('[core] and [/b] are not markup')")
     out = subprocess.run(
         [sys.executable, "-m", "vibemap.cli", "explain", "-n", "1"],
@@ -242,12 +262,13 @@ def test_explain_escapes_what_the_provider_wrote(camp: Path) -> None:
     )
     assert out.returncode == 0, out.stdout + out.stderr
     assert "MarkupError" not in out.stderr
-    assert "[core]" in out.stdout and "[/b]" in out.stdout
+    assert "[core]" in _flat(out.stdout) and "[/b]" in _flat(out.stdout)
 
 
 def test_explain_diffs_from_the_first_commit_when_the_history_is_shorter(
     camp: Path,
 ) -> None:
+    _a_camp_with_history(camp)
     env = _stub_provider(
         camp,
         "import sys, pathlib\n"
@@ -262,7 +283,7 @@ def test_explain_diffs_from_the_first_commit_when_the_history_is_shorter(
         text=True,
     )
     assert out.returncode == 0, out.stdout + out.stderr
-    assert "shorter than 3 commits" in out.stdout
+    assert "shorter than 3 commits" in _flat(out.stdout)
     prompt = (camp / "prompt.txt").read_text(encoding="utf-8")
     assert "DIFF (truncated):" in prompt
     assert "config/camp.toml" in prompt.split("DIFF (truncated):")[1]
@@ -272,7 +293,7 @@ def test_explain_diffs_from_the_first_commit_when_the_history_is_shorter(
 def test_explain_blames_the_argument_not_the_repository(camp: Path, n: str) -> None:
     out = _run(camp, "explain", "-n", n)
     assert out.returncode == 2, out.stdout + out.stderr
-    assert "no git history" not in out.stdout
+    assert "no git history" not in _flat(out.stdout)
     assert "--commits" in out.stderr
 
 
@@ -295,7 +316,7 @@ def test_a_news_limit_below_one_is_refused_before_anything_is_written(
 def test_the_day_one_state_of_the_scores_is_not_a_failed_recipe(camp: Path) -> None:
     out = _run(camp, "scores")
     assert out.returncode == 0, out.stdout
-    assert "no scores yet" in out.stdout
+    assert "no scores yet" in _flat(out.stdout)
 
 
 # ---- toolbelt ------------------------------------------------------------------
@@ -305,7 +326,7 @@ def test_an_unknown_tool_is_one_line_and_not_a_traceback(camp: Path) -> None:
     out = _run(camp, "toolbelt", "--install", "bogus", "--dry-run")
     assert out.returncode == 1, out.stdout
     assert "Traceback" not in out.stderr
-    assert "unknown tool 'bogus'" in out.stdout
+    assert "unknown tool 'bogus'" in _flat(out.stdout)
 
 
 def test_a_tier_with_nothing_missing_says_so(camp: Path) -> None:
@@ -335,7 +356,7 @@ def test_opening_something_where_there_is_no_opener_prints_it(
     )
     assert out.returncode == 0, out.stdout + out.stderr
     assert "FileNotFoundError" not in out.stderr
-    assert "open it yourself" in out.stdout
+    assert "open it yourself" in _flat(out.stdout)
 
 
 def test_play_offline_without_a_network_says_so_and_falls_back(camp: Path) -> None:
@@ -357,14 +378,14 @@ def test_play_offline_without_a_network_says_so_and_falls_back(camp: Path) -> No
     )
     assert out.returncode == 0, out.stdout + out.stderr
     assert "Traceback" not in out.stderr
-    assert "no copy to cache" in out.stdout
+    assert "no copy to cache" in _flat(out.stdout)
     assert not (camp / ".vibe" / "vibe-map.html").exists()
 
 
 def test_start_without_a_terminal_says_so_instead_of_hanging(camp: Path) -> None:
     out = _run(camp, "start")
     assert out.returncode == 1, out.stdout
-    assert "needs a terminal" in out.stdout
+    assert "needs a terminal" in _flat(out.stdout)
 
 
 # ---- pet -----------------------------------------------------------------------
@@ -373,7 +394,7 @@ def test_start_without_a_terminal_says_so_instead_of_hanging(camp: Path) -> None
 def test_the_gallery_refuses_to_be_a_write(camp: Path) -> None:
     out = _run(camp, "pet", "--all", "--species", "dog")
     assert out.returncode == 1, out.stdout
-    assert "--all only shows the gallery" in out.stdout
+    assert "--all only shows the gallery" in _flat(out.stdout)
     toml = tomllib.loads((camp / "config" / "camp.toml").read_text(encoding="utf-8"))
     assert toml["pet"]["species"] == ""
 
@@ -396,7 +417,7 @@ def test_force_says_what_it_deletes_and_waits_for_an_answer(camp: Path) -> None:
     marker.write_text("// my own\n", encoding="utf-8")
     refused = _run(camp, "fork", "--force", stdin="n\n")
     assert refused.returncode == 1, refused.stdout
-    assert "the four fork challenges start again" in refused.stdout
+    assert "the four fork challenges start again" in _flat(refused.stdout)
     assert marker.exists()
     agreed = _run(camp, "fork", "--force", stdin="y\n")
     assert agreed.returncode == 0, agreed.stdout + agreed.stderr
@@ -426,7 +447,7 @@ def test_news_leaves_no_orphan_in_the_vault(camp: Path) -> None:
     assert (camp / "vault" / "Camp" / "News.md").exists()
     lint = _run(camp, "vault", "lint")
     assert lint.returncode == 0, lint.stdout
-    assert "orphan" not in lint.stdout
+    assert "orphan" not in _flat(lint.stdout)
     assert json.loads((camp / ".vibe" / "news.json").read_text(encoding="utf-8"))[
         "items"
     ]

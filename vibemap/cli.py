@@ -2730,15 +2730,29 @@ HOSTED_GAME = "https://tpetedb.github.io/vibe-map/"
 RAW_GAME = "https://raw.githubusercontent.com/tpetedb/vibe-map/main/game/vibe-map.html"
 
 
+def _opener() -> str | None:
+    """The command this desktop hands a file or a URL to, if it has one."""
+    if sys.platform == "win32":
+        return "start"
+    name = "open" if sys.platform == "darwin" else "xdg-open"
+    return name if shutil.which(name) else None
+
+
 def launch(target: str) -> None:
     """Hand a file or a URL to the desktop, and print it when nothing can.
 
-    A container, a Codespace or a stripped PATH has no opener at all, so the
-    line on screen has to be enough on its own.
+    A container, a Codespace or a stripped PATH has no opener at all, and
+    click.launch reports that as an exception on macOS and as a return code
+    elsewhere, so the opener is looked for first and the line on screen has to
+    be enough on its own.
     """
-    try:
-        click.launch(target)
-    except OSError:
+    failed = _opener() is None
+    if not failed:
+        try:
+            failed = bool(click.launch(target))
+        except OSError:
+            failed = True
+    if failed:
         console.print(f"[muted]open it yourself:[/] [path]{target}[/]")
 
 
