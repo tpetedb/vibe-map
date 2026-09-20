@@ -93,7 +93,26 @@ body.no-motion *{animation:none!important;transition:none!important}
 /* The off switch for the live world: one class hides every element the feed
    drives, so a new one only has to carry live-feed to obey it. */
 body.no-live .live-feed{display:none!important}
+/* The canvas takes every touch itself, so two fingers are a pinch for the
+   camera and never the browser's page zoom. The compact map is the one layout
+   where the page scrolls under the stage, so there a vertical swipe still
+   belongs to the page. */
 #c{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+#stage.map-compact #c{touch-action:pan-y}
+/* A soft vignette over the 3D view: CSS over the canvas rather than a render
+   pass, so it costs the GPU nothing the compositor was not already doing. */
+#stage::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 58%,rgba(0,0,0,.26) 100%)}
+/* The zoom control sits on the right edge, above the jump button on a touch
+   screen, and its three buttons are the generic button made round. */
+#zoom{right:14px;bottom:52px;z-index:6;display:flex;flex-direction:column;gap:6px}
+#zoom button{touch-action:manipulation;width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+#zoom button .ic{width:18px;height:18px;margin:0}
+#zoom button[aria-pressed="true"]{border-color:var(--yellow)}
+@media (hover:none),(pointer:coarse){#zoom{bottom:122px}#zoom button{width:44px;height:44px}}
+#stage.lost #zoom,#stage.lost #joy,#stage.lost #jump,#stage.lost #bottom{display:none}
+#gfxlost{position:absolute;inset:0;z-index:7;display:grid;place-items:center;padding:16px;background:var(--bg)}
+#gfxlost[hidden]{display:none}
+#gfxlost .card{max-width:440px}
 h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
 h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
 h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
@@ -211,7 +230,7 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    removed: the stage keeps its size, so the camera does not jump at Start.
    This is also what takes the HUD out of the tab order until then. */
 body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
-body:has(#title:not(.off)) #talk{visibility:hidden}
+body:has(#title:not(.off)) #talk,body:has(#title:not(.off)) #zoom{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
@@ -608,6 +627,10 @@ details.cmds .cmdbar{margin-top:-8px}
 </div>
 <div id="joy" aria-hidden="true"><div id="knob"></div></div>
 <button id="jump" aria-label="Jump" data-icon="arrow-up"></button>
+<!-- The zoom control: the same three actions the wheel, a pinch and the
+     plus, minus and 0 keys have, for a hand that has none of those. -->
+<div class="ui" id="zoom" role="group" aria-label="Zoom"><button id="zoom-in" data-icon="plus" aria-label="Zoom in" title="Zoom in (+)" onclick="zoomStep(1)"></button><button id="zoom-fit" data-icon="maximize" aria-label="Show the whole island" title="Show the whole island (0)" onclick="zoomFit()"></button><button id="zoom-out" data-icon="minus" aria-label="Zoom out" title="Zoom out (-)" onclick="zoomStep(-1)"></button></div>
+<div id="gfxlost" role="alert" hidden><div class="card"><h3>The 3D view stopped</h3><p class="small">The browser took the graphics away from this tab, which happens when a phone runs short of memory or the tab has slept. Your progress is safe. The Roadmap has every stop, and the island comes back by itself when the browser allows it.</p><div class="row"><button class="primary" onclick="location.reload()">Reload the island</button><button onclick="openSheet('s-map')">Open the Roadmap</button></div></div></div>
 </div><!-- /stage -->
 <div id="talk"><div class="bubble"><div id="bub-face"></div><div><b id="bub-who">Tom</b><span id="bub-text"></span></div></div></div>
 
@@ -1181,14 +1204,39 @@ const PALETTE={
 };
 
 
-// The camera. The diorama only reads when the whole island is inside the
-// frame, so the distance is derived from the island's radius and the field of
-// view rather than fixed: a narrow window pushes the camera back instead of
-// cropping the island. pitch is the angle above the horizon in radians,
-// follow is how much of the walker's position the frame takes, drift caps how
-// far that may pull the island off centre, ahead is the look-ahead along the
-// walk and ease is how fast the frame catches up.
-const CAM={fov:46,pitch:.72,margin:1.03,follow:.5,drift:4.5,ahead:.45,ease:3.2};
+// The camera. The fitted view is derived, not fixed: the distance that puts
+// the whole island inside the frame comes from the island's radius and the
+// field of view, so a narrow window pushes the camera back instead of cropping
+// the island. pitch is the angle above the horizon in radians, follow is how
+// much of the walker's position the fitted frame takes, drift caps how far
+// that may pull the island off centre, ahead is the look-ahead along the walk
+// and ease is how fast the frame catches up. glide is the seconds the camera
+// takes from the title's orbit, or from a fast travel, down to the walker.
+// far is the far plane in island units; the near plane follows the distance
+// (nearK times it), which is what keeps ground decals from flickering when
+// the camera is a long way out.
+//
+// zoom is one level from min to max. At -1 the camera is `near` units from
+// the walker at nearPitch and frames the walker; at 0 it is the fitted view
+// and frames the island; at 1 it is `far` times the fit at farPitch and
+// frames the archipelago. start is where a fresh browser begins: close enough
+// that the walker and the companion read on a phone. step is one press of a
+// key or a button, wheel is levels per wheel pixel, pinch is how much stronger
+// a trackpad pinch is than the wheel it arrives as, ease is per second.
+const CAM={fov:46,pitch:.72,margin:1.03,follow:.5,drift:4.5,ahead:.45,ease:3.2,glide:1.4,far:520,nearK:.03,
+  zoom:{min:-1,max:1,start:-.62,near:17,nearPitch:.6,far:2.5,farPitch:.98,step:.25,wheel:.0014,pinch:6,ease:7}};
+
+// A name plate never draws smaller than minPx CSS pixels tall, up to grow
+// times its own size, which is what makes it legible from the fitted view,
+// and never larger than maxPx, so one next to a close camera stays a label;
+// past fadeZoom on the way out to the archipelago the plates fade away. gap is
+// the breathing room, in pixels, inside which a nearer plate wins over a
+// farther one instead of both being drawn on top of each other.
+const PLATE={minPx:22,maxPx:34,grow:4,fadeZoom:.35,gap:3};
+
+// The ground's texture: how many tufts an island gets, and how much darker
+// than the world's own grass colour they are.
+const GROUND={tufts:240,shade:.9};
 
 // Tone mapping: ACES with a little exposure, so bright grass and a lamp at
 // night roll off instead of clipping to the same flat value.
@@ -1198,17 +1246,20 @@ const EXPOSURE=1.06;
 // colour for the same nine. az and el are the bearing and the height of the
 // sun (of the moon from stage four) in degrees, sun is its colour, i its
 // intensity, zen the top of the sky dome over the world's horizon colour, and
-// hemi and amb the fill that keeps a night lit like a night.
+// hemi and amb the fill that keeps a night lit like a night. fig is the share
+// of their own colour the figures glow with: a night dark enough to make the
+// lamps worth having is also dark enough to lose the walker in, and the people
+// are what the player is looking for.
 const SKY_RIG=[
-  {az:35,el:52,sun:"#FFF6E0",i:1.18,zen:"#3E8FD8",hemi:.44,amb:.12,hs:"#CFE9FF",hg:"#4A7A3A"},
-  {az:20,el:34,sun:"#FFE3AE",i:1.06,zen:"#5C9BD6",hemi:.4,amb:.11,hs:"#D7E4F5",hg:"#4A6E3C"},
-  {az:5,el:17,sun:"#FF9E5E",i:.9,zen:"#7A6FA8",hemi:.34,amb:.1,hs:"#E3C6C0",hg:"#4A4038"},
-  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A"},
-  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434"},
-  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C"},
-  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824"},
-  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320"},
-  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A"},
+  {az:35,el:52,sun:"#FFF6E0",i:1.18,zen:"#3E8FD8",hemi:.44,amb:.12,hs:"#CFE9FF",hg:"#4A7A3A",fig:0},
+  {az:20,el:34,sun:"#FFE3AE",i:1.06,zen:"#5C9BD6",hemi:.4,amb:.11,hs:"#D7E4F5",hg:"#4A6E3C",fig:0},
+  {az:5,el:17,sun:"#FF9E5E",i:.9,zen:"#7A6FA8",hemi:.34,amb:.1,hs:"#E3C6C0",hg:"#4A4038",fig:0},
+  {az:-8,el:7,sun:"#F2704F",i:.56,zen:"#4C3E7A",hemi:.3,amb:.1,hs:"#9E86A8",hg:"#33303A",fig:.1},
+  {az:-140,el:30,sun:"#9FB6F0",i:.36,zen:"#232A5C",hemi:.24,amb:.09,hs:"#4A5688",hg:"#1E2434",fig:.2},
+  {az:-150,el:38,sun:"#9FB6F0",i:.32,zen:"#141A44",hemi:.2,amb:.08,hs:"#3A4470",hg:"#181D2C",fig:.24},
+  {az:-160,el:44,sun:"#A8BCF5",i:.29,zen:"#0B1130",hemi:.17,amb:.075,hs:"#2E3660",hg:"#141824",fig:.27},
+  {az:-170,el:49,sun:"#A8BCF5",i:.27,zen:"#070B24",hemi:.15,amb:.07,hs:"#262D52",hg:"#101320",fig:.29},
+  {az:180,el:53,sun:"#B4C6FF",i:.25,zen:"#04061C",hemi:.13,amb:.065,hs:"#1E2446",hg:"#0C0F1A",fig:.3},
 ];
 
 // The pixel companion that follows the walker (src/game/19b-pet.js). The
@@ -1218,12 +1269,16 @@ const SKY_RIG=[
 // exponential ease of that rate per second. SIDE keeps it off to the walker's
 // right, because straight behind is straight under his nameplate from this
 // camera and the companion would spend the walk hidden by his back. PX is
-// world units per sprite
-// pixel, so the packs keep their sizes against each other and against a
-// walker about 2.4 units tall: a duck of sixteen pixels stands 1.2 high, a
-// turtle of eight stands 0.6.
-const PET={FOLLOW:1.8,SIDE:1.9,LAG:4.5,PX:.075,BOB:.06,WALK_AT:.55,FPS:8};
-
+// world units per sprite pixel, so the packs keep their sizes against each
+// other and against a walker about 2.6 units tall: a duck of sixteen pixels
+// stands 1.6 high, a turtle of eight stands 0.8. On screen a sprite pixel is
+// always a whole number of device pixels and never fewer than MIN_TEXEL, so
+// the art stays crisp at every zoom. LEASH
+// is how far it may fall behind before it stops going round and comes
+// straight to the walker. CHEER is the seconds it celebrates a claimed stop,
+// NIGHT how far the sprite is tinted towards the moonlight at the last stage.
+const PET={FOLLOW:1.8,SIDE:1.9,LAG:4.5,PX:.1,BOB:.06,WALK_AT:.55,FPS:8,
+  MIN_TEXEL:1,LEASH:9,CHEER:2.4,NIGHT:.55};
 // Text that is not ours goes into the page through here: the feed, an answer
 // from the bridge, an imported name. One helper, early, so every module can
 // reach it; the page is built from strings, so escaping is the rule and raw
@@ -1366,7 +1421,11 @@ const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just
 // appear. Springs are stiff so nothing takes longer than about 400 ms.
-const reducedMotion=()=>matchMedia("(prefers-reduced-motion: reduce)").matches||(typeof motionOff==="function"&&motionOff());
+// Asked several times a frame, so the media query is made once and read live.
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)");
+const reducedMotion=()=>REDUCED.matches||(typeof motionOff==="function"&&motionOff());
+// How the hosts are named wherever they are named: the role is the theme's.
+const roleName=who=>who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
 function fx(el){if(!window.Motion||reducedMotion())return;Motion.animate(el,{opacity:[0,1],transform:["translateY(16px)","translateY(0px)"]},{type:"spring",stiffness:420,damping:34,mass:.8})}
 function countUp(el,to,fmt){if(!window.Motion||reducedMotion()){el.textContent=fmt(to);return}const from=parseFloat(el.textContent)||0;if(from===to){el.textContent=fmt(to);return}Motion.animate(from,to,{duration:.4,ease:"easeOut",onUpdate:v=>{el.textContent=fmt(v)}})}
 
@@ -1379,7 +1438,7 @@ const FACE={
 function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
-function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=who==="tom"?"Tom, "+CONFIG.theme.hostRole:"Rolinda, "+CONFIG.theme.guideRole;
+function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);
   if(who==="rolinda")typeOut($("bub-text"),t);else{clearInterval($("bub-text")._tw);$("bub-text").setAttribute("aria-label",t);$("bub-text").textContent=t}}
 function say(k){const [who,t]=line(k);bubble(who,t)}
 // A mentor is known by their last name; a team is not a person, so a name that
@@ -1422,7 +1481,9 @@ maximize:'<path d="M8 3H5a2 2 0 0 0-2 2v3" /><path d="M21 8V5a2 2 0 0 0-2-2h-3" 
 search:'<path d="m21 21-4.34-4.34" /><circle cx="11" cy="11" r="8" />',
 menu:'<path d="M4 5h16" /><path d="M4 12h16" /><path d="M4 19h16" />',
 backpack:'<path d="M4 10a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><path d="M8 10h8" /><path d="M8 18h8" /><path d="M8 22v-6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v6" /><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />',
-message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />'};
+message_circle:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />',
+plus:'<path d="M5 12h14" /><path d="M12 5v14" />',
+minus:'<path d="M5 12h14" />'};
 function icon(name,cls){const k=name.replace(/-/g,"_");if(!ICONS[k])return"";return `<svg class="ic${cls?' '+cls:''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`}
 // Static markup declares data-icon; boot fills them in.
 function iconize(root){(root||document).querySelectorAll("[data-icon]").forEach(el=>{if(el.querySelector(":scope>svg.ic"))return;el.insertAdjacentHTML("afterbegin",icon(el.dataset.icon))})}
@@ -1431,6 +1492,24 @@ const plots=[],builds={},clouds=[],parts=[],chars={},props={};
 let PLOT_POS=[];
 const mat=(c,o={})=>{const m=new T.MeshStandardMaterial(Object.assign({color:c,roughness:.9,metalness:0,flatShading:true},o));m.color.convertSRGBToLinear();if(o.emissive)m.emissive.convertSRGBToLinear();m.userData.viaMat=1;m.userData.cs=1;return m};
 function fixColors(root){root.traverse(o=>{const m=o.material;if(m&&m.color&&!m.userData.cs){m.userData.cs=1;if(!(m instanceof T.MeshStandardMaterial&&m.flatShading&&m.userData.viaMat)){m.color.convertSRGBToLinear();if(m.emissive)m.emissive.convertSRGBToLinear()}}})}
+// What the GPU holds for an object, given back. The island is rebuilt on every
+// crossing and the walker on every change of look, and three.js frees nothing
+// on its own: without this each rebuild left its buffers, its plate textures
+// and its shadow map behind. A geometry, a material or a texture that outlives
+// a scene (the shapes the instanced props share, the contact shadow, a pet's
+// sheet, the one laptop every lap shows) is marked with keep() and left alone.
+const KEPT=new WeakSet();
+const keep=o=>{KEPT.add(o);return o};
+function release(root){root.traverse(o=>{
+  if(o.geometry&&!KEPT.has(o.geometry))o.geometry.dispose();
+  (Array.isArray(o.material)?o.material:o.material?[o.material]:[]).forEach(m=>{
+    if(KEPT.has(m))return;if(m.map&&!KEPT.has(m.map))m.map.dispose();m.dispose()});
+  if(o.isInstancedMesh)o.dispose();
+  if(o.isLight&&o.shadow)o.shadow.dispose()})}
+// Whether an object is still part of the island being drawn: a plate of a
+// walker that was rebuilt still has a parent, just not one in the scene.
+function inScene(o){for(;o;o=o.parent)if(o===scene)return true;return false}
+function discard(o){if(!o)return;if(o.parent)o.parent.remove(o);release(o)}
 function box(w,h,d,c,x=0,y=0,z=0,py=false){const g=new T.BoxGeometry(w,h,d);if(py)g.translate(0,-h/2,0);const m=new T.Mesh(g,mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;return m}
 // A window: the same box, marked so the merge keeps it in the lit half and
 // the evening can put a light behind it.
@@ -1451,7 +1530,7 @@ function instOf(geo,material,mats,shadow){if(!mats.length)return null;
   mats.forEach((m,i)=>im.setMatrixAt(i,m));
   im.castShadow=im.receiveShadow=!!shadow;scene.add(im);return im}
 let BATCH=new Map();const BGEO={};
-const shape=(key,make)=>BGEO[key]||(BGEO[key]=make());
+const shape=(key,make)=>BGEO[key]||(BGEO[key]=keep(make()));
 function batchAdd(key,make,colour,m){const k=key+"|"+colour;let e=BATCH.get(k);
   if(!e){e={geo:shape(key,make),colour,m:[]};BATCH.set(k,e)}e.m.push(m)}
 function batchFlush(){BATCH.forEach(e=>instOf(e.geo,mat(e.colour),e.m,true));BATCH=new Map()}
@@ -1465,7 +1544,7 @@ function blobTexture(){if(blobTex)return blobTex;
   const cv=document.createElement("canvas");cv.width=cv.height=64;const g=cv.getContext("2d");
   const gr=g.createRadialGradient(32,32,0,32,32,32);
   gr.addColorStop(0,"rgba(0,0,0,.9)");gr.addColorStop(.5,"rgba(0,0,0,.45)");gr.addColorStop(1,"rgba(0,0,0,0)");
-  g.fillStyle=gr;g.fillRect(0,0,64,64);blobTex=new T.CanvasTexture(cv);return blobTex}
+  g.fillStyle=gr;g.fillRect(0,0,64,64);blobTex=keep(new T.CanvasTexture(cv));return blobTex}
 function blobAdd(x,z,r){BLOBS.push(xform(x,.04,z,-Math.PI/2,0,0,new T.Vector3(r,r,1)))}
 function blobFlush(){if(!BLOBS.length)return;
   const m=new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5});
@@ -1528,27 +1607,73 @@ function mergeStatic(g){
   const merged=add(matte,base);g.userData.lit=add(lit,glow);
   return merged}
 
-// A name can be long; the canvas cannot grow, so the font shrinks until the
-// text fits the plate instead of running off it. The canvas is drawn at twice
-// the plate's coordinates so the text is sharp at the camera's distance, and
-// the dark stroke keeps it legible over bright grass.
-const plates=[];
-function label(text,scale=1){const cv=document.createElement("canvas");const DPR=2;cv.width=256*DPR;cv.height=64*DPR;
-  const g=cv.getContext("2d");g.scale(DPR,DPR);const MAXW=222;let fs=30;g.font="bold "+fs+"px Inter,sans-serif";
-  while(fs>11&&g.measureText(text).width>MAXW){fs-=1;g.font="bold "+fs+"px Inter,sans-serif"}
-  g.textAlign="center";g.fillStyle="rgba(0,0,0,.62)";g.beginPath();const w=g.measureText(text).width+28;g.roundRect?g.roundRect(128-w/2,10,w,44,22):g.rect(128-w/2,10,w,44);g.fill();
-  g.textBaseline="middle";g.lineJoin="round";g.lineWidth=Math.max(3,fs*.22);g.strokeStyle="rgba(0,0,0,.85)";g.strokeText(text,128,33);
-  g.fillStyle="#fff";g.fillText(text,128,33);
+// A name can be long, so the plate is as wide as it has to be: the canvas is
+// one or two plate widths, a power of two either way, and only a name too long
+// for two shrinks its font. The canvas is drawn at twice the plate's
+// coordinates so the text is sharp at the camera's distance, and the dark
+// stroke keeps it legible over bright grass.
+const plates=[];let plateProbe=null;
+// The night lift of the people on the island: a share of each figure's own
+// colour added to what the lights give it, so a face stays a face and a dark
+// coat stays dark. One uniform object is shared by every figure material, so
+// the rig moves them all by writing one number (tickRig), and one cache key
+// keeps them on one program per material kind.
+const FIG_LIFT={value:0};
+function figMat(m){m.onBeforeCompile=s=>{s.uniforms.uLift=FIG_LIFT;
+  s.fragmentShader="uniform float uLift;\n"+s.fragmentShader.replace("#include <emissivemap_fragment>",
+    "#include <emissivemap_fragment>\ntotalEmissiveRadiance+=diffuseColor.rgb*uLift;")};
+  m.customProgramCacheKey=()=>"fig";m.needsUpdate=true;return m}
+function label(text,scale=1){const DPR=2,FONT=f=>"bold "+f+"px Inter,sans-serif";
+  const probe=plateProbe||(plateProbe=document.createElement("canvas").getContext("2d"));
+  let fs=30;probe.font=FONT(fs);
+  const wide=probe.measureText(text).width>222,CW=wide?512:256,MAXW=CW-34;
+  while(fs>11&&probe.measureText(text).width>MAXW){fs-=1;probe.font=FONT(fs)}
+  const cv=document.createElement("canvas");cv.width=CW*DPR;cv.height=64*DPR;
+  const g=cv.getContext("2d");g.scale(DPR,DPR);g.font=FONT(fs);
+  g.textAlign="center";g.fillStyle="rgba(0,0,0,.62)";g.beginPath();const w=g.measureText(text).width+28;g.roundRect?g.roundRect(CW/2-w/2,10,w,44,22):g.rect(CW/2-w/2,10,w,44);g.fill();
+  g.textBaseline="middle";g.lineJoin="round";g.lineWidth=Math.max(3,fs*.22);g.strokeStyle="rgba(0,0,0,.85)";g.strokeText(text,CW/2,33);
+  g.fillStyle="#fff";g.fillText(text,CW/2,33);
   const sp=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv),transparent:true,depthTest:false}));
-  sp.scale.set(4.6*scale,1.15*scale,1);sp.userData.text=text;sp.userData.fs=fs;plates.push(sp);return sp}
-// Plates cost a draw call each, so only the ones near the walker are drawn;
-// the rest fade out and stop being rendered at all.
-const PLATE_FAR=11*WORLD_SCALE,PLATE_FADE=3.5*WORLD_SCALE,_pw=new T.Vector3();
-function tickPlates(at){for(let i=plates.length-1;i>=0;i--){const sp=plates[i];
-  if(!sp.parent){plates.splice(i,1);continue}
-  sp.getWorldPosition(_pw);const d=Math.hypot(_pw.x-at.x,_pw.z-at.z);
-  const o=Math.max(0,Math.min(1,(PLATE_FAR-d)/PLATE_FADE));
-  sp.material.opacity=o;sp.visible=o>.02}}
+  // sx and sy are the plate's own size; pw and ph are the part of it the pill
+  // covers, which is what may not overlap another pill.
+  const sx=4.6*scale*CW/256,sy=1.15*scale;sp.scale.set(sx,sy,1);
+  Object.assign(sp.userData,{text,fs,sx,sy,pw:w/CW,ph:44/64,o:0});
+  sp.material.opacity=0;sp.visible=false;plates.push(sp);return sp}
+// Which plates are drawn, and how large. A plate costs a draw call, so only
+// the ones near the walker are candidates. Each is held at a legible size on
+// screen however far the camera is (PLATE.minPx), and where two pills would
+// overlap the nearer one wins: the walker's own first, then by distance. The
+// loser fades rather than pops. Nothing here allocates: it runs every frame.
+// A plate that must stay hidden (a signpost whose stop is built) says so with
+// userData.off, because visible is this function's to set.
+const PLATE_FAR=11*WORLD_SCALE,PLATE_FADE=3.5*WORLD_SCALE,_pw=new T.Vector3(),_shown=[];
+const plateOrder=(a,b)=>a.userData.d-b.userData.d;
+function plateHidden(u){for(let i=0;i<_shown.length;i++){const o=_shown[i];
+  if(Math.abs(o.cx-u.cx)<o.hw+u.hw&&Math.abs(o.cy-u.cy)<o.hh+u.hh)return true}
+  return false}
+function tickPlates(at,dt){
+  const you=chars.lotte&&chars.lotte.plate,h=VIEW.h||1,w=VIEW.w||1;
+  const unit=h/(2*Math.tan(camera.fov*Math.PI/360));
+  const out=1-Math.max(0,Math.min(1,(camZoom()-PLATE.fadeZoom)/.3));
+  for(let i=plates.length-1;i>=0;i--){const sp=plates[i],u=sp.userData;
+    if(!inScene(sp)){plates.splice(i,1);continue}
+    // y0 is where the caller put the plate; it grows upwards from there.
+    if(u.y0===undefined)u.y0=sp.position.y;
+    sp.position.y=u.y0;sp.getWorldPosition(_pw);u.d=sp===you?-1:Math.hypot(_pw.x-at.x,_pw.z-at.z);
+    u.want=u.off?0:Math.max(0,Math.min(1,(PLATE_FAR-u.d)/PLATE_FADE))*out;
+    const depth=Math.max(.1,-_pw.applyMatrix4(camera.matrixWorldInverse).z);
+    const px=u.sy*unit/depth,k=Math.min(PLATE.grow,Math.max(PLATE.minPx,Math.min(PLATE.maxPx,px))/px);
+    sp.scale.set(u.sx*k,u.sy*k,1);sp.position.y=u.y0+(k-1)*u.sy/2;
+    // The pill's box on the canvas, in CSS pixels.
+    _pw.applyMatrix4(camera.projectionMatrix);
+    u.cx=(_pw.x+1)/2*w;u.cy=(1-_pw.y)/2*h-(k-1)*u.sy/2*unit/depth;
+    u.hw=u.sx*k*u.pw*unit/depth/2+PLATE.gap;u.hh=u.sy*k*u.ph*unit/depth/2+PLATE.gap}
+  plates.sort(plateOrder);_shown.length=0;
+  const ease=reducedMotion()?1:Math.min(1,dt*9);
+  for(const sp of plates){const u=sp.userData;
+    if(u.want>0&&plateHidden(u))u.want=0;
+    if(u.want>0)_shown.push(u);
+    u.o+=(u.want-u.o)*ease;sp.material.opacity=u.o;sp.visible=u.o>.02}}
 // A walker is six meshes: four limbs that animate, one torso and one head.
 // Everything that hangs off the torso or the head is built in place and then
 // baked into that one mesh, because a scene with six characters in it cannot
@@ -1591,10 +1716,13 @@ function character(spec){
   g.add(c.lLeg,c.rLeg,c.lArm,c.rArm,torso,head);
   mergeStatic(torso);mergeStatic(head);
   c.body=torso;c.head=head;
-  const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);
+  const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);c.plate=lab;
   // A character carries a pose and a wardrobe; what they mean is the avatar
   // module's (src/game/18-avatar.js), so every walker, mentor and host has
   // the same actions available.
+  // The night lifts the body (figMat), before the wardrobe goes on so a lit
+  // screen or a hat keeps its own material.
+  g.traverse(o=>{if(o.isMesh&&o.material.isMeshStandardMaterial)figMat(o.material)});
   c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }
@@ -1789,7 +1917,7 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
     `<p class="small muted">In the vault: ${a.links.map(n=>`<span class="wl" onclick='openNote(${JSON.stringify(n)})'>${n}</span>`).join(" · ")}</p>`;
   // The sheet is built after boot, so its command block is wrapped and folded here.
   wrapCommands();$("s-artifact").querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
-  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent="Rolinda, "+CONFIG.theme.guideRole;typeOut($("bub-text"),a.rolinda);
+  $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent=roleName("rolinda");typeOut($("bub-text"),a.rolinda);
   openSheet("s-artifact")};
 window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const el=$("art-term");if(!el)return;el.textContent="";
   d.o.forEach((line,k)=>setTimeout(()=>{el.textContent+=(k?"\n":"")+line;el.scrollTop=el.scrollHeight},k*320))};
@@ -1910,13 +2038,13 @@ function cheer(){setPose(chars.lotte,"cheer");setPose(chars.tom,"cheer")}
 let LAPTOP=null;
 function laptopParts(){if(LAPTOP)return LAPTOP;
   LAPTOP={
-    base:new T.BoxGeometry(.62,.04,.44),
-    lid:new T.BoxGeometry(.62,.42,.03),
-    screen:new T.PlaneGeometry(.54,.34),
-    keys:new T.BoxGeometry(.46,.012,.22),
-    shell:mat(PALETTE.muted,{roughness:.35,metalness:.5}),
-    dark:mat(PALETTE.black),
-    lit:mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9}),
+    base:keep(new T.BoxGeometry(.62,.04,.44)),
+    lid:keep(new T.BoxGeometry(.62,.42,.03)),
+    screen:keep(new T.PlaneGeometry(.54,.34)),
+    keys:keep(new T.BoxGeometry(.46,.012,.22)),
+    shell:keep(mat(PALETTE.muted,{roughness:.35,metalness:.5})),
+    dark:keep(mat(PALETTE.black)),
+    lit:keep(mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9})),
   };return LAPTOP}
 // lite is the version an onlooker gets: the lid is the lit panel and the keys
 // are left off, which is two draw calls instead of four at the distance a
@@ -1927,10 +2055,17 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
-  // After dark the screen is what lights the face, which is the joke. A light
-  // costs no draw call, and the lid hides it from everything behind.
-  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
+// After dark the screen is what lights the face, which is the joke. The light
+// is the island's and not the laptop's: three.js compiles every lit material
+// again when the number of lights changes, so a light that comes and goes with
+// the laptop would stall the frame on every sit and every stand. This one is
+// always there, dark until somebody opens a laptop under it.
+const LAP_GLOW={at:new T.Vector3(0,1.24,.34),power:.9,reach:3.2};
+function lapGlow(){const l=new T.PointLight(PALETTE.blueBright,0,LAP_GLOW.reach);return l}
+function tickLapGlow(l,c){if(!l)return;const on=isSitting(c)&&c.lap&&c.lap.visible;l.intensity=on?LAP_GLOW.power:0;
+  if(on)l.position.copy(LAP_GLOW.at).applyAxisAngle(UP,c.g.rotation.y).add(c.g.position)}
+const UP=new T.Vector3(0,1,0);
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
 
@@ -1949,7 +2084,7 @@ function wearMesh(id){const g=new T.Group();
   else return null;
   return g}
 // A character's wardrobe is rebuilt from the list, never patched in place.
-function applyWear(c,ids){if(!c)return;if(c.wearG)c.g.remove(c.wearG);
+function applyWear(c,ids){if(!c)return;discard(c.wearG);
   const g=new T.Group();(ids||[]).forEach(id=>{const m=wearMesh(id);if(m)g.add(m)});
   c.g.add(g);c.wearG=g;fixColors(g)}
 window.toggleWear=function(id){const w=WEAR.find(x=>x.id===id);if(!w||!wearOwned(id))return;
@@ -2180,7 +2315,7 @@ function placeItems(){
 // Walking over one collects it: a small burst, a line in the backpack, and the
 // concept with the tech tree topic it belongs to.
 function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
-  scene.remove(it.m);props.items=props.items.filter(x=>x!==it);
+  discard(it.m);props.items=props.items.filter(x=>x!==it);
   if(!data)return;
   sl("items").push(data.id);save();
   for(let i=0;i<12;i++){const m=new T.Mesh(new T.BoxGeometry(.1,.1,.1),new T.MeshBasicMaterial({color:PALETTE[ITEMS.kinds[data.kind].colour]||PALETTE.text}));
@@ -2192,7 +2327,8 @@ function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
 function tickItems(dt,t){
   const pos=chars.lotte&&chars.lotte.g.position;if(!pos)return;
   (props.items||[]).slice().forEach(it=>{
-    it.m.rotation.y+=dt*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
+    // t is the ambient clock, which reduced motion stops; the spin stops with it.
+    it.m.rotation.y+=(reducedMotion()?0:dt)*1.6;it.m.position.y=.75+Math.sin(t*2+it.p)*.12;
     if(Math.hypot(pos.x-it.x,pos.z-it.z)<1.1)collect(it)});
   tickBottles(dt,t)}
 const PETS={"cat": {"version": 1, "set": "cat", "width": 20, "height": 16, "fps": 8, "palette": ["", "#383838", "#8f34a0", "#5fa030", "#1c1c1c"], "source": {"project": "Cat Sprites", "url": "https://opengameart.org/content/cat-sprites", "author": "Shepardskin", "author_url": "https://opengameart.org/users/shepardskin", "licence": "CC0-1.0"}, "states": {"idle": [[[[3, 0], [2, 1], [15, 0]], [[2, 0], [1, 1], [1, 2], [1, 1], [12, 0], [2, 1], [1, 0]], [[1, 0], [4, 1], [11, 0], [1, 1], [3, 0]], [[2, 1], [1, 3], [3, 1], [10, 0], [2, 1], [2, 0]], [[6, 1], [11, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [2, 0], [4, 1], [2, 0], [3, 1], [2, 0]], [[2, 0], [15, 1], [3, 0]], [[2, 0], [13, 1], [5, 0]], [[2, 0], [13, 1], [5, 0]], [[2, 0], [12, 1], [6, 0]], [[3, 0], [11, 1], [6, 0]], [[4, 0], [10, 1], [6, 0]], [[5, 0], [2, 1], [1, 4], [2, 0], [3, 1], [1, 4], [6, 0]], [[5, 0], [2, 1], [1, 4], [4, 0], [1, 1], [1, 4], [6, 0]], [[4, 0], [2, 1], [1, 4], [4, 0], [2, 1], [1, 4], [6, 0]], [[4, 0], [2, 1], [1, 4], [4, 0], [2, 1], [1, 4], [6, 0]]], [[[3, 0], [2, 1], [15, 0]], [[2, 0], [1, 1], [1, 2], [1, 1], [12, 0], [2, 1], [1, 0]], [[1, 0], [4, 1], [11, 0], [1, 1], [3, 0]], [[2, 1], [1, 3], [3, 1], [10, 0], [2, 1], [2, 0]], [[6, 1], [11, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [2, 0], [4, 1], [2, 0], [3, 1], [2, 0]], [[2, 0], [15, 1], [3, 0]], [[2, 0], [13, 1], [5, 0]], [[2, 0], [13, 1], [5, 0]], [[2, 0], [12, 1], [6, 0]], [[3, 0], [11, 1], [6, 0]], [[3, 0], [1, 4], [10, 1], [6, 0]], [[3, 0], [2, 4], [1, 0], [3, 1], [2, 4], [2, 1], [7, 0]], [[3, 0], [2, 4], [1, 0], [2, 1], [2, 0], [1, 4], [1, 0], [1, 1], [7, 0]], [[2, 0], [2, 4], [1, 0], [2, 1], [2, 0], [2, 4], [2, 1], [7, 0]], [[2, 0], [2, 4], [1, 0], [2, 1], [2, 0], [2, 4], [2, 1], [7, 0]]]], "walk": [[[[4, 0], [2, 1], [14, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [10, 0], [2, 1], [2, 0]], [[2, 0], [4, 1], [9, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [8, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[1, 0], [6, 1], [11, 0], [1, 1], [1, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [3, 0], [1, 1], [2, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[3, 0], [3, 1], [2, 4], [2, 0], [1, 4], [3, 1], [6, 0]], [[3, 0], [2, 1], [1, 0], [2, 4], [2, 0], [3, 4], [1, 1], [6, 0]], [[3, 0], [2, 1], [2, 4], [4, 0], [1, 4], [2, 1], [6, 0]], [[5, 0], [2, 4], [5, 0], [2, 1], [6, 0]]], [[[20, 0]], [[4, 0], [2, 1], [9, 0], [3, 1], [2, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [8, 0], [1, 1], [3, 0], [1, 1], [1, 0]], [[2, 0], [4, 1], [12, 0], [1, 1], [1, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [11, 0], [1, 1], [1, 0]], [[1, 0], [6, 1], [10, 0], [1, 1], [2, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [3, 0], [1, 1], [2, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[3, 0], [3, 1], [3, 4], [2, 0], [3, 1], [6, 0]], [[2, 0], [3, 1], [2, 0], [2, 4], [1, 0], [3, 4], [2, 1], [5, 0]], [[2, 0], [2, 1], [3, 0], [2, 4], [1, 0], [2, 4], [1, 0], [2, 1], [5, 0]]], [[[4, 0], [2, 1], [8, 0], [1, 1], [5, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [9, 0], [2, 1], [3, 0]], [[2, 0], [4, 1], [11, 0], [1, 1], [2, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [10, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [10, 0], [1, 1], [2, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [2, 0], [1, 1], [3, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[5, 0], [10, 1], [5, 0]], [[6, 0], [2, 1], [1, 4], [2, 0], [3, 1], [1, 4], [5, 0]], [[6, 0], [2, 1], [1, 4], [4, 0], [1, 1], [1, 4], [5, 0]], [[5, 0], [2, 1], [1, 4], [4, 0], [2, 1], [1, 4], [5, 0]], [[5, 0], [2, 1], [1, 4], [4, 0], [2, 1], [1, 4], [5, 0]]], [[[4, 0], [2, 1], [6, 0], [1, 1], [7, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [7, 0], [2, 1], [5, 0]], [[2, 0], [4, 1], [9, 0], [2, 1], [3, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [10, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [10, 0], [1, 1], [2, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [2, 0], [1, 1], [3, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[4, 0], [1, 4], [10, 1], [5, 0]], [[3, 0], [3, 4], [2, 1], [2, 0], [2, 1], [2, 4], [6, 0]], [[3, 0], [2, 4], [1, 0], [2, 1], [2, 0], [3, 1], [1, 4], [6, 0]], [[3, 0], [2, 4], [2, 1], [4, 0], [2, 1], [1, 4], [6, 0]], [[5, 0], [2, 1], [5, 0], [2, 4], [6, 0]]], [[[20, 0]], [[4, 0], [2, 1], [7, 0], [2, 1], [5, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [6, 0], [1, 1], [2, 0], [2, 1], [3, 0]], [[2, 0], [4, 1], [11, 0], [1, 1], [2, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [10, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [10, 0], [1, 1], [2, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [2, 0], [1, 1], [3, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[4, 0], [1, 4], [10, 1], [5, 0]], [[3, 0], [3, 4], [3, 1], [2, 0], [3, 1], [6, 0]], [[2, 0], [3, 4], [2, 0], [2, 1], [1, 0], [3, 1], [2, 4], [5, 0]], [[2, 0], [2, 4], [3, 0], [2, 1], [1, 0], [2, 1], [1, 0], [2, 4], [5, 0]]], [[[4, 0], [2, 1], [14, 0]], [[3, 0], [1, 1], [1, 2], [1, 1], [9, 0], [2, 1], [3, 0]], [[2, 0], [4, 1], [8, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[1, 0], [2, 1], [1, 3], [3, 1], [7, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[1, 0], [6, 1], [10, 0], [1, 1], [2, 0]], [[2, 0], [6, 1], [2, 0], [4, 1], [3, 0], [1, 1], [2, 0]], [[3, 0], [14, 1], [3, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [12, 1], [5, 0]], [[4, 0], [11, 1], [5, 0]], [[5, 0], [10, 1], [5, 0]], [[6, 0], [1, 4], [2, 1], [2, 0], [1, 4], [3, 1], [5, 0]], [[6, 0], [1, 4], [2, 1], [4, 0], [1, 4], [1, 1], [5, 0]], [[5, 0], [1, 4], [2, 1], [4, 0], [1, 4], [2, 1], [5, 0]], [[5, 0], [1, 4], [2, 1], [4, 0], [1, 4], [2, 1], [5, 0]]]], "happy": [[[[20, 0]], [[20, 0]], [[16, 0], [2, 1], [2, 0]], [[2, 0], [4, 1], [9, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[1, 0], [4, 1], [10, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[2, 1], [1, 3], [4, 1], [10, 0], [2, 1], [1, 0]], [[11, 1], [5, 0], [2, 1], [2, 0]], [[1, 0], [12, 1], [2, 0], [2, 1], [3, 0]], [[1, 0], [12, 1], [2, 0], [2, 1], [3, 0]], [[4, 0], [12, 1], [4, 0]], [[2, 0], [13, 1], [5, 0]], [[1, 0], [5, 1], [1, 4], [2, 0], [6, 1], [5, 0]], [[1, 0], [2, 1], [1, 0], [2, 4], [5, 0], [4, 1], [5, 0]], [[4, 0], [2, 4], [6, 0], [2, 1], [6, 0]], [[12, 0], [1, 4], [2, 1], [5, 0]], [[12, 0], [1, 4], [2, 1], [5, 0]]], [[[16, 0], [2, 1], [2, 0]], [[15, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[15, 0], [1, 1], [2, 0], [1, 1], [1, 0]], [[17, 0], [2, 1], [1, 0]], [[16, 0], [2, 1], [2, 0]], [[2, 0], [4, 1], [3, 0], [4, 1], [2, 0], [2, 1], [3, 0]], [[1, 0], [4, 1], [2, 0], [9, 1], [4, 0]], [[2, 1], [1, 3], [12, 1], [5, 0]], [[2, 1], [1, 3], [12, 1], [5, 0]], [[15, 1], [5, 0]], [[1, 0], [14, 1], [5, 0]], [[2, 0], [7, 1], [4, 0], [4, 1], [3, 0]], [[5, 1], [3, 4], [6, 0], [3, 1], [3, 0]], [[3, 1], [3, 0], [2, 4], [12, 0]], [[5, 0], [2, 4], [13, 0]], [[5, 0], [2, 4], [13, 0]]], [[[20, 0]], [[16, 0], [3, 1], [1, 0]], [[15, 0], [1, 1], [3, 0], [1, 1]], [[18, 0], [2, 1]], [[10, 0], [4, 1], [3, 0], [2, 1], [1, 0]], [[2, 0], [4, 1], [3, 0], [9, 1], [2, 0]], [[1, 0], [4, 1], [2, 0], [9, 1], [4, 0]], [[2, 1], [1, 3], [12, 1], [5, 0]], [[2, 1], [1, 3], [12, 1], [5, 0]], [[15, 1], [5, 0]], [[1, 0], [13, 1], [6, 0]], [[4, 0], [5, 1], [1, 0], [1, 4], [3, 1], [6, 0]], [[4, 0], [3, 1], [2, 4], [2, 0], [1, 4], [3, 1], [5, 0]], [[3, 0], [3, 1], [2, 0], [1, 4], [2, 0], [2, 4], [2, 1], [5, 0]], [[2, 0], [3, 1], [2, 0], [2, 4], [11, 0]], [[2, 0], [2, 1], [3, 0], [2, 4], [11, 0]]], [[[20, 0]], [[20, 0]], [[16, 0], [3, 1], [1, 0]], [[15, 0], [1, 1], [3, 0], [1, 1]], [[2, 0], [4, 1], [12, 0], [2, 1]], [[1, 0], [4, 1], [2, 0], [6, 1], [4, 0], [2, 1], [1, 0]], [[2, 1], [1, 3], [15, 1], [2, 0]], [[16, 1], [4, 0]], [[16, 1], [4, 0]], [[1, 0], [13, 1], [6, 0]], [[3, 0], [11, 1], [6, 0]], [[4, 0], [4, 1], [2, 0], [1, 4], [3, 1], [6, 0]], [[5, 0], [2, 1], [1, 4], [1, 0], [2, 4], [3, 1], [6, 0]], [[5, 0], [2, 1], [4, 4], [2, 1], [7, 0]], [[4, 0], [2, 1], [1, 0], [2, 4], [2, 0], [2, 1], [7, 0]], [[4, 0], [2, 1], [14, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[16, 0], [3, 1], [1, 0]], [[2, 0], [4, 1], [9, 0], [1, 1], [3, 0], [1, 1]], [[1, 0], [4, 1], [2, 0], [4, 1], [7, 0], [2, 1]], [[2, 1], [1, 3], [10, 1], [4, 0], [2, 1], [1, 0]], [[18, 1], [2, 0]], [[18, 1], [2, 0]], [[1, 0], [15, 1], [4, 0]], [[3, 0], [11, 1], [6, 0]], [[4, 0], [4, 1], [1, 0], [4, 1], [7, 0]], [[4, 0], [1, 4], [2, 1], [2, 0], [1, 4], [3, 1], [7, 0]], [[4, 0], [1, 4], [3, 1], [2, 4], [2, 1], [8, 0]], [[5, 0], [1, 4], [2, 1], [1, 4], [2, 1], [9, 0]], [[9, 0], [2, 1], [9, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[2, 0], [4, 1], [10, 0], [3, 1], [1, 0]], [[1, 0], [4, 1], [10, 0], [1, 1], [3, 0], [1, 1]], [[2, 1], [1, 3], [8, 1], [7, 0], [2, 1]], [[13, 1], [4, 0], [2, 1], [1, 0]], [[1, 0], [17, 1], [2, 0]], [[1, 0], [17, 1], [2, 0]], [[3, 0], [13, 1], [4, 0]], [[3, 0], [1, 4], [3, 1], [1, 0], [6, 1], [6, 0]], [[2, 0], [1, 4], [3, 1], [2, 0], [1, 4], [4, 1], [7, 0]], [[2, 0], [1, 4], [2, 1], [4, 0], [1, 4], [3, 1], [7, 0]], [[2, 0], [1, 4], [2, 1], [3, 0], [2, 4], [2, 1], [8, 0]], [[8, 0], [2, 4], [2, 1], [8, 0]], [[10, 0], [2, 1], [8, 0]]]], "sleep": [[[[20, 0]], [[5, 0], [2, 1], [13, 0]], [[4, 0], [1, 1], [1, 2], [1, 1], [13, 0]], [[3, 0], [4, 1], [13, 0]], [[2, 0], [2, 1], [1, 3], [3, 1], [12, 0]], [[2, 0], [6, 1], [12, 0]], [[3, 0], [6, 1], [7, 0], [2, 1], [2, 0]], [[4, 0], [7, 1], [4, 0], [1, 1], [4, 0]], [[4, 0], [7, 1], [4, 0], [1, 1], [4, 0]], [[4, 0], [9, 1], [2, 0], [2, 1], [3, 0]], [[5, 0], [9, 1], [2, 0], [1, 1], [3, 0]], [[5, 0], [1, 4], [9, 1], [1, 0], [2, 1], [2, 0]], [[5, 0], [2, 4], [8, 1], [2, 0], [1, 1], [2, 0]], [[5, 0], [2, 4], [1, 0], [10, 1], [2, 0]], [[4, 0], [2, 4], [1, 0], [2, 1], [2, 0], [6, 1], [3, 0]], [[4, 0], [2, 4], [1, 0], [2, 1], [1, 0], [5, 1], [5, 0]]]]}}, "crab": {"version": 1, "set": "crab", "width": 20, "height": 12, "fps": 8, "palette": ["", "#e43b44", "#f77622", "#9e2835", "#181425", "#ffffff"], "source": {"project": "vscode-pets", "url": "https://github.com/tonybaloney/vscode-pets/tree/2c91214beb922288cca1938cddb607abc5f806b7/media/crab", "commit": "2c91214beb922288cca1938cddb607abc5f806b7", "author": "Marc Duiker", "author_url": "https://github.com/marcduiker", "licence": "MIT"}, "states": {"idle": [[[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[3, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [17, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [3, 1]], [[1, 1], [1, 3], [17, 1], [1, 0]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [9, 1], [1, 3], [6, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]]], "walk": [[[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [3, 0], [1, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[3, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [17, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [1, 3], [1, 0], [1, 3], [6, 1], [2, 3], [2, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [3, 1]], [[1, 1], [1, 3], [17, 1], [1, 0]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [3, 0], [1, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [2, 3], [2, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [2, 0], [2, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [9, 1], [1, 3], [6, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [2, 3], [2, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]]], "happy": [[[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[6, 0], [8, 1], [6, 0]], [[4, 0], [12, 1], [4, 0]], [[3, 0], [14, 1], [3, 0]], [[4, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [4, 0]], [[3, 0], [14, 1], [3, 0]], [[2, 0], [1, 1], [1, 0], [1, 3], [3, 1], [1, 2], [2, 1], [1, 2], [3, 1], [1, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [2, 0], [1, 3], [1, 0], [1, 1], [2, 0], [1, 1], [1, 0], [1, 3], [2, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [1, 0], [2, 1], [4, 0], [2, 1], [1, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [1, 1], [2, 0], [1, 1], [8, 0]], [[6, 0], [8, 1], [6, 0]], [[4, 0], [12, 1], [4, 0]], [[5, 0], [6, 1], [1, 3], [3, 1], [5, 0]], [[4, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [4, 0]], [[4, 0], [4, 1], [1, 4], [2, 1], [1, 4], [4, 1], [4, 0]], [[2, 0], [1, 2], [1, 1], [1, 3], [3, 1], [1, 2], [2, 1], [1, 2], [3, 1], [1, 3], [1, 1], [1, 2], [2, 0]], [[3, 0], [1, 1], [1, 3], [1, 0], [1, 3], [1, 0], [1, 1], [2, 0], [1, 1], [1, 0], [1, 3], [1, 0], [1, 3], [1, 1], [3, 0]], [[4, 0], [1, 1], [1, 0], [2, 1], [4, 0], [2, 1], [1, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[7, 0], [1, 3], [4, 1], [1, 3], [7, 0]], [[6, 0], [8, 1], [6, 0]], [[4, 0], [1, 3], [10, 1], [1, 3], [4, 0]], [[4, 0], [4, 1], [1, 4], [2, 1], [1, 4], [4, 1], [4, 0]], [[4, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [4, 0]], [[4, 0], [2, 3], [3, 1], [2, 4], [3, 1], [2, 3], [4, 0]], [[3, 0], [1, 1], [1, 3], [4, 1], [2, 3], [4, 1], [1, 3], [1, 1], [3, 0]], [[3, 0], [1, 1], [1, 0], [1, 3], [1, 1], [1, 0], [1, 3], [2, 0], [1, 3], [1, 0], [1, 1], [1, 3], [1, 0], [1, 1], [3, 0]], [[7, 0], [1, 1], [4, 0], [1, 1], [7, 0]]], [[[20, 0]], [[20, 0]], [[8, 0], [1, 1], [2, 0], [1, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 0], [1, 1], [2, 0], [6, 1], [1, 3], [3, 1], [2, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [5, 1], [1, 4], [2, 1], [1, 4], [5, 1], [3, 0]], [[3, 0], [1, 2], [12, 1], [1, 2], [3, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[3, 0], [1, 1], [1, 0], [1, 3], [8, 0], [1, 3], [1, 0], [1, 1], [3, 0]], [[20, 0]]], [[[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[4, 0], [12, 1], [4, 0]], [[3, 0], [1, 2], [1, 1], [1, 3], [8, 0], [1, 3], [1, 1], [1, 2], [3, 0]], [[4, 0], [1, 1], [1, 3], [8, 0], [1, 3], [1, 1], [4, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]], [[20, 0]]], [[[8, 0], [1, 1], [2, 0], [1, 1], [8, 0]], [[1, 0], [1, 2], [3, 0], [1, 1], [1, 0], [6, 1], [1, 0], [1, 1], [3, 0], [1, 2], [1, 0]], [[1, 0], [2, 1], [3, 0], [8, 1], [3, 0], [2, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [2, 0], [10, 1], [2, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [1, 1], [2, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [2, 0], [1, 1], [1, 0]], [[2, 0], [1, 3], [5, 1], [1, 4], [1, 1], [2, 4], [5, 1], [1, 3], [2, 0]], [[4, 0], [1, 3], [4, 1], [2, 4], [4, 1], [1, 3], [4, 0]], [[4, 0], [1, 1], [1, 3], [1, 0], [6, 3], [1, 0], [1, 3], [1, 1], [4, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]], [[4, 0], [1, 1], [1, 3], [8, 0], [1, 3], [1, 1], [4, 0]], [[20, 0]], [[20, 0]]], [[[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[4, 0], [12, 1], [4, 0]], [[3, 0], [1, 2], [1, 1], [1, 3], [8, 0], [1, 3], [1, 1], [1, 2], [3, 0]], [[4, 0], [1, 1], [1, 3], [8, 0], [1, 3], [1, 1], [4, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]], [[20, 0]]], [[[20, 0]], [[20, 0]], [[8, 0], [1, 1], [2, 0], [1, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 0], [1, 1], [2, 0], [6, 1], [1, 3], [3, 1], [2, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [5, 1], [1, 4], [2, 1], [1, 4], [5, 1], [3, 0]], [[3, 0], [1, 2], [12, 1], [1, 2], [3, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[3, 0], [1, 1], [1, 0], [1, 3], [8, 0], [1, 3], [1, 0], [1, 1], [3, 0]], [[20, 0]]]], "sleep": [[[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [4, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[3, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 0], [17, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [2, 4], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [4, 0], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [3, 1]], [[1, 1], [1, 3], [17, 1], [1, 0]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [16, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [4, 1], [1, 4], [1, 1], [1, 4], [1, 5], [4, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[8, 0], [4, 1], [8, 0]], [[1, 0], [1, 1], [1, 2], [3, 0], [8, 1], [3, 0], [1, 2], [1, 1], [1, 0]], [[1, 1], [1, 0], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 0], [1, 1]], [[1, 1], [1, 3], [9, 1], [1, 3], [6, 1], [1, 3], [1, 1]], [[1, 0], [1, 3], [1, 1], [1, 0], [12, 1], [1, 0], [1, 1], [1, 3], [1, 0]], [[3, 0], [1, 3], [12, 1], [1, 3], [3, 0]], [[2, 0], [1, 1], [1, 0], [3, 3], [6, 1], [3, 3], [1, 0], [1, 1], [2, 0]], [[3, 0], [1, 1], [12, 0], [1, 1], [3, 0]], [[4, 0], [1, 1], [10, 0], [1, 1], [4, 0]]]]}}, "dog": {"version": 1, "set": "dog", "width": 20, "height": 12, "fps": 8, "palette": ["", "#1c1c1c", "#5d2e00", "#383838", "#714200", "#491a00", "#dc6767"], "source": {"project": "Dog Sprites", "url": "https://opengameart.org/content/dog-sprites", "author": "Shepardskin", "author_url": "https://opengameart.org/users/shepardskin", "licence": "CC0-1.0"}, "states": {"idle": [[[[16, 0], [1, 1], [3, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [1, 1], [3, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]], [[[1, 0], [1, 3], [2, 1], [2, 2], [2, 3], [8, 0], [1, 1], [3, 0]], [[1, 0], [1, 1], [4, 4], [3, 1], [7, 0], [1, 1], [3, 0]], [[1, 0], [1, 2], [2, 4], [1, 1], [1, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 0], [1, 2], [2, 4], [1, 1], [1, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 0], [3, 2], [7, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [10, 4], [1, 2], [3, 0]], [[6, 0], [3, 2], [7, 4], [1, 2], [3, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]], [[[16, 0], [1, 1], [3, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [1, 1], [3, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]], [[[16, 0], [1, 1], [3, 0]], [[16, 0], [1, 1], [3, 0]], [[4, 0], [5, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[4, 0], [5, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 1], [1, 2], [1, 4], [2, 3], [1, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 0], [3, 1], [2, 4], [2, 1], [1, 3], [7, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [2, 3], [1, 1], [3, 4], [1, 2], [7, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [6, 4], [2, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[2, 0], [8, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[2, 0], [8, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]]], "walk": [[[[20, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [3, 1], [1, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 2], [2, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[6, 0], [2, 2], [2, 4], [1, 2], [1, 0], [3, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[6, 0], [2, 2], [2, 4], [1, 2], [1, 0], [3, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[6, 0], [4, 2], [2, 0], [3, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [2, 5], [5, 0], [2, 2], [3, 0]]], [[[16, 0], [1, 1], [3, 0]], [[16, 0], [1, 1], [3, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [2, 0], [3, 1], [1, 2], [1, 1], [4, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [2, 0], [3, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [2, 1], [4, 4], [1, 2], [3, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [7, 4], [1, 2], [3, 0]], [[1, 2], [16, 4], [2, 2], [1, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [2, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[2, 0], [4, 2], [2, 0], [1, 2], [2, 4], [1, 0], [3, 5], [1, 2], [3, 4], [1, 2]], [[2, 0], [4, 2], [2, 0], [1, 2], [2, 4], [1, 0], [3, 5], [1, 2], [3, 4], [1, 2]], [[6, 0], [2, 2], [2, 4], [1, 2], [1, 0], [2, 2], [2, 5], [1, 2], [2, 4], [1, 2]], [[6, 0], [4, 2], [1, 5], [1, 0], [3, 5], [2, 0], [3, 2]]], [[[20, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [3, 1], [1, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 2], [1, 4], [4, 2], [2, 4], [1, 2], [3, 0]], [[8, 0], [1, 2], [1, 4], [1, 2], [1, 5], [2, 0], [1, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 2], [1, 4], [1, 2], [1, 5], [2, 0], [1, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 2], [1, 4], [1, 2], [1, 5], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [2, 2], [4, 0], [2, 5], [3, 2], [1, 0]]], [[[17, 0], [2, 1], [1, 0]], [[5, 0], [3, 2], [1, 1], [1, 3], [7, 0], [2, 1], [1, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [4, 1], [1, 2], [1, 1], [3, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [4, 1], [1, 2], [1, 1], [3, 0]], [[1, 0], [1, 1], [2, 3], [1, 4], [1, 1], [2, 4], [2, 1], [2, 4], [2, 1], [3, 4], [2, 2], [1, 0]], [[1, 0], [1, 2], [15, 4], [2, 2], [1, 0]], [[2, 0], [2, 2], [4, 4], [1, 2], [7, 4], [3, 2], [1, 0]], [[4, 0], [4, 2], [1, 0], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [3, 0], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [3, 0], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [3, 0], [2, 2], [2, 5], [1, 0]], [[9, 0], [2, 2], [5, 0], [3, 5], [1, 0]]], [[[20, 0]], [[16, 0], [3, 1], [1, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [2, 0], [3, 1], [1, 2], [1, 1], [4, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [2, 0], [3, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [2, 1], [4, 4], [1, 2], [3, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [7, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [2, 2], [3, 4], [3, 2], [2, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 5], [1, 2], [1, 4], [1, 2], [1, 0], [2, 2], [1, 4], [1, 2], [1, 5], [2, 2], [1, 0]], [[2, 0], [4, 2], [2, 5], [1, 2], [1, 4], [1, 2], [1, 0], [2, 2], [1, 4], [1, 2], [1, 5], [2, 2], [1, 0]], [[5, 0], [3, 5], [1, 2], [1, 4], [1, 2], [1, 0], [2, 2], [1, 4], [1, 2], [3, 5], [1, 0]], [[5, 0], [3, 5], [1, 0], [2, 2], [1, 0], [3, 2], [1, 0], [3, 5], [1, 0]]], [[[17, 0], [2, 1], [1, 0]], [[5, 0], [3, 2], [1, 1], [1, 3], [7, 0], [2, 1], [1, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [4, 1], [1, 2], [1, 1], [3, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [4, 1], [1, 2], [1, 1], [3, 0]], [[1, 0], [1, 1], [2, 3], [1, 4], [1, 1], [2, 4], [2, 1], [2, 4], [2, 1], [3, 4], [2, 2], [1, 0]], [[1, 0], [1, 2], [15, 4], [2, 2], [1, 0]], [[2, 0], [2, 2], [4, 4], [2, 2], [7, 4], [2, 2], [1, 0]], [[4, 0], [4, 2], [1, 0], [1, 5], [1, 2], [1, 4], [4, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [2, 5], [1, 2], [1, 4], [2, 2], [1, 0], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [2, 5], [1, 0], [3, 2], [1, 0], [2, 2], [3, 0]]]], "happy": [[[[16, 0], [1, 1], [3, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [1, 1], [3, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]], [[[16, 0], [1, 1], [3, 0]], [[2, 0], [4, 2], [10, 0], [1, 1], [3, 0]], [[1, 1], [1, 2], [2, 4], [1, 1], [1, 4], [2, 1], [1, 3], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 2], [2, 4], [1, 1], [1, 4], [2, 1], [1, 3], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 3], [5, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 0], [3, 2], [2, 4], [3, 1], [7, 4], [1, 2], [3, 0]], [[2, 0], [2, 6], [1, 2], [1, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[4, 0], [2, 2], [2, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]]], "sleep": [[[[16, 0], [1, 1], [3, 0]], [[4, 0], [2, 2], [2, 1], [1, 3], [7, 0], [1, 1], [3, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[2, 0], [2, 2], [2, 4], [3, 1], [1, 2], [4, 1], [1, 2], [1, 1], [4, 0]], [[1, 1], [1, 3], [2, 4], [1, 1], [1, 4], [3, 1], [2, 4], [1, 1], [4, 4], [1, 2], [3, 0]], [[1, 2], [15, 4], [1, 2], [3, 0]], [[1, 0], [1, 2], [4, 4], [3, 2], [7, 4], [1, 2], [3, 0]], [[2, 0], [4, 2], [2, 0], [1, 5], [1, 2], [1, 4], [4, 2], [2, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[8, 0], [1, 5], [1, 2], [1, 4], [1, 2], [2, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 0]], [[9, 0], [2, 2], [4, 0], [2, 2], [3, 0]]], [[[20, 0]], [[5, 0], [3, 2], [1, 1], [1, 3], [10, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [1, 1], [8, 0]], [[4, 0], [1, 2], [3, 4], [2, 1], [1, 2], [1, 1], [8, 0]], [[1, 0], [1, 1], [2, 3], [1, 4], [1, 1], [2, 4], [2, 1], [2, 4], [3, 1], [5, 0]], [[1, 0], [1, 2], [9, 4], [1, 3], [3, 4], [1, 2], [4, 0]], [[2, 0], [2, 2], [4, 4], [2, 2], [6, 4], [3, 1], [1, 0]], [[4, 0], [4, 2], [1, 0], [1, 5], [1, 2], [3, 4], [1, 2], [1, 4], [1, 2], [3, 0]], [[9, 0], [1, 5], [1, 2], [1, 4], [3, 2], [1, 4], [1, 2], [3, 0]], [[9, 0], [1, 5], [1, 2], [1, 4], [3, 2], [1, 4], [1, 2], [3, 0]], [[9, 0], [1, 5], [1, 2], [1, 4], [2, 2], [1, 4], [2, 2], [3, 0]], [[10, 0], [6, 2], [4, 0]]]]}}, "duck": {"version": 1, "set": "duck", "width": 19, "height": 16, "fps": 8, "palette": ["", "#fee761", "#feae34", "#ffffff", "#181425", "#f77622", "#e43b44", "#8b9bb4", "#c0cbdc", "#5a6988", "#b86f50"], "source": {"project": "vscode-pets", "url": "https://github.com/tonybaloney/vscode-pets/tree/2c91214beb922288cca1938cddb607abc5f806b7/media/rubber-duck", "commit": "2c91214beb922288cca1938cddb607abc5f806b7", "author": "Marc Duiker", "author_url": "https://github.com/marcduiker", "licence": "MIT"}, "states": {"idle": [[[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]]], "walk": [[[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[4, 0], [1, 7], [4, 0], [1, 4], [2, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [3, 1], [2, 4], [1, 1], [2, 5], [2, 0]], [[3, 0], [1, 7], [4, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[6, 0], [3, 7], [1, 2], [4, 1], [5, 0]], [[2, 0], [1, 7], [9, 8], [3, 1], [4, 0]], [[2, 0], [2, 8], [1, 9], [1, 8], [1, 7], [1, 9], [1, 7], [1, 8], [1, 9], [2, 8], [3, 1], [3, 0]], [[2, 0], [1, 8], [3, 4], [1, 8], [1, 7], [1, 8], [3, 4], [1, 8], [4, 1], [2, 0]], [[1, 0], [1, 1], [1, 8], [3, 4], [3, 8], [3, 4], [1, 8], [4, 1], [1, 2], [1, 0]], [[1, 0], [1, 1], [2, 8], [1, 9], [4, 8], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[9, 0], [1, 2], [3, 1], [6, 0]], [[4, 0], [1, 7], [3, 0], [1, 2], [2, 1], [3, 4], [5, 0]], [[8, 0], [4, 1], [1, 4], [1, 1], [3, 5], [2, 0]], [[3, 0], [1, 7], [4, 0], [5, 1], [1, 5], [2, 6], [3, 0]], [[6, 0], [3, 7], [1, 2], [3, 1], [1, 2], [2, 0], [1, 5], [2, 0]], [[2, 0], [1, 7], [9, 8], [2, 1], [1, 2], [4, 0]], [[2, 0], [2, 8], [1, 9], [1, 8], [1, 7], [1, 9], [1, 7], [1, 8], [1, 9], [2, 8], [3, 1], [3, 0]], [[2, 0], [1, 8], [3, 4], [1, 8], [1, 7], [1, 8], [3, 4], [1, 8], [4, 1], [2, 0]], [[2, 0], [1, 8], [3, 4], [3, 8], [3, 4], [1, 8], [4, 1], [1, 2], [1, 0]], [[1, 0], [1, 2], [2, 8], [1, 9], [4, 8], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[4, 0], [1, 7], [4, 0], [1, 4], [2, 1], [1, 3], [1, 4], [1, 2], [1, 5], [1, 0], [1, 5], [1, 0]], [[8, 0], [1, 2], [3, 1], [2, 4], [1, 1], [2, 5], [2, 0]], [[3, 0], [1, 7], [4, 0], [1, 2], [5, 1], [1, 5], [4, 0]], [[6, 0], [3, 7], [1, 2], [4, 1], [2, 0], [1, 5], [2, 0]], [[2, 0], [1, 7], [9, 8], [3, 1], [4, 0]], [[2, 0], [2, 8], [1, 9], [1, 8], [1, 7], [1, 9], [1, 7], [1, 8], [1, 9], [2, 8], [3, 1], [3, 0]], [[2, 0], [1, 8], [3, 4], [1, 8], [1, 7], [1, 8], [3, 4], [1, 8], [4, 1], [2, 0]], [[1, 0], [1, 1], [1, 8], [3, 4], [3, 8], [3, 4], [1, 8], [4, 1], [1, 2], [1, 0]], [[1, 0], [1, 1], [2, 8], [1, 9], [4, 8], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[5, 0], [1, 7], [13, 0]], [[11, 0], [3, 1], [1, 2], [4, 0]], [[4, 0], [1, 7], [5, 0], [1, 4], [2, 1], [1, 3], [1, 4], [1, 2], [1, 5], [1, 0], [1, 5]], [[9, 0], [1, 2], [3, 1], [2, 4], [1, 1], [2, 5], [1, 0]], [[3, 0], [1, 7], [5, 0], [1, 2], [5, 1], [1, 5], [3, 0]], [[6, 0], [1, 9], [1, 0], [1, 9], [1, 0], [1, 2], [4, 1], [2, 0], [1, 5], [1, 0]], [[2, 0], [1, 8], [1, 3], [1, 9], [1, 6], [1, 8], [1, 7], [2, 8], [1, 9], [2, 8], [2, 1], [1, 2], [3, 0]], [[2, 0], [1, 8], [3, 4], [1, 7], [1, 9], [1, 7], [3, 4], [1, 8], [3, 1], [1, 2], [2, 0]], [[2, 0], [1, 9], [1, 4], [1, 3], [1, 4], [1, 9], [1, 8], [1, 9], [1, 4], [1, 3], [1, 4], [1, 9], [4, 1], [2, 0]], [[1, 2], [1, 0], [1, 8], [3, 4], [3, 8], [3, 4], [1, 8], [4, 1], [1, 2], [1, 0]], [[1, 2], [1, 1], [1, 2], [1, 8], [1, 9], [3, 8], [5, 2], [5, 1], [1, 0]], [[1, 0], [3, 1], [3, 2], [6, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [3, 1], [1, 2], [7, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [3, 1], [1, 2], [6, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [6, 1], [3, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]]], "happy": [[[[19, 0]], [[19, 0]], [[19, 0]], [[8, 0], [2, 2], [9, 0]], [[8, 0], [2, 1], [9, 0]], [[5, 0], [1, 2], [6, 1], [1, 2], [6, 0]], [[5, 0], [1, 1], [1, 2], [4, 1], [1, 2], [1, 1], [6, 0]], [[4, 0], [2, 2], [6, 1], [2, 2], [5, 0]], [[4, 0], [1, 2], [8, 1], [1, 2], [5, 0]], [[4, 0], [2, 1], [1, 2], [4, 1], [1, 2], [2, 1], [5, 0]], [[4, 0], [2, 1], [1, 10], [4, 1], [1, 10], [2, 1], [5, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [1, 1], [1, 5], [1, 6], [1, 5], [2, 1], [1, 5], [1, 6], [1, 5], [1, 1], [1, 2], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 5], [1, 6], [1, 5], [2, 6], [1, 5], [1, 6], [1, 5], [1, 6], [1, 1], [4, 0]]], [[[19, 0]], [[19, 0]], [[19, 0]], [[8, 0], [2, 2], [9, 0]], [[8, 0], [2, 1], [9, 0]], [[5, 0], [1, 2], [6, 1], [1, 2], [6, 0]], [[5, 0], [1, 1], [1, 2], [4, 1], [1, 2], [1, 1], [6, 0]], [[4, 0], [2, 2], [6, 1], [2, 2], [5, 0]], [[4, 0], [1, 2], [8, 1], [1, 2], [5, 0]], [[4, 0], [2, 1], [1, 2], [4, 1], [1, 2], [2, 1], [5, 0]], [[4, 0], [2, 1], [1, 10], [4, 1], [1, 10], [2, 1], [5, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [1, 1], [1, 5], [1, 6], [1, 5], [2, 1], [1, 5], [1, 6], [1, 5], [1, 1], [1, 2], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 5], [1, 6], [1, 5], [2, 6], [1, 5], [1, 6], [1, 5], [1, 6], [1, 1], [4, 0]]], [[[19, 0]], [[19, 0]], [[19, 0]], [[8, 0], [2, 1], [9, 0]], [[5, 0], [1, 1], [1, 0], [1, 2], [2, 1], [1, 2], [1, 0], [1, 1], [6, 0]], [[4, 0], [1, 2], [1, 1], [1, 2], [4, 1], [1, 2], [1, 1], [1, 2], [5, 0]], [[4, 0], [10, 1], [5, 0]], [[4, 0], [4, 1], [2, 2], [4, 1], [5, 0]], [[4, 0], [1, 2], [8, 1], [1, 2], [5, 0]], [[4, 0], [2, 1], [1, 2], [4, 1], [1, 2], [2, 1], [5, 0]], [[4, 0], [1, 1], [1, 2], [1, 10], [1, 2], [2, 1], [1, 2], [1, 10], [1, 2], [1, 1], [5, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [1, 1], [3, 6], [2, 1], [3, 6], [1, 1], [1, 2], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 5], [1, 6], [1, 5], [2, 6], [1, 5], [1, 6], [1, 5], [1, 6], [1, 1], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 1], [1, 6], [1, 1], [2, 6], [1, 1], [1, 6], [1, 1], [1, 6], [1, 1], [4, 0]]], [[[19, 0]], [[19, 0]], [[19, 0]], [[8, 0], [2, 1], [9, 0]], [[5, 0], [1, 1], [1, 0], [1, 2], [2, 1], [1, 2], [1, 0], [1, 1], [6, 0]], [[4, 0], [1, 2], [1, 1], [1, 2], [4, 1], [1, 2], [1, 1], [1, 2], [5, 0]], [[4, 0], [10, 1], [5, 0]], [[4, 0], [4, 1], [2, 2], [4, 1], [5, 0]], [[4, 0], [1, 2], [8, 1], [1, 2], [5, 0]], [[4, 0], [2, 1], [1, 2], [4, 1], [1, 2], [2, 1], [5, 0]], [[4, 0], [1, 1], [1, 2], [1, 10], [1, 2], [2, 1], [1, 2], [1, 10], [1, 2], [1, 1], [5, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [2, 1], [1, 6], [4, 1], [1, 6], [2, 1], [1, 2], [4, 0]], [[3, 0], [1, 2], [1, 1], [3, 6], [2, 1], [3, 6], [1, 1], [1, 2], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 5], [1, 6], [1, 5], [2, 6], [1, 5], [1, 6], [1, 5], [1, 6], [1, 1], [4, 0]], [[3, 0], [1, 1], [1, 6], [1, 1], [1, 6], [1, 1], [2, 6], [1, 1], [1, 6], [1, 1], [1, 6], [1, 1], [4, 0]]]], "sleep": [[[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 3], [1, 4], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]], [[[19, 0]], [[10, 0], [3, 1], [1, 2], [5, 0]], [[9, 0], [3, 1], [1, 4], [1, 3], [1, 2], [4, 0]], [[8, 0], [1, 2], [6, 1], [2, 5], [2, 0]], [[8, 0], [1, 2], [5, 1], [1, 5], [1, 6], [3, 0]], [[9, 0], [1, 2], [4, 1], [5, 0]], [[11, 0], [4, 1], [4, 0]], [[11, 0], [1, 2], [4, 1], [3, 0]], [[11, 0], [6, 1], [2, 0]], [[1, 0], [1, 1], [6, 0], [1, 2], [8, 1], [1, 2], [1, 0]], [[1, 0], [2, 1], [2, 0], [1, 2], [3, 1], [4, 2], [5, 1], [1, 0]], [[1, 0], [1, 2], [4, 1], [2, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[2, 0], [5, 1], [1, 2], [5, 1], [1, 2], [4, 1], [1, 0]], [[3, 0], [4, 1], [2, 2], [4, 1], [1, 2], [3, 1], [1, 2], [1, 0]], [[4, 0], [3, 1], [6, 2], [4, 1], [2, 0]], [[5, 0], [11, 2], [3, 0]]]]}}, "snail": {"version": 1, "set": "snail", "width": 20, "height": 16, "fps": 8, "palette": ["", "#000000", "#eec39a", "#f2b377", "#8f563b", "#7d472d"], "source": {"project": "vscode-pets", "url": "https://github.com/tonybaloney/vscode-pets/tree/2c91214beb922288cca1938cddb607abc5f806b7/media/snail", "commit": "2c91214beb922288cca1938cddb607abc5f806b7", "author": "Kennet Shin", "author_url": "https://github.com/WoofWoof0", "licence": "MIT"}, "states": {"idle": [[[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]]], "walk": [[[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [4, 1], [2, 0]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[3, 0], [5, 1], [4, 0], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [4, 1], [2, 0]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[3, 0], [5, 1], [4, 0], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [4, 1], [2, 0]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[3, 0], [5, 1], [4, 0], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [1, 1], [2, 0], [1, 1], [2, 0]], [[14, 0], [4, 1], [2, 0]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[12, 0], [2, 1], [3, 2], [1, 3], [2, 1]], [[3, 0], [5, 1], [4, 0], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [3, 0], [2, 1], [3, 2], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [3, 1], [2, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]]], "happy": [[[[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[3, 0], [5, 1], [12, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [11, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [11, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 3], [9, 0]], [[2, 0], [9, 1], [9, 0]], [[2, 0], [9, 1], [9, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[3, 0], [5, 1], [12, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [2, 1], [1, 0], [2, 1], [4, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [2, 1], [1, 0], [2, 1], [4, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [7, 1], [4, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [7, 1], [4, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[14, 1], [6, 0]], [[14, 1], [6, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [4, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [4, 2], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[14, 1], [6, 0]], [[14, 1], [6, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [4, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [4, 2], [2, 1], [3, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[14, 1], [6, 0]], [[14, 1], [6, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[3, 0], [5, 1], [12, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [2, 1], [1, 0], [2, 1], [4, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [2, 1], [1, 0], [2, 1], [4, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [7, 1], [4, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [7, 1], [4, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 1], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[14, 1], [6, 0]], [[14, 1], [6, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[20, 0]], [[3, 0], [5, 1], [12, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [11, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [11, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [9, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 3], [9, 0]], [[2, 0], [9, 1], [9, 0]], [[2, 0], [9, 1], [9, 0]]]], "sleep": [[[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [5, 1], [3, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[11, 0], [1, 1], [3, 2], [2, 3], [1, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [2, 2], [1, 1], [2, 3], [1, 1], [2, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [3, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [1, 2], [2, 3], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [1, 1], [5, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]], [[[20, 0]], [[20, 0]], [[12, 0], [2, 1], [1, 0], [2, 1], [3, 0]], [[12, 0], [6, 1], [2, 0]], [[12, 0], [6, 1], [2, 0]], [[3, 0], [5, 1], [3, 0], [1, 1], [5, 2], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 0], [1, 1], [5, 4], [1, 1], [2, 0], [1, 1], [3, 2], [2, 1], [1, 3], [2, 1]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [3, 4], [1, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [3, 1], [2, 0]], [[2, 1], [1, 4], [2, 1], [3, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 1], [1, 4], [3, 1], [2, 4], [1, 5], [2, 1], [3, 2], [1, 3], [2, 1], [3, 0]], [[2, 0], [1, 1], [2, 4], [3, 5], [1, 1], [2, 2], [3, 3], [3, 1], [3, 0]], [[15, 1], [5, 0]], [[15, 1], [5, 0]]]]}}, "turtle": {"version": 1, "set": "turtle", "width": 20, "height": 8, "fps": 8, "palette": ["", "#000000", "#572c1a", "#22b14c", "#995d25", "#464646", "#76b387", "#62b379", "#ffffff"], "source": {"project": "vscode-pets", "url": "https://github.com/tonybaloney/vscode-pets/tree/2c91214beb922288cca1938cddb607abc5f806b7/media/turtle", "commit": "2c91214beb922288cca1938cddb607abc5f806b7", "author": "enkeefe", "author_url": "https://www.pixilart.com/draw", "licence": "MIT"}, "states": {"idle": [[[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 6], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [3, 0], [3, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [3, 1], [4, 3]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[3, 0], [1, 5], [1, 6], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [1, 0], [2, 1], [3, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]]]], "walk": [[[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[3, 0], [2, 7], [1, 1], [1, 3], [1, 1], [2, 0], [2, 7], [2, 3], [6, 0]], [[3, 0], [2, 7], [1, 5], [2, 3], [2, 0], [2, 7], [1, 1], [1, 3], [1, 1], [5, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]]], "happy": [[[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [3, 0], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [3, 1], [2, 3], [1, 8], [1, 3]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[3, 0], [1, 5], [1, 6], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [1, 0], [2, 1], [3, 0]], [[4, 0], [1, 6], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 6], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [3, 0], [1, 3], [1, 1], [1, 3]], [[5, 1], [8, 2], [3, 1], [2, 3], [1, 8], [1, 3]], [[1, 1], [2, 3], [1, 1], [10, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [1, 0], [2, 1], [3, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [3, 0], [1, 3], [1, 1], [1, 3]], [[2, 0], [3, 1], [8, 2], [3, 1], [2, 3], [1, 8], [1, 3]], [[1, 0], [1, 1], [1, 3], [1, 1], [10, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[2, 1], [1, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [1, 0], [2, 1], [3, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [3, 0], [1, 3], [1, 1], [1, 3]], [[5, 1], [8, 2], [3, 1], [2, 3], [1, 8], [1, 3]], [[1, 1], [2, 3], [1, 1], [10, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [1, 0], [2, 1], [3, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]]], "sleep": [[[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]], [[4, 0], [1, 1], [1, 3], [1, 1], [4, 0], [2, 3], [1, 1], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [7, 0]], [[4, 0], [1, 1], [8, 2], [1, 1], [6, 0]], [[2, 0], [3, 1], [8, 2], [2, 1], [5, 0]], [[3, 0], [1, 1], [10, 4], [1, 1], [5, 0]], [[20, 0]], [[20, 0]], [[20, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[6, 0], [1, 2], [3, 1], [2, 2], [8, 0]], [[5, 0], [1, 2], [2, 1], [3, 2], [1, 1], [1, 2], [7, 0]], [[3, 0], [3, 2], [1, 1], [2, 2], [1, 1], [2, 2], [1, 1], [1, 2], [1, 1], [5, 0]], [[2, 0], [1, 1], [2, 4], [8, 1], [1, 4], [1, 1], [5, 0]], [[3, 0], [3, 1], [7, 4], [1, 1], [6, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[6, 0], [1, 2], [3, 1], [2, 2], [8, 0]], [[5, 0], [1, 2], [2, 1], [3, 2], [1, 1], [1, 2], [7, 0]], [[3, 0], [3, 2], [1, 1], [2, 2], [1, 1], [2, 2], [1, 1], [1, 2], [2, 1], [4, 0]], [[1, 0], [1, 3], [1, 1], [2, 4], [8, 1], [1, 4], [1, 1], [2, 3], [3, 0]], [[2, 0], [4, 1], [7, 4], [1, 1], [2, 3], [1, 8], [3, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[6, 0], [1, 2], [3, 1], [2, 2], [8, 0]], [[5, 0], [1, 2], [2, 1], [3, 2], [1, 1], [1, 2], [7, 0]], [[3, 0], [3, 2], [1, 1], [2, 2], [1, 1], [2, 2], [1, 1], [1, 2], [2, 1], [4, 0]], [[1, 0], [1, 3], [1, 1], [2, 4], [8, 1], [1, 4], [1, 1], [2, 3], [3, 0]], [[2, 0], [4, 1], [7, 4], [1, 1], [2, 3], [1, 1], [3, 0]]], [[[20, 0]], [[20, 0]], [[20, 0]], [[6, 0], [1, 2], [3, 1], [2, 2], [8, 0]], [[5, 0], [1, 2], [2, 1], [3, 2], [1, 1], [1, 2], [7, 0]], [[3, 0], [3, 2], [1, 1], [2, 2], [1, 1], [2, 2], [1, 1], [1, 2], [2, 1], [4, 0]], [[1, 0], [1, 3], [1, 1], [2, 4], [8, 1], [1, 4], [1, 1], [2, 3], [3, 0]], [[2, 0], [4, 1], [7, 4], [1, 1], [2, 3], [1, 8], [3, 0]]], [[[20, 0]], [[20, 0]], [[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 2], [2, 1], [3, 2], [1, 1], [1, 2], [7, 0]], [[3, 0], [1, 1], [1, 2], [4, 1], [1, 2], [2, 1], [2, 2], [6, 0]], [[1, 0], [1, 3], [1, 1], [2, 4], [8, 1], [1, 4], [1, 1], [3, 3], [1, 1], [1, 0]], [[1, 0], [1, 1], [1, 3], [3, 1], [7, 4], [2, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 1], [1, 3], [1, 1], [3, 0], [1, 5], [1, 1], [2, 3], [3, 1], [3, 0]]], [[[20, 0]], [[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [5, 0], [1, 1], [1, 0]], [[3, 0], [1, 1], [1, 2], [4, 1], [1, 2], [2, 1], [2, 2], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [3, 1], [4, 3]], [[1, 0], [1, 1], [1, 3], [3, 1], [7, 4], [2, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [3, 0], [1, 7], [2, 3], [3, 1], [3, 0]], [[4, 0], [1, 7], [2, 3], [4, 0], [1, 7], [2, 3], [6, 0]]], [[[6, 0], [2, 1], [2, 2], [2, 1], [8, 0]], [[5, 0], [1, 1], [4, 2], [1, 1], [1, 2], [1, 1], [4, 0], [1, 1], [1, 3], [1, 1]], [[4, 0], [1, 1], [8, 2], [1, 1], [2, 0], [1, 1], [1, 3], [1, 1], [1, 3]], [[1, 1], [1, 3], [3, 1], [8, 2], [2, 1], [4, 3], [1, 1]], [[1, 0], [2, 3], [1, 1], [10, 4], [1, 1], [2, 3], [1, 1], [2, 0]], [[3, 0], [1, 5], [1, 7], [2, 3], [1, 1], [2, 0], [1, 5], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]], [[4, 0], [1, 7], [1, 1], [1, 3], [1, 1], [3, 0], [1, 1], [2, 3], [6, 0]]]]}}};
@@ -2207,10 +2343,11 @@ const PETS={"cat": {"version": 1, "set": "cat", "width": 20, "height": 16, "fps"
 // once into a canvas atlas and the sprite picks a cell out of it, so a change
 // of frame costs two numbers rather than a texture upload.
 
-// The three states the island asks for, mapped onto what a pack actually
+// The four states the island asks for, mapped onto what a pack actually
 // carries. Sitting is the sleep row, which is the sitting pose in both of the
-// OpenGameArt packs; a set without one idles instead of failing.
-const PET_STATE={idle:"idle",walk:"walk",sit:"sleep"};
+// OpenGameArt packs, and the cheer is the happy row every pack draws; a set
+// without one of them idles instead of failing.
+const PET_STATE={idle:"idle",walk:"walk",sit:"sleep",cheer:"happy"};
 const PET_LABEL={cat:"Cat",crab:"Crab",dog:"Dog",duck:"Duck",snail:"Snail",turtle:"Turtle"};
 // A transparent gutter around every cell, so a sprite scaled to a size that
 // is not a whole number of pixels bleeds into nothing instead of its neighbour.
@@ -2227,7 +2364,7 @@ function petId(){if(S.pet&&petKnown(S.pet))return S.pet;
   return petKnown(c.species)?c.species:"none"}
 
 const petSheets={};
-// One canvas per set: every frame of the three states in a row, nearest
+// One canvas per set: every frame of the four states in a row, nearest
 // filtered, built once and kept.
 function petSheet(id){
   if(petSheets[id])return petSheets[id];
@@ -2240,7 +2377,7 @@ function petSheet(id){
   cells.forEach((frame,i)=>frame.forEach((row,y)=>{let x=0;
     row.forEach(run=>{const n=run[0],c=d.palette[run[1]];
       if(c){ctx.fillStyle=c;ctx.fillRect(i*cw+g+x,g+y,n,1)}x+=n})}));
-  const tex=new T.CanvasTexture(cv);
+  const tex=keep(new T.CanvasTexture(cv));
   tex.magFilter=T.NearestFilter;tex.minFilter=T.NearestFilter;tex.generateMipmaps=false;
   tex.encoding=T.sRGBEncoding;
   return petSheets[id]={canvas:cv,tex,index,cells:cells.length,cw,ch,
@@ -2250,9 +2387,11 @@ function petSheet(id){
 // island is rebuilt on every crossing, so it notices a new scene and walks
 // back in beside the walker rather than being left in the old one.
 let pet=null;
-function petBuild(id){
+function petBuild(id,was){
   const sh=petSheet(id);
-  const m=new T.SpriteMaterial({map:sh.tex,transparent:true,alphaTest:.5});
+  // The pixels are the artist's colours, so the filmic curve that shapes the
+  // lit scene is not applied to them; the night tints them instead (petTint).
+  const m=new T.SpriteMaterial({map:sh.tex,transparent:true,alphaTest:.5,toneMapped:false});
   const spr=new T.Sprite(m);
   spr.scale.set(PET.PX*sh.cw,PET.PX*sh.ch,1);
   // Tapping the ground walks there; the companion is never a click target.
@@ -2262,11 +2401,14 @@ function petBuild(id){
   const sd=new T.Mesh(new T.PlaneGeometry(PET.PX*sh.cw,PET.PX*sh.cw),
     new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.45}));
   sd.rotation.x=-Math.PI/2;sd.renderOrder=1;sd.material.userData.cs=1;sd.raycast=function(){};
-  const L=chars.lotte,p=L?L.g.position:new T.Vector3();
-  pet={id,sh,spr,shadow:sd,x:p.x,z:p.z,face:1,state:"idle",frame:0,fT:0};
+  // A crossing rebuilds the island under the walker, in new coordinates. The
+  // companion is put back where it was beside him, not on top of him.
+  const L=chars.lotte,p=L?L.g.position:new T.Vector3();was=was||{dx:0,dz:0,face:1,done:-1,world:null};
+  pet={id,sh,spr,shadow:sd,x:p.x+was.dx,z:p.z+was.dz,dx:was.dx,dz:was.dz,face:was.face,
+    state:"idle",frame:0,fT:0,cheer:0,done:was.done,world:was.world};
   scene.add(spr);scene.add(sd);return pet}
 
-function petRemove(){if(!pet)return;[pet.spr,pet.shadow].forEach(o=>{if(o&&o.parent)o.parent.remove(o)});pet=null}
+function petRemove(){if(!pet)return;discard(pet.spr);discard(pet.shadow);pet=null}
 function petCell(){const cells=pet.sh.index[pet.state]||pet.sh.index.idle;
   return cells[pet.frame%cells.length]}
 function petPaint(){const sh=pet.sh,du=sh.cw/sh.canvas.width,u=petCell()*du;
@@ -2283,12 +2425,22 @@ function tickPet(dt,t){
   const id=petId();
   if(id==="none"||!PETS[id]){if(pet)petRemove();return}
   const L=chars.lotte;if(!L)return;
-  if(!pet||pet.id!==id||pet.spr.parent!==scene){if(pet)petRemove();petBuild(id)}
+  if(!pet||pet.id!==id||pet.spr.parent!==scene){const was=pet;petRemove();petBuild(id,was)}
+  // A stop claimed on this island is worth a cheer. The count is state, so
+  // the companion notices it by looking, whoever made the claim and however.
+  const world=S.world||"campus",done=(S.done||[]).length;
+  if(pet.world===world&&done>pet.done)pet.cheer=PET.CHEER;
+  pet.world=world;pet.done=done;pet.cheer=Math.max(0,pet.cheer-dt);
   const p=L.g.position,ry=L.g.rotation.y;
   // It settles behind the walker, in the walker's own facing, so turning on
   // the spot swings it round instead of dragging it through his legs.
-  const tx=p.x-Math.sin(ry)*PET.FOLLOW+Math.cos(ry)*PET.SIDE,
-        tz=p.z-Math.cos(ry)*PET.FOLLOW-Math.sin(ry)*PET.SIDE;
+  let tx=p.x-Math.sin(ry)*PET.FOLLOW+Math.cos(ry)*PET.SIDE,
+      tz=p.z-Math.cos(ry)*PET.FOLLOW-Math.sin(ry)*PET.SIDE;
+  // Its spot beside the walker can be over the water: on a bridge, on a
+  // causeway, at the shore. Then it falls in behind him, and where even that
+  // is water, or it has been left a leash behind, it comes to where he stands.
+  if(!onLandW(tx,tz)){tx=p.x-Math.sin(ry)*PET.FOLLOW;tz=p.z-Math.cos(ry)*PET.FOLLOW}
+  if(!onLandW(tx,tz)||Math.hypot(pet.x-p.x,pet.z-p.z)>PET.LEASH){tx=p.x;tz=p.z}
   const px=pet.x,pz=pet.z;
   const k=1-Math.exp(-PET.LAG*dt),nx=px+(tx-px)*k,nz=pz+(tz-pz)*k;
   // Land and bridges only: it slides along an edge the way the walker does
@@ -2296,27 +2448,47 @@ function tickPet(dt,t){
   if(onLandW(nx,nz)){pet.x=nx;pet.z=nz}
   else if(onLandW(nx,pz))pet.x=nx;
   else if(onLandW(px,nz))pet.z=nz;
+  // Two leashes behind there is water between them that it cannot walk round.
+  if(Math.hypot(pet.x-p.x,pet.z-p.z)>PET.LEASH*2){pet.x=tx;pet.z=tz}
+  pet.dx=pet.x-p.x;pet.dz=pet.z-p.z;
   // Walking is what it does this frame or what it still has to catch up: the
   // ease is slow enough that the last strides of a long catch-up are quiet.
   const travel=Math.hypot(pet.x-px,pet.z-pz)/Math.max(dt,1e-4),gap=Math.hypot(pet.x-tx,pet.z-tz);
   const sitting=typeof isSitting==="function"&&isSitting(L);
-  pet.state=sitting?"sit":(travel>PET.WALK_AT||gap>PET.FOLLOW*.6?"walk":"idle");
+  const moving=travel>PET.WALK_AT||gap>PET.FOLLOW*.6;
+  pet.state=sitting?"sit":moving?"walk":pet.cheer>0?"cheer":"idle";
   if(Math.abs(pet.x-px)>1e-3)pet.face=pet.x>px?1:-1;
   else if(Math.abs(tx-pet.x)>.2)pet.face=tx>pet.x?1:-1;
   pet.fT+=dt;const step=1/(pet.sh.fps||PET.FPS);
   while(pet.fT>=step){pet.fT-=step;pet.frame++}
   petPaint();
-  // Reduced motion keeps the companion, and takes the bobbing away.
-  const bob=(pet.state==="sit"||reducedMotion())?0:Math.sin(t*4)*PET.BOB;
+  // Reduced motion keeps the companion, and takes the bobbing and the hop of
+  // the cheer away.
+  const calm=reducedMotion(),hop=pet.state==="cheer"&&!calm?Math.abs(Math.sin(t*9))*.35:0;
+  const bob=(pet.state==="sit"||calm)?0:Math.sin(t*4)*PET.BOB;
+  const s=petScale();pet.spr.scale.set(PET.PX*pet.sh.cw*s,PET.PX*pet.sh.ch*s,1);
   // The gutter row is transparent, so the feet sit on the grass rather than
   // a pixel above it.
-  pet.spr.position.set(pet.x,PET.PX*(pet.sh.ch/2-PET_GUTTER)+bob,pet.z);
-  pet.shadow.position.set(pet.x,.05,pet.z);
-  // A sprite takes no light, so the sky stage dims it by hand: the pixels are
-  // the artist's at noon and read as a creature in the dark at midnight.
-  const rig=(typeof SKY_RIG!=="undefined"&&SKY_RIG[skyN])||{i:1};
-  pet.spr.material.color.setScalar(.5+.5*Math.min(1,rig.i/1.18));
+  pet.spr.position.set(pet.x,PET.PX*s*(pet.sh.ch/2-PET_GUTTER)+bob+hop,pet.z);
+  pet.shadow.position.set(pet.x,.05,pet.z);pet.shadow.scale.setScalar(s);
+  petTint();
 }
+// Pixel art is only crisp when every sprite pixel covers the same whole number
+// of device pixels; at any other size nearest filtering makes some columns a
+// pixel wider than their neighbours and they crawl as the camera moves. So the
+// sprite is resized a little every frame to the nearest whole number for its
+// depth, and never below PET.MIN_TEXEL.
+const _pv=new T.Vector3();
+function petScale(){
+  const depth=Math.max(.1,-_pv.set(pet.x,0,pet.z).applyMatrix4(camera.matrixWorldInverse).z);
+  const texel=PET.PX*VIEW.h/(2*Math.tan(camera.fov*Math.PI/360))/depth*renderer.getPixelRatio();
+  pet.texel=Math.max(PET.MIN_TEXEL,Math.round(texel));return pet.texel/texel}
+// A sprite takes no light, so the sky stage colours it by hand: the artist's
+// pixels at noon, and towards the moonlight of the rig as the night comes on,
+// dimmed but never so far that it is lost against dark grass.
+const _pc=new T.Color(),WHITE=new T.Color("#ffffff");
+function petTint(){const r=SKY_RIG[skyN]||SKY_RIG[0],k=PET.NIGHT*Math.max(0,Math.min(1,(skyN-2)/4));
+  pet.spr.material.color.copy(WHITE).lerp(_pc.set(r.sun).convertSRGBToLinear(),k).multiplyScalar(1-k*.35)}
 
 /* ---------------- choosing one ---------------- */
 // The picker, the same markup in the onboarding and in Settings: a select and
@@ -2359,6 +2531,8 @@ function petScreen(){if(!pet||!camera)return null;
   return {x:rc.left+(v.x+1)/2*rc.width,y:rc.top+(1-v.y)/2*rc.height}}
 window.__pet=()=>({id:petId(),on:!!(pet&&pet.spr.parent===scene),
   state:pet?pet.state:null,x:pet?pet.x:null,z:pet?pet.z:null,
+  // texel is how many device pixels one sprite pixel covers, always whole.
+  texel:pet?pet.texel:0,
   frames:pet?pet.sh.cells:0,
   // What the companion costs the renderer: the billboard and its contact
   // shadow, one draw call each, whatever the pack or the state.
@@ -2380,7 +2554,7 @@ function bottleSpot(deg){
 
 // Two draw calls a bottle: the glass, which has to stay its own transparent
 // mesh, and the roll of paper with the cork baked into one. Geometry and
-// materials are shared by every bottle.
+// materials are shared by every bottle, so keep() holds them when one is opened.
 // Larger than life on purpose: at the fitted camera a real bottle is three pixels.
 const BOTTLE_SCALE=2;
 let BOTTLEG=null;
@@ -2388,12 +2562,12 @@ function bottleParts(){if(BOTTLEG)return BOTTLEG;
   const pts=[[0,0],[.13,0],[.14,.04],[.14,.3],[.06,.42],[.055,.54],[.07,.55],[.07,.58],[0,.58]]
     .map(([x,y])=>new T.Vector2(x,y));
   BOTTLEG={
-    glass:new T.LatheGeometry(pts,9),
-    paper:new T.CylinderGeometry(.05,.05,.3,6),
-    cork:new T.CylinderGeometry(.05,.05,.07,6),
-    glassMat:mat(PALETTE.greenBright,{transparent:true,opacity:.5,roughness:.25,depthWrite:false,
-      emissive:PALETTE.greenBright,emissiveIntensity:.3}),
-    paperMat:mat(PALETTE.text),corkMat:mat(PALETTE.orange)};
+    glass:keep(new T.LatheGeometry(pts,9)),
+    paper:keep(new T.CylinderGeometry(.05,.05,.3,6)),
+    cork:keep(new T.CylinderGeometry(.05,.05,.07,6)),
+    glassMat:keep(mat(PALETTE.greenBright,{transparent:true,opacity:.5,roughness:.25,depthWrite:false,
+      emissive:PALETTE.greenBright,emissiveIntensity:.3})),
+    paperMat:keep(mat(PALETTE.text)),corkMat:keep(mat(PALETTE.orange))};
   return BOTTLEG}
 function bottleMesh(){const P=bottleParts(),g=new T.Group();
   const paper=new T.Mesh(P.paper,P.paperMat);paper.position.y=.2;
@@ -2417,7 +2591,7 @@ function placeBottles(){
     scene.add(m);props.bottles.push({id:b.id,m,x:sp.x,z:sp.z,p:props.bottles.length})})}
 
 function openBottle(it){const data=(ITEMS.bottles||[]).find(x=>x.id===it.id);
-  scene.remove(it.m);props.bottles=props.bottles.filter(x=>x!==it);
+  discard(it.m);props.bottles=props.bottles.filter(x=>x!==it);
   if(!data)return;
   sl("bottles").push(data.id);save();
   toast(icon("compass")+"A message in a bottle: "+esc(data.title),
@@ -2545,21 +2719,35 @@ let bridges=[];
 CAMPAIGN.campus.ws=CH.map(c=>({h:c.h,n:c.n,d:c.d}));
 let CHW=CH;
 function init3d(){
-  const st=$("stage");renderer=new T.WebGLRenderer({canvas:$("c"),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(st.clientWidth,st.clientHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputEncoding=T.sRGBEncoding;
+  const st=$("stage");renderer=new T.WebGLRenderer({canvas:$("c"),antialias:true});renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputEncoding=T.sRGBEncoding;
   // Filmic roll-off instead of a linear clip: without it a lit window at
   // night and grass at noon land on the same flat value.
   renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=EXPOSURE;
-  camera=new T.PerspectiveCamera(CAM.fov,st.clientWidth/st.clientHeight,.1,300*WORLD_SCALE);camera.position.set(0,22*WORLD_SCALE,26*WORLD_SCALE);
-  clock=new T.Clock();
-  addEventListener("resize",()=>{const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix()});
-  buildWorld(S.world||"campus");setupInput();inited=true;animate();
+  camera=new T.PerspectiveCamera(CAM.fov,st.clientWidth/st.clientHeight,.5,CAM.far*WORLD_SCALE);camera.position.set(0,22*WORLD_SCALE,26*WORLD_SCALE);
+  clock=new T.Clock();fitRenderer();
+  addEventListener("resize",fitRenderer);watchContext($("c"));
+  // The zoom listens before the walk does, so a pinch is known to be a pinch
+  // by the time the tap handler sees the same finger lift.
+  buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
 }
+// The browser may take the WebGL context back: a phone short of memory, a tab
+// that slept, a driver reset. three.js stops drawing and says nothing, and a
+// flat blue stage under a HUD that carries on is no answer. The loop stops,
+// the stage says what happened, and the Roadmap, which needs no 3D, opens the
+// way it does when 3D fails at the start. three.js rebuilds its own state when
+// the context returns, so the island comes back without a reload.
+let gfxLost=false;
+function watchContext(c){
+  c.addEventListener("webglcontextlost",e=>{e.preventDefault();gfxLost=true;gfxNotice()});
+  c.addEventListener("webglcontextrestored",()=>{gfxLost=false;clock.getDelta();fitRenderer();gfxNotice()})}
+function gfxNotice(){const n=$("gfxlost");if(n)n.hidden=!gfxLost;
+  $("stage").classList.toggle("lost",gfxLost);
+  if(gfxLost&&started){enterHide();openSheet("s-map")}}
 // The frame the island needs: the distance that makes a disc of the island's
 // radius fit inside both the vertical and the horizontal field of view. A
 // narrow window pushes the camera back rather than cropping the diorama, and
 // the drift allowance covers how far the follow pulls the island off centre.
-function camFitDist(){const st=$("stage");
-  const asp=Math.max(.35,st.clientWidth/Math.max(1,st.clientHeight));
+function camFitDist(){const asp=Math.max(.35,VIEW.w/VIEW.h);
   const r=(W.land[0][2]+2.6+CAM.drift*.5)*CAM.margin;
   const vf=camera.fov*Math.PI/360,hf=Math.atan(Math.tan(vf)*asp),p=CAM.pitch;
   // The island is a disc on the ground, not a sphere: the near edge is what
@@ -2576,6 +2764,9 @@ function landBlob(group,x,z,r,seg){
   d.position.set(x,-2.6,z);d.castShadow=d.receiveShadow=true;
   group.add(g,d);return g}
 function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id==="desert"?"#C9A24E":"#E9D9B5")}
+// A scene that has been replaced, waiting for the frame that follows it.
+const trash=[];
+function emptyTrash(){while(trash.length)release(trash.pop())}
 // `carry` hands the walker across a bridge: a position already converted into
 // the new island's coordinates, so the crossing does not interrupt the walk.
 function buildWorld(id,carry){
@@ -2592,6 +2783,7 @@ function buildWorld(id,carry){
   const WS=WORLD_SCALE;
   // The fog has to reach across the archipelago: a neighbour island is a
   // silhouette in the haze, not a wall of sky colour.
+  if(scene)trash.push(scene);
   scene=new T.Scene();scene.fog=new T.Fog(W.fog,80*WS,280*WS);
   hemiL=new T.HemisphereLight("#cfe9ff","#4a7a3a",.7);scene.add(hemiL);ambL=new T.AmbientLight("#fff",.15);scene.add(ambL);
   dirL=new T.DirectionalLight("#fff5d6",1.1);dirL.position.set(14*WS,24*WS,10*WS);dirL.castShadow=true;dirL.shadow.mapSize.set(CONFIG.shadowMap,CONFIG.shadowMap);dirL.shadow.bias=-.0008;dirL.shadow.normalBias=.02;Object.assign(dirL.shadow.camera,{left:-28*WS,right:28*WS,top:28*WS,bottom:-28*WS,near:1,far:80*WS});scene.add(dirL);
@@ -2604,7 +2796,8 @@ function buildWorld(id,carry){
   island=mergeStatic(land);island.userData.parts=[island];
   buildSilhouettes(id);buildBridges();
   // sea
-  water=new T.Mesh(new T.PlaneGeometry(220*WS,220*WS,64,64).rotateX(-Math.PI/2),seaMaterial());
+  // Wide enough that its edge is behind the haze from the farthest zoom.
+  water=new T.Mesh(new T.PlaneGeometry(SEA_SIZE*WS,SEA_SIZE*WS,64,64).rotateX(-Math.PI/2),seaMaterial());
   water.position.y=-1.6;water.receiveShadow=true;scene.add(water);
   const lava=id==="prod";
   // Lava is its own light, not a bright surface: a dark crust with the glow in
@@ -2684,6 +2877,7 @@ function buildWorld(id,carry){
   [[7,7],[-8,-6],[2,-6],[-14,4],[10,-2]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{if(!onLandW(x,z))return;
     batchAdd("rock",()=>new T.SphereGeometry(.45,5,5),id==="prod"?"#1F1F27":PALETTE.stone,xform(x,.2,z));blobAdd(x,z,.7)});
   if(ex("flowers")){const fl=new T.InstancedMesh(new T.BoxGeometry(.18,.18,.18),new T.MeshStandardMaterial({color:"#fff",flatShading:true}),160);const colr=new T.Color();for(let i=0;i<160;i++){const a=Math.random()*Math.PI*2,r=(3+Math.random()*11)*WS;dummy.position.set(Math.cos(a)*r,.12,Math.sin(a)*r);dummy.rotation.set(0,Math.random(),0);dummy.updateMatrix();fl.setMatrixAt(i,dummy.matrix);colr.set([PALETTE.orange,PALETTE.yellow,PALETTE.snow,"#FFA94D"][i%4]);fl.setColorAt(i,colr)}scene.add(fl)}
+  buildTufts();
   if(ex("cacti")){[[6,-6],[-5,-7],[10,5],[-9,1],[3,-15],[14,-4]].map(a=>P(a[0],a[1])).forEach(([x,z])=>{if(!onLandW(x,z))return;
     batchAdd("cactus",()=>new T.CylinderGeometry(.3,.35,2,7),"#2F855A",xform(x,1,z));
     batchAdd("cactus-arm",()=>new T.CylinderGeometry(.18,.2,.9,6),"#2F855A",xform(x+.5,1.5,z));
@@ -2718,8 +2912,8 @@ function buildWorld(id,carry){
   const lp=carry?new T.Vector3(carry.x,0,carry.z):chars.lotte?chars.lotte.g.position.clone():new T.Vector3(2.8,0,5.2);
   chars.lotte=character(playerSpec());chars.lotte.g.position.copy(carry||onLandW(lp.x,lp.z)?lp:new T.Vector3(2.8,0,5.2));scene.add(chars.lotte.g);
   if(carry){chars.lotte.g.rotation.y=carry.rot;chars.lotte.vel=carry.vel||new T.Vector3()}
-  chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:"Tom, SRE"});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
-  chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:"Rolinda, Ops"});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
+  chars.tom=character({kind:"tom",body:"#D8C49B",legs:"#6E6A66",arms:"#F5D7BC",label:roleName("tom")});chars.tom.g.position.set(-1.6,0,6.4);scene.add(chars.tom.g);
+  chars.rolinda=character({kind:"rolinda",body:"#8FD18A",legs:"#9CC4E8",arms:"#8FD18A",label:roleName("rolinda")});chars.rolinda.g.position.set(0.4,0,4.6);chars.rolinda.g.rotation.y=Math.PI*.95;scene.add(chars.rolinda.g);
   // mentors (NPC scientists) for this world
   props.mentors=[];MENTORS.filter(m=>m.world===id).forEach(m=>{const c=character({kind:"mentor",body:m.look.shirt,legs:"#374151",arms:"#F5D7BC",label:m.name,look:m.look});c.g.position.set(m.pos[0],0,m.pos[1]);c.g.rotation.y=Math.PI;scene.add(c.g);c.id=m.id;props.mentors.push(c);obstacles.push([m.pos[0],m.pos[1],.6]);blobAdd(m.pos[0],m.pos[1],.7);
     const ring=new T.Mesh(new T.TorusGeometry(1.1,.05,6,24),new T.MeshBasicMaterial({color:S.mentors.includes(m.id)?PALETTE.greenBright:S.path[m.id]==="deep"?PALETTE.blueBright:S.path[m.id]==="skip"?PALETTE.orangeBright:"#FFA94D",transparent:true,opacity:.6}));ring.rotation.x=Math.PI/2;ring.position.set(m.pos[0],.05,m.pos[1]);scene.add(ring);c.ring=ring});
@@ -2731,6 +2925,7 @@ function buildWorld(id,carry){
   blobFlush();
   // shadow blob + marker
   props.shadow=new T.Mesh(new T.PlaneGeometry(1.4,1.4),new T.MeshBasicMaterial({map:blobTexture(),transparent:true,depthWrite:false,opacity:.5}));props.shadow.rotation.x=-Math.PI/2;props.shadow.position.y=.05;props.shadow.renderOrder=1;props.shadow.material.userData.cs=1;scene.add(props.shadow);
+  props.lapGlow=lapGlow();scene.add(props.lapGlow);
   // The ring that says which of the three figures you are steering.
   props.you=new T.Mesh(new T.RingGeometry(.62,.8,24),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:.75,side:T.DoubleSide}));props.you.rotation.x=-Math.PI/2;props.you.position.y=.07;props.you.renderOrder=2;props.you.material.userData.cs=1;scene.add(props.you);
   marker=new T.Mesh(new T.RingGeometry(.3,.45,20),new T.MeshBasicMaterial({color:PALETTE.blueBright,transparent:true,opacity:0,side:T.DoubleSide}));marker.rotation.x=-Math.PI/2;marker.position.y=.06;scene.add(marker);
@@ -2739,6 +2934,22 @@ function buildWorld(id,carry){
   if(carry&&prevBg){scene.background=prevBg;scene.fog.color.copy(prevBg)}
   S.done.forEach(k=>placeBuilding(k,false));applySky(S.done.length,!carry);fixColors(scene);hud();
 }
+// Tufts: a few hundred low lumps a shade darker than the ground, in one
+// instanced draw. From the fitted view they are texture; from the close view
+// they are what stops the ground being one flat sheet of colour under the
+// walker's feet. They keep off the path, the plots, the inn and the lake, and
+// they are seeded, so the island is the same island on every visit.
+function buildTufts(){if(!GROUND.tufts)return;const mats=[],R=W.land[0][2],path=props.curve.getSpacedPoints(90);
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let i=0;i<GROUND.tufts*3&&mats.length<GROUND.tufts;i++){
+    const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*R,x=Math.cos(a)*r,z=Math.sin(a)*r,s=.7+rnd()*.9,ry=rnd()*Math.PI;
+    if(!W.land.some(b=>Math.hypot(x-b[0],z-b[1])<b[2]-1.4))continue;
+    if(Math.hypot(x,z)<6.2||Math.hypot(x-W.lake[0],z-W.lake[1])<4.2)continue;
+    if(PLOT_POS.some(p=>Math.hypot(x-p.x,z-p.z)<3)||path.some(p=>Math.hypot(x-p.x,z-p.z)<1.5))continue;
+    mats.push(xform(x,.05*s,z,0,ry,0,new T.Vector3(s,s,s)))}
+  const c=new T.Color(W.grass).multiplyScalar(GROUND.shade);
+  const im=instOf(shape("tuft",()=>new T.ConeGeometry(.2,.13,5)),mat("#"+c.getHexString()),mats,false);
+  if(im)im.receiveShadow=true;props.tufts=im}
 // One building per artifact of this world that names a model in ART_PROPS;
 // the group is an obstacle so the walker goes round it, and the ring stays.
 function buildArtifactProps(){props.artProps=[];props.artR={};(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world&&a.model&&ART_PROPS[a.model]).forEach(a=>{const g=ART_PROPS[a.model]();const r=g.userData.r||1.4;
@@ -2776,7 +2987,7 @@ window.setWorld=function(id){
   startFlight(id)};
 function renderWorldPicker(){const el=$("worlds");if(!el)return;el.innerHTML=Object.keys(WORLDS).map(k=>`<button class="world${(S.world||"campus")===k?' pick':''}" onclick="setWorld('${k}')"><b><i style="background:${WORLDS[k].swatch}"></i>${CAMPAIGN[k].title.split(":")[0]}</b>${WORLDS[k].name}. ${CAMPAIGN[k].title.split(": ")[1]}</button>`).join("")}
 function placeBuilding(k,pop){
-  const g=building(k);g.position.copy(PLOT_POS[k-1]);const p=plots[k-1];p.userData.ring.visible=false;p.userData.post.visible=false;p.userData.sign.visible=false;p.userData.lb.visible=false;
+  const g=building(k);g.position.copy(PLOT_POS[k-1]);const p=plots[k-1];p.userData.ring.visible=false;p.userData.post.visible=false;p.userData.sign.visible=false;p.userData.lb.userData.off=1;
   fixColors(g);scene.add(g);builds[k]=g;
   if(pop)popIn(g);else g.scale.set(1,1,1);
   placeAnnex(k,pop);
@@ -2809,7 +3020,10 @@ function placeAnnex(k,pop){
 }
 // The pop every new thing on the island gets: it grows from nothing (the
 // animation loop eases popT) under a burst of forty confetti cubes.
-function popIn(g){g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(new T.BoxGeometry(.18,.18,.18),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
+function popIn(g){
+  // Reduced motion: the thing is simply there, with no growth and no confetti.
+  if(reducedMotion()){g.scale.set(1,1,1);return}
+  g.scale.set(.01,.01,.01);g.userData.popT=0;if(pops.indexOf(g)<0)pops.push(g);for(let i=0;i<40;i++){const m=new T.Mesh(shape("confetti",()=>new T.BoxGeometry(.18,.18,.18)),new T.MeshBasicMaterial({color:[PALETTE.blueBright,PALETTE.blue,PALETTE.yellow,PALETTE.greenBright][i%4]}));m.position.copy(g.position).add(new T.Vector3((Math.random()-.5)*2,1,(Math.random()-.5)*2));m.userData.v=new T.Vector3((Math.random()-.5)*6,4+Math.random()*5,(Math.random()-.5)*6);m.userData.life=1.4+Math.random();scene.add(m);parts.push(m)}}
 // Everything that pops in is on this list, so one loop in the frame grows a
 // building, an annex and a mentor's plaque alike.
 const pops=[];
@@ -2829,13 +3043,14 @@ function buildSky(){
   geo.setAttribute("color",new T.BufferAttribute(c,3));
   const m=new T.MeshBasicMaterial({color:"#ffffff",vertexColors:true,side:T.BackSide,fog:false,depthWrite:false});
   m.userData.cs=1;
-  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d}
+  // A new dome has no colours yet, whatever the last one was painted with.
+  const d=new T.Mesh(geo,m);d.renderOrder=-1;d.frustumCulled=false;scene.add(d);props.sky=d;skyPainted=-1}
 // The ramp, repainted whenever the stage moves. Height runs from the horizon
 // to the zenith over the top half of the dome; below the horizon it holds the
 // horizon colour, which is also the fog, so the two meet with no seam.
-const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted="";
+const _skyTop=new T.Color(),_skyBot=new T.Color();let skyPainted=-1;
 function paintSky(bottom,top){const d=props.sky;if(!d)return;
-  const key=bottom.getHexString()+top.getHexString();if(key===skyPainted)return;skyPainted=key;
+  const key=bottom.getHex()*16777216+top.getHex();if(key===skyPainted)return;skyPainted=key;
   _skyBot.copy(bottom).convertSRGBToLinear();_skyTop.copy(top).convertSRGBToLinear();
   const p=d.geometry.attributes.position,c=d.geometry.attributes.color,r=140*WORLD_SCALE;
   for(let i=0;i<p.count;i++){const t=Math.max(0,Math.min(1,p.getY(i)/r*1.35+.06));
@@ -2845,7 +3060,11 @@ function paintSky(bottom,top){const d=props.sky;if(!d)return;
 // The sea: one mesh, animated on the GPU. Two crossing swells and a slow
 // diagonal carry the surface, the water reads shallow inside the island's
 // radius with a foam line at the shore, and the roughness scrolls so the sun
-// leaves a moving highlight instead of a flat sheet of colour.
+// leaves a moving highlight instead of a flat sheet of colour. The swell moves
+// the vertices, but the normal is worked out per pixel from the same function:
+// the mesh is coarse, and a normal interpolated across an eleven unit quad
+// shows the grid as a checkerboard in the highlight.
+const SEA_SIZE=520;
 const SEA_GLSL=`
 float seaH(vec2 p,float t){return sin(p.x*.35+t*1.3)*.16+cos(p.y*.30+t*1.1)*.16+sin((p.x+p.y)*.12-t*.7)*.10;}
 vec3 seaN(vec2 p,float t){float e=.7;
@@ -2861,11 +3080,11 @@ function seaMaterial(){
   m.userData.u=u;
   m.onBeforeCompile=s=>{Object.assign(s.uniforms,u);
     s.vertexShader="uniform float uTime;varying vec2 vSea;"+SEA_GLSL+"\n"+s.vertexShader
-      .replace("#include <beginnormal_vertex>","vec3 objectNormal=seaN(position.xz,uTime);")
       .replace("#include <begin_vertex>",
         "vec3 transformed=vec3(position);transformed.y+=seaH(position.xz,uTime);vSea=position.xz;");
-    s.fragmentShader="uniform float uTime;uniform vec3 uShallow;uniform float uCoast;varying vec2 vSea;\n"+
+    s.fragmentShader="uniform float uTime;uniform vec3 uShallow;uniform float uCoast;uniform mat3 normalMatrix;varying vec2 vSea;\n"+SEA_GLSL+"\n"+
       s.fragmentShader
+      .replace("#include <normal_fragment_maps>","normal=normalize(normalMatrix*seaN(vSea,uTime));")
       .replace("#include <color_fragment>",
         "#include <color_fragment>\nfloat sd=length(vSea);"+
         "float shallow=1.0-smoothstep(uCoast*0.98,uCoast*1.3,sd);"+
@@ -2879,7 +3098,7 @@ function seaMaterial(){
   return m}
 
 let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
-const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3();
+const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3(),_far=new T.Vector3();
 function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
   if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}
   if(instant)tickRig(1)}
@@ -2897,10 +3116,12 @@ function tickRig(k){const r=SKY_RIG[skyN],WS=WORLD_SCALE;
   hemiL.intensity+=(r.hemi-hemiL.intensity)*k;
   ambL.intensity+=(r.amb-ambL.intensity)*k;
   // The discs ride the same bearing, far out past the fog.
-  const far=_dir.clone().normalize().multiplyScalar(90*WS);
-  sunM.position.copy(far);sunM.visible=skyN<4;
-  moonM.position.copy(far);moonM.visible=skyN>=4;
-  rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen)}
+  _far.copy(_dir).normalize().multiplyScalar(90*WS);
+  sunM.position.copy(_far);sunM.visible=skyN<4;
+  moonM.position.copy(_far);moonM.visible=skyN>=4;
+  rigZen.lerp(_rigZenTo.set(r.zen),k);paintSky(scene.fog.color,rigZen);
+  // The people's share of their own colour, up as the light goes down.
+  FIG_LIFT.value+=(r.fig-FIG_LIFT.value)*k}
 
 // What the graphics tests read: the renderer's colour pipeline, the rig of
 // this stage, the camera's fit, and how much of the island is inside the
@@ -2923,11 +3144,26 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
     sky:!!props.sky,sun_disc:!!(sunM&&sunM.visible),moon_disc:!!(moonM&&moonM.visible),
     sea:!!(water&&water.material.userData.u),
     blobs:props.blobs?props.blobs.count:0,aurora:auroraNDC(),
-    plates:{total:plates.length,shown:plates.filter(p=>p.visible).length},
+    // Each drawn plate with its pill's box on the canvas in CSS pixels, so a
+    // test can ask whether it is legible and whether two of them collide.
+    plates:{total:plates.length,shown:plates.filter(p=>p.visible).length,
+      list:plates.filter(p=>p.visible).map(p=>{const u=p.userData;
+        return {text:u.text,x:u.cx,y:u.cy,w:(u.hw-PLATE.gap)*2,h:(u.hh-PLATE.gap)*2,o:u.o,want:u.want}})},
+    // Something that only ambient motion moves: the first cloud.
+    ambient:clouds.length?clouds[0].position.x:0,
     // off is how far the camera still is from the height the fit asks for, so
     // a test can ask whether the frame has landed instead of counting frames.
     cam:{fit:camFitDist(),dist:camera.position.length(),aspect:camera.aspect,fov:camera.fov,
-      off:Math.abs(camera.position.y-Math.sin(CAM.pitch)*camFitDist())},
+      off:camOff()},
+    // level is where the eased camera is, target is the state it is easing to.
+    zoom:{level:camZoom(),target:zoomTo,min:CAM.zoom.min,max:CAM.zoom.max,start:CAM.zoom.start,
+      dist:camera.position.distanceTo(camLook)},
+    lost:gfxLost,
+    // What the GPU holds. It has to come back down after an island is left.
+    // parts is what is in the air right now (dust, confetti): a test waits for
+    // it to be nothing again rather than counting frames.
+    mem:{geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
+      programs:renderer.info.programs?renderer.info.programs.length:0,parts:parts.length},
     rim:Math.max.apply(null,rim),
     lit:Object.keys(builds).filter(k=>builds[k].userData.lit).length}};
 
@@ -2937,7 +3173,7 @@ window.__gfx=()=>{const rim=[];const r=W.land[0][2],v=new T.Vector3();
 // old one was doing; the name is rebuilt on a timer, which can land long after
 // the walker has sat down.
 function rebuildPlayer(){if(!chars.lotte)return;const old=chars.lotte,p=old.g.position.clone(),r=old.g.rotation.y;
-  scene.remove(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
+  discard(old.g);chars.lotte=character(playerSpec());chars.lotte.g.position.copy(p);chars.lotte.g.rotation.y=r;
   // The walk is state as much as the pose: a look changed mid-stride keeps its
   // speed and its jump instead of stopping the walker dead.
   chars.lotte.vel=old.vel||new T.Vector3();chars.lotte.jy=old.jy||0;chars.lotte.jv=old.jv||0;
@@ -3036,7 +3272,7 @@ function refreshBridges(){
   const was=bridges.map(b=>b.open);
   bridges=bridgesFor(S.world||"campus");
   if(bridges.every((b,i)=>b.open===was[i]))return;
-  (props.bridgeParts||[]).forEach(m=>{scene.remove(m);
+  (props.bridgeParts||[]).forEach(m=>{discard(m);
     if(island)island.userData.parts=island.userData.parts.filter(p=>p!==m)});
   buildBridges()}
 
@@ -3061,7 +3297,7 @@ function checkCrossing(pos){
   crossTo(b.b===here?b.a:b.b)}
 function crossTo(id){
   const d=worldOffset(id,S.world),L=chars.lotte,p=L.g.position.clone().sub(d);
-  camera.position.sub(d);
+  camShift(d,id);
   buildWorld(id,{x:p.x,z:p.z,rot:L.g.rotation.y,vel:L.vel?L.vel.clone():null});
   if(typeof track==="function")track("world",id);
   toast(icon("globe")+"You are on "+W.name,CAMPAIGN[id].title)}
@@ -3077,22 +3313,192 @@ function tickFlight(dt){
   camera.position.copy(flight.from).lerp(to,e);camera.lookAt(flight.at.x,0,flight.at.z);
   if(x<1)return;
   const id=flight.to;flight=null;
+  // The flight ended over the new island; from there the camera glides down
+  // to the walker at whatever zoom the player keeps.
   buildWorld(id);renderWorldPicker();
-  camera.position.set(2,20*WS,22*WS)}
+  camera.position.set(0,26*WS,20*WS);camLook.set(0,0,0);camGlide()}
+/* ---------------- the camera and its zoom ---------------- */
+// One rig, three framings. The zoom level is a single number: at CAM.zoom.min
+// the camera is close and frames the walker, at zero it is the fitted view
+// that frames the island, at CAM.zoom.max it is far out and frames the
+// archipelago with its bridges. Everything between is a blend of those, so
+// there is no mode to switch and nothing pops on the way through.
+//
+// The level is state: it lives in S.settings.zoom, so it survives a reload
+// and "Back to the defaults" resets it with the rest. zoomTo is that number
+// read once (syncZoom), zoomZ is where the eased camera is right now.
+
+// The canvas in CSS pixels. Read when the window changes and never inside the
+// frame loop, where a layout read lands between two DOM writes.
+const VIEW={w:1,h:1,dpr:0};
+// The one place the renderer is sized: the window, a change of map size, full
+// screen and a browser zoom all come through here, which is also why the
+// pixel ratio is taken again every time rather than once at the start.
+function fitRenderer(){const st=$("stage");VIEW.w=Math.max(1,st.clientWidth);VIEW.h=Math.max(1,st.clientHeight);
+  if(!renderer)return;
+  VIEW.dpr=devicePixelRatio;renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(VIEW.w,VIEW.h);
+  camera.aspect=VIEW.w/VIEW.h;camera.updateProjectionMatrix();camSnap=true}
+
+let zoomTo=CAM.zoom.start,zoomZ=CAM.zoom.start,zoomRaw=CAM.zoom.start,zoomSaveT=0;
+const clampZoom=z=>Math.max(CAM.zoom.min,Math.min(CAM.zoom.max,z));
+const camZoom=()=>zoomZ;
+function syncZoom(){const z=parseFloat(settings().zoom);
+  zoomTo=zoomRaw=clampZoom(isFinite(z)?z:CAM.zoom.start);zoomHud()}
+// A wheel and a pinch move the level continuously, and the fitted view has a
+// small magnet on it so it can be found again by feel. The raw value keeps
+// moving under the magnet, which is what lets a slow trackpad leave it.
+function zoomSet(raw){zoomRaw=clampZoom(raw);zoomTo=Math.abs(zoomRaw)<.045?0:zoomRaw;
+  if(!S.settings)S.settings={};S.settings.zoom=Math.round(zoomTo*1000)/1000;
+  // A wheel fires sixty times a second and save() writes the whole record.
+  clearTimeout(zoomSaveT);zoomSaveT=setTimeout(save,250);zoomHud()}
+// A key or a button moves to the next line of a grid that has the fitted view
+// on it, so from anywhere a few presses land on it exactly. dir is 1 for in.
+window.zoomStep=function(dir){const st=CAM.zoom.step,at=zoomTo/st;
+  zoomSet((dir>0?Math.ceil(at-1e-6)-1:Math.floor(at+1e-6)+1)*st)};
+window.zoomFit=function(){zoomSet(0)};
+function zoomHud(){const a=$("zoom-in"),b=$("zoom-out"),f=$("zoom-fit");if(!a||!b||!f)return;
+  a.disabled=zoomTo<=CAM.zoom.min;b.disabled=zoomTo>=CAM.zoom.max;
+  f.setAttribute("aria-pressed",zoomTo===0?"true":"false")}
+
+// What a level means: how far, how steep, and how much of the frame belongs
+// to the walker (close) or to the archipelago (far). Distance is geometric in
+// the level, so one step always looks like the same amount of zoom.
+const smooth=x=>x*x*(3-2*x);
+const RIG={d:0,p:0,walker:0,arch:0};
+function camRig(z,fit,out){const Z=CAM.zoom;
+  if(z<=0){const k=Z.min?z/Z.min:0;
+    out.d=fit*Math.pow(Math.min(1,Z.near/fit),k);out.p=CAM.pitch+(Z.nearPitch-CAM.pitch)*k;
+    out.walker=smooth(k);out.arch=0}
+  else{const k=z/Z.max;
+    out.d=fit*Math.pow(Z.far,k);out.p=CAM.pitch+(Z.farPitch-CAM.pitch)*k;
+    out.walker=0;out.arch=smooth(k)}
+  return out}
+// The inverse, for a pinch: the fingers ask for a distance, not for a level.
+function zoomForDist(d,fit){const Z=CAM.zoom,r=Math.log(d/fit);
+  if(r<=0){const n=Math.log(Math.min(1,Z.near/fit));return n<0?Z.min*Math.min(1,r/n):0}
+  return Z.max*Math.min(1,r/Math.log(Z.far))}
+
+// Where the fitted frame is centred on one axis. The follow is partial and
+// capped at CAM.drift, which is the allowance camFitDist() frames on top of
+// the island's radius, so nothing clips wherever the walker stands. Past the
+// shore, on an annex or a bridge, the frame is about the walker and not the
+// island any more, so it follows them one for one.
+function camCentre(v){const c=Math.max(-CAM.drift,Math.min(CAM.drift,v*CAM.follow));
+  const over=Math.abs(v)-W.land[0][2];
+  return over<=0?c:c+Math.sign(v)*over}
+
+// The middle of the four islands, seen from the one that is active.
+const camArchC=new T.Vector3();let camWorld=null;
+function camArch(from){camArchC.set(0,0,0);
+  WORLD_IDS.forEach(id=>camArchC.add(worldOffset(id,from)));camArchC.multiplyScalar(1/WORLD_IDS.length)}
+
+const camC=new T.Vector3(),camLook=new T.Vector3(),_ca=new T.Vector3(),_cb=new T.Vector3(),camTarget={d:0,p:0,walker:0,arch:0};
+let camSnap=true,camFit=0,camTitle=true,glide=null;
+// From wherever the camera is now down to the rig, in CAM.glide seconds: the
+// title's orbit and a fast travel both end this way instead of in a cut.
+function camGlide(){if(reducedMotion()){camSnap=true;return}
+  glide={t:0,from:camera.position.clone(),look:camLook.clone()}}
+// A crossing rebases the world on the new island; the camera moves with it so
+// the frame does not notice.
+function camShift(d,id){camera.position.sub(d);camC.sub(d);camLook.sub(d);camWorld=id;camArch(id);
+  if(glide){glide.from.sub(d);glide.look.sub(d)}}
+
+function tickCamera(dt,t,pos,vel){
+  // A window dragged to another screen changes its pixel ratio and sends no
+  // resize, and the media query for it is not dependable, so the frame asks.
+  if(devicePixelRatio!==VIEW.dpr)fitRenderer();
+  const fit=camFitDist(),calm=reducedMotion(),Z=CAM.zoom,WS=WORLD_SCALE;
+  // Behind the title the island turns slowly under a camera that shows all of
+  // it; the walk starts with a glide down from there.
+  if(!started){const oa=calm?0:t*.07;camTitle=true;
+    camera.position.lerp(_ca.set(Math.sin(oa)*fit*.86,fit*.52,Math.cos(oa)*fit*.86),calm?1:.04);
+    camLook.set(0,-1,0);camera.lookAt(camLook);return}
+  if(camWorld!==S.world){camWorld=S.world;camArch(camWorld);camSnap=true}
+  if(camTitle){camTitle=false;camSnap=true;camGlide()}
+  // A new fit is a new window, not movement in the world: a resize reframes at
+  // once. A crossing changes the fit too, and that one is eased, because it
+  // happens under a walker who is looking at the screen.
+  const kz=calm||camSnap?1:1-Math.exp(-Z.ease*dt);
+  zoomZ+=(zoomTo-zoomZ)*kz;if(Math.abs(zoomTo-zoomZ)<1e-4)zoomZ=zoomTo;
+  camFit=camFit?camFit+(fit-camFit)*kz:fit;
+  const r=camRig(zoomZ,camFit,RIG);
+  // The look-ahead runs a little in front of the walk; it shrinks with the
+  // view so a close camera does not swing a quarter of the screen on a turn.
+  const ahead=CAM.ahead*Math.sqrt(Math.min(1,r.d/camFit));
+  const ix=camCentre(pos.x),iz=camCentre(pos.z);
+  _ca.set(ix+(pos.x-ix)*r.walker+(camArchC.x-ix)*r.arch+vel.x*ahead*(1-r.arch),0,
+          iz+(pos.z-iz)*r.walker+(camArchC.z-iz)*r.arch+vel.z*ahead*(1-r.arch));
+  camC.lerp(_ca,calm||camSnap?1:Math.min(1,1-Math.exp(-CAM.ease*dt)));
+  _ca.set(camC.x,Math.sin(r.p)*r.d,camC.z+Math.cos(r.p)*r.d);_cb.set(camC.x,.8,camC.z-WS);
+  if(glide){glide.t+=dt;const e=smooth(Math.min(1,glide.t/CAM.glide));
+    camera.position.copy(glide.from).lerp(_ca,e);camLook.copy(glide.look).lerp(_cb,e);if(e>=1)glide=null}
+  else{camera.position.copy(_ca);camLook.copy(_cb)}
+  camera.lookAt(camLook);camSnap=false;
+  const near=Math.max(.3,r.d*CAM.nearK);
+  if(Math.abs(near-camera.near)>camera.near*.02){camera.near=near;camera.updateProjectionMatrix()}
+  // The haze starts behind the island whatever the distance, so zooming out
+  // to the archipelago does not wash out the island the walker is on.
+  const push=Math.max(0,r.d-fit);scene.fog.near=80*WS+push;scene.fog.far=Math.min(280*WS+push*1.6,camera.far*.92)}
+// How far the camera still is from where the zoom asks it to be: zero once it
+// has landed, which is what a test waits for instead of counting frames.
+function camOff(){const r=camRig(zoomTo,camFitDist(),camTarget);
+  return Math.abs(camera.position.y-Math.sin(r.p)*r.d)+(glide?1:0)}
+
+/* ---------------- zoom input ---------------- */
+// Wheel and trackpad pinch (a wheel with ctrlKey) on the canvas, two fingers
+// on a touch screen, plus and minus on the keyboard, 0 for the fitted view.
+// Only the canvas listens, so a gesture that starts on a HUD control, the
+// stick or the jump button never zooms, and the page's own zoom is left alone
+// everywhere but over the 3D view.
+const pinch={pts:new Map(),on:false,span:0,dist:0};
+const pinching=()=>pinch.on;
+function pinchSpan(){const p=[...pinch.pts.values()];return Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1])}
+function setupZoom(){const c=$("c");
+  c.addEventListener("wheel",e=>{if(!started||flight)return;e.preventDefault();
+    const px=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*VIEW.h:e.deltaY;
+    zoomSet(zoomRaw+px*CAM.zoom.wheel*(e.ctrlKey?CAM.zoom.pinch:1))},{passive:false});
+  // A pinch is over when the last finger lifts, but the tap handler runs after
+  // this one on that same pointerup, so the flag is cleared by the next touch.
+  c.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse")return;
+    if(!pinch.pts.size)pinch.on=false;
+    pinch.pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pinch.pts.size===2){pinch.on=true;pinch.span=Math.max(1,pinchSpan());
+      pinch.dist=camRig(zoomTo,camFitDist(),camTarget).d}});
+  c.addEventListener("pointermove",e=>{const p=pinch.pts.get(e.pointerId);if(!p)return;
+    p[0]=e.clientX;p[1]=e.clientY;
+    if(pinch.pts.size===2&&started&&!flight)
+      zoomSet(zoomForDist(pinch.dist*pinch.span/Math.max(1,pinchSpan()),camFitDist()))});
+  const lift=e=>{pinch.pts.delete(e.pointerId)};
+  c.addEventListener("pointerup",lift);c.addEventListener("pointercancel",lift);
+  // iOS Safari announces a pinch with events of its own and zooms the page on
+  // them; the stage keeps its size and the camera takes the gesture.
+  ["gesturestart","gesturechange","gestureend"].forEach(n=>
+    $("stage").addEventListener(n,e=>e.preventDefault(),{passive:false}));
+  addEventListener("keydown",e=>{if(!started||e.ctrlKey||e.metaKey||e.altKey||inField(e.target))return;
+    if(document.querySelector("#sheet.on,#vault.on,#pal.on"))return;
+    if(e.key==="+"||e.key==="=")zoomStep(1);else if(e.key==="-"||e.key==="_")zoomStep(-1);
+    else if(e.key==="0")zoomFit();else return;
+    e.preventDefault()});
+  syncZoom()}
 const ray=new T.Raycaster(),ndc=new T.Vector2(),target=new T.Vector3(),keys={};let hasTarget=false,downPos=null,marker=null;
 let joy={x:0,y:0,on:false},wantJump=false;
+// A key typed into a field belongs to the field: the caret moves, the walker
+// does not. One test for it, because the walk, the jump and the zoom all ask.
+function inField(el){return !!el&&(el.isContentEditable||/^(input|textarea|select)$/i.test(el.tagName||""))}
 function setupInput(){
   const c=$("c");
   c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
-  c.addEventListener("pointerup",e=>{if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
+  c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
     // Enter is the keyboard twin of the proximity button, so it only fires
     // while the page itself has focus and nothing is standing in front of it:
     // a form field and an open panel keep their own Enter.
     if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
+  // A key held while the focus moves into a field never sends its keyup here.
+  addEventListener("focusin",e=>{if(inField(e.target))for(const k in keys)keys[k]=false});
   const j=$("joy"),kn=$("knob");let jid=null;
   j.addEventListener("pointerdown",e=>{jid=e.pointerId;j.setPointerCapture(jid);joy.on=true;jm(e)});
   j.addEventListener("pointermove",e=>{if(e.pointerId===jid)jm(e)});
@@ -3104,22 +3510,27 @@ function setupInput(){
 }
 function nearestPlot(){let best=-1,bd=99;PLOT_POS.forEach((p,i)=>{const d=p.distanceTo(chars.lotte.g.position);if(d<bd){bd=d;best=i}});return {i:best,d:bd}}
 let nearK=0,started=false,inited=false,lastSay="";
-// Where the frame is centred on one axis. On the island the follow is partial
-// and capped at CAM.drift, which is the allowance camFitDist() frames on top
-// of the island's radius, so nothing clips wherever the walker stands. Past
-// the shore, on an annex or a bridge, the frame is about the walker and not
-// the island any more, so it follows them one for one.
-function camCentre(v){const c=Math.max(-CAM.drift,Math.min(CAM.drift,v*CAM.follow));
-  const over=Math.abs(v)-W.land[0][2];
-  return over<=0?c:c+Math.sign(v)*over}
-const camLook=new T.Vector3(),camAim=new T.Vector3();let camFitLast=0;
+// Scratch vectors for the frame loop. It runs sixty times a second for as
+// long as the tab is open, so nothing in it allocates.
+const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.Vector3();
+// The proximity button. The frame asks for it sixty times a second with the
+// same words, so the DOM is only written when the words change: parsing an
+// icon's markup every frame is work a phone feels.
+let enterHtml=null;
+function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
+function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
 function animate(){
-  requestAnimationFrame(animate);if(!scene)return;const dt=Math.min(.05,clock.getDelta()),t=clock.elapsedTime;
+  requestAnimationFrame(animate);if(!scene||gfxLost)return;const dt=Math.min(.05,clock.getDelta());
+  // Reduced motion, from the system or from Settings, stops the clock the
+  // ambient animation runs on: the clouds, the birds, the boats, the blades,
+  // every pulse and flicker. What the player does still moves: the walk, the
+  // follow camera, the companion's frames. adt is that clock's step.
+  const calm=reducedMotion(),t=calm?0:clock.elapsedTime,adt=calm?0:dt;
   // Fast travel owns the camera and the frame while it lasts; the walker and
   // the proximity checks wait until it lands.
   if(flight){tickFlight(dt);renderer.render(scene,camera);return}
   // movement: acceleration, turning, collisions, jump
-  const L=chars.lotte,pos=L.g.position;let mv=new T.Vector3();
+  const L=chars.lotte,pos=L.g.position,mv=_mv.set(0,0,0);
   if(keys.arrowup||keys.w)mv.z-=1;if(keys.arrowdown||keys.s)mv.z+=1;if(keys.arrowleft||keys.a)mv.x-=1;if(keys.arrowright||keys.d)mv.x+=1;
   if(joy.on&&(Math.abs(joy.x)>.12||Math.abs(joy.y)>.12)){mv.set(joy.x,0,joy.y)}
   let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
@@ -3129,7 +3540,7 @@ function animate(){
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
-  if(started&&sp>.01){const prev=pos.clone();pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
+  if(started&&sp>.01){const prev=_prev.copy(pos);pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
     if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
     // obstacles: push out
@@ -3141,52 +3552,37 @@ function animate(){
   if(wantJump&&started){wantJump=false;if(L.jy<=0.001){L.jv=7}}
   if(L.jv!==0||L.jy>0){L.jv-=22*dt;L.jy=Math.max(0,L.jy+L.jv*dt);if(L.jy===0)L.jv=0}
   // dust when walking
-  if(walking&&L.jy===0&&Math.random()<dt*14){const m=new T.Mesh(new T.SphereGeometry(.09,5,5),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
+  if(walking&&L.jy===0&&!calm&&Math.random()<dt*14){const m=new T.Mesh(shape("dust",()=>new T.SphereGeometry(.09,5,5)),new T.MeshBasicMaterial({color:W.bank,transparent:true,opacity:.7}));m.material.color.convertSRGBToLinear();m.material.userData.cs=1;m.position.set(pos.x+(Math.random()-.5)*.4,.1,pos.z+(Math.random()-.5)*.4);m.userData.v=new T.Vector3((Math.random()-.5)*1.2,1.2,(Math.random()-.5)*1.2);m.userData.life=.5;m.userData.dust=1;scene.add(m);parts.push(m)}
   if(props.shadow){props.shadow.position.set(pos.x,.05,pos.z);const sc=Math.max(.4,1-L.jy*.25);props.shadow.scale.setScalar(sc)}
   // The ring under the walker: three figures of the same size stand on this
   // island, and this is the one you steer.
   if(props.you){props.you.position.set(pos.x,.07,pos.z);props.you.material.opacity=started?.45+Math.sin(t*2.4)*.18:0}
-  tickAvatar(dt,t,sp);
+  tickAvatar(dt,t,sp);tickLapGlow(props.lapGlow,L);
   tickPet(dt,t);
   animChar(L,walking,dt,t);if(L.jy>0){L.g.position.y+=L.jy;L.lLeg.rotation.x=-.5;L.rLeg.rotation.x=.4;L.lArm.rotation.x=-2.4;L.rArm.rotation.x=-2.4}
   // tom follows
-  const Tm=chars.tom,tp=Tm.g.position,dv=new T.Vector3().subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
-  if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*.05}
+  const Tm=chars.tom,tp=Tm.g.position,dv=_dv.subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
+  if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*(calm?1:.05)}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
-  marker.material.opacity*=.985;marker.rotation.z+=dt*2;
-  // camera: a slow orbit of the island behind the title, then it follows. The
-  // distance is whatever frames the island at this viewport's aspect ratio
-  // (camFitDist), the follow takes only part of the walker's position and is
-  // capped, so the island never leaves the frame, and the look-ahead runs a
-  // little in front of the walk. The easing is in time, not in frames.
-  // A new fit is a new window, not movement in the world: resizing, going full
-  // screen, changing the map size or arriving on a wider island reframes at
-  // once. Only the walk is eased, so the frame never drifts for a second after
-  // the window has stopped changing.
-  const fit=camFitDist(),reframed=Math.abs(fit-camFitLast)>.01;camFitLast=fit;
-  if(!started){const oa=t*.07;camera.position.lerp(new T.Vector3(Math.sin(oa)*fit*.86,fit*.52,Math.cos(oa)*fit*.86),.04);camera.lookAt(0,-1,0)}
-  else{const lv=chars.lotte.vel||new T.Vector3();
-    const fx=camCentre(pos.x)+lv.x*CAM.ahead,fz=camCentre(pos.z)+lv.z*CAM.ahead;
-    const k=reframed||reducedMotion()?1:Math.min(1,1-Math.exp(-CAM.ease*dt));
-    camera.position.lerp(camAim.set(fx,Math.sin(CAM.pitch)*fit,fz+Math.cos(CAM.pitch)*fit),k);
-    camLook.lerp(camAim.set(fx,.8,fz-WS),k);camera.lookAt(camLook)}
+  marker.material.opacity*=.985;marker.rotation.z+=adt*2;
+  tickCamera(dt,t,pos,L.vel||ZERO);
   // water: the surface moves on the GPU, so the frame only advances its clock
-  if(water.material.userData.u)water.material.userData.u.uTime.value=reducedMotion()?0:t;
-  clouds.forEach(c=>{c.position.x+=c.userData.v*dt;if(c.position.x>50*WS)c.position.x=-50*WS});
+  if(water.material.userData.u)water.material.userData.u.uTime.value=t;
+  clouds.forEach(c=>{c.position.x+=c.userData.v*adt;if(c.position.x>50*WS)c.position.x=-50*WS});
   // props
   const P=props;if(P.boat){P.boat.rotation.z=Math.sin(t*1.3)*.06;P.boat.rotation.x=Math.sin(t*.9)*.04;P.boat.position.y=-1.35+Math.sin(t*1.5)*.08}
   if(P.boat2){const a=t*.12;P.boat2.position.set(Math.cos(a)*34*WS,-1.35+Math.sin(t*1.4)*.08,Math.sin(a)*34*WS);P.boat2.rotation.y=-a-Math.PI/2;P.boat2.rotation.z=Math.sin(t*1.2)*.05}
-  if(P.plane2){const a=t*.25;P.plane2.position.set(Math.cos(a)*30*WS,15*WS+Math.sin(t*.7)*1.2,Math.sin(a)*30*WS);P.plane2.rotation.y=-a-Math.PI/2;P.plane2.rotation.z=.25;P.plane2.userData.prop.rotation.x+=dt*40}
-  if(P.plane)P.plane.userData.prop.rotation.x+=dt*6;
-  if(P.windmill)P.windmill.userData.blades.rotation.z+=dt*1.2;
-  (P.artProps||[]).forEach(g=>{if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.5});
+  if(P.plane2){const a=t*.25;P.plane2.position.set(Math.cos(a)*30*WS,15*WS+Math.sin(t*.7)*1.2,Math.sin(a)*30*WS);P.plane2.rotation.y=-a-Math.PI/2;P.plane2.rotation.z=.25;P.plane2.userData.prop.rotation.x+=adt*40}
+  if(P.plane)P.plane.userData.prop.rotation.x+=adt*6;
+  if(P.windmill)P.windmill.userData.blades.rotation.z+=adt*1.2;
+  (P.artProps||[]).forEach(g=>{if(g.userData.spin)g.userData.spin.rotation.z+=adt*1.5});
   if(P.balloon){P.balloon.position.y=7+Math.sin(t*.6)*.5;P.balloon.position.x=-15*WS+Math.sin(t*.15)*3;P.balloon.rotation.y=t*.1}
   if(P.birds)P.birds.forEach(b=>{const o=b.userData.o,a=t*.5+o;b.position.set(Math.cos(a)*(12+o*1.5)*WS,9+o*.5+Math.sin(t*2+o)*.4,Math.sin(a)*(12+o*1.5)*WS-4*WS);b.rotation.y=-a;const f=Math.sin(t*10+o)*.6;b.userData.w1.rotation.z=f;b.userData.w2.rotation.z=-f});
   if(P.fountain)P.fountain.userData.drops.forEach(d=>{const u=(t*.9+d.userData.p)%1;d.position.set(Math.cos(d.userData.p*6.28)*u*1.1,1.8+Math.sin(u*Math.PI)*1.4-u*.6,Math.sin(d.userData.p*6.28)*u*1.1)});
   if(P.lighthouse){const nt=skyN>=4;P.lighthouse.userData.beam.rotation.y=t*.8;P.lighthouse.userData.beamM.material.opacity=nt?.18:0;P.lighthouse.userData.lamp.material.emissiveIntensity=nt?2:0}
-  if(P.tumble){const a=t*.35;P.tumble.position.set(Math.cos(a)*11*WS,.6,Math.sin(a)*11*WS);P.tumble.rotation.x+=dt*3;P.tumble.rotation.z+=dt*2}
-  if(P.snow){const a=P.snow.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*2.2;a[i-1]+=Math.sin(t+i)*dt*.6;if(a[i]<0)a[i]=20}P.snow.geometry.attributes.position.needsUpdate=true}
-  if(P.embers){const a=P.embers.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]+=dt*(1.5+(i%5)*.3);a[i-1]+=Math.sin(t*2+i)*dt*.8;if(a[i]>16)a[i]=6}P.embers.geometry.attributes.position.needsUpdate=true}
+  if(P.tumble){const a=t*.35;P.tumble.position.set(Math.cos(a)*11*WS,.6,Math.sin(a)*11*WS);P.tumble.rotation.x+=adt*3;P.tumble.rotation.z+=adt*2}
+  if(P.snow&&!calm){const a=P.snow.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]-=dt*2.2;a[i-1]+=Math.sin(t+i)*dt*.6;if(a[i]<0)a[i]=20}P.snow.geometry.attributes.position.needsUpdate=true}
+  if(P.embers&&!calm){const a=P.embers.geometry.attributes.position.array;for(let i=1;i<a.length;i+=3){a[i]+=dt*(1.5+(i%5)*.3);a[i-1]+=Math.sin(t*2+i)*dt*.8;if(a[i]>16)a[i]=6}P.embers.geometry.attributes.position.needsUpdate=true}
   if(P.aurora){const a=P.aurora.geometry.attributes.position.array,b=P.auroraBase;for(let i=0;i<a.length;i+=3){a[i+1]=b[i+1]+Math.sin(b[i]*.15+t*.8)*2.5;a[i+2]=b[i+2]+Math.cos(b[i]*.1+t*.5)*1.5}P.aurora.geometry.attributes.position.needsUpdate=true;P.aurora.material.opacity=skyN>=4?.6+Math.sin(t*.7)*.15:0;P.aurora.material.color.setHSL(.4+Math.sin(t*.2)*.1,.8,.55)}
   if(P.volcano)P.volcano.userData.smoke.forEach(m=>{const u=(t*.25+m.userData.o*.125)%1;m.position.set(Math.sin(u*6+m.userData.o)*u*2,7.5+u*7,Math.cos(u*5)*u*2);m.scale.setScalar(.5+u*2);m.material.opacity=.55*(1-u)});
   // Every path lamp shares one material, so the whole path lights at once.
@@ -3198,27 +3594,29 @@ function animate(){
   tickPops(dt);
   annexes.forEach(a=>{a.g.userData.flag.rotation.y=Math.sin(t*4+a.k)*.35});
   for(const k in builds){const g=builds[k];
-    if(g.userData.spin){g.userData.spin.rotation.y+=dt;g.userData.spin.position.y=1.6+Math.sin(t*2)*.2}
+    if(g.userData.spin){g.userData.spin.rotation.y+=adt;g.userData.spin.position.y=1.6+Math.sin(t*2)*.2}
     if(g.userData.flag)g.userData.flag.rotation.y=Math.sin(t*4)*.35;
-    if(g.userData.orbs)g.userData.orbs.forEach((o,j)=>{o.position.y+=Math.sin(t*2+j)*.004});
+    if(g.userData.orbs&&!calm)g.userData.orbs.forEach((o,j)=>{o.position.y+=Math.sin(t*2+j)*.004});
     if(g.userData.blink)g.userData.blink.material.emissiveIntensity=1+Math.sin(t*4)*1;
-    if(g.userData.gear)g.userData.gear.rotation.z+=dt*1.5;
+    if(g.userData.gear)g.userData.gear.rotation.z+=adt*1.5;
     if(g.userData.smoke)g.userData.smoke.forEach(m=>{const u=(t*.4+m.userData.o*.2)%1;m.position.y=3.6+u*3;m.scale.setScalar(.6+u*1.2);m.material.opacity=.6*(1-u)})}
-  parts.forEach((m,i)=>{m.userData.life-=dt;m.position.addScaledVector(m.userData.v,dt);m.userData.v.y-=(m.userData.dust?4:9)*dt;if(m.userData.dust)m.material.opacity=Math.max(0,m.userData.life*1.4);m.rotation.x+=dt*4;m.rotation.y+=dt*3;if(m.userData.life<=0){scene.remove(m);parts.splice(i,1)}});
+  for(let i=parts.length-1;i>=0;i--){const m=parts[i];m.userData.life-=dt;m.position.addScaledVector(m.userData.v,dt);m.userData.v.y-=(m.userData.dust?4:9)*dt;if(m.userData.dust)m.material.opacity=Math.max(0,m.userData.life*1.4);m.rotation.x+=dt*4;m.rotation.y+=dt*3;if(m.userData.life<=0){discard(m);parts.splice(i,1)}}
   // sky: the ramp, the fog and the whole light rig move with the stage index
-  if(skyT<1){skyT=Math.min(1,skyT+dt*.5);const c=skyFrom.clone().lerp(skyTo,skyT);scene.background=c;scene.fog.color.copy(c)}
-  tickRig(Math.min(1,dt*2.2));
-  // The dome is centred on the camera so the ramp holds over the whole
-  // archipelago, not just over the island it was built around.
-  if(props.sky)props.sky.position.set(camera.position.x,0,camera.position.z);
-  stars.material.opacity=Math.max(0,(skyN-3)/3);
+  if(skyT<1){skyT=calm?1:Math.min(1,skyT+dt*.5);scene.background.copy(skyFrom).lerp(skyTo,skyT);scene.fog.color.copy(scene.background)}
+  tickRig(calm?1:Math.min(1,dt*2.2));
+  // The dome is centred on the camera, height included, so the ramp's horizon
+  // is the camera's horizon at every zoom and over the whole archipelago.
+  if(props.sky)props.sky.position.copy(camera.position);
+  // The stars are sky too: they ride with the dome, or a camera that has
+  // zoomed out above them would see them lying on the sea.
+  stars.position.copy(camera.position);stars.material.opacity=Math.max(0,(skyN-3)/3);
   const night=skyN>=3;
   builds.inn.userData.light.intensity=night?1.6:0;
   // Lit windows and lava: the evening is what makes them worth drawing.
   for(const k in builds){const lit=builds[k].userData.lit;
     if(lit)lit.material.emissiveIntensity=night?.85+Math.sin(t*1.3+k.length)*.12:0}
   if(props.lava)props.lava.emissiveIntensity=.95+Math.sin(t*1.1)*.28;
-  tickPlates(pos);
+  tickPlates(pos,dt);
   // proximity
   if(started){const np=nearestPlot();const k=np.i+1,locked=k>1&&!S.done.includes(k-1),done=S.done.includes(k);
     // The inn radius reaches over its terrace, so the last walk back ends at
@@ -3226,28 +3624,31 @@ function animate(){
     const allDone=S.done.length>=stopCount(),nearInn=Math.hypot(pos.x,pos.z)<6.6;
     let nm=null,nd=99;(props.mentors||[]).forEach(c=>{const d=c.g.position.distanceTo(pos);if(d<nd){nd=d;nm=c}});
     (props.mentors||[]).forEach(c=>{c.g.position.y=(c.poseY||0)+Math.sin(t*2+c.g.position.x)*.03;c.head.rotation.y=Math.sin(t*.7+c.g.position.z)*.2;c.ring.scale.setScalar(1+Math.sin(t*3)*.05)});
-    if(nm&&nd<2.4){nearK="m:"+nm.id;$("enterbtn").innerHTML=icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name);$("enter").classList.add("on")}
-    else if(allDone&&nearInn){nearK=finaleStop();$("enterbtn").innerHTML=icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete");$("enter").classList.add("on")}
+    if(nm&&nd<2.4){nearK="m:"+nm.id;enterShow(icon("users")+"Talk to "+shortName(MENTORS.find(m=>m.id===nm.id).name))}
+    else if(allDone&&nearInn){nearK=finaleStop();enterShow(icon((S.world||"campus")==="campus"?"milestone":"trophy")+((S.world||"campus")==="campus"?"Calendar alignment":"Evening complete"))}
     // Plots before artifacts: a signpost you can walk into always wins, even
     // where a big artifact's radius reaches over it.
-    else if(np.d<2.6&&!locked){nearK=k;$("enterbtn").innerHTML=icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n;$("enter").classList.add("on");if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
-    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;$("enterbtn").innerHTML=icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase();$("enter").classList.add("on");return true}return false})()){}
+    else if(np.d<2.6&&!locked){nearK=k;enterShow(icon(done?"check":"play")+(done?"Revisit ":"Enter ")+CH[np.i].n);if(!done&&lastSay!=="near"){say("near");lastSay="near"}}
+    else if((()=>{const na=nearArtifact(pos);if(na){nearK="a:"+na.id;enterShow(icon("compass")+(S.artifacts.includes(na.id)?"Revisit ":"Inspect ")+na.name.toLowerCase());return true}return false})()){}
     // A signpost that is not open yet is a question the island answers once,
     // after the artifacts have had their turn: a locked plot is not a target.
-    else if(np.d<2.6&&locked){nearK=0;$("enter").classList.remove("on");
+    else if(np.d<2.6&&locked){nearK=0;enterHide();
       if(lastSay!=="locked"+k){toast("Not open yet",CH[k-1].n+" opens once "+CH[k-2].n+" is delivered.");lastSay="locked"+k}}
-    else{nearK=0;$("enter").classList.remove("on")}}
+    else{nearK=0;enterHide()}}
   // Last in the frame: past the middle of a bridge the island under the
   // walker changes, and the rebuild is what the next render draws.
   if(started)checkCrossing(pos);
   tickMinimap(dt);
   renderer.render(scene,camera);
+  // The island that was left is freed after the new one has drawn, so the
+  // shader programs the two share are never compiled a second time.
+  emptyTrash();
 }
 function animChar(c,walking,dt,t){
   // A pose that is not standing owns the limbs for this frame.
   if(c.pose&&c.pose!=="stand"&&poseChar(c,dt,t))return;
   if(walking){c.walkT+=dt*11;const s=Math.sin(c.walkT);c.lLeg.rotation.x=s*.7;c.rLeg.rotation.x=-s*.7;c.lArm.rotation.x=-s*.6;if(!c.raised)c.rArm.rotation.x=s*.6;c.g.position.y=Math.abs(Math.sin(c.walkT))*.08}
-  else{c.lLeg.rotation.x*=.85;c.rLeg.rotation.x*=.85;c.lArm.rotation.x=Math.sin(t*2)*.08;if(!c.raised)c.rArm.rotation.x=-Math.sin(t*2)*.08;c.g.position.y=Math.sin(t*2)*.03}
+  else{const settle=reducedMotion()?0:.85;c.lLeg.rotation.x*=settle;c.rLeg.rotation.x*=settle;c.lArm.rotation.x=Math.sin(t*2)*.08;if(!c.raised)c.rArm.rotation.x=-Math.sin(t*2)*.08;c.g.position.y=Math.sin(t*2)*.03}
   c.head.rotation.y=Math.sin(t*.7)*.15;
 }
 
@@ -4762,7 +5163,7 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // choice made in the terminal is news here rather than a correction.
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();
       d.interests.forEach(c=>{if(cur.indexOf(c)<0)cur.push(c)});S.interests=cur}
-    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{scene.remove(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
+    if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
     if(d.name)S.name=d.name.trim().slice(0,80);save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
@@ -4790,7 +5191,7 @@ window.reset=function(){if(!confirm("Decommission the campus and reset to greenf
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
 // config/camp.toml still sets the defaults for a fresh browser; these override them.
-const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal"};
+const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start};
 const SETTINGS_OPTIONS={
   difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
@@ -4808,7 +5209,10 @@ function motionOff(){return settings().motion==="off"}
 function applySettings(){const s=settings();
   const st=$("stage");st.classList.remove("map-compact","map-big","map-tall");st.classList.add("map-"+s.map);
   if(typeof renderer!=="undefined"&&renderer){renderer.shadowMap.enabled=s.shadows!=="off";if(typeof dirL!=="undefined"&&dirL){dirL.castShadow=s.shadows!=="off";dirL.shadow.mapSize.set(s.shadows==="high"?CONFIG.shadowMap:1024,s.shadows==="high"?CONFIG.shadowMap:1024);if(dirL.shadow.map){dirL.shadow.map.dispose();dirL.shadow.map=null}}
-    const w=st.clientWidth,h=st.clientHeight;renderer.setSize(w,h);if(typeof camera!=="undefined"&&camera){camera.aspect=w/h;camera.updateProjectionMatrix()}}
+    fitRenderer()}
+  // The zoom is a setting without a dropdown: the wheel, a pinch and the
+  // buttons on the stage write it, and the defaults reset it with the rest.
+  if(typeof syncZoom==="function")syncZoom();
   const showPair=s.pairings==="config"?CONFIG.theme.showPairings:s.pairings==="on";document.querySelectorAll(".pairing").forEach(el=>el.style.display=showPair?"":"none");
   document.body.classList.toggle("no-motion",s.motion==="off");
   // Off means nothing from the feeds appears and nothing is fetched: the
@@ -4847,7 +5251,7 @@ window.resetProgress=function(btn){if(btn&&resetArmed!==btn){resetArmed=btn;cons
   const keep={name:S.name,look:S.look,mode:S.mode,settings:S.settings||{},interests:S.interests,pet:S.pet};try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}
   S={name:keep.name,done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],look:keep.look,mode:keep.mode,settings:keep.settings,interests:keep.interests,pet:keep.pet};save();
   location.replace(location.pathname)};
-document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer){const st=$("stage");renderer.setSize(st.clientWidth,st.clientHeight);camera.aspect=st.clientWidth/st.clientHeight;camera.updateProjectionMatrix()}});
+document.addEventListener("fullscreenchange",()=>{if(typeof renderer!=="undefined"&&renderer)fitRenderer()});
 // What you want to learn: the eleven shelves of the tech tree as a choice.
 // State is data. S.interests holds the chosen shelf ids; null means the
 // player has not answered yet, so config/camp.toml (CONFIG.interests) speaks.

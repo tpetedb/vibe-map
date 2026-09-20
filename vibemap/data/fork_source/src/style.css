@@ -63,7 +63,26 @@ body.no-motion *{animation:none!important;transition:none!important}
 /* The off switch for the live world: one class hides every element the feed
    drives, so a new one only has to carry live-feed to obey it. */
 body.no-live .live-feed{display:none!important}
+/* The canvas takes every touch itself, so two fingers are a pinch for the
+   camera and never the browser's page zoom. The compact map is the one layout
+   where the page scrolls under the stage, so there a vertical swipe still
+   belongs to the page. */
 #c{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none}
+#stage.map-compact #c{touch-action:pan-y}
+/* A soft vignette over the 3D view: CSS over the canvas rather than a render
+   pass, so it costs the GPU nothing the compositor was not already doing. */
+#stage::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 46%,transparent 58%,rgba(0,0,0,.26) 100%)}
+/* The zoom control sits on the right edge, above the jump button on a touch
+   screen, and its three buttons are the generic button made round. */
+#zoom{right:14px;bottom:52px;z-index:6;display:flex;flex-direction:column;gap:6px}
+#zoom button{touch-action:manipulation;width:40px;height:40px;padding:0;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+#zoom button .ic{width:18px;height:18px;margin:0}
+#zoom button[aria-pressed="true"]{border-color:var(--yellow)}
+@media (hover:none),(pointer:coarse){#zoom{bottom:122px}#zoom button{width:44px;height:44px}}
+#stage.lost #zoom,#stage.lost #joy,#stage.lost #jump,#stage.lost #bottom{display:none}
+#gfxlost{position:absolute;inset:0;z-index:7;display:grid;place-items:center;padding:16px;background:var(--bg)}
+#gfxlost[hidden]{display:none}
+#gfxlost .card{max-width:440px}
 h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
 h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
 h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
@@ -181,7 +200,7 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
    removed: the stage keeps its size, so the camera does not jump at Start.
    This is also what takes the HUD out of the tab order until then. */
 body:has(#title:not(.off)) #hud,body:has(#title:not(.off)) #bottom,
-body:has(#title:not(.off)) #talk{visibility:hidden}
+body:has(#title:not(.off)) #talk,body:has(#title:not(.off)) #zoom{visibility:hidden}
 #title .box{background:rgba(10,10,10,.88);border:1px solid var(--line2);border-radius:var(--radius-l);padding:22px 22px 18px;max-width:520px;width:100%;max-height:90vh;overflow:auto;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);margin-left:max(0px,calc((100vw - 1200px)/2))}
 @media (max-width:760px){#title{justify-content:center}#title .box{margin-left:0}}
 /* Phones: the box covers the HUD instead of letting it bleed through, and the

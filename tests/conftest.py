@@ -427,7 +427,14 @@ BROWSER_FIXTURES = frozenset(
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     for item in items:
-        if BROWSER_FIXTURES & set(getattr(item, "fixturenames", ())):
+        names = set(getattr(item, "fixturenames", ()))
+        # A test parametrised over the phones asks for its browser by name and
+        # takes it from the request, so the fixture is not in the signature:
+        # the parameter values are part of what the test asks for.
+        spec = getattr(item, "callspec", None)
+        if spec is not None:
+            names |= {v for v in spec.params.values() if isinstance(v, str)}
+        if BROWSER_FIXTURES & names:
             item.add_marker("browser")
 
 

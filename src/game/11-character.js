@@ -40,10 +40,13 @@ function character(spec){
   g.add(c.lLeg,c.rLeg,c.lArm,c.rArm,torso,head);
   mergeStatic(torso);mergeStatic(head);
   c.body=torso;c.head=head;
-  const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);
+  const lab=label(spec.label,.55);lab.position.y=3.1;g.add(lab);c.plate=lab;
   // A character carries a pose and a wardrobe; what they mean is the avatar
   // module's (src/game/18-avatar.js), so every walker, mentor and host has
   // the same actions available.
+  // The night lifts the body (figMat), before the wardrobe goes on so a lit
+  // screen or a hat keeps its own material.
+  g.traverse(o=>{if(o.isMesh&&o.material.isMeshStandardMaterial)figMat(o.material)});
   c.pose="stand";c.poseY=0;applyWear(c,spec.wear);
   c.walkT=0;return c;
 }

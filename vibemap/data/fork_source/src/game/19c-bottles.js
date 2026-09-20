@@ -15,7 +15,7 @@ function bottleSpot(deg){
 
 // Two draw calls a bottle: the glass, which has to stay its own transparent
 // mesh, and the roll of paper with the cork baked into one. Geometry and
-// materials are shared by every bottle.
+// materials are shared by every bottle, so keep() holds them when one is opened.
 // Larger than life on purpose: at the fitted camera a real bottle is three pixels.
 const BOTTLE_SCALE=2;
 let BOTTLEG=null;
@@ -23,12 +23,12 @@ function bottleParts(){if(BOTTLEG)return BOTTLEG;
   const pts=[[0,0],[.13,0],[.14,.04],[.14,.3],[.06,.42],[.055,.54],[.07,.55],[.07,.58],[0,.58]]
     .map(([x,y])=>new T.Vector2(x,y));
   BOTTLEG={
-    glass:new T.LatheGeometry(pts,9),
-    paper:new T.CylinderGeometry(.05,.05,.3,6),
-    cork:new T.CylinderGeometry(.05,.05,.07,6),
-    glassMat:mat(PALETTE.greenBright,{transparent:true,opacity:.5,roughness:.25,depthWrite:false,
-      emissive:PALETTE.greenBright,emissiveIntensity:.3}),
-    paperMat:mat(PALETTE.text),corkMat:mat(PALETTE.orange)};
+    glass:keep(new T.LatheGeometry(pts,9)),
+    paper:keep(new T.CylinderGeometry(.05,.05,.3,6)),
+    cork:keep(new T.CylinderGeometry(.05,.05,.07,6)),
+    glassMat:keep(mat(PALETTE.greenBright,{transparent:true,opacity:.5,roughness:.25,depthWrite:false,
+      emissive:PALETTE.greenBright,emissiveIntensity:.3})),
+    paperMat:keep(mat(PALETTE.text)),corkMat:keep(mat(PALETTE.orange))};
   return BOTTLEG}
 function bottleMesh(){const P=bottleParts(),g=new T.Group();
   const paper=new T.Mesh(P.paper,P.paperMat);paper.position.y=.2;
@@ -52,7 +52,7 @@ function placeBottles(){
     scene.add(m);props.bottles.push({id:b.id,m,x:sp.x,z:sp.z,p:props.bottles.length})})}
 
 function openBottle(it){const data=(ITEMS.bottles||[]).find(x=>x.id===it.id);
-  scene.remove(it.m);props.bottles=props.bottles.filter(x=>x!==it);
+  discard(it.m);props.bottles=props.bottles.filter(x=>x!==it);
   if(!data)return;
   sl("bottles").push(data.id);save();
   toast(icon("compass")+"A message in a bottle: "+esc(data.title),

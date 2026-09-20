@@ -106,7 +106,7 @@ jobs:
           - shard: qol
             files: tests/test_game_qol.py
           - shard: webkit
-            files: tests/test_game_webkit.py
+            files: tests/test_game_webkit.py tests/test_game_camera.py
             retry: true
     steps:
       - uses: actions/checkout@v4

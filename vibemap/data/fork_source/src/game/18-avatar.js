@@ -57,13 +57,13 @@ function cheer(){setPose(chars.lotte,"cheer");setPose(chars.tom,"cheer")}
 let LAPTOP=null;
 function laptopParts(){if(LAPTOP)return LAPTOP;
   LAPTOP={
-    base:new T.BoxGeometry(.62,.04,.44),
-    lid:new T.BoxGeometry(.62,.42,.03),
-    screen:new T.PlaneGeometry(.54,.34),
-    keys:new T.BoxGeometry(.46,.012,.22),
-    shell:mat(PALETTE.muted,{roughness:.35,metalness:.5}),
-    dark:mat(PALETTE.black),
-    lit:mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9}),
+    base:keep(new T.BoxGeometry(.62,.04,.44)),
+    lid:keep(new T.BoxGeometry(.62,.42,.03)),
+    screen:keep(new T.PlaneGeometry(.54,.34)),
+    keys:keep(new T.BoxGeometry(.46,.012,.22)),
+    shell:keep(mat(PALETTE.muted,{roughness:.35,metalness:.5})),
+    dark:keep(mat(PALETTE.black)),
+    lit:keep(mat(PALETTE.blueBright,{emissive:PALETTE.blueBright,emissiveIntensity:.9})),
   };return LAPTOP}
 // lite is the version an onlooker gets: the lid is the lit panel and the keys
 // are left off, which is two draw calls instead of four at the distance a
@@ -74,10 +74,17 @@ function laptop(lite){const P=laptopParts(),g=new T.Group();
   if(lite)return g;
   const keys=new T.Mesh(P.keys,P.dark);keys.position.set(0,.028,.06);g.add(keys);
   const scr=new T.Mesh(P.screen,P.lit);scr.position.set(0,.2,-.21);scr.rotation.x=-.18;g.add(scr);
-  // After dark the screen is what lights the face, which is the joke. A light
-  // costs no draw call, and the lid hides it from everything behind.
-  const glow=new T.PointLight(PALETTE.blueBright,.9,3.2);glow.position.set(0,.34,-.08);g.add(glow);
   return g}
+// After dark the screen is what lights the face, which is the joke. The light
+// is the island's and not the laptop's: three.js compiles every lit material
+// again when the number of lights changes, so a light that comes and goes with
+// the laptop would stall the frame on every sit and every stand. This one is
+// always there, dark until somebody opens a laptop under it.
+const LAP_GLOW={at:new T.Vector3(0,1.24,.34),power:.9,reach:3.2};
+function lapGlow(){const l=new T.PointLight(PALETTE.blueBright,0,LAP_GLOW.reach);return l}
+function tickLapGlow(l,c){if(!l)return;const on=isSitting(c)&&c.lap&&c.lap.visible;l.intensity=on?LAP_GLOW.power:0;
+  if(on)l.position.copy(LAP_GLOW.at).applyAxisAngle(UP,c.g.rotation.y).add(c.g.position)}
+const UP=new T.Vector3(0,1,0);
 // The lap: where the clamshell sits once the thighs are horizontal.
 function addLaptop(c){const g=laptop(c!==chars.lotte);g.position.set(0,.9,.42);c.g.add(g);c.lap=g;return g}
 
@@ -96,7 +103,7 @@ function wearMesh(id){const g=new T.Group();
   else return null;
   return g}
 // A character's wardrobe is rebuilt from the list, never patched in place.
-function applyWear(c,ids){if(!c)return;if(c.wearG)c.g.remove(c.wearG);
+function applyWear(c,ids){if(!c)return;discard(c.wearG);
   const g=new T.Group();(ids||[]).forEach(id=>{const m=wearMesh(id);if(m)g.add(m)});
   c.g.add(g);c.wearG=g;fixColors(g)}
 window.toggleWear=function(id){const w=WEAR.find(x=>x.id===id);if(!w||!wearOwned(id))return;

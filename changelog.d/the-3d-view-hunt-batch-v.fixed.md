@@ -1,0 +1,8 @@
+- When the browser takes the WebGL context away (a phone short of memory, a tab that slept), the stage says so and the Roadmap opens, instead of a flat blue stage with a HUD that carried on. The island comes back by itself when the context returns.
+- Leaving an island gives its memory back. Every crossing and every fast travel used to leave the old island's geometries, plate textures and shadow map on the GPU, about 170 geometries and a shadow map per switch; so did every mote of dust behind the walker and every change of look.
+- Browser zoom and a move to a screen with another pixel ratio resize the drawing buffer, so the island is no longer drawn at half resolution until a reload.
+- Reduced motion, from the system or from Settings, now stills the 3D view as well: clouds, birds, boats, planes, the windmill, confetti, dust and every pulse stop. The walk, the follow camera and the companion's frames stay.
+- Arrow keys and space typed into a text field move the caret and no longer steer the walker.
+- Name plates are legible from the whole-island view (they hold a minimum size on screen), a long name gets a wider plate instead of a smaller font, overlapping plates give way to the nearest one instead of being drawn on top of each other, and the signpost of a built stop no longer shows its plate again.
+- The plates over Tom and Rolinda carry the roles of the theme, the same ones the speech bubble shows.
+- The sea's highlight no longer shows the mesh as a checkerboard, and the sea reaches past the haze from the farthest zoom.
