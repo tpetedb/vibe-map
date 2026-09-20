@@ -223,11 +223,13 @@
   "raw": {
    "SETTINGS_LABELS[k]": 1,
    "SETTINGS_OPTIONS[k].map(([v,l])=>`<option value=\"${v}\"${s[k]===v?\" selected\":\"\"}>${l}</option>`).join(\"\")": 1,
+   "hintsRow()": 1,
    "interestChips()": 1,
    "interestSummary()": 1,
    "k": 3,
    "l": 1,
    "presetRow()": 1,
+   "title": 1,
    "v": 1
   }
  },

@@ -45,6 +45,9 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
   --grass:var(--green-bright); --gold:var(--yellow); --line:var(--hairline); --line2:var(--hairline-2);
   --a1:var(--blue-bright); --a2:var(--orange); --accent:var(--yellow);
   --ring:var(--edge);
+  /* Text size: one multiplier the reading surfaces and the headings read.
+     Settings writes it on the body; everything else is relative to it. */
+  --type-scale:1;
 }
 ```
 
@@ -60,6 +63,10 @@ typeface. `--font-display` and `--font-body` are the same stack; display is
 told apart by weight, size and a tighter letter-spacing.
 
 Measured contrast on `#000000`: text 18.7:1, muted 6.8:1, yellow 12.7, orange 9.0, green 6.8, red 4.2, blue 3.5. So base red and base blue are fills, borders and 3D materials only; as text use `--red-bright` (5.7:1) and `--blue-bright` (5.4:1). Filled buttons: black text on yellow, orange or green; white text on blue (5.4:1); never text on a red fill.
+
+More contrast is not a second theme. `body.contrast-more` raises the value of the tokens the dim surfaces use (`--muted` to 13:1, the hairlines, the bright variants to 9:1 or better) and gives the controls an edge; every hue keeps its meaning and the background stays black. Settings follows `prefers-contrast: more` and `forced-colors: active` by default and can insist either way (XAG 102 asks for 7:1 when a high contrast mode is on).
+
+Text size is one multiplier, `--type-scale`, that Settings writes on the body. It lands on the surfaces there is reading on (`#sheet .inner`, `#title .box`, `#vnote`) and on the headings; the sizes inside those surfaces are `em`, so they follow it. The HUD, the stick and the minimap are px and do not move: a control a thumb has learned the place of is not text.
 
 | Token | Game CSS | Textual `Theme(...)` and CSS | rich style (`palette.py`) | Obsidian snippet |
 | --- | --- | --- | --- | --- |
