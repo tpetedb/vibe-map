@@ -103,6 +103,9 @@ function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
   return [l[0],l[1].replace("{stop1}",CH[0]?CH[0].h:"first")]}
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
+// One helper, so a saved record and an imported code agree on it: NAME_SLOT
+// is the same text an unnamed camp exports and the onboarding prints.
+function cleanName(n){const s=String(n==null?"":n).trim().slice(0,80);return s===NAME_SLOT?"":s}
 // topics: the tech tree ids the terminal has verified. The game shows the tree
 // but never marks it, so this is the terminal's record travelling with the
 // progress code: it must survive a round trip through here untouched.
@@ -112,7 +115,40 @@ const KEY="vibemap1",OLD_KEY="grimoire3";
 // S.done is a view: the array doneW[world] under another name. Only the map is
 // written, so a reload can never copy one island's stops onto another.
 function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);delete S.done;if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+// The record is JSON in the player's own browser, and a browser is not a
+// vault: a half-written save, another tab or an extension can leave anything
+// under the key. Every field is checked before it becomes state, so a record
+// that is wrong costs the fields it broke and never the evening. loadFault
+// names the first field that had to be repaired, for the player and a test.
+let loadFault="";
+function load(){
+  let raw=null;try{raw=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY)}catch(e){}
+  let d=null;if(raw){try{d=JSON.parse(raw)}catch(e){}}
+  loadFault="";const bad=k=>{if(!loadFault)loadFault=k};
+  if(!isMap(d)){if(raw)bad("the record");S.done=S.doneW.campus;reportLoad();return false}
+  S=Object.assign(S,d);delete S.done;S.name=cleanName(S.name);
+  if(!isMap(S.doneW)){S.doneW={};if(d.doneW!==undefined)bad("doneW")}
+  // An island this game does not have cannot hold stops, and an island it has
+  // holds a list of stop numbers: S.done is one of those lists, so anything
+  // else here is a blank page one frame later.
+  Object.keys(S.doneW).forEach(w=>{if(!CAMPAIGN[w]){delete S.doneW[w];bad("doneW")}
+    else if(!Array.isArray(S.doneW[w])){S.doneW[w]=[];bad("doneW")}
+    else{const stops=S.doneW[w].filter(n=>typeof n==="number");
+      if(stops.length!==S.doneW[w].length)bad("doneW");S.doneW[w]=stops}});
+  Object.keys(CAMPAIGN).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[]});
+  if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.filter(n=>typeof n==="number");
+  // The island the player stands on has to be one this game builds.
+  if(S.world&&!CAMPAIGN[S.world]){S.world="campus";bad("world")}
+  if(!isMap(S.path)){S.path={};if(d.path!==undefined)bad("path")}
+  if(!isMap(S.met)){S.met={};if(d.met!==undefined)bad("met")}
+  ["mentors","artifacts","artifactsBuilt","events"].forEach(k=>{
+    if(!Array.isArray(S[k])){S[k]=[];if(d[k]!==undefined)bad(k)}});
+  if(!Array.isArray(S.interests))S.interests=null;
+  S.done=S.doneW[S.world||"campus"];reportLoad();return true}
+// A record that could not be read whole is not silence: the player is told
+// which part started fresh, and the evening runs on everything else.
+function reportLoad(){if(loadFault&&typeof toast==="function")
+  toast("Saved progress repaired","Part of the record in this browser could not be read ("+esc(loadFault)+"), so that part starts fresh.")}
 /* ---------------- the event log ---------------- */
 // One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
 // number of seconds when the event measures time. The log is local to this
@@ -154,7 +190,7 @@ const FACE={
  rolinda:`<svg viewBox="0 0 40 40"><rect x="8" y="10" width="24" height="24" rx="6" fill="#F5D7BC"/>${[[8,8],[14,4],[20,3],[26,4],[32,8],[6,15],[34,15]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#F2CF6F"/>`).join("")}<circle cx="15" cy="22" r="2" fill="#333"/><circle cx="25" cy="22" r="2" fill="#333"/><path d="M15 28 Q20 32 25 28" stroke="#B0534B" stroke-width="2" fill="none"/></svg>`
 };
 // Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
-function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
+function typeOut(el,text){el.setAttribute("aria-label",text);if(reducedMotion()){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
 function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);

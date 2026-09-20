@@ -695,8 +695,8 @@ details.cmds .cmdbar{margin-top:-8px}
       </div>
       <div class="card">
         <h3>Sync with the template repo</h3>
-        <p class="small">The game and the terminal companion share one progress code. In the repo: <code>uv run vibe export</code> prints a code to paste here; <code>uv run vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
-        <div class="row"><button data-icon="download" onclick="exportProgress()">Export progress</button><input type="text" id="impcode" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" data-icon="upload" onclick="importProgress()">Import</button></div>
+        <p class="small">The game and the terminal companion share one progress code. In your camp: <code>vibe export</code> prints a code to paste here; <code>vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes. In a checkout of the repo the same commands run as <code>uv run vibe</code>.</p>
+        <div class="row"><button data-icon="download" onclick="exportProgress()">Export progress</button><input type="text" id="impcode" aria-label="Progress code" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" data-icon="upload" onclick="importProgress()">Import</button></div>
         <p class="small muted" id="syncmsg"></p>
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>
@@ -1384,6 +1384,9 @@ function line(k){const w=SAY_WORLD[S.world||"campus"];const l=(w&&w[k])||SAY[k];
   return [l[0],l[1].replace("{stop1}",CH[0]?CH[0].h:"first")]}
 // The name stays empty until the player types one: the placeholder is a
 // placeholder, never state. playerLabel() is what the UI shows meanwhile.
+// One helper, so a saved record and an imported code agree on it: NAME_SLOT
+// is the same text an unnamed camp exports and the onboarding prints.
+function cleanName(n){const s=String(n==null?"":n).trim().slice(0,80);return s===NAME_SLOT?"":s}
 // topics: the tech tree ids the terminal has verified. The game shows the tree
 // but never marks it, so this is the terminal's record travelling with the
 // progress code: it must survive a round trip through here untouched.
@@ -1393,7 +1396,40 @@ const KEY="vibemap1",OLD_KEY="grimoire3";
 // S.done is a view: the array doneW[world] under another name. Only the map is
 // written, so a reload can never copy one island's stops onto another.
 function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY);if(r){const d=JSON.parse(r);S=Object.assign(S,d);delete S.done;if(S.name==="<your_name>")S.name="";if(!S.doneW)S.doneW={campus:[],winter:[],desert:[],prod:[]};if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.slice();if(!S.path)S.path={};if(!S.met)S.met={};if(!Array.isArray(S.mentors))S.mentors=[];if(!Array.isArray(S.artifacts))S.artifacts=[];if(!Array.isArray(S.artifactsBuilt))S.artifactsBuilt=[];if(!Array.isArray(S.events))S.events=[];if(!Array.isArray(S.interests))S.interests=null;S.done=S.doneW[S.world||"campus"];return true}}catch(e){}S.done=S.doneW.campus;return false}
+// The record is JSON in the player's own browser, and a browser is not a
+// vault: a half-written save, another tab or an extension can leave anything
+// under the key. Every field is checked before it becomes state, so a record
+// that is wrong costs the fields it broke and never the evening. loadFault
+// names the first field that had to be repaired, for the player and a test.
+let loadFault="";
+function load(){
+  let raw=null;try{raw=localStorage.getItem(KEY)||localStorage.getItem(OLD_KEY)}catch(e){}
+  let d=null;if(raw){try{d=JSON.parse(raw)}catch(e){}}
+  loadFault="";const bad=k=>{if(!loadFault)loadFault=k};
+  if(!isMap(d)){if(raw)bad("the record");S.done=S.doneW.campus;reportLoad();return false}
+  S=Object.assign(S,d);delete S.done;S.name=cleanName(S.name);
+  if(!isMap(S.doneW)){S.doneW={};if(d.doneW!==undefined)bad("doneW")}
+  // An island this game does not have cannot hold stops, and an island it has
+  // holds a list of stop numbers: S.done is one of those lists, so anything
+  // else here is a blank page one frame later.
+  Object.keys(S.doneW).forEach(w=>{if(!CAMPAIGN[w]){delete S.doneW[w];bad("doneW")}
+    else if(!Array.isArray(S.doneW[w])){S.doneW[w]=[];bad("doneW")}
+    else{const stops=S.doneW[w].filter(n=>typeof n==="number");
+      if(stops.length!==S.doneW[w].length)bad("doneW");S.doneW[w]=stops}});
+  Object.keys(CAMPAIGN).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[]});
+  if(!d.doneW&&Array.isArray(d.done)&&d.done.length)S.doneW.campus=d.done.filter(n=>typeof n==="number");
+  // The island the player stands on has to be one this game builds.
+  if(S.world&&!CAMPAIGN[S.world]){S.world="campus";bad("world")}
+  if(!isMap(S.path)){S.path={};if(d.path!==undefined)bad("path")}
+  if(!isMap(S.met)){S.met={};if(d.met!==undefined)bad("met")}
+  ["mentors","artifacts","artifactsBuilt","events"].forEach(k=>{
+    if(!Array.isArray(S[k])){S[k]=[];if(d[k]!==undefined)bad(k)}});
+  if(!Array.isArray(S.interests))S.interests=null;
+  S.done=S.doneW[S.world||"campus"];reportLoad();return true}
+// A record that could not be read whole is not silence: the player is told
+// which part started fresh, and the evening runs on everything else.
+function reportLoad(){if(loadFault&&typeof toast==="function")
+  toast("Saved progress repaired","Part of the record in this browser could not be read ("+esc(loadFault)+"), so that part starts fresh.")}
 /* ---------------- the event log ---------------- */
 // One shape for the game and for the CLI: {ts, kind, id, world}, plus v for a
 // number of seconds when the event measures time. The log is local to this
@@ -1435,7 +1471,7 @@ const FACE={
  rolinda:`<svg viewBox="0 0 40 40"><rect x="8" y="10" width="24" height="24" rx="6" fill="#F5D7BC"/>${[[8,8],[14,4],[20,3],[26,4],[32,8],[6,15],[34,15]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="#F2CF6F"/>`).join("")}<circle cx="15" cy="22" r="2" fill="#333"/><circle cx="25" cy="22" r="2" fill="#333"/><path d="M15 28 Q20 32 25 28" stroke="#B0534B" stroke-width="2" fill="none"/></svg>`
 };
 // Rolinda types (20 ms a character, 1.2 s at most); Tom is instant. Off under reduced motion.
-function typeOut(el,text){el.setAttribute("aria-label",text);if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
+function typeOut(el,text){el.setAttribute("aria-label",text);if(reducedMotion()){el.textContent=text;return}const step=Math.min(20,1200/Math.max(1,text.length));let i=0;el.textContent="";clearInterval(el._tw);el._tw=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length)clearInterval(el._tw)},step)}
 // Every line in the bubble goes through here: the face, the role the theme
 // gives the speaker, and the running type-out that a new line must cancel.
 function bubble(who,t){$("bub-face").innerHTML=FACE[who];$("bub-who").textContent=roleName(who);
@@ -5125,8 +5161,15 @@ function renderMsg(){if(!S.date||!S.wine){$("msgcard").style.display="none";retu
 window.copyMsg=function(){copyText($("msg").textContent,$("copybtn"),"Copy to clipboard",$("msg"))};
 // Read-only seam for the tests: the dates and pairings this camp configured.
 window.__finale=()=>({dates:DATES,pairings:WINES,pairing:CONFIG.theme.pairing});
-window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList(),topics:sl("topics"),pet:petId()})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");$("impcode").value=code;const paste="Code is in the box. In your camp: vibe import, then paste it.";
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. In your camp: vibe import, then paste it."},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
+// The command a camp really has: `vibe import` takes the code as its argument,
+// there is nothing to paste into. The box shows about thirty of two thousand
+// characters, so the code is selected as well as copied and a browser that
+// refuses the clipboard still leaves one keystroke that works.
+const IMPORT_CMD="in your camp: vibe import <code>, with the code pasted in place of <code>.";
+window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList(),topics:sl("topics"),pet:petId()})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const box=$("impcode");box.value=code;box.focus();box.select();
+  const paste="Code is in the box and selected. Press "+copyKey()+" to copy it, then "+IMPORT_CMD;
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. Then "+IMPORT_CMD},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
 // A code is pasted from a mail or a chat, so it is outside data. Every id in
 // it is checked before anything is merged: the name of the first field that
 // is not what the format says, or "" when the code is sound.
@@ -5135,15 +5178,24 @@ function progressFault(d){
   const bad=CODE_ID_LISTS.find(k=>d[k]!==undefined&&!(Array.isArray(d[k])&&d[k].every(plainId)));if(bad)return bad;
   if(d.name!==undefined&&typeof d.name!=="string")return "name";
   if(d.pet!==undefined&&typeof d.pet!=="string")return "pet";
-  if(d.done!==undefined&&!Array.isArray(d.done))return "done";
-  if(d.doneW!==undefined&&!(isMap(d.doneW)&&Object.keys(d.doneW).every(w=>plainId(w)&&Array.isArray(d.doneW[w]))))return "doneW";
+  if(d.done!==undefined&&!(Array.isArray(d.done)&&d.done.every(n=>typeof n==="number")))return "done";
+  if(d.doneW!==undefined&&!(isMap(d.doneW)&&Object.keys(d.doneW).every(w=>plainId(w)&&Array.isArray(d.doneW[w])&&d.doneW[w].every(n=>typeof n==="number"))))return "doneW";
   if(d.path!==undefined&&!(isMap(d.path)&&Object.keys(d.path).every(m=>plainId(m)&&(d.path[m]==="deep"||d.path[m]==="skip"))))return "path";
   return ""}
 window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/g,"+").replace(/_/g,"/");c+="=".repeat((4-c.length%4)%4);const d=JSON.parse(decodeURIComponent(escape(atob(c))));
-    // The progress code is versioned: an unknown version is refused loudly.
-    if(d.v!==2){$("syncmsg").textContent="That code is version "+(d.v===undefined?"1 or older":d.v)+"; this game reads version 2. Run uv run vibe export again with an up-to-date vibe.";return}
+    // The progress code is versioned: an unknown version is refused loudly,
+    // and the refusal names the side that is behind. A version that is not a
+    // number is not a version, so it is refused too, the way the CLI does.
+    if(typeof d.v!=="number"&&d.v!==undefined){$("syncmsg").textContent="That code does not say which version it is, so this game cannot read it. Run vibe export again and paste the whole code.";return}
+    if(d.v>2){$("syncmsg").textContent="That code is version "+d.v+" and this game reads version 2, so the game is the old side. Rebuild it with just build, or open a newer copy.";return}
+    if(d.v!==2){$("syncmsg").textContent="That code is version "+(d.v===undefined?"1 or older":d.v)+"; this game reads version 2. Run vibe export again with an up-to-date vibe.";return}
     // Refused whole and by name: a code that fails here merges nothing.
-    const fault=progressFault(d);if(fault){$("syncmsg").textContent="That code carries a value this game cannot read, in \""+fault+"\". Nothing was imported. Run uv run vibe export again and paste the whole code.";return}
+    const fault=progressFault(d);if(fault){$("syncmsg").textContent="That code carries a value this game cannot read, in \""+fault+"\". Nothing was imported. Run vibe export again and paste the whole code.";return}
+    // An island this game does not build has no stops to unlock and no
+    // buildings to place, so it is refused by name rather than written in.
+    const dw=d.doneW||{campus:d.done||[]};
+    const alien=Object.keys(dw).find(w=>!CAMPAIGN[w]);
+    if(alien){$("syncmsg").textContent="That code carries an island this game does not have: \""+alien+"\". This game has "+Object.keys(CAMPAIGN).join(", ")+".";return}
     // The companion is a single choice, not a set, so a code overwrites it;
     // an id this game has no pixels for is refused by name, never defaulted.
     if(d.pet!==undefined&&d.pet!==""){if(!petKnown(d.pet)){$("syncmsg").textContent="That code carries a companion this game does not have: \""+d.pet+"\". This game knows "+petOptions().join(", ")+".";return}S.pet=d.pet}
@@ -5151,7 +5203,9 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // mentors or only artifacts merged something, and the confirmation says so
     // instead of reporting the workstreams it never touched.
     const got={};const won=(k,n)=>{got[k]=(got[k]||0)+(n===undefined?1:n)};
-    const dw=d.doneW||{campus:d.done||[]};Object.keys(dw).forEach(w=>{if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{n=+n;if(n>=1&&n<=8&&!S.doneW[w].includes(n)){S.doneW[w].push(n);won("stop");if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a)){S.artifacts.push(a);won("artifact")}});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);won("mentor");track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);won("build");track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);
+    // How many stops an island has is the campaign's to say, so a camp that
+    // adds a ninth stop can send it and a code cannot invent one.
+    Object.keys(dw).forEach(w=>{const stops=CAMPAIGN[w].ws.length;if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{if(n>=1&&n<=stops&&!S.doneW[w].includes(n)){S.doneW[w].push(n);won("stop");if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a)){S.artifacts.push(a);won("artifact")}});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);won("mentor");track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);won("build");track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);
     // Added inside version 2: an older code carries none of these keys and a
     // newer reader simply finds nothing to merge.
     [["items","collectible"],["ach","badge"],["topics","topic"]].forEach(([k,n])=>(d[k]||[]).forEach(v=>{if(!sl(k).includes(v)){sl(k).push(v);won(n)}}));
@@ -5164,12 +5218,17 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     if(Array.isArray(d.interests)&&d.interests.length){const cur=interestList().slice();
       d.interests.forEach(c=>{if(cur.indexOf(c)<0)cur.push(c)});S.interests=cur}
     if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
-    if(d.name)S.name=d.name.trim().slice(0,80);save();hud();renderMap();if(started)applySky(S.done.length,false);
+    // A camp nobody named exports the placeholder, which is not a person: the
+    // same rule as a saved record, so the HUD never reads "<YOUR_NAME>".
+    if(d.name!==undefined){const n=cleanName(d.name);if(n)S.name=n}save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
       S.done.length+"/"+stopCount()+" workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
 const playerPlate=()=>{const sp=chars.lotte&&chars.lotte.g.children.find(c=>c.isSprite);return sp?{text:sp.userData.text,fs:sp.userData.fs}:null};
 window.__S=()=>S;
+// Test seam: the field of the saved record that had to be repaired on load,
+// "" when the record was sound.
+window.__loadFault=()=>loadFault;
 window.__plaques=()=>props.plaques||{};
 // Test seam: the data the build injects, read-only, for the Playwright battery.
 window.__data=()=>({worlds:WORLDS,artifacts:ARTIFACTS,mentors:MENTORS,campaign:CAMPAIGN,config:CONFIG,scale:WORLD_SCALE});

@@ -11,12 +11,13 @@ from __future__ import annotations
 import base64
 import datetime as dt
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from vibemap import project, sprites
+from vibemap import campaign, project, sprites
 
 STATE_VERSION = 2
 CODE_VERSION = 2
@@ -67,6 +68,61 @@ PLACEHOLDER = "<your_name>"
 # The log entry a progress code writes. The game claims, it never checks, so
 # an imported stop is worth half until `vibe check` passes it (ADR 0004).
 IMPORTED_NOTE = "done in the game, imported"
+
+# A progress code is pasted from a mail or a chat, so it is outside data. The
+# game checks the same fields by the same rules (src/game/80-sync.js): an id
+# is a short word of letters, digits, dot, dash, underscore and colon, which
+# is every id the course data uses.
+ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}$")
+CODE_ID_LISTS = (
+    "artifacts",
+    "mentors",
+    "artifactsBuilt",
+    "items",
+    "ach",
+    "wear",
+    "topics",
+    "interests",
+)
+
+
+def _is_id(value: Any) -> bool:
+    return isinstance(value, str) and bool(ID_RE.match(value))
+
+
+def _is_id_list(value: Any) -> bool:
+    return isinstance(value, list) and all(_is_id(v) for v in value)
+
+
+def _is_stop_list(value: Any) -> bool:
+    return isinstance(value, list) and all(
+        isinstance(n, int) and not isinstance(n, bool) for n in value
+    )
+
+
+def code_fault(payload: dict[str, Any]) -> str:
+    """The name of the first field a progress code gets wrong, "" when sound."""
+    for key in CODE_ID_LISTS:
+        if key in payload and not _is_id_list(payload[key]):
+            return key
+    for key in ("name", "pet"):
+        if key in payload and not isinstance(payload[key], str):
+            return key
+    if "done" in payload and not _is_stop_list(payload["done"]):
+        return "done"
+    done_w = payload.get("doneW")
+    if done_w is not None and not (
+        isinstance(done_w, dict)
+        and all(_is_id(w) and _is_stop_list(lst) for w, lst in done_w.items())
+    ):
+        return "doneW"
+    path = payload.get("path")
+    if path is not None and not (
+        isinstance(path, dict)
+        and all(_is_id(m) and v in ("deep", "skip") for m, v in path.items())
+    ):
+        return "path"
+    return ""
 
 
 class State(BaseModel):
@@ -218,22 +274,44 @@ class State(BaseModel):
             The decoded payload.
 
         Raises:
-            ValueError: on a malformed code or a newer code version.
+            ValueError: on a malformed code, a field this tool cannot read, an
+                island or a companion it does not have, or a newer code
+                version. Every check runs before the first field is merged, so
+                a refused code leaves this state exactly as it was.
         """
         payload = decode_code(code)
-        if payload.get("name"):
+        fault = code_fault(payload)
+        if fault:
+            raise ValueError(
+                f"that progress code carries a value this tool cannot read, in "
+                f"{fault!r}; nothing was imported"
+            )
+        done_w = payload.get("doneW") or {"campus": payload.get("done") or []}
+        alien = next((w for w in done_w if w not in campaign.evenings()), "")
+        if alien:
+            known = ", ".join(campaign.evenings())
+            raise ValueError(
+                f"that progress code carries an island this camp does not have: "
+                f"{alien!r}; this camp has {known}"
+            )
+        pet = check_pet(str(payload.get("pet") or ""))
+        # A camp nobody named exports the placeholder, which reads as an
+        # instruction and never as a person, so it never becomes a name here.
+        if payload.get("name") and payload["name"] != PLACEHOLDER:
             self.name = str(payload["name"])
-        done_w = payload.get("doneW") or {"campus": payload.get("done", [])}
+        # How many stops an island has is the campaign's to say, so a camp that
+        # adds a ninth stop can send it and a code cannot invent one.
         for world, lst in done_w.items():
+            stops = campaign.stop_count(world)
             for n in lst:
-                n = int(n)
-                if 1 <= n <= 8 and n not in self.done_w.setdefault(world, []):
+                if 1 <= n <= stops and n not in self.done_w.setdefault(world, []):
                     self.done_w[world].append(n)
         self.path.update(
             {str(k): str(v) for k, v in (payload.get("path") or {}).items()}
         )
-        if isinstance(payload.get("xp"), int):
-            self.xp = max(self.xp, payload["xp"])
+        # The XP in a code is not merged: XP derives from the log, which is
+        # what an undo hands back. `vibe import` logs half for every stop the
+        # code brings (ADR 0004), so the code's own total would pay twice.
         for a in payload.get("artifacts") or []:
             if str(a) not in self.artifacts:
                 self.artifacts.append(str(a))
@@ -249,9 +327,9 @@ class State(BaseModel):
                 if str(value) not in mine:
                     mine.append(str(value))
         # The companion is one choice, not a set, so the code overwrites it.
-        if payload.get("pet"):
-            self.pet = check_pet(str(payload["pet"]))
-            # An interest is a set, so a code adds a shelf and never removes one:
+        if pet:
+            self.pet = pet
+        # An interest is a set, so a code adds a shelf and never removes one:
         # a choice made on the other machine is news, not a correction.
         for shelf in payload.get("interests") or []:
             if str(shelf) not in self.interests:
@@ -269,7 +347,14 @@ def decode_code(code: str) -> dict[str, Any]:
         payload = json.loads(base64.urlsafe_b64decode(raw))
     except (ValueError, json.JSONDecodeError) as e:
         raise ValueError("that is not a valid progress code") from e
-    version = int(payload.get("v", 1))
+    # A code is a JSON object carrying a whole number for a version. Anything
+    # else is not this format, whatever it decodes to, and the game refuses
+    # the same shapes (src/game/80-sync.js).
+    if not isinstance(payload, dict):
+        raise ValueError("that is not a valid progress code")
+    version = payload.get("v", 1)
+    if isinstance(version, bool) or not isinstance(version, int):
+        raise ValueError("that is not a valid progress code")
     if version > CODE_VERSION:
         raise ValueError(
             f"progress code version {version} is newer than this tool "
