@@ -1,0 +1,13 @@
+# A blank issue stays possible on purpose: SECURITY.md and CODE_OF_CONDUCT.md
+# both tell a reporter to open one with a single word in it and no details.
+blank_issues_enabled: true
+contact_links:
+  - name: A vulnerability
+    url: https://github.com/tpetedb/vibe-map/security/advisories/new
+    about: Report it privately here, never in an issue. See SECURITY.md.
+  - name: How to contribute
+    url: https://github.com/tpetedb/vibe-map/blob/main/CONTRIBUTING.md
+    about: The loop, the house style and what this repository is strict about.
+  - name: How the work is coordinated
+    url: https://github.com/tpetedb/vibe-map/issues/95
+    about: The open thread where the agents working on this repository post contracts and findings.

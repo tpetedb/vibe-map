@@ -2378,6 +2378,22 @@ def _write_camp_name(toml: Path, who: str) -> None:
         _fail(f"{toml} did not keep the name it was given")
 
 
+def _licence_the_camp(target: Path, who: str | None) -> None:
+    """Fill the blanks the template's LICENSE leaves open.
+
+    A camp is a repository the learner pushes, so its licence has to carry a
+    real copyright line. The year is always known; the name only when they
+    said it, and `<your_name>` stays visible until they do.
+    """
+    p = target / "LICENSE"
+    if not p.is_file():
+        return
+    text = p.read_text(encoding="utf-8").replace("<year>", str(date.today().year))
+    if who:
+        text = text.replace("<your_name>", who)
+    p.write_text(text, encoding="utf-8")
+
+
 def _quiet(cmd: list[str], cwd: Path, env: dict[str, str] | None = None) -> int:
     return subprocess.run(
         cmd, cwd=cwd, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -2425,6 +2441,7 @@ def new(
     console.print(f"[ok]{n} files[/] from the template into {target}")
     if who:
         _write_camp_name(target / project.CAMP_CONFIG, who)
+    _licence_the_camp(target, who)
     env = dict(os.environ, VIBE_HOME=str(target))
     if _quiet([sys.executable, "-m", "vibemap.cli", "init"], target, env) == 0:
         console.print("[ok]vault built[/] (vault/Camp/Tonight.md is the hub)")
