@@ -35,8 +35,10 @@ Future retro, playful but serious, terminal-nerdy, one coherent whole across the
   --glow-green:0 0 12px rgba(0,208,132,.45); --glow-yellow:0 0 12px rgba(255,213,0,.40);
   --t-fast:150ms; --t-base:240ms; --t-slow:400ms;
   /* The talk band under the stage: one number, so the stage can take the rest
-     of the window and no black strip is left between them. */
+     of the window and no black strip is left between them. The band also
+     carries the bottom safe-area inset, so the stage never pays for it. */
   --talk-h:104px;
+  --talk-band:calc(var(--talk-h) + env(safe-area-inset-bottom,0px));
   --ease:cubic-bezier(.4,1,.75,.9); --ease-out:cubic-bezier(.2,.8,.2,1);
   /* Names the older rules below still use, mapped onto the tokens. */
   --bg2:var(--surface-1); --panel:rgba(10,10,10,.78); --panel2:var(--surface-2); --ink:var(--text);

@@ -101,7 +101,11 @@ def test_config_defaults_and_round_trip(tmp_path: Path) -> None:
     cfg = Config()
     cfg.save(p)
     assert Config.load(p) == cfg
-    assert cfg.learner.difficulty == "normal" and len(cfg.finale.dates) == 6
+    assert cfg.learner.difficulty == "normal"
+    # Slots, not calendar dates: nothing in a default camp can go stale.
+    assert cfg.finale.dates and not any(
+        c.isdigit() for d in cfg.finale.dates for c in d
+    )
 
 
 def test_config_refuses_unknown_keys(tmp_path: Path) -> None:

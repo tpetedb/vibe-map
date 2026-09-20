@@ -1,0 +1,73 @@
+# An issue form: GitHub renders these fields and writes the answers into the
+# issue body, so a report arrives with what a fix needs instead of a sentence.
+name: Bug report
+description: Something in the game, the vibe command or the vault does not work
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Not a bug but a vulnerability? Do not file it here.
+        [SECURITY.md](https://github.com/tpetedb/vibe-map/blob/main/SECURITY.md)
+        has the private channel.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it happens
+      options:
+        - The game in the browser
+        - The vibe command in the terminal
+        - The onboarding screen (just start)
+        - The Obsidian vault
+        - The camp a vibe new writes
+        - Somewhere else
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to see it happen
+      description: The smallest path from a fresh start to the fault.
+      placeholder: |
+        1. just build
+        2. Open game/vibe-map.html, type a name, press Go
+        3. Walk to the 18:00 signpost and press Space
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Where you are
+      description: >-
+        The browser and its version for a game bug, the terminal and the
+        operating system for a command. `uv run vibe --version` prints the
+        version; `uv run vibe doctor` prints the rest.
+      placeholder: |
+        vibe 0.9.0, macOS 15.6, Chrome 140, opened from file://
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: What it printed, or the browser console
+      description: Paste it as text, not as a screenshot of text.
+      render: text
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you file
+      options:
+        - label: I am on the latest release or on main
+          required: false
+        - label: >-
+            For a game bug, the built file is current (`just build`) and the
+            browser console is in the report
+          required: false

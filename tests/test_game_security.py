@@ -171,9 +171,17 @@ def _foreign(urls: list[str], origin: str) -> list[str]:
 def test_the_page_only_ever_talks_to_its_own_origin(
     game_desktop: GamePage, server: str
 ) -> None:
-    """No CDN: a boot, the Roadmap, a lesson and the dashboard stay home."""
+    """No CDN: a boot, the Roadmap, a lesson and the dashboard stay home.
+
+    The tab icon is part of this. A page with no icon makes the browser ask
+    for /favicon.ico, which is a request the one-file game cannot answer.
+    """
     asked: list[str] = []
+    missing: list[str] = []
     game_desktop.page.on("request", lambda r: asked.append(r.url))
+    game_desktop.page.on(
+        "response", lambda r: missing.append(r.url) if r.status >= 400 else None
+    )
     game_desktop.goto()
     game_desktop.screenshot("fonts_title")
     game_desktop.start("Lotte")
@@ -187,6 +195,11 @@ def test_the_page_only_ever_talks_to_its_own_origin(
     game_desktop.screenshot("fonts_dashboard")
     assert asked, "no requests recorded at all"
     assert _foreign(asked, server) == []
+    assert missing == [], f"the page asked for something that is not there: {missing}"
+    # The icon travels inside the page, so no favicon is ever fetched.
+    icon = game_desktop.page.get_attribute("link[rel=icon]", "href")
+    assert icon and icon.startswith("data:image/svg+xml,")
+    assert not [u for u in asked if "favicon" in u]
     game_desktop.assert_clean()
 
 
