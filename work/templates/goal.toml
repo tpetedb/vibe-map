@@ -1,0 +1,11 @@
+# A goal: the sentence first, then the orders that reach it. Copy to
+# work/goals/<id>.toml. `just work-plan <id>` turns it into launch groups.
+v = 1
+id = ""
+statement = ""
+# What this goal deliberately leaves out.
+not = []
+# How many agents may build at once. The machine's budget is 4 (host.md).
+budget = 4
+# Order ids, in the order you would like them; needs and owns decide the rest.
+orders = []

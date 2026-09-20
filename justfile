@@ -74,6 +74,7 @@ changelog:
 # cut changelog.d into a dated section in CHANGELOG.md (example: just release 1.0.0)
 release version:
     uv run python tools/changelog.py release {{version}}
+    python3 tools/work.py sweep
 
 # run the whole pytest battery (CLI, build, Playwright in Chromium and WebKit)
 test:

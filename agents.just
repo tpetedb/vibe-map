@@ -78,3 +78,45 @@ changed:
 [group('agent')]
 play world n:
     uv run python tools/play.py {{world}} {{n}}
+
+# ---- work orders: a task is data and its acceptance is a command (work/README.md)
+
+# scaffold an order on this branch: just work-new hunt-s-ask panels "Ask panel and chat bridge"
+work-new id team title:
+    python3 tools/work.py new "{{id}}" --team "{{team}}" --title "{{title}}"
+
+# every order here is readable, and no two active orders own the same file
+work-validate:
+    python3 tools/work.py validate
+
+# ownership, then every criterion's command; the result is cached for this exact tree
+work-check id:
+    python3 tools/work.py check "{{id}}"
+
+# what a reviewer reads, and the commit to put in review.toml
+work-review id:
+    python3 tools/work.py review "{{id}}"
+
+# checks, review and sign-offs together: is it ready to land
+work-accept id:
+    python3 tools/work.py accept "{{id}}"
+
+# a goal as launch groups: needs first, disjoint files, the agent budget
+work-plan goal:
+    python3 tools/work.py plan "{{goal}}"
+
+# every active order in every worktree
+work-board:
+    python3 tools/work.py board
+
+# write or refresh the order's one status comment on its issue
+work-post id:
+    python3 tools/work.py post "{{id}}"
+
+# read the order's issue: owner and collaborators only, status comments left out
+work-thread id:
+    python3 tools/work.py thread "{{id}}"
+
+# say something on the order's issue in a role: just work-say hunt-s manager:panels "..."
+work-say id role text:
+    python3 tools/work.py say "{{id}}" --role "{{role}}" "{{text}}"

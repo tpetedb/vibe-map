@@ -64,6 +64,11 @@ jobs:
         run: |
           git fetch --no-tags --depth=50 origin ${{ github.base_ref }}
           uv run python tools/changelog.py check --base origin/${{ github.base_ref }}
+      # A work order that ships code ships its accepted review with it, and a
+      # single order's pull request stays inside the files the order owns.
+      - name: work orders are readable, reviewed and inside their files
+        if: github.event_name == 'pull_request'
+        run: python3 tools/work.py ci --base origin/${{ github.base_ref }}
       # No -q on the command line: pyproject already passes -q -ra, and a
       # second -q would swallow the summary of what failed.
       - run: uv run pytest -m "not browser and not integration"

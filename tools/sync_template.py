@@ -14,6 +14,7 @@ puts the dots back.
 from __future__ import annotations
 
 import filecmp
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -21,17 +22,41 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "vibemap" / "data" / "template"
 
-# The develop-camp skill is the product's own loop; a camp has no engine to develop.
-PRODUCT_ONLY_SKILLS = {"develop-camp"}
+# The product's own loops: a camp has no engine to develop and no orders to run.
+PRODUCT_ONLY_SKILLS = {"develop-camp", "work-order"}
+
+# Hooks that call this are the product's own harness (work orders); a camp has
+# no tools/ folder, so a camp's settings are this repository's minus those.
+PRODUCT_ONLY_HOOK = "tools/work.py"
+SETTINGS = ROOT / ".claude" / "settings.json"
+CAMP_SETTINGS = TEMPLATE / "_claude" / "settings.json"
 
 PAIRS: list[tuple[Path, Path]] = [
     (ROOT / "env.example", TEMPLATE / "env.example"),
-    (ROOT / ".claude" / "settings.json", TEMPLATE / "_claude" / "settings.json"),
     (
         ROOT / ".claude" / "agents" / "scorekeeper.md",
         TEMPLATE / "_claude" / "agents" / "scorekeeper.md",
     ),
 ]
+
+
+def camp_settings() -> str:
+    """This repository's Claude Code settings as a camp gets them."""
+    settings = json.loads(SETTINGS.read_text(encoding="utf-8"))
+    hooks = {}
+    for event, groups in settings.get("hooks", {}).items():
+        kept = []
+        for group in groups:
+            ours = [
+                h
+                for h in group["hooks"]
+                if PRODUCT_ONLY_HOOK not in h.get("command", "")
+            ]
+            if ours:
+                kept.append({**group, "hooks": ours})
+        if kept:
+            hooks[event] = kept
+    return json.dumps({**settings, "hooks": hooks}, indent=2) + "\n"
 
 
 def pairs() -> list[tuple[Path, Path]]:
@@ -57,6 +82,8 @@ def stale() -> list[Path]:
     for extra in (TEMPLATE / "_agents" / "skills").rglob("*"):
         if extra.is_file() and extra not in wanted:
             bad.append(extra)
+    if not CAMP_SETTINGS.exists() or CAMP_SETTINGS.read_text() != camp_settings():
+        bad.append(CAMP_SETTINGS)
     return bad
 
 
@@ -64,6 +91,7 @@ def sync() -> None:
     for src, dst in pairs():
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
+    CAMP_SETTINGS.write_text(camp_settings(), encoding="utf-8")
     wanted = {dst for _, dst in pairs()}
     for extra in list((TEMPLATE / "_agents" / "skills").rglob("*")):
         if extra.is_file() and extra not in wanted:
