@@ -565,7 +565,7 @@ The concept that survives to today: a model is a pile of numbers (weights), a lo
 
 Do this:
 1. Watch the first 40 minutes of Karpathy's micrograd lecture: a working backprop engine in 100 lines of Python.
-2. Ask Claude Code: "reproduce LeCun 1989 in a notebook using Karpathy's repo as reference, and explain each cell in one line".
+2. Ask Claude Code: "reproduce LeCun 1989 in a notebook in workspace/winter/backprop/, using Karpathy's repo as reference, and explain each cell in one line".
 3. Write one vault note: what a weight is, what a loss is, what a gradient is. Three sentences.
 4. Talk to Hinton and LeCun on this island.
 
@@ -605,7 +605,7 @@ Deterministic or not: the forward pass is deterministic. Sampling the next token
 Do this:
 1. Watch Karpathy's "Let's build GPT" (2h, worth it) or the general-audience "Deep dive into LLMs" on his channel.
 2. Paste a paragraph into a tokenizer and count: ask Claude "how many tokens is this and why does 'Rolinda' split into pieces".
-3. Ask Claude to draw the transformer block as a Mermaid diagram in your vault (the mermaid skill will do it).
+3. Ask Claude to write `workspace/winter/transformer.md`: the transformer block as a Mermaid diagram (the mermaid skill will do it), and your own lines on tokens and attention.
 
 Checked by: `vibe check --world winter 3` looks for workspace/winter/transformer.md with a mermaid block and your own lines on tokens and attention.
 
@@ -660,7 +660,7 @@ _Licences, Llama, Mistral, Qwen, Gemma; run a local model with Ollama on Apple s
 On your MacBook: Apple silicon shares memory between CPU and GPU, so a 7 to 8 billion parameter model in 4-bit runs comfortably on 16 GB. Ollama makes it one command. Once it runs, you can point OpenCode or any AGENTS.md-aware agent at it and see what the gap to a frontier model feels like in practice.
 
 Do this:
-1. brew install ollama && ollama run llama3.2 (or qwen2.5:7b). Ask it the same three questions you asked Claude today. Note the differences in the vault.
+1. `brew install ollama && ollama run llama3.2` (or `qwen2.5:7b`). Ask it the same three questions you asked Claude today. Write the model, the three questions and how the answers differed into `workspace/winter/local-model.md`.
 2. Read one licence: the Llama licence and the Apache-2.0 text. Write one sentence on what you may not do with each.
 3. Ask Claude: "steelman the open-weights position, then steelman the controlled-release position, 150 words each".
 4. Talk to LeCun here.
@@ -699,8 +699,8 @@ The best way to make the last seven stops stick is to build the smallest possibl
 Definition of done for Evening 2: a notebook in your repo that trains makemore on a list of Dutch first names (ask Claude to fetch a public list), and a vault note that explains, in your words, tokens, embeddings, attention, loss and sampling. If you can explain those five words to Rolinda, you understand more than most people using these tools.
 
 Do this:
-1. git clone https://github.com/karpathy/makemore into a scratch folder; run it on the bundled names.
-2. In Claude Code: "swap the dataset for Dutch first names and add a cell that samples ten new names".
+1. `git clone https://github.com/karpathy/makemore` into `workspace/winter/makemore/`; run it on the bundled names.
+2. In Claude Code: "swap the dataset for Dutch first names and add a cell that samples ten new names into samples.txt".
 3. Write the five-word vault note. Link it to every stop on this island.
 4. Talk to Karpathy here before you leave.
 
@@ -725,7 +725,7 @@ The rule of thumb: if you would be embarrassed to lose it, or someone else depen
 Do this:
 1. Write the dial into your AGENTS.md: which folders are vibe-only (scratch/), which need tests before merge.
 2. Read Karpathy's original post and Cherny's thread. Note in the vault the one sentence from each you disagree with.
-3. Talk to Karpathy and Cherny on this island.
+3. Talk to Chris Olah, the mentor on this island. Karpathy is on the Cold Storage Cluster and Cherny on the Innovation Campus.
 
 Checked by: `vibe check --world desert 1` reads AGENTS.md for both ends of the dial: a vibe-only folder and where tests are required.
 
@@ -742,9 +742,9 @@ A leading dot hides a file from ls; that is the entire mechanism. The convention
 Why they matter for consistency: every one of these is text, so every one can be versioned, diffed, and shared. A dotfiles repo is how experienced people make a new Mac feel like the old one in ten minutes (Evening 4, Stop 8).
 
 Do this:
-1. Run ls -la in the template repo and in your home folder. Ask Claude to explain every dot entry in one line each; put the list in the vault.
-2. Check that .env and .venv/ are in .gitignore. Commit a change to .gitignore and read the diff.
-3. Open ~/.claude/settings.json and the project's .claude/settings.json. Ask Claude which wins when they disagree, then verify in the docs.
+1. Run `ls -la` in the template repo and in your home folder. Ask Claude to explain every dot entry in one line each; put the list in `workspace/desert/dotfiles.md`, one line each.
+2. Check that `.env` and `.venv/` are in .gitignore. Commit a change to `.gitignore` and read the diff.
+3. Open `~/.claude/settings.json` and the project's `.claude/settings.json`. Ask Claude which wins when they disagree, then verify in the docs.
 
 Checked by: `vibe check --world desert 2` looks for workspace/desert/dotfiles.md explaining at least six dot entries.
 
@@ -756,12 +756,12 @@ Rolinda's question: "Why is it all hidden if it is important?"
 
 _Tests, linters and formatters: the cheapest way to make an agent behave_
 
-A model cannot be made deterministic; the checks around it can. Three tools do most of the work. A test runner (pytest) asserts that a function returns what you expect; if the agent breaks it, the test says so, not you. A linter (ruff check) catches unused imports, undefined names, and style drift; a formatter (ruff format) removes every argument about whitespace. Run all three before every commit and the agent's freedom is bounded exactly where you want it. In the template, workspace/python/scores.py gets its first test tonight.
+A model cannot be made deterministic; the checks around it can. Three tools do most of the work. A test runner (pytest) asserts that a function returns what you expect; if the agent breaks it, the test says so, not you. A linter (ruff check) catches unused imports, undefined names, and style drift; a formatter (ruff format) removes every argument about whitespace. Run all three before every commit and the agent's freedom is bounded exactly where you want it. The script you wrote into workspace/python/ on Evening 1 gets its first test tonight.
 
 The habit Cherny recommends: give the agent the command that verifies its work and tell it to run it. Put that command in AGENTS.md under Commands. It will run it without being asked.
 
 Do this:
-1. uv pip install pytest ruff. Ask Claude: "write tests for workspace/python/scores.py that cover the mean and the best score, then run them".
+1. `uv pip install pytest ruff`. Ask Claude: "write tests for the script in workspace/python/ that cover the mean and the best score, then run them".
 2. Ask Claude to introduce a bug on purpose and show the failing test. Then ask it to fix it. Watch the loop.
 3. Add to AGENTS.md: "Before finishing, run: ruff check && ruff format && pytest". Start a new session and see it obey.
 
@@ -780,9 +780,9 @@ Evening 1 used a hook to back up data. Tonight hooks become gates. A PreToolUse 
 Design rule: hooks are for things that must happen every time. Instructions in AGENTS.md are for things that should usually happen. Do not write a rule where you need a gate.
 
 Do this:
-1. Add a PostToolUse hook on Edit|Write that runs ruff format on the changed file (the hooks guide has the exact shape).
-2. Add a Stop hook that runs pytest -q and returns a non-zero exit with a message when tests fail. Ask Claude to break a test and watch it get sent back.
-3. Read the permissions page and add Bash(pytest*) to the allow list so it never asks for that.
+1. Add a PostToolUse hook on Edit|Write that runs `ruff format` on the changed file (the hooks guide has the exact shape).
+2. Add a Stop hook that runs `pytest -q` and returns a non-zero exit with a message when tests fail. Ask Claude to break a test and watch it get sent back.
+3. Read the permissions page and add `Bash(pytest*)` to the allow list so it never asks for that.
 
 Checked by: `vibe check --world desert 4` reads .claude/settings.json for a hook that gates: one that runs ruff or pytest, or a PreToolUse or Stop hook.
 
@@ -800,8 +800,8 @@ Two commands to memorise: /compact when the context gets long and slow, /rewind 
 
 Do this:
 1. Start a task in plan mode and refuse to leave it until the plan lists every file it will touch.
-2. Ask Claude to write a spec for "players can have a nickname" in docs/specs/, then implement from the spec in a fresh session.
-3. Open a PR with the GitHub CLI and ask Claude to review it before you merge: gh pr create, then "review PR #1 for correctness and missing tests".
+2. Ask Claude to write a spec for "players can have a nickname" in `workspace/specs/`, then implement from the spec in a fresh session.
+3. Open a PR with the GitHub CLI and ask Claude to review it before you merge: `gh pr create`, then "review PR #1 for correctness and missing tests".
 
 Checked by: `vibe check --world desert 5` looks for workspace/specs/<feature>.md with ## sections and twelve lines.
 
@@ -833,9 +833,9 @@ _Headless runs, schedules, idempotency, and when a subagent beats a prompt_
 Evening 1 scheduled one headless job. The engineering questions arrive the second morning: what if it runs twice, what if the input is empty, what if it half-finishes. The answers are old: make jobs idempotent (running twice yields the same result), write output to a temporary file and move it into place, log every run with a timestamp, and fail loudly. A subagent with a narrow system prompt and a fixed tool list is more predictable than a general session for a repetitive job, because it cannot wander. Batch work ("do this for every file in data/") is where claude -p with --output-format json shines: you get a parsable result per item.
 
 Do this:
-1. Rewrite the scorekeeper job so it writes to Scores.md.tmp and renames at the end. Run it twice; diff the vault.
-2. Ask Claude to add a logs/ line per run with start time, end time, and exit code. Check it after tomorrow's 08:00 run.
-3. Try one batch: for f in data/*.csv; do claude -p "summarise $f in one line" --output-format text; done.
+1. Put the scorekeeper job in `workspace/jobs/` and rewrite it so it writes to `Scores.md.tmp` and renames at the end. Run it twice; diff the vault.
+2. Ask Claude to add a row per run to `workspace/jobs/log.csv` with start time, end time, and exit code. Check it after tomorrow's 08:00 run.
+3. Try one batch: `for f in data/*.csv; do claude -p "summarise $f in one line" --output-format text; done`.
 
 Checked by: `vibe check --world desert 7` looks for workspace/jobs/ with your script and log.csv holding two recorded runs.
 
@@ -852,8 +852,8 @@ Once you have rules, hooks and CI, the last question is whether your instruction
 Definition of done for Evening 3: tests, a formatter hook, a Stop gate, green CI, an idempotent scheduled job, and a five-case eval for one skill. You now have a system that behaves, with a model inside it that does not.
 
 Do this:
-1. Write evals/cases.csv with five prompts and the answer you expect (yes/no or a short string).
-2. Ask Claude to write evals/run.py that calls claude -p per case and prints a score. Run it before and after changing one rule.
+1. Write `workspace/evals/cases.csv` with five prompts and the answer you expect (yes/no or a short string).
+2. Ask Claude to write `workspace/evals/run.py` that calls `claude -p` per case and prints a score. Run it before and after changing one rule.
 3. Record both scores in the vault. That number is your first eval.
 
 Checked by: `vibe check --world desert 8` looks for workspace/evals/cases.csv with five cases and workspace/evals/run.py.
@@ -870,10 +870,10 @@ Production: your machine, set up like someone who does this every day. Mac, Chro
 
 _Homebrew, Apple silicon, Chrome, and the three settings that save an hour a week_
 
-Everything on this island assumes a MacBook with Apple silicon and Chrome as the default browser, because that is what you have and it makes every instruction exact. Homebrew is the package manager; on Apple silicon it lives in /opt/homebrew, which is why some old guides fail. Rosetta is not needed for anything in this course. A Brewfile is a text list of everything you install, so the next Mac is one command away. Chrome is the browser Claude in Chrome and Claude Code's browser tools target, and it is the one whose DevTools you will use in Stop 6.
+Everything on this island assumes a MacBook with Apple silicon and Chrome as the default browser, because that is what you have and it makes every instruction exact. Homebrew is the package manager; on Apple silicon it lives in /opt/homebrew, which is why some old guides fail. Rosetta is not needed for anything in this course. A Brewfile is a text list of everything you install, so the next Mac is one command away. Chrome is the browser Claude in Chrome and Claude Code's browser tools target, and the one whose DevTools show you what a page is really doing.
 
 Do this:
-1. Install Homebrew from brew.sh. Then brew bundle dump to write a Brewfile of what you already have; commit it to your dotfiles repo (Stop 8).
+1. Install Homebrew from brew.sh. Then `mkdir -p workspace/dotfiles && brew bundle dump --file=workspace/dotfiles/Brewfile` to write a Brewfile of what you already have, five entries at least. Stop 8 turns that folder into your dotfiles repository.
 2. Set Chrome as default. In Chrome, sign in to Claude and pin the tab.
 3. Ask Claude: "what is in /opt/homebrew/bin and why is it on my PATH", and put the answer in the vault.
 
@@ -890,9 +890,9 @@ _Ghostty, zsh, starship, fzf, ripgrep, bat, eza, and Tom's configs_
 Claude Code lives in a terminal, so the terminal is the room you work in all day. Ghostty (Mitchell Hashimoto, who built Terraform and Vagrant) is fast, native on macOS, GPU-rendered, and configured with one text file in ~/.config/ghostty/config. Around it: zsh with a prompt from starship, fzf for fuzzy history and file search, ripgrep instead of grep, bat instead of cat, eza instead of ls, zoxide for jumping between folders. None of these are required; all of them are the difference between tolerating the terminal and preferring it. Keeping your configs in a repository is the fastest way back to a good setup on a new machine, and reading them is a good way to learn what each tool does.
 
 Do this:
-1. brew install --cask ghostty, then brew install starship fzf ripgrep bat eza zoxide.
-2. Write your own ghostty/config and .zshrc, one setting at a time, and read every line before you keep it. Ask Claude to explain each line you do not understand.
-3. Open Ghostty, run claude, and try Ctrl+R with fzf. That is the loop for the rest of your life.
+1. `brew install --cask ghostty`, then `brew install starship fzf ripgrep bat eza zoxide`.
+2. Write your own `workspace/dotfiles/ghostty/config` and `workspace/dotfiles/zshrc`, one setting at a time, and read every line before you keep it. Symlink them into place from Stop 8; the camp keeps the copies it can check. Ask Claude to explain each line you do not understand.
+3. Open Ghostty, run `claude`, and try `Ctrl+R` with fzf. That is the loop for the rest of your life.
 
 Checked by: `vibe check --world prod 2` looks for workspace/dotfiles/ghostty/config and workspace/dotfiles/zshrc, both written.
 
@@ -907,9 +907,9 @@ _Fork, clone, branch, commit, push, pull request, learned by doing it to the tem
 Git is a database of snapshots with names. A repository is the database; a commit is a snapshot; a branch is a movable name pointing at a commit; a remote is another copy of the database on another computer; a fork is your own copy on GitHub; a pull request is a request to merge your branch into someone else's. Every command tonight is one of those nouns plus a verb. You will do it by hand once, then let Claude do it, then check that you can still read what it did.
 
 Do this:
-1. Fork the template on GitHub, gh repo clone YOUR-USER/vibe, git switch -c feature/nickname.
-2. Make one change by hand, git add -p (review every hunk), git commit, git push -u origin feature/nickname, gh pr create.
-3. Ask Claude to do the same for a second change and read git log --oneline --graph afterwards.
+1. Fork the template on GitHub, `gh repo clone YOUR-USER/vibe`, `git switch -c feature/nickname`.
+2. Make one change by hand, `git add -p` (review every hunk), `git commit`, `git push -u origin feature/nickname`, `gh pr create`.
+3. Ask Claude to do the same for a second change and read `git log --oneline --graph` afterwards.
 4. Talk to Torvalds on this island.
 
 Checked by: `vibe check --world prod 3` reads git: an origin remote on github.com and a second branch.
@@ -925,8 +925,8 @@ _Revert, reset, rebase, cherry-pick, worktrees, and how Cherny runs five agents 
 Undo has flavours. git revert makes a new commit that undoes an old one (safe, shareable). git reset moves the branch name backwards (rewrites your local history; never on shared branches). git rebase replays your commits on top of someone else's, giving a straight line instead of a merge bubble; interactive rebase lets you squash five messy agent commits into one clean one. git cherry-pick copies a single commit across. Worktrees check out several branches into several folders from one repository, which is how you run several agents on the same repo at once; Cherny uses separate checkouts and numbers the tabs.
 
 Do this:
-1. On a throwaway branch: make three commits, git rebase -i HEAD~3, squash them into one. Then git reflog to see nothing was lost.
-2. git worktree add ../vibe-2 feature/second, open a second Ghostty tab, run a second Claude there. Give each a different task.
+1. On a throwaway branch: make three commits, `git rebase -i HEAD~3`, squash them into one. Then `git reflog` to see nothing was lost.
+2. `git worktree add ../vibe-2 feature/second`, open a second Ghostty tab, run a second Claude there. Give each a different task.
 3. Ask Claude to revert a commit by hash and explain the difference from reset in the commit message.
 
 Checked by: `vibe check --world prod 4` reads the reflog for a rebase, revert, cherry-pick or reset.
@@ -944,8 +944,8 @@ You have used Claude Code for three evenings; tonight you configure it. Personal
 The browser is a surface too. Claude in Chrome is the official extension: a side panel where Claude can read the page, click, fill forms and navigate, with site restrictions on banking and similar categories. Separately, Claude Code can connect to Chrome, so the agent in your terminal can open your own game, take a screenshot and read the console. An agent in your logged-in browser acts as you: use it on tabs you would let a colleague touch, and read the permission prompt every time.
 
 Do this:
-1. Write your personal ~/.claude/CLAUDE.md: how you like explanations, which commands are fine, what to never do. Ten lines.
-2. Configure allowed tools in settings for Bash(pytest*), Bash(ruff*), Bash(git status*). The check wants at least three patterns in .claude/settings.json.
+1. Write your personal `~/.claude/CLAUDE.md`: how you like explanations, which commands are fine, what to never do. Ten lines.
+2. Configure allowed tools in settings for `Bash(pytest*)`, `Bash(ruff*)`, `Bash(git status*)`. The check wants three patterns at least in `.claude/settings.json`.
 3. Try the desktop app and the web session once, so you know they exist when you need them.
 4. Install Claude in Chrome, give it one repetitive task you did last week, and note in the vault what it got wrong.
 
@@ -964,10 +964,10 @@ Three evenings you used the tools. Tonight you take one of them apart. A fork is
 Where the settings live. Your camp's `config/camp.toml` is the journey level: who you are, how hard, which theme. The fork's `src/config/` is the source level: world scale, island radius, palette. Changing the first changes your game; changing the second changes the game. Knowing which one you are holding is most of what separation of concerns means. `docs/CONFIG.md` is the full table.
 
 Do this:
-1. exists: fork tpetedb/vibe-map on GitHub (or `gh repo fork tpetedb/vibe-map`), then run `vibe fork` in your camp. Check it with `vibe check --fork exists`.
-2. config: change one value in `workspace/forks/vibe-map/src/config/00-config.js`, the world scale or a palette colour, then `just build` in the fork and open the result. Check it with `vibe check --fork config`.
-3. topic: take a topic from `vibe news` or an article you read and have your agent add it to the fork, a stop in `tools/generated/campaign.json` or a node in `tools/generated/tree.js`, then rebuild. Check it with `vibe check --fork topic`.
-4. repair: break the build on purpose (rename a file in `src/game/`), run `just record`, read the error, fix it, and run `just record` again. The failing run followed by the passing one in `repair.json` is the evidence. Check it with `vibe check --fork repair`.
+1. exists: fork `tpetedb/vibe-map` on GitHub (or `gh repo fork tpetedb/vibe-map`), then run `vibe fork` in your camp. `vibe check --fork exists`.
+2. config: change one value in `workspace/forks/vibe-map/src/config/00-config.js`, the world scale or a palette colour, then `just build` and open the result. `vibe check --fork config`.
+3. topic: take a topic from `vibe news` or an article you read and have your agent add it to the fork: a stop in `workspace/forks/vibe-map/tools/generated/campaign.json` or a node in `tree.js` beside it, then rebuild. `vibe check --fork topic`.
+4. repair: break the build on purpose (rename a file in `src/game/`), run `just record`, read the error, fix it, and run `just record` again. The two runs in `repair.json` are the evidence. `vibe check --fork repair`.
 
 Checked by: `vibe check --world prod 6` runs all four challenges plus the note; `vibe check --fork <challenge>` runs one of them.
 
@@ -982,9 +982,9 @@ _OpenCode, Codex CLI, Gemini CLI: same AGENTS.md, same .agents/skills, different
 This course is Anthropic-centric on purpose: one tool, learned deeply. The setup you built is not locked to it. AGENTS.md is read by OpenAI's Codex CLI, Google's Gemini CLI, Cursor, Copilot and OpenCode, an open-source terminal agent that can run against Claude, GPT, Gemini or a local Ollama model. Your skills in .agents/skills/ load in OpenCode and Codex unchanged. Try one alternative tonight, on the same repo, with the same instructions, and see what changes: usually the engine, rarely the workflow.
 
 Do this:
-1. brew install opencode (or the install script on opencode.ai). Run it in the template repo; confirm it picked up AGENTS.md and the skills.
-2. Point it at your local Ollama model from Evening 2 and ask for the same test you asked Claude for in Evening 3. Compare.
-3. Write the comparison in the vault: speed, correctness, what needed hand-holding.
+1. `brew install opencode` (or the install script on opencode.ai). Run it in the template repo; confirm it picked up AGENTS.md and the skills.
+2. Then try a second one, Codex, Gemini CLI, Copilot CLI or Cursor, on the same task you gave Claude in Evening 3. Two alternatives, so you compare the field and not just your habit.
+3. Write the comparison in `workspace/agents/comparison.md`, eight lines at least, naming both agents: speed, correctness, what needed hand-holding.
 
 Checked by: `vibe check --world prod 7` looks for workspace/agents/comparison.md naming two agents over eight lines.
 
@@ -1001,8 +1001,8 @@ The graduation project is a repository called dotfiles: your .zshrc, Ghostty con
 Definition of done for the course: four islands built, a template repo you understand line by line, a vault with your own words in it, and a dotfiles repo. Rolinda can pour the last one.
 
 Do this:
-1. mkdir ~/dotfiles && cd ~/dotfiles && git init. Move the config files in and symlink them back (ask Claude to write install.sh using ln -sf).
-2. Add the Brewfile from Stop 1. Push to GitHub, private if you prefer.
+1. `cd workspace/dotfiles && git init`, in the folder Stops 1 and 2 have been filling. Move the rest of your config files in and symlink them back (ask Claude to write `install.sh` using `ln -sf`), and write a `README.md` saying what each file does.
+2. Commit it, and add the line `workspace/dotfiles/` to the camp's `.gitignore` so a repository inside a repository never confuses `git add -A`. Push to GitHub, private if you prefer.
 3. Write the final vault note: what you would tell yourself before Evening 1.
 
 Checked by: `vibe check --world prod 8` looks for workspace/dotfiles/ as a git repo with install.sh (ln -s) and a README.md.
