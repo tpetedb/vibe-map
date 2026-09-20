@@ -5640,9 +5640,8 @@ const DASH_DELIVERED=["claim","verified","built"];
 const DASH_LABEL={session:"Session started",open:"Stop opened",claim:"Stop delivered",dwell:"Time on a screen",play:"Time on the island",artifact:"Artifact inspected",built:"Artifact built for real",mentor:"Mentor met",verified:"Mentor verified",chat:"Question asked",item:"Item collected",achievement:"Achievement unlocked",interests:"Shelves chosen",world:"Island reached",bottle:"Message in a bottle"};
 const DASH_HUE={claim:"var(--green-bright)",built:"var(--green-bright)",verified:"var(--green-bright)",open:"var(--yellow)",dwell:"var(--yellow)",achievement:"var(--yellow)",play:"var(--blue-bright)",session:"var(--blue-bright)",chat:"var(--blue-bright)",world:"var(--blue-bright)",artifact:"var(--orange)",mentor:"var(--orange)",item:"var(--orange)",bottle:"var(--orange)",interests:"var(--blue)"};
 // The screens a dwell can be measured on, named the way the game names them.
-// s-gen is the one screen that stands for whichever stop was opened last, so
-// the feed can only call it a stop; dashDwell() reads its number out of the
-// log instead.
+// s-gen stands for whichever stop was opened last, so it is named from the
+// log by dashStopAt() and only falls back to this entry when no stop was.
 const DASH_SCREEN={"s-0":"Pre-flight","s-map":"Roadmap","s-dash":"Stats","s-settings":"Settings","s-setup":"Setup","s-mentor":"A mentor","s-artifact":"An artifact","s-chat":"Ask","s-pack":"A topic pack","s-gen":"A stop"};
 const STOP_SHEET=/^s-(\d+)$/;
 function dashEvents(){return Array.isArray(S.events)?S.events:[]}
