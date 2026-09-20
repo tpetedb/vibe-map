@@ -39,6 +39,29 @@ let sheetOpen=null;
 // not standing next to anything of its own.
 let lastScreen=null;
 function sheetDwell(){if(!sheetOpen)return;const s=(Date.now()-sheetOpen.at)/1000;const id=sheetOpen.id;sheetOpen=null;if(s>=2)track("dwell",id,s)}
+/* ---------------- the screen stays awake while a sheet is open ---------------- */
+// A lesson is read with both hands in a terminal, so the phone must not dim in
+// the middle of it (MDN, Screen Wake Lock API). The platform drops the lock
+// whenever the document stops being visible, so it is asked for again when the
+// page comes back and a sheet is still open. Secure context only: a file://
+// game never gets one, and nothing here may throw where there is no API.
+let wakeLock=null,wakeWant=false;
+// Batch 1 owns the Settings row; anything but "off" means the lock is wanted,
+// so this reads a setting that may not exist yet.
+function wakeOn(){return (typeof settings==="function"?settings().awake:"on")!=="off"}
+function wakeDrop(){const l=wakeLock;wakeLock=null;if(l&&l.release){try{l.release()}catch(e){}}}
+function wakeSync(){
+  if(!navigator.wakeLock||!navigator.wakeLock.request)return;
+  const want=wakeWant&&wakeOn()&&document.visibilityState!=="hidden";
+  if(want===!!wakeLock)return;
+  if(!want){wakeDrop();return}
+  let p;try{p=navigator.wakeLock.request("screen")}catch(e){return}
+  if(!p||!p.then)return;
+  wakeLock=true;
+  p.then(l=>{if(!wakeWant||!wakeOn()){try{l.release()}catch(e){}wakeLock=null;return}
+    wakeLock=l;if(l&&l.addEventListener)l.addEventListener("release",()=>{if(wakeLock===l)wakeLock=null})},
+    ()=>{wakeLock=null})}
+addEventListener("visibilitychange",wakeSync);
 // A lesson is long, so the row that closes it (Mark as done, and the way back)
 // sticks to the bottom of the scroll container. Only that row: a list screen
 // would have its own items sitting under a bar that never scrolls away.
@@ -47,12 +70,12 @@ function stickyActions(screen){
   rows.forEach(r=>r.classList.remove("actions"));
   const bar=rows.reverse().find(r=>[...r.querySelectorAll("button")].some(b=>(b.getAttribute("onclick")||"").indexOf("claim(")===0));
   if(bar)bar.classList.add("actions")}
-window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};lastScreen=id;document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));const sc=$(id);sc.classList.add("on");stickyActions(sc);$("sheet").classList.add("on");fx($("sheet"));if(id==="s-map"){renderMap();loadNews()}
+window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date.now()};lastScreen=id;document.querySelectorAll("#sheet .screen").forEach(s=>s.classList.remove("on"));const sc=$(id);sc.classList.add("on");stickyActions(sc);wrapCommands(sc);$("sheet").classList.add("on");fx($("sheet"));wakeWant=true;wakeSync();if(id==="s-map"){renderMap();loadNews()}
   // The sheet has its own scroll container, so a new screen starts at the top
   // of it and the page behind the overlay never moves.
   $("sheet").querySelector(".inner").scrollTop=0;
   setTimeout(()=>{const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
-window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on")};
+window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on");wakeWant=false;wakeSync()};
 // Both panels are role=dialog, so Escape has to close them; the palette sits
 // on top of everything, then the vault, then the sheet.
 addEventListener("keydown",e=>{if(e.key!=="Escape")return;
@@ -140,11 +163,40 @@ function open(n){
   bubble("rolinda","Same rule as always: explain it to me in one sentence when you are done.");
   openSheet("s-gen");syncClaimRow($("s-gen"),n);
 }
-function renderMap(){const ok=S.done.length>=stopCount();const ev=CAMPAIGN[S.world||"campus"];
+/* ---------------- Continue: where you were, and the one command ---------------- */
+// Derived from S and never stored: the first stop of this island that is not
+// delivered, or 0 when the island is finished. stopCount() is the island's own
+// length, so a camp that adds a ninth stop is counted right.
+function nextStop(){const done=S.done||[];for(let n=1;n<=stopCount();n++)if(!done.includes(n))return n;return 0}
+// The one command that stop opens with in the camp: vibe check runs its checks
+// and claims it when they pass, and it takes the stop number and the island.
+function stopCommand(n){const w=S.world||"campus";return "uv run vibe check "+n+(w==="campus"?"":" -w "+w)}
+// One card in two places: the title screen of a returning player and the top
+// of the Roadmap. The title has no game running yet, so its button starts one.
+function continueCard(where){const n=nextStop();if(!n)return "";const c=CH[n-1];if(!c)return "";
+  const w=WORLDS[S.world||"campus"];
+  return `<div class="cont card"><h3>${icon("flag")}Continue</h3>
+<p class="small muted">${esc(w?w.name:"")} · stop ${esc(n)} of ${esc(stopCount())}</p>
+<b class="cont-t">${esc(c.h)}, ${esc(c.n)}</b>
+<p class="small">${esc(c.d)}</p>
+<pre class="cmd">${esc(stopCommand(n))}</pre>
+<div class="row"><button class="primary" onclick="${where==="title"?"continueHere":"openCh"}(${esc(n)})">Open it</button></div></div>`}
+// The card is a view over S: it is rebuilt with the screen it sits on and
+// holds nothing of its own.
+function renderContinue(){const el=$("cont");if(!el)return;
+  const html=$("title").classList.contains("returning")?continueCard("title"):"";
+  el.innerHTML=html;el.style.display=html?"":"none";wrapCommands(el)}
+// Resume and open that stop in one press. start() is still the only way in, so
+// the name it insists on is insisted on here too.
+window.continueHere=function(n){start();if($("title").classList.contains("off"))open(n)};
+function renderMap(){const ok=S.done.length>=stopCount();const ev=CAMPAIGN[S.world||"campus"];const nx=nextStop();
+  const mc=$("mapcont");if(mc){mc.innerHTML=continueCard("map");wrapCommands(mc)}
+  // Where you are and what is left of this island, before the list of stops.
+  const here=`<p class="here">${icon("compass")}You are here: <b>${esc((WORLDS[S.world||"campus"]||{}).name||"")}</b> · ${S.done.filter(n=>n<=stopCount()).length} of ${esc(stopCount())} delivered</p>`;
   // Pre-flight (workstream 0) only exists on the campus; the other islands start at stop 1.
   const preflight=(S.world||"campus")==="campus"?`<button class="date" onclick="openCh(0)">Before the evening, Pre-flight<br><span class="small" style="opacity:.75">Install Claude Code, git, Obsidian. 20 minutes, alone.</span></button>`:"";
-  $("plotlist").innerHTML=`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
-    return `<button class="date${done?' pick':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
+  $("plotlist").innerHTML=here+`<div class="evening">${ev.title}</div><p class="small muted">${ev.blurb}</p>`+preflight+CH.map((c,i)=>{const k=i+1,done=S.done.includes(k),locked=k>1&&!S.done.includes(k-1);
+    return `<button class="date${done?' pick':''}${k===nx?' next':''}" ${locked?'disabled':''} onclick="openCh(${k})">${done?icon("check"):""}${c.h}, ${c.n}${done?" (delivered)":locked?" (blocked by dependency)":k===nx?" (next)":""}<br><span class="small" style="opacity:.75">${c.d}</span></button>`}).join("")+
     ((S.world||"campus")==="campus"?`<button class="date" ${ok?'':'disabled'} onclick="openCh(${finaleStop()})">${icon("milestone")}Calendar alignment${ok?"":" (pending "+stopCount()+" OKRs)"}</button>`:"")+
     interestCard()+
     `<div class="card"><h3>${icon("users")}Your path: the mentors</h3><p class="small muted">People you met on the islands, and what you chose. Tap to revisit or change your mind.</p>`+MENTORS.map(m=>{const st=S.path[m.id];return `<div class="pathrow"><span>${interestDot(!interestsAll()&&wantsShelf(m.shelf)?m.shelf:null)}<b>${m.name}</b> <span class="muted">· ${WORLDS[m.world].name}</span></span><span style="display:flex;gap:6px;align-items:center"><span class="st ${st==="deep"||st==="skip"?st:""}">${st==="deep"?"on path":st==="skip"?"skipped":S.met[m.id]?"met":"not met"}</span><button onclick="openMentor('${m.id}')" aria-label="Open ${m.name}" style="padding:4px 10px;font-size:12px">Open</button></span></div>`}).join("")+`</div>`+

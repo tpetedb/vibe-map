@@ -28,10 +28,47 @@ function playerLabel(){return S.name||(LOOKS[S.look]&&S.look!=="own"?LOOKS[S.loo
 function playerSpec(){const l=playerLook();const n=playerLabel();return {kind:l.kind,body:l.body,legs:l.legs,arms:l.arms,look:l.look,wear:sl("wear"),label:n?n+", "+l.role:l.role}}
 function difficulty(){const d=(S.settings&&S.settings.difficulty)||"config";return d==="config"?CONFIG.difficulty:d}
 function cmdsOpen(){return ["beginner","easy","normal"].indexOf(difficulty())>=0}
+// Every command block in the game: the lessons, the setup guide and the
+// Continue card. A pre that prints output rather than asking for input is not
+// one of them.
+const CMD_SEL=".lesson pre,.setup pre,#s-setup pre,pre.cmd";
+const CMD_OUT=["out","term","sql"];
 // Every command block in a lesson becomes a <details>: open at beginner, easy
-// and normal, folded at hard and up, always one click away. Runs once at boot;
-// syncCmds re-applies the fold whenever the difficulty changes.
-function wrapCommands(){document.querySelectorAll(".lesson pre").forEach(pre=>{if(pre.parentElement.classList.contains("cmds"))return;const d=document.createElement("details");d.className="cmds";d.innerHTML="<summary>Commands</summary>";pre.replaceWith(d);d.appendChild(pre)})}
+// and normal, folded at hard and up, always one click away. Runs at boot for
+// the lessons in the page and again for each screen openSheet() shows, so a
+// panel rendered at runtime needs no call of its own; syncCmds re-applies the
+// fold whenever the difficulty changes.
+function wrapCommands(root){(root||document).querySelectorAll(CMD_SEL).forEach(pre=>{
+  if(CMD_OUT.some(c=>pre.classList.contains(c)))return;
+  if(!pre.parentElement.classList.contains("cmds")&&pre.closest(".lesson")){
+    const d=document.createElement("details");d.className="cmds";d.innerHTML="<summary>Commands</summary>";d.open=cmdsOpen();pre.replaceWith(d);d.appendChild(pre)}
+  copyBar(pre)})}
+// The Copy button sits under its command block, never over it: a control on
+// top of the text hides the thing it copies, and a full row is past the 44 px
+// a finger needs. One bar per block, so a panel that re-renders cannot
+// collect two.
+function copyBar(pre){
+  const next=pre.nextElementSibling;
+  if(next&&next.classList.contains("cmdbar"))return;
+  const bar=document.createElement("div");bar.className="cmdbar";
+  const b=document.createElement("button");b.type="button";b.className="copy";b.textContent="Copy";
+  b.setAttribute("aria-label","Copy the commands");
+  b.onclick=()=>copyCommand(pre,b);
+  bar.appendChild(b);pre.after(bar)}
+// A command that names the player copies with the real name in it, and the
+// button says which of the two happened: a command rewritten in silence is
+// worse than one you have to finish by hand.
+const NAME_SLOT="<your_name>";
+// shq() is this project's spelling of a name that is safe in a shell. A plain
+// word goes in bare; anything else, a space or a quote included, goes in as
+// one single-quoted word.
+function nameForCommand(){const n=playerLabel();if(!n)return "";
+  return /^[A-Za-z0-9._-]+$/.test(n)?n:shq(n)}
+function copyCommand(pre,btn){const raw=pre.textContent||"";
+  if(raw.indexOf(NAME_SLOT)<0){copyText(raw,btn,"Copy",pre,"Copied");return}
+  const nm=nameForCommand();
+  copyText(nm?raw.split(NAME_SLOT).join(nm):raw,btn,"Copy",pre,
+    nm?"Copied, with your name":"Copied, fill in your name")}
 let cmdsLevel=null;
 function syncCmds(){const open=cmdsOpen();if(cmdsLevel===open)return;cmdsLevel=open;document.querySelectorAll("details.cmds").forEach(d=>d.open=open)}
 // The naming convention for a local camp: your name, vibe-map, the date.
@@ -67,7 +104,7 @@ just setup</code></pre>
 <p class="small muted">Own GitHub copy instead? Needs <code>gh auth login</code> first.</p>
 <pre><code>vibe new ${dir} --github YOU/vibe-map-${slug(playerLabel())}</code></pre>
 <h4>3. Tell it who you are</h4>
-<pre><code>vibe name ${esc(shq(playerLabel()||"player"))}
+<pre><code>vibe name ${esc(playerLabel()?shq(playerLabel()):NAME_SLOT)}
 vibe difficulty ${esc(difficulty())}
 just start</code></pre>
 <p class="small muted">You should see: the camp menu, with your name at the top and 0 of 8 stops done.</p>
@@ -100,7 +137,7 @@ window.pickMode=function(m){S.mode=m;save();renderOnboarding();if(m==="full"){co
 // The walker carries the name on a sprite, so it is rebuilt after typing
 // stops rather than on every keystroke.
 let nameT=null;
-window.nameTyped=function(v){S.name=v.trim();if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";clearNameError();save();hud();const el=$("ob-setup");if(el&&el.style.display!=="none")el.innerHTML=setupHtml();
+window.nameTyped=function(v){S.name=v.trim();if(S.look!=="own"&&LOOKS[S.look]&&LOOKS[S.look].label!==S.name)S.look="own";clearNameError();save();hud();const el=$("ob-setup");if(el&&el.style.display!=="none"){el.innerHTML=setupHtml();wrapCommands(el)}
   clearTimeout(nameT);nameT=setTimeout(()=>{if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer()},400)};
 // The name is the one thing the title screen insists on: no placeholder gets
 // saved, so an empty box sends you back to it instead of starting as nobody.
@@ -131,9 +168,9 @@ ${presetRow()}
 <div class="choices modes"><button class="choice${mode==="online"?" on":""}" onclick="pickMode('online')"><b>Just the game</b><span>In this browser. Nothing to install. The lessons still show every command.</span></button><button class="choice${mode==="full"?" on":""}" onclick="pickMode('full')"><b>The full experience</b><span>Everything, synced. Add a terminal and Obsidian so your work is checked and your notes are saved. You can switch to this later; nothing is lost.</span></button></div>
 <p class="small muted" id="prereq">Honest prerequisites for the full experience: a Mac or Linux terminal, about fifteen minutes to install the tools, a GitHub account, and a paid plan for Claude, Codex or Gemini. Without those, pick just the game; you can switch later and nothing is lost.</p>
 <div class="step"><b>5</b><span>Your name, then go</span></div>`;
-  const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():""}
+  const setup=$("ob-setup");if(setup){setup.style.display=mode==="full"?"":"none";setup.innerHTML=mode==="full"?setupHtml():"";wrapCommands(setup)}
   const nm=$("name");if(nm&&nm.value!==S.name)nm.value=S.name;
-  document.body.dataset.mode=mode}
+  document.body.dataset.mode=mode;renderContinue()}
 // The title is modal: until Start the campus behind it is not there. The
 // stylesheet takes away the HUD's tab stops and its clicks; this takes away the
 // global keys, so c, Cmd K and Escape cannot open a panel over the form or
