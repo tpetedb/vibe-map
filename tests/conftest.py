@@ -466,27 +466,6 @@ def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
 
 
 @pytest.fixture
-def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
-    """Chromium with Pixel 7 metrics: the phone the owner actually plays on."""
-    context = chromium.new_context(
-        viewport={"width": 412, "height": 915},
-        device_scale_factor=2.625,
-        is_mobile=True,
-        has_touch=True,
-        user_agent=(
-            "Mozilla/5.0 (Linux; Android 14; Pixel 7) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/126.0.0.0 Mobile Safari/537.36"
-        ),
-    )
-    page = context.new_page()
-    gp = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, gp.errors)
-    yield gp
-    context.close()
-
-
-@pytest.fixture
 def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
     """WebKit with iPhone 15 metrics and touch, the closest headless proxy for iOS."""
     context = webkit.new_context(**phone_options("iphone"))
