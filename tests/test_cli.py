@@ -311,7 +311,8 @@ def test_a_camp_without_scores_says_so_instead_of_crashing(tmp_path: Path) -> No
     camp = _camp(tmp_path)
     for args in (("scores",), ("scores", "--sql", "top_runs")):
         out = _run(camp, *args)
-        assert out.returncode == 1, out.stdout
+        # Day one has no scores.csv yet, so this is news, not a failed recipe.
+        assert out.returncode == 0, out.stdout
         assert "no scores yet" in out.stdout
         assert "Traceback" not in out.stderr
 
@@ -388,7 +389,7 @@ def test_skills_are_counted_once() -> None:
 
 
 def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:
-    from vibemap.quests import _plain
+    from vibemap.palette import plain
     from vibemap.toolbelt import TOOLS_BY_ID, Tool
 
     assert TOOLS_BY_ID["obsidian"].version_args == ("version",)
@@ -396,7 +397,7 @@ def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:
     assert Tool("f", "f", "w", "false", "i", "https://x.test", "core").version() == (
         "installed"
     )
-    assert _plain("\x1b[31m3 passed\x1b[0m\n") == "3 passed"
+    assert plain("\x1b[31m3 passed\x1b[0m\n") == "3 passed"
     assert "just verify" in DIFFICULTIES["god"].blurb
     assert "camp" in DIFFICULTIES["god"].blurb
 
@@ -592,7 +593,7 @@ def test_imported_progress_is_half_and_a_passing_check_pays_the_rest(
     assert state["xp"] == full // 2
 
     # The status grid says which stops are claims and which are verified.
-    assert "claimed in the game, not verified here" in _run(camp, "status").stdout
+    assert "claimed, not verified" in _run(camp, "status").stdout
 
     (camp / "workspace" / "game").mkdir(parents=True, exist_ok=True)
     (camp / "workspace" / "game" / "index.html").write_text(

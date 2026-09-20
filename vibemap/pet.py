@@ -5,7 +5,7 @@ claude-buddy by Romesh Niriella (MIT, https://github.com/btcromesh/claude-buddy)
 itself extracted from the short-lived /buddy feature of Claude Code (April
 2026, removed in 2.1.97). The ASCII crab is ours. Same name, same creature: the
 roll is a seeded PRNG over the learner's name, and every field can be
-overridden in vibe.toml under [pet].
+overridden in config/camp.toml under [pet].
 
 Six species also have real pixel sprites, vendored from vscode-pets and from
 two CC0 packs on OpenGameArt and credited in data/pets/CREDITS.md;
@@ -287,7 +287,7 @@ def resolve(
     eye: str = "",
     hat: str = "",
 ) -> Pet:
-    """The rolled pet with any overrides from vibe.toml applied.
+    """The rolled pet with any overrides from config/camp.toml applied.
 
     Raises:
         ValueError: when an override names a species, eye or hat that does

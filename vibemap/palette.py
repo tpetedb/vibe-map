@@ -6,6 +6,8 @@ and paths, yellow is curiosity and warnings, black is the background.
 
 from __future__ import annotations
 
+import re
+
 from rich.theme import Theme
 
 RED = "#D32F2F"
@@ -123,3 +125,19 @@ def css_tokens(indent: str = "  ") -> str:
     """The :root block every generated page starts from."""
     body = "\n".join(f"{indent}--{k}:{v};" for k, v in CSS_TOKENS.items())
     return ":root{\n" + body + "\n}"
+
+
+# A terminal paints with escape sequences; a table cell, a log line and a check
+# detail are text. This is the one place they come off.
+_ESCAPE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-_~]")
+
+
+def plain(text: str) -> str:
+    """Terminal output as text: no escape sequences, no control characters.
+
+    Newlines survive, because a caller that splits the output into lines
+    depends on them; everything else a program writes to move the cursor or
+    ring a bell is dropped.
+    """
+    kept = (c for c in _ESCAPE.sub("", text) if c == "\n" or c.isprintable())
+    return "".join(kept).strip()
