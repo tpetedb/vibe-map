@@ -315,16 +315,23 @@ def test_launchers_grey_out_what_a_camp_cannot_run(tmp_path: Path, monkeypatch) 
 
 
 def test_the_progress_line_carries_stops_mentors_and_artifacts() -> None:
+    from vibemap import campaign
     from vibemap.state import State
     from vibemap.tui import progress_line
 
+    # Every denominator comes from the campaign, so a camp that adds a stop,
+    # a mentor or an artifact is counted against what it really has.
+    stops = campaign.total_stops()
+    people = len(campaign.mentors())
+    built = len(campaign.artifacts())
     st = State(name="Lotte")
     assert progress_line(st) == (
-        "0/32 stops, 0/12 mentors verified, 0/21 artifacts built for real"
+        f"0/{stops} stops, 0/{people} mentors verified, "
+        f"0/{built} artifacts built for real"
     )
     st.done_w["campus"] = [1, 2]
     st.mentors.append("torvalds")
     st.artifacts_built.extend(["dock", "crane"])
     line = progress_line(st)
-    assert "2/32 stops" in line and "1/12 mentors verified" in line
-    assert "2/21 artifacts built for real" in line
+    assert f"2/{stops} stops" in line and f"1/{people} mentors verified" in line
+    assert f"2/{built} artifacts built for real" in line
