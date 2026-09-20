@@ -10,15 +10,17 @@ scripted fork, and the game shows that stop on the production island.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
+from html import unescape
 from pathlib import Path
 
 from click.testing import CliRunner
 
 from tests.conftest import encode_progress
 from tools.script_camp import script_fork, script_stops
-from vibemap import quests
+from vibemap import campaign, quests
 from vibemap.cli import cli
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -157,3 +159,100 @@ def test_the_agent_comparison_lesson_asks_for_two_agents_the_check_counts() -> N
     html = data["evenings"]["prod"]["ws"][6]["html"].lower()
     named = [a for a in quests.OTHER_AGENTS if a in html]
     assert len(named) >= 2, f"the lesson names {named}; the check needs two"
+
+
+# ---- the lesson copy against the data it describes -----------------------------
+
+# A workspace path as a hint spells it. A hint may carry a placeholder for the
+# learner's own name (workspace/specs/<feature>.md); the folder is the part the
+# lesson has to say out loud.
+DELIVERABLE = re.compile(r"workspace/[A-Za-z0-9_./<>*-]+")
+
+
+def _paths(hint: str) -> set[str]:
+    out = set()
+    for path in DELIVERABLE.findall(hint):
+        path = path.rstrip(".,:;)")
+        out.add(path[: path.index("<")] if "<" in path else path)
+    return out
+
+
+def test_every_lesson_names_the_path_its_check_reads() -> None:
+    """A learner who follows a lesson literally must land where the check looks.
+
+    The hints know every deliverable path, so the rule is checked against them
+    rather than against a list that has to be kept in step by hand.
+    """
+    for (world, n), checks in sorted(quests.STOP_CHECKS.items()):
+        html = campaign.raw()["evenings"][world]["ws"][n - 1].get("html", "")
+        if not html:  # Evening 1 teaches from src/body.html, not from the data.
+            continue
+        for path in sorted(set().union(*(_paths(c.hint) for c in checks))):
+            assert path in html, f"{world} stop {n} never names {path}"
+
+
+def test_a_lesson_sends_you_to_a_mentor_who_is_on_that_island() -> None:
+    """Twelve mentors, four islands: a "talk to" step has to be walkable.
+
+    Read sentence by sentence, because one step may place the mentor who is
+    here and then say where the others are. A sentence that says "here" names
+    only mentors of this island; any other names the island the game shows.
+    """
+    mentors = {m["name"]: m["world"] for m in campaign.raw()["mentors"]}
+    for world, evening in campaign.raw()["evenings"].items():
+        for n, ws in enumerate(evening["ws"], 1):
+            for item in re.findall(r"<li>(.*?)</li>", ws.get("html", ""), re.S):
+                text = re.sub(r"<[^>]+>", " ", item).strip()
+                if not text.startswith("Talk to"):
+                    continue
+                for line in re.split(r"(?<=[.;])\s+", text):
+                    here = "on this island" in line or re.search(r"\bhere\b", line)
+                    for name, home in mentors.items():
+                        surname = re.escape(name.split()[-1])
+                        if home == world or not re.search(rf"\b{surname}\b", line):
+                            continue
+                        island = campaign.WORLD_NAMES[home]
+                        where = f"{world} stop {n}: {line}"
+                        assert not here, f"{name} is on {island}. {where}"
+                        assert island in line, f"{name} is on {island}. {where}"
+
+
+# The syllabus repeats each stop as prose, so its steps are the same steps.
+# Backticks, bold and links are the Markdown of the one and the HTML of the
+# other: compared without them, the two have to be the same sentences.
+SYLLABUS = ROOT / "docs" / "SYLLABUS.md"
+EVENINGS = ("winter", "desert", "prod")
+
+
+def _plain(text: str) -> str:
+    text = re.sub(r"<a [^>]*>(.*?)</a>", r"\1", text, flags=re.S)
+    text = re.sub(r"\[([^]]*)\]\([^)]*\)", r"\1", text)
+    text = unescape(re.sub(r"<[^>]+>", "", text))
+    return re.sub(r"\s+", " ", text.replace("`", "").replace("**", "")).strip()
+
+
+def _syllabus_steps() -> dict[tuple[str, int], list[str]]:
+    text = SYLLABUS.read_text(encoding="utf-8")
+    out: dict[tuple[str, int], list[str]] = {}
+    for world in EVENINGS:
+        title = campaign.raw()["evenings"][world]["title"]
+        assert f"### {title}\n" in text, f"the syllabus has no section for {title}"
+        section = text.split(f"### {title}\n", 1)[1].split("\n### ", 1)[0]
+        parts = re.split(r"^#### Stop (\d+): .*$", section, flags=re.M)
+        for n, body in zip(parts[1::2], parts[2::2], strict=True):
+            block = re.search(r"^Do this:\n((?:\d+\..*\n)+)", body, re.M)
+            steps = re.findall(r"^\d+\.\s*(.*)$", block.group(1), re.M) if block else []
+            out[(world, int(n))] = [_plain(s) for s in steps]
+    return out
+
+
+def test_the_syllabus_repeats_the_steps_the_game_shows() -> None:
+    """One wording per step: the page a reader trusts cannot drift from the game."""
+    syllabus = _syllabus_steps()
+    for world in EVENINGS:
+        for n, ws in enumerate(campaign.raw()["evenings"][world]["ws"], 1):
+            block = re.search(r"<h3>Do this</h3><ol[^>]*>(.*?)</ol>", ws["html"], re.S)
+            assert block, f"{world} stop {n} has no Do this list"
+            items = re.findall(r"<li>(.*?)</li>", block.group(1), re.S)
+            steps = [_plain(s) for s in items]
+            assert syllabus[(world, n)] == steps, f"{world} stop {n}"
