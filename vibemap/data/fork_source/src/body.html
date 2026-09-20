@@ -11,7 +11,7 @@
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
   <div class="pill" id="hud-bar"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button id="hud-search" data-icon="search" onclick="openPalette()" title="Search everything (Cmd K)"><span class="lbl">Search</span></button><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><div id="hud-more"><div id="hud-menu"><div id="hud-sec"><button data-icon="backpack" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div><div id="hud-ter"><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div></div><button id="hud-more-btn" data-icon="menu" aria-expanded="false" aria-haspopup="true" onclick="toggleHudMenu()"><span class="lbl">More</span></button></div></div>
-  <div id="kpis">
+  <div id="kpis" aria-live="polite">
     <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
     <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
     <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
@@ -21,7 +21,9 @@
 
 <div class="ui" id="bottom">
   <div id="enter"><button class="primary" id="enterbtn" onclick="enterNear()">Enter</button></div>
-  <div class="hint" id="hint">Tap the ground, or use the stick · arrows / WASD · space to jump</div>
+  <!-- One hint, two halves: a finger is told about the ground and the stick,
+       a mouse and keyboard about the keys. The stylesheet picks by pointer. -->
+  <div class="hint" id="hint"><span class="touch">Tap the ground, or use the stick</span><span class="keys">Click the ground, or use the arrows / WASD · space to jump</span></div>
 </div>
 <div id="joy" aria-hidden="true"><div id="knob"></div></div>
 <button id="jump" aria-label="Jump" data-icon="arrow-up"></button>
@@ -76,7 +78,7 @@
   <div class="inner">
     <section class="screen" id="s-map">
       <h2>Roadmap</h2>
-      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
+      <div class="row" style="margin-top:0"><button data-icon="settings" onclick="openSettings()">Settings</button><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button data-icon="terminal" onclick="openSetup()">Setup guide</button><button onclick="resetProgress(this)" title="Back to the start of the roadmap; your name and settings stay">Reset progress</button></div>
       <p class="small muted">Select a workstream below, or walk to its plot. Dependencies are strictly sequential, as ratified by the Steering Committee.</p>
       <div id="plotlist"></div>
       <div class="card live-feed" id="newscard">

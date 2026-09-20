@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nothing here: Vibe Code Camp</title>
+<meta name="robots" content="noindex">
+<!-- GitHub Pages serves this for any path it cannot find. It is deliberately
+     not the game: it carries the palette and the type of src/style.css and
+     nothing else, so it needs no build and no request. The way home is
+     filled in with this site's own root by the workflow, because a missing
+     path can sit at any depth and a relative link would miss. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23000000'/%3E%3Ccircle cx='16' cy='10' r='4' fill='%23FFBF00'/%3E%3Cpath d='M3 26a13 8 0 0 1 26 0z' fill='%2300A86B'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#000000">
+<style>
+:root{--bg:#000000;--text:#F1F1F8;--muted:#8B93A7;--green:#00A86B;--green-bright:#00D084;--line:#1A1A1A;
+  --font-display:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{font-family:var(--font-display);line-height:1.6;display:grid;place-items:center;padding:24px}
+main{max-width:34rem;text-align:center}
+p.code{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+h1{font-size:clamp(28px,7vw,44px);font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:0 0 12px}
+p.said{color:var(--muted);margin:0 0 28px}
+a.go{display:inline-block;padding:12px 22px;border-radius:999px;border:1px solid var(--green);
+  color:var(--green-bright);text-decoration:none;font-weight:600}
+a.go:hover,a.go:focus-visible{background:var(--green);color:var(--bg);outline:none}
+hr{border:0;border-top:1px solid var(--line);margin:32px 0 14px}
+p.foot{font-size:14px;color:var(--muted);margin:0}
+p.foot a{color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<p class="code">404</p>
+<h1>You have walked off the island</h1>
+<p class="said">There is no page at this address. The camp is one page, and that page is the game.</p>
+<a class="go" href="{{BASE}}/">Back to the island</a>
+<hr>
+<p class="foot">Or read the course on <a href="https://github.com/tpetedb/vibe-map">GitHub</a>.</p>
+</main>
+</body>
+</html>

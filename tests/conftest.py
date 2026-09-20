@@ -366,6 +366,49 @@ class GamePage:
         assert self.errors == [], f"page errors: {self.errors}"
 
 
+# The two phones the game is played on, one definition for the fixtures and
+# for any test that needs another size. A phone-facing change is shown on
+# both: the owner plays on Android Chrome, and iOS is the other half of the
+# world. WebKit is the closest headless proxy for iOS, never the real thing.
+PHONES = {
+    "android": {
+        "viewport": {"width": 412, "height": 915},
+        "device_scale_factor": 2.625,
+        "is_mobile": True,
+        "has_touch": True,
+        "user_agent": (
+            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+        ),
+    },
+    "iphone": {
+        "viewport": {"width": 393, "height": 852},
+        "device_scale_factor": 3,
+        "is_mobile": True,
+        "has_touch": True,
+        "user_agent": (
+            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
+            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
+            "Mobile/15E148 Safari/604.1"
+        ),
+    },
+}
+
+
+def phone_options(
+    profile: str, *, width: int | None = None, height: int | None = None
+) -> dict[str, Any]:
+    """The context options for a phone, optionally at another window size."""
+    options = dict(PHONES[profile])
+    size = dict(options["viewport"])
+    if width is not None:
+        size["width"] = width
+    if height is not None:
+        size["height"] = height
+    options["viewport"] = size
+    return options
+
+
 # Every test that takes a browser fixture is a browser test. Marking it here
 # rather than by hand keeps the CI split honest: a new browser test lands in
 # the browser job without anyone remembering to label it.
@@ -425,17 +468,7 @@ def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
 @pytest.fixture
 def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
     """WebKit with iPhone 15 metrics and touch, the closest headless proxy for iOS."""
-    context = webkit.new_context(
-        viewport={"width": 393, "height": 852},
-        device_scale_factor=3,
-        is_mobile=True,
-        has_touch=True,
-        user_agent=(
-            "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
-            "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 "
-            "Mobile/15E148 Safari/604.1"
-        ),
-    )
+    context = webkit.new_context(**phone_options("iphone"))
     page = context.new_page()
     gp = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, gp.errors)
@@ -445,17 +478,8 @@ def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
 
 @pytest.fixture
 def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
-    """Chromium with Pixel 7 metrics and touch: the owner's own phone."""
-    context = chromium.new_context(
-        viewport={"width": 412, "height": 915},
-        device_scale_factor=2.625,
-        is_mobile=True,
-        has_touch=True,
-        user_agent=(
-            "Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36"
-        ),
-    )
+    """Chromium with Pixel 7 metrics and touch: the phone the owner plays on."""
+    context = chromium.new_context(**phone_options("android"))
     page = context.new_page()
     gp = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, gp.errors)
