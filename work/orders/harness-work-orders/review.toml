@@ -1,98 +1,77 @@
-# Second review of this order, by someone who did not build it. Every experiment
+# Third review of this order, by someone who did not build it. Every experiment
 # ran in scratch git repositories under $TMPDIR, never in this worktree.
 v = 1
 order = "harness-work-orders"
 by = "reviewer-fable-1"
-reviewed = "c0ed11241ce6c5426c3905d14d831cc152f76f6e"
+reviewed = "3a83644d18cb4fc6990a9f2fb537ca510df973f4"
 verdict = "improve"
 
 [[criteria]]
 id = "c1"
 verdict = "fail"
 evidence = '''
-On this machine `uv run pytest -q tests/test_work.py` passes (packet: c1 pass, 8.0s, 48 tests). It passes because of this machine: `git config --global core.excludesfile` is ~/.gitignore_global, which hides __pycache__. With `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null uv run pytest -q tests/test_work.py`, which is what a CI runner has: 2 failed, `test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off` (`work: one: tools/__pycache__/sync_main.cpython-312.pyc is outside what it owns`) and `test_the_commands_run_end_to_end` (`assert (1 == 0)`). Both are the new tests that run the tool as a subprocess inside a scratch repository that has no .gitignore. CI run 35543970777 on this commit says the same in its log: `2 failed, 539 passed, 301 deselected`, those two tests, that message, from /home/runner. The subjects of the sentence are covered (I mapped the 48 names), but the tests do not pass where it counts.
+Here: packet c1 pass in 9.6s, and `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null uv run pytest tests/test_work.py` gives `60 passed`, so the second review's finding is fixed. On the runner it fails again, for a new reason. CI run 35544887851 on this commit, step 13: `FAILED tests/test_work.py::test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off - AssertionError: assert '1 orders' in 'work: 0 orders in this pull request, 0 problems\n'`, `1 failed, 552 passed, 301 deselected`. A pull_request runner sets GITHUB_HEAD_REF for the whole job, and the new branch detection in cmd_ci prefers it to the scratch repository's own branch. Reproduced here with one variable: `GITHUB_HEAD_REF=chore/work-orders uv run pytest tests/test_work.py` gives `1 failed, 59 passed`. The subjects of the sentence are all covered; the tests do not pass where the sentence is judged.
 '''
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = '''
-tools/sync_template.py and the template are unchanged since the commit I reviewed first (`git diff --stat 2e4423f..HEAD` lists neither), where I hand-edited the camp's settings.json in a clone and saw `--check` exit 1 on a pasted hook and on one added newline. Packet on this commit: c2 pass. The substring limit I noted then still applies.
+tools/sync_template.py and the template are unchanged since the first review (`git diff --stat 059d115..HEAD` lists neither), where a pasted hook and a single added newline in the camp's settings.json each made `--check` exit 1. Packet on this commit: c2 pass.
 '''
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = '''
-Packet: c3 pass. The dependence on other sessions is gone: in a scratch repository a fresh `work.py new` in a second worktree now prints `draft elsewhere, not judged: ...` and validate exits 0, while a draft in the own checkout still exits 2 and names the file. Two orders on one branch still pass validate silently, although `check` of either then reports the other's files as strays.
+Packet: c3 pass. In a scratch repository two orders naming one branch now give `collision: aaa-order and bbb-order share the branch feat/two`, exit 1, and a path outside every team gives `owns 'nowhere/x.txt', which no team in work/teams.toml covers`. A draft in another worktree is named and does not fail validate (checked in round two, code unchanged).
 '''
 
 [[criteria]]
 id = "c4"
 verdict = "fail"
 evidence = '''
-Packet: c4 pass in 123.5s on this machine. The sentence now ends `which is what CI runs`, and CI ran it on this commit: run 35543970777, job `lint, unit tests, generated files in sync`, step 13 pytest failure, step 14 (work orders) skipped. The cause is the one under c1. Ruff, format and style are green there.
+Packet: c4 pass in 116.6s on this machine. The sentence ends `which is what CI runs`, and CI ran it: run 35544887851, step 13 `uv run pytest -m "not browser and not integration"` failure (`1 failed, 552 passed`), step 14 skipped. Ruff, format, style and the generated-file checks are green there. The cause is the one under c1.
 '''
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
 evidence = '''
-Repeated the journey in scratch repositories with only README and skill. `new` with the title `Say "hi" \ to the sheet` writes valid TOML and says it is a draft; an Edit event on that order.toml exits 0; validate names what is missing; check fails before the work and passes after; review and accept reach `Ready to land`. Builder step 5 now says which CI step stays red and whose it is. Small guesses left: nothing says who commits review.toml, the keys `issue` and `timeout` are in no template or text, no command answers which team a path belongs to (`owns = ["src/cli.py"]` still answers `belongs to team None`), and the train car is unexplained. None of them stopped me. An ordinary order lands; this one cannot, see the first finding.
+Unchanged for the builder since round two, where I walked it from `work.py new` to `Ready to land` in a scratch repository. New this round and checked: an order that owns work/ keeps its review after the review is committed (accept then only asks for the sign-off); a sign-off by the reviewer is refused with `by = 'rev' also wrote the review`, one naming another team with `team = 'scene', expected 'panels'`; with both right, `checked, reviewed, signed off. Ready to land.` The README now says one order, one branch, one pull request.
 '''
 
 [[criteria]]
 id = "c6"
 verdict = "pass"
 evidence = '''
-Piped events into both hooks in scratch repositories. pre-tool: malformed JSON and empty stdin exit 0; a list, null, a string tool_input and a numeric file_path still end in a traceback with exit 1, which does not block; a draft or broken order.toml on the branch: Edit on it and on any file exits 0. stop: blocked once (exit 2 with the failing check), exit 0 with stop_hook_active true; a broken order on the branch or a draft in another worktree: exit 0. A criterion `sleep 9; true` with timeout 1 returns (124, timed out) and `pgrep` finds nothing left. /usr/bin/python3 3.9.6: hook exit 0. Nothing I tried holds an agent twice or blocks a repair.
-'''
-
-[[findings]]
-severity = "high"
-file = "tools/work.py"
-text = '''
-This order's review lapses the moment it is committed, so this pull request can never pass its own gate. contribution() diffs `owns` plus order.toml, this order owns `work/`, and review.toml and signoff-docs.toml live under it. In a clone of this branch ($TMPDIR/wo2-self, origin/main set to 1cc63b8) I set `reviewed` to c0ed11241ce6c5426c3905d14d831cc152f76f6e: uncommitted, `load_review` answers `improve`; after `git commit` it raises `the order or a file it owns changed after the reviewer looked; review again and update reviewed`, and `work.py ci --head chore/work-orders` prints the same. The first version exempted the order's folder; the new one should exempt everything in it except order.toml. No test has an order that owns its own folder, and the one order in the repository does.
+Twelve malformed events (broken JSON, empty, list, null, string, number, string and list tool_input, numeric and list file_path, a NUL in the path, a numeric message with an object agent_id) into both hooks: exit 0 every time, no traceback. A draft's own order.toml: Edit exits 0. touched.json and result.json: exit 2, `is a measurement tools/work.py writes, not yours to edit`. Subagent sub-1 recorded by the edit hook and stopping with a closing text that is not its report: exit 2 with `FAIL c1`; with stop_hook_active it is let go (round two, code unchanged). A session that edited, on an ordinary turn: exit 0; with a first line `order: first-order`: exit 2. Three criteria of `sleep 4` under a budget of 5s ended in 6.1s, the last two as `timed out after 1s`. /usr/bin/python3 3.9.6: `work hooks are off: python3 is older than 3.11`, exit 0.
 '''
 
 [[findings]]
 severity = "high"
 file = "tests/test_work.py"
 text = '''
-CI is red on this commit and c1 and c4 pass only on the builder's machine. `test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off` and `test_the_commands_run_end_to_end` run `python tools/work.py` inside a scratch repository; importing sync_main writes tools/__pycache__/, the scratch repository has no .gitignore, and dirty() reports the .pyc as a stray. Here ~/.gitignore_global hides it. Reproduce: `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null uv run pytest -q tests/test_work.py` gives 2 failed. CI run 35543970777, step 13: `FAILED tests/test_work.py::test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off - AssertionError: work: one: tools/__pycache__/sync_main.cpython-312.pyc is outside what it owns`, `FAILED tests/test_work.py::test_the_commands_run_end_to_end`, `2 failed, 539 passed`. The moved work step (14) was skipped, so it has never run on a runner.
-'''
-
-[[findings]]
-severity = "medium"
-file = "tools/work.py"
-text = '''
-The patch id has a false pass: `git patch-id` ignores whitespace. In $TMPDIR/wo2-pid an owned tools/guard.py held `if x:` / `audit(x)` / `return False` / `return True`; review and sign-off accepted. After them I dedented `        return False` to `    return False`, so may() always returns False, and committed: `work.py accept` still printed `checked, reviewed, signed off. Ready to land.` The same holds for re-indenting a step in ci.yml or a block in a justfile. `--verbatim` closes it. Controls behave: an edit, a replaced binary, chmod +x and a loosened order.toml lapse the review; a clean merge of main that touches line 1 of an owned file keeps it.
-'''
-
-[[findings]]
-severity = "medium"
-file = "tools/work.py"
-text = '''
-touched.json holds only an agent that wants to be held. With a failing order in $TMPDIR/wo2-h: sub-1 edits through the Edit tool, is recorded as builder, and its stop exits 2 with `FAIL c1` although its closing text is not the report; that part works. Three ways out, each `hook stop` exit 0: sub-2 edits only through Bash and is never recorded; sub-1 overwrites touched.json with `{}` (the file is in its own order folder, so the edit hook allows the Write); sub-3 appends one broken line to order.toml, after which the edit hook lets an Edit of vibemap/cli.py through, nothing is recorded, and even a first line `order: first-order` is not held because a draft is not active. check, accept and CI still refuse the result, so this opens no landing; but README and CLAUDE.md say an agent that worked on an order `cannot stop while it fails`, and that is only true of a cooperative one. Honouring the cache in `hook stop` is acceptable on the same ground: the hold is advice, accept measures.
+CI is red on this commit, and the work step has still never run on a runner (step 14 skipped in runs 35542270516, 35543970777 and 35544887851). `test_ci_finds_the_order_by_its_branch_and_wants_review_and_sign_off` calls `work.py ci --base origin/main` without --head and expects the scratch repository's branch `main-plan` to be found; cmd_ci reads `a.head or os.environ.get("GITHUB_HEAD_REF") or` the current branch, and on a pull_request runner GITHUB_HEAD_REF is `chore/work-orders`, so the tool answers `0 orders in this pull request, 0 problems`. Reproduce: `GITHUB_HEAD_REF=chore/work-orders uv run pytest tests/test_work.py` gives `1 failed, 59 passed`. It is the same kind of defect as last round, a test that reads the machine it runs on, from the other side: the autouse fixture clears the git configuration and not the runner's variables. c1 and c4 cannot pass in CI until it is fixed, and I will not accept a gate whose own CI step nobody has seen run.
 '''
 
 [[findings]]
 severity = "low"
 file = "tools/work.py"
 text = '''
-Identity makes the hold per session, and Stop fires at the end of every turn. A main session that once used Edit under an order (`{"session_id":"main-1"}`) ran every criterion again at each turn end in which the tree had changed, and was blocked once per turn while the order failed: 3s each in the scratch repository with `sleep 3`, about 130s for this order (c1 8.0s plus c4 123.5s in the packet). touched.json is never pruned. For a builder subagent it fires once, which is the case it was built for.
+contribution() reads the diff with text=True. An owned text file that is not UTF-8 (`printf 'caf\xe9\n' > src/body.html`, Latin-1, no NUL byte, so git diffs it as text) ends `work.py accept` and `work.py ci` in a traceback, `UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9`, exit 1, and the stop hook prints `work hook let go: UnicodeDecodeError`. It fails closed and no tracked file here is like that today (I scanned all 649), so it costs a confusing message, not a wrong answer; bytes through to patch-id would end it.
 '''
 
 [[findings]]
 severity = "low"
 file = "tools/work.py"
 text = '''
-Left from the first review, and the ADR now says all sixteen are fixed, each with a test. Still open: a JSON list, null, a string tool_input or a numeric file_path in a hook event end in a traceback (exit 1); `belongs to team None` for a path no team covers; `thread` never prints the issue's own text; MEMBER is not push access; the Stop timeout is 1800s against four criteria of up to 1500s; landed() counts a review whose verdict is improve; on Python 3.9 the hooks are now silently off (exit 0, no message). New and small: a sign-off's `team` key is never read and `by` may be the reviewer (`team = "scene"`, `by = "rev"` in signoff-docs.toml passed ci); two orders on one branch are both guarded by the hook but each fails the other's `check` as strays, and validate says nothing; `ci` without `--head` finds 0 orders for a build that leaves the folder alone, so the fix lives in one line of ci.yml.
+cmd_ci carries a landed order by its branch name until a release sweeps it. In a scratch repository body-order landed (`landed: {'body-order'}`); a new branch with the same name that edits src/head.html then gets `work: body-order: src/head.html is outside what it owns`, exit 1. carried should leave out landed(). Also small: _remember() still records session ids that hook_stop no longer reads (`{"sub-1": "builder", "s1": "builder"}`); a stop-hook run that hits its budget writes `timed out after 1s` rows into result.json, which board and post then show as FAIL; any file named signoff-<anything>.toml in the order's folder is exempt from the currency check, not only those of the cross teams.
 '''
 
 [[findings]]
 severity = "low"
-file = ".github/workflows/ci.yml"
+file = "docs/adr/0016-work-orders.md"
 text = '''
-A fork's pull request, as asked. The step is safe to run: the branch names arrive through env, `--head '--base=HEAD'` ends in an argparse error with exit 2, ci executes no criterion (a check that appends to a file ran 0 times under `work.py ci`), and the job has `contents: read`. It is not a gate against a fork: `pull_request` runs the fork's own tools/work.py, `by` is free text, and a pull request that carries no order is left alone. That is the trust the ADR states; it belongs there in so many words.
+For the docs manager. The four docs files read true and in the house voice (no em dashes, no emoji, plain sentences), with three small exceptions. The ADR says an order is `landed once its review is on main`; the code and work/README.md now say its accepting review. The ADR says `This very change went through its own review twice before it was accepted`; this is the third review and it does not accept. docs/MAINTAINERS.md says `Hooks hold an agent to its order` (AGENTS.md: `a hook holds an agent to it`), while the ADR and README now call the stop hook a reminder for a cooperative agent. True and checked: the index line about 0015 (docs/adr/0015-experiences-share-one-core.md is on origin/docs/galaxy-design, pull request 141, in car 147), the fork paragraph, and the verbatim patch id paragraph. When car 147 lands first, docs/adr/README.md will conflict on the `Next number` line, and resolving it is an edit to an owned file that ends this review, as designed.
 '''
