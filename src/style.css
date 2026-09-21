@@ -360,15 +360,20 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tech em.d2{color:var(--yellow)}.tech em.d3{color:var(--orange-bright)}
 .tech i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
 /* Interests: a shelf you did not choose is set back, never hidden, disabled
-   or unreadable. It loses its surface and keeps its hairline, the way every
-   other level here is told apart; the words keep their own contrast, because
-   opacity takes the 11px description down with the card and a screen with no
-   hover has no way to bring it back. */
+   or unreadable. It gives up its surface, the white of its title and the
+   colour of its count, and keeps its hairline and the contrast of every word
+   on it: opacity takes the 11px description down with the card, and a screen
+   with no hover has no way to bring it back. */
 .age.faded{background:transparent}
+.age.faded h4,.age.faded .lvl{color:var(--muted)}
 .age.faded .tech{opacity:.85}
 .age.faded:focus-within{background:var(--surface-2)}
+.age.faded:focus-within h4{color:var(--text)}
+.age.faded:focus-within .lvl{color:var(--orange-bright)}
 .age.faded:focus-within .tech{opacity:1}
 @media (hover:hover){.age.faded:hover{background:var(--surface-2)}
+  .age.faded:hover h4{color:var(--text)}
+  .age.faded:hover .lvl{color:var(--orange-bright)}
   .age.faded:hover .tech{opacity:1}}
 .idot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .setting.wide{display:block}

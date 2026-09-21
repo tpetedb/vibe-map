@@ -717,13 +717,13 @@ def test_a_demo_step_starts_at_the_column_and_a_fold_is_set_in(
             assert min(step["lefts"]) <= origin + 0.5, (step, info)
             starts += sum(1 for left in step["lefts"] if left <= origin + 0.5)
         assert starts == len(steps), ("a fold started at the column", info)
+        assert info["over"] <= 1, ("the transcript runs off its box", info)
+        assert info["column"] <= 1 and info["page"] <= 1, info
         if surface in PHONES:
             assert any(len(step["lefts"]) > 1 for step in steps), (
                 "nothing folded, so this measures nothing",
                 info,
             )
-        assert info["over"] <= 1, ("the transcript runs off its box", info)
-        assert info["column"] <= 1 and info["page"] <= 1, info
         _shot(game, f"hunt_b7_{surface}_columns")
         game.assert_clean()
 
@@ -742,17 +742,21 @@ def test_the_sentence_a_demo_ends_on_is_read_whole(
     """
     with _surface(browsers, server, surface) as game:
         info = _run_demo(game, "fountain", 1, "the same way")
+        assert info["ends"], info
+        for rect in info["ends"]:
+            assert rect["l"] >= info["box"]["l"] - 0.5, ("cut on the left", rect, info)
+            assert rect["r"] <= info["box"]["r"] + 0.5, (
+                "the end of the sentence is outside the box",
+                rect,
+                info,
+            )
+        assert info["over"] <= 1, ("the sentence runs off its box", info)
+        assert info["column"] <= 1 and info["page"] <= 1, info
         last = info["steps"][-1]
         assert len(last["lefts"]) > 1, (
             "the sentence fits, so this proves nothing",
             info,
         )
-        assert info["ends"], info
-        for rect in info["ends"]:
-            assert rect["l"] >= info["box"]["l"] - 0.5, (rect, info)
-            assert rect["r"] <= info["box"]["r"] + 0.5, (rect, info)
-        assert info["over"] <= 1, ("the sentence runs off its box", info)
-        assert info["column"] <= 1 and info["page"] <= 1, info
         _shot(game, f"hunt_b7_{surface}_sentence")
         game.assert_clean()
 
