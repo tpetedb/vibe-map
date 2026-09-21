@@ -15,6 +15,18 @@ uv run ruff check vibemap tests tools
 
 unlocks = ["agenthooks", "ci"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The githooks
+# manual page carries no date, so the origin is the dated release that let a
+# team commit its hooks, and git itself has no address.
+
+[[origins]]
+place = "the-internet"
+year = 2016
+what = "Git 2.9 adds core.hooksPath, so one folder of hooks can be pointed at from every repository."
+source = "https://github.blog/open-source/git/git-2-9-has-been-released/"
+primary = true
+
 [[sources]]
 label = "githooks manual"
 url = "https://git-scm.com/docs/githooks"

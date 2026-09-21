@@ -12,6 +12,24 @@ try_it = "Read pyproject.toml in this repo and add a dependency, then uv sync."
 
 unlocks = ["pylibs"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. TOML is a
+# format with a repository and no address; the echo is the specification that
+# put it in Python packaging.
+
+[[origins]]
+place = "the-internet"
+year = 2021
+what = "TOML v1.0.0, a minimal configuration file format by Tom Preston-Werner, Pradyun Gedam and others, is published."
+source = "https://toml.io/en/v1.0.0"
+primary = true
+
+[[origins]]
+place = "a-standards-body"
+year = 2016
+what = "Brett Cannon, Nathaniel J. Smith and Donald Stufft write PEP 518, which stores a project's build system dependencies in a file named pyproject.toml."
+source = "https://peps.python.org/pep-0518/"
+
 [[sources]]
 label = "TOML 1.0.0 spec"
 url = "https://toml.io/en/v1.0.0"
