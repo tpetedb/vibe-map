@@ -524,6 +524,23 @@ def test_a_key_brings_the_frames_back(game_desktop: GamePage) -> None:
     game_desktop.assert_clean()
 
 
+def test_a_press_anywhere_counts_as_somebody_being_there(
+    game_android: GamePage,
+) -> None:
+    """The one that broke the phone's zoom: the island is not the only control.
+
+    A player stepping through the zoom is present, so the saver must not start
+    halving the frames the zoom spring is settling on.
+    """
+    game_android.goto(state=RETURNING)
+    game_android.resume()
+    game_android.page.evaluate("() => window.__saverAfter(400)")
+    game_android.until("window.__saver().half === true")
+    game_android.page.tap("#zoom-in")
+    assert game_android.page.evaluate("() => window.__saver().half") is False
+    game_android.assert_clean()
+
+
 def test_the_saver_turned_off_keeps_every_frame(game_desktop: GamePage) -> None:
     game_desktop.goto(state=dict(RETURNING, settings={"saver": "off"}))
     game_desktop.resume()
