@@ -1,1 +1,0 @@
-- The README, the quickstart and a camp's own README say which browsers the game is supported in: Chrome on desktop and on Android is the one it is built and fixed for, an iPhone is best effort because every iPhone browser runs Apple's WebKit, and Firefox and desktop Safari should work without being tested beyond that.
