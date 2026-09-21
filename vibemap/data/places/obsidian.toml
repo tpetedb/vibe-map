@@ -1,0 +1,10 @@
+# Obsidian. A small team, no office named; Erica Xu started it in 2020.
+id = "obsidian"
+name = "Obsidian"
+kind = "company"
+region = "everywhere"
+era = "data"
+globe = "cloud"
+look = "house"
+landmark = "vault-door"
+source = "https://obsidian.md/about"

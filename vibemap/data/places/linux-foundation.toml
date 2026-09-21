@@ -1,0 +1,10 @@
+# The Linux Foundation. A neutral hub for open technology projects.
+id = "linux-foundation"
+name = "The Linux Foundation"
+kind = "foundation"
+region = "everywhere"
+era = "open-source"
+globe = "cloud"
+look = "station"
+landmark = "neutral-hub"
+source = "https://www.linuxfoundation.org/about"

@@ -1,0 +1,10 @@
+# The cloud. Somebody else's computers, defined once by NIST in September 2011.
+id = "the-cloud"
+name = "The cloud"
+kind = "cloud"
+region = "everywhere"
+era = "open-source"
+globe = "cloud"
+look = "nebula"
+landmark = "nebula"
+source = "https://csrc.nist.gov/pubs/sp/800/145/final"

@@ -1,0 +1,12 @@
+# Carnegie Mellon University, Pittsburgh. 5000 Forbes Avenue, Pittsburgh.
+id = "carnegie-mellon"
+name = "Carnegie Mellon University, Pittsburgh"
+kind = "university"
+region = "us-east"
+era = "mainframe"
+globe = "earth"
+lat = 40.443
+lon = -79.944
+look = "campus"
+landmark = "the-cut"
+source = "https://www.cmu.edu/about/"

@@ -1,0 +1,12 @@
+# Airbnb, San Francisco. 888 Brannan Street, San Francisco.
+id = "airbnb-sf"
+name = "Airbnb, San Francisco"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.77
+lon = -122.403
+look = "tower"
+landmark = "brannan-street-office"
+source = "https://news.airbnb.com/about-us/"

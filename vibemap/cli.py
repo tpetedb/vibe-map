@@ -36,7 +36,16 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
 
-from vibemap import __version__, campaign, pet, project, quests, sprites, topics
+from vibemap import (
+    __version__,
+    campaign,
+    pet,
+    places,
+    project,
+    quests,
+    sprites,
+    topics,
+)
 from vibemap import chat as chat_bridge
 from vibemap.artifact_checks import (
     ARTIFACT_NOTE,
@@ -1216,6 +1225,25 @@ def _list_topics(ctx: Ctx, pack_id: str | None) -> None:
     )
 
 
+def _origin_lines(topic: Topic) -> None:
+    """Where the topic happened, primary first: the facts the game is given too.
+
+    A place no file declares is refused here with the topic's file name, so a
+    wrong id is a message and never a blank planet.
+    """
+    try:
+        found = places.origins_of(topic)
+    except ValueError as e:
+        _fail(str(e))
+    for origin in found:
+        place = places.get(origin.place)
+        mark = "Where." if origin.primary else "Echo."
+        console.print(
+            f"[accent]{mark}[/] {escape(place.name)}, {origin.year}: "
+            f"{escape(origin.what)} [muted]{escape(origin.source)}[/]"
+        )
+
+
 def _show_topic(ctx: Ctx, topic: Topic) -> None:
     """One topic in the terminal: the same words the vault note carries."""
     shelf_of = {s.id: s.name for s in topics.tree().shelves}
@@ -1230,6 +1258,7 @@ def _show_topic(ctx: Ctx, topic: Topic) -> None:
         console.print(f"[muted]{escape(topic.for_agents)}[/]")
     if topic.history:
         console.print(f"[accent]History.[/] {escape(topic.history)}")
+    _origin_lines(topic)
     if topic.try_it:
         console.print(f"[accent]Try it.[/] {escape(topic.try_it)}")
     if topic.prerequisites:
@@ -1331,6 +1360,79 @@ def topic_cmd(ctx: Ctx, topic_id: str, start: bool) -> None:
                 "own, so vibe writes none.[/]"
             )
     _show_topic(ctx, topic)
+
+
+# ---- places -------------------------------------------------------------------
+
+
+def _place_or_fail(place_id: str) -> places.Place:
+    try:
+        return places.get(place_id)
+    except ValueError as e:
+        _fail(str(e))
+    raise AssertionError  # _fail exits; this keeps the type checker honest
+
+
+def _list_places() -> None:
+    """Every place by era, with the topics that come from it."""
+    by_place = places.topics_by_place()
+    for era in places.ERAS:
+        here = [p for p in places.all_places() if p.era == era.id]
+        if not here:
+            continue
+        span = f"{era.first} to {era.last}" if era.last else f"{era.first} on"
+        console.print(f"[title]{era.name}[/] [muted]({span})[/]")
+        t = Table(header_style="path", box=None, padding=(0, 1))
+        for col in ("id", "place", "kind", "region", "where", "topics"):
+            t.add_column(col)
+        for place in here:
+            found = [topic.id for topic in by_place[place.id]]
+            t.add_row(
+                place.id,
+                escape(place.name),
+                place.kind,
+                place.region,
+                place.where,
+                ", ".join(found) or "[muted]none yet[/]",
+            )
+        console.print(t)
+    console.print(
+        "One place: [accent]vibe places <id>[/], and a topic's origins: "
+        "[accent]vibe topic <id>[/]."
+    )
+
+
+def _show_place(place: places.Place) -> None:
+    era = places.era(place.era)
+    console.print(
+        f"[title]{escape(place.name)}[/] · [path]{place.kind}[/] · {era.name}"
+    )
+    landmark = place.landmark.replace("-", " ")
+    # An abstract place is its own landmark ("a nebula around its nebula" is
+    # not a sentence), so the silhouette is only named when it adds one.
+    around = f" around its {landmark}" if landmark != place.look else ""
+    console.print(
+        f"On the {place.globe} globe at {place.where}, in {place.region}, "
+        f"drawn as a {place.look}{around}."
+    )
+    console.print(f"  [muted]{escape(place.source)}[/]")
+    for topic in places.topics_by_place()[place.id]:
+        origin = places.origin_at(topic, place.id)
+        mark = "where it lives" if origin.primary else "echo"
+        console.print(
+            f"[accent]{topic.id}[/] {origin.year} [muted]({mark})[/]: "
+            f"{escape(origin.what)}"
+        )
+
+
+@cli.command("places")
+@click.argument("place_id", required=False)
+def places_cmd(place_id: str | None) -> None:
+    """Where the topics happened: the places, and what came from each."""
+    if place_id:
+        _show_place(_place_or_fail(place_id))
+        return
+    _list_places()
 
 
 # ---- scores -------------------------------------------------------------------

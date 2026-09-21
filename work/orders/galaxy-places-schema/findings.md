@@ -14,3 +14,22 @@ Tom accepted ADR 0015 on 2026-09-21 ("all approved, build it"). This order sets 
 # The bar for a claim (ADR 0010)
 
 A real organisation or person appears by name, as plain text, and everything said about them links to their own words or to a primary source. Open every link you cite. Prefer the organisation's own history page, the original paper or announcement, a standards document. No paraphrased opinion, no "widely considered". If you cannot find a primary source for where something happened, say so in the pull request and leave that origin out rather than guess.
+
+# Which places are seeded, and what is still missing (round 2)
+
+Seeded after the first review, each read before it was written: `openai-sf`
+(OpenAI, Inc.'s IRS Form 990, EIN 81-0861541, gives 3180 18th Street, San
+Francisco), `amazon-seattle` (Amazon.com, Inc.'s EDGAR record gives 410 Terry
+Avenue North, Seattle), `uc-santa-barbara` (where GNU's Bulletin of June 1989
+puts Brian Fox), `ecma-international` (its own site gives Rue du Rhone 114,
+Geneva; ECMA-262 and ECMA-404 are published there).
+
+Still not seeded, with the reason as it was measured on 2026-09-21, not as it
+was assumed: `iso.org` and `ansi.org` answer 403 to every client tried, and
+openai.com does too, which is why OpenAI is sourced from its filings instead.
+Mozilla, Meta and the W3C's contact pages answer 200 but carry no address in
+their text at all. Where an organisation has no single address, the answer is
+not a guess: `docs/TOPICS.md` says an open-source project sits at
+`the-internet`, a hosted service at `the-cloud` and a specification at
+`a-standards-body`, and it says how a research order adds a place when it
+finds a source for one.
