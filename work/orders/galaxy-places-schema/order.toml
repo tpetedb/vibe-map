@@ -5,7 +5,7 @@ team = "content"
 branch = "feat/galaxy-places-schema"
 goal = "galaxy"
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-galaxy-places-schema"
 
 owns = [
   "vibemap/places.py",

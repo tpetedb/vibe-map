@@ -8,6 +8,9 @@ into the lists the roadmap, the vault and the game build have always read.
 Nothing is guessed: an unknown shelf, an unknown depth, a duplicate id, a
 link to a topic that does not exist and a pack that lists a file it does not
 have are all refused with the file name in the message.
+
+Where a topic happened is `[[origins]]` here and a registry of places in
+`vibemap/places.py`, which is where an origin's place name is checked.
 """
 
 from __future__ import annotations
@@ -37,6 +40,23 @@ class Source(BaseModel):
     label: str
     url: str
     checked: dt.date | None = None
+
+
+class Origin(BaseModel):
+    """Where a topic happened: a place, a year, one line, and a source.
+
+    `place` is the id of a file in vibemap/data/places/ (vibemap/places.py
+    holds that registry and checks the name). Exactly one origin of a topic
+    is `primary`, the place the topic lives at; the others are echoes.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    place: str
+    year: int
+    what: str
+    source: str
+    primary: bool = False
 
 
 class HandsOn(BaseModel):
@@ -73,6 +93,9 @@ class Topic(BaseModel):
     history: str | None = None
     try_it: str | None = None
     sources: list[Source] = []
+    # Where this happened. Additive: a topic written before its pack was
+    # migrated carries none, and `places.problems()` is what reports that.
+    origins: list[Origin] = []
     unlocks: list[str] = []
     prerequisites: list[str] = []
     minutes: int | None = None
@@ -149,6 +172,38 @@ def _fail(where: str, msg: str) -> None:
     raise ValueError(f"{where}: {msg}")
 
 
+# Nothing in this tree is older than the first stored-program computers, so a
+# year outside this window is a typo, not history.
+FIRST_YEAR = 1940
+
+
+def _check_origins(topic: Topic, where: str) -> None:
+    """A topic either has no origin yet, or has a sound set of them.
+
+    The place name itself is checked in vibemap/places.py, which is the
+    registry; everything that can be judged from this file alone is judged here.
+    """
+    if not topic.origins:
+        return
+    primary = [o for o in topic.origins if o.primary]
+    if len(primary) != 1:
+        _fail(
+            where,
+            f"has {len(primary)} primary origins; exactly one origin carries"
+            " primary = true, and it is where the topic lives",
+        )
+    for origin in topic.origins:
+        at = f"the origin at {origin.place!r}"
+        if not origin.source.startswith("https://"):
+            _fail(where, f"{at} needs an https source that says what it claims")
+        if not (FIRST_YEAR <= origin.year <= dt.date.today().year + 1):
+            _fail(
+                where, f"{at} has the year {origin.year}, outside {FIRST_YEAR} to now"
+            )
+        if not origin.what.strip():
+            _fail(where, f"{at} says nothing; `what` is one line about what happened")
+
+
 def _pack_topics(folder: Path, pack: Pack) -> list[Topic]:
     """Every topic of one pack, in the pack's own order.
 
@@ -178,6 +233,7 @@ def _pack_topics(folder: Path, pack: Pack) -> list[Topic]:
             topic.summary and topic.history and topic.try_it
         ):
             _fail(where, "needs summary, history and try_it")
+        _check_origins(topic, where)
         out.append(topic.model_copy(update={"pack": pack.id}))
     return out
 

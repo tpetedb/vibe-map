@@ -13,11 +13,14 @@ vibemap/data/topics/
     pack.toml        the pack: title, blurb, shelf, maintainer notes, reading order
     unix.toml        one topic
     bash.toml
+vibemap/data/places/
+  bell-labs.toml     one place a topic can have happened at
 ```
 
 `vibemap/topics.py` is the loader and the schema. `vibemap/tech.py` turns what it
 loads into the lists the generators read, so a new topic reaches the roadmap, the
-vault notes and the game as soon as you run `just tree`.
+vault notes and the game as soon as you run `just tree`. `vibemap/places.py` is
+the same pair for places, and it is what an origin's `place` is checked against.
 
 ## Add one
 
@@ -66,6 +69,7 @@ while writing. Nothing from memory.
 | `history` | yes | The mental model and the real history, five sentences, each one sourced. |
 | `try_it` | yes | The smallest real thing, five minutes, on a laptop. |
 | `sources` | yes | `[[sources]]` blocks with `label`, `url` and an optional `checked` date. |
+| `origins` | while the pack is migrated | `[[origins]]` blocks: where this happened (below). |
 | `unlocks` | no | Topic ids this one leads to. An unknown id fails the load. |
 | `prerequisites` | no | Topic ids to read first. Also checked. |
 | `checked` | new topics | The day the sources were read. |
@@ -78,6 +82,65 @@ Prose goes in a literal string, so nothing needs escaping:
 ```toml
 summary = '''A justfile is a file of named commands you run with `just RECIPE`.'''
 ```
+
+## Where it happened
+
+A topic sits somewhere: a lab, a company, a university, a network. That is data
+too, with the same bar as a quote (ADR 0010), and it is what the Galaxy view
+puts on the map (`docs/GALAXY.md`, ADR 0015).
+
+```toml
+[[origins]]
+place = "bell-labs"     # a file in vibemap/data/places/; uv run vibe places
+year = 1969
+what = "A small team of researchers at Bell Labs releases the first version of Unix."
+source = "https://ethw.org/UNIX"
+primary = true          # exactly one: where the topic lives
+
+[[origins]]             # any others are echoes: the same topic, somewhere else
+place = "apple-cupertino"
+year = 2026
+what = "Apple's macOS stands on the Open Group's register of certified UNIX products."
+source = "https://www.opengroup.org/openbrand/register/"
+```
+
+Rules, all of them checked:
+
+- The source is https, it was opened while writing, and the page says what the
+  line says: the year, the place, the people or the organisation. If no primary
+  source puts the thing in a place, leave the origin out and say so; a gap is
+  honest, a guess is a false statement about a real company.
+- `what` is one line, plainly what happened, not why it matters.
+- Exactly one origin is `primary`. Two, or none, is refused by file name.
+- A topic with no origin at all still loads: packs are sourced one at a time.
+  `uv run python -c "from vibemap import places; print(places.problems(packs=['core']))"`
+  lists what is still missing, one sentence per file. `shelves=[...]` narrows it
+  to one shelf.
+
+A place that does not exist yet is a new file under `vibemap/data/places/`:
+
+```toml
+# vibemap/data/places/bell-labs.toml
+id = "bell-labs"                   # the file name, without .toml
+name = "Bell Labs, Murray Hill"
+kind = "lab"                       # lab, company, university, city, network,
+                                   # cloud, orbit, standards, foundation
+region = "us-east"                 # one of the regions in vibemap/places.py
+era = "mainframe"                  # the arm of the map: mainframe, personal,
+                                   # open-source, data, agents
+globe = "earth"                    # earth, datacentre or cloud
+lat = 40.684                       # only on the earth globe, and within a
+lon = -74.402                      # quarter of a degree of the real address
+look = "campus"                    # the diorama kit: campus, tower, lab, hall,
+                                   # racks, nebula, lanes, station, house, harbour
+landmark = "horn-antenna"          # one silhouette, as a slug
+source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-1983"
+```
+
+An open-source project with no single address is not a guess about an office:
+it sits at `the-internet`, the way a hosted service sits at `the-cloud` and a
+specification at `a-standards-body`. `uv run vibe places` lists every place and
+what comes from it; `uv run vibe places <id>` is one of them.
 
 ## The hands-on
 
@@ -124,6 +187,8 @@ as done and the progress code carries as `topics`.
 - [ ] The title survives `safe_title()` and is not the title of another topic.
 - [ ] Shelf, age and depth exist in `tree.toml` and the depth is honest.
 - [ ] Every factual sentence is covered by a cited URL that was fetched today.
+- [ ] Exactly one origin is primary, its place exists, and every origin's source
+      was opened and says the year, the place and the organisation it claims.
 - [ ] Three to six sources, all https, each with a label that says what it is.
 - [ ] `try_it` is a command a learner can paste, and it works.
 - [ ] The hands-on is under twenty minutes, offline, and its check fails before

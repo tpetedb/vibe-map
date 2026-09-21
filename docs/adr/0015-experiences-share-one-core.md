@@ -1,6 +1,6 @@
 # ADR 0015: An experience is a view over one shared core, and where a topic happened is data
 
-Status: Proposed, 2026-09-21
+Status: Accepted, 2026-09-21
 
 ## Context
 
@@ -18,7 +18,7 @@ Three things in the repository decide what is cheap and what is not:
 
 **One progress, and the choice of view is a preference.** `S.experience` is new, defaults to `islands`, starts from `experience` in `config/camp.toml`, and stays out of the progress code: a code says what was done, not how it was looked at. No format version changes, because no existing field changes meaning.
 
-**Where a topic happened is data, with a source.** A topic gains `[[origins]]` (place, year, one-line claim, source link, one marked primary). Places live once in `vibemap/data/places.toml` (kind, era, region, latitude and longitude when the place is on Earth, which globe carries it, a look, a landmark, a source). `vibemap/places.py` loads and validates them the way `topics.py` does: an unknown place, a missing source or a topic with no primary origin fails loudly with the file name. The build injects them as `PLACES`. The CLI reads the same data (`vibe places`, origins in `vibe topic`).
+**Where a topic happened is data, with a source.** A topic gains `[[origins]]` (place, year, one-line claim, source link, one marked primary). A place is one file of its own under `vibemap/data/places/` (kind, era, region, latitude and longitude when the place is on Earth, which globe carries it, a look, a landmark, a source). `vibemap/places.py` loads and validates them the way `topics.py` does: an unknown place, a missing source or a topic with two primary origins or none fails loudly with the file name, while a topic that carries no origin yet still loads and is reported by `places.problems()`. The build injects them as `PLACES`. The CLI reads the same data (`vibe places`, origins in `vibe topic`).
 
 **`listing()` is part of the contract, not an extra.** A canvas is one opaque image to assistive technology, so every experience must return what it shows as plain data, and the non-3D twin (the journey list, the place list) is built from it first. What the canvas can do, the list can do.
 
@@ -35,3 +35,7 @@ Three things in the repository decide what is cheap and what is not:
 - `fork_source` and the template carry the new folders, so `tools/sync_fork_source.py` and the build's file list change with phase 2, not before.
 - Accessibility rules bind the design, not only the result: travel is autopilot, every zoom level is also a button, and with reduced motion every camera move is a cut (`docs/GALAXY.md`, section 6).
 - Open, to decide when version zero exists: whether Galaxy is offered on the title screen, and whether the star map replaces the vault's graph view or sits next to it.
+
+## Amendments
+
+**2026-09-21, on acceptance: a place is one file, not a row in `places.toml`.** The proposal put every place in one `vibemap/data/places.toml`. Five research orders source the packs at the same time, and a shared file is a shared conflict: exactly the reason ADR 0013 gave for making a topic one file in a pack. Places are therefore one `vibemap/data/places/<id>.toml` each, with the same schema, and the loader reads the folder. The eras moved with them, from `tree.toml` into `vibemap/places.py`, because an era places a place and not a topic: a lab sits in one arm of the map for its whole life while the topics made there span decades.

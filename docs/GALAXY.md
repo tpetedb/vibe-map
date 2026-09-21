@@ -91,7 +91,7 @@ Constraints: three.js r128 as vendored, no build step beyond concatenation, phon
 
 ```
   DATA            vibemap/data/topics/**.toml      topics, now with [[origins]]
-  (what is true)  vibemap/data/places.toml         places: kind, era, region, look
+  (what is true)  vibemap/data/places/<id>.toml    one place: kind, era, region, look
                   vibemap/data/campaign.json       evenings, mentors (unchanged)
                           |
                           |  pydantic loaders, fail loudly with the file name
@@ -140,7 +140,7 @@ Islands implements the same seven. Most already exist under other names (`buildW
 
 ### Data model
 
-A topic gains origins. Additive; a topic without one fails the loader once the pack is migrated, so a gap is a red test, not a blank planet.
+A topic gains origins. Additive: a topic that has none still loads, because the packs are sourced one research order at a time, and `places.problems(shelves=..., packs=...)` returns one sentence per topic that is still without one. What cannot be half right fails the loader by file name: an unknown place, a missing or non-https source, two primary origins or none.
 
 ```toml
 # vibemap/data/topics/core/data.toml
@@ -158,25 +158,25 @@ what = "Postgres begins"
 source = "https://www.postgresql.org/docs/current/history.html"
 ```
 
-A place is its own small file, because many topics share one and its look is decided once:
+A place is one file of its own, because many topics share one, its look is decided once, and several research orders add origins at the same time without ever owning the same file (ADR 0013's reason for topics, and the amendment on ADR 0015):
 
 ```toml
-# vibemap/data/places.toml
-[[places]]
+# vibemap/data/places/bell-labs.toml
 id = "bell-labs"
 name = "Bell Labs, Murray Hill"
-kind = "lab"            # lab, company, university, city, network, cloud, orbit
-region = "us-east"
+kind = "lab"            # lab, company, university, city, network, cloud,
+                        # orbit, standards, foundation
+region = "us-east"      # a coarse region from vibemap/places.py
 era = "mainframe"       # the arm of the galaxy it sits in
-lat = 40.684            # where the dome sits on the tiny globe; omitted for
-lon = -74.401           # a place that is not on Earth (the cloud, the lanes)
 globe = "earth"         # earth, datacentre, cloud: which tiny globe carries it
+lat = 40.684            # where the dome sits on the tiny globe; refused for
+lon = -74.402           # a place that is not on Earth (the cloud, the lanes)
 look = "campus"         # which diorama builder and palette family
 landmark = "horn-antenna"
-source = "https://www.bell-labs.com/about/history/"
+source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-1983"
 ```
 
-Eras are the arms of the map, in `tree.toml` next to the ages: mainframe and Unix (1960 to 1979), personal computers and the web (1980 to 1999), open source and the cloud (2000 to 2011), data and deep learning (2012 to 2021), agents (2022 on). Abstract places are first-class and get a globe of their own: `datacentre` is a little world of racks and cooling towers, "the cloud" is a nebula you fly into, "the internet" is the lanes themselves, a standard body is a station. On an `earth` globe the continents are a simple outline in one palette hue, enough to say "China", "Europe", "California" at a glance, with the place's dome standing at its true coordinates. Several places in one region (Silicon Valley has many) share a planet and stand as neighbouring domes on it, which is itself a true thing to learn.
+Eras are the arms of the map, in `vibemap/places.py` next to the loader rather than in the tech tree's `tree.toml`, because an era places a place and not a topic: mainframes and Unix (1960 to 1979), personal computers and the web (1980 to 1999), open source and the cloud (2000 to 2011), data and deep learning (2012 to 2021), agents (2022 on). Abstract places are first-class and get a globe of their own: `datacentre` is a little world of racks and cooling towers, "the cloud" is a nebula you fly into, "the internet" is the lanes themselves, a standard body is a station. On an `earth` globe the continents are a simple outline in one palette hue, enough to say "China", "Europe", "California" at a glance, with the place's dome standing at its true coordinates. Several places in one region (Silicon Valley has many) share a planet and stand as neighbouring domes on it, which is itself a true thing to learn.
 
 An **echo** is a secondary origin. It appears at its place as a marker that offers a jump to the primary site. That is the teleport in the brief, and it is how one topic can honestly belong to IBM in 1970 and Berkeley in 1986.
 
@@ -272,7 +272,7 @@ Each phase is one pull request that can ship alone, and islands must be pixel-st
 | Phase | What | Proves |
 |---|---|---|
 | 0 | This document and ADR 0015. | The decision, in writing, before code. |
-| 1 | Data: `places.toml`, `[[origins]]`, `vibemap/places.py`, `vibe places`, `vibe topic` shows origins. The core pack sourced first, every claim checked against its link. No game change. | The where and when are real and loadable. |
+| 1 | Data: `vibemap/data/places/`, `[[origins]]`, `vibemap/places.py`, `vibe places`, `vibe topic` shows origins, `PLACES` in the build. Every place seeded, the shell shelf sourced as the worked example, every claim checked against its link. No game change. | The where and when are real and loadable. |
 | 2 | The seam: golden screenshots of the four islands, then the experience contract with islands registered under it. No file moves. | A refactor that changes no pixel. |
 | 3 | Galaxy version zero: the list twins first (journey and chart), then the journey line and the star map drawn from them, travel as a cut, tiny globes with the place pinned at its coordinates, landing in a dome whose miniature is built by the island builder with the place's look, the unchanged sheet. Three places only, chosen to be as different as possible (a California campus, a Chinese city, a data centre globe), reviewed side by side. Behind the setting. | The loop works end to end with no flight at all, and the miniatures are recognisable. |
 | 4 | The ship: autopilot flight, skip, reduced-motion cut, the ages as jump range, echoes as jumps. | The fantasy, within the accessibility rules. |

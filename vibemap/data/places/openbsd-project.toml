@@ -1,0 +1,10 @@
+# The OpenBSD project. A Canadian not-for-profit and developers in several countries; OpenSSH is theirs.
+id = "openbsd-project"
+name = "The OpenBSD project"
+kind = "foundation"
+region = "everywhere"
+era = "personal"
+globe = "cloud"
+look = "station"
+landmark = "puffer-fish"
+source = "https://www.openbsdfoundation.org/"

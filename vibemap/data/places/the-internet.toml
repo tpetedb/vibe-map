@@ -1,0 +1,10 @@
+# The internet. Not a building: the network itself, as the people who built it tell it.
+id = "the-internet"
+name = "The internet"
+kind = "network"
+region = "everywhere"
+era = "mainframe"
+globe = "cloud"
+look = "lanes"
+landmark = "lanes"
+source = "https://www.internetsociety.org/internet/history-internet/brief-history-internet/"

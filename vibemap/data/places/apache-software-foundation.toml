@@ -1,0 +1,10 @@
+# The Apache Software Foundation. A nonprofit run almost entirely by volunteers, hosting hundreds of projects.
+id = "apache-software-foundation"
+name = "The Apache Software Foundation"
+kind = "foundation"
+region = "everywhere"
+era = "open-source"
+globe = "cloud"
+look = "station"
+landmark = "feather"
+source = "https://www.apache.org/foundation/"

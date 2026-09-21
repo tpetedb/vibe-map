@@ -1,0 +1,10 @@
+# The IETF. Founded in 1986, the standards development organisation for the internet.
+id = "ietf"
+name = "The IETF"
+kind = "standards"
+region = "everywhere"
+era = "personal"
+globe = "cloud"
+look = "station"
+landmark = "working-group-room"
+source = "https://www.ietf.org/about/"

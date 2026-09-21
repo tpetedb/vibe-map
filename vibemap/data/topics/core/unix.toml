@@ -12,6 +12,22 @@ try_it = "Open Terminal.app. Type pwd, then ls -la, then man ls (q to quit)."
 
 unlocks = ["bash", "files", "git"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "bell-labs"
+year = 1969
+what = "A small team of researchers at Bell Labs releases the first version of Unix, begun on a PDP-7."
+source = "https://ethw.org/UNIX"
+primary = true
+
+[[origins]]
+place = "apple-cupertino"
+year = 2026
+what = "Apple's macOS 26 Tahoe stands on the Open Group's register of certified UNIX products."
+source = "https://www.opengroup.org/openbrand/register/"
+
 [[sources]]
 label = "The Missing Semester (MIT)"
 url = "https://missing.csail.mit.edu"

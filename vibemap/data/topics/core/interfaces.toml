@@ -12,6 +12,22 @@ try_it = "Run the same thing four ways: `uv run vibe status` (CLI), `just start`
 
 unlocks = ["unix", "mcp", "apis"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "parc"
+year = 1972
+what = "PARC researchers begin the Xerox Alto, whose graphical user interface proved widely and profoundly influential."
+source = "https://ethw.org/Milestones:The_Xerox_Alto_Establishes_Personal_Networked_Computing,_1972-1983"
+primary = true
+
+[[origins]]
+place = "anthropic-sf"
+year = 2024
+what = "Anthropic publishes the Model Context Protocol, a standard for connecting assistants to the systems where data lives."
+source = "https://www.anthropic.com/news/model-context-protocol"
+
 [[sources]]
 label = "Textual, TUIs in Python"
 url = "https://textual.textualize.io/"

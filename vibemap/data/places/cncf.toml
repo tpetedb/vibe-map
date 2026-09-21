@@ -1,0 +1,10 @@
+# The Cloud Native Computing Foundation. Part of the Linux Foundation; it hosts Kubernetes, Prometheus and Envoy.
+id = "cncf"
+name = "The Cloud Native Computing Foundation"
+kind = "foundation"
+region = "everywhere"
+era = "data"
+globe = "cloud"
+look = "station"
+landmark = "helm"
+source = "https://www.cncf.io/about/who-we-are/"

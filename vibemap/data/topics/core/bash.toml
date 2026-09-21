@@ -12,6 +12,16 @@ try_it = "cat workspace/data/scores.csv | sort -t, -k3 -n | tail -3 (the three h
 
 unlocks = ["zsh", "dotfiles", "justfile", "docker", "hooks"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "free-software-foundation"
+year = 1989
+what = "Brian Fox beta-releases BASH, the Bourne Again SHell, as the GNU version of sh."
+source = "https://www.gnu.org/bulletins/bull7.html"
+primary = true
+
 [[sources]]
 label = "Bash Guide (Greg's wiki)"
 url = "https://mywiki.wooledge.org/BashGuide"

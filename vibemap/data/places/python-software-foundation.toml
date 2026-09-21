@@ -1,0 +1,10 @@
+# The Python Software Foundation. The organisation behind the Python language.
+id = "python-software-foundation"
+name = "The Python Software Foundation"
+kind = "foundation"
+region = "everywhere"
+era = "open-source"
+globe = "cloud"
+look = "station"
+landmark = "two-snakes"
+source = "https://www.python.org/psf/about/"

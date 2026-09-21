@@ -1,0 +1,12 @@
+# Apple Park, Cupertino. One Apple Park Way, Cupertino.
+id = "apple-cupertino"
+name = "Apple Park, Cupertino"
+kind = "company"
+region = "us-west"
+era = "personal"
+globe = "earth"
+lat = 37.335
+lon = -122.009
+look = "campus"
+landmark = "the-ring"
+source = "https://www.apple.com/contact/"
