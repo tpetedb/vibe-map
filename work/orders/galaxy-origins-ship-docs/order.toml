@@ -1,0 +1,49 @@
+v = 1
+id = "galaxy-origins-ship-docs"
+title = "Origins for the ship, docs, knowledge shelves: where and when each topic happened, with a source"
+team = "content"
+branch = "feat/galaxy-origins-ship-docs"
+goal = "galaxy"
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/data/topics/core/cloud.toml",
+  "vibemap/data/topics/core/docker.toml",
+  "vibemap/data/topics/core/headless.toml",
+  "vibemap/data/topics/core/kubernetes.toml",
+  "vibemap/data/topics/core/adr.toml",
+  "vibemap/data/topics/core/changelog.toml",
+  "vibemap/data/topics/core/readme.toml",
+  "vibemap/data/topics/core/semver.toml",
+  "vibemap/data/topics/core/obsidian.toml",
+  "vibemap/data/topics/core/vault.toml",
+  "tests/test_origins_ship_docs.py",
+]
+cross = []
+needs = ["galaxy-places-schema"]
+
+[[criteria]]
+id = "c1"
+text = "This order's tests pass."
+check = "uv run pytest -q tests/test_origins_ship_docs.py tests/test_places.py tests/test_topics.py"
+
+[[criteria]]
+id = "c2"
+text = "Every topic of these shelves has exactly one primary origin, a place that exists, a year, a claim and an https source."
+check = "uv run python -c \"from vibemap import places; import sys; bad = places.problems(shelves=['ship', 'docs', 'knowledge']); print('\\n'.join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The reviewer opens every source link added by this order, and each page says what the claim says: the year, the place, the people or organisation. A claim the page does not support is a finding, however plausible."
+judge = "reviewer"
