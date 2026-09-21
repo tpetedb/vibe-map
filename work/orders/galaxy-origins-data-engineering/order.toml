@@ -1,0 +1,55 @@
+v = 1
+id = "galaxy-origins-data-engineering"
+title = "Origins for the data-engineering pack: where and when each topic happened, with a source"
+team = "content"
+branch = "feat/galaxy-origins-data-engineering"
+goal = "galaxy"
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/data/topics/data-engineering/airflow.toml",
+  "vibemap/data/topics/data-engineering/arrow.toml",
+  "vibemap/data/topics/data-engineering/csv.toml",
+  "vibemap/data/topics/data-engineering/dagster.toml",
+  "vibemap/data/topics/data-engineering/datamap.toml",
+  "vibemap/data/topics/data-engineering/dataquality.toml",
+  "vibemap/data/topics/data-engineering/dbt.toml",
+  "vibemap/data/topics/data-engineering/dlt.toml",
+  "vibemap/data/topics/data-engineering/duckdblab.toml",
+  "vibemap/data/topics/data-engineering/iceberg.toml",
+  "vibemap/data/topics/data-engineering/jsonl.toml",
+  "vibemap/data/topics/data-engineering/kafka.toml",
+  "vibemap/data/topics/data-engineering/medallion.toml",
+  "vibemap/data/topics/data-engineering/parquet.toml",
+  "vibemap/data/topics/data-engineering/polars.toml",
+  "vibemap/data/topics/data-engineering/schemas.toml",
+  "tests/test_origins_data_engineering.py",
+]
+cross = []
+needs = ["galaxy-places-schema"]
+
+[[criteria]]
+id = "c1"
+text = "This order's tests pass."
+check = "uv run pytest -q tests/test_origins_data_engineering.py tests/test_places.py tests/test_topics.py"
+
+[[criteria]]
+id = "c2"
+text = "Every topic of the pack has exactly one primary origin, a place that exists, a year, a claim and an https source."
+check = "uv run python -c \"from vibemap import places; import sys; bad = places.problems(packs=['data-engineering']); print('\\n'.join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The reviewer opens every source link added by this order, and each page says what the claim says. A claim the page does not support is a finding."
+judge = "reviewer"
