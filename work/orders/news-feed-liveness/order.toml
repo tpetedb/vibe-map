@@ -6,7 +6,7 @@ branch = "fix/news-feed-liveness"
 goal = "release-0-11-0"
 issue = 148
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-news-feed-liveness"
 
 owns = [
   "vibemap/news.py",

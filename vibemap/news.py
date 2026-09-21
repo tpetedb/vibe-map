@@ -284,6 +284,91 @@ def fetch_one(src: Source, *, limit: int = 8, timeout: int = 20) -> list[Item]:
         return parse(r.read(), src, limit=limit)
 
 
+# ---- is the feed still there --------------------------------------------------
+# Two facts a liveness check must not confuse: a feed that answers and still
+# parses is alive, and a feed with items today is fresh. A digest rests between
+# announcements (arXiv announces Sunday to Thursday and declares the gap in its
+# own skipDays), so only the first is a fault.
+
+FEED_ROOTS = ("rss", f"{ATOM}feed")
+
+
+@dataclass(frozen=True, slots=True)
+class Liveness:
+    """What one source answered, and what was wrong when it did not."""
+
+    source: str  # the source id
+    url: str
+    alive: bool
+    entries: int = 0  # item or entry elements in the document
+    items: int = 0  # how many of them this parser understood
+    fault: str = ""  # why it is not alive; empty when it is
+
+    @property
+    def fresh(self) -> bool:
+        """It had something to say today. Quiet is weather, not death."""
+        return self.items > 0
+
+    def __str__(self) -> str:
+        """The line a failing check prints: the feed, the URL, what was wrong."""
+        head = f"{self.source} ({self.url})"
+        if not self.alive:
+            return f"{head}: {self.fault}"
+        if not self.fresh:
+            return f"{head}: alive, nothing published yet today"
+        return f"{head}: alive, {self.items} of {self.entries} entries read"
+
+
+def liveness(src: Source, body: bytes | str) -> Liveness:
+    """Read what a feed answered: is this still a feed this parser knows?
+
+    Dead is a body that is not XML, XML that is not a feed, or a feed whose
+    entries none of the parser's fields fit, which is how a changed format
+    looks from out here. An empty feed is not dead: it has nothing to announce
+    today, and a digest between announcements looks exactly like this.
+    """
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError as e:
+        return Liveness(src.id, src.url, False, fault=f"not XML: {str(e)[:100]}")
+    if root.tag not in FEED_ROOTS:
+        return Liveness(
+            src.id,
+            src.url,
+            False,
+            fault=f"not a feed: the root element is {root.tag!r}",
+        )
+    entries = sum(1 for _ in root.iter("item"))
+    entries += sum(1 for _ in root.iter(f"{ATOM}entry"))
+    items = len(parse(body, src, limit=entries))
+    if entries and not items:
+        return Liveness(
+            src.id,
+            src.url,
+            False,
+            entries,
+            0,
+            fault=(
+                f"format changed: {entries} entries, none of them with a "
+                "title and a link this parser could read"
+            ),
+        )
+    return Liveness(src.id, src.url, True, entries, items)
+
+
+def check_one(src: Source, *, timeout: int = 20) -> Liveness:
+    """Ask one feed whether it is still there; one step of the nightly check."""
+    req = Request(src.url, headers={"User-Agent": USER_AGENT})
+    try:
+        with urlopen(req, timeout=timeout) as r:  # noqa: S310 (feeds are config)
+            body = r.read()
+    except Exception as e:  # reason: a feed that will not answer is the answer
+        return Liveness(
+            src.id, src.url, False, fault=f"{type(e).__name__}: {str(e)[:120]}"
+        )
+    return liveness(src, body)
+
+
 def fetch(
     sources: tuple[Source, ...] | None = None, *, per_feed: int = 8
 ) -> tuple[list[Item], list[str]]:
