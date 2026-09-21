@@ -18,7 +18,7 @@ unlocks = ["vault"]
 [[origins]]
 place = "obsidian"
 year = 2022
-what = "Obsidian 1.0.0 for desktop is released on 13 October 2022, and the workspace supports tabs."
+what = "Obsidian 1.0.0 for desktop is released on 13 October 2022."
 source = "https://obsidian.md/changelog/2022-10-13-desktop-v1.0.0/"
 primary = true
 

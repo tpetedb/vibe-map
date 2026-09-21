@@ -18,8 +18,8 @@ unlocks = ["github"]
 [[origins]]
 place = "bell-labs"
 year = 1979
-what = "The V7 Unix tree carries /usr/doc/README, a file of 314 bytes listed at 11 January 1979 in the TUHS archive."
-source = "https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/doc"
+what = "Bell Telephone Laboratories copyrights the documents of Seventh Edition Unix in 1979, and the files shipped on its distribution tapes include a README with the papers of Volumes 2A and 2B."
+source = "https://9p.io/7thEdMan/index.html"
 primary = true
 
 [[sources]]

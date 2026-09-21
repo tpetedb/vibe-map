@@ -11,6 +11,7 @@ dome with no label, which no schema rule can catch.
 from __future__ import annotations
 
 import datetime as dt
+import re
 
 from vibemap import places, topics
 
@@ -32,15 +33,23 @@ NAMES = {
     "vault": "vault",
 }
 
+# A page below an edition's root in the TUHS tree is a path and the file's own
+# bytes: a date at best, never a lab or a person. The edition's root page and
+# the manual's title page are where Bell Laboratories is named.
+TUHS_FILE_PAGE = re.compile(r"tuhs\.org/cgi-bin/utree\.pl\?file=[^/&]+/")
+
 
 def _topics() -> list[topics.Topic]:
     return [t for t in topics.all_topics() if t.shelf in SHELVES]
 
 
 def test_the_three_shelves_hold_the_topics_this_order_sourced() -> None:
-    # A topic added to one of these shelves later needs an origin and a word
-    # of its own, and this is where it is told so.
-    assert sorted(t.id for t in _topics()) == sorted(NAMES)
+    found = sorted(t.id for t in _topics())
+    assert found == sorted(NAMES), (
+        "a topic on the ship, docs or knowledge shelf needs an [[origins]] block"
+        " and its word in NAMES, and one that left needs its word removed:"
+        f" {sorted(set(found) ^ set(NAMES))}"
+    )
 
 
 def test_none_of_the_three_shelves_has_a_defect_left() -> None:
@@ -62,7 +71,7 @@ def test_every_topic_of_them_lives_at_one_place_that_exists() -> None:
 
 def test_the_primary_line_of_every_topic_names_the_topic() -> None:
     for topic in _topics():
-        primary = next(o for o in topic.origins if o.primary)
+        primary = places.origins_of(topic)[0]
         assert NAMES[topic.id] in primary.what.lower(), (
             f"{topic.pack}/{topic.id}.toml: the primary origin's line is the only"
             f" one the map shows, so it has to say {NAMES[topic.id]!r}:"
@@ -76,6 +85,18 @@ def test_no_topic_of_them_stands_twice_at_the_same_place() -> None:
     for topic in _topics():
         used = [o.place for o in topic.origins]
         assert len(used) == len(set(used)), topic.id
+
+
+def test_no_origin_of_them_stands_on_a_page_that_names_no_one() -> None:
+    # The town may come from the place file, the actor may not: an origin's own
+    # page has to say who, so a bare file out of an archive cannot carry one.
+    for topic in _topics():
+        for origin in places.origins_of(topic):
+            assert not TUHS_FILE_PAGE.search(origin.source), (
+                f"{topic.pack}/{topic.id}.toml: {origin.source} is a file in the"
+                f" TUHS tree and names no lab and no person, so it cannot put"
+                f" {topic.id!r} at {origin.place!r}; cite a page that says who"
+            )
 
 
 def test_the_game_is_given_the_origins_of_all_ten() -> None:

@@ -18,7 +18,7 @@ unlocks = ["ci"]
 [[origins]]
 place = "the-internet"
 year = 2014
-what = "Keep a Changelog's own CHANGELOG dates its first release, 0.0.1, to 31 May 2014."
+what = "Keep a Changelog 0.0.1, the first entry of its own changelog, is dated 31 May 2014."
 source = "https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md"
 primary = true
 

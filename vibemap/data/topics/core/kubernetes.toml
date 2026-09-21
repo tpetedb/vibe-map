@@ -18,8 +18,8 @@ unlocks = ["future"]
 [[origins]]
 place = "google-mountain-view"
 year = 2014
-what = "Kubernetes is developed at Google and released as open source in 2014."
-source = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story"
+what = "Google announces Kubernetes, an open source container manager, on 10 June 2014."
+source = "https://cloudplatform.googleblog.com/2014/06/an-update-on-container-support-on-google-cloud-platform.html"
 primary = true
 
 [[origins]]

@@ -17,9 +17,9 @@ unlocks = ["tests", "cost"]
 
 [[origins]]
 place = "bell-labs"
-year = 1974
-what = "Cron, the clock daemon that runs commands at the dates and times scheduled in /usr/lib/crontab, is in the V6 Unix manual page dated 25 October 1974."
-source = "https://www.tuhs.org/cgi-bin/utree.pl?file=V6/usr/man/man8/cron.8"
+year = 1979
+what = "The Seventh Edition of the UNIX Programmer's Manual, from Bell Telephone Laboratories in Murray Hill, is dated January 1979 and has cron, the clock daemon that runs commands at the dates and times scheduled in /usr/lib/crontab."
+source = "https://9p.io/7thEdMan/v7vol1.pdf"
 primary = true
 
 [[origins]]
