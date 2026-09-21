@@ -1,0 +1,110 @@
+# First review of this order, by someone who did not build it. The order's own
+# commands ran in this worktree and left it clean; every experiment that changes
+# a file ran in scratch copies of e042c5c under /tmp (git archive), never here.
+v = 1
+order = "galaxy-seam"
+by = "reviewer-galaxy-seam-r1"
+reviewed = "e042c5c539e21278fb4760fc31d68c66af758383"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran the command in a scratch copy of e042c5c: 12 passed, the four pictures at mean 0.00, worst 0.00. The branch is behind main (merge base cb03e8b, origin/main at 322895f), so I laid the three owned paths on today's origin/main in a second scratch copy, rebuilt and ran it again: 12 passed, pictures 0.00/0.00, so it survives main's newer conftest.py and build.py. CI, smoke shard, both runs of pull request 169 (35619326089 on 4edb158, 35622986955 on e042c5c): 59 passed on the first attempt, no retry, the pictures at worst 0.33. The command proves the sentence; what a passing picture is worth is c4's question. The contract tests are not vacuous: in a scratch copy I reverted seven behaviours of the module one at a time and each failed its own test (the own-key check made a truthy lookup: 'constructor' == 'islands'; tick emptied: before -0.62, after -0.62; the record made to beat the URL parameter: 'galaxy' == 'islands'; dispose without emptyTrash: geometries 175 of 175; listing reading S.done for every island: campus states wrong; goTo without openCh: the sheet never opens; experienceId writing the default into S.settings: 'experience' found in settings). The file has no sleep and no wait_for_timeout; every wait is on something the page produced.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran every part in the worktree at e042c5c: ruff check and ruff format --check silent, checks.py style prints 'style OK', checks.py sinks exit 0, pytest -m 'not browser and not integration' exit 0 with no F anywhere in the log, and git status empty afterwards. The sink guard does read the new module: an innerHTML fed with S.name, planted at the end of 24-experience.js in a scratch copy, gave '24-experience.js: 1 HTML sinks, the register has 0' and exit 1. The module itself writes no HTML, no link and nothing into the build, and neither it, the tests nor the fragment carries an em-dash or an emoji.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the loop in the worktree: build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus each exit 0 under --check. diff of src/game/24-experience.js against vibemap/data/fork_source/src/game/24-experience.js is empty.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = '''
+Not flaky: yes. Real: only for coarse changes, and the first colour I changed went through. All in scratch copies, game rebuilt after each change, numbers are mean/worst as the test prints them.
+Unchanged: five runs of the four pictures plus two whole-file runs on this Mac, 28 pictures, all pass; 24 of them 0.00/0.00, four at worst 0.33 to 0.67 (desert twice, prod once, winter once), mean never above 0.01. CI passed them first attempt in both runs at worst 0.33. I downloaded run 35622986955's screenshots and compared them with tests/golden myself: 76 to 339 of 256000 pixels differ per island, the median shift between the two machines is exactly [0,0,0] on all four, 16x10 distance at most 0.00/0.33. Both machines draw with the same software renderer, which is why.
+Changed: (A) campus grass #79CC72 to #79CC7D, eleven levels on one channel: all four PASS (campus 0.81/3.00, desert 0.03/2.33, prod 0.07/2.67). That is the criterion's own experiment and the test did not fail. (B) the same colour to #84D77D, eleven levels on all three channels: campus 2.80/10.33, desert worst 8.33, prod worst 9.33 fail, which reproduces the builder's row. (A2) grass #79CC86, twenty levels on one channel: campus fails on the mean alone, 1.48/5.67. (E) windmill taken out of campus extras: fails, worst 10.00. (F) campus plot 1 moved from [0,10] to [0,12]: fails, worst 16.67. (K) the well taken out of campus extras, run twice: all four PASS, 0.04/1.00. (I) EXPOSURE 1.06 to 1.17: campus 1.21/2.33 and desert 1.43/3.00 fail by the mean only, winter 0.80/2.67 and prod 0.91/3.67 PASS.
+How the tolerance was chosen: measured on both machines as the order asked, and tightened from 12.0 to 6.0 after the first CI run, which is the right process. But 6.0 is 9 times the largest unchanged worst region I measured here and 18 times CI's, and 1.0 is a hundred times the largest unchanged mean, not the 'order of magnitude' the docstring, the pull request and the fragment say; and 'the smallest change worth catching' is the one change the numbers were tuned to. See the first finding.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+git diff origin/main...HEAD --name-status: eight files added (the fragment, the module, its fork_source mirror, four PNGs, the test file) and two modified (game/vibe-map.html, and order.toml by the builder's name only). No existing file under src/ is in the diff. diff of the merge base's game/vibe-map.html against the branch's is one hunk, 96 lines added after 23-camera.js's text and none removed, and those 96 lines are src/game/24-experience.js byte for byte. At load the module defines constants and three window seams and calls nothing; grep finds no caller of EXPERIENCES or activeExperience outside it. python3 tools/work.py ci names one problem only, the missing review, so every touched file is inside the order.
+Each of the seven is driven through window.__experience(), which is activeExperience(): name (equals 'Islands'), listing, goTo to a stop and to an island, where (the cafe on the terrace, then stop 1 after the walk), tick (the zoom level eases inside one synchronous evaluate, so the frame loop cannot be what moved it), dispose and build (scene null, geometries under half, then back and drawing). My own probes through the same seam: a fresh game lists 32 rows, stop 1 of each island 'next' and the rest 'ahead', ids unique; before Start listing answers, where is null and goTo is false; with ?experience=islands over a saved 'orbit', JSON of S and the localStorage record are identical before and after five rounds of activeExperience, listing and where; ?experience=constructor, __proto__, toString, ISLANDS and the empty value all fall back to islands; build({island:'atlantis'}) keeps the island. The live render I looked at (campus, on today's main) is the recorded picture.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tests/test_game_experience.py"
+text = '''
+MEAN_TOL 1.0 and WORST_TOL 6.0 sit far above what was measured, and the guard is blind below them. Unchanged noise is at most 0.67 worst and 0.01 mean on this Mac (28 pictures) and 0.33 and 0.00 on CI (8 pictures); the Linux render differs from the Mac record in 76 to 339 pixels of 256000. Against that, one island colour changed by eleven levels on one channel (campus grass #79CC72 to #79CC7D) passes on all four pictures at 0.81/3.00, which is c4's own experiment not failing, and a ten percent change of EXPOSURE passes on winter and prod and fails campus and desert by 0.21 and 0.43 of mean only. The docstring says the tolerances are 'an order of magnitude above' the two machines and 'still below the smallest change worth catching'; the first is 18 times and over 100 times, the second was never measured below the one nudge the numbers were tuned to. Its row 'the same tree twice on this Mac, mean 0.00, worst 0.00' is also not what this Mac does: four of 28 unchanged pictures came out at 0.33 to 0.67. Every later Galaxy order will cite this test as proof that it left the islands alone, so the tolerance has to follow the noise that was measured, on both machines, and the docstring, the pull request text and the fragment have to say what the guard cannot see: the well taken off the campus passes at 0.04/1.00, and at a 32x20 grid its 3.00 is still inside this Mac's own 2.33 of noise, so a prop of that size is below this method whatever the tolerance.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_experience.py"
+text = '''
+_distance takes the median difference out so that 'a machine whose rasteriser renders the whole picture a shade darker' still passes. The measurement shows no such machine: the median shift between the Mac record and the CI render is exactly [0,0,0] on all four islands. What the step does cost is that a flat shift is invisible, and the backstop the docstring names for that, tests/test_game_graphics.py, accepts any exposure between 0.6 and 2.0. Either measure a reason for the step or say in the docstring that nothing watches a flat shift.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/24-experience.js"
+text = '''
+where() names a stop the contract does not have. With all eight campus stops delivered the walk starts inside the inn's radius, the loop sets nearK to finaleStop(), and where() answers {kind:'stop', stop:9, island:'campus'}; listing() has stops 1 to 8 and goTo({stop:9}) answers false. The same holds on every island. A twin built from listing() and where() would mark a row that is not there. The finale is its own kind of place, or null; no test stands at it.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/24-experience.js"
+text = '''
+goTo answers true when less than what was asked will happen, and the caller cannot tell. goTo({island:'winter', stop:2}) returns true, travels and drops the stop: on landing the sheet is closed and the walker is at the inn; the comment says the walk 'is asked for again once it lands' but nothing tells a caller when that is. With motion on, goTo({island:'winter'}) then goTo({island:'desert'}) both return true and the game lands on winter, because setWorld ignores a request during a flight. goTo({stop:1}) during a flight, and after dispose(), sets a target, opens the lesson and returns true; where() after dispose() still reports the cafe from the last frame. None of it is tested. feat/qol-batch2 carries walkTo(n) and aim(), which refuse during a flight and off the land and call themselves the one place that writes a destination; once that lands, goTo's own five assignments are a second spelling of it.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/24-experience.js"
+text = '''
+Three rules are spelled again because the order could not touch their files: firstUndone() is nextStop()'s loop from 40-sheet.js (the comment says so), where() is the third reader of nearK's 'm:' and 'a:' prefixes after enterNear in 40-sheet.js and the context in 88-chat.js, and the row title w.h+", "+w.n is the roadmap's and the search palette's label. The order that owns those files should leave one of each.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_experience.py"
+text = '''
+Gaps beside what is tested. listing() is only asserted for a game with stops delivered; the fresh game is right (my probe: 32 rows, stop 1 of each island 'next') but no test says so. where() is never asked next to a mentor. build() is only reached through its buildWorld branch, never the init3d one, and its island and carry arguments are not driven (they work: build({island:'desert'}) builds the desert). The tick test's precondition gap_before > 0.1 holds by 0.02: CAM.zoom.start is -0.62 and one step lands on -0.5, so a camp or a design change that moves the start level in src/config fails this test for a reason that has nothing to do with tick().
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/24-experience.js"
+text = '''
+The header comment narrates the plan rather than a constraint: 'Nothing calls the registry yet', 'Moving the call sites over is the next order's work'. It is true today and false the day galaxy-v0 lands, and AGENTS.md asks comments to state constraints and why. The three comment lines on the test seam and on experienceKnown are the house style; this paragraph is the exception.
+'''
+
+[[findings]]
+severity = "low"
+file = ".github/workflows/ci.yml"
+text = '''
+Not this order's file. The twelve new browser tests fall into the default shard, smoke, which was already the longest leg: 47 tests in 26:56 on main's run 35619131095, 59 tests in 30:11 on this branch. A pattern that gives tests/test_game_experience.py to a shorter shard is a harness order.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_camera.py"
+text = '''
+Not this order's file and not its doing, recorded because it keeps pull request 169 red. browser shard, webkit fails in both runs on test_every_zoom_level_holds_the_phone_budget[game_android], first attempt and retry (a wait_for_function or a screenshot timeout). The same test fails the same way on feat/qol-batch2 (run 35620407442) and on plan/galaxy-concept-fix (run 35619257012), and passed on main's push run 35619131095, so it is a flaky test on the runner, for whoever owns test determinism.
+'''
