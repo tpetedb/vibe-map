@@ -79,21 +79,32 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: python3 tools/work.py ci --base "origin/$BASE_REF" --head "$HEAD_REF"
 
-  # The browser battery is the long pole, so four runners share it instead of
+  # The browser battery is the long pole, so seven runners share it instead of
   # one carrying it end to end. The split is by file and this list is the only
-  # place it lives; `test_every_browser_test_file_is_in_exactly_one_shard` in
-  # tests/test_repo.py fails when a file is in no shard or in two, so a new
-  # browser test cannot go unrun. This job must never carry the name branch
-  # protection requires: that belongs to the aggregator below.
+  # place it lives; `tools/ci_shards.py` reads it back, and
+  # `test_every_browser_test_file_is_in_exactly_one_shard` in tests/test_repo.py
+  # fails when a file is in no shard, in two, or when a pattern claims nothing.
+  #
+  # A shard claims files by name or by pattern, and `smoke` carries
+  # `default: true`: a browser test file no pattern claims runs there, so a new
+  # test file is run from the moment it exists and no order has to edit this
+  # workflow to add one. The default belongs on a shard with headroom, which is
+  # why it is the shortest one; the guard's failure message prints the whole
+  # split, and every shard prints `--durations`, which is how this is rebalanced
+  # when it drifts.
+  #
+  # This job must never carry the name branch protection requires: that belongs
+  # to the aggregator below.
   browser-shard:
     name: browser shard, ${{ matrix.shard }}
     runs-on: ubuntu-latest
     strategy:
-      # One red shard should not hide the state of the other three.
+      # One red shard should not hide the state of the other six.
       fail-fast: false
       matrix:
         include:
           - shard: smoke
+            default: true
             files: >-
               tests/test_game_smoke.py tests/test_stops.py
               tests/test_grow_game.py tests/test_game_bottles.py
@@ -102,7 +113,7 @@ jobs:
               tests/test_game_ui.py tests/test_interests.py
               tests/test_artifacts.py tests/test_game_vault.py
           - shard: phone
-            files: tests/test_game_phone.py
+            files: tests/test_game_phone*.py
           - shard: bridges
             files: >-
               tests/test_game_bridges.py tests/test_game_news.py
@@ -115,9 +126,7 @@ jobs:
               tests/test_onboarding.py tests/test_reset.py
               tests/test_syllabus.py
           - shard: qol
-            files: >-
-              tests/test_game_qol.py tests/test_game_qol_settings.py
-              tests/test_game_state.py
+            files: tests/test_game_qol*.py tests/test_game_state.py
           - shard: webkit
             files: tests/test_game_webkit.py tests/test_game_camera.py
             retry: true
@@ -148,24 +157,33 @@ jobs:
       # on a cache hit, and then only the apt half does work.
       - name: Browsers and their system libraries
         run: uv run playwright install --with-deps chromium webkit
+      # The files come from the same reading of the matrix the guard uses, so a
+      # pattern and the default shard mean exactly the same thing here and
+      # there. It refuses to print an empty list, because pytest with no file
+      # argument would quietly run the whole battery on one runner.
       # --durations prints the slowest tests of the shard, which is how the
       # split above is rebalanced when it drifts.
       - name: The shard
         if: ${{ !matrix.retry }}
-        run: >-
-          uv run pytest --durations=10 -m "browser and not integration"
-          ${{ matrix.files }}
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          files=$(uv run python tools/ci_shards.py --files "$SHARD")
+          echo "$SHARD runs: $files"
+          uv run pytest --durations=10 -m "browser and not integration" $files
       # Headless WebKit drops the WebGL context on a loaded runner often enough
       # to redden a green branch, and it is the one browser we cannot debug
       # here. One rerun of only the tests that failed tells the two apart: a
       # real defect fails twice, a lost context passes on the retry.
       - name: The shard, with one retry of what failed
         if: ${{ matrix.retry }}
-        run: >-
-          uv run pytest --durations=10 -m "browser and not integration"
-          ${{ matrix.files }}
-          || uv run pytest --last-failed -m "browser and not integration"
-          ${{ matrix.files }}
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          files=$(uv run python tools/ci_shards.py --files "$SHARD")
+          echo "$SHARD runs: $files"
+          uv run pytest --durations=10 -m "browser and not integration" $files \
+            || uv run pytest --last-failed -m "browser and not integration" $files
       # The receipt the aggregator counts. It is written only when the tests
       # above passed, so a shard cannot claim a pass it did not earn.
       - name: Leave a receipt for the aggregator
