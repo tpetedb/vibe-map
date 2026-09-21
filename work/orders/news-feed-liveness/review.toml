@@ -1,0 +1,92 @@
+# Review of this order, by someone who did not build it. Every feed case was
+# served by my own local server (scripts under /tmp, nothing in the tree), the
+# fixes were undone one at a time in a `git archive` copy of the reviewed commit,
+# and the product was run in a scratch camp made with `vibe new`.
+v = 1
+order = "news-feed-liveness"
+by = "reviewer-news-feed-liveness-r1"
+reviewed = "772e0c86345155f59cbb4b0fd7b4ad0ad8e670a7"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran it on 772e0c8: 35 passed. `each new one seen failing first` is not something the command can show, so I undid the fixes one at a time in a copy of the commit and ran the whole file. Without the `entries and not items` branch only the RENAMED case fails. With the old rule back (`if not items`) test_a_feed_with_nothing_new_today_is_alive and the three-source test fail. Without the root element check only the A_PAGE case fails. With the URL taken out of `Liveness.__str__` all four dead cases fail. With the request error escaping `check_one` the 404 case, the closed port and the three-source test fail. `items = entries` fails the RENAMED case. Against origin/main's news.py all eight new tests fail with AttributeError. Six fixes undone, each noticed, nothing else moves, the copy restored byte for byte and green again. No new test waits on time: the fixture joins its server thread, a closed port refuses at once. One thing the command does that its sentence does not say is the fourth low below.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the whole command on 772e0c8: exit 0 (ruff check, ruff format, style, sinks, the battery without browser and integration). CI run 35567103114 on the same commit agrees: steps 5 to 13 are green, step 14 `work orders are readable, reviewed and inside their files` is the only red one and it waits for this file. The command is the sentence. No em-dash in the diff.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+All six `--check` runs exit 0 on this commit, each run on its own so that a pipe could not hide an exit code. The diff touches nothing a generator reads: vibemap/news.py is not mirrored into fork_source or the template, and vibemap/data/sources.json is main's file, 21 sources, none added or removed.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = '''
+Twenty-two cases against my own sockets on 127.0.0.1 (and one name under .invalid), each through `news.check_one`, nothing over the network.
+Alive, rightly: a full RSS feed (`alive, 2 of 2 entries read`), a well-formed RSS channel with no items and a well-formed Atom feed with no entries (both `alive, nothing published yet today`, fresh False), a feed where one item of two parses (`1 of 2`).
+Dead, rightly, each line `id (url): what`: 404, 410 and 500 (`HTTPError: HTTP Error 404: Not Found`), a closed port (`URLError ... Connection refused`), a name under .invalid (`URLError ... nodename nor servname`), a server that accepts and never answers (`TimeoutError: timed out` after the 1 s I gave it), a body cut short of its Content-Length (`IncompleteRead`), well-formed HTML and a 302 landing on it (`not a feed: the root element is 'html'`), everyday HTML, JSON and an empty 200 (`not XML: ...`), RSS 1.0 under rdf:RDF (`not a feed`, and the parser never read those), items whose title and link were renamed (`format changed: 1 entries, none of them with a title and a link this parser could read`), items whose only link is `javascript:` (same sentence, true enough).
+Swallowed, and this is why the criterion fails: a FULL feed whose entry element itself was renamed. Three spellings, `<article>` for `<item>` under an rss root, `<n:item>` in a namespace, `<post>` for `<entry>` under an Atom root, two or three entries each with a good title and link: all three answer `alive, nothing published yet today`, entries=0. origin/main's rule (`not fetch_one(src, limit=1)` is dead) caught all three as `parsed, no items`. The pull request names this case and leans on the nightly printing every quiet feed; it does not, see the second finding. The order asked for the option that `still catches a feed whose format changed so that the parser finds nothing in a full feed`; this catches one half of that.
+The message: every dead line carries the source id, the full URL and the fault; taking the URL out fails four tests.
+The real registry, once, on Monday 2026-09-21: all 21 alive and fresh, every one `N of N entries read` (6 to 1210), arxiv-cs-ai 214 of 214, and its live channel does declare `<skipDays>` Sunday and Saturday, so the comment in news.py is true. The other twenty carry 6 to 1210 entries and keep their back catalogue in the feed, so for them an empty answer is the signal the old rule was using.
+Registry version: the builder added no key, so `SOURCES_VERSION` and the file are untouched. I checked that version 2, no version and `"1"` as a string are each refused with the number in the sentence, and that an unknown optional key on every source still loads 21 sources, so the other option in findings.md stays open without a bump.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+The diff touches none of `fetch`, `fetch_one`, `parse`, cli.py or src/; I ran them anyway. A camp from `vibe new` with `[news] feeds` set to three URLs on my server (a full feed, the quiet digest with skipDays, a 404): `vibe news --dry-run` and `vibe news` print the two items and one `feed 127.0.0.1:8765: HTTPError: HTTP Error 404: Not Found`; the quiet source is not mentioned anywhere, in the terminal, in .vibe/news.json (version 2, two items) or in vault/Camp/News.md, whose `Feeds that did not answer` lists only the 404. The card: a scratch Playwright test through the repo's own `game` fixture, `./news.json` routed to the baked feed minus every arxiv-cs-ai item and dated 2026-09-20. Twelve rows, `Pulled 2026-09-20 from the sources in vibemap/data/sources.json. Unofficial, not affiliated; every line links to the publisher.`, no word about a missing source, zero page errors; with an empty items list the card says `Nothing pulled yet. Run uv run vibe news, then just build; a forked repo does it every day.` I looked at both screenshots: the card reads as on any other day. `Liveness.__str__` reaches no learner; only the nightly test calls it.
+'''
+
+[[findings]]
+severity = "high"
+file = "vibemap/news.py"
+text = '''
+`liveness()` counts entries with the parser's own two element names (`item`, Atom `entry`), so it can only see a format change that keeps those names. Rename the entry element in a full feed and entries is 0, which is the quiet branch: `<article>` under rss, a namespaced `<n:item>`, `<post>` under an Atom feed, two or three good entries each, all answer `alive, nothing published yet today`. That sentence is then false, and it is the exact case findings.md set as the condition for choosing the simpler option; main's rule caught it. Run through test_every_registered_feed_is_alive with the nightly's own flags and a registry of a full feed, the quiet digest and the renamed feed: `1 passed`, no output. A source can drop out of the News card for good and the night stays green. tests/test_news.py has no such case: RENAMED keeps `<item>` and renames the children. What would satisfy me: the renamed-entry family reported dead by name, offline tests for it that fail without the fix, QUIET and an empty Atom feed still alive. The evidence is in reach inside `owns`: the answer itself (an empty arXiv channel has single metadata children and declares skipDays; a renamed feed has a run of repeated unknown children) or the registry (an optional key on the one digest, empty staying a fault for the other twenty, which loads today without a version bump).
+'''
+
+[[findings]]
+severity = "medium"
+file = "tests/test_news.py"
+text = '''
+`print("\nAlive with nothing new today: ...")` is captured. The nightly runs `uv run pytest -m integration tests/test_news.py`, addopts are `-q -ra`, and pytest shows captured output of a passing test only with `-rP` or `-s`: I ran the nightly's exact command against a local registry of a full feed, the quiet digest and the renamed feed and got `.` and `1 passed, 34 deselected`; the two lines appear only when I add `-rP`. So the changelog's `a feed that is alive with nothing new is printed rather than failed` and the pull request's `the nightly prints every quiet feed by name, so that shows up as a feed quiet every single night` are not what happens on a green night. .github/workflows/nightly.yml is not in `owns`, so the flag is not the builder's to add; a `warnings.warn` per quiet feed lands in the warnings summary of a passing run and is. Make it visible or stop saying it is.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+`check_one` spells `fetch_one`'s request a second time: the same `Request(src.url, headers={"User-Agent": USER_AGENT})`, the same `urlopen(req, timeout=timeout)`, the same noqa. AGENTS.md: one helper per concept. One `_get(src, timeout) -> bytes` under both would keep the user agent and the S310 reasoning in one place.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+`liveness()` parses the body with `ET.fromstring` and then hands the same bytes to `parse()`, which parses them again and builds every Item in full (hash, entity and tag stripping, dates) only to be counted: 1210 for openai-news, 862 for huggingface-blog, twice each per night. Harmless at 13 s for the whole registry; worth folding in when the first finding reshapes the function.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_news.py"
+text = '''
+The comment over QUIET ends `and the nightly check used to read this as death`. AGENTS.md: comments state constraints and why, never narrate changes. The first half of the sentence (arXiv declares the gap with skipDays) is the constraint and is enough.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/news-feed-liveness/order.toml"
+text = '''
+For the manager, not the builder: c1's command is `uv run pytest -q tests/test_news.py` with no `-m 'not integration'`, and nothing in pyproject.toml deselects the marker, so `just work-check` and every reviewer's run of c1 fetch all 21 registered feeds from the open internet (35 tests, not 34; the 20 s in result.json is that). The order's own text says tests run offline. On a night when one publisher is down c1 goes red for a reason the diff cannot fix.
+'''
