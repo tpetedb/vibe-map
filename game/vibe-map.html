@@ -3699,7 +3699,10 @@ function tickPath(from){
   if(!hasTarget){l.visible=false;return}
   const a=l.geometry.attributes.position;
   a.setXYZ(0,from.x,.09,from.z);a.setXYZ(1,target.x,.09,target.z);a.needsUpdate=true;
-  l.geometry.computeBoundingSphere();l.computeLineDistances();l.visible=true}
+  // The dashes are spaced along the line's own length, so that is the one
+  // thing recomputed; the line is never culled, so its bounds are nobody's
+  // question.
+  l.computeLineDistances();l.visible=true}
 // Battery saver: a minute with no key, no tap and no stick, and nothing open
 // that somebody could be typing into, means half the frames are enough. Any
 // input is full rate again on the next one. The minute is a constant the

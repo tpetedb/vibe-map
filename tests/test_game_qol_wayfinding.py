@@ -1,11 +1,12 @@
 """Wayfinding and movement: walk me there, the arrow, the map, hurrying.
 
-Every test presses the control a player presses (a palette button, the arrow
-at the edge of the screen, a plot on the map, a key) and then waits for a fact
-the page produced: where the walker is, what window.__walk() says, how many
-frames the renderer drew. Nothing here waits on a clock, and the one place
-where the game counts a minute hands the tests a shorter one so the wait stays
-a fact rather than a minute of sleeping.
+Every test presses what a player presses (a palette button, a plot on the map,
+a stop in its list, a key, the stick) and then waits for a fact the page
+produced: where the walker is, what window.__walk() says, how many frames the
+renderer drew. The arrow at the edge of the screen is read rather than
+pressed, because it takes no press. Nothing here waits on a clock, and the one
+place where the game counts a minute hands the tests a shorter one so the wait
+stays a fact rather than a minute of sleeping.
 """
 
 from __future__ import annotations
@@ -125,6 +126,14 @@ def _tap_the_ground(game: GamePage) -> None:
     game.page.wait_for_function("() => window.__walk().has === true", timeout=WAIT_MS)
 
 
+def _walk_there_from_the_palette(game: GamePage) -> None:
+    """Send the walker to the next stop, which is across the island."""
+    _open_palette(game, NEXT_QUERY)
+    game.page.click("#pal-walk")
+    game.page.wait_for_selector("#pal:not(.on)", state="attached")
+    assert _walk(game)["has"] is True
+
+
 SPEED = "Math.hypot(window.__debug().vel[0], window.__debug().vel[2])"
 
 
@@ -209,14 +218,21 @@ def test_the_marker_and_its_line_stay_up_for_the_whole_walk(
 ) -> None:
     game_desktop.goto(state=RETURNING)
     game_desktop.resume()
+    # A destination across the island, so the walk is long enough to watch
+    # whatever speed the renderer is managing.
+    _walk_there_from_the_palette(game_desktop)
+    for _ in range(12):
+        # The marker is lit the moment the destination is taken; the line to
+        # it is drawn by the frame loop, so the frame comes first.
+        game_desktop.frames(1)
+        walking = _walk(game_desktop)
+        assert walking["has"] is True, walking
+        # A dozen frames of the old fade left the marker at four fifths; the
+        # walk is still on its way, so it stays fully lit, line and all.
+        assert walking["marker"] == 1, walking
+        assert walking["line"] is True, walking
+    # And both go out when the walk is over, which a few paces away is.
     _tap_the_ground(game_desktop)
-    game_desktop.frames(12)
-    walking = _walk(game_desktop)
-    assert walking["has"] is True
-    # A dozen frames of the old fade left the marker at four fifths; the walk
-    # is still on its way, so it is still fully lit, line and all.
-    assert walking["marker"] == 1, walking
-    assert walking["line"] is True, walking
     _arrived(game_desktop)
     game_desktop.frames(2)
     done = _walk(game_desktop)
@@ -229,7 +245,7 @@ def test_steering_away_puts_the_marker_out(game_desktop: GamePage) -> None:
     """One walk at a time: the arrow keys are a new intention, not a detour."""
     game_desktop.goto(state=RETURNING)
     game_desktop.resume()
-    _tap_the_ground(game_desktop)
+    _walk_there_from_the_palette(game_desktop)
     game_desktop.page.keyboard.down("ArrowDown")
     game_desktop.frames(3)
     game_desktop.page.keyboard.up("ArrowDown")
