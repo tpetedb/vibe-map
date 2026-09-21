@@ -1,0 +1,110 @@
+# First review of this order, by someone who did not build it. Every experiment
+# that changed a file ran in a throwaway copy under /tmp, never in this worktree;
+# the runs in this worktree wrote only into tests/out and left `git status` empty.
+v = 1
+order = "harness-test-determinism"
+by = "reviewer-harness-test-determinism-r1"
+reviewed = "aaa2552f4c43fa142b1fe0850376804396a2d6ad"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+The packet served the builder's cache, so I ran the command myself at aaa2552: 13 passed in 40 s. The sentence also says `each seen failing before its fix`, which the command cannot show, so I took each fix out in a copy and ran its test. Without `clock_script(NOON)` in game_page: the four noon tests fail with `the page thinks it is 9 o'clock`. With `static now()` returning a constant: `the page's clock stopped`. With set_clock() doing nothing: the Night owl test fails on `assert 12 == 23` for the 23:30 leg. Without RECORD_TOASTS in game_page: `test_the_toast_record_outlives_the_toast` and the converted test in tests/test_game_state.py both run out. With main's tests/test_game_pet.py put back: the source guard names `path=str(target)` and the page refuses the write (`a browser test wrote outside tests/out: .../docs/media/pets-game/cat.png`), and cat.png keeps its checksum. With until() bare again and with `_zoom_is` catching nothing: both D4 tests fail on Playwright's bare `Timeout 1000ms exceeded`. One thing the tests do not pin is in the findings: nothing compares what the record holds with what the page raised.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the whole command in the worktree at aaa2552: exit 0, 598 tests, `git status` empty afterwards. The sentence says `which is what CI runs`: the required job of the pull request's run 35568433652 printed `598 passed, 355 deselected`, against `593 passed, 345 deselected` on main's run 35564113814 (da0b2ab, this branch's merge base). Five more passed are the five guards of tests/test_harness_determinism.py that take no browser; ten more deselected are its eight browser tests and the two legs of the Night owl test. The job is red on one step only, `work orders are readable, reviewed and inside their files`, and `python3 tools/work.py ci` says why: no review yet.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the loop myself: `build OK`, `tree OK`, `cookbook OK`, `syllabus OK`, the two sync checks silent, every exit 0. The command proves the sentence, and it could hardly do otherwise here: the diff touches five test files, tests/conftest.py, one changelog fragment and the order, and none of those is the source of a generated file.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = '''
+D1, D3 and D4 hold; D2 is where this falls short, and both halves of it are in the findings.
+D1. Reproduced on main first: main's conftest and avatar test with the machine's clock faked to 23:30 (an init script ahead of everything else) fail exactly as the issue says, `assert 'Picked up' in 'Achievement: Night owlOn the island after eleven at night.'`. The same fake ahead of the builder's clock script: the page says 12 while the machine says 23, and all of tests/test_game_avatar.py passes, 15 tests. Then for real, `TZ=Etc/GMT+8` at 07:01 UTC, which Chromium follows (machine 23:01 on the 20th, page 12:00 on the 20th): the avatar file and the determinism file pass but for the WebKit leg of the noon test, and that one is my simulation, not a defect: WebKit on macOS ignores TZ, so its day was the 21st while Python's was the 20th. The Night owl test sets the hour itself: 23:30 unlocks it and its toast is in the record, 12:30 does not, and First light's toast proves the pass ran (achCheck is one synchronous forEach). The init script is on the context, so it survives goto()'s reload: hour 12 and today's date after the seeded reload, and with set_clock(23, 30) 23:30 on the 21st both after goto() and after one more reload. avatar_item_pickup.png from the 23:30 run shows the pickup toast alone.
+D2. There is one record (RECORD_TOASTS in tests/conftest.py) behind toasts() and toast_said(); tests/test_game_state.py lost its private copy and nothing else names `__toastLog`; the pickup test now waits for `Picked up: ` plus the item's own name. But the record holds the first toast of every page twice, and the guard passes for nine of the ten ways I wrote a direct read of `#toast`. A guard that stays green while a browser test reads the toast off the screen is not a test that fails without the fix.
+D3. tests/test_game_pet.py in the worktree: 11 passed, `git status` empty, the checksums and the modification times of docs/media/pets-game/* unchanged, six close-ups in tests/out/pet_*.png; pet_cat.png frames the cat the way docs/media/pets-game/cat.png does. The guard reads the `path=` expression of every `.screenshot(` call in the test sources and the page refuses at the moment of the write; neither looks at git. Probes: a `ROOT / "docs"` path is named by file and line for page and locator alike, and a path spelled through `OUT.parent.parent` passes the source guard and is refused by the page.
+D4. The builder's answer is the landing, reached by measurement and arithmetic, and I could confirm it by making it happen. My numbers on the heaviest island: the level wait is 0.00 s every time (a tap sets zoom.target in the same breath), the first landing is 25 frames (7.6 s at 3.3 frames a second on SwiftShader, 1.3 s at 60 in WebKit), a zoom step lands in 8 to 16 frames. Then four copies of the Android leg at once under `taskpolicy -b`, with LAND_MS put back to main's 20 s: three of four ran out at `the camera landing after the island loaded did not happen inside 20 s; the page drew 9 frames while waiting, 0.5 a second` (9, 20 and 9 frames), which is the glide inside `_island`, before the first tap, and not the first zoom level the issue guessed at. The message did its job. The fourth died in resume() on Playwright's own bare `Page.click: Timeout 30000ms`, which no named wait covers. 30 s is the glide's 28 frames (1.4 s at 0.05 s a frame; I counted 25 once the island had entered) at just under one frame a second; at the 0.5 I produced it runs out too, and the comment says so and sends that case to the scene team, as does the pull request. `Emulation.setCPUThrottlingRate` at 20 changes nothing (87 s against 68 s, green): the renderer is not what is slow.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Ran tests/test_game_dashboard.py and tests/test_dashboard.py: 29 passed. How they use time: seeded_events() stamps absolute milliseconds from Python's time.time(), the game groups them with dayStart() on local calendar days and counts the last seven from `today`, and the feed is array order, never sorted by ts. The shift moves the hour and keeps the day, so every seeded event falls on the day it fell on before; the report test stamps 20:30 of `date.today()` and never loads the game. Nothing in tests/ exercises a live dwell or the speed run (grep for dwell, speedRun, speed-run, streak: only seeded numbers), so I wrote the probe: open s-map, wait on the page's own Date for 2.2 s, close it, and the log holds `dwell s-map v=2`; claim stop 1, then stop 2 through the real button, and `Achievement: Speed run` is in the record, night-owl is not, and every event the page wrote carries hour 12. tests/test_game_state.py and tests/test_game_camera.py: 44 passed. CI on this commit, shard by shard against main's da0b2ab: phone 45 and 45, bridges 57 and 57, ui 50 and 50, qol 54 and 54, webkit 33 and 33, panels 72 and 74 (the two Night owl legs), smoke 28 and 36 with 10 and 15 deselected (the 13 tests of the new file, which lands in the default shard as harness-ci-shards promised). No shard ran fewer tests than on main.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tests/conftest.py"
+text = '''
+GamePage.toasts() returns the first toast of every page twice. With the repaired-record state the game's own count `window.__toasts()` is 1, one `.tst` is on screen, and toasts() has two identical entries; after a second toast (First sit) the game says 2 and the record 3. It is the same in all four fixtures. Cause: toast() creates `#toast`, appends it to the body and appends the `.tst` to it in one task, so the observer is handed both records together: for the added `#toast` it runs `querySelectorAll('.tst')`, which already finds the notice, and for the added `.tst` it notes it again. Later toasts are noted once because `#toast` is already there. On main this was a private helper that only ever asked `some(...)`; here it is the public list the docstring calls `every toast the page has raised`, and the follow-up that converts tests/test_game_bottles.py and tests/test_game_ui.py will build on it. A count, an order or an `exactly one` written against it is wrong from the first toast. Wanted: each notice recorded once, and a test that fails today, for instance the record's length against `window.__toasts()` after the first and after the second toast.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tests/test_harness_determinism.py"
+text = '''
+`test_no_browser_test_reads_a_toast_off_the_screen` fails for the one shape main had and passes for the rest. In a copy I wrote a browser test ten ways and ran the guard after each. Caught: `game.page.text_content("#toast .tst")`. Green: `game.page.locator("#toast .tst").text_content()`, `locator("#toast .tst").first.inner_text()`, `el = page.wait_for_selector("#toast .tst")` then `el.text_content()`, `page.evaluate("document.querySelector('#toast .tst').textContent")`, `wait_for_selector('#toast .tst:has-text("Picked up")')`, the selector held in a variable, `text_content(".tst")`, `inner_html("#toast")`, and `expect(page.locator("#toast")).to_contain_text(...)`. The guard only looks at a call whose own positional string starts with `#toast` and whose own name reads text, so a read one attribute further along the chain is invisible to it, and the locator chain is how Playwright asks to be used and how tests/test_game_ui.py:416 already reaches for a toast. D2 asks for `no browser test reads #toast text directly`. Wanted: a call that names `#toast` (or `.tst`) is the finding unless it is on a short list of things that are not a read (`is_visible`, which tests/test_game_qol_settings.py:371 uses rightly), with the locator, handle and evaluate shapes as cases of the guard's own test.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+The clock goes back to 12:00:00.000 on every navigation, because the shift is worked out inside the page at each load. Measured across goto()'s seeded reload: the page's Date went back 5.5 s while 6.9 s passed. Nothing orders by timestamp today (the feed and dashRows are array order, the chat does not sort by `at`, lastClaimAt and sheetOpen live in memory), so I found no victim, but `runs at real speed` stops being true at a reload and a test that measures across one will read a negative time. Working the shift out once in Python and writing the number into the script would make one clock per context.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+toast_said() is the wait every converted toast test now hangs on, and it is still bare: without the record it fails with `Page.wait_for_function: Timeout 20000ms exceeded` and says neither which text it wanted nor what the page did say. Main's pickup test failed with `assert 'Picked up' in 'Achievement: Night owl...'`, and that one line is how D1 was diagnosed. named_wait() is right there; the message wants the text and the record as it stood.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_phone.py"
+text = '''
+Outside this order's files, so for a follow-up: `_phone` and `_window` build their GamePage by hand, and so does the file-url page in tests/test_game_news.py. That is the whole phone shard, 45 tests, plus one, still on the runner's clock, with no toast record (toast_said() on such a page can only run out) and no write guard, while the changelog fragment opens with `The browser tests no longer depend on when or where they run`. I found no victim: `#toast` is `pointer-events:none`, so a stray Night owl notice blocks no tap and no elementFromPoint check. game_page() is there to be adopted, and a guard that no test file calls `new_context` for a game page would keep it so.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = '''
+STILL_READ_THE_SCREEN is an honest list, but the follow-up lives only in that comment, and tests/test_game_bottles.py:69 is the very race D2 describes (wait for `#toast .tst`, then read `#toast`), live until someone converts it: it belongs on issue 148. The test that says the list only shrinks asserts that the string `#toast` occurs in each file, so it notices neither a third name added to the set nor a converted file that still mentions `#toast` in a comment. And the noon test cannot fail without its fix between 12:00 and 13:00 on the runner, since it compares the hour with 12 rather than with `__realDate`.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+`Shifted` is a class, so `Date()` called without `new` throws `Class constructor Shifted cannot be invoked without 'new'` where the real one returns a string. The built game has eleven `new Date(` and no bare call, so nothing breaks today; the first vendored library that stamps a log line with `Date()` will fail only under test. A function that returns `new Shifted().toString()` when called without `new` closes it.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_pet.py"
+text = '''
+The docstring of `_close_up` says the pictures in the documentation are rendered by tools/media.py. For these six that is not so: tools/media.py has no pet in it and docs/media/README.md lists `pets-game/*` as made by hand. The test was their only producer, so after this change nothing renders them. That is the right outcome for a test; say it as it is, and let the media owner decide whether tools/media.py should learn them.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+A few new comments tell the history rather than the constraint, which AGENTS.md asks us not to do: `Four fixtures once repeated these lines` (game_page), `used to unlock this in the middle of any other test` (the Night owl test), `which is what ran the usual 20 s budget out on the Android leg` (LAND_MS), and `a follow-up of issue 148` next to STILL_READ_THE_SCREEN. `tools/checks.py style` does not mind, so this is taste: the why can stay, the story belongs in the pull request. The LAND_MS comment also calls every landing the 1.4 s glide; only the first one is, a zoom step is the eased zoom and lands in 8 to 16 frames.
+'''
