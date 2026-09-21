@@ -47,12 +47,22 @@ const ART_DEMOS={
     {l:"Land it",o:["aws ec2 terminate-instances ...  meter stopped","Region, instance, storage, traffic out: four meters, not one."]}
   ],
   mountain:[
-    {l:"Climb",o:["1  hardware      Apple M4, 10 cores, 16 GB","2  operating system   macOS: files, processes, ports","3  runtime       Python 3.12, managed by uv","4  libraries     click, rich, polars, duckdb, textual","5  your app      vibe","6  the agent     Claude Code, reading and writing all of it","Every layer stands on the one below. A bug can live on any of them."]},
-    {l:"Look down from the summit",o:["the agent edits vibemap/cli.py  (layer 5)","which imports polars       (layer 4)","which calls into Python    (layer 3)","which asks macOS for a file (layer 2)","which reads the disk        (layer 1)","One keystroke at the top touches every layer on the way down."]}
+    // A transcript is read down its columns as much as along its lines: the
+    // layer numbers here are a table, so what stands in the second column
+    // starts at the same place on every line of the same demo. The longest
+    // first column sets it, and a rename moves the whole block, not one line.
+    {l:"Climb",o:["1  hardware           Apple M4, 10 cores, 16 GB","2  operating system   macOS: files, processes, ports","3  runtime            Python 3.12, managed by uv","4  libraries          click, rich, polars, duckdb, textual","5  your app           vibe","6  the agent          Claude Code, reading and writing all of it","Every layer stands on the one below. A bug can live on any of them."]},
+    {l:"Look down from the summit",o:["the agent edits vibemap/cli.py  (layer 5)","which imports polars            (layer 4)","which calls into Python         (layer 3)","which asks macOS for a file     (layer 2)","which reads the disk            (layer 1)","One keystroke at the top touches every layer on the way down."]}
   ],
   stall:[
     {l:"Read the menu (the docs)",o:["GET /openapi.json","endpoints:  GET /coffee   GET /scores   POST /scores   GET /status","auth:       Authorization: Bearer <token>","An API is a menu: what you may ask for, in which words, and what comes back."]},
-    {l:"Order without reading it",o:["POST /scoresss  {\"player\": 1}","400 Bad Request:  unknown path; and player must be a string","Read the menu first. Then order exactly."]},
+    // Two mistakes, two answers. A path the stall does not have is a 404, the
+    // code the cafe teaches two artifacts away and the one this stall's own
+    // source (FastAPI, First Steps) gives a route it never declared; a body it
+    // cannot read is the client's grammar, so 400. One 400 for both would
+    // teach that a thing that is not there and a sentence that is malformed
+    // are the same mistake, and the reader would look for the wrong fix.
+    {l:"Order without reading it",o:["POST /scoresss  {\"player\": 1}","404 Not Found:  no such path.  The menu says POST /scores","POST /scores  {\"player\": 1}","400 Bad Request:  player must be a string","A wrong path is a 404, a wrong body is a 400. Read the menu first, then order exactly."]},
     {l:"Show your key",o:["GET /scores   Authorization: Bearer ****","200 OK   3 rows","Keys live in .env, never in the code, never in the vault."]}
   ],
   bridge:[
@@ -130,10 +140,16 @@ const ART_DEMOS={
 // slabs, the river and the lake disc, and the inn's terrace deck.
 const RING_Y=.2;
 // The ring is the zone, not a decoration around the model: it is drawn at the
-// radius nearArtifact() tests, so "walk up to the yellow ring and press
-// Inspect" is true wherever you cross it. A smaller ring sits inside whatever
-// the walker is pushed out of (the lake around the fountain, the mountain
-// itself) and is never seen at all.
+// radius nearArtifact() tests, so crossing the yellow ring is what offers
+// Inspect. A smaller ring sits inside whatever the walker is pushed out of
+// (the lake around the fountain, the mountain itself) and is never seen at
+// all. Two things the ring alone does not say. Two rings can overlap, which
+// on the campus the cafe's and the stall's do, either side of the Hub, and in
+// the overlap nearArtifact() offers the nearer of the two. And a signpost
+// keeps its own prompt within its radius, which the animate loop asks about
+// first, so where a stop's zone reaches over a ring the stop answers: at
+// signpost 4 and the mountain, signpost 6 and the dock, and signpost 6 and
+// the energy grid on the winter island.
 function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world).forEach(a=>{
   const found=S.artifacts.includes(a.id);
   const ring=new T.Mesh(new T.TorusGeometry(a.r,.06,6,24),new T.MeshBasicMaterial({color:found?PALETTE.greenBright:PALETTE.yellow,transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],RING_Y,a.pos[1]);scene.add(ring);
@@ -145,9 +161,12 @@ function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>
 // commands get the same Commands disclosure every lesson uses.
 // Every word of it is meant to be reproduced: a step says to print a line
 // exactly and the check reads that line back, and the commands are typed as
-// they stand. So the block is drawn with ligatures off, because Inter and SF
-// draw "->" as one arrow glyph and "--" as one dash, and what is copied from
-// the screen then never matches.
+// they stand. Ligatures are off here as a guard, not as a repair: the stack
+// the game ships (system-ui and ui-monospace) joins nothing, measured at 40 px
+// in Chromium and in WebKit, where normal and none draw the same pixels. A
+// fork that sets a typeface which joins "->" into one arrow or "--" into one
+// dash would break a line that has to be copied off the screen, and this is
+// what keeps that from happening quietly.
 function artifactReal(a){const r=a.real;const built=S.artifactsBuilt.includes(a.id);
   return `<div class="lesson" style="font-variant-ligatures:none"><h3>${icon("milestone")}Do it for real: ${r.title}</h3>
    <p class="small muted">About ${r.minutes} minutes, in <code>${r.dir}/</code> in your camp. Written from <a href="${r.doc.url}" target="_blank" rel="noopener">${esc(r.doc.title)}</a>.</p>
@@ -162,9 +181,10 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
   $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
     // The terminal answers a button press, so it is a live region: a reader
-    // that is not looking at it hears what came back. It prints command lines,
-    // so it gets the walkthrough's ligature rule: a terminal shows two
-    // hyphens in front of a flag, never one long dash.
+    // that is not looking at it hears what came back, one line at a time,
+    // because runDemo appends each line as its own node. It prints command
+    // lines, so it carries the walkthrough's ligature guard as well: a
+    // terminal shows two hyphens in front of a flag, never one long dash.
     `<pre class="term" id="art-term" aria-live="polite" style="font-variant-ligatures:none">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+
     artifactReal(a)+
@@ -189,12 +209,38 @@ window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const 
   // Typing is the animation; reduced motion gets the whole transcript at once,
   // which is also the one announcement a screen reader hears.
   if(reducedMotion()){el.textContent=d.o.join("\n");el.scrollTop=el.scrollHeight;return}
-  el._demo=d.o.map((line,k)=>setTimeout(()=>{el.textContent+=(k?"\n":"")+line;el.scrollTop=el.scrollHeight},k*320))};
+  // Each line is appended as a node of its own. Writing textContent instead
+  // replaces the single text node holding the whole transcript, and a live
+  // region that speaks what was added would then read every line printed so
+  // far again on each new one.
+  el._demo=d.o.map((line,k)=>setTimeout(()=>{el.append((k?"\n":"")+line);el.scrollTop=el.scrollHeight},k*320))};
+// The flat ground under the ring itself: the highest upward-facing surface a
+// ray straight down finds at the points of the circle a player can stand on.
+// That is what RING_Y has to clear. A face that is not level is a slope or a
+// tuft of grass, which stands on the ground rather than being it, and nothing
+// is laid down tipped over, so the face normal keeps its up in world space. A
+// point inside an obstacle is left out, because there the prop is in front of
+// the ring at any height, and so is anything above the knee. The rings are
+// skipped, or every sample would hit the one it is measuring.
+function ringGround(x,z,r){const ray=new T.Raycaster(),down=new T.Vector3(0,-1,0),bb=new T.Box3();
+  // Ground is wide. A level top under a metre across is something standing on
+  // it, a bottle or a crate or a collectible, which the ring passes behind.
+  const floor=[];scene.traverse(o=>{if(!o.isMesh||(o.geometry&&o.geometry.type==="TorusGeometry"))return;
+    bb.setFromObject(o);if(bb.max.x-bb.min.x>=1&&bb.max.z-bb.min.z>=1)floor.push(o)});
+  let top=0;
+  for(let i=0;i<48;i++){const th=i/48*Math.PI*2,px=x+Math.cos(th)*r,pz=z+Math.sin(th)*r;
+    if((obstacles||[]).some(o=>Math.hypot(o[0]-px,o[1]-pz)<o[2]))continue;
+    ray.set(new T.Vector3(px,6,pz),down);
+    ray.intersectObjects(floor,false).forEach(h=>{
+      if(h.point.y<=.4&&h.point.y>top&&h.face&&h.face.normal.y>.95)top=h.point.y})}
+  return +top.toFixed(4)}
 // Test seam: the ring each artifact of this island is drawn with, the radius
-// the walk-up test uses, and the radius the walker is pushed out of at the
-// same centre, so a test can assert the ring is the zone and can be stood on.
+// the walk-up test uses, the radius the walker is pushed out of at the same
+// centre, and the ground the ring is drawn over, so a test can assert the
+// ring is the zone, can be stood on, and lies on top of what it crosses.
 window.__rings=()=>(props.artifacts||[]).map(x=>({id:x.a.id,zone:x.a.r,
   r:x.ring.geometry.parameters.radius,tube:x.ring.geometry.parameters.tube,y:x.ring.position.y,
+  ground:ringGround(x.a.pos[0],x.a.pos[1],x.ring.geometry.parameters.radius),
   block:(obstacles||[]).filter(o=>Math.hypot(o[0]-x.a.pos[0],o[1]-x.a.pos[1])<.01)
     .reduce((m,o)=>Math.max(m,o[2]),0)}));
 function artifactsMd(){return "# Artifacts\nThings on the island that explain one idea each. Walk up to the yellow ring and press Inspect; a found one turns green. Each one also sets a task from the official documentation of the thing, checked in your camp.\n"+
