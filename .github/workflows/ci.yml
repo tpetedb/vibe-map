@@ -115,7 +115,9 @@ jobs:
               tests/test_onboarding.py tests/test_reset.py
               tests/test_syllabus.py
           - shard: qol
-            files: tests/test_game_qol.py
+            files: >-
+              tests/test_game_qol.py tests/test_game_qol_settings.py
+              tests/test_game_state.py
           - shard: webkit
             files: tests/test_game_webkit.py tests/test_game_camera.py
             retry: true

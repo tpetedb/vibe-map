@@ -95,8 +95,8 @@
       </div>
       <div class="card">
         <h3>Sync with the template repo</h3>
-        <p class="small">The game and the terminal companion share one progress code. In the repo: <code>uv run vibe export</code> prints a code to paste here; <code>uv run vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes.</p>
-        <div class="row"><button data-icon="download" onclick="exportProgress()">Export progress</button><input type="text" id="impcode" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" data-icon="upload" onclick="importProgress()">Import</button></div>
+        <p class="small">The game and the terminal companion share one progress code. In your camp: <code>vibe export</code> prints a code to paste here; <code>vibe import &lt;code&gt;</code> takes the one from here and writes the vault notes. In a checkout of the repo the same commands run as <code>uv run vibe</code>.</p>
+        <div class="row"><button data-icon="download" onclick="exportProgress()">Export progress</button><input type="text" id="impcode" aria-label="Progress code" placeholder="paste a code from the CLI" style="flex:1;min-width:160px"><button class="primary" data-icon="upload" onclick="importProgress()">Import</button></div>
         <p class="small muted" id="syncmsg"></p>
         <p class="small">Template repo (fork it with "Use this template"): <a id="tplink" href="https://github.com/tpetedb/vibe-map" target="_blank" rel="noopener">github.com/tpetedb/vibe-map</a>. It ships AGENTS.md, five skills in the Agent Skills standard, a subagent, a hook, the CLI, DuckDB queries and a starter vault. Setup: <code>bash scripts/setup.sh</code>.</p>
       </div>

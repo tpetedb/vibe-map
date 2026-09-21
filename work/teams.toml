@@ -12,7 +12,7 @@ shared = ["tests/"]
 id = "state"
 title = "Saved state, progress codes, configuration"
 paths = ["src/game/00-state.js", "src/game/80-sync.js", "vibemap/state.py", "vibemap/config.py", "vibemap/project.py", "config/"]
-tests = ["tests/test_config_levels.py", "tests/test_camp_config.py", "tests/test_project.py", "tests/test_reset.py"]
+tests = ["tests/test_game_state.py", "tests/test_config_levels.py", "tests/test_camp_config.py", "tests/test_project.py", "tests/test_reset.py"]
 
 [[teams]]
 id = "scene"
@@ -24,7 +24,7 @@ tests = ["tests/test_game_camera.py", "tests/test_game_graphics.py", "tests/test
 id = "panels"
 title = "Everything that is not the canvas: sheet, search, vault, settings, onboarding, chat, stats"
 paths = ["src/game/", "src/body.html", "src/head.html", "src/style.css", "src/errors.js", "src/icon.svg"]
-tests = ["tests/test_game_qol.py", "tests/test_game_smoke.py"]
+tests = ["tests/test_game_qol.py", "tests/test_game_qol_settings.py", "tests/test_game_smoke.py"]
 
 [[teams]]
 id = "content"

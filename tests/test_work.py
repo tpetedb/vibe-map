@@ -741,6 +741,21 @@ def test_a_hurried_run_is_not_kept_as_the_measurement(repo: Path) -> None:
     assert (order.dir / "result.json").exists()
 
 
+def test_what_arrives_from_main_in_a_merge_is_not_the_orders_doing(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / "src" / "panel.js").write_text("// mine\n")
+    commit(repo)
+    sh(repo, "checkout", "-q", "main")
+    (repo / "src" / "scene.js").write_text("// another team's work, landed on main\n")
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "main moves"))
+    sh(repo, "checkout", "-q", "feat/x")
+    sh(repo, "merge", "-q", "--no-commit", "origin/main")
+    assert work.strays(order, "origin/main") == []
+    # And a file of another team edited on top of that merge is still caught.
+    (repo / "src" / "scene.js").write_text("// and now I touched it too\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+
+
 # ------------------------------------------------------------ the issue
 
 

@@ -407,7 +407,20 @@ def find(oid: str, root: Path = ROOT) -> Order:
 
 def changed(root: Path, base: str) -> list[str]:
     """What this branch changes against base, committed or not."""
-    return sorted(n for n in set(diff_names(root, base)) | set(dirty(root)) if n)
+    mine = set(diff_names(root, base))
+    loose = dirty(root)
+    if loose:
+        # An uncommitted file is this branch's work only if it differs from
+        # base: in the middle of a merge, everything arriving from main is
+        # uncommitted too, and none of it is ours.
+        differs = set(
+            git(
+                root, "diff", "--name-only", "--no-renames", base, "--", *loose
+            ).splitlines()
+        )
+        new = set(git(root, "ls-files", "--others", "--exclude-standard").splitlines())
+        mine |= {n for n in loose if n in differs or n in new}
+    return sorted(n for n in mine if n)
 
 
 def diff_names(root: Path, base: str, rev: str = "HEAD") -> list[str]:

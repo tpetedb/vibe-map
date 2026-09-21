@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import subprocess
@@ -83,14 +84,96 @@ def test_progress_code_round_trip_and_version_gate() -> None:
     assert payload["v"] == 2 and payload["done"] == [3]
     other = State()
     other.merge_code(code)
-    assert other.done == [3] and other.path["karpathy"] == "deep" and other.xp == 100
+    # The XP of the sender does not travel: it derives from the log, and
+    # `vibe import` writes the log entries an imported stop is worth.
+    assert other.done == [3] and other.path["karpathy"] == "deep" and other.xp == 0
     with pytest.raises(ValueError):
         decode_code("definitely not base64 json")
-    import base64
-
     newer = base64.urlsafe_b64encode(json.dumps({"v": 9}).encode()).decode()
     with pytest.raises(ValueError, match="newer"):
         decode_code(newer)
+
+
+def _code(payload: dict[str, object]) -> str:
+    """A progress code with any payload, the way another machine would send it."""
+    raw = json.dumps(payload).encode()
+    return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+
+def _settled() -> State:
+    """A camp with something to lose, so a refusal can be shown to cost nothing."""
+    s = State(name="Tom")
+    s.mark_done("campus", 1, note="shipped", xp=100)
+    s.path["karpathy"] = "deep"
+    s.pet = "crab"
+    s.interests.append("data")
+    return s
+
+
+@pytest.mark.parametrize(
+    ("code", "message"),
+    [
+        ("MTIz", "not a valid progress code"),
+        ("bnVsbA", "not a valid progress code"),
+        ("eyJ2IjpbMl19", "not a valid progress code"),
+        ("eyJ2IjoyLCJkb25lVyI6WzEsMl19", "cannot read"),
+    ],
+)
+def test_a_malformed_code_is_refused_with_the_one_message(
+    code: str, message: str
+) -> None:
+    """A code is pasted from a mail: every shape it can be wrong in says so."""
+    s = _settled()
+    before = s.model_dump_json()
+    with pytest.raises(ValueError, match=message):
+        s.merge_code(code)
+    assert s.model_dump_json() == before
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        ({"v": 2, "doneW": {"mars": [1, 2, 3]}}, "island this camp does not have"),
+        ({"v": 2, "ach": ["<img src=x>"]}, "cannot read"),
+        ({"v": 2, "path": {"karpathy": "sideways"}}, "cannot read"),
+        ({"v": 2, "pet": "dragon"}, "unknown pet"),
+        ({"v": "2"}, "not a valid progress code"),
+        ({"v": 3}, "newer than this tool"),
+    ],
+)
+def test_a_refused_code_leaves_the_camp_exactly_as_it_was(
+    payload: dict[str, object], message: str
+) -> None:
+    """Refused whole: the check runs before the first field is merged."""
+    s = _settled()
+    before = s.model_dump_json()
+    with pytest.raises(ValueError, match=message):
+        s.merge_code(_code(payload))
+    assert s.model_dump_json() == before
+
+
+def test_the_placeholder_in_a_code_is_never_taken_for_a_name() -> None:
+    """An unnamed camp exports "<your_name>", which is an instruction."""
+    s = State(name="Four")
+    s.merge_code(_code({"v": 2, "name": "<your_name>"}))
+    assert s.name == "Four"
+    s.merge_code(_code({"v": 2, "name": "Tom"}))
+    assert s.name == "Tom"
+
+
+def test_an_imported_stop_is_bounded_by_the_campaign_not_by_eight() -> None:
+    """A camp that adds a stop can send it; a code cannot invent one."""
+    stops = campaign.stop_count("campus")
+    s = State()
+    s.merge_code(_code({"v": 2, "doneW": {"campus": [1, stops, stops + 1]}}))
+    assert s.done_w["campus"] == [1, stops]
+
+
+def test_the_xp_in_a_code_is_not_added_on_top_of_the_log() -> None:
+    """XP derives from the log, which is what an undo hands back."""
+    s = State()
+    s.merge_code(_code({"v": 2, "xp": 300, "doneW": {"campus": [1]}}))
+    assert s.xp == 0 and s.done == [1]
 
 
 # ---- config --------------------------------------------------------------------

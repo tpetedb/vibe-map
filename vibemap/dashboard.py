@@ -22,7 +22,7 @@ from typing import Any
 
 from vibemap import campaign, project
 from vibemap.palette import css_tokens
-from vibemap.quests import level_for
+from vibemap.quests import BADGES, level_for
 from vibemap.state import State
 
 KIND_LABEL = {
@@ -43,25 +43,34 @@ KIND_HUE = {
 }
 DAYS = 7
 STOPS_TOTAL = 32
+# What a day streak counts, here and in the game's panel (DASH_DELIVERED in
+# src/game/89-dashboard.js): a day something was delivered. Running a check or
+# opening the game is activity, which the heatmap shows, and not a streak.
+DELIVERED = ("claim", "verified", "built")
 
 
 @dataclass(frozen=True, slots=True)
 class Event:
-    """One thing that happened, in the shape the game and the CLI share."""
+    """One thing that happened, in the shape the game and the CLI share.
 
-    ts: dt.datetime
+    The state records a time for a claim and for a check. A mentor or an
+    artifact that arrived by progress code has none, so ts is None and the
+    event is left out of every chart that reads a clock.
+    """
+
+    ts: dt.datetime | None
     kind: str
     id: str
     world: str = "campus"
     v: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        out: dict[str, Any] = {
-            "ts": self.ts.isoformat(timespec="minutes"),
-            "kind": self.kind,
-            "id": self.id,
-            "world": self.world,
-        }
+        out: dict[str, Any] = {}
+        if self.ts is not None:
+            out["ts"] = self.ts.isoformat(timespec="minutes")
+        out["kind"] = self.kind
+        out["id"] = self.id
+        out["world"] = self.world
         if self.v is not None:
             out["v"] = self.v
         return out
@@ -75,13 +84,27 @@ def _parse(at: str) -> dt.datetime:
         return dt.datetime.now()
 
 
+# A check record is filed under "<world>:<n>" for a stop, and under
+# "mentor:<id>" or "artifact:<id>" for an encounter the CLI verified. The
+# second kind is when that encounter happened, not a check run of its own.
+ENCOUNTER_KEYS = ("mentor", "artifact")
+
+
+def _checked_at(st: State, key: str) -> dt.datetime | None:
+    """When this was verified here, or None when a progress code brought it."""
+    record = st.checks.get(key)
+    return _parse(record.at) if record else None
+
+
 def events_from_state(st: State) -> list[Event]:
-    """The log and the check records, as events, oldest first."""
+    """The log and the check records, as events, oldest first, undated last."""
     out = [
         Event(ts=_parse(e.at), kind="claim", id=str(e.n), world=e.world) for e in st.log
     ]
     for key, record in st.checks.items():
         world, _, n = key.partition(":")
+        if world in ENCOUNTER_KEYS:
+            continue
         out.append(
             Event(
                 ts=_parse(record.at),
@@ -91,12 +114,14 @@ def events_from_state(st: State) -> list[Event]:
             )
         )
     for mentor in st.mentors:
-        out.append(Event(ts=_parse(st.log[-1].at) if st.log else dt.datetime.now(),
-                         kind="verified", id=mentor))  # fmt: skip
+        out.append(
+            Event(ts=_checked_at(st, f"mentor:{mentor}"), kind="verified", id=mentor)
+        )
     for artifact in st.artifacts_built:
-        out.append(Event(ts=_parse(st.log[-1].at) if st.log else dt.datetime.now(),
-                         kind="built", id=artifact))  # fmt: skip
-    return sorted(out, key=lambda e: e.ts)
+        out.append(
+            Event(ts=_checked_at(st, f"artifact:{artifact}"), kind="built", id=artifact)
+        )
+    return sorted(out, key=lambda e: (e.ts is None, e.ts or dt.datetime.min))
 
 
 def _streak(days: list[dt.date]) -> int:
@@ -116,18 +141,25 @@ def _vault_notes(root: Path) -> int:
     return len(list(folder.rglob("*.md"))) if folder.exists() else 0
 
 
+def _no_runs() -> dict[str, Any]:
+    return {"runs": 0, "best": 0, "best_by": "", "mean": 0.0, "players": []}
+
+
 def _scores(root: Path) -> dict[str, Any]:
     """The scores summary, or an empty one when workstream 3 is still to come."""
     path = root / "workspace" / "data" / "scores.csv"
     if not path.exists():
-        return {"runs": 0, "best": 0, "best_by": "", "mean": 0.0, "players": []}
+        return _no_runs()
+    from polars.exceptions import NoDataError  # noqa: PLC0415
+
     from vibemap.scores import read_scores, summary  # noqa: PLC0415
 
     try:
         return summary(read_scores(path))
-    except ValueError:
-        # A renamed column is the workstream 3 lesson, not a reason to crash.
-        return {"runs": 0, "best": 0, "best_by": "", "mean": 0.0, "players": []}
+    except (ValueError, NoDataError):
+        # A renamed column and a file with nothing in it yet are both the
+        # workstream 3 lesson, not a reason for the report to crash.
+        return _no_runs()
 
 
 def numbers(st: State, root: Path | None = None) -> dict[str, Any]:
@@ -137,11 +169,19 @@ def numbers(st: State, root: Path | None = None) -> dict[str, Any]:
     today = dt.date.today()
     days = [today - dt.timedelta(days=i) for i in range(DAYS - 1, -1, -1)]
     per_day = {d: 0 for d in days}
+    claims_per_day = {d: 0 for d in days}
+    delivered_per_day = {d: 0 for d in days}
     grid: dict[tuple[dt.date, int], int] = {}
     for e in events:
+        if e.ts is None:
+            continue
         day = e.ts.date()
         if day in per_day:
             per_day[day] += 1
+            if e.kind == "claim":
+                claims_per_day[day] += 1
+            if e.kind in DELIVERED:
+                delivered_per_day[day] += 1
             grid[(day, e.ts.hour)] = grid.get((day, e.ts.hour), 0) + 1
     # The log is where a claim records what it was worth, so the line is the
     # log's own numbers; a mentor or an artifact adds its XP to the total
@@ -170,9 +210,13 @@ def numbers(st: State, root: Path | None = None) -> dict[str, Any]:
         "checks": len(st.checks),
         "checks_green": sum(1 for c in st.checks.values() if c.ok),
         "notes": _vault_notes(root),
-        "streak": _streak([e.ts.date() for e in events]),
+        "streak": _streak(
+            [e.ts.date() for e in events if e.ts is not None and e.kind in DELIVERED]
+        ),
         "days": [d.isoformat() for d in days],
         "per_day": [per_day[d] for d in days],
+        "claims_per_day": [claims_per_day[d] for d in days],
+        "delivered_per_day": [delivered_per_day[d] for d in days],
         "xp_day": {d.isoformat(): v for d, v in sorted(xp_day.items())},
         "heat": {f"{d.isoformat()}:{h}": n for (d, h), n in grid.items()},
         "scores": _scores(root),
@@ -195,12 +239,18 @@ def _svg(w: int, h: int, label: str, inner: str) -> str:
     )
 
 
-def spark(values: list[float], hue: str) -> str:
-    """A shape, not a reading: no axis, no dots, one hue."""
+def reading(name: str, values: list[float]) -> str:
+    """What a sparkline says, in words: the same sentence the game's panel uses."""
+    return f"{name}, last seven days: " + ", ".join(f"{round(v)}" for v in values)
+
+
+def spark(values: list[float], hue: str, name: str) -> str:
+    """A shape, not a reading, so the label and the title carry the reading."""
     top = max(values, default=0)
     if len(values) < 2 or top <= 0:
         return ""
     w, h = 120, 26
+    said = reading(name, values)
     pts = [
         (2 + i * (w - 4) / (len(values) - 1), h - 2 - (v / top) * (h - 6))
         for i, v in enumerate(values)
@@ -212,10 +262,11 @@ def spark(values: list[float], hue: str) -> str:
     return _svg(
         w,
         h,
-        "Last seven days",
+        said,
         f'<path d="{area}" fill="{hue}" fill-opacity=".12"/>'
         f'<path d="{line}" fill="none" stroke="{hue}" stroke-width="2"'
-        ' stroke-linejoin="round" stroke-linecap="round"/>',
+        f' stroke-linejoin="round" stroke-linecap="round">'
+        f"<title>{_esc(said)}</title></path>",
     )
 
 
@@ -253,6 +304,11 @@ def ring(name: str, done: int, total: int) -> str:
 
 def empty(msg: str) -> str:
     return f'<p class="small muted dash-empty">{_esc(msg)}</p>'
+
+
+def badge_name(badge: str) -> str:
+    """A badge as the terminal names it (`vibe status`), never as its id."""
+    return BADGES.get(badge, badge).split(":")[0]
 
 
 def _short_day(iso: str) -> str:
@@ -384,7 +440,8 @@ def feed(data: dict[str, Any]) -> str:
     for e in events:
         hue = KIND_HUE.get(e["kind"], "var(--muted)")
         label = KIND_LABEL.get(e["kind"], e["kind"])
-        when = e["ts"].replace("T", " ")
+        # An event with no recorded time says nothing rather than borrowing one.
+        when = e["ts"].replace("T", " ") if e.get("ts") else ""
         rows.append(
             f'<li><i style="background:{hue}"></i>'
             f"<span>{_esc(label)} <b>{_esc(e['id'])}</b></span>"
@@ -461,7 +518,8 @@ text.v{fill:var(--text)}
 def render(data: dict[str, Any]) -> str:
     """The whole report: one file, no fetch, no script."""
     scores = data["scores"]
-    per_day = [float(n) for n in data["per_day"]]
+    claims = [float(n) for n in data["claims_per_day"]]
+    delivered = [float(n) for n in data["delivered_per_day"]]
     xp_series = [float(data["xp_day"].get(day, 0)) for day in data["days"]]
     tiles = "".join(
         [
@@ -470,19 +528,21 @@ def render(data: dict[str, Any]) -> str:
                 f'{data["stops"]}<span class="of">/{data["stops_total"]}</span>',
                 f"{round(data['stops'] / data['stops_total'] * 100)} percent"
                 " of the campaign",
-                spark(per_day, "var(--green-bright)"),
+                spark(claims, "var(--green-bright)", "Stops delivered per day"),
             ),
             tile(
                 "XP earned",
                 str(data["xp"]),
                 f"level {data['level']}, {data['age']} age",
-                spark(xp_series, "var(--orange)"),
+                spark(xp_series, "var(--orange)", "XP earned per day"),
             ),
             tile(
                 "Day streak",
                 str(data["streak"]),
-                "days in a row" if data["streak"] else "nothing today yet",
-                spark(per_day, "var(--yellow)"),
+                "days in a row with something delivered"
+                if data["streak"]
+                else "nothing delivered today yet",
+                spark(delivered, "var(--yellow)", "Things delivered per day"),
             ),
             tile(
                 "Checks run",
@@ -517,7 +577,9 @@ def render(data: dict[str, Any]) -> str:
     )
     badges = (
         '<div class="card"><h2>Badges</h2><div class="badges">'
-        + "".join(f'<span class="badge">{_esc(b)}</span>' for b in data["badges"])
+        + "".join(
+            f'<span class="badge">{_esc(badge_name(b))}</span>' for b in data["badges"]
+        )
         + "</div></div>"
         if data["badges"]
         else ""
