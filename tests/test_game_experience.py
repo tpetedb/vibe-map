@@ -32,18 +32,23 @@ single region, both in colour levels out of 255. Every run prints them, so
 the numbers below can be measured again on any machine:
 
     the same tree twice on this Mac        mean 0.00, worst 0.00
-    the same tree on Linux, on this
-      branch's own CI run                  printed by that run
+    these pictures, made on a Mac,
+      against Linux on this branch's own
+      CI run (the software renderer, the
+      other architecture)                  mean 0.00, worst 0.33
     one island colour nudged by eleven
-      levels in src/game/20-worlds.js      mean 2.84, worst 10.33
+      levels in src/game/20-worlds.js,
+      rebuilt in a scratch copy            mean 2.84, worst 10.33 on that
+                                           island, worst 8.33 and 9.33 on the
+                                           two that carry its silhouette
 
-The mean is what catches a recoloured island: it sits an order of magnitude
-above the two machines and a third of the way to the smallest change worth
-catching. The worst region is the second half of the guard, for a change that
-moves one corner of the picture a long way (a building gone, a prop moved)
-without moving the average anywhere. A missing picture is never a silent
-pass: the test writes it and fails, so somebody looks at it before it becomes
-the record.
+Two machines agree to a third of a colour level, which is what taking the
+text out bought. So the tolerances are set an order of magnitude above that
+and still below the smallest change worth catching: the mean at 1.0 against a
+recoloured island's 2.84, and the worst region at 6.0, which even a changed
+island seen as a silhouette in someone else's picture goes past. A missing
+picture is never a silent pass: the test writes it and fails, so somebody
+looks at it before it becomes the record.
 """
 
 from __future__ import annotations
@@ -71,9 +76,9 @@ GRID = (16, 10)
 ZOOM = 0
 # Delivered on the island in the picture: buildings, annexes, a dusk sky.
 DONE = [1, 2, 3]
-# Measured, both halves of it (see the module docstring).
+# Measured, both halves of it, on two machines (see the module docstring).
 MEAN_TOL = 1.0
-WORST_TOL = 12.0
+WORST_TOL = 6.0
 
 # Both go in before anything on the page runs, so the world is built with
 # them in force. The random numbers come from a linear congruential generator,
@@ -207,6 +212,10 @@ def test_the_view_is_a_preference_that_reading_never_writes(game: GamePage) -> N
     _island(game, settings={"experience": "orbit"})
     assert game.page.evaluate("window.__experienceId()") == "islands"
     assert (game.state().get("settings") or {})["experience"] == "orbit"
+    # A key every object has is not a view either, whoever put it there.
+    _island(game, settings={"experience": "constructor"})
+    assert game.page.evaluate("window.__experienceId()") == "islands"
+    assert game.page.evaluate("window.__experience().name") == "Islands"
     game.assert_clean()
 
 

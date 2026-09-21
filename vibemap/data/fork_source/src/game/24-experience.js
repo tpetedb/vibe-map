@@ -80,10 +80,14 @@ EXPERIENCES.islands={
 // islands are the default; a URL parameter wins, so a test can ask for a view
 // without writing a record. Nothing here writes: choosing is the settings'
 // business, and an id this build does not have falls back rather than failing.
+// A view id arrives from a URL and from a saved record, so it is checked the
+// way every value from outside is: only a key this object holds itself, never
+// one every object has ("constructor" is not an experience).
+const experienceKnown=id=>Object.prototype.hasOwnProperty.call(EXPERIENCES,id);
 function experienceId(){let want="";
   try{want=new URLSearchParams(location.search).get("experience")||""}catch(e){}
   if(!want)want=(S.settings&&S.settings.experience)||"";
-  return EXPERIENCES[want]?want:EXPERIENCE_DEFAULT}
+  return experienceKnown(want)?want:EXPERIENCE_DEFAULT}
 function activeExperience(){return EXPERIENCES[experienceId()]}
 // Test seam: the registry and the view in force, so the contract can be driven
 // from a test the way window.__S and window.__debug are driven.
