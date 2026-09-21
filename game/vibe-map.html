@@ -1928,7 +1928,7 @@ const ART_DEMOS={
     // cannot read is the client's grammar, so 400. One 400 for both would
     // teach that a thing that is not there and a sentence that is malformed
     // are the same mistake, and the reader would look for the wrong fix.
-    {l:"Order without reading it",o:["POST /scoresss  {\"player\": 1}","404 Not Found:  no such path.  The menu says POST /scores","POST /scores  {\"player\": 1}","400 Bad Request:  player must be a string","A wrong path is a 404, a wrong body is a 400. Read the menu first, then order exactly."]},
+    {l:"Order without reading it",o:["POST /scoresss  {\"player\": 1}","404 Not Found:  no route by that name","POST /scores  {\"player\": 1}","400 Bad Request:  player must be a string","A wrong path is a 404, a wrong body is a 400. Read the menu first, then order exactly."]},
     {l:"Show your key",o:["GET /scores   Authorization: Bearer ****","200 OK   3 rows","Keys live in .env, never in the code, never in the vault."]}
   ],
   bridge:[

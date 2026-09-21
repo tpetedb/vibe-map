@@ -99,6 +99,26 @@ def _rings(game: GamePage) -> list[dict[str, Any]]:
     return game.page.evaluate("window.__rings()")
 
 
+def _walk_onto_the_fountain_ring(game: GamePage) -> None:
+    """Walk at the fountain until it is the fountain that Inspect offers.
+
+    The lake pushes the walker out at its bank, so a walk at the middle ends
+    where a player would stand: on the ring, in the band between the bank and
+    the edge of the zone. That band is narrower than walk_to's tolerance, so
+    the walk is driven in short stretches and the prompt, not a step budget,
+    is what says it arrived.
+    """
+    fountain = game.page.evaluate(
+        "window.__artifacts().find(a => a.id === 'fountain').pos"
+    )
+    for _ in range(12):
+        game.walk_to(fountain[0], fountain[1], tol=0.9, steps=40)
+        if game.near() == "a:fountain":
+            return
+    stopped = game.page.evaluate("window.__debug().pos")
+    raise AssertionError(f"never reached the fountain's ring, stopped at {stopped}")
+
+
 # F1 ------------------------------------------------------------------------
 def test_a_second_demo_press_cancels_the_lines_the_first_still_owes(
     game: GamePage,
@@ -477,8 +497,7 @@ def test_the_artifact_surfaces_are_photographed(
         # The lake pushes the walker out at its bank, so this is as close to
         # the fountain as a player can stand: the ring has to be visible here,
         # and the walk has to have arrived, which the prompt is the proof of.
-        game.walk_to(-3.2, 6.4, tol=0.9, steps=300)
-        game.until("window.__debug().near === 'a:fountain'")
+        _walk_onto_the_fountain_ring(game)
         game.page.wait_for_selector("#enter.on", state="attached")
         # The prompt rises into place, so the shot waits for it to land.
         game.still("document.getElementById('enterbtn').getBoundingClientRect().top")
