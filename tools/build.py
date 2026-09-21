@@ -2,7 +2,8 @@
 
 The game ships as one file with three.js embedded and no CDN. src/ holds the
 parts in load order: src/config/ first (the source configuration a fork
-edits), then the game modules. This script concatenates them and injects the
+edits), then the game modules, whose file names are that order, so adding one
+is adding a file. This script concatenates them and injects the
 generated data (campaign JSON, tech notes, tech tree) and the journey values
 from config/camp.toml that the game exposes as CONFIG. Concatenation is the
 whole build: no bundler, no minifier, so the output stays readable.
@@ -46,48 +47,28 @@ NEWS_OUT = ROOT / "game" / "news.json"
 GENERATED = ROOT / "tools" / "generated"
 CONFIG_DIR = SRC / "config"
 
-# Game modules in load order. The state module must come first (S, save,
-# load) and boot last (it reads localStorage and paints the title screen).
-GAME_ORDER = [
-    "@config",  # CONFIG, NEWS and src/config/*.js
-    "00-state.js",
-    "05-icons.js",
-    "10-scene.js",
-    "11-character.js",
-    "12-buildings.js",
-    "@campaign",
-    "16-artifacts.js",
-    "17-artifact-props.js",
-    "17b-switchboard.js",
-    "@items",
-    "18-avatar.js",
-    "19-items.js",
-    "@pets",
-    "19b-pet.js",
-    "19c-bottles.js",
-    "20-worlds.js",
-    "21-world-build.js",
-    "22-archipelago.js",
-    "23-camera.js",
-    "30-input.js",
-    "31-animate.js",
-    "32-minimap.js",
-    "40-sheet.js",
-    "41-search.js",
-    "@notes",
-    "51-notes-dynamic.js",
-    "@tree",
-    "60-vault.js",
-    "70-minigames.js",
-    "71-finale.js",
-    "80-sync.js",
-    "85-settings.js",
-    "86-interests.js",
-    "87-onboarding.js",
-    "88-chat.js",
-    "89-dashboard.js",
-    "90-boot.js",
-]
+# The folders of modules, in load order: the game, then the second experience
+# (src/galaxy/, which need not exist). Each is read on its own and the later
+# one loads after the earlier one.
+MODULE_DIRS = ("game", "galaxy")
+
+# A module's name is its place in the load order: two digits, an optional
+# letter that splits a number, a dash, the rest. The build sorts by that and
+# reads what it finds, so a new module is a new file and nothing here changes.
+# 00-state.js sorts first (S, save, load) and 90-boot.js last (it reads
+# localStorage and paints the title screen).
+MODULE_NAME = re.compile(r"\d{2}[a-z]?-[a-z0-9-]+\.js")
+
+# The parts the build makes itself, each written in front of the module it
+# belongs before. The anchor is a module, so renaming one is a loud fault
+# instead of a generated part that quietly slid somewhere else.
+INJECT_BEFORE = {
+    "game/00-state.js": ("config",),  # CONFIG, NEWS and src/config/*.js
+    "game/16-artifacts.js": ("campaign",),
+    "game/18-avatar.js": ("items",),
+    "game/19b-pet.js": ("pets",),
+    "game/60-vault.js": ("tree",),
+}
 
 
 # Data goes into a script element, and the HTML parser reads that element
@@ -458,26 +439,75 @@ def _element(rel: str) -> str:
     return text
 
 
+def _config_parts() -> list[str]:
+    """What a fork edits, before any module reads it."""
+    parts = [_part("CONFIG", _config_js()), _part("NEWS", _news_js())]
+    for f in sorted(CONFIG_DIR.glob("*.js")):
+        parts.append(_part(f"src/config/{f.name}", f.read_text("utf-8")))
+    return parts
+
+
+# The generated parts by the name INJECT_BEFORE calls them.
+INJECTED = {
+    "config": _config_parts,
+    "campaign": lambda: [_part("the campaign", _campaign_js())],
+    "items": lambda: [_part("the items", _items_js())],
+    "pets": lambda: [_part("the pixel pets", _pets_js())],
+    "tree": lambda: [_part("tools/generated/tree.js", _tree_js())],
+}
+
+# The module the build makes from its file rather than reading it as it is.
+MADE = {"game/50-notes.js": _notes_js}
+
+
+def _place(name: str) -> tuple[int, str, str]:
+    """Sort key: the number, then the letter that splits it, then the name."""
+    return (int(name[:2]), name[2:3], name)
+
+
+def _modules(folder: str) -> list[str]:
+    """src/<folder>/ in load order. An absent folder simply has no modules.
+
+    Everything the folder holds is a module: a name the rule does not cover (a
+    module renamed out of the way, a backup, a stray script) stops the build
+    rather than leaving a part of the game quietly out of it. A dotfile belongs
+    to the operating system, not to us.
+    """
+    d = SRC / folder
+    if not d.is_dir():
+        return []
+    names = [f.name for f in d.iterdir() if f.is_file() and f.name[0] != "."]
+    stray = sorted(n for n in names if not MODULE_NAME.fullmatch(n))
+    if stray:
+        raise SystemExit(
+            f"src/{folder}/ holds {', '.join(stray)}, and a module's name is its"
+            " place in the load order: two digits, an optional letter, a dash,"
+            " then lowercase words (24-example.js). Rename it, or move it out."
+        )
+    return sorted(names, key=_place)
+
+
+def _module(rel: str) -> str:
+    """One module: the file as it stands, or the one the build makes of it."""
+    make = MADE.get(rel)
+    return _part(f"src/{rel}", make() if make else _read(rel))
+
+
 def _game_script() -> str:
-    parts = []
-    for name in GAME_ORDER:
-        if name == "@config":
-            parts.append(_part("CONFIG", _config_js()))
-            parts.append(_part("NEWS", _news_js()))
-            for f in sorted(CONFIG_DIR.glob("*.js")):
-                parts.append(_part(f"src/config/{f.name}", f.read_text("utf-8")))
-        elif name == "@campaign":
-            parts.append(_part("the campaign", _campaign_js()))
-        elif name == "@pets":
-            parts.append(_part("the pixel pets", _pets_js()))
-        elif name == "@items":
-            parts.append(_part("the items", _items_js()))
-        elif name == "@notes":
-            parts.append(_part("src/game/50-notes.js", _notes_js()))
-        elif name == "@tree":
-            parts.append(_part("tools/generated/tree.js", _tree_js()))
-        else:
-            parts.append(_part("src/game/" + name, _read("game/" + name)))
+    """Every part of the game, in the order the file names ask for."""
+    rels = [f"{d}/{n}" for d in MODULE_DIRS for n in _modules(d)]
+    missing = sorted((set(INJECT_BEFORE) | set(MADE)) - set(rels))
+    if missing:
+        raise SystemExit(
+            "the build has a generated part to write in front of, or in place"
+            f" of, {', '.join(missing)}, and src/ has no such module. Point the"
+            " table in tools/build.py at the module the part belongs to."
+        )
+    parts: list[str] = []
+    for rel in rels:
+        for name in INJECT_BEFORE.get(rel, ()):
+            parts.extend(INJECTED[name]())
+        parts.append(_module(rel))
     return "(function(){\n" + "".join(parts) + "})();\n"
 
 
