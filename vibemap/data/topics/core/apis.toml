@@ -12,6 +12,31 @@ try_it = "Ask Claude: 'wrap workspace/sql/per_player.sql in a FastAPI endpoint /
 
 unlocks = ["mcp", "docker"]
 
+[[origins]]
+place = "uc-irvine"
+year = 2000
+what = "In 2000 Roy Thomas Fielding's doctoral dissertation at the University of California, Irvine, introduces the Representational State Transfer (REST) architectural style."
+source = "https://ics.uci.edu/~fielding/pubs/dissertation/abstract.htm"
+primary = true
+
+[[origins]]
+place = "microsoft-redmond"
+year = 1998
+what = "SOAP starts in early 1998; its original contributors inside Microsoft work on the COM/MTS team, and a specification under that name ships late in 1999."
+source = "https://www.xml.com/pub/a/ws/2001/04/04/soap.html"
+
+[[origins]]
+place = "amazon-seattle"
+year = 2002
+what = "On 16 July 2002 Amazon.com launches the first version of Amazon.com Web Services, which developers reach through XML and SOAP."
+source = "https://press.aboutamazon.com/2002/7/amazon-com-launches-web-services-developers-can-now-incorporate-amazon-com-content-and-features-into-their-own-web-sites-extends-welcome-mat-for-developers"
+
+[[origins]]
+place = "google-mountain-view"
+year = 2015
+what = "On 26 February 2015 Google open sources gRPC, a framework for remote procedure calls based on HTTP/2, for creating APIs and microservices."
+source = "https://developers.googleblog.com/introducing-grpc-a-new-open-source-http2-rpc-framework/"
+
 [[sources]]
 label = "FastAPI tutorial"
 url = "https://fastapi.tiangolo.com/tutorial/"
