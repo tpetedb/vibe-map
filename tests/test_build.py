@@ -203,6 +203,102 @@ def test_the_build_refuses_a_script_that_could_end_its_own_element(
     assert not (root / "game" / "vibe-map.html").exists()
 
 
+# The load order is the file name, so a new module is a new file and the build
+# needs no edit. These tests add one to a fork and read the built game back.
+def _game_script_of(root: Path) -> str:
+    return _script_bodies((root / "game" / "vibe-map.html").read_text())[-1]
+
+
+def _order(text: str, *parts: str) -> bool:
+    """True when each part is in text, in this order."""
+    at = -1
+    for part in parts:
+        found = text.find(part, at + 1)
+        if found <= at:
+            return False
+        at = found
+    return True
+
+
+def test_a_new_module_lands_at_the_place_its_name_asks_for(tmp_path) -> None:
+    root = _fork_root(tmp_path)
+    (root / "src" / "game" / "24-example.js").write_text("const EXAMPLE_MARK=24;\n")
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode == 0, r.stdout + r.stderr
+    script = _game_script_of(root)
+    before = (root / "src" / "game" / "23-camera.js").read_text()
+    after = (root / "src" / "game" / "30-input.js").read_text()
+    assert _order(script, before, "const EXAMPLE_MARK=24;", after)
+
+
+def test_a_second_source_folder_loads_after_the_game_and_is_optional(
+    tmp_path,
+) -> None:
+    """src/galaxy/ is read the same way, after src/game/, and may be absent."""
+    root = _fork_root(tmp_path)
+    assert not (root / "src" / "galaxy").exists()
+    plain = _run("tools/build.py", "--root", str(root))
+    assert plain.returncode == 0, plain.stdout + plain.stderr
+    assert "GALAXY_MARK" not in _game_script_of(root)
+    (root / "src" / "galaxy").mkdir()
+    (root / "src" / "galaxy" / "10-planets.js").write_text("const GALAXY_LATE=10;\n")
+    (root / "src" / "galaxy" / "00-map.js").write_text("const GALAXY_MARK=0;\n")
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode == 0, r.stdout + r.stderr
+    script = _game_script_of(root)
+    boot = (root / "src" / "game" / "90-boot.js").read_text()
+    assert _order(script, boot, "const GALAXY_MARK=0;", "const GALAXY_LATE=10;")
+
+
+@pytest.mark.parametrize("folder", ["game", "galaxy"])
+@pytest.mark.parametrize("name", ["helpers.js", "9-early.js", "24_example.js"])
+def test_the_build_refuses_a_module_whose_name_is_not_a_place(
+    tmp_path, folder: str, name: str
+) -> None:
+    root = _fork_root(tmp_path)
+    (root / "src" / folder).mkdir(exist_ok=True)
+    (root / "src" / folder / name).write_text("const STRAY=1;\n")
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode != 0
+    assert name in r.stdout + r.stderr
+    assert not (root / "game" / "vibe-map.html").exists(), "it wrote the game anyway"
+
+
+def test_a_module_renamed_out_of_the_way_stops_the_build(tmp_path) -> None:
+    """The fork challenge turns the game off exactly this way: a part that is
+    no longer a module is a fault, not a part quietly left out of the game."""
+    root = _fork_root(tmp_path)
+    boot = root / "src" / "game" / "90-boot.js"
+    boot.rename(boot.with_suffix(".js.off"))
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode != 0
+    assert "90-boot.js.off" in r.stdout + r.stderr
+
+
+def test_a_part_the_build_injects_names_the_module_it_sits_in_front_of(
+    tmp_path,
+) -> None:
+    """The campaign and its neighbours are anchored to a module by name, so a
+    renamed anchor is a loud build fault, not a part that silently slid."""
+    root = _fork_root(tmp_path)
+    game = root / "src" / "game"
+    (game / "16-artifacts.js").rename(game / "16a-artifacts.js")
+    r = _run("tools/build.py", "--root", str(root))
+    assert r.returncode != 0
+    assert "16-artifacts.js" in r.stdout + r.stderr
+
+
+def test_the_fork_mirror_carries_every_file_the_build_reads() -> None:
+    """sync_fork_source mirrors src/ whole, so a new source folder travels."""
+    sys.path.insert(0, str(ROOT))
+    from tools.sync_fork_source import pairs
+
+    mirrored = {src for src, _ in pairs()}
+    assert {p for p in (ROOT / "src").rglob("*") if p.is_file()} <= mirrored
+    assert ROOT / "tools" / "build.py" in mirrored
+    assert ROOT / "tools" / "generated" / "notes.js" in mirrored
+
+
 def test_a_note_reaches_the_game_character_for_character() -> None:
     """Notes travel as template literals: a backslash, a backtick and a dollar
     brace in a topic are text, never an escape or an expression."""
