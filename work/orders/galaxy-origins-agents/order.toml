@@ -27,7 +27,7 @@ owns = [
   "tests/test_origins_agents.py",
 ]
 cross = []
-needs = ["galaxy-places-schema"]
+needs = ["galaxy-places-schema", "galaxy-places-more"]
 
 [[criteria]]
 id = "c1"

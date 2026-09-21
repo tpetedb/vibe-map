@@ -12,6 +12,8 @@ orders = [
   "harness-build-finds-modules",
   "galaxy-seam",
   "galaxy-places-schema",
+  "harness-boot-stays-last",
+  "galaxy-places-more",
   "galaxy-origins-code-git",
   "galaxy-origins-data-net",
   "galaxy-origins-ship-docs",
