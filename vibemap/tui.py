@@ -59,7 +59,7 @@ ROOT = project.root()
 def progress_line(state: State) -> str:
     """The one progress sentence both screens show, from state alone."""
     return (
-        f"{state.total_done()}/32 stops, "
+        f"{state.total_done()}/{campaign.total_stops()} stops, "
         f"{len(state.mentors)}/{len(campaign.mentors())} mentors verified, "
         f"{len(state.artifacts_built)}/{len(campaign.artifacts())} "
         "artifacts built for real"

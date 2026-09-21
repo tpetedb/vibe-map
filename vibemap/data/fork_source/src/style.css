@@ -31,6 +31,9 @@
   --grass:var(--green-bright); --gold:var(--yellow); --line:var(--hairline); --line2:var(--hairline-2);
   --a1:var(--blue-bright); --a2:var(--orange); --accent:var(--yellow);
   --ring:var(--edge);
+  /* Text size: one multiplier the reading surfaces and the headings read.
+     Settings writes it on the body; everything else is relative to it. */
+  --type-scale:1;
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
@@ -57,8 +60,8 @@ body:has(#stage.map-tall) #bottom{margin-bottom:var(--talk-band)}
 body.no-fullscreen .fs-only{display:none}
 .setting{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .setting:first-of-type{border-top:0}
-.setting label{font-size:14px}
-.setting select{font:inherit;font-size:13px;color:var(--text);background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px;padding:8px 10px;flex:1 1 200px;min-width:0;max-width:100%;text-overflow:ellipsis}
+.setting label{font-size:.875em}
+.setting select{font:inherit;font-size:min(.81em,15px);color:var(--text);background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px;padding:8px 10px;flex:1 1 200px;min-width:0;max-width:100%;text-overflow:ellipsis}
 body.no-motion *{animation:none!important;transition:none!important}
 /* The off switch for the live world: one class hides every element the feed
    drives, so a new one only has to carry live-feed to obey it. */
@@ -84,10 +87,10 @@ body.no-live .live-feed{display:none!important}
 #gfxlost[hidden]{display:none}
 #gfxlost .card{max-width:440px}
 h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
-h1{font-size:clamp(28px,7vw,40px)} h2{font-size:clamp(22px,5vw,28px)}
+h1{font-size:calc(clamp(28px,7vw,40px)*var(--type-scale))} h2{font-size:calc(clamp(22px,5vw,28px)*var(--type-scale))}
 h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
 p{margin:0 0 .9em;max-width:38em}
-button{font:inherit;font-weight:600;font-size:14px;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:11px 18px;cursor:pointer;box-shadow:var(--ring);transition:transform .12s,box-shadow .2s,border-color .2s}
+button{font:inherit;font-weight:600;font-size:.875em;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:11px 18px;cursor:pointer;box-shadow:var(--ring);transition:transform .12s,box-shadow .2s,border-color .2s}
 @media (hover:hover){button:hover{border-color:var(--blue-bright);transform:translateY(-1px)}}
 button:active{transform:none}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--yellow-bright);outline-offset:2px}
@@ -105,7 +108,7 @@ input[type=text],textarea{font:inherit;color:var(--ink);background:var(--panel2)
 textarea{min-height:120px;resize:vertical;font-family:var(--font-mono);font-size:13.5px;line-height:1.55}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0}
 .card{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:14px 0}
-.muted{color:var(--muted)}.small{font-size:14px}.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}.small{font-size:.875em}.num{font-variant-numeric:tabular-nums}
 a{color:var(--blue-bright);text-decoration:none;border-bottom:1px solid rgba(0,136,204,.4)}
 
 /* Lucide icons inherit the button colour; one size per context. */
@@ -206,32 +209,32 @@ body:has(#title:not(.off)) #talk,body:has(#title:not(.off)) #zoom{visibility:hid
 /* Phones: the box covers the HUD instead of letting it bleed through, and the
    whole screen is the form. */
 @media (max-width:480px){#title{padding:8px;background:var(--bg)}#title .box{background:var(--surface-1);max-height:100%;border-radius:var(--radius-m)}}
-.kicker{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.kicker{font-family:var(--font-mono);font-size:.69em;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
 .kicker b{color:var(--yellow);font-weight:600}
 .tstats{display:flex;gap:22px;margin:12px 0 10px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .tstats div{display:flex;flex-direction:column;gap:3px}
-.tstats b{font-family:var(--font-display);font-size:22px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.tstats b{font-family:var(--font-display);font-size:1.375em;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
 .tstats span{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .tstats .done b{color:var(--green-bright)}
-details.brief{margin:4px 0 8px}details.brief summary{cursor:pointer;font-size:13px;color:var(--blue-bright);list-style:none;font-family:var(--font-mono)}
-details.brief summary::-webkit-details-marker{display:none}details.brief summary::before{content:"> "}details.brief[open] summary::before{content:"v "}
+details.brief{margin:4px 0 8px}details.brief summary{cursor:pointer;font-size:.81em;color:var(--blue-bright);list-style:none;font-family:var(--font-mono)}
+details.brief summary::-webkit-details-marker{display:none}details.brief summary::before{content:">"}details.brief[open] summary::before{content:"v"}
 details.brief p{margin-top:8px}
 .stamp{font-family:var(--font-mono);font-size:11px;color:var(--muted);margin:10px 0 0;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .stamp i{font-style:normal;color:var(--green-bright)}
 #title.off{display:none}
 /* Onboarding steps on the title screen. A returning player sees the resume
    button first; the steps fold under a summary. */
-.step{display:flex;align-items:center;gap:10px;margin:14px 0 6px;font-family:var(--font-display);font-size:15px;letter-spacing:-.01em}
+.step{display:flex;align-items:center;gap:10px;margin:14px 0 6px;font-family:var(--font-display);font-size:.94em;letter-spacing:-.01em}
 .step b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--yellow);color:#000;font-size:12px;font-family:var(--font-mono)}
 .choices{display:flex;flex-wrap:wrap;gap:8px}
-.choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;border-radius:var(--radius-pill)}
+.choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:.81em;border-radius:var(--radius-pill)}
 .choice i{width:12px;height:12px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}
 .choice.on{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
 .choices.modes{flex-direction:column}.choices.modes .choice{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border-radius:var(--radius-m);width:100%;text-align:left}
-.choices.modes .choice span{font-weight:400;color:var(--muted);font-size:12.5px}
+.choices.modes .choice span{font-weight:400;color:var(--muted);font-size:.96em}
 .setup{margin:8px 0 4px;padding:4px 12px 8px;border:1px solid var(--line);border-radius:var(--radius-m)}
 .setup h4{font-family:var(--font-display);font-size:14px;margin:12px 0 4px}
-.setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5}
+.setup pre,#s-setup pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:.78em;line-height:1.5}
 /* The primary row stays on screen however long the form gets, and the setup
    guide is rendered below it rather than between two steps. Both offsets: a
    sticky bottom alone lets the row scroll off the top once the guide is open,
@@ -252,31 +255,35 @@ details.brief p{margin-top:8px}
 /* First visit: the steps are the screen, so the disclosure is invisible and
    only a returning player gets the line that opens them again. */
 #title:not(.returning) #obfold>summary{display:none}
-#obfold>summary{cursor:pointer;font-size:13px;color:var(--blue-bright);list-style:none;font-family:var(--font-mono);margin:12px 0 0}
+#obfold>summary{cursor:pointer;font-size:.81em;color:var(--blue-bright);list-style:none;font-family:var(--font-mono);margin:12px 0 0}
 #obfold>summary::-webkit-details-marker{display:none}
-#obfold>summary::before{content:"> "}#obfold[open]>summary::before{content:"v "}
+#obfold>summary::before{content:">"}#obfold[open]>summary::before{content:"v"}
 #title.returning details.brief{margin-top:10px}
 /* Lesson commands fold at hard and above; the summary is the only thing
    that changes with the difficulty, the commands are always one click away. */
-details.cmds{margin:8px 0 12px}details.cmds summary{cursor:pointer;font-family:var(--font-mono);font-size:12px;color:var(--blue-bright);list-style:none}
-details.cmds summary::-webkit-details-marker{display:none}details.cmds summary::before{content:"> "}details.cmds[open] summary::before{content:"v "}
+details.cmds{margin:8px 0 12px}details.cmds summary{cursor:pointer;font-family:var(--font-mono);font-size:.75em;color:var(--blue-bright);list-style:none}
+details.cmds summary::-webkit-details-marker{display:none}details.cmds summary::before{content:">"}details.cmds[open] summary::before{content:"v"}
 details.cmds[open] summary{margin-bottom:-4px}details.cmds pre{margin-top:8px}
+/* The gap after the chevron is a margin, never a space inside the content: a
+   coarse pointer lays the summary out as a flex row, where a trailing space in
+   generated content collapses and the marker runs into the word. */
+details.brief summary::before,details.cmds summary::before,#obfold>summary::before{margin-right:.6ch}
 
-.pairing{border:1px solid rgba(255,213,0,.35);background:rgba(255,213,0,.08);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:13.5px;line-height:1.5}
+.pairing{border:1px solid rgba(255,213,0,.35);background:rgba(255,213,0,.08);border-radius:14px;padding:10px 14px;margin:0 0 14px;font-size:.84em;line-height:1.5}
 .pairing b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
 .pairing i{color:var(--muted)}
 .lesson{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
-.lesson h4{font-family:var(--font-display);font-size:15px;margin:18px 0 6px;letter-spacing:-.01em}
+.lesson h4{font-family:var(--font-display);font-size:.94em;margin:18px 0 6px;letter-spacing:-.01em}
 .lesson ol{padding-left:22px;margin:6px 0 10px}.lesson li{margin:4px 0}
-.lesson pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.callout{border-radius:14px;padding:12px 14px;margin:12px 0;font-size:14.5px;border:1px solid var(--line)}
+.lesson pre{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;overflow-x:auto;font-family:var(--font-mono);font-size:.78em;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.callout{border-radius:14px;padding:12px 14px;margin:12px 0;font-size:.9em;border:1px solid var(--line)}
 .callout b{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
 .callout.ok{border-color:rgba(0,208,132,.4);background:rgba(0,208,132,.08)}.callout.ok b{color:var(--grass)}
 .callout.why{border-color:rgba(0,136,204,.4);background:rgba(0,136,204,.08)}.callout.why b{color:var(--blue-bright)}
 .callout.try{border-color:rgba(255,213,0,.4);background:rgba(255,213,0,.08)}.callout.try b{color:var(--gold)}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
 /* The artifact demos print like a terminal: mono, one line per step. */
-.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
 /* The workstream 2 demo component: one card, two change requests. */
 .demo{margin:10px 0}
 .demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
@@ -308,9 +315,9 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .web line{stroke:var(--a2);stroke-width:1.5;stroke-dasharray:400;stroke-dashoffset:400}
 .web.woven line{animation:draw 1.4s ease forwards}.web.woven circle,.web.woven text{animation:fade .5s ease backwards}
 @keyframes draw{to{stroke-dashoffset:0}}@keyframes fade{from{opacity:0}to{opacity:1}}
-.date{display:block;width:100%;text-align:left;padding:14px 18px;margin:8px 0;font-weight:600;font-size:15px;border-radius:16px}
+.date{display:block;width:100%;text-align:left;padding:14px 18px;margin:8px 0;font-weight:600;font-size:.94em;border-radius:16px}
 .date.pick,.wine.pick{background:var(--accent);border-color:transparent;color:#fff}
-.msg{white-space:pre-wrap;font-size:14px;font-family:var(--font-mono);background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:14px}
+.msg{white-space:pre-wrap;font-size:.875em;font-family:var(--font-mono);background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:14px;padding:14px}
 
 /* vault */
 /* The reader is the palette's own surface, not an imported Obsidian grey:
@@ -357,9 +364,9 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .setting.pet canvas{width:96px;height:72px;image-rendering:pixelated;background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:10px}
 .setting.pet p{flex:1 0 100%;margin:0}
 button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-bright);font:inherit;font-size:inherit;text-decoration:underline;cursor:pointer}
-#vnote{padding:16px 18px 60px;font-size:15px;line-height:1.6;max-width:640px;margin:0 auto}
-#vnote h1{font-size:22px;color:var(--text);margin:0 0 8px;letter-spacing:-.01em}
-#vnote h2{font-size:14px;color:var(--blue-bright);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 6px}
+#vnote{padding:16px 18px 60px;font-size:calc(15px*var(--type-scale));line-height:1.6;max-width:640px;margin:0 auto}
+#vnote h1{font-size:1.47em;color:var(--text);margin:0 0 8px;letter-spacing:-.01em}
+#vnote h2{font-size:.94em;color:var(--blue-bright);text-transform:uppercase;letter-spacing:.1em;margin:18px 0 6px}
 #vnote p{margin:0 0 10px;max-width:none}
 #vnote ul{margin:0 0 10px 18px;padding:0}
 #vnote li{margin:2px 0}
@@ -370,7 +377,7 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 #vnote .bl{border-top:1px solid var(--hairline);margin-top:16px;padding-top:10px}
 #vnote .bl .wl{display:inline-block;margin:2px 8px 2px 0}
 #vnote a{color:var(--blue-bright);border-bottom:1px solid rgba(0,136,204,.4)}
-#vnote code{background:var(--surface-3);border-radius:4px;padding:1px 5px;font-family:var(--font-mono);font-size:13px}
+#vnote code{background:var(--surface-3);border-radius:4px;padding:1px 5px;font-family:var(--font-mono);font-size:.87em}
 /* The command palette: one box over everything, the same spacing scale. */
 #pal{display:none;position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);padding:max(8vh,24px) var(--space-4) var(--space-4);justify-content:center;align-items:flex-start}
 #pal.on{display:flex}
@@ -549,7 +556,7 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 /* The copy control is a row under its command block, never over it: on a
    phone a button on top of the text hides the command it copies. */
 .cmdbar{display:flex;justify-content:flex-end;margin:-6px 0 12px}
-.cmdbar .copy{padding:6px 14px;font-size:12px;font-family:var(--font-mono);border-radius:var(--radius-pill);color:var(--blue-bright)}
+.cmdbar .copy{padding:6px 14px;font-size:.75em;font-family:var(--font-mono);border-radius:var(--radius-pill);color:var(--blue-bright)}
 details.cmds .cmdbar{margin-top:-8px}
 /* A finger needs 44 px, so on a touch screen the button grows to it rather
    than the text shrinking away from it. */
@@ -557,12 +564,68 @@ details.cmds .cmdbar{margin-top:-8px}
 /* Continue: the next stop, its goal and the one command for it. */
 .cont{border-color:var(--yellow-dim)}
 .cont h3{color:var(--yellow)}
-.cont .cont-t{display:block;font-family:var(--font-display);font-size:17px;letter-spacing:-.01em;margin:2px 0 4px}
-.cont pre.cmd{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.cont .cont-t{display:block;font-family:var(--font-display);font-size:1.06em;letter-spacing:-.01em;margin:2px 0 4px}
+.cont pre.cmd{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:6px 0 10px;overflow-x:auto;font-family:var(--font-mono);font-size:.78em;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .cont .row{margin:0}
 #cont .cont{margin:10px 0 0;padding:14px 16px}
 #mapcont .cont{margin-top:10px}
 /* You are here, above the list of stops, and the one row to open next. */
-.here{font-size:13px;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:6px}
+.here{font-size:.81em;color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:6px}
 .here b{color:var(--text)}
 .date.next{border-color:var(--yellow);box-shadow:0 0 0 1px var(--yellow) inset}
+
+/* quality of life (issue #127, batch 1): reading comfort, contrast and the
+   hand the phone is held in. Every one of them is a value in S.settings that
+   applySettings writes onto the body, so the stylesheet is the only place the
+   look of it is decided. */
+/* Text size. The multiplier lands on the surfaces there is reading on, so a
+   lesson and the title grow while the HUD, the stick and the minimap stay
+   where a thumb left them; the vault reader carries it in its own rule,
+   because its base size is not the body's. The sizes inside those surfaces
+   are relative, so they follow without a second rule each. */
+body[data-text="large"]{--type-scale:1.2}
+body[data-text="larger"]{--type-scale:1.45}
+#sheet .inner,#title .box{font-size:calc(16px*var(--type-scale))}
+/* Above Normal the value gets the whole row rather than sharing it with
+   the label. A select cannot wrap or fold, so the value is either whole
+   or lost, and how much of it fits beside a label is a question about
+   font metrics, which differ between one device and the next. The same
+   constraint caps the control size above: the longest option has to fit
+   the narrowest phone at every text size. */
+body[data-text="large"] .setting select,body[data-text="larger"] .setting select{flex-basis:100%}
+/* Line spacing, the numbers XAG 101 names: 1.5 line, 0.12em letter, 0.16em
+   word. It is spacing and not a font, so nothing is downloaded and the game
+   stays one file. A command block keeps its own tracking: a monospace block
+   that no longer lines up is harder to read, not easier. */
+body[data-spacing="comfortable"] #sheet .inner,
+body[data-spacing="comfortable"] #title .box,
+body[data-spacing="comfortable"] #vnote{line-height:1.75;letter-spacing:.12em;word-spacing:.16em}
+body[data-spacing="comfortable"] pre,body[data-spacing="comfortable"] code,
+body[data-spacing="comfortable"] .term{letter-spacing:normal;word-spacing:normal}
+/* More contrast raises the token values and adds an edge to the controls that
+   leaned on a fill. It is not a second theme: black is still the brand
+   (docs/DESIGN.md), and every colour here clears 7:1 on it. */
+body.contrast-more{--muted:#C6CCD9;--hairline:rgba(255,255,255,.32);--hairline-2:rgba(255,255,255,.52);
+  --surface-2:#1C1C1C;--surface-3:#242424;
+  --blue-bright:#4DB8FF;--green-bright:#2BE39B;--orange-bright:#FFC078;--red-bright:#FF8A6B}
+body.contrast-more button,body.contrast-more .card,body.contrast-more .kpi{border-color:var(--hairline-2)}
+/* Forced colours: the system repaints text and background itself, so the only
+   thing left to say is that the controls keep an edge. */
+@media (forced-colors:active){
+  button,.card,.pill,.kpi,.tst,input,textarea,select{border:1px solid currentColor}
+  .ic{stroke:currentColor}
+}
+/* Left-handed and one-handed: the stick, the jump button and the zoom column
+   swap sides. The stick reads its own bounding rectangle, so no input code
+   knows about this. */
+body.hand-left #joy{left:auto;right:calc(14px + env(safe-area-inset-right,0px))}
+body.hand-left #jump{right:auto;left:calc(14px + env(safe-area-inset-left,0px))}
+body.hand-left #zoom{right:auto;left:14px}
+@media (max-height:520px) and (pointer:coarse){
+  body.hand-left #bottom{left:calc(84px + env(safe-area-inset-left,0px));right:calc(110px + env(safe-area-inset-right,0px))}
+}
+/* Quiet: the toast stack is suppressed and nothing else is. The event behind
+   a toast is still recorded, so the dashboard and the achievements are whole. */
+body.quiet #toast{display:none}
+/* A group heading already separates its first row from the one above it. */
+h3+.setting{border-top:0}

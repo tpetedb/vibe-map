@@ -69,6 +69,25 @@ def test_the_walkthroughs_keep_the_house_style() -> None:
         assert not any(d in text for d in dashes), a["id"]
 
 
+def test_a_walkthrough_that_adds_a_dependency_makes_a_project_first() -> None:
+    """uv add needs a pyproject.toml, and a camp has none anywhere above it.
+
+    The walkthrough runs in workspace/artifacts/<id>/, so the folder has to
+    become a project of its own before anything can be added to it.
+    """
+    for a in campaign.artifacts():
+        commands = a["real"]["commands"]
+        adds = [i for i, c in enumerate(commands) if c.startswith("uv add")]
+        if not adds:
+            continue
+        inits = [i for i, c in enumerate(commands) if c.startswith("uv init")]
+        assert inits and inits[0] < adds[0], (
+            f"{a['id']}: uv add with no uv init before it: {commands}"
+        )
+        steps = " ".join(a["real"]["steps"])
+        assert "uv init" in steps, f"{a['id']}: the steps never say to run uv init"
+
+
 def test_every_artifact_quest_has_two_checks_with_hints() -> None:
     for artifact_id in artifact_ids():
         quest = artifact_quest(artifact_id, GOD)
