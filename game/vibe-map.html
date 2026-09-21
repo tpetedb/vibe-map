@@ -330,8 +330,14 @@ details.brief summary::before,details.cmds summary::before,#obfold>summary::befo
    above: the columns keep their origin and the fold reads as a fold. Folding
    rather than scrolling sideways because most steps end in the sentence the
    demo is for, and a sentence off the right edge of a phone is a sentence
-   nobody reads. */
-.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px calc(14px + 3ch);margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre-wrap;text-indent:-3ch each-line;overflow-wrap:break-word;color:var(--text)}
+   nobody reads.
+   A grid holding one run of text, because a transcript arrives a line at a
+   time: laid out as flow text, WebKit keeps the indent a line was given when
+   it was appended, and a step short enough to need no fold is left set in as
+   if it were the tail of the step above. A grid container lays the whole
+   transcript out again on every line, so what the columns say is what the
+   finished transcript says. */
+.term{display:grid;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px calc(14px + 3ch);margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre-wrap;text-indent:-3ch each-line;overflow-wrap:break-word;color:var(--text)}
 /* The workstream 2 demo component: one card, two change requests. */
 .demo{margin:10px 0}
 .demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
@@ -519,9 +525,15 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
   #hud-search .lbl{display:none}
   #hud-search .ic{display:inline-block;margin-right:0;width:16px;height:16px}
   /* Over a sheet the bar is back to its own width, so the sheet's Close
-     button has the other side of the row to itself. The band the panel keeps
-     clear grows with the pill, which a finger makes taller. */
+     button has the other side of the row to itself. */
   body:has(#sheet.on) #hud-bar{flex:0 1 auto}
+}
+/* The band the panel keeps clear of the HUD follows the pill, and two things
+   make the pill taller than the desktop one: a narrow window, where the bar
+   takes a row of its own under the name, and a finger, which makes every
+   button 44px at any width. So the band is written for both, and not for the
+   compact HUD alone: a tablet has the finger without the narrow window. */
+@media (max-width:820px),(pointer:coarse){
   #sheet{--sheet-top:calc(86px + env(safe-area-inset-top,0px))}
 }
 /* A finger gets the same menu as a sheet on the bottom edge, where the thumb
@@ -565,22 +577,31 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
    box is what the minimap measures to hang itself under, and a message that
    joined that box would push the map down the window and onto the zoom
    column. A message moves nothing.
-   It keeps to the left half of the row: the right half under the bar is the
-   map's column, and the half is the wider of the two at every width the game
-   is played at.
+   It takes the row it hangs in, less the corner the map keeps at the right
+   end of it and never more than a reading width: a message is as tall as the
+   lines its words wrap to, and half a phone is twice the lines of a whole
+   one.
    Its height is the room between the two, not a fraction of the window: the
    stage, less the bar it hangs from (100% is that bar, however many rows it
    wrapped to) and less the button column at the bottom, so no batch of
    unlocks can reach the zoom buttons in either hand. Never more than 40vh,
-   because a message is not a page, and never less than one card: a phone
-   lying down has no free band at all, and a message over a button is still
-   better than a message nobody sees.
-   The newest message is at the top, nearest the bar it hangs from, so the
-   stack gives way at the far end and the message just raised is always whole.
-   The fade is the last of that room and nothing switches it on: it marks a
-   card that reaches the bound, and on a stack that ends above it there is
-   nothing under the gradient to dim. */
-#toast{--keep:192px;position:absolute;top:calc(100% + 8px);left:0;width:min(340px,50%);display:flex;flex-direction:column-reverse;justify-content:flex-end;align-items:flex-start;gap:8px;height:max(96px,min(40vh,calc(var(--stage-h) - 100% - var(--hud-top) - 8px - var(--keep))));overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent)}
+   because a message is not a page.
+   Never less than one whole card and the fade under it, whatever the room
+   says: the stack gives way at the far end from the bar, so the only thing
+   that can cut the card a player is being shown is a room shorter than that
+   card, and a phone lying down or a compact map has no free band at all to
+   give it. Five seconds of a card over a button is better than a sentence
+   nobody reaches the end of, which is what the room alone leaves there.
+   One card is the card's own box and ten lines of message: what the longest
+   message the game raises, a bottle lesson and its link, comes to at the
+   width a phone gives a card, and room over it for a font wider than the one
+   it was measured on. A message that outgrows even that turns the stack's own
+   test red rather than arriving cut.
+   The newest message is at the top, nearest the bar it hangs from. The fade
+   is the last of that room and nothing switches it on: it marks a card that
+   reaches the bound, and on a stack that ends above it there is nothing under
+   the gradient to dim. */
+#toast{--keep:192px;--fade:24px;--card:calc(40px + 10 * 12px * 1.45);position:absolute;top:calc(100% + 8px);left:0;width:min(340px,calc(100% - 56px));display:flex;flex-direction:column-reverse;justify-content:flex-end;align-items:flex-start;gap:8px;height:max(calc(var(--card) + var(--fade)),min(40vh,calc(var(--stage-h) - 100% - var(--hud-top) - 8px - var(--keep))));overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - var(--fade)),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - var(--fade)),transparent)}
 /* The room to keep at the bottom: where #zoom stands and how tall it is, plus
    a gap, so the lowest card and the highest button never meet. */
 @media (hover:none),(pointer:coarse){#toast{--keep:274px}}
@@ -591,11 +612,13 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 body:has(#title:not(.off)) #toast{visibility:visible}
 body:has(#title:not(.off)) #hud{z-index:51}
 /* The vault takes the page below the HUD, so the stack anchors to the window
-   for as long as it is open, on the same side as on the island. Nothing of
-   the reader lives in that corner. It hangs from the bottom edge there, so
+   for as long as it is open, on the same side as on the island. On a laptop
+   that corner is empty; on a phone the reader is the width of the window, so
+   a message lies over the end of the note for the five seconds it is up, and
+   that corner is the one it costs least. It hangs from the bottom edge there, so
    the newest message is the lowest one and the stack gives way at the top:
    the same rule, read from the other end. */
-body:has(#vault.on) #toast{position:fixed;inset:auto auto 14px 14px;width:min(340px,calc(100vw - 28px));height:40vh;flex-direction:column;justify-content:flex-end;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 24px);mask-image:linear-gradient(to bottom,transparent,#000 24px)}
+body:has(#vault.on) #toast{position:fixed;inset:auto auto 14px 14px;width:min(340px,calc(100vw - 28px));height:max(calc(var(--card) + var(--fade)),40vh);flex-direction:column;justify-content:flex-end;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 var(--fade));mask-image:linear-gradient(to bottom,transparent,#000 var(--fade))}
 /* The card is read over the island, over an open panel and inside the fade at
    the bound, so it carries its own surface: a translucent card leans on a
    backdrop blur, and a blur is worth nothing behind a mask and not enough

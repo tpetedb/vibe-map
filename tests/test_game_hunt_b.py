@@ -195,6 +195,52 @@ def test_a_scrolled_panel_never_shows_text_inside_the_hud_band(
         game.assert_clean()
 
 
+# A touch screen wider than the compact HUD: a tablet lying down, and an
+# eleven inch one standing. A finger makes every button in the pill 44px at
+# any width, so the bar is taller than the laptop's there while the window is
+# too wide for the compact block. That pair is what the band has to follow.
+TABLETS = [
+    pytest.param({"width": 1024, "height": 768}, id="1024x768"),
+    pytest.param({"width": 834, "height": 1112}, id="834x1112"),
+]
+
+
+@pytest.mark.parametrize("size", TABLETS)
+def test_a_touch_screen_wider_than_a_phone_keeps_the_same_band(
+    chromium: Browser, server: str, size: dict[str, int]
+) -> None:
+    """B1 where the pill is finger-sized and the window is not narrow.
+
+    The band is the pill's height, and the pill's height is the pointer, not
+    the width: a window wide enough for the one-row HUD still has 44px buttons
+    in it when it is touched. The check that it is a touch screen comes first,
+    because with a mouse this window proves nothing.
+    """
+    context = chromium.new_context(
+        viewport=size, has_touch=True, is_mobile=True, device_scale_factor=2
+    )
+    page = context.new_page()
+    game = GamePage(page=page, url=server + GAME_PATH)
+    _attach_error_collectors(page, game.errors)
+    try:
+        game.goto(state={"name": "Tom", "look": "own"})
+        game.start("Tom")
+        assert page.evaluate("matchMedia('(pointer:coarse)').matches"), (
+            "a fine pointer, so the pill is the laptop's and this proves nothing"
+        )
+        game.open_workstream(1)
+        for scroll in (260, 10_000):
+            page.eval_on_selector("#sheet .inner", "(e, y) => e.scrollTop = y", scroll)
+            game.still("document.querySelector('#sheet .inner').scrollTop")
+            info = page.evaluate(UNDER_HUD)
+            assert info["innerTop"] >= info["pillBottom"] - 0.5, info
+            assert info["hits"] == [], info
+        _shot(game, f"hunt_b1_touch_{size['width']}x{size['height']}")
+        game.assert_clean()
+    finally:
+        context.close()
+
+
 # ---- B2 and B3: the toast stack -----------------------------------------------
 
 # Every message the game raises, recorded as it is appended. A toast is gone
@@ -261,6 +307,11 @@ def _widest() -> tuple[str, str]:
 
 
 WIDEST = _widest()
+
+# The last of the stack's room is a fade, so a card that ends inside it is a
+# card whose last line is dimmed into the island. Whole means clear of the
+# fade and not merely inside the box; it is --fade in the stylesheet.
+FADE = 24
 
 # One card, and the colour it is painted in. The strip measured is inside the
 # border and left of the text, where the card draws nothing of its own: what a
@@ -456,11 +507,63 @@ def test_a_full_stack_is_bounded_and_moves_nothing(
         assert info["box"]["b"] <= info["view"]["h"] + 1, info
         assert info["box"]["b"] - info["box"]["t"] <= info["view"]["h"] * 0.4 + 1, info
         # The message just raised is whole: the stack gives way at the far end
-        # from the bar, never on the card a player is being shown.
+        # from the bar, never on the card a player is being shown, and the
+        # fade is not on it either, because a dimmed last line is not read.
         newest = _reads_as_itself(game)
         assert newest["y"] >= info["box"]["t"] - 0.5, (newest, info)
-        assert newest["y"] + newest["h"] <= info["box"]["b"] + 0.5, (newest, info)
+        assert newest["y"] + newest["h"] <= info["box"]["b"] - FADE + 0.5, (
+            "the newest message ends in the fade",
+            newest,
+            info,
+        )
         _shot(game, f"hunt_b3_{_tag(surface, settings)}_stack")
+        game.assert_clean()
+
+
+@pytest.mark.parametrize("mapsize", ["default", "compact"])
+@pytest.mark.parametrize("surface", SURFACES)
+def test_the_newest_message_is_whole_in_the_room_it_is_given(
+    browsers: dict[str, Browser], server: str, surface: str, mapsize: str
+) -> None:
+    """B2 and B3 together: the message just raised is read to its end.
+
+    The room between the bar and the buttons promises nothing about a message:
+    a player who set the map to Compact has no room at all, and a window whose
+    bar has wrapped has less of it than it looks. So the stack takes what one
+    card needs whatever the room says, and where that is more than the room it
+    lies over a button for the five seconds it is up, which is the side of the
+    trade a player can read.
+
+    A phone with the map set to Compact is the case that proves it: the room
+    there is shorter than the message, which the test asserts before it
+    asserts anything else. The same setting on the laptop still leaves more
+    room than a message needs, so there this is a regression check.
+
+    One reading setting is enough here, unlike the tests about the chrome
+    around a panel: the type scale reaches the panel, the title and the vault
+    reader, and a card's title and line are absolute sizes, so a message is
+    the same height at every setting.
+    """
+    extra = {"map": "compact"} if mapsize == "compact" else {}
+    with _surface(browsers, server, surface, settings={**FAST, **extra}) as game:
+        assert _fill(game, 3, WIDEST) == 3
+        info = game.page.evaluate(TOAST_OVER)
+        where = game.page.evaluate(NEIGHBOURS)
+        card = _reads_as_itself(game)
+        room = where["zoom"]["t"] - info["box"]["t"]
+        if mapsize == "compact" and surface in PHONES:
+            assert room < card["h"] + FADE, (
+                "the room already holds the message, so this proves nothing",
+                room,
+                card,
+            )
+        assert card["y"] >= info["box"]["t"] - 0.5, (card, info)
+        assert card["y"] + card["h"] <= info["box"]["b"] - FADE + 0.5, (
+            "the newest message ends in the fade",
+            card,
+            info,
+        )
+        _shot(game, f"hunt_b3_{surface}_{mapsize}_whole")
         game.assert_clean()
 
 
@@ -550,10 +653,12 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
     """A repaired record is announced before the island is entered.
 
     The title owns the window then and the HUD is hidden under it, so the row
-    the stack lives in has to come forward with the message in it. On a phone
-    the panel covers the whole window, which is where this would be lost; on
-    the laptop it is a box in the middle of the sky, and the message lands
-    somewhere else, so both are photographed.
+    the stack lives in has to come forward with the message in it. What that
+    costs is in the pictures, and both are taken: the panel is the whole
+    window on a phone and a box in the sky on the laptop, and either way the
+    message lies over the top of it, on the laptop across the first line of
+    the heading. A message about the record belongs on the panel that is about
+    to load it, and it is gone in five seconds, but it is not in the sky.
     """
     context = browsers[surface].new_context(**_options(surface))
     page = context.new_page()
@@ -663,12 +768,18 @@ def test_the_panel_is_a_named_dialog_and_claims_no_more_than_that(
         game.page.focus("#sheet .x")
         game.page.keyboard.press("Shift+Tab")
         behind = game.page.evaluate(FOCUSED)
-        assert behind["inSheet"] is False, behind
         modal = game.page.get_attribute("#sheet", "aria-modal")
-        assert modal != "true", (
-            "the panel says it is modal while the keyboard leaves it",
-            behind,
-        )
+        if behind["inSheet"]:
+            assert modal == "true", (
+                "the keyboard stays in the panel now, so the panel is modal "
+                "and the attribute belongs on it",
+                behind,
+            )
+        else:
+            assert modal != "true", (
+                "the panel says it is modal while the keyboard leaves it",
+                behind,
+            )
         game.assert_clean()
 
 
@@ -719,19 +830,23 @@ def test_the_menu_leaves_the_numbers_on_screen(
 # ---- B6: a wrapped heading has colliding lines --------------------------------
 
 # One rect per rendered line, so the leading is measured where it is drawn.
+# Each wrapped heading carries where it stands among the panel's headings, so
+# the picture can be of the heading that was measured: on a phone it is below
+# the fold, and a picture of the first screen shows none of it.
 LEADING = """() => {
   const out = [];
-  for (const h of document.querySelectorAll('#sheet .screen.on h3')) {
+  const heads = [...document.querySelectorAll('#sheet .screen.on h3')];
+  heads.forEach((h, at) => {
     const node = [...h.childNodes].find(n => n.nodeType === 3 && n.textContent.trim());
-    if (!node) continue;
+    if (!node) return;
     const range = document.createRange();
     range.selectNodeContents(node);
     const lines = [...range.getClientRects()].filter(r => r.width > 1);
-    if (lines.length < 2) continue;
-    out.push({text: (h.textContent || '').trim().slice(0, 40),
+    if (lines.length < 2) return;
+    out.push({at, text: (h.textContent || '').trim().slice(0, 40),
               size: parseFloat(getComputedStyle(h).fontSize),
               step: +(lines[1].top - lines[0].top).toFixed(2)});
-  }
+  });
   return out;
 }"""
 
@@ -749,7 +864,11 @@ def test_a_wrapped_heading_keeps_its_leading(
         assert wrapped, "no heading wrapped, so this measures nothing"
         for head in wrapped:
             assert head["step"] >= head["size"] * 1.25, head
-        _shot(game, f"hunt_b6_{surface}_heading")
+        _shot_element(
+            game,
+            f"#sheet .screen.on h3 >> nth={wrapped[0]['at']}",
+            f"hunt_b6_{surface}_heading",
+        )
         game.assert_clean()
 
 
@@ -760,21 +879,43 @@ def test_a_wrapped_heading_keeps_its_leading(
 # two apart on screen: a step starts at the column origin and the rest of a
 # folded step is set in from it. The rects are read per step, so the answer is
 # about the line the player sees rather than the string behind it.
+#
+# How many nodes the transcript is written in is the terminal's own business:
+# runDemo appends each line as a node of its own so that a live region reads
+# one line rather than all of them again, and reduced motion writes the whole
+# transcript at once. So the text is every text node of the element in order,
+# and an offset into it is resolved back to the node that holds it.
 TERMINAL = """() => {
   const el = document.getElementById('art-term');
   const box = el.getBoundingClientRect();
-  const node = [...el.childNodes].find(n => n.nodeType === 3);
-  const text = node.data;
+  const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  let text = '';
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    nodes.push({node: n, at: text.length});
+    text += n.data;
+  }
+  // The node an offset falls in: the last one that starts at or before it.
+  // An offset on a boundary is the start of the next node, which is the same
+  // point on screen and the same rects.
+  const point = offset => {
+    let hit = nodes[0];
+    for (const entry of nodes) if (entry.at <= offset) hit = entry;
+    return [hit.node, Math.min(offset - hit.at, hit.node.data.length)];
+  };
+  const drawnBetween = (from, to) => {
+    const range = document.createRange();
+    range.setStart(...point(from));
+    range.setEnd(...point(to));
+    return [...range.getClientRects()].filter(r => r.height > 1 && r.width > 1);
+  };
   const steps = [];
   let at = 0;
   for (const line of text.split('\\n')) {
     const start = at;
     at += line.length + 1;
     if (!line.trim()) continue;
-    const range = document.createRange();
-    range.setStart(node, start);
-    range.setEnd(node, start + line.length);
-    const drawn = [...range.getClientRects()].filter(r => r.height > 1 && r.width > 1);
+    const drawn = drawnBetween(start, start + line.length);
     steps.push({text: line.trim().slice(0, 32),
                 lefts: drawn.map(r => +r.left.toFixed(1)),
                 right: +Math.max(...drawn.map(r => r.right)).toFixed(1)});
@@ -782,10 +923,7 @@ TERMINAL = """() => {
   // The last thing the demo prints is the sentence it is for, so the end of
   // it is measured on its own: characters, not the line they sit on.
   const tail = text.replace(/\\s+$/, '');
-  const range = document.createRange();
-  range.setStart(node, Math.max(0, tail.length - 24));
-  range.setEnd(node, tail.length);
-  const ends = [...range.getClientRects()].filter(r => r.height > 1 && r.width > 1)
+  const ends = drawnBetween(Math.max(0, tail.length - 24), tail.length)
     .map(r => ({l: +r.left.toFixed(1), r: +r.right.toFixed(1)}));
   const inner = document.querySelector('#sheet .inner');
   return {steps, ends, box: {l: +box.left.toFixed(1), r: +box.right.toFixed(1)},
@@ -827,6 +965,10 @@ def test_a_demo_step_starts_at_the_column_and_a_fold_is_set_in(
     text and nothing else does, so a line that begins at that edge is a step
     and a line set in from it is the rest of the step above. On a phone the
     steps are wider than the panel, which is the case this is about.
+
+    It is measured on the transcript as a player gets it, typed out a line at
+    a time, and the one step of this demo that needs no fold is the step that
+    says whether the column survived being written that way.
     """
     with _surface(browsers, server, surface) as game:
         info = _run_demo(game, "data-centre", 0, "one token at a time")
@@ -834,7 +976,11 @@ def test_a_demo_step_starts_at_the_column_and_a_fold_is_set_in(
         assert len(steps) >= 5, info
         starts = 0
         for step in steps:
-            assert min(step["lefts"]) <= origin + 0.5, (step, info)
+            assert min(step["lefts"]) <= origin + 0.5, (
+                "a step was set in as if it were a fold",
+                step,
+                info,
+            )
             starts += sum(1 for left in step["lefts"] if left <= origin + 0.5)
         assert starts == len(steps), ("a fold started at the column", info)
         assert info["over"] <= 1, ("the transcript runs off its box", info)
