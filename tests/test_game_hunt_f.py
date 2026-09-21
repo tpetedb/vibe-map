@@ -280,6 +280,15 @@ def test_the_artifact_surfaces_are_photographed(
         game.page.locator("#s-artifact .wl").first.scroll_into_view_if_needed()
         game.still("document.getElementById('sheet').scrollTop")
         game.screenshot(f"hunt_f_links_{profile}")
+        # The demo copy that changed: the balloon's meter and the mountain's
+        # module path, each read back in the terminal it prints into.
+        for aid, demo in (("balloon", 0), ("mountain", 1)):
+            _open_artifact(game, aid)
+            game.page.click(f"#s-artifact button[data-demo='{demo}']")
+            _wait_line(
+                game, game.page.evaluate(f"window.__demos()['{aid}'][{demo}].o.at(-1)")
+            )
+            game.screenshot(f"hunt_f_{aid}_{profile}")
         game.page.click("#sheet .x")
         # The lake pushes the walker out at its bank, so this is as close to
         # the fountain as a player can stand: the ring has to be visible here.

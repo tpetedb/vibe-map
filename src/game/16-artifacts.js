@@ -40,8 +40,9 @@ const ART_DEMOS={
     // One region, one rate: t3.small is dearer in Ireland than in Virginia,
     // and a demo about regions that charges another region's price teaches
     // the opposite of its own lesson. 0.0228 USD is the eu-west-1 on-demand
-    // rate; the month below is that rate times 24 hours times 30 days.
-    {l:"Rent a balloon",o:["aws ec2 run-instances --instance-type t3.small --region eu-west-1","running.  meter: 0.0228 USD per hour   (eu-west-1; every region has its own price list)","The cloud is a computer you rent by the hour and never see."]},
+    // rate; the month below is that rate times 24 hours times 30 days. The
+    // walkthrough has the learner look today's rate up for themselves.
+    {l:"Rent a balloon",o:["aws ec2 run-instances --instance-type t3.small --region eu-west-1","running.  meter: 0.0228 USD per hour","The cloud is a computer you rent by the hour and never see."]},
     {l:"Forget to land it",o:["30 days later ...  16.42 USD  (and 2.10 USD for the storage it was tied to)","The meter runs whether you use it or not. Set a budget alarm before the first launch."]},
     {l:"Land it",o:["aws ec2 terminate-instances ...  meter stopped","Region, instance, storage, traffic out: four meters, not one."]}
   ],
