@@ -1,1 +1,0 @@
-- The zoom control on the stage is out of the way while the title is up: it no longer takes a tab stop behind the panel.

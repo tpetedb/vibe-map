@@ -1,1 +1,0 @@
-- Work orders: a change that is only staged is a stray like any other, a `git diff` the verdict rests on is an error when it cannot run instead of reading as nothing changed, every list of file names is read with `-z` so a name with a quote or an accent in it arrives whole, and `touched.json` keeps the newest thirty-two agents instead of growing without end.
