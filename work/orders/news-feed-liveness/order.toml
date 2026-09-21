@@ -1,0 +1,42 @@
+v = 1
+id = "news-feed-liveness"
+title = "A feed that answers with nothing new is alive: the nightly check stops failing every weekend"
+team = "cli"
+branch = "fix/news-feed-liveness"
+goal = "release-0-11-0"
+issue = 148
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-news-feed-liveness"
+
+owns = [
+  "vibemap/news.py",
+  "vibemap/data/sources.json",
+  "tests/test_news.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The news tests pass, each new one seen failing first."
+check = "uv run pytest -q tests/test_news.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "The liveness check now fails for a feed that is really dead (a 404, a DNS failure, a body that is not a feed, a changed format) and passes for a live feed with no items today. The reviewer tries each against a local server, not against the network."
+judge = "reviewer"
+
+[[criteria]]
+id = "c5"
+text = "The product is unchanged for a learner on a weekend: `vibe news` and the game's News card behave sensibly when one source has nothing, and say nothing alarming."
+judge = "reviewer"
