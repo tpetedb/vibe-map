@@ -12,6 +12,22 @@ try_it = "Read one Deployment YAML and identify: image, replicas, port."
 
 unlocks = ["future"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "google-mountain-view"
+year = 2014
+what = "Kubernetes is developed at Google and released as open source in 2014."
+source = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story"
+primary = true
+
+[[origins]]
+place = "cncf"
+year = 2016
+what = "The Cloud Native Computing Foundation accepts Kubernetes on 10 March 2016, at the incubating maturity level."
+source = "https://www.cncf.io/projects/kubernetes/"
+
 [[sources]]
 label = "Kubernetes basics"
 url = "https://kubernetes.io/docs/tutorials/kubernetes-basics/"

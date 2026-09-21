@@ -12,6 +12,16 @@ try_it = "cat CHANGELOG.md. Then make one change to the repo and add its line un
 
 unlocks = ["ci"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "the-internet"
+year = 2014
+what = "Keep a Changelog's own CHANGELOG dates its first release, 0.0.1, to 31 May 2014."
+source = "https://github.com/olivierlacan/keep-a-changelog/blob/main/CHANGELOG.md"
+primary = true
+
 [[sources]]
 label = "Keep a Changelog 1.1.0"
 url = "https://keepachangelog.com/en/1.1.0/"

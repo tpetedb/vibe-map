@@ -12,6 +12,22 @@ try_it = "The 23:00 workstream: schedule the scorekeeper for 08:00."
 
 unlocks = ["tests", "cost"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "bell-labs"
+year = 1974
+what = "Cron, the clock daemon that runs commands at the dates and times scheduled in /usr/lib/crontab, is in the V6 Unix manual page dated 25 October 1974."
+source = "https://www.tuhs.org/cgi-bin/utree.pl?file=V6/usr/man/man8/cron.8"
+primary = true
+
+[[origins]]
+place = "anthropic-sf"
+year = 2025
+what = "Anthropic makes Claude Code generally available on 22 May 2025, with background tasks through GitHub Actions."
+source = "https://www.anthropic.com/news/claude-4"
+
 [[sources]]
 label = "Run Claude Code programmatically"
 url = "https://code.claude.com/docs/en/headless"

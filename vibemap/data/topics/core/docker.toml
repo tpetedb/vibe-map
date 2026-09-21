@@ -12,6 +12,25 @@ try_it = "Install Docker Desktop or OrbStack. docker run -it python:3.12 python 
 
 unlocks = ["cloud", "ci", "kubernetes"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# Docker's first public demo was a talk at PyCon and its first release a tag in
+# a repository: no page opened for this order puts either in an office, so the
+# project sits at the-internet rather than at a company address.
+
+[[origins]]
+place = "the-internet"
+year = 2013
+what = "Docker's own changelog dates its initial public release, 0.1.0, to 23 March 2013."
+source = "https://github.com/moby/moby/blob/v1.5.0/CHANGELOG.md"
+primary = true
+
+[[origins]]
+place = "linux-foundation"
+year = 2015
+what = "Docker donates its container format and runtime, runC, to the Open Container Initiative, launched under the Linux Foundation on 22 June 2015."
+source = "https://opencontainers.org/about/overview/"
+
 [[sources]]
 label = "Docker get started"
 url = "https://docs.docker.com/get-started/"

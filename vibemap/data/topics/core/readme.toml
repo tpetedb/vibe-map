@@ -12,6 +12,16 @@ try_it = "head -30 README.md, then run the first Quickstart command exactly as w
 
 unlocks = ["github"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "bell-labs"
+year = 1979
+what = "The V7 Unix tree carries /usr/doc/README, a file of 314 bytes listed at 11 January 1979 in the TUHS archive."
+source = "https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/doc"
+primary = true
+
 [[sources]]
 label = "Make a README"
 url = "https://www.makeareadme.com"
