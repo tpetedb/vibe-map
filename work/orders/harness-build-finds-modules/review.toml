@@ -1,0 +1,64 @@
+# First review of this order, by someone who did not build it. The order's own
+# commands ran in this worktree and left it clean; every experiment that adds,
+# renames or reverts a file ran in a scratch copy of the commit under /tmp.
+v = 1
+order = "harness-build-finds-modules"
+by = "reviewer-harness-build-finds-modules-r1"
+reviewed = "47ebf4b0130f614b2adb18db82604bcf715721f5"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+The command passes: 25 passed in a scratch copy of 47ebf4b (`git archive` into /tmp) and again inside c2's battery in the worktree. `Seen failing first` is history no command can show, so I reproduced it. With origin/main's tools/build.py put under the branch's tests in the scratch copy, 9 of the 11 new cases fail: the 24-example placement, the galaxy folder, all six refusals (helpers.js, 9-early.js, 24_example.js in game and in galaxy) and the rename to 90-boot.js.off. Two pass on main: the anchor test, because main's FileNotFoundError happens to name 16-artifacts.js, and the mirror test. Then I took the new mechanism apart one piece at a time, restoring the file between runs. Stray names filtered instead of refused: the six refusals and the .off rename fail. MODULE_DIRS without galaxy: the galaxy test and the three galaxy refusals fail. The missing-anchor check switched off: the anchor test fails, so it does guard the new code even though main passes it by accident. The sort reversed: the placement test, the galaxy test and test_game_matches_a_fresh_build_of_src fail. galaxy read before game: the galaxy test fails. The tests run tools/build.py as a subprocess with --root, the entry point and not the helper, and none of them waits on time. The one new test nothing in this order can turn red is the mirror test, see the findings.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the whole command myself in the worktree at 47ebf4b: ruff check, ruff format --check, checks.py style and checks.py sinks silent and zero, then pytest -m 'not browser and not integration': 618 passed, none failed, exit 0, `git status` empty afterwards. The command proves its sentence. Beside it: basedpyright on tools/build.py and tests/test_build.py, 0 errors; `tools/changelog.py check`, 1 fragment for 1 changed product file; no em-dash and no emoji in any added line of the diff or in the commit message. The battery holds the neighbour this change leans on hardest: tools/script_camp.py breaks a fork's build by renaming 90-boot.js to 90-boot.js.off and expects `build failed`, then `build passed`. On main that failed because a listed file was missing; here it fails because the stray name is refused. `pytest tests/test_stops.py -k "fork or repair"`: 2 passed. None of the four other open pull request branches adds a file under src/game/ (33 modules on each), so nothing in flight is refused by the new naming rule, and `just work-validate` reads 24 orders with 0 collisions. Pull request 162, run 35586319280: every step of the required job green up to the last one, which waits for this file; the smoke shard green.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+`uv run python tools/build.py` in the worktree wrote game/vibe-map.html with sha256 6a872c22a08ac5c8903d6300df26af8c5b29d2df62fb66916583f65523b0df31; `git show origin/main:game/vibe-map.html | shasum -a 256` gives the same, game/news.json matches main's too (4663c9e0...), and `git status` stayed empty. The six --check generators each exit 0 and `git diff --quiet origin/main -- game/vibe-map.html` exits 0. The command compares the file on disk with main's blob and the file on disk with a fresh build, which together is the sentence, provided main's blob is what main's list builds. I checked that as well: loading origin/main's build.py and the branch's side by side on the same src/, `old.build() == new.build()` is True. The order itself: I rebuilt the branch's sequence (modules, the five injected parts, the made 50-notes.js) and compared it with main's GAME_ORDER entry by entry: 38 and 38, identical, including 19-items.js, the pets, 19b-pet.js, 19c-bottles.js. `_place` is (number, third character, name); the dash (0x2d) sorts before every lowercase letter, so 19- comes before 19b before 19c, and for every name the rule admits the key orders exactly as plain sorted() does: sorted(names) == _modules("game") is True, and main's hand-written file names were already in sorted() order. The mirror: `git ls-tree -r` of vibemap/data/fork_source on origin/main and on HEAD, 49 files each, no difference in the list; the files on disk equal the index; the only changed file is fork_source/tools/build.py, byte-identical to tools/build.py.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+All in the scratch copy, whose plain build first gave main's sha256. (1) src/game/24-example.js holding one comment line and nothing else: build exit 0; in the built game 23-camera.js's text ends at byte 1322231, the comment starts at 1322231 and 30-input.js starts where the comment ends, once, nothing between. `build.py --check` then agrees, `sync_fork_source.py --check` names the mirror's missing 24-example.js as stale, the sync writes it (50 files), `cmp` says it is the same file, and the mirror copied out on its own, as `vibe fork` would leave it, builds with its own build.py and carries the comment once. (2) src/game/example.js: exit 1, no game written, `src/game/ holds example.js, and a module's name is its place in the load order: two digits, an optional letter, a dash, then lowercase words (24-example.js). Rename it, or move it out.` The same refusal by name for 24-example.js~, 24-example.js.orig, #24-example.js#, README.md, notes.txt, 24-Example.js, 24-example.JS, 24-example.mjs, 24-example.min.js, 100-late.js and 24-.js. A dotfile (.DS_Store, a vim .swp) is skipped and the sha256 stays main's. (3) src/galaxy/01-x.js starts at the byte where 90-boot.js ends, every src/game/ module before it, `})();` right after; src/galaxy/x.js is refused by name with its folder; an empty src/galaxy/ builds main's bytes; a galaxy 00-state.js does not collide with the game's. (4) Shared numbers: 24-b.js, 24-a.js and 24a-z.js come out as 24-a, 24-b, 24a-z, so the order is decided and does not depend on the file system. (5) The generated parts: 19b-pet.js renamed to 19b-pets.js and 50-notes.js renamed to 50-note.js each stop the build naming the module the table points at; a syntax fault in a new module is reported as src/game/24-example.js with its line. What I could get past it is in the findings: a subfolder and a deleted module.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/CONFIG.md"
+text = '''
+Outside this order's files, so for a docs order, but it goes stale the moment this lands: the row `The load order itself | GAME_ORDER in tools/build.py` points at a name that no longer exists, and docs/adr/0001-single-file-game.md still says `GAME_ORDER in tools/build.py is part of the design and a new file must be added there`. The row should say the file name is the order (two digits, an optional letter, a dash) and that the generated parts are anchored in INJECT_BEFORE; the ADR wants a line that this consequence was lifted. The pull request's text mentions neither.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/build.py"
+text = '''
+The comment above MODULE_NAME says 90-boot.js sorts last because it reads localStorage and paints the title screen. With src/galaxy/ present that holds only inside src/game/: a galaxy module lands directly after boot's last byte, which is what the order asked for. But 90-boot.js runs at load (applyTheme(), init3d() and applySettings() are called at its top level), so every top-level const or let of a galaxy module is still in its temporal dead zone when boot runs; only function declarations are hoisted through the one function the game is wrapped in. Nothing breaks today because the folder does not exist. For the orchestrator and galaxy-v0, which owns both src/galaxy/ and 90-boot.js: either boot never touches a galaxy binding at load, or the folder order wants another look before that order starts. The comment should state the constraint either way.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/build.py"
+text = '''
+The docstring of _modules says everything the folder holds is a module and that a part is never quietly left out of the game. Two things still are. A subfolder: src/game/sub/24-example.js builds green and is not in the game (is_file() skips the directory), while sync_fork_source.py, which walks src/ with rglob, carries it into the mirror. And a deletion: with 31-animate.js moved away the build exits 0 and writes a game 14 KB smaller, where main stopped with FileNotFoundError; only the six modules named in INJECT_BEFORE and MADE are missed by name. In a checkout `build.py --check` and the mirror check catch a deletion, in a learner's fork nothing does until the page throws. Both are the price of finding modules instead of listing them and I would land it; for a follow-up, refuse a directory in a module folder the way a stray file is refused. The same seam shows with a dotfile: the build skips src/game/.DS_Store, the mirror check reports it as stale.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_build.py"
+text = '''
+test_the_fork_mirror_carries_every_file_the_build_reads spells the same rglob that sync_fork_source.pairs() uses and compares the two, so it passes on main and nothing this order could have done wrong turns it red; it pins a neighbour against a future change to a list of folders, which is worth having but is not a test of this change. What proves the sentence `mirrors what the build read` is `sync_fork_source.py --check` in c3 and the run I did by hand: add a module, the check names it stale, the sync writes it, the copied mirror builds with it. A test that does that in a temporary copy would be the real one.
+'''
