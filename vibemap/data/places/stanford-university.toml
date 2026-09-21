@@ -1,0 +1,12 @@
+# Stanford University. Stanford, California 94305.
+id = "stanford-university"
+name = "Stanford University"
+kind = "university"
+region = "us-west"
+era = "personal"
+globe = "earth"
+lat = 37.428
+lon = -122.17
+look = "campus"
+landmark = "hoover-tower"
+source = "https://www.stanford.edu/about/"

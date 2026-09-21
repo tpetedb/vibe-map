@@ -1,0 +1,12 @@
+# Anthropic, San Francisco. 548 Market Street, San Francisco.
+id = "anthropic-sf"
+name = "Anthropic, San Francisco"
+kind = "company"
+region = "us-west"
+era = "agents"
+globe = "earth"
+lat = 37.79
+lon = -122.401
+look = "tower"
+landmark = "market-street-office"
+source = "https://www.anthropic.com/legal/privacy"

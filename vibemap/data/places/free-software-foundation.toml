@@ -1,0 +1,13 @@
+# The Free Software Foundation, Boston. A nonprofit "with a worldwide mission to
+# promote computer user freedom"; it dates its own announcements from Boston.
+id = "free-software-foundation"
+name = "The Free Software Foundation, Boston"
+kind = "foundation"
+region = "us-east"
+era = "personal"
+globe = "earth"
+lat = 42.357
+lon = -71.059
+look = "house"
+landmark = "foundation-office"
+source = "https://www.fsf.org/about/"

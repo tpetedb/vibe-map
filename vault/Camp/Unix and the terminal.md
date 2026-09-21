@@ -2,7 +2,7 @@
 title: "Unix and the terminal"
 date: 2026-09-16
 tags: [tech, shell]
-generated: d06efe298473
+generated: 7f190cc72f84
 ---
 # Unix and the terminal
 
@@ -12,7 +12,7 @@ The terminal is a text conversation with the computer. Every tool in this tree i
 
 **Try in five minutes.** Open Terminal.app. Type pwd, then ls -la, then man ls (q to quit).
 
-- Docs: [The Missing Semester (MIT)](https://missing.csail.mit.edu), [Linux Journey](https://linuxjourney.com), [Source: Ritchie, The Evolution of the Unix Time-sharing System (1984)](https://www.read.seas.harvard.edu/~kohler/class/aosref/ritchie84evolution.pdf), [Source: The Open Group register of UNIX certified products](https://www.opengroup.org/openbrand/register/), [Source: Torvalds' 1991 Linux announcements (CMU archive)](https://www.cs.cmu.edu/~awb/linux.history.html)
+- Docs: [The Missing Semester (MIT)](https://missing.csail.mit.edu), [Linux Journey](https://linuxjourney.com), [Source: Ritchie, The Evolution of the Unix Time-sharing System (1984)](https://www.read.seas.harvard.edu/~kohler/class/aosref/ritchie84evolution.pdf), [Source: The Open Group, UNIX 03 certificate for macOS 26.0 Tahoe](https://www.opengroup.org/openbrand/register/brand3725.htm), [Source: Torvalds' 1991 Linux announcements (CMU archive)](https://www.cs.cmu.edu/~awb/linux.history.html)
 - Unlocks: [[Bash and shell scripts]], [[Files, folders and paths]], [[Git]]
 - Shelf: Terminal and shell · Depth: Basics
 

@@ -1,0 +1,12 @@
+# Docker, Palo Alto. 3790 El Camino Real, Palo Alto.
+id = "docker-palo-alto"
+name = "Docker, Palo Alto"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.419
+lon = -122.129
+look = "harbour"
+landmark = "stacked-containers"
+source = "https://www.docker.com/legal/docker-privacy-policy/"

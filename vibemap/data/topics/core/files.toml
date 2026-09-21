@@ -12,6 +12,22 @@ try_it = "In the template: find . -type f -not -path './.venv/*' | head -30 and 
 
 unlocks = ["dotfiles", "config", "git"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "mit"
+year = 1965
+what = "R. C. Daley of MIT and P. G. Neumann describe a general-purpose file system for secondary storage at the Fall Joint Computer Conference."
+source = "https://www.multicians.org/fjcc4.html"
+primary = true
+
+[[origins]]
+place = "bell-labs"
+year = 1965
+what = "The paper's second author, P. G. Neumann, gives his address as Bell Telephone Laboratories, Murray Hill, New Jersey."
+source = "https://www.multicians.org/fjcc4.html"
+
 [[sources]]
 label = "Unix filesystem basics"
 url = "https://missing.csail.mit.edu/2020/course-shell/"

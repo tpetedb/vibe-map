@@ -1,0 +1,10 @@
+# The W3C. The web's standards body, its own legal entity since January 2023.
+id = "w3c"
+name = "The W3C"
+kind = "standards"
+region = "everywhere"
+era = "personal"
+globe = "cloud"
+look = "station"
+landmark = "recommendation-track"
+source = "https://www.w3.org/about/"

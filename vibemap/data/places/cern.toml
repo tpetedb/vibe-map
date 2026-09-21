@@ -1,0 +1,12 @@
+# CERN, Geneva. Esplanade des Particules 1, Geneva. The laboratory sits astride the border.
+id = "cern"
+name = "CERN, Geneva"
+kind = "lab"
+region = "europe-west"
+era = "personal"
+globe = "earth"
+lat = 46.234
+lon = 6.056
+look = "lab"
+landmark = "globe-of-science"
+source = "https://home.cern/about"
