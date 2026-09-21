@@ -212,7 +212,8 @@
    "trust": "Recognised outlet: the preprint server the field posts to, operated by Cornell University.",
    "building": "ai-lab",
    "tags": ["agents"],
-   "cap": 3
+   "cap": 3,
+   "rests": "arXiv announces new submissions Sunday to Thursday and nothing on Friday or Saturday, and rebuilds the feed at midnight US Eastern, so this feed is empty over the weekend and says so itself in skipDays: https://info.arxiv.org/help/availability.html"
   }
  ]
 }
