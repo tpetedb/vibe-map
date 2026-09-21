@@ -1,0 +1,43 @@
+v = 1
+id = "hunt-h-palette-keys-focus"
+title = "Hunt batch H: the search palette, keys and focus"
+team = "panels"
+branch = "fix/hunt-h-palette-keys-focus"
+goal = "second-wave"
+issue = 110
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "src/game/41-search.js",
+  "src/game/88-chat.js",
+  "src/body.html",
+  "tests/test_game_hunt_h.py",
+]
+cross = []
+needs = ["harness-ci-shards"]
+
+[[criteria]]
+id = "c1"
+text = "The order's own tests pass: one test per finding, each seen failing before its fix."
+check = "uv run pytest -q tests/test_game_hunt_h.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the HTML sink guard and the whole non-browser battery pass, which is what CI runs."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "Every finding in findings.md is either fixed with a test that fails without the fix, or rejected with the evidence that it does not reproduce on main. None is silently skipped."
+judge = "reviewer"
+
+[[criteria]]
+id = "c5"
+text = "Screenshots of every changed surface were taken on the desktop and both phone profiles and looked at; copy keeps its voice (Rolinda plain, everyone else corporate), no em-dashes, no emoji."
+judge = "reviewer"

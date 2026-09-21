@@ -1,0 +1,25 @@
+v = 1
+id = "second-wave"
+statement = "Every confirmed finding of the two hunts and every quality-of-life proposal that has not landed is either fixed with a test, or rejected with evidence, by an order with a named owner, a review and the sign-off of every team whose files it touches; and the test harness stops depending on the clock, the screen and the machine."
+not = [
+  "Galaxy (ADR 0015): its own goal, once the owner accepts the proposal.",
+  "The workstream issues (topic packs, venues, interiors, courses): their own goals.",
+  "A release: 0.11.0 is cut by the owner.",
+]
+# Three build while one slot stays free for a reviewer or a team manager.
+budget = 3
+orders = [
+  "harness-ci-shards",
+  "harness-work-followups",
+  "hunt-q-docs-generators",
+  "harness-test-determinism",
+  "hunt-f-artifacts",
+  "hunt-b-panel-chrome",
+  "hunt-s-ask-panel",
+  "qol-2-wayfinding",
+  "hunt-h-palette-keys-focus",
+  "qol-4-feedback-companion",
+  "hunt-k-lesson-copy",
+  "hunt-w-settings-news",
+  "qol-5-continuity-photo",
+]

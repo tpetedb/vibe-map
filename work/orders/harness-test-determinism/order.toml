@@ -1,0 +1,45 @@
+v = 1
+id = "harness-test-determinism"
+title = "Browser tests run on a shifted clock, ask a record what was said, and write no tracked file"
+team = "harness"
+branch = "fix/test-determinism"
+goal = "second-wave"
+issue = 148
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "tests/conftest.py",
+  "tests/test_game_avatar.py",
+  "tests/test_game_state.py",
+  "tests/test_game_pet.py",
+  "tests/test_game_camera.py",
+  "tests/test_harness_determinism.py",
+]
+cross = []
+needs = ["harness-ci-shards"]
+
+[[criteria]]
+id = "c1"
+text = "The order's own tests pass: one test per finding, each seen failing before its fix."
+check = "uv run pytest -q tests/test_harness_determinism.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the HTML sink guard and the whole non-browser battery pass, which is what CI runs."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "Every finding in findings.md is either fixed with a test that fails without the fix, or rejected with the evidence that it does not reproduce on main. None is silently skipped."
+judge = "reviewer"
+
+[[criteria]]
+id = "c5"
+text = "The shifted clock breaks no existing test: the reviewer runs the dwell, speed-run and dashboard tests and reads how each uses time."
+judge = "reviewer"
