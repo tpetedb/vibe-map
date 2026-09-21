@@ -222,10 +222,15 @@ function drawMinimap(){
 /* ---------------- the arrow at the edge of the screen ---------------- */
 // Where the next stop is, always, so nobody circles the island looking for
 // the signpost; once the island is finished it points at the bridge that has
-// opened instead. Pressing it walks you there, so the cue and the way to
-// follow it are one control. The mode is S.settings.guide: on, next (the stop
-// and never the bridge) or off, and the two hardest difficulties, where
-// finding your own way is the game, start it off.
+// opened instead. The mode is S.settings.guide: on, next (the stop and never
+// the bridge) or off, and the two hardest difficulties, where finding your own
+// way is the game, start it off.
+//
+// It says where to go and takes no press of its own. It moves with the camera,
+// and a control that wanders across the screen is a control that sooner or
+// later sits on the zoom buttons and swallows a tap meant for them. Walking
+// there is asked for where it stays put: the palette, a plot on the map, or a
+// stop in the big map's list.
 let gEl=null,gArrow=null,gText=null,gSaid="",gGoal=null;
 const _gv=new T.Vector3();
 function guideMode(){const g=(S.settings||{}).guide;
@@ -233,13 +238,17 @@ function guideMode(){const g=(S.settings||{}).guide;
   return ["expert","god"].includes(typeof difficulty==="function"?difficulty():"normal")?"off":"on"}
 function guideBuild(){
   if(gEl)return;
-  gEl=document.createElement("button");gEl.id="guide";gEl.type="button";
+  gEl=document.createElement("div");gEl.id="guide";
   // Placed by its middle, so the point it is put on is the point it marks and
-  // no width has to be measured every frame.
+  // no width has to be measured every frame. Nothing about it takes a pointer:
+  // a tap where it happens to be is a tap on the island under it. The same
+  // fact is a sentence in the Roadmap and a row in the map's list, so a screen
+  // reader is not missing it here.
+  gEl.setAttribute("aria-hidden","true");
   gEl.style.cssText="position:fixed;z-index:6;display:none;align-items:center;gap:8px;"+
-    "transform:translate(-50%,-50%);min-height:"+MM_TAP+"px;padding:6px 12px;font-size:12px;"+
-    "font-weight:700;border-radius:22px;background:rgba(0,0,0,.55);color:#F1F1F8;"+
-    "border:1px solid rgba(241,241,248,.18)";
+    "pointer-events:none;transform:translate(-50%,-50%);min-height:"+MM_TAP+"px;"+
+    "padding:6px 12px;font-size:12px;font-weight:700;border-radius:22px;"+
+    "background:rgba(0,0,0,.55);color:#F1F1F8;border:1px solid rgba(241,241,248,.18)";
   // The chevron is two borders and no glyph: a triangle renders the same in
   // every font, and it is the one thing on screen that has to rotate.
   gArrow=document.createElement("span");
@@ -247,7 +256,6 @@ function guideBuild(){
     "border-bottom:13px solid "+PALETTE.orange+";display:block";
   gText=document.createElement("span");
   gEl.appendChild(gArrow);gEl.appendChild(gText);
-  gEl.addEventListener("click",guideGo);
   document.body.appendChild(gEl)}
 // What the arrow is pointing at: the next stop of this island, or, once they
 // are all delivered, the nearest open bridge off it.
@@ -264,11 +272,8 @@ function guideGoal(){
   const other=b.a===(S.world||"campus")?b.b:b.a;
   return {x:b.mid.x,z:b.mid.z,stop:0,name:"the bridge to "+((WORLDS[other]||{}).name||other),colour:PALETTE.text}}
 function stopName(n){const c=CH[n-1];return c?c.h+", "+c.n:"the next stop"}
-function guideGo(){if(!gGoal)return;
-  if(gGoal.stop){walkTo(gGoal.stop);return}
-  aim(gGoal.x,gGoal.z);toast(icon("compass")+"Walking there",esc(gGoal.name))}
-// Placed every frame, because it tracks the camera; the words under it are
-// written only when they change, which is once a walk.
+// Placed every frame, because it tracks the camera; the words in it are
+// written only when they change, which is once a metre walked.
 function guideLayout(){
   if(!gEl)return;
   const busy=!!document.querySelector("#sheet.on, #vault.on, #pal.on");
@@ -292,8 +297,7 @@ function guideLayout(){
   gArrow.style.transform="rotate("+Math.round(Math.atan2(dx,-dy)*180/Math.PI)+"deg)";
   gArrow.style.borderBottomColor=gGoal.colour;
   const said=away+" m";
-  if(said!==gSaid){gSaid=said;gText.textContent=said;
-    gEl.setAttribute("aria-label","Walk to "+gGoal.name+", "+away+" metres away")}}
+  if(said!==gSaid){gSaid=said;gText.textContent=said}}
 // Six times a second is plenty for a map of four islands, and it keeps the
 // canvas work off the frame budget. The arrow is placed every frame: it
 // follows the camera, and a chevron that lagged a sixth of a second behind

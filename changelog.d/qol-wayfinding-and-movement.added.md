@@ -3,9 +3,10 @@
   big map's list of stops: the walker sets off for it and the island says
   which one it is going to. One seam, `walkTo(n)`, is what every panel calls.
 - An arrow at the edge of the screen points at the next stop with the distance
-  to it, and at the bridge that has opened once the island is finished.
-  Pressing it walks you there. It is off at the two hardest difficulties, and
-  `S.settings.guide` (on, next, off) is the answer anywhere.
+  to it, and at the bridge that has opened once the island is finished. It
+  says where to go and takes no press of its own, so a tap where it happens to
+  be is a tap on the island under it. It is off at the two hardest
+  difficulties, and `S.settings.guide` (on, next, off) is the answer anywhere.
 - The marker where you are walking to stays lit until you arrive instead of
   fading after a second, with a dashed line from the walker to it.
 - The map is a map you can use: tap a plot to walk there, make it bigger with
