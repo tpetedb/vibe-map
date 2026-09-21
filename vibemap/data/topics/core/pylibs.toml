@@ -12,6 +12,19 @@ try_it = '''uv pip install pandas, then python3 -c "import pandas as pd; print(p
 
 unlocks = ["apis", "tests"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. Most of these
+# libraries were written by people at no shared address, and NumPy's own
+# about page names neither a town nor an employer, so the library sits on the
+# network it is published to.
+
+[[origins]]
+place = "the-internet"
+year = 2005
+what = "NumPy is created on the earlier Numeric and Numarray libraries, with Travis Oliphant as its founder."
+source = "https://numpy.org/about/"
+primary = true
+
 [[sources]]
 label = "pandas 10 minutes"
 url = "https://pandas.pydata.org/docs/user_guide/10min.html"

@@ -12,6 +12,24 @@ try_it = "Read .github/workflows/ci.yml and change the Python version in one pla
 
 unlocks = ["ci", "docker"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The spec was
+# written by three people on a site with no address; the echo is the workflow
+# file a learner meets YAML in.
+
+[[origins]]
+place = "the-internet"
+year = 2004
+what = "Oren Ben-Kiki, Clark Evans and Brian Ingerson publish the YAML 1.0 specification, a final draft dated 29 January 2004."
+source = "https://yaml.org/spec/1.0/"
+primary = true
+
+[[origins]]
+place = "github-sf"
+year = 2019
+what = "GitHub gives Actions a workflow syntax based on YAML, in the release that adds CI/CD."
+source = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
+
 [[sources]]
 label = "GitHub Actions workflow syntax"
 url = "https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions"

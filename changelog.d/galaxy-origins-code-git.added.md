@@ -1,0 +1,3 @@
+- The fifteen topics of the git, code and formats shelves say where they happened: one primary origin each, plus eight echoes, every year and claim read off the page it cites.
+- `vibe places` now has topics under CERN, Carnegie Mellon, Ecma International, the W3C, Google, Anthropic, Obsidian, GitHub and Microsoft, and the git, code and formats shelves are clear in `places.problems()`.
+- Nine of those origins sit at the internet or at a standards body, because no primary source puts a format or an open-source project at an address; the places that were wished for are named on issue 168 rather than guessed at.

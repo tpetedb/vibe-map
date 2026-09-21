@@ -12,6 +12,24 @@ try_it = "Write vault/Camp/Me.md with three sentences and two `[[links]]`. Open 
 
 unlocks = ["vault", "agentsmd", "readme", "adr", "obsidian"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. Markdown was
+# released on a personal site with no address on it; the echo is the editor
+# this camp keeps its notes in.
+
+[[origins]]
+place = "the-internet"
+year = 2004
+what = "John Gruber releases Markdown 1.0.1, a plain text formatting syntax and a Perl tool that converts it to HTML."
+source = "https://daringfireball.net/projects/markdown/"
+primary = true
+
+[[origins]]
+place = "obsidian"
+year = 2020
+what = "Erica Xu starts Obsidian, a note app whose data stays on your own device in open file formats."
+source = "https://obsidian.md/about"
+
 [[sources]]
 label = "Markdown guide"
 url = "https://www.markdownguide.org"

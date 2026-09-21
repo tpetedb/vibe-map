@@ -12,6 +12,18 @@ try_it = "git log --oneline | head, then change one line, git diff, git commit -
 
 unlocks = ["github", "hooks", "ci", "semver"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. No page we
+# found puts the writing of git at an address, so it sits on the network the
+# kernel community worked over.
+
+[[origins]]
+place = "the-internet"
+year = 2005
+what = "The Linux development community, and Linus Torvalds in particular, write git after BitKeeper's free-of-charge status is revoked."
+source = "https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git"
+primary = true
+
 [[sources]]
 label = "Git tutorial"
 url = "https://git-scm.com/docs/gittutorial"

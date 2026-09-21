@@ -12,6 +12,24 @@ try_it = "Ask Claude: 'add a GitHub Actions workflow that runs python3 workspace
 
 unlocks = ["headless", "tests"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The service
+# this camp runs its checks on is the primary; Jenkins is an echo, and its
+# renaming was a vote of a project with no address.
+
+[[origins]]
+place = "github-sf"
+year = 2019
+what = "GitHub Actions adds CI/CD, with every workflow written as YAML in the repository."
+source = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
+primary = true
+
+[[origins]]
+place = "the-internet"
+year = 2011
+what = "A community vote renames the Hudson project to Jenkins, 214 votes to 14."
+source = "https://www.jenkins.io/blog/2011/01/29/jenkins/"
+
 [[sources]]
 label = "GitHub Actions quickstart"
 url = "https://docs.github.com/en/actions/quickstart"

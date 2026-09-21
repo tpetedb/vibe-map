@@ -5,7 +5,7 @@ team = "content"
 branch = "feat/galaxy-origins-code-git"
 goal = "galaxy"
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-galaxy-origins-code-git"
 
 owns = [
   "vibemap/data/topics/core/ci.toml",

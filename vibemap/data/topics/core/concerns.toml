@@ -12,6 +12,19 @@ try_it = "Open your camp. For each top-level folder and file write one line in a
 
 unlocks = ["meta", "agentsmd", "toml", "files"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. Dijkstra coined
+# the phrase, but EWD 447 is signed from Nuenen, which is no place in this
+# map, so the origin is the paper that gave the criterion and prints its
+# author's university under his name.
+
+[[origins]]
+place = "carnegie-mellon"
+year = 1972
+what = "D.L. Parnas of Carnegie-Mellon University publishes the criteria for dividing a system into modules: each module hides a design decision likely to change."
+source = "https://www.cse.sc.edu/~mgv/csce590f20/ParnasCriteria.pdf"
+primary = true
+
 [[sources]]
 label = "Dijkstra, On the role of scientific thought (EWD 447), 1974"
 url = "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html"

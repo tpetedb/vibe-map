@@ -12,6 +12,31 @@ try_it = "Open workspace/game/index.html in a text editor and in a browser side 
 
 unlocks = ["http", "localhost"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. CERN's pages
+# date the first server and browser but never name html, so this line says
+# what they say; the two echoes are where the other two languages were
+# written down.
+
+[[origins]]
+place = "cern"
+year = 1990
+what = "Tim Berners-Lee has the first web server and browser up and running at CERN."
+source = "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/"
+primary = true
+
+[[origins]]
+place = "w3c"
+year = 1996
+what = "The W3C publishes Cascading Style Sheets level 1 as a Recommendation, on 17 December 1996."
+source = "https://www.w3.org/TR/REC-CSS1-961217"
+
+[[origins]]
+place = "ecma-international"
+year = 1997
+what = "Ecma International publishes the first edition of ECMA-262, the ECMAScript specification, in June 1997."
+source = "https://ecma-international.org/publications-and-standards/standards/ecma-262/"
+
 [[sources]]
 label = "MDN Web Docs"
 url = "https://developer.mozilla.org/en-US/docs/Learn_web_development"
