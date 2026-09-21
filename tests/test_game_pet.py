@@ -20,7 +20,6 @@ from vibemap import sprites
 from vibemap.state import State
 
 ROOT = Path(__file__).resolve().parents[1]
-MEDIA = ROOT / "docs" / "media" / "pets-game"
 PETS = ("cat", "crab", "dog", "duck", "snail", "turtle")
 
 
@@ -50,23 +49,27 @@ def _choose(page: GamePage, pet_id: str) -> None:
     page.frames(2)
 
 
-def _close_up(page: GamePage, target: Path) -> None:
-    """A screenshot framed on the companion, so a human can see the pixels."""
+def _close_up(page: GamePage, name: str) -> None:
+    """A screenshot framed on the companion, so a human can see the pixels.
+
+    It goes through the page helper, which writes into tests/out: a browser
+    test that renders into `docs/media` leaves a tracked file changed behind a
+    green run, and two branches that ran the battery a merge conflict over the
+    same picture. The pictures in the documentation are rendered by
+    `tools/media.py`, not by a test.
+    """
     at = _pet(page)["screen"]
     size = 320
     box = page.page.viewport_size or {"width": 1440, "height": 900}
     x = max(0, min(box["width"] - size, at["x"] - size / 2))
     y = max(0, min(box["height"] - size, at["y"] - size / 2))
-    page.page.screenshot(
-        path=str(target), clip={"x": x, "y": y, "width": size, "height": size}
-    )
+    page.screenshot(name, clip={"x": x, "y": y, "width": size, "height": size})
 
 
 def test_every_pet_can_be_chosen_in_settings_and_appears_on_the_island(
     island: GamePage,
 ) -> None:
     """The six vendored sets, each picked through the Settings control."""
-    MEDIA.mkdir(parents=True, exist_ok=True)
     for pet_id in PETS:
         _choose(island, pet_id)
         island.page.wait_for_function(
@@ -77,7 +80,7 @@ def test_every_pet_can_be_chosen_in_settings_and_appears_on_the_island(
         seen = _pet(island)
         assert seen["state"] in ("idle", "walk", "sit"), seen
         assert seen["frames"] > 0, f"{pet_id} has no frames"
-        _close_up(island, MEDIA / f"{pet_id}.png")
+        _close_up(island, f"pet_{pet_id}")
     island.assert_clean()
 
 

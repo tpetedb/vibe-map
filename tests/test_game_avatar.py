@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from tests.conftest import WAIT_MS, GamePage, encode_progress
+from tests.conftest import GamePage, encode_progress
 from vibemap import campaign
 from vibemap.state import State
 
@@ -81,17 +81,14 @@ def test_the_progress_code_carries_the_avatar_additively() -> None:
 
 
 def test_x_sits_the_walker_down_with_the_laptop_open(island: GamePage) -> None:
-    before = island.page.evaluate("window.__toasts()")
     _sit(island)
     state = _avatar(island)
     assert state["pose"] == "sit"
     assert state["laptop"], "the laptop did not open on the lap"
     assert "first-sit" in state["ach"]
-    # A toast removes itself after a few seconds, so the wait is on the count
-    # of toasts raised, not on the element still being in the page.
-    island.page.wait_for_function(
-        "n => window.__toasts() > n", arg=before, timeout=WAIT_MS
-    )
+    # A toast removes itself after a few seconds, so the wait is on the record
+    # of what the page said, not on the element still being in the page.
+    island.toast_said("Achievement: First sit")
     island.screenshot("avatar_sitting_with_laptop", clip_height=700)
     island.assert_clean()
 
@@ -120,11 +117,40 @@ def test_walking_over_a_collectible_picks_it_up(island: GamePage) -> None:
     island.page.wait_for_function(
         "id => window.__avatar().items.includes(id)", arg=item["id"], timeout=20_000
     )
-    island.page.wait_for_selector("#toast .tst", state="attached")
-    text = island.page.text_content("#toast .tst") or ""
-    assert "Picked up" in text
+    # What the page said, not what is on the screen: the pickup toast expires
+    # after five seconds and an achievement can take its place before a slow
+    # runner looks. The name comes from the package data, so the toast is the
+    # one this collectible raised and not whichever was showing.
+    named = next(
+        i["name"] for i in campaign.items_raw()["items"] if i["id"] == item["id"]
+    )
+    island.toast_said("Picked up: " + named)
     island.screenshot("avatar_item_pickup", clip_height=700)
     island.assert_clean()
+
+
+@pytest.mark.parametrize(("hour", "owl"), [(23, True), (12, False)])
+def test_night_owl_follows_the_clock_the_page_was_given(
+    game: GamePage, hour: int, owl: bool
+) -> None:
+    """The achievement reads the hour, so the page's clock decides it.
+
+    A shard running between eleven and midnight used to unlock this in the
+    middle of any other test, and its toast took the place of the one that
+    test was waiting for. The fixtures put every page at noon; this one asks
+    for the night. First light is true from the seeded record, so its toast is
+    the page's own word that the achievement pass ran, and Night owl was
+    judged in that same pass.
+    """
+    game.set_clock(hour, 30)
+    game.goto(state={"name": "Lotte", "done": [1], "doneW": {"campus": [1]}})
+    game.resume()
+    assert game.page.evaluate("new Date().getHours()") == hour
+    game.toast_said("Achievement: First light")
+    assert ("night-owl" in _avatar(game)["ach"]) is owl
+    if owl:
+        game.toast_said("Achievement: Night owl")
+    game.assert_clean()
 
 
 def test_the_backpack_lists_the_inventory_and_the_achievements(

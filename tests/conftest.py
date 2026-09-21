@@ -21,6 +21,7 @@ from typing import Any
 
 import pytest
 from playwright.sync_api import Browser, Page, Playwright, sync_playwright
+from playwright.sync_api import TimeoutError as PageTimeout
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "tests" / "out"
@@ -136,6 +137,122 @@ STILL = """expr => new Promise(done => {
 })"""
 
 
+# The hour every page believes it is. The runner's clock is UTC and a shard
+# can run at any hour, so a test that says nothing about the time gets the
+# middle of the day: after eleven at night the game unlocks Night owl, whose
+# toast then lands in the middle of another test's wait.
+NOON = 12
+
+
+def clock_script(hour: int, minute: int = 0) -> str:
+    """An init script that moves the page's clock to an hour of the same day.
+
+    The clock is shifted, never frozen: sheet dwell, the speed run achievement
+    and the dashboard's days are all measured with Date, and a stopped clock
+    breaks those instead. The day is kept, so a page and the Python that seeds
+    its record agree on what today is.
+    """
+    return f"""(() => {{
+  const Real = window.__realDate || Date;
+  window.__realDate = Real;
+  const now = new Real();
+  const want = new Real(now.getFullYear(), now.getMonth(), now.getDate(),
+    {hour}, {minute}, 0, 0);
+  const shift = want.getTime() - now.getTime();
+  class Shifted extends Real {{
+    constructor(...a) {{ a.length ? super(...a) : super(Real.now() + shift); }}
+    static now() {{ return Real.now() + shift; }}
+  }}
+  window.Date = Shifted;
+}})()"""
+
+
+# A toast is removed on a five second timer, so reading the screen for one is a
+# race a slow runner loses: by the time the test looks, the notice has expired
+# or another toast has taken its place. The page keeps a record of every toast
+# it raised instead, and GamePage.toasts() is what a test asks. The name is not
+# __toasts: the game already has that seam, for the count.
+# An init script is a body, not a function the page calls, so it is an IIFE.
+RECORD_TOASTS = """(() => {
+  window.__toastLog = [];
+  const note = n => { if (n.nodeType === 1 && n.classList.contains('tst'))
+    window.__toastLog.push(n.textContent || ''); };
+  const root = document.documentElement || document;
+  new MutationObserver(rs => rs.forEach(r => r.addedNodes.forEach(n => {
+    note(n);
+    if (n.nodeType === 1) n.querySelectorAll('.tst').forEach(note);
+  }))).observe(root, {childList: true, subtree: true});
+})()"""
+
+
+def out_file(path: str | Path) -> Path:
+    """Where a browser test may write: tests/out, and nowhere else.
+
+    Test output is not a tracked file. A test that renders into `docs/media`
+    turns a green run into a dirty working tree and two branches into a merge
+    conflict over the same picture, so the path is checked before the write.
+    """
+    target = Path(path)
+    if not target.is_absolute():
+        target = OUT / target
+    target = target.resolve()
+    if not target.is_relative_to(OUT.resolve()):
+        raise AssertionError(
+            f"a browser test wrote outside tests/out: {target}. Test output "
+            "belongs in tests/out; pass a name to GamePage.screenshot()."
+        )
+    return target
+
+
+def writes_only_to_out(page: Page) -> None:
+    """Hold the page to that rule, at the moment of the write."""
+    take = page.screenshot
+
+    def guarded(**options: Any) -> bytes:
+        if options.get("path") is not None:
+            options["path"] = str(out_file(options["path"]))
+        return take(**options)
+
+    page.screenshot = guarded  # pyright: ignore[reportAttributeAccessIssue]
+
+
+class _NamedWait:
+    """What GamePage.named_wait() hands out: the name, and how the page did.
+
+    A wait that runs out on a loaded runner and a wait on a condition the page
+    will never reach both raise the same bare timeout, so the failure names
+    the wait and the frames the page drew while it waited. Under a software
+    renderer that number is the whole story: the game advances its animations
+    by at most 0.05 s a frame, so a page drawing two frames a second lives ten
+    times slower than the wall clock the budget is written in.
+    """
+
+    def __init__(
+        self, game: GamePage, what: str, budget: int, frame: int | None = None
+    ) -> None:
+        self.game = game
+        self.what = what
+        self.budget = budget
+        # A caller that has just read the frame count hands it over rather
+        # than paying for a second round trip: walk_to waits hundreds of times.
+        self.frame = frame
+
+    def __enter__(self) -> _NamedWait:
+        if self.frame is None:
+            self.frame = self.game.frame_count()
+        return self
+
+    def __exit__(self, kind: Any, error: BaseException | None, tb: Any) -> bool:
+        if error is None or not isinstance(error, PageTimeout):
+            return False
+        drawn = self.game.frame_count() - (self.frame or 0)
+        seconds = self.budget / 1000
+        raise AssertionError(
+            f"{self.what} did not happen inside {seconds:.0f} s; the page drew "
+            f"{drawn} frames while waiting, {drawn / seconds:.1f} a second"
+        ) from error
+
+
 @dataclass
 class GamePage:
     """A page with the game loaded and its console errors collected.
@@ -151,6 +268,42 @@ class GamePage:
     url: str
     errors: list[str] = field(default_factory=list)
 
+    def set_clock(self, hour: int, minute: int = 0) -> None:
+        """Believe it is this hour of today, from the next load on.
+
+        The fixtures put every page at noon; a test about the time of day says
+        which hour it wants and then loads. An init script on the context, so
+        the reload goto() does to seed a record keeps the same clock.
+        """
+        self.page.context.add_init_script(clock_script(hour, minute))
+
+    def toasts(self) -> list[str]:
+        """Every toast the page has raised, expired or still on screen."""
+        return list(self.page.evaluate("window.__toastLog || []"))
+
+    def toast_said(self, text: str) -> None:
+        """Wait for a toast that carried this text, expired or not.
+
+        The record is a fact the page produced, so this never sleeps and never
+        races the five second timer that takes a toast off the screen.
+        """
+        self.page.wait_for_function(
+            "t => (window.__toastLog || []).some(m => m.includes(t))",
+            arg=text,
+            timeout=WAIT_MS,
+        )
+
+    def named_wait(
+        self, what: str, budget: int | None = None, frame: int | None = None
+    ) -> _NamedWait:
+        """A context manager that names the wait inside it when it runs out.
+
+        Playwright's message says which line waited, never what it was waiting
+        for or how the page was doing, so a timeout on a loaded runner reads
+        the same as a broken page. This adds both.
+        """
+        return _NamedWait(self, what, budget or WAIT_MS, frame)
+
     def goto(self, *, state: dict[str, Any] | None = None) -> GamePage:
         """Load the game, optionally seeding localStorage first."""
         self.page.goto(self.url)
@@ -163,29 +316,50 @@ class GamePage:
         self.page.wait_for_function("typeof window.__S === 'function'")
         return self
 
+    def frame_count(self) -> int:
+        """How many frames the loop has drawn, or zero on a page without one."""
+        try:
+            return int(
+                self.page.evaluate(
+                    "() => (window.__debug ? window.__debug().frame : 0) || 0"
+                )
+            )
+        except Exception:
+            # A page that is closing or navigating answers nothing, and a wait
+            # that ran out is a poor moment to raise a second failure.
+            return 0
+
     def frames(self, n: int = 3) -> None:
         """Wait for the frame loop to draw n more frames.
 
         Proximity, the camera and the pop-in animations are sampled in the
         loop, so a read straight after a click can be a frame stale.
         """
-        start = int(self.page.evaluate("window.__debug().frame") or 0)
-        self.page.wait_for_function(
-            "n => window.__debug().frame >= n", arg=start + n, timeout=WAIT_MS
-        )
+        start = self.frame_count()
+        with self.named_wait(f"{n} more frames", frame=start):
+            self.page.wait_for_function(
+                "n => window.__debug().frame >= n", arg=start + n, timeout=WAIT_MS
+            )
 
     def still(self, expression: str) -> None:
         """Wait until a numeric JavaScript expression stops changing."""
         self.page.wait_for_function(STILL, arg=expression, timeout=WAIT_MS)
 
-    def until(self, expression: str) -> None:
+    def until(
+        self, expression: str, *, what: str | None = None, budget: int | None = None
+    ) -> None:
         """Wait for a condition the page makes true.
 
         The counterpart to still() for a fact that has a shape rather than a
         value: it is the assertion's own condition, so a layout that never
         reaches it runs out of the budget and fails as the defect it is.
+        `what` names the wait in that failure, and `budget` is for the one
+        wait that is measured in something other than the usual.
         """
-        self.page.wait_for_function(f"() => ({expression})", timeout=WAIT_MS)
+        with self.named_wait(what or expression, budget):
+            self.page.wait_for_function(
+                f"() => ({expression})", timeout=budget or WAIT_MS
+            )
 
     def _entered(self) -> None:
         """The title is gone, the 3D scene runs and the first frames are drawn."""
@@ -349,15 +523,25 @@ class GamePage:
         )
         return self.page.text_content("#syncmsg") or ""
 
-    def screenshot(self, name: str, *, clip_height: int | None = None) -> Path:
+    def screenshot(
+        self,
+        name: str,
+        *,
+        clip_height: int | None = None,
+        clip: dict[str, float] | None = None,
+    ) -> Path:
+        """The one way a browser test writes a picture, always into tests/out.
+
+        `clip_height` takes the top of the viewport, `clip` frames a corner of
+        it, and neither decides where the file lands.
+        """
         OUT.mkdir(parents=True, exist_ok=True)
-        target = OUT / f"{name}.png"
-        if clip_height:
+        target = out_file(f"{name}.png")
+        if clip is None and clip_height:
             width = self.page.viewport_size["width"] if self.page.viewport_size else 420
-            self.page.screenshot(
-                path=str(target),
-                clip={"x": 0, "y": 0, "width": width, "height": clip_height},
-            )
+            clip = {"x": 0, "y": 0, "width": width, "height": clip_height}
+        if clip is not None:
+            self.page.screenshot(path=str(target), clip=clip)
         else:
             self.page.screenshot(path=str(target), full_page=True)
         return target
@@ -450,45 +634,44 @@ def _attach_error_collectors(page: Page, errors: list[str]) -> None:
     )
 
 
-@pytest.fixture
-def game(chromium: Browser, server: str) -> Iterator[GamePage]:
-    """A fresh Chromium page at a phone-sized viewport, errors collected."""
-    context = chromium.new_context(viewport={"width": 420, "height": 860})
+def game_page(browser: Browser, server: str, **options: Any) -> Iterator[GamePage]:
+    """The one page every browser fixture hands out, whatever its size.
+
+    Four fixtures once repeated these lines, so what one of them learned the
+    others did not: the clock runs at noon of today, every toast the page
+    raises is kept where a test can ask for it, and a picture only ever lands
+    in tests/out.
+    """
+    context = browser.new_context(**options)
+    context.add_init_script(clock_script(NOON))
+    context.add_init_script(RECORD_TOASTS)
     page = context.new_page()
+    writes_only_to_out(page)
     gp = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, gp.errors)
     yield gp
     context.close()
+
+
+@pytest.fixture
+def game(chromium: Browser, server: str) -> Iterator[GamePage]:
+    """A fresh Chromium page at a phone-sized viewport, errors collected."""
+    yield from game_page(chromium, server, viewport={"width": 420, "height": 860})
 
 
 @pytest.fixture
 def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
     """A fresh Chromium page at 1440x900: the laptop the course is written for."""
-    context = chromium.new_context(viewport={"width": 1440, "height": 900})
-    page = context.new_page()
-    gp = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, gp.errors)
-    yield gp
-    context.close()
+    yield from game_page(chromium, server, viewport={"width": 1440, "height": 900})
 
 
 @pytest.fixture
 def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
     """WebKit with iPhone 15 metrics and touch, the closest headless proxy for iOS."""
-    context = webkit.new_context(**phone_options("iphone"))
-    page = context.new_page()
-    gp = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, gp.errors)
-    yield gp
-    context.close()
+    yield from game_page(webkit, server, **phone_options("iphone"))
 
 
 @pytest.fixture
 def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
     """Chromium with Pixel 7 metrics and touch: the phone the owner plays on."""
-    context = chromium.new_context(**phone_options("android"))
-    page = context.new_page()
-    gp = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, gp.errors)
-    yield gp
-    context.close()
+    yield from game_page(chromium, server, **phone_options("android"))

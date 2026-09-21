@@ -17,12 +17,27 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from playwright.sync_api import TimeoutError as PageTimeout
 
 from tests.conftest import STORAGE_KEY, WAIT_MS, GamePage
 
 ALL_DONE = [1, 2, 3, 4, 5, 6, 7, 8]
 LANDED = "window.__gfx().cam.off < 0.5"
 PHONES = ["game_android", "game_webkit_iphone"]
+
+# How long the camera may take to land, which is not the usual budget.
+#
+# The landing is an animation of a fixed length in the game's own time: the
+# glide is CAM.glide, 1.4 s, and the frame loop advances that time by at most
+# 0.05 s a frame (the clamp in `src/game/31-animate.js`). A page drawing fewer
+# than twenty frames a second therefore takes longer than 1.4 s of wall clock
+# to land, in proportion: measured on a laptop, the same landing is 1.4 s in
+# WebKit at 60 frames a second and 4.7 s in headless Chromium on SwiftShader
+# at 5.7, both on the heaviest island. A loaded CI runner draws fewer still,
+# which is what ran the usual 20 s budget out on the Android leg of the zoom
+# budget test. Below one frame a second this budget runs out too, and that is
+# the point: a landing that slow is a performance finding, not a slow runner.
+LAND_MS = 30_000
 
 
 def _gfx(game: GamePage) -> dict[str, Any]:
@@ -51,16 +66,32 @@ def _island(
         state["settings"] = {"zoom": zoom}
     game.goto(state=state)
     game.resume()
-    game.until(LANDED)
+    _landed(game, "the island loaded")
     return game
 
 
+def _landed(game: GamePage, after: str) -> None:
+    """Wait for the camera to be where the zoom asks it to be.
+
+    Named, because the level and the landing are two waits a line apart and
+    the bare timeout of either reads the same in a CI log.
+    """
+    game.until(LANDED, what=f"the camera landing after {after}", budget=LAND_MS)
+
+
 def _zoom_is(game: GamePage, level: float) -> None:
-    game.page.wait_for_function(
-        "z => Math.abs(window.__gfx().zoom.target - z) < 0.001",
-        arg=level,
-        timeout=WAIT_MS,
-    )
+    """Wait for the zoom level itself, which a tap sets in the same breath."""
+    try:
+        game.page.wait_for_function(
+            "z => Math.abs(window.__gfx().zoom.target - z) < 0.001",
+            arg=level,
+            timeout=WAIT_MS,
+        )
+    except PageTimeout as expired:
+        raise AssertionError(
+            f"the zoom level never reached {level}: it is {_zoom(game)}, so a "
+            "tap on the zoom control did not arrive"
+        ) from expired
 
 
 def _stage_point(game: GamePage, fx: float, fy: float) -> tuple[float, float]:
@@ -118,7 +149,7 @@ def test_the_walk_starts_close_and_zero_shows_the_whole_island(
     close = gfx["zoom"]["dist"]
     game.page.keyboard.press("0")
     _zoom_is(game, 0)
-    game.until(LANDED)
+    _landed(game, "the 0 key")
     gfx = _gfx(game)
     assert gfx["rim"] < 1, f"the fitted view crops the island: {gfx['rim']}"
     assert gfx["zoom"]["dist"] > close * 1.5
@@ -141,7 +172,7 @@ def test_the_wheel_zooms_both_ways_and_stops_at_the_ends(
     for _ in range(12):
         game.page.mouse.wheel(0, 400)
     _zoom_is(game, 1)
-    game.until(LANDED)
+    _landed(game, "the wheel reached the archipelago")
     assert game.page.is_disabled("#zoom-out"), "nothing further out than this"
     far = _gfx(game)
     assert far["plates"]["shown"] == 0, "no plates over the archipelago"
@@ -233,7 +264,7 @@ def test_two_fingers_zoom_and_never_walk(
     before = game.page.evaluate("window.__debug().pos")
     _pinch(game, 90, 260)
     game.until("window.__gfx().zoom.target < -0.3")
-    game.until(LANDED)
+    _landed(game, "the pinch")
     game.screenshot(f"camera_pinch_in_{fixture}", clip_height=915)
     _pinch(game, 260, 40)
     game.until("window.__gfx().zoom.target > 0.3")
@@ -342,7 +373,7 @@ def test_every_zoom_level_holds_the_phone_budget(
         for _ in range(taps):
             game.page.tap(button)
         _zoom_is(game, level)
-        game.until(LANDED)
+        _landed(game, f"the taps to zoom {level}")
         game.frames(2)
         gfx = _gfx(game)
         pet = game.page.evaluate("window.__pet()")
