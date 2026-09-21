@@ -15,20 +15,23 @@ selector that reads `#toast` is a test asking the screen instead of the page.
 from __future__ import annotations
 
 import ast
+import tempfile
 from datetime import date
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import Browser, Page
 from playwright.sync_api import TimeoutError as PageTimeout
 
 from tests.conftest import (
+    GAME_PATH,
     NOON,
     OUT,
     ROOT,
     SHOT_MS,
     GamePage,
+    game_context,
     out_file,
     writes_only_to_out,
 )
@@ -243,6 +246,30 @@ def test_every_page_fixture_believes_it_is_noon_of_today(
     assert now[4] is True, "the page was never given a clock of its own"
     assert now[3] == NOON, f"the page thinks it is {now[3]} o'clock"
     assert date(now[0], now[1], now[2]) in (before, after), now
+
+
+def test_a_page_with_no_wrapper_gets_the_same_three_rules(
+    chromium: Browser, server: str
+) -> None:
+    """The three rules hang off the context, not off GamePage.
+
+    A test of one of our own tools is handed a bare Page (tools/media.py takes
+    one), and a test that wants a size or a browser the fixtures do not offer
+    opens its own. Both take game_context(), so neither has to be taught the
+    clock, the record and the write rule a second time.
+    """
+    # The write the guard has to refuse is aimed at a temporary directory and
+    # not at docs/media: a run where the guard is missing is exactly the run
+    # that would then overwrite the tracked picture it aimed at.
+    outside = Path(tempfile.gettempdir()) / "vibe-map-write-guard-probe.png"
+    with game_context(chromium, viewport={"width": 420, "height": 860}) as page:
+        page.goto(server + GAME_PATH)
+        hour = page.evaluate("() => new Date().getHours()")
+        recorded = page.evaluate("() => Array.isArray(window.__toastLog)")
+        with pytest.raises(AssertionError, match="outside tests/out"):
+            page.screenshot(path=str(outside))
+    assert hour == NOON, f"the page thinks it is {hour} o'clock"
+    assert recorded, "the page keeps no record of the toasts it raises"
 
 
 def test_the_shifted_clock_still_runs(game: GamePage) -> None:

@@ -16,6 +16,7 @@ import math
 import threading
 import time
 from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -716,44 +717,64 @@ def _attach_error_collectors(page: Page, errors: list[str]) -> None:
     )
 
 
-def game_page(browser: Browser, server: str, **options: Any) -> Iterator[GamePage]:
-    """The one page every browser fixture hands out, whatever its size.
+@contextmanager
+def game_context(browser: Browser, **options: Any) -> Iterator[Page]:
+    """A page on a context that carries the three rules, and nothing else.
 
-    One helper, so the three rules hold for every fixture rather than for
-    whichever one was taught them: the clock runs at noon of today, every
-    toast the page raises is kept where a test can ask for it, and a picture
-    only ever lands in tests/out.
+    The clock runs at noon of today, every toast the page raises is kept where
+    a test can ask for it, and a picture only ever lands in tests/out. Both
+    halves of the suite need the three: a test that drives the game through
+    GamePage takes game_page(), and one that drives it through a tool of ours
+    (tools/media.py hands the tool a bare Page) takes this.
     """
     context = browser.new_context(**options)
     context.add_init_script(clock_script(NOON))
     context.add_init_script(RECORD_TOASTS)
     page = context.new_page()
     writes_only_to_out(page)
-    gp = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, gp.errors)
-    yield gp
-    context.close()
+    try:
+        yield page
+    finally:
+        context.close()
+
+
+@contextmanager
+def game_page(browser: Browser, server: str, **options: Any) -> Iterator[GamePage]:
+    """The one page every browser fixture hands out, whatever its size.
+
+    One helper, so the three rules hold for every fixture rather than for
+    whichever one was taught them, and a test that wants its own size or its
+    own browser opens it here rather than building a context by hand.
+    """
+    with game_context(browser, **options) as page:
+        gp = GamePage(page=page, url=server + GAME_PATH)
+        _attach_error_collectors(page, gp.errors)
+        yield gp
 
 
 @pytest.fixture
 def game(chromium: Browser, server: str) -> Iterator[GamePage]:
     """A fresh Chromium page at a phone-sized viewport, errors collected."""
-    yield from game_page(chromium, server, viewport={"width": 420, "height": 860})
+    with game_page(chromium, server, viewport={"width": 420, "height": 860}) as gp:
+        yield gp
 
 
 @pytest.fixture
 def game_desktop(chromium: Browser, server: str) -> Iterator[GamePage]:
     """A fresh Chromium page at 1440x900: the laptop the course is written for."""
-    yield from game_page(chromium, server, viewport={"width": 1440, "height": 900})
+    with game_page(chromium, server, viewport={"width": 1440, "height": 900}) as gp:
+        yield gp
 
 
 @pytest.fixture
 def game_webkit_iphone(webkit: Browser, server: str) -> Iterator[GamePage]:
     """WebKit with iPhone 15 metrics and touch, the closest headless proxy for iOS."""
-    yield from game_page(webkit, server, **phone_options("iphone"))
+    with game_page(webkit, server, **phone_options("iphone")) as gp:
+        yield gp
 
 
 @pytest.fixture
 def game_android(chromium: Browser, server: str) -> Iterator[GamePage]:
     """Chromium with Pixel 7 metrics and touch: the phone the owner plays on."""
-    yield from game_page(chromium, server, **phone_options("android"))
+    with game_page(chromium, server, **phone_options("android")) as gp:
+        yield gp

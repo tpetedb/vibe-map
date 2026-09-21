@@ -13,7 +13,7 @@ import pytest
 from PIL import Image, ImageChops
 from playwright.sync_api import Browser
 
-from tests.conftest import GAME_PATH, ROOT
+from tests.conftest import GAME_PATH, ROOT, game_context
 from tools import media
 
 MEDIA = ROOT / "docs" / "media"
@@ -97,19 +97,19 @@ def test_the_gif_window_keeps_the_zoom_column_off_the_minimap(
     """The zoom column sits above the stage's bottom edge and the minimap
     hangs under the HUD at the top of the window, so a short window draws one
     over the other (issue 161). The GIF is recorded where they do not meet."""
-    context = chromium.new_context(
-        viewport={"width": window[0], "height": window[1]}, device_scale_factor=1
-    )
-    page = context.new_page()
-    media._load(page, server + GAME_PATH, media.PLAYED)
-    media._start(page)
-    media._settled(page, "campus")
-    boxes = page.evaluate(
-        "() => ['minimap', 'zoom'].map(id => {"
-        " const el = document.getElementById(id);"
-        " const r = el.getBoundingClientRect(); return [r.top, r.bottom] })"
-    )
-    context.close()
+    with game_context(
+        chromium,
+        viewport={"width": window[0], "height": window[1]},
+        device_scale_factor=1,
+    ) as page:
+        media._load(page, server + GAME_PATH, media.PLAYED)
+        media._start(page)
+        media._settled(page, "campus")
+        boxes = page.evaluate(
+            "() => ['minimap', 'zoom'].map(id => {"
+            " const el = document.getElementById(id);"
+            " const r = el.getBoundingClientRect(); return [r.top, r.bottom] })"
+        )
     clear = boxes[1][0] > boxes[0][1]
     assert clear == (window == media.GIF_WINDOW), (
         f"in a {window[0]}x{window[1]} window the minimap ends at {boxes[0][1]} "
@@ -123,24 +123,23 @@ def test_the_gif_taps_the_ground_and_the_walker_moves(
     """The GIF's caption says she walks to the signpost. A tap below the stage
     lands on the talk band and walks nobody, so the tool aims at the plate the
     island draws over the signpost and refuses any point but the ground."""
-    context = chromium.new_context(
+    with game_context(
+        chromium,
         viewport={"width": media.GIF_WINDOW[0], "height": media.GIF_WINDOW[1]},
         device_scale_factor=1,
-    )
-    page = context.new_page()
-    media._load(page, server + GAME_PATH, None)
-    media._start(page)
-    media._settled(page, "campus")
-    before = page.evaluate("() => window.__debug().pos")
-    media._tap_towards(page, media._signpost(page, media.SIGNPOST), share=0.9)
-    page.wait_for_function(
-        "p => { const q = window.__debug().pos;"
-        " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 1 }",
-        arg=before,
-    )
-    media._still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
-    walked = media._walked(page, before)
-    context.close()
+    ) as page:
+        media._load(page, server + GAME_PATH, None)
+        media._start(page)
+        media._settled(page, "campus")
+        before = page.evaluate("() => window.__debug().pos")
+        media._tap_towards(page, media._signpost(page, media.SIGNPOST), share=0.9)
+        page.wait_for_function(
+            "p => { const q = window.__debug().pos;"
+            " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 1 }",
+            arg=before,
+        )
+        media._still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
+        walked = media._walked(page, before)
     assert walked > 4, f"the walker moved {walked:.1f} after the tap"
 
 
@@ -149,20 +148,18 @@ def test_no_tap_lands_under_the_stage(chromium: Browser, server: str) -> None:
     the talk band: a point there walks nobody, however much of the picture it
     is. Aimed at one, the tool aims shorter until the point is the island."""
     wide, tall = media.GIF_WINDOW
-    context = chromium.new_context(
-        viewport={"width": wide, "height": tall}, device_scale_factor=1
-    )
-    page = context.new_page()
-    media._load(page, server + GAME_PATH, None)
-    media._start(page)
-    media._settled(page, "campus")
-    stage = media._stage(page, wide)
-    at = media._tap_towards(page, (wide / 2, tall - 20), share=1.0)
-    hit = page.evaluate(
-        "([x, y]) => { const el = document.elementFromPoint(x, y);"
-        " return el ? el.id : null }",
-        [at[0], at[1]],
-    )
-    context.close()
+    with game_context(
+        chromium, viewport={"width": wide, "height": tall}, device_scale_factor=1
+    ) as page:
+        media._load(page, server + GAME_PATH, None)
+        media._start(page)
+        media._settled(page, "campus")
+        stage = media._stage(page, wide)
+        at = media._tap_towards(page, (wide / 2, tall - 20), share=1.0)
+        hit = page.evaluate(
+            "([x, y]) => { const el = document.elementFromPoint(x, y);"
+            " return el ? el.id : null }",
+            [at[0], at[1]],
+        )
     assert hit == "c", f"the tap at {at} landed on {hit}"
     assert at[1] < stage["height"], f"the tap at {at} is under the stage"
