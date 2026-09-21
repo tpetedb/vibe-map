@@ -13,13 +13,15 @@ try_it = "source scripts/vibe.zsh then g status."
 unlocks = ["dotfiles"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
-# exactly one origin is primary, and every source was opened.
+# exactly one origin is primary, and every source was opened. Apple's support
+# page carries the shell but no year, so the year comes from the release
+# announcement and the shell from the sources below.
 
 [[origins]]
 place = "apple-cupertino"
 year = 2019
-what = "Apple makes zsh the default login shell and interactive shell, from macOS 10.15 on."
-source = "https://support.apple.com/en-us/102360"
+what = "Apple releases macOS Catalina on 7 October 2019."
+source = "https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/"
 primary = true
 
 [[sources]]

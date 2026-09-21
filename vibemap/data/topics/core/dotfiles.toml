@@ -18,7 +18,7 @@ unlocks = ["config", "env", "harness"]
 [[origins]]
 place = "github-sf"
 year = 2008
-what = "Chris Wanstrath posts that GitHub is officially live, and a repository becomes somewhere to keep a dotfile."
+what = "Chris Wanstrath posts that GitHub is officially live."
 source = "https://github.blog/2008-04-10-we-launched/"
 primary = true
 

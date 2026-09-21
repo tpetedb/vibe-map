@@ -25,7 +25,7 @@ primary = true
 [[origins]]
 place = "bell-labs"
 year = 1965
-what = "Neumann writes his half of that file system paper at Bell Telephone Laboratories in Murray Hill."
+what = "The paper's second author, P. G. Neumann, gives his address as Bell Telephone Laboratories, Murray Hill, New Jersey."
 source = "https://www.multicians.org/fjcc4.html"
 
 [[sources]]

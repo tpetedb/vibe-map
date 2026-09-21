@@ -1,4 +1,5 @@
-# Bell Labs, Murray Hill. The IEEE milestone plaque here cites the UNIX operating system (1969), C and S.
+# Bell Labs, Murray Hill. The IEEE milestone plaques hang in the lobby at 600 Mountain
+# Avenue; their citation names the UNIX operating system (1969), C and S.
 id = "bell-labs"
 name = "Bell Labs, Murray Hill"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 40.684
 lon = -74.402
 look = "campus"
-landmark = "horn-antenna"
+landmark = "mountain-avenue-plaque"
 source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-1983"

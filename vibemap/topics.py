@@ -196,12 +196,14 @@ def _check_origins(topic: Topic, where: str) -> None:
         at = f"the origin at {origin.place!r}"
         if not origin.source.startswith("https://"):
             _fail(where, f"{at} needs an https source that says what it claims")
-        if not (FIRST_YEAR <= origin.year <= dt.date.today().year + 1):
+        if not (FIRST_YEAR <= origin.year <= dt.date.today().year):
             _fail(
                 where, f"{at} has the year {origin.year}, outside {FIRST_YEAR} to now"
             )
         if not origin.what.strip():
             _fail(where, f"{at} says nothing; `what` is one line about what happened")
+        if "\n" in origin.what.strip():
+            _fail(where, f"{at} runs over several lines; `what` is one line")
 
 
 def _pack_topics(folder: Path, pack: Pack) -> list[Topic]:

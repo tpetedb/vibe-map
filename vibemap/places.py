@@ -106,7 +106,9 @@ REGIONS = (
     "everywhere",
 )
 # A landmark names one silhouette the diorama builder draws, so it is a slug
-# and not prose.
+# and not prose. It is a thing that stands at the place, never an
+# organisation's logo, wordmark or mascot: ADR 0010 gives a real organisation
+# its name as plain text and nothing else, and a place inherits that rule.
 LANDMARK = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
 
@@ -164,7 +166,7 @@ def _check(place: Place, where: str) -> None:
     _one_of(where, "globe", place.globe, GLOBES)
     _one_of(where, "look", place.look, LOOKS)
     if not LANDMARK.fullmatch(place.landmark):
-        _fail(where, "landmark names one shape to draw, as a slug (horn-antenna)")
+        _fail(where, "landmark names one shape to draw, as a slug (great-dome)")
     if not place.source.startswith("https://"):
         _fail(where, "source is an https link to a page about the place itself")
     has_coords = place.lat is not None and place.lon is not None
@@ -270,7 +272,22 @@ def topics_by_place() -> dict[str, list[Topic]]:
 def _selected(
     shelves: Sequence[str] | None, packs: Sequence[str] | None
 ) -> list[Topic]:
+    """The topics a selection names, refusing a name the tree does not have.
+
+    A misspelt shelf would otherwise select nothing, and nothing has no
+    defects: the order asking would pass with nothing checked.
+    """
     chosen = topics.all_topics()
+    for one, many, asked, known in (
+        ("shelf", "shelves", shelves, {t.shelf for t in chosen}),
+        ("pack", "packs", packs, {t.pack for t in chosen}),
+    ):
+        for name in asked or ():
+            if name not in known:
+                raise ValueError(
+                    f"unknown {one} {name!r}; the {many} are:"
+                    f" {', '.join(sorted(known))}."
+                )
     if shelves is not None:
         chosen = tuple(t for t in chosen if t.shelf in shelves)
     if packs is not None:
@@ -285,7 +302,9 @@ def problems(
 
     `shelves` and `packs` narrow the selection the way a research order is cut:
     one shelf of the tree, or a whole pack. With neither, every topic is read.
-    An empty list means nothing is wrong with what was asked about.
+    A shelf or a pack the tree does not have is itself the first defect, so a
+    typo in an order's command fails it instead of checking nothing. An empty
+    list means nothing is wrong with what was asked about.
     """
     try:
         known = {p.id for p in all_places()}

@@ -16,9 +16,9 @@ unlocks = ["zsh", "dotfiles", "justfile", "docker", "hooks"]
 # exactly one origin is primary, and every source was opened.
 
 [[origins]]
-place = "free-software-foundation"
+place = "uc-santa-barbara"
 year = 1989
-what = "Brian Fox beta-releases BASH, the Bourne Again SHell, as the GNU version of sh."
+what = "Brian Fox, working for the Free Software Foundation at UC Santa Barbara, beta-releases BASH, the GNU version of sh."
 source = "https://www.gnu.org/bulletins/bull7.html"
 primary = true
 

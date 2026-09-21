@@ -172,7 +172,8 @@ globe = "earth"         # earth, datacentre, cloud: which tiny globe carries it
 lat = 40.684            # where the dome sits on the tiny globe; refused for
 lon = -74.402           # a place that is not on Earth (the cloud, the lanes)
 look = "campus"         # which diorama builder and palette family
-landmark = "horn-antenna"
+landmark = "mountain-avenue-plaque"   # one silhouette that stands there, and
+                        # never a logo, a wordmark or a mascot (ADR 0010)
 source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-1983"
 ```
 

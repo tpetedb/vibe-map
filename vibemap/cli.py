@@ -1240,7 +1240,7 @@ def _origin_lines(topic: Topic) -> None:
         mark = "Where." if origin.primary else "Echo."
         console.print(
             f"[accent]{mark}[/] {escape(place.name)}, {origin.year}: "
-            f"{escape(origin.what)} [muted]{origin.source}[/]"
+            f"{escape(origin.what)} [muted]{escape(origin.source)}[/]"
         )
 
 
@@ -1407,11 +1407,15 @@ def _show_place(place: places.Place) -> None:
     console.print(
         f"[title]{escape(place.name)}[/] · [path]{place.kind}[/] · {era.name}"
     )
+    landmark = place.landmark.replace("-", " ")
+    # An abstract place is its own landmark ("a nebula around its nebula" is
+    # not a sentence), so the silhouette is only named when it adds one.
+    around = f" around its {landmark}" if landmark != place.look else ""
     console.print(
         f"On the {place.globe} globe at {place.where}, in {place.region}, "
-        f"drawn as a {place.look} around its {place.landmark.replace('-', ' ')}."
+        f"drawn as a {place.look}{around}."
     )
-    console.print(f"  [muted]{place.source}[/]")
+    console.print(f"  [muted]{escape(place.source)}[/]")
     for topic in places.topics_by_place()[place.id]:
         origin = places.origin_at(topic, place.id)
         mark = "where it lives" if origin.primary else "echo"

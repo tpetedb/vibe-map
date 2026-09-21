@@ -1,4 +1,5 @@
-# The Free Software Foundation, Boston. Boston, Massachusetts. The GNU tools, bash among them, were paid for here.
+# The Free Software Foundation, Boston. A nonprofit "with a worldwide mission to
+# promote computer user freedom"; it dates its own announcements from Boston.
 id = "free-software-foundation"
 name = "The Free Software Foundation, Boston"
 kind = "foundation"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 42.357
 lon = -71.059
 look = "house"
-landmark = "gnu-office"
+landmark = "foundation-office"
 source = "https://www.fsf.org/about/"

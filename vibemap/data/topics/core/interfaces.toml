@@ -18,7 +18,7 @@ unlocks = ["unix", "mcp", "apis"]
 [[origins]]
 place = "parc"
 year = 1972
-what = "PARC researchers begin the Xerox Alto, whose graphical user interface proved widely and profoundly influential."
+what = "Xerox PARC researchers develop the Alto: a high-resolution display, a mouse and PARC's own Ethernet networking."
 source = "https://ethw.org/Milestones:The_Xerox_Alto_Establishes_Personal_Networked_Computing,_1972-1983"
 primary = true
 

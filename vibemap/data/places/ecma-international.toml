@@ -1,0 +1,14 @@
+# Ecma International, Geneva. Its own site gives Rue du Rhone 114, 1204 Geneva,
+# Switzerland. ECMA-262 (the JavaScript language) and ECMA-404 (JSON) are its
+# standards.
+id = "ecma-international"
+name = "Ecma International, Geneva"
+kind = "standards"
+region = "europe-west"
+era = "mainframe"
+globe = "earth"
+lat = 46.203
+lon = 6.154
+look = "hall"
+landmark = "rue-du-rhone-office"
+source = "https://ecma-international.org/"

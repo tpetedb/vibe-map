@@ -19,8 +19,8 @@ unlocks = ["agentsmd", "ci", "githooks"]
 [[origins]]
 place = "the-internet"
 year = 2022
-what = "just reaches 1.0.0, tagged on 22 February 2022 in its public repository rather than at any address."
-source = "https://api.github.com/repos/casey/just/releases/tags/1.0.0"
+what = "just reaches 1.0.0, dated 22 February 2022 in its own changelog."
+source = "https://github.com/casey/just/blob/master/CHANGELOG.md"
 primary = true
 
 [[sources]]

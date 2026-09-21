@@ -1,4 +1,5 @@
-# The Apache Software Foundation. A nonprofit run almost entirely by volunteers, hosting hundreds of projects.
+# The Apache Software Foundation. A 501(c)(3) charity "run almost exclusively by
+# volunteers that provide support for hundreds of projects".
 id = "apache-software-foundation"
 name = "The Apache Software Foundation"
 kind = "foundation"
@@ -6,5 +7,5 @@ region = "everywhere"
 era = "open-source"
 globe = "cloud"
 look = "station"
-landmark = "feather"
+landmark = "volunteer-hall"
 source = "https://www.apache.org/foundation/"

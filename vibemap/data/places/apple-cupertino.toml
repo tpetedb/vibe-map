@@ -1,6 +1,7 @@
-# Apple Park, Cupertino. One Apple Park Way, Cupertino.
+# Apple, Cupertino. Apple's own contact page gives One Apple Park Way, Cupertino,
+# California 95014.
 id = "apple-cupertino"
-name = "Apple Park, Cupertino"
+name = "Apple, Cupertino"
 kind = "company"
 region = "us-west"
 era = "personal"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.335
 lon = -122.009
 look = "campus"
-landmark = "the-ring"
+landmark = "one-apple-park-way"
 source = "https://www.apple.com/contact/"

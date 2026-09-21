@@ -24,9 +24,9 @@ primary = true
 
 [[origins]]
 place = "apple-cupertino"
-year = 2026
-what = "Apple's macOS 26 Tahoe stands on the Open Group's register of certified UNIX products."
-source = "https://www.opengroup.org/openbrand/register/"
+year = 2025
+what = "Apple's macOS 26.0 Tahoe is registered as a UNIX 03 product on 29 August 2025."
+source = "https://www.opengroup.org/openbrand/register/brand3725.htm"
 
 [[sources]]
 label = "The Missing Semester (MIT)"
@@ -41,8 +41,8 @@ label = "Source: Ritchie, The Evolution of the Unix Time-sharing System (1984)"
 url = "https://www.read.seas.harvard.edu/~kohler/class/aosref/ritchie84evolution.pdf"
 
 [[sources]]
-label = "Source: The Open Group register of UNIX certified products"
-url = "https://www.opengroup.org/openbrand/register/"
+label = "Source: The Open Group, UNIX 03 certificate for macOS 26.0 Tahoe"
+url = "https://www.opengroup.org/openbrand/register/brand3725.htm"
 
 [[sources]]
 label = "Source: Torvalds' 1991 Linux announcements (CMU archive)"

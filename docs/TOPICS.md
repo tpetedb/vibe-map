@@ -99,9 +99,9 @@ primary = true          # exactly one: where the topic lives
 
 [[origins]]             # any others are echoes: the same topic, somewhere else
 place = "apple-cupertino"
-year = 2026
-what = "Apple's macOS stands on the Open Group's register of certified UNIX products."
-source = "https://www.opengroup.org/openbrand/register/"
+year = 2025
+what = "Apple's macOS 26.0 Tahoe is registered as a UNIX 03 product on 29 August 2025."
+source = "https://www.opengroup.org/openbrand/register/brand3725.htm"
 ```
 
 Rules, all of them checked:
@@ -110,7 +110,12 @@ Rules, all of them checked:
   line says: the year, the place, the people or the organisation. If no primary
   source puts the thing in a place, leave the origin out and say so; a gap is
   honest, a guess is a false statement about a real company.
-- `what` is one line, plainly what happened, not why it matters.
+- `year` is a year the page gives, never the year you read the page. A page
+  that carries the fact but no date needs a second page that carries the date,
+  and then the line says what that page says.
+- `what` is one line, plainly what happened, not why it matters. A judgement
+  ("widely influential"), a reason the source does not give, and anything
+  inferred from an address line all belong to somebody else, not to us.
 - Exactly one origin is `primary`. Two, or none, is refused by file name.
 - A topic with no origin at all still loads: packs are sourced one at a time.
   `uv run python -c "from vibemap import places; print(places.problems(packs=['core']))"`
@@ -133,9 +138,15 @@ lat = 40.684                       # only on the earth globe, and within a
 lon = -74.402                      # quarter of a degree of the real address
 look = "campus"                    # the diorama kit: campus, tower, lab, hall,
                                    # racks, nebula, lanes, station, house, harbour
-landmark = "horn-antenna"          # one silhouette, as a slug
+landmark = "mountain-avenue-plaque"  # one silhouette that stands there, as a
+                                   # slug, and never a logo, a wordmark or a
+                                   # mascot: a place inherits ADR 0010
 source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-1983"
 ```
+
+The place's own source has to carry what the file says about it, the landmark
+included: a thing that stands in the next town is a wrong fact, printed by
+`vibe places <id>` and drawn on the map.
 
 An open-source project with no single address is not a guess about an office:
 it sits at `the-internet`, the way a hosted service sits at `the-cloud` and a
