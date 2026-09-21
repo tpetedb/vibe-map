@@ -12,6 +12,18 @@ try_it = "python3 workspace/python/scores.py, then add one line that prints the 
 
 unlocks = ["toml", "pylibs", "sql", "apis"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The timeline is
+# a post by Guido van Rossum on his own history blog; its entries name no
+# subject, so the line names him as the one who tells it.
+
+[[origins]]
+place = "cwi-amsterdam"
+year = 1991
+what = "Python 0.9.0 is released to alt.sources on 20 February 1991, after internal releases at CWI in 1990, in Guido van Rossum's own timeline."
+source = "https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html"
+primary = true
+
 [[sources]]
 label = "Official tutorial"
 url = "https://docs.python.org/3/tutorial/"

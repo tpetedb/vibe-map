@@ -12,6 +12,24 @@ try_it = "Ask Claude: 'rewrite workspace/python/scores.py in Go, explain each li
 
 unlocks = ["docker"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The primary is
+# the first language in this topic's own history line, told by the person who
+# wrote it; the Go FAQ names Google and no town, which is the place file's.
+
+[[origins]]
+place = "bell-labs"
+year = 1972
+what = "C comes into being at Bell Telephone Laboratories from 1969 to 1973, in parallel with the early development of Unix; Dennis Ritchie puts its most creative period in 1972."
+source = "https://cscie26.dce.harvard.edu/~dce-lib113/reference/c/c_history.html"
+primary = true
+
+[[origins]]
+place = "google-mountain-view"
+year = 2009
+what = "Go, which Robert Griesemer, Rob Pike and Ken Thompson began sketching in 2007 for the work they were doing at Google, becomes a public open source project on 10 November 2009."
+source = "https://go.dev/doc/faq"
+
 [[sources]]
 label = "Stack Overflow developer survey"
 url = "https://survey.stackoverflow.co"
