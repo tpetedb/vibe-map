@@ -1,0 +1,12 @@
+# MIT, Cambridge. 77 Massachusetts Avenue, Cambridge. Project MAC and Multics were here.
+id = "mit"
+name = "MIT, Cambridge"
+kind = "university"
+region = "us-east"
+era = "mainframe"
+globe = "earth"
+lat = 42.36
+lon = -71.094
+look = "campus"
+landmark = "great-dome"
+source = "https://www.mit.edu/about/"

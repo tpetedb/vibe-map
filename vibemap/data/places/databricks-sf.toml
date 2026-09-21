@@ -1,0 +1,12 @@
+# Databricks, San Francisco. Headquartered in San Francisco, founded in 2013.
+id = "databricks-sf"
+name = "Databricks, San Francisco"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.791
+lon = -122.395
+look = "tower"
+landmark = "city-office"
+source = "https://www.databricks.com/company/about-us"

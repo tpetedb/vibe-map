@@ -1,0 +1,12 @@
+# SRI International, Menlo Park. 333 Ravenswood Avenue, Menlo Park. PARC is part of SRI today.
+id = "sri-menlo-park"
+name = "SRI International, Menlo Park"
+kind = "lab"
+region = "us-west"
+era = "mainframe"
+globe = "earth"
+lat = 37.453
+lon = -122.182
+look = "campus"
+landmark = "ravenswood-campus"
+source = "https://www.sri.com/research/future-concepts-division/"
