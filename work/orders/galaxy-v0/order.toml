@@ -1,0 +1,45 @@
+v = 1
+id = "galaxy-v0"
+title = "Galaxy, version zero: the journey and its list twin, tiny globes, domes you can look into, travel as a cut"
+team = "scene"
+branch = "feat/galaxy-v0"
+goal = "galaxy"
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "src/galaxy/",
+  "src/game/90-boot.js",
+  "src/game/85-settings.js",
+  "src/body.html",
+  "src/style.css",
+  "vibemap/config.py",
+  "tests/test_game_galaxy.py",
+]
+cross = ["panels", "state"]
+needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "hunt-w-settings-news", "hunt-k-lesson-copy"]
+
+[[criteria]]
+id = "c1"
+text = "The Galaxy tests pass on the desktop and both phone profiles, and the four golden island pictures still match."
+check = "uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync, and Galaxy added less than 80 KB to the built game."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python -c \"import subprocess,sys; a=len(open('game/vibe-map.html','rb').read()); b=len(subprocess.run(['git','show','origin/main:game/vibe-map.html'],capture_output=True).stdout); print(a-b); sys.exit(0 if a-b < 80000 else 1)\""
+
+[[criteria]]
+id = "c4"
+text = "Every accessibility row of docs/GALAXY.md section 6 that applies to version zero holds, each shown by a test: the list twins do everything the canvas does, every zoom level is a button, reduced motion turns every camera move into a cut, era and state are never colour alone, targets are 44 px, switching experience keeps focus and the open sheet and announces itself."
+judge = "reviewer"
+
+[[criteria]]
+id = "c5"
+text = "A stranger recognises three places that are as different as possible (a California campus, a Chinese city, a data centre globe) from their domes and finds them on their globes. The reviewer looks at the screenshots side by side with `concept.html` in this folder, which Tom has seen and approved as the direction."
+judge = "reviewer"
