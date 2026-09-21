@@ -15,6 +15,7 @@ owns = [
   "src/game/00-state.js",
   "src/game/90-boot.js",
   "tests/test_game_qol_feedback.py",
+  "tests/conftest.py",
 ]
 cross = ["state", "panels"]
 needs = ["harness-ci-shards"]
