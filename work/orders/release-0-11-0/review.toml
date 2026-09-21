@@ -1,0 +1,156 @@
+# Review of this order, round 1, by someone who did not build it. Every checked
+# criterion was run again on the reviewed commit, three parts of the release
+# were undone one at a time in a clone under /tmp and the checks seen failing,
+# every picture under docs/media was opened, the media tool was run end to end
+# in that clone (26 files, 6m48s, exit 0), the real window was photographed
+# next to three of its pictures, and a dozen changelog lines were tried in a
+# camp made with `vibe new`. Nothing in the tree but this file was written.
+v = 1
+order = "release-0-11-0"
+by = "reviewer-release-0-11-0-r1"
+reviewed = "eab628a2f546eac7ff4569c770263e2fbc3e422a"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran it on eab628a: 78 passed. The command proves the sentence for a release: in a clone of the same commit, putting `version` back to 0.10.0 fails `tests/test_build.py::test_game_matches_a_fresh_build_of_src` (the built game carries the number in CONFIG), and putting the two compare links back to their 0.10.0 state fails `tests/test_changelog.py::test_release_writes_a_dated_section_and_moves_the_links`. `tests/test_changelog.py` is owned and was not touched; nothing a new version changes needed it.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran it: prints `0.11.0 []`, exit 0. Each clause can fail: version back to 0.10.0 exits 1, the `[0.11.0]:` link removed exits 1, a file `changelog.d/leftover.fixed.md` exits 1 and names it. The version agrees in every place a tool reads it: `pyproject.toml` 0.11.0, the `vibe-map` entry of `uv.lock` 0.11.0, `const CONFIG={"version": "0.11.0"` in `game/vibe-map.html`, `uv run vibe --version` prints 0.11.0, and `git grep 0.10.0` outside CHANGELOG.md and uv.lock finds only prose in work orders. The three diffs are one line each. The section is dated 2026-09-21; `[Unreleased]` compares v0.11.0...HEAD and `[0.11.0]` compares v0.10.0...v0.11.0. `changelog.d/` holds README.md only; all 29 fragments that were on main (28 and news-feed-liveness) are gone, and a sentence-by-sentence comparison of the 29 against the section finds every sentence kept or merged except one that reported no change ("`vibe news` and the game's News card are unchanged").
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the whole command on eab628a: exit 0. ruff check and format clean, `style OK: no em dashes, no emoji`, the sink guard clean, 610 tests of the battery without browser and integration. The tree was clean afterwards. CI run 35578884780 on the same commit agrees on every step of the lint job except the last, which waits for this file and for the docs sign-off.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Ran the loop: build OK, tree OK, cookbook OK, syllabus OK, and `sync_template.py --check` and `sync_fork_source.py --check` exit 0. The command can fail: with the version put back in the clone, `tools/build.py --check` says the game differs from a fresh build. It does not cover `docs/OBSIDIAN.md` or `vault/`, which AGENTS.md also lists as generated; this order changes nothing they are made from, so the sentence holds here.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Read the section top to bottom as a stranger, then against the 29 fragments. Order is Keep a Changelog's: Added, Changed, Removed, Fixed, Security, no empty heading, one bullet per paragraph like 0.10.0, no em dash and no non-ASCII character in it. The merges are real: the zoom control's title-screen fix is inside the zoom entry, the three "who says how many stops" sentences from three fragments are one bullet, reduced motion and Rolinda's typewriter are one bullet, the two removals have their own heading. I found no line that contradicts another.
+True of main, 22 lines tried, 21 hold: the `CAM` block in `src/config/00-config.js`; eight bottles in `items.json`, two per island; the wake lock in `40-sheet.js` and `85-settings.js`; five Settings headings and the sizes Normal, Large, Larger and Comfortable in `85-settings.js`; `[game] site_url` in both camp.toml files; `__version__` from pyproject with `0+unknown`; the `tests/test_game_qol*.py` pattern in ci.yml and `tools/ci_shards.py`; 21 sources with `rests` on arXiv cs.AI alone; `js_json()`; no `interestAnswered` in src or the built game; no HANDOVER.md; no `your-game` in pages.yml; SECURITY-MODEL.md, ADR 0014, `just sinks-check`, `reviewed_sinks.json`; the MIT LICENSE and four vendor licence texts; `TOUCHED_KEEP = 32`; and in a camp made by `vibe new --name 'Re"vie\wer'`: the name round-trips through TOML, the camp LICENSE carries it, `vibe scores` on day one is one line and exit 0, `vibe news --limit -1`, `vibe name ""`, `vibe pet --all --species cat` and `vibe check --mentor ""` are each refused in one line. In a 393x852 phone window the More menu has seven rows, all on screen, each 44px or more; at 640px wide the HUD is collapsed into More. The one that does not hold as written is `vibe check` and two targets (low finding).
+Released sections: a diff of CHANGELOG.md with the 0.11.0 section cut out shows three changed lines, all in 0.10.0, all the one count (the palette line, the `vibe artifact` line, "3 of 21 artifacts found"), and the two link lines. `campaign.json` has 21 artifacts, the switchboard is 0.10.0's own twenty-first, and 0.9.0's "twenty" is left alone, rightly.
+What I would land anyway is in the low findings: two things said from two sides, one fix to a feature that is first released here, three bullets that read as one paragraph.
+'''
+
+[[criteria]]
+id = "c6"
+verdict = "fail"
+evidence = '''
+Opened all 30 changed files and the unchanged ones. Current and whole: island-campus, island-winter, island-winter-artifacts (data centre, library and energy grid in frame), island-desert, island-prod (the lava is orange), archipelago (four islands, the bridges), roadmap (Continue card on top), settings (the rows under their headings), backpack, ask, dashboard, artifact-cafe ("3 OF 21 ARTIFACTS FOUND", the 429, "v Commands" with its space), vault, tree, phone (two-row HUD, More, Map, the zoom column), tui-pet.png and tui-pet.gif, and the six pets-game crops. Those six are the media tool's: dusk look, the cap, walker zoom; the same test run in a clone writes a different picture (day, no cap, farther out). None is blank or mid fly-over; the winter island that the builder reports as once white is whole.
+It fails on five files. phone-more.png, hero.png and onboarding-start.png are cut by the tool, not by the product (finding 1): in the real window the More sheet shows seven rows down to Settings and the title's name field and Start are whole. gameplay.gif shows nobody walking and two controls on top of each other (finding 2). tui-welcome.png and tui-map.png are from before this release and README.md shows both (finding 4). The sentence about issue 148 holds for the committed files and not for what the branch says about the test (finding 3).
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/media.py"
+text = '''
+Three pictures are clipped to the stage while what they show is laid out against the window, which `_fill_stage` has just made taller than the stage. docs/media/phone-more.png ends at 748pt: the World row is cut through and Settings is missing, under a caption that says "one opaque sheet on the bottom edge" and next to a changelog line that says no row is off screen. In the same 393x852 window the rows measure Backpack 477 to 522, World 729 to 774, Settings 787 to 831, all on screen. docs/media/hero.png and onboarding-start.png cut the name field and the Start button through the middle: after `_fill_stage(1200, 630)` the window is 734 tall and Start sits at 600 to 647, below the 630 clip; in a plain 1200x630 window it sits at 501 to 548, whole, with "Type your name plainly." under it. hero.png is the og:image that pages.yml publishes, so the cut button is what every link preview shows. Running the tool again in a clone reproduces all three exactly. Photograph the window for a shot whose subject is anchored to the window, or do not grow the window for it.
+'''
+
+[[findings]]
+severity = "medium"
+file = "docs/media/gameplay.gif"
+text = '''
+README.md captions it "Walking to the 18:00 signpost, opening the workstream, unlocking the OKR" and docs/media/README.md says "Walking to the signpost". Nobody walks: in the 640x480 window the stage is 376 tall, so `page.mouse.click(300, 380)` in `gameplay_gif` lands on `#talk` (`document.elementFromPoint` says so), and the walker is at (2.8, 5.2) before the tap and 2.5 seconds after it. All 29 frames show her at the Hospitality Hub. The old GIF did not walk either, which is what a re-render was for. In every island frame the zoom column (x 586 to 626, y 192 to 324) is drawn over the minimap (x 494 to 630, y 141 to 277). That overlap is the product in a short desktop window, not the tool, so it also wants an issue for the panels team; the README's first moving picture should be recorded at a size where the chrome does not collide, with a tap that lands on the ground, waited for with `window.__debug().pos` the way `_walk_near` already does.
+'''
+
+[[findings]]
+severity = "medium"
+file = "docs/media/README.md"
+text = '''
+This order adds "A test never writes here either: test output goes to `tests/out/`." It is not true of this branch or of main. In a clone of eab628a, `pytest tests/test_game_pet.py -k every_pet_can_be_chosen` passes and leaves `git status` with all six `docs/media/pets-game/*.png` modified (`MEDIA = ROOT / "docs" / "media" / "pets-game"`, written by `_close_up`). The same claim is in tools/media.py twice: the docstring ("Nothing else writes there: a test that wants a picture writes to tests/out/") and the comment above the pets loop ("A test used to write these; it writes tests/out now"), which also narrates a change, which AGENTS.md rules out. Issue 148 is open and its order, harness-test-determinism, is on another branch. Say what is true today: the pet test still rewrites these six until 148 lands, and `just media` is what puts them back.
+'''
+
+[[findings]]
+severity = "medium"
+file = "docs/media/tui-welcome.png"
+text = '''
+For the manager as much as for the builder. tui-welcome.png still reads "every choice lives in vibe.toml" and tui-map.png still prints the three-mark legend (x done, > next, . to do). README.md shows them at lines 54 and 88, and the 0.11.0 section this order ships says the retired `vibe.toml` is gone from the `vibe start` welcome and that the campaign map draws four marks. c6 says every picture, so it fails on these two as written. The builder said so plainly in the pull request and in docs/media/README.md, and is right that `tools/tui_media.py` is outside `owns`. Either add `tools/tui_media.py` to the order (harness, the same team) and render the two screens the way tui-pet.png is rendered, or have c6 amended to leave them to a named follow-up. A release that says its pictures show the product should not carry two in the README that contradict its own changelog without the order saying so.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/"
+text = '''
+The sweep removed nothing. `git diff origin/main...HEAD -- work/` is three added files: this order, its findings and the goal. So the active orders on other branches are untouched (harness-test-determinism, hunt-b-panel-chrome, hunt-f-artifacts and the rest are byte for byte main's), and so are the five that have landed: harness-ci-shards, harness-work-followups, harness-work-orders, hunt-q-docs-generators and news-feed-liveness each have an accepting review on origin/main, `work.landed()` names exactly these five, and their folders are still here. findings.md step 1 says the release sweeps them; the pull request does not say it did not. Leaving them was the right call inside this order, because `work/orders/<other>` is outside `owns` and `work.py ci` refuses a stray in a single-order pull request, but it should be said, and the orchestrator runs `python3 tools/work.py sweep` in a commit of its own after this lands.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/release-0-11-0/signoff-docs.toml"
+text = '''
+Not the builder's: `python3 tools/work.py ci --base origin/main --head release/0.11.0` reports two problems, this review and "team docs has not signed off on its files" (`cross = ["docs"]`, for docs/media/). An accepting review alone will not turn the last CI step green.
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+"`vibe check` refuses two targets instead of running the first and exiting 0" holds for two named targets (`--mentor cherny --artifact cafe`: "pick one of --mentor, --artifact", exit 1) and not for a stop number beside one: `vibe check 1 --mentor cherny` runs the mentor check and drops the 1 without a word, because `n` and `--all` are not in `targets_given` in `vibemap/cli.py`. The line came from a reviewed fragment; either narrow it or file the gap for the cli team.
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+Four places where the fragments still show. The progress code check is told in Fixed ("checked whole before anything is merged ... refused by name") and again in the second sentence of the first Security bullet ("checks every id in a code before it merges anything and refuses a code that fails, naming the field"). The four marks are told from both sides: `vibe status` draws the campaign map's marks, and the campaign map speaks `vibe status`'s grid language. The Fixed bullet "Work orders: a change that is only staged ..." fixes a feature that is first released in this same section; the zoom control's fix was folded into its Added entry and this one can be too. The three news feed bullets are one paragraph cut in three: "Empty stays a fault ..." and "That check still fails ..." lean on the bullet before them.
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+The release's own change under tools/ has no entry: `tools/media.py` now renders every picture, seven new ones and the six pets-game shots, and the 0.11.0 section does not say so. CI's fragment step passed on the 29 deletions, not on an entry for this change. One Changed line would do. While there: the goal file says twenty-eight fragments and the pull request twenty-nine; 29 were assembled.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/media.py"
+text = '''
+The pull request says the tool "now waits for facts the page produced ... instead of fixed waits". The island shots do (`_settled`, `_calm`, `_frames`, `_still`). These remain: 400ms in `_load`, 1500ms in `_start`, 2200ms before the hero and the title shot, 2600ms after `runDemo` in `_sheet`, 2500ms before vault.png, 600ms before tree.png, 400ms per step of `_fill_stage`, and every wait in `gameplay_gif`. vault.png and tree.png came out whole here and in my run, but a force layout photographed after a fixed wait is the failure the tool's own docstring describes.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/dashboard.png"
+text = '''
+The numbers in the picture do not add up for a reader: "7/32 stops delivered" beside "300 XP earned, 100 a stop". `rich()` keeps PLAYED's seven done stops and `_events()` records three claims, so the tiles disagree with each other. Seed a claim event per done stop, or fewer done stops.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/bottle.png"
+text = '''
+The bottle is there and on the shore, as the criterion asks. The crop is soft and carries half a name plate ("lity Engineer") and half of Tom on its left edge; phone.png likewise cuts the stick through at the bottom because it is clipped at 640 of the stage's 748 points. Neither is wrong about the product.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/island-campus-start.png"
+text = '''
+Rendered by `tools/campus_shots.py`, which this order does not own: it hides the title by script without starting, so the picture shows a state no player reaches now that the title is modal and Start refuses an empty name: a HUD pill that reads "EVENING 1" with a gap where the name goes, and a walker called "Player". The chrome is current. For the same follow-up as the two terminal screens. Also outside this order and older than it: `og:image:alt` in `src/head.html` says "at dusk, seen from above" while hero.png is the title screen over a daytime island.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/archipelago.png"
+text = '''
+The sea on the left of the far framing is a regular lattice of bright patches. It is the two crossing swells of `seaH` lit per pixel, not the mesh, so the Fixed line "The sea's highlight no longer shows the mesh as a checkerboard" is true; a stranger who reads that line and then opens this picture will still call it a checkerboard. A product note for the scene team, not a fault of the picture.
+'''
