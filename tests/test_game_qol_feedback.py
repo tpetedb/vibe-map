@@ -44,21 +44,6 @@ RECORD_VIBRATIONS = """(() => {
     value: p => { window.__vibes.push(p); return true; }});
 })()"""
 
-# How many cards were ever on screen together. A card removes itself after
-# five seconds, so the count is taken as each one arrives rather than read off
-# the screen afterwards, which is the race this file does not run.
-RECORD_STACK = """(() => {
-  window.__stackMax = 0;
-  const seen = () => {
-    const el = document.getElementById('toast');
-    if (!el) return;
-    const n = el.querySelectorAll('.tst').length;
-    if (n > window.__stackMax) window.__stackMax = n;
-  };
-  const root = document.documentElement || document;
-  new MutationObserver(seen).observe(root, {childList: true, subtree: true});
-})()"""
-
 # The saved mark lives for about a second, so where it was put and how it was
 # announced are recorded as it arrives instead of looked for afterwards.
 RECORD_SAVED = """(() => {
@@ -260,9 +245,12 @@ def test_quiet_raises_no_toast_and_keeps_what_it_would_have_said(
     game.start("Tom")
     _set(game, "toasts", "quiet")
     before = int(game.page.evaluate("window.__log().length"))
+    raised = len(game.toasts())
     game.claim(1)
     game.until(f"window.__log().length > {before}")
-    assert game.page.locator("#toast .tst").count() == 0
+    # The log grew, so the message happened; the page's record of the cards
+    # it raised did not, so none was shown for it.
+    assert game.toasts()[raised:] == []
     said = game.page.evaluate("window.__log().map(n => n.t).join(' ')")
     assert "Achievement" in said, said
     _open_pack(game, "Notifications")
@@ -311,15 +299,16 @@ def test_the_stack_shows_a_few_cards_and_the_tab_keeps_them_all(
     what a phone can read, and the tab keeps every line.
     """
     game = game_android
-    game.page.add_init_script(RECORD_STACK)
     # Thirty-two stops and ten things picked up: First light, Full evening,
     # Campaign and Ten things all answer true on the same pass.
     done = {w: [1, 2, 3, 4, 5, 6, 7, 8] for w in ("campus", "winter", "desert", "prod")}
     state = {"name": "Tom", "doneW": done, "items": [f"item-{i}" for i in range(10)]}
     game.goto(state=state)
     game.until("window.__log().filter(n => n.t.includes('Achievement')).length >= 4")
-    seen = int(game.page.evaluate("window.__stackMax"))
-    assert 0 < seen <= 3, seen
+    # The peak is the fixture's, taken as each card arrived: a card removes
+    # itself after five seconds, so the screen cannot be asked afterwards.
+    seen = game.toast_peak()
+    assert 0 < seen <= 3, (seen, game.toasts())
     game.assert_clean()
 
 
