@@ -1,0 +1,218 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "hunt-b-panel-chrome"
+by = "reviewer-hunt-b-panel-chrome-r1"
+# The commit that was read. Pull request 157, CI run 35568062009.
+reviewed = "49911543a63fc0f7a3ce128e08f937feefbcf0d0"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "fail"
+evidence = """
+Here it passes: I ran the file in the worktree at 4991154, 31 of 31, 7 min 18 s with the machine \
+at load 20. The tests are tests: with src/style.css and src/body.html from origin/main in a \
+scratch copy (the built game byte-identical to main's) all 31 fail, each on the number the \
+finding names (B1 hits 'Before the first glass is empty', B2 box 14 to 93.6 over Stats, Vault, \
+Tree, World, More, B3 box 14 to 549.5, B4 aria-modal None, B5 visibility hidden, B6 step 13.19, \
+B7 19 and 13 drawn for 7 lines, B8 h4 at 3.83). With only B4 to B7 taken back out, exactly those \
+ten fail and the B1 and B8 tests I ran beside them pass, so a test answers for its own fix. \
+It is not true where main decides: on this same commit the smoke shard of run 35568062009 is red \
+on the order's own test_a_toast_on_the_island_leaves_the_map_alone[android], a 20 s timeout \
+waiting for '#toast .tst', and that shard has no retry. See the first finding: three tests wait \
+for an element that a five second timer removes. The webkit shard is red too, on \
+tests/test_game_camera.py::test_every_zoom_level_holds_the_phone_budget[game_android], twice. \
+That one is not this order's: run 35568485671 on fix/hunt-f-artifacts fails the same test the \
+same way, nothing in the camera reads the HUD, and it passes here on this branch (2 of 2). It \
+needs a rerun, not a fix from this builder.
+Headroom of the layout facts, measured by my own probe on the branch, text normal and larger, \
+hand right and left, desktop 1440x900, Pixel 7 and WebKit iPhone (12 combinations, all four \
+settings and not only the two ends): B1 scroll container top against the lowest pill, 62 against \
+55.6 (6.4 px) on the desktop and 86 against 72 (14 px) on both phones, zero hits at scroll 0, 260 \
+and the end; also zero hits at 320, 360, 481, 600, 700, 820 (29.4 px), 821 and 1024 (6.4 px) with \
+a mouse and at 320x640, 360x740, 600x900, 820x1180, 915x412 and 852x393 with a finger (14 px). \
+The text size does not move the HUD (the scale lands on #sheet .inner and #title .box only), so \
+this is a fact and not font luck. B2 settled toast bottom 178 against the map at 186, phones \
+234.4 against the Map button at 242.4: 8 px, by construction. B3 stack 360 of 900 against a bound \
+of 406. B5 250 px between the last number (x 378) and the menu (x 629) at 821, 840 and 900, 451 at \
+1024, 867 at 1440. B6 17.39 against the 15 the test asks. B7 exact. B8 description text about \
+6.4:1 against 4.5."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the whole command in the worktree at 4991154: ruff check and format clean, style and sinks \
+clean, the non-browser battery 593 dots, exit 0. On the pull request the lint job of run \
+35568062009 has steps 5 to 13 green, the changelog fragment step among them; its only red step is \
+14, the work-order step, which waited for this file. The command is what CI runs, so it proves \
+the sentence. No em-dash or emoji on any added line, in the fragment, the commit message or the \
+pull request body (scanned)."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran all six with --check in the worktree, each exit 0: build OK, tree OK, cookbook OK, \
+sync_template, sync_fork_source, syllabus OK. The two generated files in the diff \
+(game/vibe-map.html, vibemap/data/fork_source/src) are both covered by them, and the working tree \
+was clean afterwards."""
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = """
+All eight reproduce on origin/main in my own browser runs (Chromium desktop, Chromium Pixel 7, \
+WebKit iPhone, four settings each where it is chrome): B1 one paragraph inside the pill band at \
+scroll 260 on all 12; B2 the toast at y 14 to 93.6 over five HUD buttons on the desktop and over \
+the name, Search, Roadmap and More on both phones; B3 seven messages, y 14 to 549.5, over the HUD \
+and the Close button; B4 '- dialog:' with no name and modal false in Chromium's tree; B5 #kpis \
+hidden at 821 to 1440 with the menu 250 px or more away; B6 13.19 px; B7 19, 21, 13 and 17 drawn \
+lines for 7; B8 opacity .45 on ten of eleven shelves. None is rejected and none is skipped, and \
+every one has a test that fails without its fix (c1). Seven are gone on the branch at every size \
+and setting I tried. B7 is why this fails: the fold is gone from the data centre's columns, and \
+the closing sentence of 68 of the 74 demos is now cut at the edge of a Pixel 7, and of 23 demos \
+in 16 of the 21 artifacts at 1440x900 with default settings, where main showed every one whole. \
+A finding that comes back larger on the same element is moved, not fixed. B3 and B4 are fixed as \
+far as the owned files go and the rest is handed on in the pull request body, which I count as \
+honest and not as skipped."""
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = """
+The copy half holds: the fragment is plain, 'Camp panel' is a plain name, nothing else a player \
+reads changed, no em-dash, no emoji. The screenshot half does not. tests/out/hunt_b* has B1 and \
+B2 on all three surfaces, B3 and B6 on the desktop and the Pixel only, B7 and B8 on the two \
+phones only; .term and .age.faded are changed surfaces on the desktop as well, and the desktop \
+is where the B7 regression shows at default settings. And the B7 phone shot that was taken \
+(hunt_b7_android_terminal.png, I looked at it) has '1 200', '9', '2 10' and 'at a time. Mo' run \
+off the right edge, in the finding whose complaint was a number broken in two. I took the missing \
+ones myself: B3 iPhone, B6 iPhone, B8 desktop are fine; B7 desktop is the second finding. \
+Looked at besides: main and branch for B1 (desktop, Pixel larger-left, iPhone), B2 (desktop, \
+Pixel), B3 (all three), B8 (Pixel, both sides), the phone More sheet and Settings at the largest \
+text from pull requests 134 and 145, which are unharmed (tests/test_game_phone.py, \
+tests/test_game_qol_settings.py and tests/test_repo.py: 93 of 93 here, shards phone and qol green \
+in CI)."""
+
+[[findings]]
+severity = "high"
+file = "tests/test_game_hunt_b.py"
+text = """
+Pull request 157 is red on this order's own test, on the commit under review: \
+test_a_toast_on_the_island_leaves_the_map_alone[android] timed out in the smoke shard (run \
+35568062009, job 106233739261, 80 s in the test, 20 s waiting for '#toast .tst'), and smoke has no \
+retry, so main cannot take it. The shape is a race on a clock: the signpost toast fires once \
+(lastSay) when the walker is 2.6 from the plot, walk_to() goes on to 1.6 and only then does the \
+test start looking for an element that removes itself after 5000 ms. Here the gap is 0.7 to \
+1.6 s, so it passes; on the runner it did not. _claim_the_first_stop and the batch test have the \
+same shape: wait_for_selector, then until(SETTLED), then the measurement, all inside one toast's \
+five seconds, with software WebGL drawing the spring. src/game/18-avatar.js says it in its own \
+comment ('looking for the element is a race on a loaded machine') and offers window.__toasts() \
+for the wait; the module docstring here says nothing waits on a clock. The measurement needs a \
+message that is still there, so the wait has to stop the timer or not depend on it (the page \
+clock, or a stack the test fills for the geometry with the real path kept for the count). AGENTS \
+test loop rule 6."""
+
+[[findings]]
+severity = "high"
+file = "src/style.css"
+text = """
+B7, .term: white-space:pre is applied to the one element all 74 artifact demos print into \
+(#art-term), and most of what they print is not columns. Counting a line with no column gap as \
+a sentence, 88 of the 157 transcript lines longer than 44 characters in ART_DEMOS \
+(src/game/16-artifacts.js) are sentences, the lesson of the demo. Measured on the fountain, 'Fill it \
+again', 115 characters: at 1440x900 with default settings 80 fit and 35 are hidden ('...The \
+prompt cache keeps the st'), on the Pixel 7 71 are hidden, on the iPhone 74; on main the same \
+line wraps and reads whole (shots main_prose_desktop and branch_prose_desktop in my scratch). \
+23 demos in 16 of the 21 artifacts end in a sentence longer than the desktop box, 68 of 74 in one \
+longer than the Pixel's. There is no scrollbar to say so on macOS or a phone and the pre takes no \
+focus (no tabindex), so a keyboard cannot bring the rest in. The test locks this in: it asks for \
+drawn == lines on the data centre only, which also forbids the other remedy the finding names, a \
+hanging indent. Keep the columns whole without taking the sentences away, and test a demo that \
+ends in one."""
+
+[[findings]]
+severity = "medium"
+file = "src/style.css"
+text = """
+#toast as the HUD's last row moves the minimap, because 32-minimap.js hangs the map 8 px under \
+the HUD's bottom, and on a laptop the map lands on the zoom column. Measured at 1366x680, right \
+handed, seven messages on the island (put into #toast by hand as .tst nodes, because toast() is \
+inside the game's closure; the layout is the stylesheet's either way): minimap y 378 to 514, x 1220 to 1356; #zoom y 392 to 524, \
+x 1312 to 1352; the map paints over the plus and the fit button for as long as the stack lives \
+(shot branch_x_island_short_batch). Two messages of the First light size are enough at that \
+height (map y 274 to 410 against #zoom from 392, measured), which is a tenth pickup or a stop \
+that unlocks two achievements; at 1366x768 three are (map to 497 against 480). At 1440x900 \
+the full 40vh stack leaves 10 px (602 against 612), and 900 and 915 are the only heights the \
+tests run at; none of them measures the displaced map against #zoom. On main the map never \
+moved (top 100.4). The stylesheet comment promises 'clears every button at any width and any \
+wrap'; that holds for the toast and not for what it pushes."""
+
+[[findings]]
+severity = "medium"
+file = "src/body.html"
+text = """
+aria-modal="true" says something the panel does not do. The name is right and reaches the tree: \
+Playwright reads '- dialog "Camp panel"' in Chromium and WebKit for the Roadmap, a stop, Settings \
+and the Backpack, and Chromium's accessibility tree over CDP has name 'Camp panel', modal true. \
+But focus is not confined: fourteen Shift+Tab presses from Close went zoom-out, zoom-fit, \
+zoom-in, 'Inspect the cafe' (all four behind the panel), then More, World, Tree, Vault, Stats, \
+Ask, Backpack, Roadmap, Search and the name pill, and never came back into the panel. The \
+stylesheet says the HUD stays usable over an open panel on purpose. So the pull request's 'the \
+contract the panel already keeps for the keyboard' is not so, and MDN's page on aria-modal is \
+plain about this case: a dialog with no inert background and no confined focus omits the \
+attribute or sets it false. It costs something here: the toast live region now lives in #hud, \
+outside the dialog that claims the page, and a batch import raises its messages while the panel \
+is open. Chromium still exposes the HUD buttons; VoiceOver is the reader that takes aria-modal at \
+its word, and I could not run it. Either the panel becomes modal (openSheet() in 40-sheet.js, \
+with the name per screen) or the attribute waits for that order."""
+
+[[findings]]
+severity = "low"
+file = "src/style.css"
+text = """
+B8: the contrast is fixed and the shelf no longer reads as set back. A chosen shelf is #141414 \
+and the others are transparent over #0A0A0A, with the same hairline; on the Pixel shot the two \
+columns are told apart by their order and little else, while the line above them still says \
+'the rest dimmed' (60-vault.js, not owned, named in the pull request body). Worth a look by the \
+owner before the copy is changed to match."""
+
+[[findings]]
+severity = "low"
+file = "work/orders/hunt-b-panel-chrome/order.toml"
+text = """
+What is handed on lives only in the pull request body; `just work-post` was not run, so issue 110 \
+has no word of this order. The hand-on to the owner of 18-avatar.js is located well enough to \
+take: toast() appends without a limit, so the bound is the row's height and a batch still builds \
+seven nodes; drop the oldest or fold a batch into one line there. It should also name two things \
+that file now gets wrong: the comment 'One stack, created on demand so the page keeps its markup' \
+(body.html holds the stack now), and that a test should wait on window.__toasts(). The name per \
+panel is understated: s-pack, s-dash, s-gen, s-mentor, s-artifact, s-chat, s-settings and s-setup \
+have no heading in the markup, so it is eight renderers and openSheet(), not one line."""
+
+[[findings]]
+severity = "low"
+file = "src/style.css"
+text = """
+The empty stack is not quite a row of no height: it is a flex line, so the HUD's 6 px row gap \
+comes with it. HUD bottom 92.4 on main, 98.4 here with no message; the map top 100.4 to 106.4; \
+and the compact More menu with a mouse, which drops from the HUD's bottom, sits 6 px lower and \
+jumps under a toast when one is up."""
+
+[[findings]]
+severity = "low"
+file = "src/style.css"
+text = """
+B3: the bound clips the oldest message mid-card right under the bar (42 to 81 percent of the \
+third card showing, by surface). It is bounded, which is what was asked; a cut card reads as a \
+glitch, and the real answer is the cap in toast()."""
+
+[[findings]]
+severity = "low"
+file = "src/style.css"
+text = """
+Not from this order, seen while measuring B1: at 320 and 340 wide with a finger the Close button \
+(x 16 to 103) sits under the HUD bar (x 81 or 101 onwards), the same on main. Both phone profiles \
+are clear. B1's sentence named the Close button, so it belongs on the list for whoever takes the \
+compact HUD next."""
