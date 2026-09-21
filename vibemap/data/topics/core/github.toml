@@ -12,6 +12,23 @@ try_it = "gh repo create, gh pr create after a branch, then enable Pages. The 22
 
 unlocks = ["ci", "cloud"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. The launch
+# post names no town; San Francisco is the place file's own.
+
+[[origins]]
+place = "github-sf"
+year = 2008
+what = "Chris Wanstrath posts that GitHub is officially live and thanks everyone for the beta, on 10 April 2008."
+source = "https://github.blog/2008-04-10-we-launched/"
+primary = true
+
+[[origins]]
+place = "microsoft-redmond"
+year = 2018
+what = "Microsoft announces an agreement to acquire GitHub for 7.5 billion dollars in Microsoft stock, on 4 June 2018."
+source = "https://news.microsoft.com/2018/06/04/microsoft-to-acquire-github-for-7-5-billion/"
+
 [[sources]]
 label = "GitHub docs"
 url = "https://docs.github.com/en"
