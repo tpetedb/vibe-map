@@ -1,247 +1,231 @@
 # A review of one order, by someone who did not build it.
 v = 1
 order = "hunt-b-panel-chrome"
-by = "reviewer-hunt-b-panel-chrome-r2"
-# The commit that was read. Pull request 157, CI run 35581400429. Round two.
-reviewed = "2e1058d7374346dd02abeab8470bfb2731c33967"
+by = "reviewer-hunt-b-panel-chrome-r3"
+# The commit that was read. Pull request 157, CI run 35596561161. Round three.
+reviewed = "4237cb859bd45a98a9d8a6052be91a846719e943"
 verdict = "improve"
 
 [[criteria]]
 id = "c1"
-verdict = "pass"
+verdict = "fail"
 evidence = """
-Ran the file myself on a byte-identical copy of 2e1058d (git archive, the built game compared \
-with cmp): 37 of 37, exit 0, with the machine at load 20. Where main decides it agrees: the smoke \
-shard of run 35581400429 (job 106274875236) claims this file and ended '64 passed' on its first \
-go, and smoke has no retry. The red test of round one is gone with its cause: no test waits for \
-'#toast .tst' from the real path any more. The real path is read from window.__toasts() and a \
-mutation observer, which outlive the message, and the geometry from cards the test appends, which \
-never expire. \
-The tests are tests. In a scratch copy I put five round-two fixes back the way round one had them \
-(the stack in the HUD's flow, .term white-space:pre, the two title rules and the vault rule gone, \
-aria-modal back), rebuilt, and ran the 25 tests beside B1 and B2: exactly 14 fail, each on its own \
-fact, and the other 11 pass (the real path, the batch, B5, B6, the desktop columns, B8). The map \
-steps from 100.4 to 106.4 on the desktop and the Map button from 156.8 to 162.8 on both phones; \
-the title message is 'visibility hidden' with hud 40 under title 50; the vault stack is \
-'position relative' at top -8, above the fold; the dialog test says 'the panel says it is modal \
-while the keyboard leaves it' with the focus on zoom-out; the column test says 'the transcript \
-runs off its box' on both phones and the sentence test 'the end of the sentence is outside the \
-box' on all three. Round one showed the same for B1, B2, B5, B6 and B8 against main's stylesheet. \
-What the command does not prove is the second finding: the stack's geometry is measured with the \
-default hand and a middle-sized message."""
+The command exits 0 here and the sentence is not true where it decides. I ran it in the worktree \
+at 4237cb8: 45 of 45, exit 0, 16:30 with the machine at load 40, worktree clean afterwards. CI ran \
+the same file on the same commit (run 35596561161, smoke shard, job 106322613665): '8 failed, 84 \
+passed', all eight in tests/test_game_hunt_b.py, and smoke has no retry. Six are the two B7 tests \
+on all three surfaces: CI tests the pull request merged with main, and main is cb03e8b now, where \
+runDemo() appends every line of a transcript as a text node of its own. I reproduced it without \
+CI: a scratch clone with origin/main merged and the game rebuilt gives the same six, with the \
+same messages (first finding). The other two are the full stack on the WebKit iPhone, default and \
+larger-left: 'what is behind the card reads through it', card y 193.6 and 298.5 tall. Here the \
+same card is 277.7 tall under a bar that ends at 148.8, so the test passes on this Mac's fonts \
+with 39.5 px to spare and fails on the runner's by 18 (second finding). \
+The tests are tests, which is the half that holds. With the round two stylesheet under the round \
+three tests, all 15 stack tests fail: 14 on the colour read off the screenshot, and iphone \
+larger-left on covered zoom-in with the box at 497.6, which is the second review's finding. With \
+B1, B5, B6 and B8 put back the way main has them, the 15 tests beside them fail, each on its own \
+fact: 'Before the first glass is empty we ship' inside the band on all six, visibility hidden at \
+1440, 1024 and 900, the heading step, and 3.83 for the title of a dimmed shelf at opacity .45. \
+Nothing in the file waits on a clock or on a message a timer can remove."""
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = """
-Ran the whole command in the worktree at 2e1058d: ruff check and format clean, style and sinks \
-clean, the non-browser battery all dots, exit 0, and the worktree clean afterwards. On the pull \
-request the lint job of run 35581400429 has one red step, 'work orders are readable, reviewed and \
-inside their files', which waited for this file; the changelog fragment step is green. The \
-command is what CI runs, so it proves the sentence. No em-dash, en-dash or emoji on any added \
-line of src, tests or the fragment, in the commit messages or in the pull request body (scanned)."""
+Ran the whole command in the worktree at 4237cb8: ruff check and format clean, style and sinks \
+clean, the non-browser battery all dots, exit 0, worktree clean afterwards. That battery holds \
+the docs/DESIGN.md test, and it has nothing to notice: both :root blocks are byte for byte \
+origin/main's, and the four new custom properties (--stage-h, --hud-top, --sheet-top, --keep) are \
+local to #stage, #hud, #sheet and #toast. The only colour literal the diff adds is #000, four \
+times, as the alpha of a mask; #9BD3F5 and rgba(0,0,0,.35) are main's own on rewritten lines, and \
+the card's new surface is var(--surface-1). On the pull request the lint job has one red step, \
+the one that waits for this file; the changelog step is green. No em-dash, en-dash or emoji on \
+any of 1077 added lines, in the commit messages or in the pull request body (scanned), and the \
+body ends with the line it should."""
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = """
-Ran all six with --check on the byte-identical copy, each exit 0: 'build OK: game/vibe-map.html \
-matches src/', tree OK, cookbook OK, sync_template, sync_fork_source, syllabus OK. The two \
-generated files in the diff (game/vibe-map.html and vibemap/data/fork_source/src) are both \
-covered by them. :root is byte for byte main's (both blocks compared), so the docs/DESIGN.md test \
-has nothing to notice; the one new custom property is --sheet-top, local to #sheet. The only \
-colour literal the diff adds is #000 as the alpha of a mask, which paints nothing."""
+Ran all six with --check in the worktree, each exit 0: 'build OK: game/vibe-map.html matches \
+src/', tree OK, cookbook OK, sync_template, sync_fork_source, syllabus OK. The two generated \
+files in the diff, the built game and vibemap/data/fork_source/src, are both covered. In the \
+scratch merge with main the built game conflicts, as it must, and tools/build.py and \
+sync_fork_source.py regenerate it clean; the branch is 15 commits behind and needs just sync-main."""
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
 evidence = """
-All eight reproduce on origin/main in my own browser runs, and B1 to B3 in all four settings \
-(text normal and larger, hand right and left) on the 1440x900 desktop, the Pixel 7 and the WebKit \
-iPhone: B1 'Before the first glass is empt' inside #hud-bar at scroll 260 on all 12, scroll \
-container top 0 against a bar bottom of 55.6 or 72; B2 a real claim's message at y 14 to 93.6 over \
-Stats, Vault, Tree, World and More on the desktop and over the name, Search, Roadmap and More on \
-both phones; B3 the real import, seven messages, y 14 to 549.5, over the HUD, the numbers, the \
-Map button, zoom-in, and with the Roadmap open over Close on both phones and over Export and \
-Import on the iPhone; B4 '- dialog:' and \
-over CDP name '' modal false; B5 #kpis hidden at 821, 900, 1024 and 1440 with a mouse and with a \
-finger while the menu starts at x 628.7 or further; B6 step 13.19 under a 15 px glyph box on all \
-three; B7 13 line starts for 7 steps on the Pixel, and 10 for 7 on the desktop at the largest \
-text, which the finding did not know; B8 opacity .45 on ten of eleven shelves on all three. \
-On the branch, same twelve combinations: B1 zero hits at scroll 0, 260 and the end, scroll \
-container top 62 against 55.6 on the desktop (6.4 px) and 86 against 72 on both phones (14 px), \
-the same numbers at either text size and in either hand because the scale never reaches the HUD, \
-so a fact and not font luck. B2 the real message at 12 to 352 by 100.4 to 180 on the desktop and \
-12 to 206 by 156.8 to 274.6 on the Pixel, 8 px under the numbers by construction, 148 px left of \
-the Map button, nothing covered; HUD bottom 92.4 and map top 100.4, which are main's. B3 the real \
-seven bounded at 40vh (360 of 900, 366 of 915, 340.8 of 852), the map and the HUD where they \
-were, also at 1366x680, 1366x768, 1280x600 and 1024x600; what it does to the zoom column in the \
-left hand and to the cards themselves is the first two findings. B4 through the accessibility \
-tree: Chromium over CDP gives role dialog, name 'Camp panel', modal false for the Roadmap, a \
-stop, Settings and the Backpack on the desktop and the Pixel, and WebKit's tree reads '- dialog \
-"Camp panel"' for the same four. The aria-modal half is rejected with evidence I saw myself: with \
-the attribute back, the builder's test fails with the focus on zoom-out after one Shift+Tab from \
-Close. B5 #kpis visible and no pill under a menu at 481, 600, 700, 820, 821, 900, 1024 and 1440, \
-mouse and finger, about 247 px between the last pill and the menu at 821. B6 17.39 against the 15 \
-the test asks and the 15 px glyph box, all three surfaces; the heading is a fixed 12 px, so the \
-text size cannot move it. B7 line starts equal steps everywhere (7 for 7 on the desktop at both \
-sizes with the three folds set in at 449.7, 7 for 7 on the Pixel with six folds at 59.5; on the \
-iPhone my probe read the transcript early, 3 for 3, and the builder's test there has all 7), \
-the fountain's 115 characters inside the box on all six, scrollWidth within \
-clientWidth. B8 opacity 1, title and count rgb(139,147,167) on the page black, about 6.4 to 1. \
-None is skipped. What could not be fixed in the owned files is on issue 110 and in the pull \
-request body, each with its file and function: the number that breaks at its own space \
-(16-artifacts.js), the cap in toast() (18-avatar.js), the focus and a name per screen \
-(40-sheet.js, eight renderers named), one word in 60-vault.js, the Close button at 320."""
+All eight reproduce on origin/main (cb03e8b) in my own browser runs, B1, B2, B3, B6, B7 and B8 \
+in all twelve settings (text normal and larger, hand right and left, the 1440x900 desktop, the \
+Pixel 7, the WebKit iPhone). Main: scroll container top 0 and 'Before the first glass is empty we \
+ship' inside #hud-bar at scroll 260; a real claim's message at 14 to 93.6 over Stats, Vault, \
+Tree, World, More and the minimap on the desktop and over the name, Search, Roadmap and More on \
+both phones; the real import unbounded from 14 to 461.9 over the HUD, over Close on both phones \
+and over Export, the code box and Import on the iPhone; heading step 13.19; 13 line starts for 7 \
+steps on both phones and 10 for 7 on the desktop at the largest text (read with the text nodes \
+joined); opacity .45 with 1.98 to 1 for a shelf's description; '- dialog:' and over CDP name '' \
+modal false; #kpis hidden at 821, 900, 1024 and 1440 with a mouse and with a finger. \
+The branch, same twelve: B1 zero hits at scroll 0, 260 and the end, container top 62 against a \
+bar bottom of 55.6 on the desktop (6.4 px) and 86 against 72 on both phones (14 px), the same at \
+either text size because the scale never reaches the HUD. B2 the real message at 12 to 352 by \
+100.4 to 180 on the desktop, 12 to 206 by 156.8 to 274.6 on the Pixel, 12 to 196.5 on the iPhone, \
+nothing covered in any of the twelve. B3 the real import, seven messages from a fresh save: over \
+the Roadmap the stack is 63.6 to 423.6 on the desktop, 80 to 446 on the Pixel, 80 to 420.8 on the \
+iPhone, clear of the HUD and of Close, and once the entry spring has settled the newest card is \
+rgb(10,10,10) at opacity 1 with one colour in the strip on all three, so the second review's \
+first finding is dealt with (my shot branch_real_iphone_right_panel: three cards read over the \
+Roadmap, the third fading over Export). Back on the island the bar has wrapped to 185.6 on both \
+phones and the box is 193.6 to 537 on the Pixel and 193.6 to 474 on the iPhone, 8 px above the \
+zoom column in either hand, so that review's second finding is dealt with too: the room shrinks \
+by what the bar gains. Headroom of the box over zoom-in, left hand: 151.6 px on the desktop and \
+22.2 on the Pixel where 40vh binds, 8 by construction on the iPhone, 8 at 1280x600 and 1024x600 \
+where round two covered zoom-in, 19.6 at 1366x680. B6 17.39 against the 15 asked on all twelve, a \
+fixed 12 px times 1.45, so no font can move it. B7 one line start per step in all twelve and \
+nothing outside the box, and on the scratch merge with main's new runDemo the same holds on all \
+18 (three surfaces, two text sizes, three demos), so the fix survives main; its tests do not. B8 \
+opacity 1 and 6.83, 6.83, 6.83, 11.41 to 1. B4 through the accessibility tree: Chromium over CDP \
+gives role dialog, name 'Camp panel', modal false for the Roadmap, a stop, Settings and the \
+Backpack on the desktop and the Pixel; WebKit's tree reads '- dialog "Camp panel"' for the same \
+four. The aria-modal half is rejected with evidence I saw on main and on the branch: one \
+Shift+Tab from Close lands on zoom-out, outside the panel, on all three surfaces. B5 #kpis \
+visible and no pill under a menu at 481, 600, 700, 820, 821, 900, 1024 and 1440, mouse and finger. \
+None is skipped. tests/test_game_phone.py and tests/test_game_qol_settings.py: 61 of 61 on a \
+byte-identical copy, and the phone and qol shards are green on this commit, so the phone HUD and \
+More menu of pull request 134 and the Settings rows of 145 are unharmed; main's own \
+tests/test_game_hunt_f.py pass on the scratch merge. What the three named surfaces do not show \
+is in the second and third findings."""
 
 [[criteria]]
 id = "c5"
-verdict = "fail"
+verdict = "pass"
 evidence = """
-The copy half holds: the fragment is plain, 'Camp panel' is a plain name, nothing else a player \
-reads changed, no em-dash, no emoji. The screenshot half is closer than in round one and still \
-not what the sentence says. tests/out/hunt_b* (31 files, written 11:18 to 11:25 today) has B1, \
-B2, B3 and B7 on all three surfaces. B6 is still the desktop and the Pixel only and B8 still the \
-two phones only, which is word for word what round one reported; h3 and .age.faded are changed on \
-every surface. The title message is shot on the phones only, and on the desktop it is where it \
-lands on the heading (fourth finding). And every shot of the stack is taken over the island, \
-never over an open panel, which is where a batch is raised and where the first finding shows at \
-a glance. The slab of shadow behind the cards is in the builder's own hunt_b2_android and \
-hunt_b3_desktop shots (fifth finding). \
-I took the missing ones: B6 on the iPhone at the largest text and B8 on the desktop are fine, \
-the set-back shelf now reads as set back. Looked at besides: main and branch for B1 (Pixel \
-larger-left), B2 and B3 (all three, panel open and closed), B5 at 821, B7 (Pixel columns, iPhone \
-larger-left sentence, the switchboard listing), B8 (Pixel and desktop), the title message on both, \
-the vault stack on both phones, and the phone More sheet and Settings at the largest text in the \
-left hand from pull requests 134 and 145, which are unharmed: tests/test_game_phone.py and \
-tests/test_game_qol_settings.py 61 of 61 on the copy, shards phone and qol green in CI."""
+This commit's tests write 40 pictures to tests/out/hunt_b* (three more are left over from round \
+two, which no test writes any more) and the three gaps of round two are closed: \
+B6 on the iPhone, B8 on the desktop, the repair message on the laptop, and the stack over an open \
+panel on all three. I looked at B1 (Pixel larger-left), B2 and B3 in both hands on all three, the \
+stack on a panel (iPhone: the newest card whole and solid, the second fading into the bound over \
+the lesson), the title message on the desktop, the vault stack, B5 at 900, B6, B7 columns on the \
+Pixel and B8 on the desktop, where the chosen shelf keeps its surface and the others read as set \
+back. One gap is left and I would land it: the B6 pictures on both phones are the first screen \
+of the switchboard and the wrapped heading is below the fold, so two of the three B6 pictures do \
+not show B6 (fourth finding). I took them myself on main and on the branch at the largest text: \
+main's three lines of caps nearly touch, the branch's have normal leading. Copy: the fragment is \
+plain and says what a player sees, 'Camp panel' is a plain name, nothing else a player reads \
+changed, no em-dash, no emoji."""
+
+[[findings]]
+severity = "high"
+file = "tests/test_game_hunt_b.py"
+text = """
+Main moved under B7 and the order's own tests are red on the commit under review. origin/main is \
+cb03e8b since pull request 163 (hunt F), where runDemo() in src/game/16-artifacts.js appends each \
+line with el.append() so that a live region does not read the transcript again. TERMINAL takes \
+'[...el.childNodes].find(n => n.nodeType === 3)', which is now the first line only. CI tests the \
+merge with main, so run 35596561161 has test_a_demo_step_starts_at_the_column_and_a_fold_is_set_in \
+red on all three surfaces (one step, 'you (Amsterdam)  ->  POST /v1/me', where five are asked) \
+and test_the_sentence_a_demo_ends_on_is_read_whole red on all three ('the sentence fits, so this \
+proves nothing', the step being 'fountain:  HIT    3 ms'). Reproduced in a scratch clone: merge \
+origin/main, rebuild, the same six fail with the same words. The stylesheet is not at fault: with \
+the element normalised first, the merged tree draws one line start per step on all 18 cases and \
+nothing leaves the box. The reader has to walk every text node of #art-term, or take its ranges \
+over the element, and the branch needs just sync-main before anything else: main only takes \
+up-to-date pull requests, so this is what landing looks like."""
+
+[[findings]]
+severity = "high"
+file = "src/style.css"
+text = """
+'The message just raised is always whole' holds only while the room is taller than the message, \
+and the room is a fixed sum. Three places where it is not. \
+One, CI, on this commit: test_a_full_stack_is_bounded_and_moves_nothing is red on the WebKit \
+iPhone, default and larger-left. Under the runner's fonts the four numbers wrap to two rows on a \
+fresh save (card y 193.6) and the widest message is 298.5 tall in a box of 280.4, so the newest \
+card is cut and the island reads through its faded end. Here the card is 277.7 in 317.2. The \
+fonts are system-ui, so every machine has its own answer, and this test has 39.5 px of this \
+Mac's: about two lines of a bottle lesson, which the test reads out of items.json, so the content \
+team can turn it red from another file. \
+Two, a real iPhone-sized window after a real import: the bar wraps to 185.6, the room is 280.4, \
+the widest message 277.7, whole by 2.7 px with its 'Read the topic' link inside the fade (my shot \
+branch_iphone_normal_left_b3_fill_after_import). \
+Three, Map size Compact, a row in Settings that main supports on a phone (touch-action:pan-y is \
+written for it): the room is negative, the floor of 96 px binds, and the comment's 'never less \
+than one card' is not true, because an ordinary claim is 117.8 px tall at half width on both \
+phones. The only message on screen reads 'You delivered your first stop. Unlocked: the head' and \
+ends there in the fade (brk_branch_iphone_compact_right_one); left-handed the same 96 px lie on \
+zoom-in, by 6.4 on the Pixel and 41.7 on the iPhone, and on Enter on the iPhone. The same at 320 \
+wide. On main that player read the whole message, over the HUD. So for them B2 trades a covered \
+bar for a message that cannot be read to its end, and the changelog does not say so. \
+Either the newest card sets the floor, so it is whole and lies over a button when it must, which \
+is what the comment argues for, or the card gets more of the row on a phone so it is shorter, or \
+toast() drops the oldest until the newest fits, which is the other order. The test should then \
+hold with the bar wrapped, which is what a player with progress has."""
 
 [[findings]]
 severity = "medium"
 file = "src/style.css"
 text = """
-The fade added in round two takes the blur off every card, and it is switched by a count that is \
-wrong on every surface. '#toast:has(.tst:nth-child(4))' puts a mask on the stack; a masked \
-element is the backdrop root of what is inside it, so each card's backdrop-filter: blur(8px) has \
-nothing of the page left to blur and the card is only rgba(10,10,10,.78). Over the island that \
-is a look. Over an open panel it is the message: on the Pixel and on the WebKit iPhone, with four \
-cards over workstream 1, 'You delivered your first stop.' runs through 'The Innovation Hub' and \
-the lesson's paragraphs read through all four cards; with two cards (no mask) the same spot is \
-clean (my shots p5_android_2 against p5_android_4, p5_iphone_4). The real path is B3's own: the \
-import is pressed in the Roadmap, so the seven messages come up over the Roadmap, and on a phone \
-they cannot be read (b3open_branch_android). On main the same seven were readable and sat on the \
-HUD, Close and Import; now they sit clear of the HUD and Close and cannot be read. A bound \
-that keeps the controls clear and loses the words is half a fix. \
-The count: on the desktop four cards fit (342 of 360, scrollHeight equals clientHeight) and the \
-oldest is faded all the same, which the comment above the rule says must not happen. On a phone \
-the bound is reached by three ordinary messages (3 x 117.8 plus gaps is 369 against 340.8 on the \
-iPhone) and by two real ones: the longest bottle lesson (246 characters and its link) is 277.7 px \
-tall at half width on the iPhone, 260.3 on the Pixel, against 152.5 on main, and one pickup after \
-it cuts 75.6 px off its top (34 on the Pixel), which is the whole title, with a hard edge \
-because there is no fourth child (shot p4_branch_iphone_bottle_pickup). So the fade is absent \
-where a card is cut and present where none is. Either the oldest card leaves whole, or the cut is marked by something \
-that does not mask the stack, and the rule follows overflow rather than a count."""
-
-[[findings]]
-severity = "medium"
-file = "tests/test_game_hunt_b.py"
-text = """
-The stack's geometry passes by the luck of the default hand and a middle-sized message. \
-test_a_full_stack_is_bounded_and_moves_nothing runs with FAST only, and the larger-left \
-condition is measured with one card. The stylesheet keeps the stack to the left half 'because the \
-right half under the bar is the map's column'; in the left hand the zoom column is on the left \
-(body.hand-left #zoom), straight under the stack, and '#zoom button' is in the test's own \
-CONTROLS. Measured: with the test's own nine-card fill, left-handed, the WebKit iPhone gives \
-covered ['zoom-in'] (stack bottom 497.6 against #zoom top 482); the Pixel is clear by 22 px (522.8 \
-against 545) only while the numbers fit one row. After the real import they wrap to two, the HUD \
-ends at 185.6, and the real seven cover zoom-in on the Pixel (559.6 against 545) and zoom-in and \
-zoom-fit on the iPhone (534.4 against 482), in both text sizes (shot \
-b3_branch_iphone_normal_left: the plus is under the 'Verified' card). On main the stack was on \
-the right, so a left-handed player never had this. The desktop has room at 900, 768 and 680 high \
-(19.6 px at 1366x680) and covers zoom-in at 1280x600 and 1024x600, left hand. The cards take no \
-pointer events, so the buttons still work under them; it is what the player sees for five \
-seconds, and three at once is a pickup that unlocks two achievements, or two pickups and one \
-within five seconds on a path. The Enter button is not in CONTROLS: the \
-real seven cover its top 18 px on the iPhone in either hand (516.4 against 534.4), as main did. \
-The fill is 'First light', 99 characters; the game's widest message is 246 and a link, which is \
-where the bound and the fade of the first finding break. No test has a panel open under a \
-message, so '#sheet.on .x' in CONTROLS never matches; I measured it, Close is clear on all \
-twelve. Measure the full stack in the left hand on all three surfaces, with the widest real \
-message in it, once over an open panel, and let the layout pass that."""
+B1 is not gone where a finger makes the pill taller and the window is wider than 820. The 86 px \
+band lives in the compact block, '(max-width:820px),(max-height:520px) and (pointer:coarse)', \
+and the pill's height follows '@media (pointer:coarse)' alone. With touch at 1024x768 and at \
+834x1112 (a tablet lying down, an 11 inch one standing) the scroll container starts at 62 and \
+the bar ends at 72: 'Before the first glass is empty we ship' is inside the band at scroll 260, \
+in either hand. Main started at 0 there, so it is 10 px instead of 72, not none. The comment on \
+the rule says the band 'grows with the pill, which a finger makes taller'; it grows with the \
+width. No test has a coarse pointer above 820, which is the widest case for the bar's height, so \
+the 6.4 and 14 px of headroom are the headroom of the three named surfaces only."""
 
 [[findings]]
 severity = "low"
 file = "tests/test_game_hunt_b.py"
 text = """
-What c5 asks and round one already named: B6 is photographed on the desktop and the Pixel and not \
-the iPhone, B8 on the two phones and not the desktop, the title message on the phones and not the \
-desktop. Both tests already take a surface parameter. I took all three and two are fine; the \
-third is the next finding."""
+test_a_wrapped_heading_keeps_its_leading photographs the first screen of the panel. On the \
+desktop the heading is in it; on the Pixel and the iPhone it is below the fold, so \
+hunt_b6_android_heading and hunt_b6_iphone_heading show the switchboard's buttons and no h3. \
+Scroll the measured heading into view, or photograph the element, as the B8 test already does."""
 
 [[findings]]
 severity = "low"
 file = "src/style.css"
 text = """
-On the desktop title the repair message now lands on the panel's heading: card 12 to 352 by \
-100.4 to 180 against #title .box from x 136, so 'Vibe Code' and the tagline are under it for five \
-seconds (shot p3_title_branch_desktop). On main it sat at the top right over the sky, clear of \
-the box. On the phones it covers the four numbers instead of the kicker, which is no worse than \
-main. A rare message, a corrupted save."""
+Carried from round two and unchanged: on the desktop title the repair message lies on the \
+panel's heading, card 12 to 352 by 100.4 to 180 over the h1 at 159 to 633 by 95.7 to 139.7 \
+(tests/out/hunt_b2_desktop_title_message: 'Vibe Code' is under it). Main had it top right over \
+the sky. The test's docstring says it 'lands somewhere else', which is kinder than the picture. \
+And new, the same kind of sentence: in the vault 'nothing of the reader lives in that corner' is \
+true on the laptop; on a phone the stack is 14 to 354 by 497 to 838 over the note's text. Five \
+seconds, and main covered Tech tree and Back to campus instead, so a trade."""
 
 [[findings]]
 severity = "low"
 file = "src/style.css"
 text = """
-overflow:hidden on #toast cuts each card's --lift shadow (0 10px 30px) to the stack's rectangle, \
-so the rounded cards sit on a grey slab with square corners, plain in the builder's \
-hunt_b2_android and hunt_b3_desktop shots and in my four-card one. The same clip takes the \
-bottom 16 px off a new card while fx() springs it up from translateY(16px)."""
-
-[[findings]]
-severity = "low"
-file = "src/style.css"
-text = """
-A phone lying down has no free band under the HUD, which ends at 148.8 of 412. One message lands \
-on the stick (right hand, Pixel and iPhone) or on the jump button and zoom-out (left hand), and \
-on the iPhone on the Enter button too. Main put it over the HUD's buttons instead, so this is a \
-trade and not a regression; worth a line in the hand-on to whoever caps the stack."""
-
-[[findings]]
-severity = "low"
-file = "src/style.css"
-text = """
-B7, two limits of the hanging indent, both better than main and neither a reason to hold it. \
-text-indent each-line is Chrome 146, Safari 15, Firefox 121 (mdn/browser-compat-data, opened \
-today; Playwright here is Chromium 153 and WebKit 26.6, both support it). An older engine drops \
-the whole declaration and keeps the 3ch of padding, so it gets main's folds in a narrower box; \
-an @supports around the pair would give it main's box. And 17 transcript lines in ART_DEMOS \
-start with spaces (the switchboard's 'just --list'): '    verify    # what CI runs: lint + \
-tests +' starts 4ch in and its fold 'build check' lands at 3ch, left of its own step, so 'anything \
-set in from the edge is the rest of the step above' is not true there (shot \
-p6_branch_android_switchboard). It still reads."""
-
-[[findings]]
-severity = "low"
-file = "tests/test_game_hunt_b.py"
-text = """
-The dialog test asserts that Shift+Tab leaves the panel before it looks at aria-modal, so the \
-order that confines the focus in openSheet() goes red here on 'inSheet is False' with only a \
-dict for a message, in a file it does not own. The docstring says the test will ask for the \
-attribute that day; as written it asks for nothing, it fails one line earlier. Holding the two \
-together is one assertion: aria-modal is true exactly when the focus stays in."""
+Three lows of round two that the pull request names and does not take, still true: overflow \
+hidden cuts each card's --lift shadow at the stack's left and right edge; a phone lying down \
+has no free band, so the floor lies on the stick (right hand) or on jump and zoom-out (left \
+hand), and on Enter on the iPhone, where one ordinary message (79.6 px at that width) is whole \
+with its last 7.6 px in the fade; text-indent each-line has no @supports around it, and a \
+transcript line that starts with spaces folds left of its own step. And one in the test file: \
+the dialog test asserts that Shift+Tab leaves the panel before it looks at aria-modal, so the \
+order that confines the focus goes red on a bare dict rather than on the sentence written for it."""
 
 [[findings]]
 severity = "low"
 file = "work/orders/hunt-b-panel-chrome/order.toml"
 text = """
-The hand-on is on issue 110 now and the cause for 18-avatar.js is located well enough to take: \
-toast() appends without a limit, the two remedies are named, and so are the stale comment and \
-the advice to wait on window.__toasts(). Two corrections for whoever takes it. The import raises \
-seven messages here, not nine, on main and on the branch. And a cap by count will not do on a \
-phone: at half width two real messages reach 40vh, so the cap has to be by height or the batch \
-has to become one line. \
-For the harness: this file is in the default shard, and smoke went from about 10 minutes on main \
-(run 35584809681) to 28 on this branch, single tests at 45 to 66 s on the runner. It is not the \
-longest shard (qol 35, webkit 30), and the next hunt file lands in the same one. \
-origin/main has moved by one planning merge (fd2877d) that touches none of the owned files; the \
-branch needs just sync-main before it lands."""
+The hand-on to the owner of src/game/18-avatar.js is on issue 110 and in the pull request body, \
+and the cause is located well enough to take: toast() appends without a limit and removes each \
+node 5000 ms later; the remedies named are dropping the oldest or folding a batch into one \
+line; the stale comment and the advice to wait on window.__toasts() are named, and round three \
+adds the clipped shadow and the floor on a phone lying down. Three things it should also say. \
+The two corrections of the second review were not carried over: the body and the issue still say \
+nine nodes, and the import raises seven from a fresh save (six once stop one is claimed), on main \
+and on the branch; and a cap by count will not do on a phone, where two real messages fill the \
+room, so the cap is by height. And the second finding above belongs in the same hand-on: toast() \
+is the one place that can keep the newest message whole at any room. \
+For the orchestrator, not for this builder: the webkit shard is red on this commit and on main's \
+own cb03e8b (run 35596102600) on the same test, \
+tests/test_game_camera.py::test_every_zoom_level_holds_the_phone_budget[game_android], a timeout \
+in both goes. It is not this order's, and nothing lands green until it is dealt with."""
