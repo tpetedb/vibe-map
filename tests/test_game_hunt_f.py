@@ -25,10 +25,9 @@ import pytest
 from playwright.sync_api import Browser
 
 from tests.conftest import (
-    GAME_PATH,
     WAIT_MS,
     GamePage,
-    _attach_error_collectors,
+    game_page,
     phone_options,
 )
 
@@ -453,16 +452,14 @@ def _profile(
         if profile == "desktop"
         else phone_options(profile)
     )
-    context = (webkit if profile == "iphone" else chromium).new_context(**options)
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    game.goto()
-    game.start()
-    try:
+    browser = webkit if profile == "iphone" else chromium
+    # Three sizes across two browsers is more than the fixtures offer, so this
+    # opens a page of its own, through the helper the fixtures use: that is
+    # where the clock, the toast record and the write rule are installed.
+    with game_page(browser, server, **options) as game:
+        game.goto()
+        game.start()
         yield game
-    finally:
-        context.close()
 
 
 @pytest.mark.parametrize("profile", PROFILES)
