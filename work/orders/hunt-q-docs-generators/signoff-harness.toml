@@ -1,0 +1,64 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "hunt-q-docs-generators"
+team = "harness"
+by = "manager-harness"
+reviewed = "8b809dd91a8701217dd968b197e56177c91e4661"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Accepted as the owner of tools/regen_tree.py. Nothing to change.
+
+What I checked, all at 8b809dd:
+- The change is tools/regen_tree.py:113-122 and nothing else under tools/: the \
+heading moves to the start of its line and the depth label opens the body, once, \
+above the EXIST branch, so both branches share it. Five lines in, three out, in \
+the file's own style; `from __future__ import annotations` and the `__main__` \
+guard are there; ruff check and ruff format --check are clean, no line over 88. \
+The comment states the constraint (a heading must start its line) and why.
+- Contract: `regen_tree.py --check` exits 0 on the branch. In a scratch export \
+of the commit it exits 1 and names the file for one byte appended to \
+docs/ROADMAP.md, for one byte appended to tools/generated/tree.js, and for a \
+missing output. Two write runs under PYTHONHASHSEED=1 and 987654 give the same \
+sha256 for all five outputs, and the same bytes as the committed files.
+- Only the intended part moved: origin/main's docs/ROADMAP.md plus the single \
+rule "*Depth.* ### Name, blank, Body" to "### Name, blank, *Depth.* Body" equals \
+HEAD's file byte for byte, 70 topics, 140 lines in and 140 out, 0 headings \
+before and 70 after, no duplicate heading, the 11 shelves untouched. \
+tools/generated/notes.js, tools/generated/tree.js, docs/RESOURCES.md, \
+docs/OBSIDIAN.md, game/ and vibemap/data/fork_source/ do not differ from \
+origin/main.
+- `build.py --check`, `sync_fork_source.py --check` and `changelog.py check` \
+pass (one fragment, changelog.d/roadmap-headings-and-a-run-path.fixed.md, for \
+the one changed product file).
+- Nothing of ours reads the old shape: tests/, tools/, vibemap/, src/, \
+.github/, the justfiles and the skills only name docs/ROADMAP.md in lists of \
+generated files (tools/checks.py:61, tools/sync_main.py:33, \
+tests/test_changelog.py:166). No parser of the depth label exists.
+- With main's generator put back in the scratch copy, \
+tests/test_hunt_q.py::test_q2 fails at line 65 and the regenerated roadmap is \
+main's; with the fix it passes. The test guards the tool.
+- `work.py ci` names three things between this order and main: the review and \
+the two sign-offs. The one red CI step is that one.
+
+For the harness team after this lands:
+- Q3 is not fixed here and I agree it must not be fixed in EXIST \
+(tools/regen_tree.py:30): that would drop the Git and Python prose from the \
+roadmap and still open the stub. The cause is tools/build.py:190, which is \
+ours: one object literal, generated notes first, src/game/50-notes.js last, \
+and a duplicate title silently keeps the last. My preference as the owner of \
+build.py is not to swap the order (that only makes the other side win \
+silently) but a follow-up order in which panels or content drops the two \
+handwritten cards from src/game/50-notes.js:117 and :194, and build.py refuses \
+a title that is in both, loudly. That order empties KNOWN_SHADOWED in \
+tests/test_hunt_q.py:33. No order for it exists yet.
+- Topic headings in docs/ROADMAP.md now have anchors, so other pages may start \
+linking to them. `tools/checks.py links` (tools/checks.py:56) probes https \
+URLs only, so a relative link with a fragment into the roadmap is checked by \
+nothing and a renamed topic would break it silently.
+- Not this order's: the docstring of tools/regen_tree.py:3-9 has stray line \
+breaks and says "write the three outputs" for five. It goes to \
+harness-work-followups or a one-line fix by a person.
+"""
