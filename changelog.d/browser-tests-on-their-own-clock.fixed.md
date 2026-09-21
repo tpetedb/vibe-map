@@ -15,3 +15,10 @@
   camera landing carries a budget of its own with the measurement behind it,
   because the game advances its animations by at most 0.05 s a frame and a
   software renderer stretches a 1.4 s glide into seconds of wall clock.
+- Taking a picture is one of those waits too, which is the wait that ran a CI
+  shard out while this was being written: a capture costs the page five to six
+  frames, and on a starved runner that is longer than the thirty seconds
+  Playwright gives it. It now carries a name, a budget of its own and the
+  frames it waited, and it is taken at one image pixel per CSS pixel, where a
+  phone profile was rendering up to three of them per CSS pixel for a picture
+  nothing measures.

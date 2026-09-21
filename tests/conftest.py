@@ -36,6 +36,21 @@ RESUME_BUTTON = "#btn-continue"
 # runner is slow, not broken; a wait that runs out is a real defect.
 WAIT_MS = 20_000
 
+# How long a picture may take, which is not the usual budget.
+#
+# A capture is paid for in frames like every other wait here: the compositor
+# has to produce one, and under a software renderer that costs what everything
+# else costs. Measured on the heaviest island at the Pixel 7 profile, a
+# picture costs five to six frames: on a laptop drawing two to four a second,
+# 1.5 s to 3.1 s at one image pixel per CSS pixel and 2.3 s to 3.3 s at the
+# device scale it used to be taken at. A runner drawing a fifth of a frame a
+# second therefore needs thirty seconds, which is all Playwright gives a
+# screenshot by default and is what ran out twice in one job (run 35573982127,
+# the Android leg of the zoom budget test, at its first level). Doubling it
+# means a starved page gives up at the landing beside it, which says more,
+# before it gives up here.
+SHOT_MS = 60_000
+
 # Software WebGL for headless Chromium. Without ANGLE on SwiftShader the
 # canvas has no context and the game falls back to the roadmap list, which
 # would hide every 3D regression behind a green test.
@@ -584,16 +599,33 @@ class GamePage:
 
         `clip_height` takes the top of the viewport, `clip` frames a corner of
         it, and neither decides where the file lands.
+
+        The capture is a wait like the others, so it has a name, a budget and
+        the frames the page drew, and it is taken at one image pixel per CSS
+        pixel: a phone profile renders up to three device pixels to the CSS
+        pixel, which is up to nine times the pixels for a picture somebody
+        looks at and no test measures.
         """
         OUT.mkdir(parents=True, exist_ok=True)
         target = out_file(f"{name}.png")
         if clip is None and clip_height:
             width = self.page.viewport_size["width"] if self.page.viewport_size else 420
             clip = {"x": 0, "y": 0, "width": width, "height": clip_height}
+        options: dict[str, Any] = {
+            "path": str(target),
+            "scale": "css",
+            "timeout": SHOT_MS,
+        }
+        framing = "the full page"
         if clip is not None:
-            self.page.screenshot(path=str(target), clip=clip)
+            options["clip"] = clip
+            framing = f"{clip['width']:.0f} by {clip['height']:.0f} CSS pixels"
         else:
-            self.page.screenshot(path=str(target), full_page=True)
+            options["full_page"] = True
+        with self.named_wait(
+            f"the picture {name}", SHOT_MS, detail=lambda: f"it frames {framing}"
+        ):
+            self.page.screenshot(**options)
         return target
 
     def assert_clean(self) -> None:

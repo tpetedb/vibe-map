@@ -3,8 +3,9 @@
 Three leaks made a green run depend on when and where it ran (issue 148): the
 runner's clock unlocked an achievement whose toast took another test's place,
 a toast was read off the screen after the five second timer had taken it away,
-and the battery rendered into `docs/media`, which is tracked. Each finding has
-a test here, and each of them fails without its fix.
+and the battery rendered into `docs/media`, which is tracked. A fourth item is
+a wait that could not say why it gave up. Each finding has a test here, and
+each of them fails without its fix.
 
 The guards read the test sources, because that is where the leak is written
 down: what a test passes to a screenshot is the path it will write, and a
@@ -20,8 +21,17 @@ from typing import Any, cast
 
 import pytest
 from playwright.sync_api import Page
+from playwright.sync_api import TimeoutError as PageTimeout
 
-from tests.conftest import NOON, OUT, ROOT, GamePage, out_file, writes_only_to_out
+from tests.conftest import (
+    NOON,
+    OUT,
+    ROOT,
+    SHOT_MS,
+    GamePage,
+    out_file,
+    writes_only_to_out,
+)
 from tests.test_game_camera import _zoom_is
 
 FIXTURES = ["game", "game_desktop", "game_android", "game_webkit_iphone"]
@@ -36,10 +46,18 @@ GUARDS = {"conftest.py", "test_harness_determinism.py"}
 # claims to be.
 STILL_READ_THE_SCREEN = {"test_game_bottles.py", "test_game_ui.py"}
 HAND_BUILT_PAGES = {"test_game_phone.py", "test_game_news.py"}
-# A toast selector may be used to ask whether the stack is on the screen.
-# Anything else done with one reads text that expires on a five second timer.
+# Whether the stack is on the screen is a fair question to ask the screen, and
+# `#toast` on its own is the stack. A selector that reaches past it into a
+# notice reads text that expires on a five second timer, whatever the call
+# that holds it is called.
 NOT_A_READ = {"is_visible"}
-TOAST_SELECTORS = ("#toast", ".tst")
+THE_STACK = "#toast"
+# What names the stack or a notice inside it: the two selectors, and the
+# element id as a page script quotes it, which is this suite's other idiom for
+# reading text. A test that asks for a toast by its words instead
+# (`get_by_text`) names no selector and no guard on selectors can see it; the
+# record is what makes writing one unnecessary.
+TOAST_SELECTORS = ("#toast", ".tst", "'toast'", '"toast"')
 # What tells a context opened for the game from one opened for another page
 # the battery visits: the dashboard report and the syllabus are not this.
 GAME_FILE = "vibe-map.html"
@@ -64,18 +82,23 @@ def _literal_names(tree: ast.Module) -> dict[str, str]:
     """Every name in the file bound to a string literal.
 
     A selector is as often held in a variable as written at the call, so the
-    guard has to see through one. Deliberately flat: the last binding wins,
-    which over-reports rather than letting a read past.
+    guard has to see through one, annotated or not. Deliberately flat: the
+    last binding wins, which over-reports rather than letting a read past.
     """
     names: dict[str, str] = {}
     for node in ast.walk(tree):
-        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Constant):
+        if isinstance(node, ast.Assign):
+            targets: list[ast.expr] = list(node.targets)
+            value = node.value
+        elif isinstance(node, ast.AnnAssign):
+            targets, value = [node.target], node.value
+        else:
             continue
-        if not isinstance(node.value.value, str):
+        if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
             continue
-        for target in node.targets:
+        for target in targets:
             if isinstance(target, ast.Name):
-                names[target.id] = node.value.value
+                names[target.id] = value.value
     return names
 
 
@@ -124,10 +147,10 @@ def _operation(call: ast.Call, parents: dict[ast.AST, ast.AST]) -> str:
 def toast_reads(source: str, name: str = "<sample>") -> list[str]:
     """Every place in this source that asks the screen about a toast.
 
-    A call that names `#toast` or `.tst`, in an argument of its own or through
-    a variable, is a read of the screen unless what the chain finally does
-    with it is on NOT_A_READ. Asking which method reads text would miss every
-    shape but the one that was there when the rule was written.
+    A call that names the stack or a notice inside it, in an argument of its
+    own or through a variable, is a read of the screen unless it asks only
+    whether the stack is there. Asking which method reads text would miss
+    every shape but the one that was there when the rule was written.
     """
     tree = ast.parse(source, filename=name)
     names = _literal_names(tree)
@@ -138,12 +161,29 @@ def toast_reads(source: str, name: str = "<sample>") -> list[str]:
             continue
         args: list[ast.AST] = [*node.args, *(kw.value for kw in node.keywords)]
         said = [s for a in args for s in _strings(a, names)]
-        if not any(sel in s for s in said for sel in TOAST_SELECTORS):
+        hits = [s for s in said if any(sel in s for sel in TOAST_SELECTORS)]
+        if not hits:
             continue
-        if _operation(node, parents) in NOT_A_READ:
+        stack_only = all(s == THE_STACK for s in hits)
+        if stack_only and _operation(node, parents) in NOT_A_READ:
             continue
         found.append(f"{name}:{node.lineno} {ast.unparse(node)}")
     return found
+
+
+def _builds_a_page(node: ast.AST) -> bool:
+    """A call that opens a browser context, or wraps a page in a GamePage.
+
+    Both halves are needed, because a page arrives by more names than one:
+    `new_page` on the browser and `launch_persistent_context` each hand back
+    a page with no init script on it, and what they all end in is a GamePage
+    built outside the fixture, so that wrapper is the half that catches them.
+    """
+    if not isinstance(node, ast.Call):
+        return False
+    if isinstance(node.func, ast.Attribute):
+        return node.func.attr == "new_context"
+    return isinstance(node.func, ast.Name) and node.func.id == "GamePage"
 
 
 def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
@@ -151,8 +191,8 @@ def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
 
     game_page() in tests/conftest.py is where the clock, the toast record and
     the write guard are installed, so a file that opens its own context for
-    the game runs with none of the three. A context for one of the other
-    pages the battery opens is not this.
+    the game, or wraps a page of its own in a GamePage, runs with none of the
+    three. A context for one of the other pages the battery opens is not this.
     """
     tree = ast.parse(source, filename=name)
     said = _strings(tree, {})
@@ -170,9 +210,7 @@ def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
     return [
         f"{name}:{node.lineno} {ast.unparse(node.func)}"
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "new_context"
+        if _builds_a_page(node)
     ]
 
 
@@ -342,19 +380,25 @@ def test_no_browser_test_reads_a_toast_off_the_screen() -> None:
     )
 
 
-# The shapes a test reaches for a toast in. The chain is Playwright's own
-# suggestion and a handle keeps the element for later, so a guard that asks
-# only whether this call names the selector and reads text lets nine of these
-# eleven past.
+# The shapes a test reaches for a toast in. A selector is as often held in a
+# name, or named two steps up a chain, or written as an element id inside a
+# page script, as passed to the call that finally reads it, so the guard
+# cannot decide on what this one call does.
 TOAST_READS = [
     'game.page.text_content("#toast .tst")',
     'game.page.locator("#toast .tst").text_content()',
     'game.page.locator("#toast .tst").first.inner_text()',
     'el = game.page.wait_for_selector("#toast .tst")\nsaid = el.text_content()',
     "game.page.evaluate(\"document.querySelector('#toast .tst').textContent\")",
+    "game.page.evaluate(\"document.getElementById('toast').textContent\")",
+    'game.page.wait_for_function("() => '
+    "document.getElementById('toast').textContent.includes('Picked up')\")",
     "game.page.wait_for_selector('#toast .tst:has-text(\"Picked up\")')",
     'SAYS = "#toast .tst"\nsaid = game.page.text_content(SAYS)',
+    'SAYS: str = "#toast .tst"\nsaid = game.page.text_content(SAYS)',
     'game.page.locator("#toast .tst", has_text="Picked up").first',
+    'game.page.locator("#toast .tst", has_text="Picked up").is_visible()',
+    "game.page.is_visible('#toast .tst:has-text(\"Picked up\")')",
     'game.page.text_content(".tst")',
     'game.page.inner_html("#toast")',
     'expect(game.page.locator("#toast")).to_contain_text("Picked up")',
@@ -394,6 +438,13 @@ HAND_BUILT = (
     "page = context.new_page()\n"
     "game = GamePage(page=page, url=server + GAME_PATH)"
 )
+# The same page with no context of its own: new_page() on the browser, and a
+# persistent context, are two more ways to the same page without the clock,
+# the record or the write guard.
+NO_CONTEXT_AT_ALL = (
+    "page = chromium.new_page(**phone_options(profile))\n"
+    "game = GamePage(page=page, url=server + GAME_PATH)"
+)
 ANOTHER_PAGE = (
     "context = chromium.new_context(viewport={'width': 393, 'height': 852})\n"
     "page = context.new_page()\n"
@@ -404,6 +455,7 @@ ANOTHER_PAGE = (
 def test_the_page_guard_tells_the_game_from_the_other_pages() -> None:
     """The dashboard report and the syllabus open contexts of their own."""
     assert opens_its_own_game_page(HAND_BUILT)
+    assert opens_its_own_game_page(NO_CONTEXT_AT_ALL)
     assert opens_its_own_game_page(ANOTHER_PAGE) == []
 
 
@@ -527,3 +579,58 @@ def test_the_zoom_level_and_the_camera_landing_fail_differently(
     with pytest.raises(AssertionError) as expired:
         _zoom_is(game, 0.13)
     assert "the zoom level never reached 0.13" in str(expired.value)
+
+
+def test_a_picture_that_never_arrives_names_itself_and_the_frames() -> None:
+    """The third wait in the zoom loop, the one with no name of its own.
+
+    A capture waits for the compositor, so it is spent in the same currency
+    as the landing beside it, and it ran out on CI where the landing did not.
+    Playwright says only that its default thirty seconds passed at a line
+    inside the helper; what tells a starved runner from a page that stopped
+    drawing is the frames, so the helper answers with those.
+    """
+
+    class Stalls:
+        """A page whose picture never arrives, with a loop that keeps going."""
+
+        def __init__(self) -> None:
+            self.drawn = 0
+            self.asked: dict[str, Any] = {}
+            self.viewport_size = {"width": 412, "height": 915}
+
+        def evaluate(self, *_: Any, **__: Any) -> int:
+            self.drawn += 2
+            return self.drawn
+
+        def screenshot(self, **options: Any) -> bytes:
+            self.asked = options
+            raise PageTimeout(f"Page.screenshot: Timeout {SHOT_MS}ms exceeded")
+
+    stalls = Stalls()
+    game = GamePage(page=cast(Page, stalls), url="")
+    with pytest.raises(AssertionError) as expired:
+        game.screenshot("a_picture_that_never_arrives", clip_height=915)
+    said = str(expired.value)
+    assert "a_picture_that_never_arrives" in said, said
+    assert "frames while waiting" in said, said
+    assert "412 by 915 CSS pixels" in said, said
+    assert stalls.asked["timeout"] == SHOT_MS, stalls.asked
+
+
+def test_a_picture_from_a_phone_is_one_image_pixel_per_css_pixel(
+    game_android: GamePage,
+) -> None:
+    """The cheaper half, in the currency the capture is paid in.
+
+    The Pixel 7 profile draws 2.625 device pixels to the CSS pixel, so a full
+    height picture was 2.6 megapixels of a scene no test measures. Nothing
+    reads these pictures but a person looking at them, and the two that are
+    read as pixels are taken at a desktop profile, where this changes nothing.
+    """
+    from PIL import Image
+
+    game_android.goto()
+    shot = game_android.screenshot("harness_phone_picture", clip_height=300)
+    with Image.open(shot) as picture:
+        assert picture.size == (412, 300), picture.size

@@ -55,9 +55,8 @@ def _close_up(page: GamePage, name: str) -> None:
     It goes through the page helper, which writes into tests/out: a browser
     test that renders into `docs/media` leaves a tracked file changed behind a
     green run, and two branches that ran the battery a merge conflict over the
-    same picture. `docs/media/pets-game/*` is nobody's output now, and
-    `docs/media/README.md` records it as made by hand: whether it should have
-    a renderer of its own is the media owner's call, not a test's.
+    same picture. A tracked picture is made by whoever owns it, never as a
+    side effect of running the battery.
     """
     at = _pet(page)["screen"]
     size = 320
