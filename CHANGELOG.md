@@ -64,6 +64,8 @@ Nothing here between releases: an entry lives in its own file under
 
 - A browser shard in CI claims its test files by name or by pattern (`tests/test_game_qol*.py`), and one shard is the default: a browser test file no pattern claims runs there. A new browser test is run from the moment it exists, without an edit to `.github/workflows/ci.yml`, which is what made two branches that each added one collide. `tools/ci_shards.py` expands the matrix the same way for the shard jobs and for the guard, and the guard still refuses a file in no shard or in two, now also a pattern that claims nothing, and prints the whole split when it fails.
 
+- Every picture under `docs/media` is rendered from the product again by `just media` and `just tui-media`, and seven of them are new: the archipelago, the Ask panel, the Stats panel, the Backpack, the Settings rows, the More menu on a phone and a message in a bottle on its shore. A shot whose subject is laid out against the window is taken in a window of that size, so the social card carries the whole title card and the More menu all seven of its rows; the gameplay GIF walks to the 18:00 signpost through the controls a player uses, in a window where the zoom control is not drawn over the minimap; and the `just start` Welcome screen and campaign map come from the app instead of being kept by hand.
+
 ### Removed
 
 - The published site no longer serves the learner's untouched `workspace/game/index.html` at `/your-game.html`.
@@ -188,7 +190,7 @@ Nothing here between releases: an entry lives in its own file under
 
 - `vibe status` draws the same four marks as the campaign map in `vibe start` (`x` checked, `i` claimed but not verified, `>` next, `.` to do) and prints the legend whenever the grid is drawn, so a forced claim no longer shows an unexplained `i`.
 
-- `vibe check` refuses two targets instead of running the first and exiting 0, and an empty `--mentor`, `--artifact` or `--topic` is refused the way an unknown id is rather than quietly checking campus stop 1.
+- `vibe check` refuses two named targets (`--mentor`, `--artifact`, `--topic`) instead of running the first and exiting 0, and an empty one of them is refused the way an unknown id is rather than quietly checking campus stop 1.
 
 - `vibe check --fork all` claims the forking stop when the four challenges pass, as the source always promised; one challenge says what it proved and claims nothing, instead of telling everyone their fork builds.
 

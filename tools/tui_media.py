@@ -5,8 +5,9 @@ Chromium turns that SVG into a PNG, and Pillow stacks a run of frames into the
 GIF. Everything comes from the real app, so the pictures cannot drift from the
 code.
 
-    uv run python tools/tui_media.py              the launch screen and the GIF
-    uv run python tools/tui_media.py --quick      the PNG only
+    uv run python tools/tui_media.py              the screens and the GIF
+    uv run python tools/tui_media.py --quick      the stills only
+    uv run python tools/tui_media.py --screens    the Welcome screen and the map
     uv run python tools/tui_media.py --pets       the gallery of pixel species
 """
 
@@ -17,10 +18,15 @@ import io
 import sys
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PIL import Image
 from playwright.sync_api import sync_playwright
 from rich.text import Text
+
+if TYPE_CHECKING:  # the app and its state are imported where they are used, so
+    from vibemap.state import State  # that a --pets run pays for neither
+    from vibemap.tui import VibeApp
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -29,6 +35,10 @@ OUT = ROOT / "docs" / "media"
 SIZE = (120, 50)
 NAME = "<your_name>"
 SPECIES = "crab"
+# The campaign map's camp: four stops claimed on the campus, three of them
+# confirmed by a check, so the grid carries every mark it knows.
+PLAYED_DONE = (1, 2, 3, 4)
+PLAYED_VERIFIED = (1, 2, 3)
 # One full stroll of the pet, at the eight frames a second the widget runs.
 FRAMES = 40
 # The fraction of the screen the GIF keeps: the status line and the pet.
@@ -41,21 +51,84 @@ PET_GIF_WIDTH = 440
 SHEET_WIDTH = 84
 
 
+def _camp(home: Path, state: State | None = None) -> VibeApp:
+    """A camp of its own under a temporary folder, and the app that opens it."""
+    from vibemap.config import Config
+    from vibemap.tui import VibeApp
+
+    config_path = home / "config" / "camp.toml"
+    config_path.parent.mkdir(parents=True)
+    # The picture is about the sprites, so pin a species that has them.
+    cfg = Config()
+    cfg.pet.species = SPECIES
+    cfg.pet.style = "pixel"
+    cfg.save(config_path)
+    state_path = home / "state.json"
+    if state is not None:
+        state.save(state_path)
+    return VibeApp(config_path=config_path, state_path=state_path)
+
+
+def _part_way() -> State:
+    """A camp part way through the first evening.
+
+    The campaign map paints a mark per stop, so the picture is only worth
+    looking at when the state has one of each: checked, claimed, next, to do.
+    """
+    from vibemap.state import CheckRecord, State
+
+    state = State(name=NAME)
+    for stop in PLAYED_DONE:
+        state.mark_done("campus", stop, xp=100)
+    for stop in PLAYED_VERIFIED:
+        state.checks[f"campus:{stop}"] = CheckRecord(ok=True)
+    return state
+
+
+async def _screen_svgs() -> dict[str, str]:
+    """The Welcome screen and the campaign map, as `just start` draws them.
+
+    Two apps, because the two screens want different camps: nobody has said
+    their name yet on the first, and the map is worth a picture only once
+    there is something on it.
+    """
+    from vibemap.tui import Launch, Map, Welcome
+
+    out: dict[str, str] = {}
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _camp(Path(tmp))
+        async with app.run_test(size=SIZE) as pilot:
+            await pilot.pause()
+            assert isinstance(app.screen, Welcome), app.screen
+            out["tui-welcome.png"] = app.export_screenshot()
+            await pilot.click("#quit")
+    with tempfile.TemporaryDirectory() as tmp:
+        app = _camp(Path(tmp), _part_way())
+        async with app.run_test(size=SIZE) as pilot:
+            await pilot.pause()
+            app.screen.query_one("#name").value = NAME
+            await pilot.click("#next")
+            await pilot.pause()
+            await pilot.click("#next")
+            await pilot.pause()
+            assert isinstance(app.screen, Launch), app.screen
+            # The map is reached the way a learner reaches it, by its button.
+            await pilot.click("#act-map")
+            await pilot.pause()
+            assert isinstance(app.screen, Map), app.screen
+            out["tui-map.png"] = app.export_screenshot()
+            await pilot.click("#back")
+            await pilot.pause()
+            await pilot.click("#act-quit")
+    return out
+
+
 async def _svgs(count: int, gap: float) -> list[str]:
     """The launch screen, exported once per pet tick."""
-    from vibemap.config import Config
-    from vibemap.tui import Launch, VibeApp
+    from vibemap.tui import Launch
 
     with tempfile.TemporaryDirectory() as tmp:
-        home = Path(tmp)
-        config_path = home / "config" / "camp.toml"
-        config_path.parent.mkdir(parents=True)
-        # The picture is about the sprites, so pin a species that has them.
-        cfg = Config()
-        cfg.pet.species = SPECIES
-        cfg.pet.style = "pixel"
-        cfg.save(config_path)
-        app = VibeApp(config_path=config_path, state_path=home / "state.json")
+        app = _camp(Path(tmp))
         shots: list[str] = []
         async with app.run_test(size=SIZE) as pilot:
             await pilot.pause()
@@ -220,12 +293,30 @@ def pets() -> int:
     return 0
 
 
+def screens() -> int:
+    """The two `just start` screens the README shows, from the app itself."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    svgs = asyncio.run(_screen_svgs())
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1400, "height": 900})
+        for name, svg in svgs.items():
+            shot = OUT / name
+            _png(page, svg, shot)
+            print(f"{shot.relative_to(ROOT)}  {shot.stat().st_size // 1024} KB")
+        browser.close()
+    return 0
+
+
 def main() -> int:
     if "--pets" in sys.argv:
         return pets()
+    if "--screens" in sys.argv:
+        return screens()
     quick = "--quick" in sys.argv
     frames = 1 if quick else FRAMES
     OUT.mkdir(parents=True, exist_ok=True)
+    screens()
     svgs = asyncio.run(_svgs(frames, 0.125))
     with tempfile.TemporaryDirectory() as tmp, sync_playwright() as p:
         browser = p.chromium.launch()

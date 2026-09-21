@@ -2,7 +2,9 @@
 
 Everything comes from the built game through headless Chromium with software
 WebGL, so the pictures always match the code. Output lands in docs/media/.
-Nothing else writes there: a test that wants a picture writes to tests/out/.
+One test writes there too: tests/test_game_pet.py rewrites the six
+docs/media/pets-game crops while issue 148 is open, and this tool is what puts
+them back.
 
     uv run python tools/media.py            all screenshots and the GIF
     uv run python tools/media.py --quick    screenshots only
@@ -52,6 +54,21 @@ PLAYED = {
 }  # fmt: skip
 # The six vendored sprite sets, in the order the Companion select offers them.
 PETS = ("cat", "crab", "dog", "duck", "snail", "turtle")
+# The windows the pictures are taken in. A screen laid out against the window
+# is photographed in a window of exactly that size: the stage is shorter than
+# the window by the talk band, so growing the window to fill a stage-shaped
+# clip pushes the title card and the More sheet out of the frame.
+SOCIAL = (1200, 630)  # the Open Graph size, the one pages.yml publishes
+DESKTOP = (1280, 760)
+PHONE = (393, 852)
+# The signpost the GIF walks to: workstream 1 of the campus, by the plate the
+# island draws over it.
+SIGNPOST = "18:00"
+# The GIF's window. In a shorter one the zoom column, which sits above the
+# stage's bottom edge, is drawn over the minimap, which hangs below the HUD at
+# the top of the window (issue 161), and the picture opens on two controls at
+# once.
+GIF_WINDOW = (800, 640)
 # A panel worth a picture, by the function its HUD button calls, the screen
 # that function opens and what to do once it is open. The picture is the
 # sheet, which is what a player sees.
@@ -81,6 +98,11 @@ STILL = """expr => new Promise(done => {
   };
   tick();
 })"""
+
+
+class Cut(Exception):
+    """A picture that would leave its own subject out of frame, or a control
+    that is not where a tap can reach it. Raised before the file is written."""
 
 
 class _Quiet(http.server.SimpleHTTPRequestHandler):
@@ -224,26 +246,71 @@ def _still(page: Page, expression: str) -> None:
     page.wait_for_function(STILL, arg=expression)
 
 
+def _walked(page: Page, before: list[float]) -> float:
+    """How far the walker has come from a position, on the ground plane."""
+    now = page.evaluate("() => window.__debug().pos")
+    return math.hypot(now[0] - before[0], now[2] - before[2])
+
+
+def _tap_towards(
+    page: Page, to: tuple[float, float], share: float = 0.8
+) -> tuple[float, float]:
+    """Tap the ground part of the way to a point, and never anything else.
+
+    Tap to walk is the real control. The ground is a plane, so a point between
+    two of its points on screen is between them on the island and the walker
+    can never overshoot the target. A point below the stage, or under one of
+    the controls drawn over it, is not the ground: tapping there walks nobody,
+    so a blocked point is aimed shorter until one of them is the island.
+    """
+    me = page.evaluate("() => window.__pet().screen")
+    hit = "nothing"
+    for part in (share, share * 0.7, share * 0.45, share * 0.25):
+        at = (me["x"] + (to[0] - me["x"]) * part, me["y"] + (to[1] - me["y"]) * part)
+        hit = page.evaluate(
+            "([x, y]) => { const el = document.elementFromPoint(x, y);"
+            " return el ? el.id || el.tagName.toLowerCase() : 'nothing' }",
+            [at[0], at[1]],
+        )
+        if hit == "c":
+            page.mouse.click(*at)
+            return at
+    raise Cut(f"every tap towards {to[0]:.0f},{to[1]:.0f} lands on {hit}, not ground")
+
+
+def _signpost(page: Page, label: str) -> tuple[float, float]:
+    """The ground under a signpost's pill, in canvas pixels.
+
+    The plot positions live in the game's own scope; what it publishes is the
+    plate it drew, which hangs over the same signpost and is only there when a
+    player can see it too.
+    """
+    plate = page.evaluate(
+        "t => window.__gfx().plates.list.find(p => p.text === t && p.o > .5) || null",
+        label,
+    )
+    if plate is None:
+        raise Cut(f"no {label} signpost is on screen to walk to")
+    return plate["x"], plate["y"] + plate["h"]
+
+
 def _walk_near(page: Page, stage: dict[str, int], gap: float = 6.0) -> None:
     """Walk to the shore beside the first bottle, in steps, never onto it.
 
-    Tap to walk is the real control. Each tap aims part of the way there on
-    the screen: the ground is a plane, so a point between two of its points on
-    screen is between them on the island, and the walker can never overshoot
-    onto the bottle, which would read it and take it off the shore.
+    Each tap aims part of the way there, because walking over a bottle reads
+    it and takes it off the shore.
     """
     for _ in range(6):
         bottle = page.evaluate("() => window.__bottles().here[0]")
         at = page.evaluate("() => window.__debug().pos")
         if math.hypot(at[0] - bottle["x"], at[2] - bottle["z"]) < gap:
             return
-        me = page.evaluate("() => window.__pet().screen")
-        to = (
-            _px(bottle["screen"][0], stage["width"]),
-            _py(bottle["screen"][1], stage["height"]),
-        )
-        page.mouse.click(
-            me["x"] + (to[0] - me["x"]) * 0.8, me["y"] + (to[1] - me["y"]) * 0.8
+        _tap_towards(
+            page,
+            (
+                _px(bottle["screen"][0], stage["width"]),
+                _py(bottle["screen"][1], stage["height"]),
+            ),
         )
         page.wait_for_function(
             "p => { const q = window.__debug().pos;"
@@ -253,11 +320,58 @@ def _walk_near(page: Page, stage: dict[str, int], gap: float = 6.0) -> None:
         _still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
 
 
+def _outside(clip: dict[str, int], box: dict[str, float] | None) -> tuple[str, ...]:
+    """Which edges of a clip a box crosses. Empty means the subject is whole."""
+    if box is None:
+        return ("missing",)
+    edges = {
+        "left": box["x"] < clip["x"] - 0.5,
+        "top": box["y"] < clip["y"] - 0.5,
+        "right": box["x"] + box["width"] > clip["x"] + clip["width"] + 0.5,
+        "bottom": box["y"] + box["height"] > clip["y"] + clip["height"] + 0.5,
+    }
+    return tuple(name for name, out in edges.items() if out)
+
+
+def _whole(page: Page, clip: dict[str, int], selector: str, name: str) -> None:
+    """Refuse a picture that cuts its own subject.
+
+    The stage and the window are two rectangles of different heights, so a
+    clip measured from one and a subject laid out against the other can
+    disagree without anything failing: the picture is simply wrong.
+    """
+    edges = _outside(clip, page.locator(selector).bounding_box())
+    if edges:
+        raise Cut(f"{name}: {selector} is off the {' and the '.join(edges)} of it")
+
+
+def _window(page: Page, width: int, height: int) -> dict[str, int]:
+    """The whole window as the clip, for a screen laid out against the window.
+
+    The title card, the More sheet and the minimap are positioned against the
+    window rather than against the stage, so the window is the picture.
+    """
+    if page.viewport_size != {"width": width, "height": height}:
+        page.set_viewport_size({"width": width, "height": height})
+        _frames(page, 10)
+    return {"x": 0, "y": 0, "width": width, "height": height}
+
+
+def _stage(page: Page, width: int) -> dict[str, int]:
+    """The stage as this window has it, for a picture of the island itself."""
+    tall = page.evaluate(
+        "() => document.getElementById('stage').getBoundingClientRect().height"
+    )
+    return {"x": 0, "y": 0, "width": width, "height": round(tall)}
+
+
 def _fill_stage(page: Page, width: int, height: int) -> dict[str, int]:
     """Grow the window until the stage itself is the size the picture wants.
 
     The stage leaves room under it for the controls, so a shot of the whole
-    window carries a strip below the island that no player looks at.
+    window carries a strip below the island that no player looks at. Only for
+    a picture whose subject is on the stage: it makes the window taller than
+    the clip, and anything anchored to the window moves down with it.
     """
     for _ in range(4):
         tall = page.evaluate(
@@ -308,30 +422,25 @@ def screenshots(browser, url: str) -> list[Path]:
     out: list[Path] = []
     OUT.mkdir(parents=True, exist_ok=True)
 
-    # Hero: the title screen at the social-card size.
-    ctx = browser.new_context(
-        viewport={"width": 1200, "height": 630}, device_scale_factor=2
-    )
-    page = ctx.new_page()
-    _load(page, url, None)
-    # The island orbits behind the title; give it a turn before the shot.
-    page.wait_for_timeout(2200)
-    page.screenshot(path=str(OUT / "hero.png"), clip=_fill_stage(page, 1200, 630))
-    out.append(OUT / "hero.png")
-    ctx.close()
-
-    # The title screen on a first visit, at the size the README shows it.
-    ctx = browser.new_context(
-        viewport={"width": 1280, "height": 760}, device_scale_factor=1
-    )
-    page = ctx.new_page()
-    _load(page, url, None)
-    page.wait_for_timeout(2200)
-    page.screenshot(
-        path=str(OUT / "onboarding-start.png"), clip=_fill_stage(page, 1280, 760)
-    )
-    out.append(OUT / "onboarding-start.png")
-    ctx.close()
+    # The title screen, at the social-card size and at the size the README
+    # shows it. The card is fixed to the window and is as tall as the window
+    # lets it be, so the window is the picture in both.
+    for name, (wide, tall), scale in (
+        ("hero.png", SOCIAL, 2),
+        ("onboarding-start.png", DESKTOP, 1),
+    ):
+        ctx = browser.new_context(
+            viewport={"width": wide, "height": tall}, device_scale_factor=scale
+        )
+        page = ctx.new_page()
+        _load(page, url, None)
+        # The island orbits behind the title; give it a turn before the shot.
+        page.wait_for_timeout(2200)
+        clip = _window(page, wide, tall)
+        _whole(page, clip, "#title .box", name)
+        page.screenshot(path=str(OUT / name), clip=clip)
+        out.append(OUT / name)
+        ctx.close()
 
     # Desktop: every world with a played state, then roadmap, vault and tree.
     ctx = browser.new_context(
@@ -389,7 +498,8 @@ def screenshots(browser, url: str) -> list[Path]:
         out.append(_sheet(page, name, opener, screen, after))
     stage = _fill_stage(page, 1280, 900)
     # The six companions as the game draws them, picked through the real
-    # control in Settings. A test used to write these; it writes tests/out now.
+    # control in Settings. tests/test_game_pet.py writes these six files as
+    # well while issue 148 is open, so this loop is what puts them back.
     pets = OUT / "pets-game"
     pets.mkdir(parents=True, exist_ok=True)
     _zoom(page, "walker")
@@ -428,9 +538,11 @@ def screenshots(browser, url: str) -> list[Path]:
     out.append(OUT / "bottle.png")
     ctx.close()
 
-    # Phone: the HUD as a thumb finds it, and the More menu open over it.
+    # Phone: the HUD as a thumb finds it, and the More menu open over it. The
+    # HUD lives on the stage; the More sheet lies on the window's bottom edge,
+    # so the two pictures are cut to different rectangles of the same window.
     ctx = browser.new_context(
-        viewport={"width": 393, "height": 852},
+        viewport={"width": PHONE[0], "height": PHONE[1]},
         device_scale_factor=2,
         is_mobile=True,
         has_touch=True,
@@ -440,54 +552,97 @@ def screenshots(browser, url: str) -> list[Path]:
     _start(page)
     _settled(page, "campus")
     _calm(page)
-    phone = _fill_stage(page, 393, 748)
-    page.screenshot(
-        path=str(OUT / "phone.png"), clip={"x": 0, "y": 0, "width": 393, "height": 640}
-    )
+    page.screenshot(path=str(OUT / "phone.png"), clip=_stage(page, PHONE[0]))
     out.append(OUT / "phone.png")
     page.tap("#hud-more-btn")
     page.wait_for_selector("#hud-more.open", state="attached")
     _frames(page, 20)
-    page.screenshot(path=str(OUT / "phone-more.png"), clip=phone)
+    clip = _window(page, *PHONE)
+    _whole(page, clip, "#hud-menu", "phone-more.png")
+    page.screenshot(path=str(OUT / "phone-more.png"), clip=clip)
     out.append(OUT / "phone-more.png")
     ctx.close()
     return out
 
 
+def _workstream(page: Page, n: int):
+    """Workstream n's button in the Roadmap panel, past Pre-flight."""
+    buttons = page.locator("#plotlist button")
+    first = buttons.nth(0).text_content() or ""
+    return buttons.nth((1 if "Pre-flight" in first else 0) + n - 1)
+
+
 def gameplay_gif(browser, url: str, *, frames: int = 36) -> Path:
-    """Walk to the 18:00 signpost, open the workstream, claim it: one GIF."""
+    """Walk to the 18:00 signpost, open the workstream, claim it: one GIF.
+
+    Every step is the control a player uses, and the walk is checked against
+    the walker's own position: a GIF of a caption that did not happen is
+    worse than no GIF.
+    """
+    wide, tall = GIF_WINDOW
     ctx = browser.new_context(
-        viewport={"width": 640, "height": 480}, device_scale_factor=1
+        viewport={"width": wide, "height": tall}, device_scale_factor=1
     )
     page = ctx.new_page()
     _load(page, url, None)
     _start(page)
+    _settled(page, "campus")
+    _calm(page)
+    clip = _window(page, wide, tall)
     shots: list[Image.Image] = []
 
     def snap(n: int = 1) -> None:
+        # The pause is the capture rate, not a wait for the page: the GIF
+        # plays a frame every 120ms and is recorded at the same cadence.
         for _ in range(n):
-            png = page.screenshot(clip={"x": 0, "y": 0, "width": 640, "height": 480})
-            shots.append(Image.open(_bytes(png)).convert("RGB"))
+            shots.append(Image.open(_bytes(page.screenshot(clip=clip))).convert("RGB"))
             page.wait_for_timeout(120)
 
+    def arrived() -> bool:
+        """The game's own word for standing at the first signpost."""
+        return page.evaluate("() => window.__debug().near") == 1
+
     snap(3)
-    page.mouse.click(300, 380)  # tap the ground near the 18:00 plot
-    for _ in range(frames // 3):
-        snap()
+    before = page.evaluate("() => window.__debug().pos")
+    for tap in range(3):
+        if arrived():
+            break
+        at = page.evaluate("() => window.__debug().pos")
+        _tap_towards(page, _signpost(page, SIGNPOST), share=0.9)
+        page.wait_for_function(
+            "p => { const q = window.__debug().pos;"
+            " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 1 }",
+            arg=at,
+        )
+        for _ in range(frames // 3 if tap == 0 else frames // 6):
+            snap()
+        _still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
+    walked = _walked(page, before)
+    if not arrived() or walked < 4:
+        raise Cut(
+            f"the walker is {walked:.1f} from where she stood and not at the "
+            f"{SIGNPOST} signpost: the caption says she walks there"
+        )
     page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_timeout(500)
+    page.wait_for_selector("#plotlist button", state="attached")
+    _frames(page, 10)
     snap(4)
-    page.evaluate("openCh(1)")
-    page.wait_for_timeout(500)
-    page.evaluate("window.scrollTo(0, 0)")
+    _workstream(page, 1).click()
+    page.wait_for_selector("#sheet .screen.on", state="attached")
+    _frames(page, 10)
     snap(4)
-    page.evaluate("claim(1)")
-    page.wait_for_timeout(300)
+    page.click("#sheet .screen.on button:has-text('Mark as done')")
+    page.wait_for_function(
+        "() => (window.__S().doneW[window.__S().world] || []).includes(1)"
+    )
     for _ in range(frames // 3):
         snap()
     ctx.close()
     target = OUT / "gameplay.gif"
-    small = [im.resize((480, 360), Image.LANCZOS).quantize(colors=128) for im in shots]
+    small = [
+        im.resize((480, round(480 * tall / wide)), Image.LANCZOS).quantize(colors=128)
+        for im in shots
+    ]
     small[0].save(
         target,
         save_all=True,
