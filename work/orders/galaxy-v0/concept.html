@@ -237,9 +237,10 @@ a{color:var(--blueb)}
     var disc = new T.Mesh(new T.CircleGeometry(R * 0.96, 28), mat(ground)); disc.rotation.x = -Math.PI / 2; disc.position.y = 0.002; g.add(disc);
     var i;
     if (look === "lab") {
-      block(g, 0.24, 0.035, 0.06, 0xB8B2A4, 0, 0.03); block(g, 0.1, 0.05, 0.05, 0x8F897B, -0.05, -0.04);
-      var horn = new T.Mesh(new T.ConeGeometry(0.035, 0.09, 4), mat(C.orange)); horn.rotation.z = -Math.PI / 2.4; horn.position.set(0.07, 0.06, -0.06); g.add(horn);
-      block(g, 0.012, 0.05, 0.012, 0x666666, 0.05, -0.06);
+      // Murray Hill is long brick laboratory wings on a lawn. The horn antenna people
+      // picture stands at Holmdel, another town, so it does not belong in this dome.
+      block(g, 0.26, 0.035, 0.05, 0xB8B2A4, 0, 0.05); block(g, 0.26, 0.035, 0.05, 0xA9A294, 0, -0.03); block(g, 0.05, 0.045, 0.13, 0x8F897B, -0.08, 0.01);
+      block(g, 0.3, 0.003, 0.03, C.green, 0, 0.11);
     } else if (look === "campus") {
       block(g, 0.12, 0.03, 0.05, 0xD9D4C6, -0.03, 0.02); block(g, 0.05, 0.03, 0.12, 0xC8C2B2, 0.06, 0); block(g, 0.08, 0.025, 0.04, 0xBDB7A8, -0.04, -0.07);
       for (i = 0; i < 5; i++) { var tr = new T.Mesh(new T.ConeGeometry(0.014, 0.04, 5), mat(C.green)); tr.position.set(-0.12 + i * 0.05, 0.02, 0.1 - (i % 2) * 0.03); g.add(tr); }
