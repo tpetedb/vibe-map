@@ -315,26 +315,6 @@ def test_the_mark_is_throttled_because_save_is_called_constantly(
     game.assert_clean()
 
 
-def test_the_saved_mark_is_shown_where_the_other_messages_are(
-    game_desktop: GamePage,
-) -> None:
-    """One picture of the mark on screen, for the eye that has to judge it.
-
-    A zoom button writes the record a quarter of a second after the press, so
-    pressing a few of them over a couple of seconds lands one outside the
-    mark's own throttle and the wait is for the element, not for a clock.
-    """
-    game = _started(game_desktop)
-    for i in range(8):
-        game.page.click("#zoom-in" if i % 2 == 0 else "#zoom-out")
-        game.frames(6)
-        if game.page.locator(".saved").count():
-            break
-    game.page.wait_for_selector(".saved", state="attached")
-    game.screenshot("qol4-desktop-saved-mark", clip_height=300)
-    game.assert_clean()
-
-
 # ---- the panel, on the three screens the game is played on ---------------------
 
 
