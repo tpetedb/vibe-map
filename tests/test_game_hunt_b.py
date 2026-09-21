@@ -2,15 +2,22 @@
 
 One test per finding, each measuring a fact the page produced: a bounding box
 against another bounding box, a rendered line against the line above it, a
-name in the ARIA tree. Nothing here waits on a clock and nothing reads a toast
-off the screen, because a toast is removed on a five second timer and a
-rendered pixel is not a promise.
+name in the ARIA tree.
+
+Nothing here waits on a clock, and nothing measures a toast that the page put
+on screen: a toast removes itself five seconds after it was raised, so a test
+that walks to a signpost and then looks for the element is racing that timer
+on a loaded runner. The two halves are measured where neither can expire. The
+real path is proved by what the page keeps: the count in window.__toasts()
+and the node recorded by a mutation observer as it was appended, both of
+which outlive the message. The geometry is measured on a stack this file
+fills with the markup toast() writes, which the real path test pins.
 
 Every surface finding is measured on the three the course is played on: the
 1440x900 laptop it is written for, Chromium with Pixel 7 metrics, and WebKit
 with iPhone metrics. Where the finding is about the chrome around a panel the
-measurement is repeated with the largest text size and the left-handed layout,
-because both of those move what a player reads.
+measurement is repeated with the largest text size and the left-handed
+layout, because both of those move what a player reads.
 """
 
 from __future__ import annotations
@@ -45,11 +52,10 @@ CONDITIONS = [
     pytest.param({"text": "normal", "hand": "right"}, id="default"),
     pytest.param({"text": "larger", "hand": "left"}, id="larger-left"),
 ]
-# A toast lives five seconds. Headless Chromium draws this island in software,
-# where a frame with soft shadows costs more than that to photograph, so the
-# toast tests are played the way a player on a weak machine plays: shadows
-# off. It is a setting in the panel and it changes nothing about where a box
-# lands, only how long the renderer takes to hand one over.
+# Headless Chromium draws this island in software, where a frame with soft
+# shadows costs more than the rest of the frame put together. The toast tests
+# are played the way a player on a weak machine plays: shadows off. It is a
+# setting in the panel and it changes nothing about where a box lands.
 FAST = {"shadows": "off"}
 
 
@@ -104,6 +110,12 @@ def _shot_element(game: GamePage, selector: str, name: str) -> None:
     """
     OUT.mkdir(parents=True, exist_ok=True)
     game.page.locator(selector).screenshot(path=str(OUT / f"{name}.png"))
+
+
+def _shot_view(game: GamePage, name: str) -> None:
+    """What the window shows, for a message that is fixed to the window."""
+    OUT.mkdir(parents=True, exist_ok=True)
+    game.page.screenshot(path=str(OUT / f"{name}.png"))
 
 
 def _tag(surface: str, settings: dict[str, str]) -> str:
@@ -169,11 +181,51 @@ def test_a_scrolled_panel_never_shows_text_inside_the_hud_band(
         game.assert_clean()
 
 
-# ---- B2: the toast covers the HUD ---------------------------------------------
+# ---- B2 and B3: the toast stack -----------------------------------------------
 
-# Every control the HUD offers, the minimap that hangs under it and the
-# panel's own Close button, against the box the toast stack occupies.
-CONTROLS = "#hud button, #hud .kpi, #hud-name, #sheet.on .x, #minimap, #minimap-btn"
+# Every message the game raises, recorded as it is appended. A toast is gone
+# five seconds later, so this is what a test can read afterwards and be sure
+# of: where the node was put, what it was made of, and how many there were.
+# The document is what is watched rather than its root element, because this
+# also runs before the page has one, to catch a message raised during boot.
+WATCH = """() => {
+  window.__seen = [];
+  new MutationObserver(list => {
+    for (const change of list) for (const node of change.addedNodes)
+      if (node.nodeType === 1 && node.classList &&
+          node.classList.contains('tst'))
+        window.__seen.push({
+          parent: node.parentElement ? node.parentElement.id : null,
+          hud: !!node.closest('#hud'),
+          cls: node.className,
+          kids: [...node.children].map(k => k.tagName),
+          text: (node.textContent || '').trim().slice(0, 40)});
+  }).observe(document, {subtree: true, childList: true});
+}"""
+
+# The markup toast() writes: the icon, the title, the line under it. The real
+# path test asserts a raised message has exactly this shape, so what is
+# measured here is the message a player gets and not a box of the test's own.
+FILL = """(n) => {
+  const stack = document.getElementById('toast');
+  for (let i = 0; i < n; i++) {
+    const node = document.createElement('div');
+    node.className = 'tst';
+    node.innerHTML =
+      '<b><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"></svg>' +
+      'Achievement: First light</b><span>You delivered your first stop. ' +
+      'Unlocked: the head torch, in the Backpack.</span>';
+    stack.appendChild(node);
+  }
+  return document.querySelectorAll('#toast .tst').length;
+}"""
+
+# Every control the HUD offers, the minimap that hangs under it, the zoom
+# column and the panel's own Close button, against the box the stack occupies.
+CONTROLS = (
+    "#hud button, #hud .kpi, #hud-name, #sheet.on .x, "
+    "#minimap, #minimap-btn, #zoom button"
+)
 TOAST_OVER = (
     """() => {
   const rect = e => { const b = e.getBoundingClientRect();
@@ -187,6 +239,7 @@ TOAST_OVER = (
     + """')]
     .filter(e => e.getBoundingClientRect().height > 0.5)
     .filter(e => getComputedStyle(e).visibility !== 'hidden')
+    .filter(e => getComputedStyle(e).display !== 'none')
     .filter(e => over(box, rect(e)))
     .map(e => (e.textContent || '').trim().slice(0, 24) || e.id);
   return {box: {t: +box.t.toFixed(1), b: +box.b.toFixed(1),
@@ -196,36 +249,82 @@ TOAST_OVER = (
 }"""
 )
 
-# The stack is up, its newest message has finished springing into place and
-# the minimap has taken its own next place under the HUD. All three are
-# things the page does for itself, so this waits for them instead of a clock;
-# a layout that never reaches them runs out of the budget and fails.
-SETTLED = """document.querySelectorAll('#toast .tst').length >= 1 &&
-  (() => {
-    const last = document.querySelector('#toast .tst:last-child');
-    const t = getComputedStyle(last).transform;
-    if (!(t === 'none' || Math.abs(new DOMMatrix(t).m42) < 0.5)) return false;
-    const hud = document.getElementById('hud').getBoundingClientRect();
-    return [...document.querySelectorAll('#minimap, #minimap-btn')]
-      .filter(e => getComputedStyle(e).display !== 'none')
-      .every(e => e.getBoundingClientRect().top >= hud.bottom - 0.5);
-  })()"""
+# What hangs under the HUD besides the stack, and the column of buttons in the
+# bottom corner it must not be pushed onto. The minimap puts itself under the
+# bar's own box (32-minimap.js), so this is the pair that says whether a
+# message moved anything.
+NEIGHBOURS = """() => {
+  const rect = e => { if (!e) return null;
+    if (getComputedStyle(e).display === 'none') return null;
+    const b = e.getBoundingClientRect();
+    return {t: +b.top.toFixed(1), b: +b.bottom.toFixed(1),
+            l: +b.left.toFixed(1), r: +b.right.toFixed(1)}; };
+  const over = (a, b) => a && b && Math.min(a.b, b.b) - Math.max(a.t, b.t) > 0.5 &&
+                         Math.min(a.r, b.r) - Math.max(a.l, b.l) > 0.5;
+  const map = rect(document.getElementById('minimap'));
+  const btn = rect(document.getElementById('minimap-btn'));
+  const zoom = rect(document.getElementById('zoom'));
+  return {map, btn, zoom, hudBottom: +document.getElementById('hud')
+            .getBoundingClientRect().bottom.toFixed(1),
+          onZoom: [map, btn].filter(e => over(e, zoom)).length};
+}"""
+
+# Whatever the map is showing itself as on this surface: the canvas on a
+# laptop, the button it hides behind on a phone. It lays itself out from the
+# frame loop, so its top is the number that says it has had its say.
+MAP_TOP = """(() => {
+  const e = [...document.querySelectorAll('#minimap, #minimap-btn')]
+    .find(x => getComputedStyle(x).display !== 'none');
+  return e ? e.getBoundingClientRect().top
+           : document.getElementById('hud').getBoundingClientRect().bottom;
+})()"""
 
 
-def _claim_the_first_stop(game: GamePage) -> None:
-    """Deliver stop one through its own button, which unlocks an achievement.
+def _settled(game: GamePage) -> None:
+    """The stack has its box and the map has taken its place under the bar.
 
-    The achievement is a toast, so this is the shortest real path to one.
+    Both are things the page settles by itself, so this waits for them rather
+    than for a number of frames or a length of time.
     """
-    game.open_workstream(1)
-    game.page.click("#sheet .screen.on button:has-text('Mark as done')")
-    game.page.wait_for_selector("#toast .tst", state="attached", timeout=WAIT_MS)
-    game.until(SETTLED)
+    game.still("document.getElementById('toast').getBoundingClientRect().height")
+    game.still(MAP_TOP)
+
+
+def _fill(game: GamePage, n: int) -> int:
+    """Put n messages of the shape toast() writes into the HUD's stack."""
+    count = int(game.page.evaluate(FILL, n))
+    _settled(game)
+    return count
+
+
+def test_a_claimed_stop_puts_its_message_in_the_huds_stack(
+    browsers: dict[str, Browser], server: str
+) -> None:
+    """The real path, measured where nothing expires.
+
+    Delivering stop one unlocks an achievement, which is a toast. What is
+    asked is the part the geometry tests rest on: that the game appends its
+    message to the stack the HUD holds, and that the message is a card with a
+    title and a line.
+    """
+    with _surface(browsers, server, "desktop", settings=FAST) as game:
+        game.page.evaluate(WATCH)
+        game.open_workstream(1)
+        game.page.click("#sheet .screen.on button:has-text('Mark as done')")
+        game.until("window.__toasts() >= 1")
+        seen = game.page.evaluate("window.__seen")
+        assert len(seen) >= 1, seen
+        for note in seen:
+            assert note["parent"] == "toast", note
+            assert note["hud"] is True, note
+            assert note["cls"] == "tst", note
+            assert note["kids"] == ["B", "SPAN"], note
+        game.assert_clean()
 
 
 @pytest.mark.parametrize("settings", CONDITIONS)
 @pytest.mark.parametrize("surface", SURFACES)
-def test_a_toast_covers_no_hud_control(
+def test_a_message_covers_no_control(
     browsers: dict[str, Browser],
     server: str,
     surface: str,
@@ -233,9 +332,9 @@ def test_a_toast_covers_no_hud_control(
 ) -> None:
     """B2: the message hangs under the HUD instead of on top of its buttons."""
     with _surface(browsers, server, surface, settings={**settings, **FAST}) as game:
-        _claim_the_first_stop(game)
+        _fill(game, 1)
         info = game.page.evaluate(TOAST_OVER)
-        assert info["notes"] >= 1, info
+        assert info["notes"] == 1, info
         assert info["covered"] == [], info
         assert info["box"]["r"] <= info["view"]["w"] + 1, info
         assert info["box"]["b"] <= info["view"]["h"] + 1, info
@@ -243,29 +342,74 @@ def test_a_toast_covers_no_hud_control(
         game.assert_clean()
 
 
-MAP_SHOWN = """() => [...document.querySelectorAll('#minimap, #minimap-btn')]
-     .filter(e => getComputedStyle(e).display !== 'none').length"""
-
-
-@pytest.mark.parametrize("surface", ("desktop", "android"))
-def test_a_toast_on_the_island_leaves_the_map_alone(
+@pytest.mark.parametrize("surface", SURFACES)
+def test_a_full_stack_is_bounded_and_moves_nothing(
     browsers: dict[str, Browser], server: str, surface: str
 ) -> None:
-    """B3 named the minimap, which puts itself under whatever the HUD holds.
+    """B3: a batch of unlocks leaves a stack, and a stack is only itself.
 
-    That is now where the stack hangs, so the two have to agree. A locked
-    signpost says so in a toast with no panel open, which is the one moment
-    the map is on screen to be covered.
+    It is bounded, so it never runs off the top of the window, and it is out
+    of the HUD's own box, so the minimap that hangs under that box stays
+    where it was instead of stepping down the window onto the zoom column.
     """
     with _surface(browsers, server, surface, settings=FAST) as game:
-        game.walk_to(-14.4, 12.8)
-        game.page.wait_for_selector("#toast .tst", state="attached", timeout=WAIT_MS)
-        game.until(SETTLED)
+        _settled(game)
+        before = game.page.evaluate(NEIGHBOURS)
+        assert before["map"] or before["btn"], ("no map on screen", before)
+        assert before["onZoom"] == 0, before
+        assert _fill(game, 9) == 9
+        after = game.page.evaluate(NEIGHBOURS)
         info = game.page.evaluate(TOAST_OVER)
-        assert game.page.evaluate(MAP_SHOWN) >= 1, "no map on screen to measure"
-        assert info["notes"] >= 1, info
+        for part in ("map", "btn", "hudBottom"):
+            assert before[part] == after[part], (part, before, after)
+        assert after["onZoom"] == 0, after
         assert info["covered"] == [], info
-        _shot(game, f"hunt_b3_{surface}_map")
+        assert info["box"]["t"] >= 0, info
+        assert info["box"]["b"] <= info["view"]["h"] + 1, info
+        assert info["box"]["b"] - info["box"]["t"] <= info["view"]["h"] * 0.4 + 1, info
+        _shot(game, f"hunt_b3_{surface}_stack")
+        game.assert_clean()
+
+
+def _full_code() -> str:
+    """A progress code with every island, mentor and artifact finished."""
+    import json
+    from pathlib import Path
+
+    data = json.loads(
+        (Path(__file__).resolve().parents[1] / "vibemap/data/campaign.json").read_text()
+    )
+    worlds = {
+        world: list(range(1, len(island["ws"]) + 1))
+        for world, island in data["evenings"].items()
+    }
+    return encode_progress(
+        name="Tom",
+        done_w=worlds,
+        mentors=[m["id"] for m in data["mentors"]],
+        artifacts_built=[a["id"] for a in data["artifacts"]],
+    )
+
+
+def test_a_batch_of_unlocks_raises_every_message_into_the_stack(
+    browsers: dict[str, Browser], server: str
+) -> None:
+    """B3, the path: importing a finished campaign unlocks many at once.
+
+    Nine messages in one pass is the case the finding was about. Where they
+    went is read off the record the observer kept, because by the time the
+    import has placed thirty-two buildings the first of them may be gone.
+    """
+    with _surface(
+        browsers, server, "desktop", settings={**FAST, "motion": "off"}
+    ) as game:
+        game.page.evaluate(WATCH)
+        game.import_code(_full_code())
+        game.until("window.__toasts() >= 5")
+        seen = game.page.evaluate("window.__seen")
+        assert len(seen) >= 5, seen
+        assert {note["parent"] for note in seen} == {"toast"}, seen
+        assert all(note["hud"] for note in seen), seen
         game.assert_clean()
 
 
@@ -296,6 +440,9 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
     game = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, game.errors)
     try:
+        # The repair happens while the page boots, so the record of it has to
+        # be running before the first script does.
+        page.add_init_script(f"({WATCH})()")
         # Every record the game writes has a list under mentors; a string in
         # its place is the part that cannot be read, and the repair says so.
         game.goto(
@@ -306,7 +453,12 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
                 "settings": FAST,
             }
         )
-        page.wait_for_selector("#toast .tst", state="attached", timeout=WAIT_MS)
+        game.until("window.__toasts() >= 1")
+        seen = page.evaluate("window.__seen")
+        assert len(seen) >= 1, seen
+        assert seen[0]["parent"] == "toast", seen
+        game.page.evaluate(FILL, 1)
+        game.still("document.getElementById('toast').getBoundingClientRect().height")
         info = page.evaluate(TITLE_STACK)
         assert info["visibility"] == "visible", info
         # Stacking has no geometry to measure: what can be asked is that the
@@ -325,7 +477,8 @@ VAULT_STACK = """() => {
   const box = stack.getBoundingClientRect();
   return {position: getComputedStyle(stack).position,
           hudBottom: document.getElementById('hud').getBoundingClientRect().bottom,
-          top: box.top, bottom: box.bottom, right: box.right,
+          top: box.top, bottom: box.bottom, left: box.left, right: box.right,
+          notes: document.querySelectorAll('#toast .tst').length,
           view: {w: innerWidth, h: innerHeight}};
 }"""
 
@@ -342,109 +495,60 @@ def test_the_stack_is_still_on_screen_while_the_vault_is_read(
     with _surface(browsers, server, "desktop", settings=FAST) as game:
         game.open_vault()
         game.still("window.scrollY")
+        game.page.evaluate(FILL, 1)
+        game.still("document.getElementById('toast').getBoundingClientRect().height")
         info = game.page.evaluate(VAULT_STACK)
         assert info["hudBottom"] <= 0, ("the HUD is still on screen", info)
         assert info["position"] == "fixed", info
+        assert info["notes"] == 1, info
         assert 0 <= info["bottom"] <= info["view"]["h"] + 1, info
-        assert info["right"] <= info["view"]["w"] + 1, info
+        assert 0 <= info["left"] and info["right"] <= info["view"]["w"] + 1, info
+        _shot_view(game, "hunt_b3_vault_stack")
         game.assert_clean()
 
 
-# ---- B3: a batch of unlocks stacks off the screen -----------------------------
+# ---- B4: the panel dialog has no name ------------------------------------------
 
-STACK = """() => {
-  const rect = e => { const b = e.getBoundingClientRect();
-    return {t: +b.top.toFixed(1), b: +b.bottom.toFixed(1),
-            l: +b.left.toFixed(1), r: +b.right.toFixed(1), h: +b.height.toFixed(1)}; };
-  const stack = document.getElementById('toast');
-  const notes = [...stack.querySelectorAll('.tst')];
-  // A message that is still springing into place is on its way to the box,
-  // not in it, so the newest one that has arrived is the one asked about.
-  const still = notes.filter(n => { const t = getComputedStyle(n).transform;
-    return t === 'none' || Math.abs(new DOMMatrix(t).m42) < 0.5; });
-  const pills = [...document.querySelectorAll('#hud .pill, #hud .kpi')]
-    .filter(e => e.getBoundingClientRect().height > 0.5)
-    .map(e => e.getBoundingClientRect().bottom);
-  return {box: rect(stack), pillBottom: +Math.max(...pills).toFixed(1),
-          n: notes.length, arrived: still.length,
-          newest: still.length ? rect(still[still.length - 1]) : null,
-          view: {w: innerWidth, h: innerHeight}};
-}"""
-
-
-def _full_code() -> str:
-    """A progress code with every island, mentor and artifact finished."""
-    import json
-    from pathlib import Path
-
-    data = json.loads(
-        (Path(__file__).resolve().parents[1] / "vibemap/data/campaign.json").read_text()
-    )
-    worlds = {
-        world: list(range(1, len(island["ws"]) + 1))
-        for world, island in data["evenings"].items()
-    }
-    return encode_progress(
-        name="Tom",
-        done_w=worlds,
-        mentors=[m["id"] for m in data["mentors"]],
-        artifacts_built=[a["id"] for a in data["artifacts"]],
-    )
-
-
-@pytest.mark.parametrize("surface", ("desktop", "android"))
-def test_a_batch_of_unlocks_leaves_a_bounded_stack(
-    browsers: dict[str, Browser], server: str, surface: str
-) -> None:
-    """B3: importing a finished campaign unlocks many achievements at once.
-
-    The stack is bounded and stays under the HUD, so the newest message is
-    always the one on screen and the island is never behind a column of them.
-    Motion is off as well as the shadows: an import that places thirty-two
-    buildings holds the frame loop for longer than a toast lives, so the
-    springs that carry the messages in would outlast the messages.
-    """
-    with _surface(
-        browsers, server, surface, settings={**FAST, "motion": "off"}
-    ) as game:
-        game.import_code(_full_code())
-        game.until("document.querySelectorAll('#toast .tst').length >= 5")
-        game.until(SETTLED)
-        info = game.page.evaluate(STACK)
-        covered = game.page.evaluate(TOAST_OVER)
-        assert info["n"] >= 5, info
-        assert covered["covered"] == [], covered
-        assert info["box"]["t"] >= info["pillBottom"] - 0.5, info
-        assert info["box"]["b"] <= info["view"]["h"] + 1, info
-        assert info["box"]["h"] <= info["view"]["h"] * 0.45 + 1, info
-        assert info["newest"] is not None, info
-        assert info["newest"]["t"] >= info["box"]["t"] - 0.5, info
-        assert info["newest"]["b"] <= info["box"]["b"] + 0.5, info
-        _shot(game, f"hunt_b3_{surface}_batch")
-        game.assert_clean()
-
-
-# ---- B4: the panel dialog has no name and no aria-modal -----------------------
+# Where the focus goes from the panel's own Close button, which is the first
+# thing in it: backwards out of the panel is the answer this asks about.
+FOCUSED = """() => { const a = document.activeElement;
+  const label = a.getAttribute('aria-label') || a.textContent || '';
+  return {tag: a.tagName, id: a.id, what: label.trim().slice(0, 24),
+          inSheet: !!a.closest('#sheet')}; }"""
 
 
 @pytest.mark.parametrize("screen", ("s-map", "s-1", "s-settings"))
-def test_the_panel_is_a_named_modal_dialog(
+def test_the_panel_is_a_named_dialog_and_claims_no_more_than_that(
     browsers: dict[str, Browser], server: str, screen: str
 ) -> None:
-    """B4: a dialog without a name is announced as "dialog" and nothing else.
+    """B4 asked for a name, and for aria-modal with it.
 
-    The name is read out of the ARIA tree rather than out of the markup, so an
-    attribute a browser ignores cannot pass this.
+    The name is the half the markup can keep: it is read out of the ARIA tree
+    rather than out of the attribute, so a name a browser ignores cannot pass.
+    The other half is a promise this panel does not keep. The HUD floats over
+    an open panel on purpose and its buttons stay in the tab order, so the
+    page behind the dialog is reachable and aria-modal would tell a screen
+    reader to ignore it. Confining the focus belongs to openSheet(); until it
+    does, the attribute stays off, and this holds the two together: the day
+    the focus is confined, this test asks for the attribute.
     """
     with _surface(browsers, server, "desktop") as game:
         game.page.evaluate("id => openSheet(id)", screen)
         game.page.wait_for_selector(f"#{screen}.on", state="attached")
         game.sheet_in_place()
         assert game.page.get_attribute("#sheet", "role") == "dialog"
-        assert game.page.get_attribute("#sheet", "aria-modal") == "true"
         tree = game.page.locator("#sheet").aria_snapshot()
         first = tree.strip().splitlines()[0]
         assert re.match(r'^-\s+dialog\s+"[^"]+"', first), f"the panel is {first!r}"
+        game.page.focus("#sheet .x")
+        game.page.keyboard.press("Shift+Tab")
+        behind = game.page.evaluate(FOCUSED)
+        assert behind["inSheet"] is False, behind
+        modal = game.page.get_attribute("#sheet", "aria-modal")
+        assert modal != "true", (
+            "the panel says it is modal while the keyboard leaves it",
+            behind,
+        )
         game.assert_clean()
 
 
@@ -529,55 +633,127 @@ def test_a_wrapped_heading_keeps_its_leading(
         game.assert_clean()
 
 
-# ---- B7: the demo terminal wraps mid-column and mid-number --------------------
+# ---- B7: the demo terminal folds mid-column and mid-number --------------------
 
+# Where every step of a transcript is drawn. A step is one line of output; a
+# step too wide for the panel folds, and the hanging indent is what tells the
+# two apart on screen: a step starts at the column origin and the rest of a
+# folded step is set in from it. The rects are read per step, so the answer is
+# about the line the player sees rather than the string behind it.
 TERMINAL = """() => {
   const el = document.getElementById('art-term');
+  const box = el.getBoundingClientRect();
   const node = [...el.childNodes].find(n => n.nodeType === 3);
+  const text = node.data;
+  const steps = [];
+  let at = 0;
+  for (const line of text.split('\\n')) {
+    const start = at;
+    at += line.length + 1;
+    if (!line.trim()) continue;
+    const range = document.createRange();
+    range.setStart(node, start);
+    range.setEnd(node, start + line.length);
+    const drawn = [...range.getClientRects()].filter(r => r.height > 1 && r.width > 1);
+    steps.push({text: line.trim().slice(0, 32),
+                lefts: drawn.map(r => +r.left.toFixed(1)),
+                right: +Math.max(...drawn.map(r => r.right)).toFixed(1)});
+  }
+  // The last thing the demo prints is the sentence it is for, so the end of
+  // it is measured on its own: characters, not the line they sit on.
+  const tail = text.replace(/\\s+$/, '');
   const range = document.createRange();
-  range.selectNodeContents(node);
-  // A forced break draws a rect of its own with no width; a line of output
-  // draws one with both. Two rects with width for one line of output is the
-  // fold this is about.
-  const drawn = [...range.getClientRects()]
-    .filter(r => r.height > 1 && r.width > 1).length;
-  const text = el.textContent || '';
-  return {drawn, lines: text.split('\\n').filter(l => l.trim()).length,
-          longest: text.split('\\n').reduce((a, l) => Math.max(a, l.length), 0),
-          scrollable: el.scrollWidth > el.clientWidth + 1,
+  range.setStart(node, Math.max(0, tail.length - 24));
+  range.setEnd(node, tail.length);
+  const ends = [...range.getClientRects()].filter(r => r.height > 1 && r.width > 1)
+    .map(r => ({l: +r.left.toFixed(1), r: +r.right.toFixed(1)}));
+  const inner = document.querySelector('#sheet .inner');
+  return {steps, ends, box: {l: +box.left.toFixed(1), r: +box.right.toFixed(1)},
+          origin: +Math.min(...steps.flatMap(s => s.lefts)).toFixed(1),
+          over: el.scrollWidth - el.clientWidth,
+          column: inner.scrollWidth - inner.clientWidth,
           page: document.documentElement.scrollWidth -
-                document.documentElement.clientWidth,
-          column: document.querySelector('#sheet .inner').scrollWidth -
-                  document.querySelector('#sheet .inner').clientWidth};
+                document.documentElement.clientWidth};
 }"""
 
 
-@pytest.mark.parametrize("profile", PHONES)
-def test_the_demo_terminal_keeps_every_line_whole(
-    browsers: dict[str, Browser], server: str, profile: str
-) -> None:
-    """B7: a transcript is columns, so a phone scrolls it rather than folding it.
+def _run_demo(game: GamePage, artifact: str, demo: int, last: str) -> dict[str, Any]:
+    """Open an artifact, press one of its demo buttons, read the transcript.
 
-    One rendered line per line of output is the fact: a wrapped line draws two
-    rects, which is what broke a number in half.
+    The transcript types itself out a line at a time, so the wait is for the
+    last line of it to be in the element rather than for the typing to look
+    finished.
     """
-    with _surface(browsers, server, profile) as game:
-        game.page.evaluate("openArtifact('data-centre')")
-        game.page.wait_for_selector("#s-artifact.on", state="attached")
-        game.page.click("#s-artifact button[data-demo='0']")
-        # The transcript types itself out line by line, so the wait is for the
-        # last line of it rather than for the typing to look finished.
-        game.page.wait_for_function(
-            "t => (document.getElementById('art-term').textContent || '').includes(t)",
-            arg="one token at a time",
-            timeout=WAIT_MS,
+    game.page.evaluate("id => openArtifact(id)", artifact)
+    game.page.wait_for_selector("#s-artifact.on", state="attached")
+    game.page.click(f"#s-artifact button[data-demo='{demo}']")
+    game.page.wait_for_function(
+        "t => (document.getElementById('art-term').textContent || '').includes(t)",
+        arg=last,
+        timeout=WAIT_MS,
+    )
+    game.sheet_in_place()
+    return game.page.evaluate(TERMINAL)
+
+
+@pytest.mark.parametrize("surface", SURFACES)
+def test_a_demo_step_starts_at_the_column_and_a_fold_is_set_in(
+    browsers: dict[str, Browser], server: str, surface: str
+) -> None:
+    """B7: the fold is what broke the columns, so the fold is marked.
+
+    The data centre transcript is the one the finding measured: columns of
+    arrows, tokens and milliseconds. Every step starts at the left edge of the
+    text and nothing else does, so a line that begins at that edge is a step
+    and a line set in from it is the rest of the step above. On a phone the
+    steps are wider than the panel, which is the case this is about.
+    """
+    with _surface(browsers, server, surface) as game:
+        info = _run_demo(game, "data-centre", 0, "one token at a time")
+        steps, origin = info["steps"], info["origin"]
+        assert len(steps) >= 5, info
+        starts = 0
+        for step in steps:
+            assert min(step["lefts"]) <= origin + 0.5, (step, info)
+            starts += sum(1 for left in step["lefts"] if left <= origin + 0.5)
+        assert starts == len(steps), ("a fold started at the column", info)
+        if surface in PHONES:
+            assert any(len(step["lefts"]) > 1 for step in steps), (
+                "nothing folded, so this measures nothing",
+                info,
+            )
+        assert info["over"] <= 1, ("the transcript runs off its box", info)
+        assert info["column"] <= 1 and info["page"] <= 1, info
+        _shot(game, f"hunt_b7_{surface}_columns")
+        game.assert_clean()
+
+
+@pytest.mark.parametrize("surface", SURFACES)
+def test_the_sentence_a_demo_ends_on_is_read_whole(
+    browsers: dict[str, Browser], server: str, surface: str
+) -> None:
+    """B7, the other half: a transcript is mostly sentences, not columns.
+
+    The fountain ends on a hundred and fifteen characters of plain English,
+    which is longer than the box on every surface: it folds, and both halves
+    of it are inside the box. A transcript that scrolled sideways instead
+    would leave the end of that sentence off the right edge with nothing to
+    say so.
+    """
+    with _surface(browsers, server, surface) as game:
+        info = _run_demo(game, "fountain", 1, "the same way")
+        last = info["steps"][-1]
+        assert len(last["lefts"]) > 1, (
+            "the sentence fits, so this proves nothing",
+            info,
         )
-        info = game.page.evaluate(TERMINAL)
-        assert info["lines"] >= 5, info
-        assert info["drawn"] == info["lines"], info
-        assert info["scrollable"], "a line wider than the phone has to scroll"
-        assert info["page"] <= 1 and info["column"] <= 1, info
-        _shot(game, f"hunt_b7_{profile}_terminal")
+        assert info["ends"], info
+        for rect in info["ends"]:
+            assert rect["l"] >= info["box"]["l"] - 0.5, (rect, info)
+            assert rect["r"] <= info["box"]["r"] + 0.5, (rect, info)
+        assert info["over"] <= 1, ("the sentence runs off its box", info)
+        assert info["column"] <= 1 and info["page"] <= 1, info
+        _shot(game, f"hunt_b7_{surface}_sentence")
         game.assert_clean()
 
 

@@ -286,11 +286,14 @@ details.brief summary::before,details.cmds summary::before,#obfold>summary::befo
 .callout.why{border-color:rgba(0,136,204,.4);background:rgba(0,136,204,.08)}.callout.why b{color:var(--blue-bright)}
 .callout.try{border-color:rgba(255,213,0,.4);background:rgba(255,213,0,.08)}.callout.try b{color:var(--gold)}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
-/* The artifact demos print like a terminal: mono, one line per step. The
-   columns are the point, so a line wider than the panel scrolls sideways
-   rather than folding: wrapped, the second half of a line starts flush left
-   under the first column and a number breaks in two. */
-.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre;overflow-x:auto;overscroll-behavior-x:contain;color:var(--text)}
+/* The artifact demos print like a terminal: mono, one line per step. A step
+   wider than the panel folds with a hanging indent, so the left edge belongs
+   to the start of a step and anything set in from it is the rest of the step
+   above: the columns keep their origin and the fold reads as a fold. Folding
+   rather than scrolling sideways because most steps end in the sentence the
+   demo is for, and a sentence off the right edge of a phone is a sentence
+   nobody reads. */
+.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px 12px calc(14px + 3ch);margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre-wrap;text-indent:-3ch each-line;overflow-wrap:break-word;color:var(--text)}
 /* The workstream 2 demo component: one card, two change requests. */
 .demo{margin:10px 0}
 .demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
@@ -514,15 +517,21 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 }
 /* The toast stack: what just happened, gone in five seconds. It is a message
    and never state, so nothing below it depends on one being there.
-   It is the HUD's own last row, under the numbers, rather than a box at an
-   offset of its own: that way it clears every button at any width and any
-   wrap, and the minimap, which puts itself under whatever the HUD holds,
-   steps down with it instead of disappearing behind it. Empty it is a row of
-   no height, so the region a screen reader listens to is never taken out of
-   the page. Bounded on purpose: a batch of unlocks shows the newest messages
-   and clips the older ones rather than filling the window, because a column
-   packed from the bottom overflows at the top, which is the oldest end. */
-#toast{flex-basis:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;gap:8px;max-height:40vh;overflow:hidden;pointer-events:none}
+   It hangs under the HUD and out of the HUD's own flow: under, so it clears
+   every button at any width and any wrap; out of the flow, because the bar's
+   box is what the minimap measures to hang itself under, and a message that
+   joined that box would push the map down the window and onto the zoom
+   column. A message moves nothing.
+   It keeps to the left half of the row: the right half under the bar is the
+   map's column, and the half is the wider of the two at every width the game
+   is played at. Bounded on purpose: a batch of unlocks shows the newest
+   messages rather than filling the window, because a column packed from the
+   bottom overflows at the top, which is the oldest end. */
+#toast{position:absolute;top:calc(100% + 8px);left:0;width:min(340px,50%);display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:8px;max-height:40vh;overflow:hidden;pointer-events:none}
+/* A stack over its bound is cut by that edge, so the oldest card fades into
+   it instead of ending mid sentence. Only then: on a stack that fits, the
+   same fade would dim the message itself. */
+#toast:has(.tst:nth-child(4)){-webkit-mask-image:linear-gradient(to bottom,transparent,#000 56px);mask-image:linear-gradient(to bottom,transparent,#000 56px)}
 /* The title hides the HUD and covers it, and the record is repaired before
    the island is entered, so what that repair says has to stay on screen: the
    row comes forward with the panel, and it is the only thing in the HUD that
@@ -530,8 +539,9 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
 body:has(#title:not(.off)) #toast{visibility:visible}
 body:has(#title:not(.off)) #hud{z-index:51}
 /* The vault takes the page below the HUD, so the stack anchors to the window
-   for as long as it is open. Nothing of the reader lives in that corner. */
-body:has(#vault.on) #toast{position:fixed;inset:auto 14px 14px auto;width:min(340px,calc(100vw - 28px))}
+   for as long as it is open, on the same side as on the island. Nothing of
+   the reader lives in that corner. */
+body:has(#vault.on) #toast{position:fixed;inset:auto auto 14px 14px;width:min(340px,calc(100vw - 28px))}
 .tst{flex:none;width:min(340px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .tst b{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;color:var(--yellow)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}

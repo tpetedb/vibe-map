@@ -81,12 +81,13 @@
     <p class="pal-hint small muted">Up and down to move, Enter to open, Escape to close.</p>
   </div>
 </div>
-<!-- The panel is modal: it covers the page, Escape closes it and opening it
-     puts the focus on Close, so a screen reader stays inside it rather than
-     wandering through the island behind it. The name is the panel itself;
-     naming the screen that is open needs the screen's own title and belongs
-     to openSheet(). -->
-<div id="sheet" role="dialog" aria-modal="true" aria-label="Camp panel">
+<!-- A named dialog, and deliberately not a modal one: the HUD floats over an
+     open panel and its buttons stay in the tab order, which is the point of
+     the bar, so aria-modal would promise a page nothing else can reach and
+     hide the rest of the island from a reader that believes it. Confining
+     the focus and naming the screen that is open both belong to openSheet().
+     The name is the panel itself, so a reader says more than "dialog". -->
+<div id="sheet" role="dialog" aria-label="Camp panel">
   <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
   <div class="inner">
     <section class="screen" id="s-map">
