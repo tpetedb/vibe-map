@@ -1,0 +1,65 @@
+# First review of this order, by someone who did not build it. Every experiment
+# ran in a throwaway clone under /tmp, never in this worktree.
+v = 1
+order = "harness-ci-shards"
+by = "reviewer-ci-shards"
+reviewed = "6d620e8bb0e6b78c6b3765060ef18680aa2d48ca"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+The packet served the builder's cache, so I ran the command myself in a clean clone at 6d620e8: exit 0, one skip (`no GitHub origin configured`, a property of my clone). The sentence says `which is what CI runs`: the required job runs the same five commands plus the generator checks of c2 and the fragment check, and on this commit (run 35559811612) its steps 4 to 13 are green; step 14 is the one that waits for this file. `tools/changelog.py check --base origin/main`: `1 fragment(s) for 1 changed product file(s)`. `basedpyright tools/ci_shards.py`: 0 errors. The three owned files and the fragment are byte-identical between 802809d, where I started, and 6d620e8 (`git diff` empty); the two commits in between are the merge of main and a regenerated vault/Camp/Map.md.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the loop myself in the clean clone at 6d620e8: exit 0, `build OK`, `tree OK`, `cookbook OK`, `syllabus OK`, the two sync checks silent and zero. The command proves the sentence for the six generators it names; CI agrees on steps 8 to 11.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+findings.md has five bullets and I took each one. (1) One expansion: the shard step calls `ci_shards.py --files`, which is browser_test_files() then problems() then assign(); the guard calls the same three. Nothing in .github/ reads `matrix.files` any more. I compared for myself: 27 files collected by my own spelling of the collection, 27 expanded, the two sets equal, none twice, and every shard holds exactly the files main's literal list held. (2) The default shard and (3) the three promises: I mutated the helper four ways in the clone. No fallback to the default: test_a_browser_test_file_no_pattern_claims_runs_in_the_default_shard fails. Pattern-claims-nothing check off: test_the_guard_names_a_pattern_that_claims_nothing fails. Exactly-one-default check off: test_the_guard_refuses_a_matrix_with_no_default_shard fails. A double claim silently given to the first shard: the pattern test fails on its `a, b` line. A literal name that matches no browser file is a pattern that claims nothing, so the third promise rides on the same check. (4) The split in the failure message: no test can fail for it, since the message lives in the test; I saw it by breaking the matrix, the assertion printed the offending pattern and then all seven shards with their files. (5) The two names: see the required-context test below, and `gh api .../branches/main/protection/required_status_checks` returns exactly `lint, unit tests, generated files in sync` and `Playwright tests (Chromium and WebKit)`, which are the `name` of `lint-and-unit` and `browser` in the parsed workflow. The diff of ci.yml touches the browser-shard comment, one `default: true`, two `files` lines and the two run steps, nothing else. None of the five is skipped.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+In the clone I added tests/test_game_example.py with one test that takes the `game` fixture, and nothing else (`git status`: one untracked file). `python tools/ci_shards.py`: `smoke (default): 5 files` with the example in it; `--files <shard>` for all seven: the example once in smoke, zero times in the other six. The whole of tests/test_repo.py: 31 passed, 1 skipped, which includes the guard, the default-shard test and test_the_required_context_is_its_own_job_and_keeps_its_name. Then I ran the smoke step as the workflow spells it, under `bash -e`: it printed `smoke runs:` with the example in the list and pytest ran it, 28 passed (main's count for smoke) plus my one test, which failed on my own naive assertion and so proved it was executed and can redden the shard.
+Then I tried to break it, each time through the guard and through `--files smoke`. A pattern that matches nothing (`tests/test_game_nothing*.py` on phone): guard fails and names shard and pattern, `--files` exits 1, and under `bash -e` the step stops before pytest. A file matched by two patterns (`tests/test_game_q*.py` added to phone): `in more than one shard (phone, qol)` for both qol files, exit 1. A browser test whose name follows no convention (tests/test_zzz_browser.py): lands in smoke, guard green. A non-browser test whose name matches a pattern (tests/test_game_qol_pure.py): not handed to qol, because only files pytest collects under `-m "browser and not integration"` are assigned, and the non-browser job's marker expression collects it. An unknown shard name: exit 1 with the list of names. `--verify` as the aggregator spells it (`uv run --no-project --with pyyaml`): no receipts names all seven, seven receipts gives `all 7 shards passed`, a failed matrix is refused. The one thing I could get past it is the first finding.
+The pull request's own run on the same owned files (35557619256, 802809d): all seven shards and the aggregator green, each shard's log carries its `runs:` line, and the passed counts equal main's run 35556457380 shard by shard: smoke 28, ui 50, phone 45, bridges 57, panels 72, qol 54, webkit 33, together 339, which is what I collect locally. Wall time in minutes, this run and main: smoke 10.1 and 10.2, ui 17.9 and 18.7, phone 18.3 and 15.1, panels 22.7 and 17.1, webkit 28.5 and 29.5, bridges 30.3 and 15.5, qol 34.7 and 35.0. Bridges ran the same 57 tests, each about twice as slow in the same ranking (pet chooser 175s against 85s, bridge walk 93s against 43s), so that is the runner and not the split; main's two latest runs differ from each other by as much (qol 18.6 and 35.0). Smoke is the shortest leg by a wide margin, so it is the right home for the default.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/ci_shards.py"
+text = '''
+browser_test_files() throws away pytest's return code. A browser test file that does not import and that no pattern claims simply drops out of the set: with tests/test_game_broken.py (`import a_module_that_does_not_exist`, one `game` test) in the clone, `--files smoke` exits 0 without it, the split does not list it, and the guard passes. On main such a file was named in a list and reddened its shard. Nothing lands because of it, since the other required job's own collection stops with `Interrupted: 1 error during collection`, but the browser context reports green for a battery it did not fully run, and the comment in _files_of says a split the runner cannot trust is a hard stop. For a follow-up: a non-zero exit of the collection is a problem line in `--files` and in the guard.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_repo.py"
+text = '''
+The entry point CI runs has no test. The four tests call assign() and problems(); `--files` with its three refusals (unknown shard, a split with problems, an empty shard) is exercised only by the workflow, and only on its happy path. I ran the refusals by hand and they hold, so this is a follow-up: one test that runs `tools/ci_shards.py --files smoke` and reads the line, one that gives it a name the matrix does not have.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/MAINTAINERS.md"
+text = '''
+Outside this order's files, so for a docs order: the CI section still says five runners and names five shards (main already has seven), and it does not say what this order changes for every builder: a new browser test file needs no edit to ci.yml, smoke is the default, and a pattern that claims nothing is refused.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/ci_shards.py"
+text = '''
+Two small ones. `fnmatch(file, pattern)` is spelled in Shard.claims and again in problems(); the per-pattern question wants its own small helper so the match is said once. And `bool(e.get("default"))` reads a quoted `default: "false"` as true; `is True` would refuse it.
+'''

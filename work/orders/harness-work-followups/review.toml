@@ -1,0 +1,70 @@
+# Review of this order, by someone who did not build it. Every experiment ran in
+# scratch git repositories under $TMPDIR, through `tools/work.py check`, `ci` and
+# `hook`, once with origin/main's copy of the tool and once with this branch's.
+v = 1
+order = "harness-work-followups"
+by = "reviewer-work-followups"
+reviewed = "fa784b246bf4e48c0afb0cb665c3b1398a92a302"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Measured myself under a runner's conditions: `GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null GITHUB_HEAD_REF=some/branch uv run pytest tests/test_work.py`: 70 passed in 13.7s, and `work.py check harness-work-followups --force` with the same variables: c1 pass, no stray. The sentence says `each seen failing before its fix`, so I undid one fix at a time in a copy of the tree and ran the whole file: without `--cached` only test_a_stray_that_is_only_staged fails; without must=True on the inner diff only test_a_diff_that_cannot_run; changed() back on newline splitting fails test_a_name_git_would_quote on its first assertion, diff_names() back on it fails the same test on its second; load_order() back on it fails test_a_quoted_name_inside_an_owned_folder; `kept = seen` fails test_touched_json_keeps_the_newest; AGENTS.md back to `holds` fails test_every_document_calls_a_hook_a_reminder. Seven fixes undone, each noticed by exactly one of the six new tests, and nothing else moves. No new test waits on time.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Forced check on this commit: c2 pass in 114.7s. `which is what CI runs`: run 35559575001 on fa784b2, steps 5 to 13 green (ruff, format, style, the four --check generators, the changelog fragment, pytest without browser and integration); step 14 is red with `review.toml: no review yet` and nothing else, which I reproduced here with `work.py ci --base origin/main --head fix/work-followups`. The tool still imports the standard library only (walked the imports of work.py and sync_main.py; `python3 -I -S tools/work.py validate` exits 0), still parses as Python 3.8, and under this machine's /usr/bin/python3 3.9.6 both hooks print `work hooks are off` and exit 0 while `board` exits 1 with the sentence about 3.11.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Forced check: c3 pass in 0.5s, all six generators `--check` clean; CI steps 8 to 11 agree. The one generated file in the diff is vault/Camp/Map.md (a date and a hash after the merge of main), which any order may touch and which `strays` does not list.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+All five are fixed, none rejected, none skipped; each reproduced on origin/main's tool first, through the command line.
+W1: `MM src/scene.js` (staged, copy restored): main `check` exit 0 OK, branch exit 1 STRAY, also without --force after a cached OK. Neighbours on the branch: staged deletion with and without the copy, staged rename (both names listed, also when the working tree is moved back, where main listed one), staged then `restore --staged` with the copy still changed, `add -N` of an unowned file: all STRAY. Staged then index and copy both reverted: OK, rightly. A staged-only change to an owned file: OK. A staged-only `--chmod=+x`: slipped on main, caught now. The merge test still holds: what main stages is equal to base in the index too.
+W2: a base that does not exist is exit 2 on main as well (diff_names already had must), so it proves nothing; the inner diff is what was unchecked. With `:(nope)x.js` tracked on main and modified next to a modified src/scene.js, main prints OK, exit 0; the branch exits 2 with git's own sentence.
+W3: `sp ace.js`, `we"ird.js`, `üñí.js`, `-dash.js`, a tab, a backslash, under src/ and a leading dash at top level; untracked, staged, tracked and modified, committed; through `check` and `ci`. Main: the quote, the tab and the backslash are exit 0 until committed, then listed under their quoted spelling. Branch: every one is a STRAY under its real name. An order owning lib/ with all six inside: main refuses it (`"lib/back\\slash.js"`, which no team covers), branch loads it; owning mix/ where `mix/we"ird.js` is team scene's: branch refuses and names scene. A folder named `-odd/` loads.
+W4: through `hook pre-tool` and `hook stop`. Two subagents on one failing order: both kept, both sent back, a stranger let go. Builder, reviewer, builder again: `{B: builder, R: reviewer}`, unchanged. A reviewer who starts building moves to the end; an unchanged role rewrites nothing. A legacy file of 100 entries is cut to the newest 32 at the next new agent. Landing drops nothing: the rule is the bound, not the landing, and after landing the stop hook is silent on main and on the branch alike. The rule is in _remember's docstring and at TOUCHED_KEEP. The one way to lose a live entry is the first low below.
+W5: the word diff is `holds` to `reminds`, `to it.` to `of it, and the checks decide.`; the rest of the sentence is byte for byte.
+Neighbours: `board` from this worktree lists the three live orders, the same rows as main's tool. In scratch clones of fix/hunt-q-docs-generators and chore/ci-shards-by-pattern, `work.py ci` gives the same lines and exit codes with both tools (1 with three missing rulings, 0 with none).
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+changed() still hands the uncommitted names to git as pathspecs, and W2's fix now shows it. An untracked `:(nope)x.js` was judged on main (`STRAY :(nope)x.js`, exit 1); here `check` ends with exit 2 and `fatal: Invalid pathspec magic`, and test_a_diff_that_cannot_run writes that down as the expected behaviour for a legal file name. Worse spelled: a folder `:!src/` with scene.js in it reads as an exclusion, so a modified src/scene.js next to it drops off the list, on main and here alike (still NOT OK, because the odd path is itself a stray). `git --literal-pathspecs diff --name-only HEAD -- ':!src/scene.js' ':(nope)x.js' src/scene.js` exits 0 and prints src/scene.js. Fail closed both ways, so it opens no landing; CI never reaches it, a runner's tree is clean.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+In touched.json newest means first edit, not last. Builder B edits, then thirty-one other agents make their first edit under the same order while B keeps editing between each of them: at the thirty-third agent B is dropped, and a stop by B right then is exit 0 on a failing order. B's next edit puts it back and the stop is exit 2 again, so what it takes is thirty-two new agents between a builder's last edit and its stop, and what it costs is one reminder. The docstring of _remember says as much; the comment at TOUCHED_KEEP, `holds every agent that could still be running`, promises more than the code does. Moving an agent to the end when it is found in the older half would close it without a write per edit.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/adr/0016-work-orders.md"
+text = '''
+For a docs order, neither file is this order's: the ADR's consequences still say `Known and accepted: touched.json is never pruned`, which this change makes untrue, and the row for touched.json in work/README.md does not say that it keeps the newest thirty-two.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_work.py"
+text = '''
+None of the six new tests goes through the command line: they call strays(), changed() and hook_pre_tool(). I ran every one of them through `work.py check`, `ci` and `hook` and the answers are the same, and older tests in the file cover the path from the command to strays(), so this is a preference of AGENTS.md (`test the entry point`) and not a gap in what is proven.
+'''

@@ -756,6 +756,54 @@ def test_what_arrives_from_main_in_a_merge_is_not_the_orders_doing(repo: Path) -
     assert work.strays(order, "origin/main") == ["src/scene.js"]
 
 
+# ------------------------------------------------------------ the follow-ups
+
+
+def test_a_stray_that_is_only_staged_is_still_a_stray(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / "src" / "scene.js").write_text("// another team's file\n")
+    sh(repo, "add", "src/scene.js")
+    # The working copy goes back to what base has, so only the index differs.
+    (repo / "src" / "scene.js").write_text("// scene\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+
+
+def test_a_diff_that_cannot_run_is_an_error_not_nothing_changed(repo: Path) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    # A name git reads as pathspec magic: the diff over what is uncommitted
+    # cannot run, and an empty answer would read as "this branch changed nothing".
+    (repo / ":(nope)x.js").write_text("// odd, and legal\n")
+    with pytest.raises(work.Bad, match="git diff"):
+        work.changed(repo, "origin/main")
+
+
+def test_a_name_git_would_quote_is_read_whole(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / "src" / 'we"ird.js').write_text("// not mine\n")
+    assert work.strays(order, "origin/main") == ['src/we"ird.js']
+    commit(repo)
+    assert work.strays(order, "origin/main") == ['src/we"ird.js']
+
+
+def test_a_quoted_name_inside_an_owned_folder_is_read_whole(repo: Path) -> None:
+    (repo / "tests").mkdir()
+    (repo / "tests" / 'we"ird.py').write_text("a = 1\n")
+    commit(repo)
+    order = put_order(repo, "one", order_text("one", "feat/x", ["tests/"]))
+    assert order.owns == ("tests/",)
+
+
+def test_touched_json_keeps_the_newest_entries_and_no_more(repo: Path) -> None:
+    order = put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    for n in range(work.TOUCHED_KEEP + 5):
+        event = {**edit(repo / "src" / "panel.js"), "agent_id": f"agent-{n}"}
+        assert work.hook_pre_tool(event) == (0, "")
+    seen = json.loads((order.dir / "touched.json").read_text())
+    assert len(seen) == work.TOUCHED_KEEP
+    assert f"agent-{work.TOUCHED_KEEP + 4}" in seen
+    assert "agent-0" not in seen
+
+
 # ------------------------------------------------------------ the issue
 
 
@@ -831,6 +879,19 @@ def test_the_hooks_are_wired_to_events_claude_code_has() -> None:
     )
     for event in ("Stop", "SubagentStop"):
         assert any("tools/work.py" in c and "hook stop" in c for c in wired[event])
+
+
+def test_every_document_calls_a_hook_a_reminder() -> None:
+    """A hook reminds; check, accept and CI decide. A document that says a hook
+    holds an agent to the checks invites a builder to trust it instead."""
+    for name in (
+        "AGENTS.md",
+        "CLAUDE.md",
+        "work/README.md",
+        "docs/adr/0016-work-orders.md",
+    ):
+        assert "hook holds" not in (ROOT / name).read_text(), f"{name}: a hook reminds"
+    assert "a hook reminds an agent of it" in (ROOT / "AGENTS.md").read_text()
 
 
 def test_no_harness_hook_reaches_a_camp() -> None:

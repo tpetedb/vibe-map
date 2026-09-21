@@ -2,7 +2,7 @@
 
 New concept in this file: a dictionary comprehension builds {player: [scores]}
 in one line, then max()/statistics.mean() summarise each list.
-Run: python3 python/scores.py
+Run from the camp root: python3 workspace/python/scores.py
 """
 
 import csv

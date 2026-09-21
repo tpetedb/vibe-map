@@ -6,9 +6,9 @@ Every topic has a depth: basics, working knowledge, deep. Each one: what it is, 
 
 Where every command starts: the terminal, files, the shell and its config, ports, remote machines.
 
-*Basics.* ### Unix and the terminal
+### Unix and the terminal
 
-The terminal is a text conversation with the computer. Every tool in this tree is a command you type; every agent in the Imperial Age is, underneath, typing those same commands for you. Learning ten commands (ls, cd, cat, mkdir, cp, mv, rm, grep, find, man) covers most of daily use.
+*Basics.* The terminal is a text conversation with the computer. Every tool in this tree is a command you type; every agent in the Imperial Age is, underneath, typing those same commands for you. Learning ten commands (ls, cd, cat, mkdir, cp, mv, rm, grep, find, man) covers most of daily use.
 
 **History.** Unix was born at Bell Labs in 1969 (Thompson, Ritchie). macOS is a certified Unix, so your Mac terminal is the direct descendant. Linux (1991, Torvalds) is the free reimplementation that servers, clouds and containers run on.
 
@@ -18,9 +18,9 @@ Docs: [The Missing Semester (MIT)](https://missing.csail.mit.edu) · [Linux Jour
 
 Unlocks: Bash and shell scripts, Files, folders and paths, Git
 
-*Basics.* ### Files, folders and paths
+### Files, folders and paths
 
-A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./workspace/data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
+*Basics.* A project is a folder. A path is an address inside it: absolute (/Users/<your_name>/vibe-map) or relative (./workspace/data/scores.csv). Agents work inside one folder at a time and see the world as files, which is why structure matters more than in a GUI.
 
 **History.** The hierarchical file system with directories comes from Multics (Daley and Neumann, 1965) via Unix. Hidden dotfiles are, according to Rob Pike, the result of an early Unix shortcut: ls skipped every name starting with a dot to hide . and .., and people started using it on purpose.
 
@@ -30,9 +30,9 @@ Docs: [Unix filesystem basics](https://missing.csail.mit.edu/2020/course-shell/)
 
 Unlocks: Dotfiles, Config formats: JSON, YAML, TOML, Markdown, Git
 
-*Basics.* ### Interfaces: GUI, TUI, CLI, API
+### Interfaces: GUI, TUI, CLI, API
 
-Four ways to talk to a program. A CLI takes a command and flags and prints text (`vibe status`, git, uv). A TUI draws a screen inside the terminal you can move around in (`just start`, htop, the Claude Code chat). A GUI is windows and a pointer (Obsidian, Zed, the browser game). An API is for programs, not people: HTTP endpoints that return JSON (GitHub's REST API), or a protocol two programs agree on, such as MCP between an agent and a tool server and ACP between an editor and an agent. One program can have all four: Obsidian has a GUI, a URI scheme and a CLI.
+*Basics.* Four ways to talk to a program. A CLI takes a command and flags and prints text (`vibe status`, git, uv). A TUI draws a screen inside the terminal you can move around in (`just start`, htop, the Claude Code chat). A GUI is windows and a pointer (Obsidian, Zed, the browser game). An API is for programs, not people: HTTP endpoints that return JSON (GitHub's REST API), or a protocol two programs agree on, such as MCP between an agent and a tool server and ACP between an editor and an agent. One program can have all four: Obsidian has a GUI, a URI scheme and a CLI.
 
 **History.** The command line came with time-sharing systems and Unix (1969); full-screen terminal programs followed once terminals could address the screen, with vi (1976) and the curses library (1978); the graphical desktop was prototyped on the Xerox Alto (1973) and sold with the Macintosh (1984); REST named the web's API style in Roy Fielding's dissertation (2000); MCP was published by Anthropic on 25 November 2024 and ACP by Zed in August 2025.
 
@@ -42,9 +42,9 @@ Docs: [Textual, TUIs in Python](https://textual.textualize.io/) · [click, CLIs 
 
 Unlocks: Unix and the terminal, MCP, Building and consuming APIs
 
-*Working knowledge.* ### Bash and shell scripts
+### Bash and shell scripts
 
-Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in.
+*Working knowledge.* Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in.
 
 **History.** The Bourne shell shipped with Seventh Edition Unix in January 1979; bash (the Bourne-again shell, written by Brian Fox) went into beta as the GNU replacement in June 1989. macOS switched its default login shell to zsh with macOS 10.15 Catalina in 2019; zsh is bash-compatible for everything you will meet tonight.
 
@@ -54,9 +54,9 @@ Docs: [Bash Guide (Greg's wiki)](https://mywiki.wooledge.org/BashGuide) · [Shel
 
 Unlocks: zsh and your shell config, Dotfiles, Justfiles and task running, Docker and containers, Hook
 
-*Working knowledge.* ### zsh and your shell config
+### zsh and your shell config
 
-~/.zshrc runs every time you open a terminal: it sets PATH (the folders where commands are looked up), aliases (short names for long commands), the prompt, and small functions. zsh is the macOS default; it is bash-compatible for daily use and adds better completion and globbing. oh-my-zsh bundles plugins and themes; starship is a fast prompt that works in any shell. Keep .zshrc in your dotfiles repo so a new machine is one clone away.
+*Working knowledge.* ~/.zshrc runs every time you open a terminal: it sets PATH (the folders where commands are looked up), aliases (short names for long commands), the prompt, and small functions. zsh is the macOS default; it is bash-compatible for daily use and adds better completion and globbing. oh-my-zsh bundles plugins and themes; starship is a fast prompt that works in any shell. Keep .zshrc in your dotfiles repo so a new machine is one clone away.
 
 **History.** zsh was written by Paul Falstad while a student at Princeton, around 1990. Apple made it the default login shell with macOS 10.15 Catalina in October 2019, replacing bash.
 
@@ -66,9 +66,9 @@ Docs: [zsh manual](https://zsh.sourceforge.io/Doc/) · [oh-my-zsh](https://ohmyz
 
 Unlocks: Dotfiles
 
-*Working knowledge.* ### Dotfiles
+### Dotfiles
 
-Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable.
+*Working knowledge.* Hidden files and folders (.zshrc, .gitconfig, .claude/, .agents/) that configure your tools. Your agent setup is dotfiles: AGENTS.md is the exception that chose to be visible. Keep them in a repo and your setup becomes portable.
 
 **History.** Sharing dotfile repos on GitHub took off after GitHub launched in 2008; the community guide dotfiles.github.io followed in 2012. Today the same idea configures AI agents: .claude/settings.json, .agents/skills/.
 
@@ -78,9 +78,9 @@ Docs: [dotfiles.github.io](https://dotfiles.github.io) · [Claude Code settings]
 
 Unlocks: Config formats: JSON, YAML, TOML, Markdown, .env files and secrets, Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
 
-*Working knowledge.* ### Justfiles and task running
+### Justfiles and task running
 
-A justfile is a file of named commands, called recipes, that you run with `just RECIPE`. It replaces a folder of half-remembered scripts and the README section nobody updates: `just --list` prints every task with the comment above it, so the project explains itself. just is a command runner, not a build system, so it skips make's file-timestamp machinery and its idiosyncrasies (no .PHONY). Recipes take parameters with defaults (`deploy env='staging':`), a last parameter may be variadic with + (one or more) or * (zero or more), and a recipe may depend on others, which run first and only once per invocation. Variables are assigned with `:=`, `export` puts one in the environment, and `set dotenv-load` reads a .env file into the environment of every recipe. A recipe starting with `#!` is a shebang recipe: its body is saved to a file and run, so a task can be Python or Node instead of sh. Attributes annotate a recipe: `[group('check')]` sorts it in the listing, `[private]` hides a helper, `[confirm]` asks before a destructive one, `[no-cd]` keeps the working directory where you invoked from. `import 'agents.just'` pulls another file's recipes in as if they were here; `mod foo` makes a submodule you call as `just foo b`. On the command line: `just --choose` hands the recipes to a chooser (fzf by default), `just --fmt` formats the file, `just --fmt --check` exits 1 with a diff instead, `just --dump --dump-format json` prints the whole file as JSON, `just -n` (--dry-run) prints what it would do, and `just --completions zsh` writes a completion script. And for an agent: a justfile is the narrowest useful contract between a person and a coding agent. Every task is one named, reviewable command instead of hand-composed shell, AGENTS.md lists recipes rather than incantations, the hook and the CI job call the same recipe you do, `[confirm]` guards the dangerous ones, and in Claude Code a single allow rule `Bash(just *)` grants the recipes you wrote and nothing else, which is far narrower than allowing arbitrary shell. This repository is the worked example: `justfile` holds the human tasks and imports `agents.just`, which holds the [check] and [agent] groups.
+*Working knowledge.* A justfile is a file of named commands, called recipes, that you run with `just RECIPE`. It replaces a folder of half-remembered scripts and the README section nobody updates: `just --list` prints every task with the comment above it, so the project explains itself. just is a command runner, not a build system, so it skips make's file-timestamp machinery and its idiosyncrasies (no .PHONY). Recipes take parameters with defaults (`deploy env='staging':`), a last parameter may be variadic with + (one or more) or * (zero or more), and a recipe may depend on others, which run first and only once per invocation. Variables are assigned with `:=`, `export` puts one in the environment, and `set dotenv-load` reads a .env file into the environment of every recipe. A recipe starting with `#!` is a shebang recipe: its body is saved to a file and run, so a task can be Python or Node instead of sh. Attributes annotate a recipe: `[group('check')]` sorts it in the listing, `[private]` hides a helper, `[confirm]` asks before a destructive one, `[no-cd]` keeps the working directory where you invoked from. `import 'agents.just'` pulls another file's recipes in as if they were here; `mod foo` makes a submodule you call as `just foo b`. On the command line: `just --choose` hands the recipes to a chooser (fzf by default), `just --fmt` formats the file, `just --fmt --check` exits 1 with a diff instead, `just --dump --dump-format json` prints the whole file as JSON, `just -n` (--dry-run) prints what it would do, and `just --completions zsh` writes a completion script. And for an agent: a justfile is the narrowest useful contract between a person and a coding agent. Every task is one named, reviewable command instead of hand-composed shell, AGENTS.md lists recipes rather than incantations, the hook and the CI job call the same recipe you do, `[confirm]` guards the dangerous ones, and in Claude Code a single allow rule `Bash(just *)` grants the recipes you wrote and nothing else, which is far narrower than allowing arbitrary shell. This repository is the worked example: `justfile` holds the human tasks and imports `agents.just`, which holds the [check] and [agent] groups.
 
 **History.** just is written in Rust by Casey Rodarmor, with a syntax the manual says is inspired by make. It reached 1.0.0 on 22 February 2022 and has kept one changelog since. Modules (`mod`) arrived in 1.19.0 and were stabilised in 1.31.0, which is why older justfiles use `import` for everything.
 
@@ -90,9 +90,9 @@ Docs: [just manual](https://just.systems/man/en/) · [just, the repository](http
 
 Unlocks: AGENTS.md, CI/CD and automation, Git hooks
 
-*Working knowledge.* ### localhost and ports
+### localhost and ports
 
-localhost (127.0.0.1) is your own machine talking to itself over the network stack. A port is a numbered door; a dev server on port 8000 means open http://localhost:8000. Everything web starts here before it goes anywhere.
+*Working knowledge.* localhost (127.0.0.1) is your own machine talking to itself over the network stack. A port is a numbered door; a dev server on port 8000 means open http://localhost:8000. Everything web starts here before it goes anywhere.
 
 **History.** Network 127 is set aside for loopback in the Assigned Numbers RFCs (RFC 990, 1986); TCP/IP became the ARPANET standard on 1 January 1983 (RFC 801). Port numbers were assigned by hand by Jon Postel for years, in those same RFCs.
 
@@ -102,9 +102,9 @@ Docs: [MDN: How the web works](https://developer.mozilla.org/en-US/docs/Learn_we
 
 Unlocks: HTTP and APIs, Docker and containers, MCP
 
-*Deep.* ### SSH and remote machines
+### SSH and remote machines
 
-SSH is an encrypted terminal to another computer. ssh user@host gives you a shell on a server; the same key pair authenticates you to GitHub. Once you can SSH somewhere, everything in the Dark Age works there too, including running an agent on a remote box.
+*Deep.* SSH is an encrypted terminal to another computer. ssh user@host gives you a shell on a server; the same key pair authenticates you to GitHub. Once you can SSH somewhere, everything in the Dark Age works there too, including running an agent on a remote box.
 
 **History.** SSH was written by Tatu Ylonen at Helsinki University of Technology and published in July 1995, after a password sniffer was found on the university network; OpenSSH (first shipped with OpenBSD in December 1999) is what every Mac and Linux ships.
 
@@ -118,9 +118,9 @@ Unlocks: Cloud and servers, Docker and containers
 
 Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push.
 
-*Basics.* ### Git
+### Git
 
-A time machine for a folder. Commit = named snapshot, branch = parallel line of work, merge = bring them together, revert = undo safely. Agents can produce a lot of change fast; git is what makes that safe.
+*Basics.* A time machine for a folder. Commit = named snapshot, branch = parallel line of work, merge = bring them together, revert = undo safely. Agents can produce a lot of change fast; git is what makes that safe.
 
 **History.** Linus Torvalds wrote git in April 2005, in about ten days, after the Linux kernel lost its previous tool (BitKeeper). GitHub launched in 2008 and made it social; today git is the default version control system almost everywhere.
 
@@ -130,9 +130,9 @@ Docs: [Git tutorial](https://git-scm.com/docs/gittutorial) · [Oh Shit, Git!?!](
 
 Unlocks: GitHub, pull requests, Pages, Hook, CI/CD and automation, Semantic Versioning
 
-*Working knowledge.* ### GitHub, pull requests, Pages
+### GitHub, pull requests, Pages
 
-GitHub hosts git repositories and adds the social layer: issues, pull requests (proposed changes with review), Actions (CI), Pages (free static hosting). A PR is how professionals let others check work before it lands; it is also how you check an agent's work.
+*Working knowledge.* GitHub hosts git repositories and adds the social layer: issues, pull requests (proposed changes with review), Actions (CI), Pages (free static hosting). A PR is how professionals let others check work before it lands; it is also how you check an agent's work.
 
 **History.** GitHub launched in 2008 (pull requests arrived in February 2008), was acquired by Microsoft in 2018, and passed 100 million developers in January 2023. Pull requests turned code review into a habit; Copilot (technical preview June 2021) put a model in the editor; Copilot's coding agent and OpenAI's Codex (2025) now open PRs themselves.
 
@@ -142,9 +142,9 @@ Docs: [GitHub docs](https://docs.github.com/en) · [GitHub CLI](https://cli.gith
 
 Unlocks: CI/CD and automation, Cloud and servers
 
-*Working knowledge.* ### Git hooks
+### Git hooks
 
-Scripts git runs at moments in its own lifecycle: pre-commit before a commit is written, commit-msg to check the message, pre-push before anything leaves the machine, post-checkout and post-merge after a switch. A non-zero exit aborts the step. They live in .git/hooks (not versioned), or in a folder you commit and point at with core.hooksPath; the pre-commit framework and lefthook manage them from a config file.
+*Working knowledge.* Scripts git runs at moments in its own lifecycle: pre-commit before a commit is written, commit-msg to check the message, pre-push before anything leaves the machine, post-checkout and post-merge after a switch. A non-zero exit aborts the step. They live in .git/hooks (not versioned), or in a folder you commit and point at with core.hooksPath; the pre-commit framework and lefthook manage them from a config file.
 
 **History.** Hooks have been in git since the first releases (the githooks manual page lists thirty of them); core.hooksPath arrived in Git 2.9 (June 2016) so a team can version its hooks; pre-commit (Yelp, 2014) and lefthook (Evil Martians, 2019) turned them into a one-line install.
 
@@ -156,9 +156,9 @@ Docs: [githooks manual](https://git-scm.com/docs/githooks) · [Pro Git, Customiz
 
 Unlocks: Agent hooks, CI/CD and automation
 
-*Deep.* ### CI/CD and automation
+### CI/CD and automation
 
-Continuous integration: every push runs the tests and checks in a clean machine. Continuous delivery: passing pushes deploy. GitHub Actions is a YAML file in .github/workflows/. This is where headless agents also live: a PR review bot is claude -p in a workflow.
+*Deep.* Continuous integration: every push runs the tests and checks in a clean machine. Continuous delivery: passing pushes deploy. GitHub Actions is a YAML file in .github/workflows/. This is where headless agents also live: a PR review bot is claude -p in a workflow.
 
 **History.** CruiseControl (ThoughtWorks) was registered in March 2001, Hudson was renamed Jenkins in January 2011, Travis CI started in 2011, GitHub Actions became generally available in November 2019. CI made 'it works' a machine's opinion instead of a person's.
 
@@ -172,9 +172,9 @@ Unlocks: Headless agents and scheduling, Tests and evals
 
 The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env.
 
-*Basics.* ### Config formats: JSON, YAML, TOML, Markdown
+### Config formats: JSON, YAML, TOML, Markdown
 
-Tools read settings from text files in a few formats. JSON: strict, braces, what APIs speak. YAML: indentation, what CI and Docker Compose use. TOML: sections, what Python packaging uses. Markdown: prose with light structure, what agents and Obsidian read.
+*Basics.* Tools read settings from text files in a few formats. JSON: strict, braces, what APIs speak. YAML: indentation, what CI and Docker Compose use. TOML: sections, what Python packaging uses. Markdown: prose with light structure, what agents and Obsidian read.
 
 **History.** JSON was first presented at json.org by Douglas Crockford in 2001; YAML began in 2001 (1.0 spec in 2004); Markdown by John Gruber in 2004; TOML by Tom Preston-Werner in 2013. Agents made Markdown the config format for instructions (AGENTS.md, SKILL.md) because it is readable by both people and models.
 
@@ -184,9 +184,9 @@ Docs: [JSON](https://www.json.org/json-en.html) · [YAML](https://yaml.org/spec/
 
 Unlocks: .env files and secrets, YAML in practice: CI and Compose, TOML in practice: pyproject.toml, AGENTS.md, Agent Skills standard
 
-*Basics.* ### .env files and secrets
+### .env files and secrets
 
-A .env file holds KEY=VALUE pairs (API tokens, database URLs) that your code reads at startup, so the secret lives on the machine and not in the repo. The pattern: .env is listed in .gitignore and never committed; .env.example (in this repo env.example, without the dot, because some agent guardrails refuse anything that looks like a real .env) is committed with the same keys and empty values so the next person knows what to fill in; python-dotenv loads .env into os.environ. A token that lands in a commit has to be rotated, because git history is forever.
+*Basics.* A .env file holds KEY=VALUE pairs (API tokens, database URLs) that your code reads at startup, so the secret lives on the machine and not in the repo. The pattern: .env is listed in .gitignore and never committed; .env.example (in this repo env.example, without the dot, because some agent guardrails refuse anything that looks like a real .env) is committed with the same keys and empty values so the next person knows what to fill in; python-dotenv loads .env into os.environ. A token that lands in a commit has to be rotated, because git history is forever.
 
 **History.** The twelve-factor app (Adam Wiggins at Heroku, 2011) made 'store config in the environment' a rule. The dotenv convention started with Brandon Keepers' Ruby dotenv gem in July 2012; python-dotenv followed on PyPI in September 2014.
 
@@ -196,9 +196,9 @@ Docs: [Twelve-Factor config](https://12factor.net/config) · [python-dotenv](htt
 
 Unlocks: Security and permissions, Docker and containers
 
-*Basics.* ### Markdown and Obsidian
+### Markdown and Obsidian
 
-Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.
+*Basics.* Markdown is prose with a little structure (#, -, **, `[[links]]`). It is the file format of documentation, READMEs, AGENTS.md, skills, and Obsidian notes. Obsidian is a Markdown editor with a graph, so your notes are plain files an agent can read and write.
 
 **History.** Markdown 2004; GitHub's own flavour was public by 2009 and made it the format of READMEs; Obsidian (2020) made it a second brain; agent instruction files in 2024 to 2025 made it a config language.
 
@@ -208,9 +208,9 @@ Docs: [Markdown guide](https://www.markdownguide.org) · [Obsidian help](https:/
 
 Unlocks: Claude and Obsidian, AGENTS.md, README and the quickstart, Architecture decision records, Obsidian features
 
-*Working knowledge.* ### TOML in practice: pyproject.toml
+### TOML in practice: pyproject.toml
 
-TOML is INI with types. [tables] group keys; key = "value" pairs are typed (strings, numbers, booleans, dates, arrays); `[[arrays.of.tables]]` repeat asection, one block per item. Python packaging chose it because it is unambiguous, has a small spec, and stays readable when hand-edited: pyproject.toml declares the package, its dependencies and the tool settings (ruff, pytest) in one file.
+*Working knowledge.* TOML is INI with types. [tables] group keys; key = "value" pairs are typed (strings, numbers, booleans, dates, arrays); `[[arrays.of.tables]]` repeat asection, one block per item. Python packaging chose it because it is unambiguous, has a small spec, and stays readable when hand-edited: pyproject.toml declares the package, its dependencies and the tool settings (ruff, pytest) in one file.
 
 **History.** TOML was started by Tom Preston-Werner in 2013 and reached 1.0.0 in January 2021. PEP 518 (2016) introduced pyproject.toml for build requirements, PEP 621 (2020) added the [project] table, and tomllib joined the standard library with Python 3.11 in October 2022.
 
@@ -220,9 +220,9 @@ Docs: [TOML 1.0.0 spec](https://toml.io/en/v1.0.0) · [Python packaging: writing
 
 Unlocks: Python libraries: what they are for
 
-*Working knowledge.* ### YAML in practice: CI and Compose
+### YAML in practice: CI and Compose
 
-YAML is data shaped by indentation: a map is key: value, a list is lines starting with a dash, nesting is two spaces. Strings rarely need quotes, which is the trap: no, yes, on and 3:30 can turn into booleans or numbers unless you quote them. One file can hold several documents separated by ---, so a stray separator silently splits your config. CI (GitHub Actions) and Docker Compose chose it because a pipeline is a nested list of steps that people read and diff more often than machines do.
+*Working knowledge.* YAML is data shaped by indentation: a map is key: value, a list is lines starting with a dash, nesting is two spaces. Strings rarely need quotes, which is the trap: no, yes, on and 3:30 can turn into booleans or numbers unless you quote them. One file can hold several documents separated by ---, so a stray separator silently splits your config. CI (GitHub Actions) and Docker Compose chose it because a pipeline is a nested list of steps that people read and diff more often than machines do.
 
 **History.** YAML began in 2001 and the 1.0 spec was published in 2004 by Clark Evans, Oren Ben-Kiki and Ingy dot Net; the 1.2.2 revision (October 2021) clarified the spec without changing it. GitHub Actions became generally available in November 2019 with YAML workflows.
 
@@ -236,9 +236,9 @@ Unlocks: CI/CD and automation, Docker and containers
 
 Python first, then the web, the other languages and how to know the code works.
 
-*Basics.* ### Python
+### Python
 
-The general-purpose language of data, automation and AI tooling. Readable, batteries included, the language agents write most fluently. Use it for scripts, data, glue, and small services.
+*Basics.* The general-purpose language of data, automation and AI tooling. Readable, batteries included, the language agents write most fluently. Use it for scripts, data, glue, and small services.
 
 **History.** Guido van Rossum released Python 0.9.0 in February 1991; Python 3.0 (December 2008) broke compatibility and Python 2 was only retired in January 2020. It became the language of machine learning through NumPy, pandas and PyTorch, and of AI agents through their SDKs.
 
@@ -248,9 +248,9 @@ Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism trac
 
 Unlocks: TOML in practice: pyproject.toml, Python libraries: what they are for, SQL and DuckDB, Building and consuming APIs
 
-*Working knowledge.* ### Python libraries: what they are for
+### Python libraries: what they are for
 
-pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (talk to APIs), duckdb (SQL on files), pydantic (validate data), fastapi (build an API), typer/click (build a CLI), playwright (drive a browser), pytest (tests). Install with uv; import only what removes real work.
+*Working knowledge.* pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (talk to APIs), duckdb (SQL on files), pydantic (validate data), fastapi (build an API), typer/click (build a CLI), playwright (drive a browser), pytest (tests). Install with uv; import only what removes real work.
 
 **History.** NumPy 2005 (1.0 in 2006), pandas 2008 (Wes McKinney, at a hedge fund), requests 2011, pytest 2004 lineage, FastAPI 2018, pydantic 2017, Playwright 2020, DuckDB 2019 (started at CWI in 2018). The stack is young; most of it postdates the iPhone.
 
@@ -260,9 +260,9 @@ Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html) 
 
 Unlocks: Building and consuming APIs, Tests and evals
 
-*Working knowledge.* ### HTML, CSS and JavaScript
+### HTML, CSS and JavaScript
 
-The three languages of a web page: structure, style, behaviour. A single HTML file can hold all three, which is why the game is one file. JavaScript is also the language of Node and most CLIs you install with npm.
+*Working knowledge.* The three languages of a web page: structure, style, behaviour. A single HTML file can hold all three, which is why the game is one file. JavaScript is also the language of Node and most CLIs you install with npm.
 
 **History.** Tim Berners-Lee's first web software ran in 1990 and HTML was written up as an IETF draft in 1993; CSS1 became a W3C Recommendation in 1996; Brendan Eich prototyped JavaScript in ten days in May 1995. Node.js (2009) put JavaScript on servers; npm calls itself the world's largest software registry.
 
@@ -272,9 +272,9 @@ Docs: [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Learn_web_developm
 
 Unlocks: HTTP and APIs, localhost and ports
 
-*Working knowledge.* ### Separation of concerns
+### Separation of concerns
 
-One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (config/camp.toml, AGENTS.md, the skills, the hooks) is visible and separate, and it has levels: the repository's, the source's, and your journey's; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
+*Working knowledge.* One folder, one file, one function per concern, and a boundary between them that hides how each one works. This camp is the first example: the product (the game and the vibe command) is installed, not copied into your folder; the configuration (config/camp.toml, AGENTS.md, the skills, the hooks) is visible and separate, and it has levels: the repository's, the source's, and your journey's; your own work has one home, workspace/. The test of a good cut is Parnas's: does each part hide a decision that is likely to change on its own? When two concerns share a file, a change to one breaks the other for no visible reason; when they are apart, you can read, test and replace one without opening the rest. Ousterhout's version: prefer deep modules, a small interface over a lot of hidden work, to shallow ones that expose everything.
 
 **History.** Dijkstra coined the phrase in 1974 (EWD 447): intelligent thinking means studying one aspect of a problem in isolation for its own consistency, without pretending the others do not exist. Parnas (1972) gave the criterion for where to cut: around design decisions likely to change, not around the order of processing steps (information hiding). Conway (1968) noticed that module boundaries end up copying the communication structure of the people who build them. Ousterhout (2018) restated it for today's code as deep versus shallow modules. The Twelve-Factor App (2011) applies it to config versus code; Team Topologies (2021) applies it to teams as cognitive load.
 
@@ -284,9 +284,9 @@ Docs: [Dijkstra, On the role of scientific thought (EWD 447), 1974](https://www.
 
 Unlocks: Building the builder, AGENTS.md, TOML in practice: pyproject.toml, Files, folders and paths
 
-*Deep.* ### Other languages and what they are for
+### Other languages and what they are for
 
-TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one binary. Rust: speed and safety, the new systems language. Java/Kotlin, C#: enterprise and Android. Swift: Apple. C/C++: everything underneath. Bash: gluing them. You do not learn them all; you learn to read them, and agents write them.
+*Deep.* TypeScript: JavaScript with types, most web apps. Go: servers and CLIs, one binary. Rust: speed and safety, the new systems language. Java/Kotlin, C#: enterprise and Android. Swift: Apple. C/C++: everything underneath. Bash: gluing them. You do not learn them all; you learn to read them, and agents write them.
 
 **History.** C 1972, C++ 1985, Java 1995, C# 2002, Go 2009, Rust 2015 (1.0), Swift 2014, TypeScript 2012. Each language is a bet on what is expensive: programmer time (Python), machine time (Rust), or organisational scale (Java).
 
@@ -296,9 +296,9 @@ Docs: [Stack Overflow developer survey](https://survey.stackoverflow.co) · [Rus
 
 Unlocks: Docker and containers
 
-*Deep.* ### Tests and evals
+### Tests and evals
 
-A test runs code and checks the result. An eval does the same for an agent: a set of tasks with known good answers, run after every change to AGENTS.md or a skill. Without tests, an agent will happily make things worse faster.
+*Deep.* A test runs code and checks the result. An eval does the same for an agent: a set of tasks with known good answers, run after every change to AGENTS.md or a skill. Without tests, an agent will happily make things worse faster.
 
 **History.** JUnit was written by Kent Beck and Erich Gamma on a flight to OOPSLA in 1997, pytest's lineage starts in 2004, property-based testing arrived with QuickCheck (ICFP 2000). Model evals became an engineering discipline around 2023; today teams keep an eval set next to their instruction files.
 
@@ -312,9 +312,9 @@ Unlocks: CI/CD and automation
 
 Files, schemas, warehouses and SQL over all of it.
 
-*Basics.* ### Data: files, schemas, warehouses
+### Data: files, schemas, warehouses
 
-Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses (Snowflake, BigQuery, DuckDB locally). A schema is the contract: column names and types. Most data pain is schema drift, which is why AGENTS.md pins the columns of scores.csv.
+*Basics.* Data lives in files (CSV, Parquet), databases (Postgres, SQLite), and warehouses (Snowflake, BigQuery, DuckDB locally). A schema is the contract: column names and types. Most data pain is schema drift, which is why AGENTS.md pins the columns of scores.csv.
 
 **History.** Relational databases: Codd 1970. Postgres 1986 (Berkeley). SQLite 2000, in every phone. Cloud warehouses (BigQuery 2011, Redshift 2012, Snowflake 2015) separated storage from compute. Parquet (2013, Twitter and Cloudera) is the file format they all read.
 
@@ -324,9 +324,9 @@ Docs: [Parquet](https://parquet.apache.org/docs/) · [SQLite](https://www.sqlite
 
 Unlocks: Building and consuming APIs, Tests and evals
 
-*Basics.* ### CSV done properly
+### CSV done properly
 
-CSV is a text file of records separated by line breaks and fields separated by commas, and it is the format every tool can read and no tool reads the same way. Reach for it when a human has to open the file, when the other side is a spreadsheet, or when the data is small enough that nobody cares about speed. RFC 4180 writes the rules down, but it is an Informational document that "does not specify an Internet standard of any kind", so it describes common practice rather than commanding it. The three fields that break naive code are a field with a comma in it, a field with a quote in it, and a field with a line break in it; all three are legal and all three need quoting. And for an agent: never split a CSV line on commas. Use a real reader, because the line you are splitting may not be a whole record.
+*Basics.* CSV is a text file of records separated by line breaks and fields separated by commas, and it is the format every tool can read and no tool reads the same way. Reach for it when a human has to open the file, when the other side is a spreadsheet, or when the data is small enough that nobody cares about speed. RFC 4180 writes the rules down, but it is an Informational document that "does not specify an Internet standard of any kind", so it describes common practice rather than commanding it. The three fields that break naive code are a field with a comma in it, a field with a quote in it, and a field with a line break in it; all three are legal and all three need quoting. And for an agent: never split a CSV line on commas. Use a real reader, because the line you are splitting may not be a whole record.
 
 **History.** RFC 4180 gives the grammar as file = [header CRLF] record *(CRLF record) [CRLF], so a record is a line and the line break is CRLF. It says "Fields containing line breaks (CRLF), double quotes, and commas should be enclosed in double-quotes", which is why a quoted field may contain a newline and still be one field. A double quote inside a quoted field is escaped by doubling it: "a double-quote appearing inside a field must be escaped by preceding it with another double quote". The MIME type it registers is text/csv, with the optional parameters charset and header, whose "Valid values are 'present' or 'absent'". Python's own csv documentation puts the reason for all of this plainly: "CSV format was used for many years prior to attempts to describe the format in a standardized way in RFC 4180. The lack of a well-defined standard means that subtle differences often exist in the data produced and consumed by different applications."
 
@@ -336,9 +336,9 @@ Docs: [RFC 4180, Common Format and MIME Type for CSV Files](https://www.rfc-edit
 
 Unlocks: JSON Lines, Parquet, Schemas and schema evolution
 
-*Basics.* ### JSON Lines
+### JSON Lines
 
-JSON Lines is one JSON value per line in a UTF-8 text file, extension .jsonl. Reach for it when records arrive one at a time and the file has to stay appendable: logs, event streams, an API paged into a file, anything you want to tail. It is the format that makes a large JSON document readable a record at a time, because a whole-file JSON array has to be parsed before you see the first record. Every line stands alone, so two files concatenate into one valid file and a crash halfway through costs you one line, not the file. And for an agent: a .jsonl file is the cheapest append-only log you can write from a tool, and the easiest one to diff.
+*Basics.* JSON Lines is one JSON value per line in a UTF-8 text file, extension .jsonl. Reach for it when records arrive one at a time and the file has to stay appendable: logs, event streams, an API paged into a file, anything you want to tail. It is the format that makes a large JSON document readable a record at a time, because a whole-file JSON array has to be parsed before you see the first record. Every line stands alone, so two files concatenate into one valid file and a crash halfway through costs you one line, not the file. And for an agent: a .jsonl file is the cheapest append-only log you can write from a tool, and the easiest one to diff.
 
 **History.** The specification has three requirements, and the first is UTF-8: "a byte order mark (U+FEFF) must NOT be included". The second is that each line is a valid JSON value, where "The most common values will be objects or arrays, but any JSON value is permitted. e.g. null is a valid value but a blank line is not". The third is the line terminator: "Line Terminator is '\n'", and "'\r\n' is also supported because surrounding white space is implicitly ignored when parsing JSON values". The spec explains why the terminator comes after the last record too: "Including a line terminator after every JSON value makes generating and concatenating JSON Lines files easier", while after the last value it is "strongly recommended but not required". The suggested extension is .jsonl, and compressed variants such as .jsonl.gz are named as the way to save space.
 
@@ -348,9 +348,9 @@ Docs: [JSON Lines, the specification](https://jsonlines.org/) · [Python, the js
 
 Unlocks: Schemas and schema evolution, dlt, ingestion as code
 
-*Basics.* ### Ingestion, transformation, orchestration
+### Ingestion, transformation, orchestration
 
-Every data tool you will be handed does one of three things, and the fastest way to read a job advert or an architecture diagram is to sort the names into those three piles. Ingestion moves bytes and changes nothing: dlt, Kafka, a vendor export. Transformation changes meaning and moves nothing: dbt, Polars, SQL in DuckDB. Orchestration runs neither, and owns only the order, the schedule and what happens when a step fails: Airflow, Dagster, Prefect. Read this topic first if the pack looks like a list of sixteen unrelated products, and last if you want the summary. And for an agent: when you are asked to add a tool, say which of the three it is before you install it. Two tools in the same pile is usually a mistake you are about to make.
+*Basics.* Every data tool you will be handed does one of three things, and the fastest way to read a job advert or an architecture diagram is to sort the names into those three piles. Ingestion moves bytes and changes nothing: dlt, Kafka, a vendor export. Transformation changes meaning and moves nothing: dbt, Polars, SQL in DuckDB. Orchestration runs neither, and owns only the order, the schedule and what happens when a step fails: Airflow, Dagster, Prefect. Read this topic first if the pack looks like a list of sixteen unrelated products, and last if you want the summary. And for an agent: when you are asked to add a tool, say which of the three it is before you install it. Two tools in the same pile is usually a mistake you are about to make.
 
 **History.** Each pile has a definition its own documentation gives it. Ingestion, from dlt: it "loads data from various, often messy data sources into well-structured datasets", and it "infers schemas and data types, normalizes the data, and handles nested data structures". Transformation, from dbt: "When you execute dbt run, you are running a model that will transform your data without that data ever leaving your warehouse", which is the whole point, because the data does not move. Orchestration, from Airflow: "A Dag is a model that encapsulates everything needed to execute a workflow", where "Tasks are discrete units of work that are run on workers" and the schedule is one argument. Dagster puts the same job in different words, calling itself "a data orchestrator built for data engineers, with integrated lineage, observability, a declarative programming model". Nothing here is a hierarchy: a working pipeline needs all three, and most of the arguments you will hear are about which pile a particular tool belongs in.
 
@@ -358,9 +358,9 @@ Every data tool you will be handed does one of three things, and the fastest way
 
 Docs: [dlt, the introduction: what ingestion is for](https://dlthub.com/docs/intro) · [dbt, building models: transformation where the data is](https://docs.getdbt.com/docs/build/models) · [Airflow, core concepts: DAGs, tasks and schedules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html) · [Dagster, the documentation home](https://docs.dagster.io/)
 
-*Working knowledge.* ### SQL and DuckDB
+### SQL and DuckDB
 
-SQL asks questions of tables: select what, from where, filter, group, order. DuckDB runs it on CSV and Parquet files with no server, which is why the data hour uses it. Window functions (lag, row_number) are the step from junior to medior.
+*Working knowledge.* SQL asks questions of tables: select what, from where, filter, group, order. DuckDB runs it on CSV and Parquet files with no server, which is why the data hour uses it. Window functions (lag, row_number) are the step from junior to medior.
 
 **History.** SQL was designed at IBM in 1974 (as SEQUEL, by Chamberlin and Boyce) and standardised by ANSI in 1986 and ISO in 1987. It has outlived every technology that promised to replace it. DuckDB (started at CWI Amsterdam in 2018, first release 2019) brought analytics SQL to a single file.
 
@@ -370,9 +370,9 @@ Docs: [DuckDB docs](https://duckdb.org/docs/) · [SQLBolt](https://sqlbolt.com) 
 
 Unlocks: Data: files, schemas, warehouses, Building and consuming APIs
 
-*Working knowledge.* ### Parquet
+### Parquet
 
-Parquet is a binary columnar file format: the rows are cut into row groups, each row group holds one chunk per column, and a footer at the end records where every chunk is and what is in it. Reach for it the moment a CSV stops being something a human opens: it is smaller, it is typed, and a query that wants two of forty columns reads two. The footer is what makes it fast, because a reader can look up the minimum and maximum of a column in a row group and skip the whole group without decompressing it. That skipping is what predicate pushdown means, and it is why the same query is faster on Parquet than on CSV even though Parquet is harder to read by hand. And for an agent: write Parquet when the next step is a query and CSV when the next step is a human.
+*Working knowledge.* Parquet is a binary columnar file format: the rows are cut into row groups, each row group holds one chunk per column, and a footer at the end records where every chunk is and what is in it. Reach for it the moment a CSV stops being something a human opens: it is smaller, it is typed, and a query that wants two of forty columns reads two. The footer is what makes it fast, because a reader can look up the minimum and maximum of a column in a row group and skip the whole group without decompressing it. That skipping is what predicate pushdown means, and it is why the same query is faster on Parquet than on CSV even though Parquet is harder to read by hand. And for an agent: write Parquet when the next step is a query and CSV when the next step is a human.
 
 **History.** The Parquet file layout is documented as a magic number PAR1, then the column chunks, then the file metadata, then a four-byte little-endian metadata length, then PAR1 again. The metadata sits at the end on purpose: "File metadata is written after the data to allow for single pass writing", and a reader works backwards, because "Readers are expected to first read the file metadata to find all the column chunks they are interested in". Splitting metadata from data is also deliberate: it "allows splitting columns into multiple files, as well as having a single metadata file reference multiple parquet files". DuckDB documents what it does with that footer: "When you apply a filter to a column that is scanned from a Parquet file, the filter will be pushed down into the scan", and only "the columns required for the query are read". Size matters to the same reader: DuckDB "works best on Parquet files with row groups of 100K-1M rows each", because it "can only parallelize over row groups", and it measures TPC-H queries running "approximately 1.1-5.0x slower on Parquet files than on a DuckDB database".
 
@@ -382,9 +382,9 @@ Docs: [Apache Parquet, the file format](https://parquet.apache.org/docs/file-for
 
 Unlocks: Apache Arrow, DuckDB beyond the basics, Apache Iceberg
 
-*Working knowledge.* ### Schemas and schema evolution
+### Schemas and schema evolution
 
-A schema is the contract a table keeps: the column names, their types, and whether a value may be missing. Reach for one the moment two programs share a file, because without it the reader guesses and the guess changes when the data does. Schema evolution is what happens next, when a column is added, dropped, renamed or widened while old files are still lying around. The formats that survive that name their columns rather than count them; the one drift nobody can repair automatically is a rename, because a new name and a dropped column look identical from the outside. And for an agent: pin the columns you depend on in writing, then fail loudly when they move, rather than quietly reading position three.
+*Working knowledge.* A schema is the contract a table keeps: the column names, their types, and whether a value may be missing. Reach for one the moment two programs share a file, because without it the reader guesses and the guess changes when the data does. Schema evolution is what happens next, when a column is added, dropped, renamed or widened while old files are still lying around. The formats that survive that name their columns rather than count them; the one drift nobody can repair automatically is a rename, because a new name and a dropped column look identical from the outside. And for an agent: pin the columns you depend on in writing, then fail loudly when they move, rather than quietly reading position three.
 
 **History.** Avro resolves a writer's schema against a reader's schema, and the rules are worth knowing by heart: "If the reader's record schema has a field that contains a default value, and writer's schema does not have a field with the same name, then the reader should use the default value from its field", while "If the writer's record contains a field with a name not present in the reader's record, the writer's value for that field is ignored". A missing field with no default is not patched over: "an error is signalled". Records are matched "by name", not by position, which is the whole trick. Iceberg makes the same promise on a table: it "supports the following schema evolution changes: Add, Drop, Rename, Update, Reorder", "Iceberg schema updates are metadata changes, so no data files need to be rewritten", and the reason it is safe is that "Iceberg uses unique IDs to track each column in a table. When you add a column, it is assigned a new ID so existing data is never used by mistake". DuckDB gives the same problem a reader-side answer: by default it "reads the schema of the first file provided, and then unifies columns in subsequent files by column position", and `union_by_name = true` matches on names instead, where "any missing values are set to NULL".
 
@@ -394,9 +394,9 @@ Docs: [Apache Avro specification, schema resolution](https://avro.apache.org/doc
 
 Unlocks: Apache Iceberg, Data quality and contracts, dlt, ingestion as code
 
-*Working knowledge.* ### DuckDB beyond the basics
+### DuckDB beyond the basics
 
-The core topic on SQL and DuckDB gets you selecting from a CSV; this one is the rest of the tool. Reach for it when the query is the program: a persistent .duckdb file instead of a re-read of the files, views that name a step, window functions that answer per-group questions, and the friendly syntax that removes the boilerplate. The two habits that change the most are QUALIFY, which filters on a window function without a wrapping subquery, and GROUP BY ALL, which stops you restating the grouping columns. Keep reading the files directly while you explore, and load them into a database file once the same data is queried again and again. And for an agent: a .duckdb file is a whole analytics database you can commit to a scratch folder and delete, with no server to start.
+*Working knowledge.* The core topic on SQL and DuckDB gets you selecting from a CSV; this one is the rest of the tool. Reach for it when the query is the program: a persistent .duckdb file instead of a re-read of the files, views that name a step, window functions that answer per-group questions, and the friendly syntax that removes the boilerplate. The two habits that change the most are QUALIFY, which filters on a window function without a wrapping subquery, and GROUP BY ALL, which stops you restating the grouping columns. Keep reading the files directly while you explore, and load them into a database file once the same data is queried again and again. And for an agent: a .duckdb file is a whole analytics database you can commit to a scratch folder and delete, with no server to start.
 
 **History.** DuckDB documents a list it calls Friendly SQL, and most of it exists to delete typing. FROM-first: "DuckDB allows queries in the form of FROM tbl which selects all columns". GROUP BY ALL lets you "omit the group-by columns by inferring them from the list of attributes", and ORDER BY ALL is "shorthand to order on all columns (e.g., to ensure deterministic results)". SELECT * EXCLUDE "allows excluding specific columns from the * expression" and SELECT * REPLACE "allows replacing specific columns with different expressions". Column aliases are usable in WHERE, GROUP BY and HAVING, which no other dialect lets you do. When to stop reading files and load them is a documented answer too: "If you have the storage space available, and have a join-heavy workload and/or plan to run many queries on the same dataset, load the Parquet files into the database first", because a DuckDB database carries "hyperloglog statistics that Parquet files do not have".
 
@@ -406,9 +406,9 @@ Docs: [DuckDB, Friendly SQL](https://duckdb.org/docs/stable/sql/dialect/friendly
 
 Unlocks: dbt, The medallion layering
 
-*Working knowledge.* ### dlt, ingestion as code
+### dlt, ingestion as code
 
-dlt is a Python library that takes whatever a source hands you and lands it in a destination as a proper table. Reach for it when the shape of the incoming data is not your decision: an API that nests three levels deep, a paginated endpoint, a vendor export whose columns move. You write a function that yields records and name a destination; dlt works out the schema, flattens the nesting into columns, creates the tables and loads them. The part that saves the most work is the second run, because a primary key and a merge write disposition turn "load it again" into "update what changed" instead of doubling the table. And for an agent: dlt is the piece that lets you point at a messy source without writing the CREATE TABLE by hand first.
+*Working knowledge.* dlt is a Python library that takes whatever a source hands you and lands it in a destination as a proper table. Reach for it when the shape of the incoming data is not your decision: an API that nests three levels deep, a paginated endpoint, a vendor export whose columns move. You write a function that yields records and name a destination; dlt works out the schema, flattens the nesting into columns, creates the tables and loads them. The part that saves the most work is the second run, because a primary key and a merge write disposition turn "load it again" into "update what changed" instead of doubling the table. And for an agent: dlt is the piece that lets you point at a messy source without writing the CREATE TABLE by hand first.
 
 **History.** The project describes itself plainly: "dlt is an open-source Python library that loads data from various, often messy data sources into well-structured datasets". The work it removes is named in the same place: it "infers schemas and data types, normalizes the data, and handles nested data structures", and it "automates pipeline maintenance with incremental loading, schema evolution, and schema and data contracts". Installing it is one line, pip install dlt, and a pipeline is three arguments plus a run: dlt.pipeline(pipeline_name=..., destination="duckdb", dataset_name=...) then pipeline.run(source). The version read for this topic was 1.30.0, and it is the version the hands-on was run against. Because the destination is DuckDB, none of this needs a warehouse, an account or a network.
 
@@ -418,9 +418,9 @@ Docs: [dlt, the introduction](https://dlthub.com/docs/intro) · [dlt, creating a
 
 Unlocks: dbt, The medallion layering, Data quality and contracts
 
-*Working knowledge.* ### Kafka concepts
+### Kafka concepts
 
-Kafka is a durable log that many programs write to and many programs read from, at their own speed. Reach for it when events have to reach several consumers that do not know about each other, when the reader may be down while the writer is not, or when the order of events per customer is part of the answer. The three words that carry the whole model are topic, partition and consumer group: a topic is the name, a partition is the ordered piece that gives you the ordering guarantee, and a group is how a team of consumers divides the partitions between them. This topic is concepts only, on purpose: the documented way to run either Kafka or Redpanda on a laptop needs Docker and several gigabytes, which is more than a twenty-minute exercise can ask for. And for an agent: if a question is answered by reading the same events twice from different places, you are looking at a log, not a queue.
+*Working knowledge.* Kafka is a durable log that many programs write to and many programs read from, at their own speed. Reach for it when events have to reach several consumers that do not know about each other, when the reader may be down while the writer is not, or when the order of events per customer is part of the answer. The three words that carry the whole model are topic, partition and consumer group: a topic is the name, a partition is the ordered piece that gives you the ordering guarantee, and a group is how a team of consumers divides the partitions between them. This topic is concepts only, on purpose: the documented way to run either Kafka or Redpanda on a laptop needs Docker and several gigabytes, which is more than a twenty-minute exercise can ask for. And for an agent: if a question is answered by reading the same events twice from different places, you are looking at a log, not a queue.
 
 **History.** Kafka's own introduction defines the pieces in order. "An event records the fact that 'something happened' in the world or in your business. It is also called record or message in the documentation." "Producers are those client applications that publish (write) events to Kafka, and consumers are those that subscribe to (read and process) these events." "Events are organized and durably stored in topics. Very simplified, a topic is similar to a folder in a filesystem, and the events are the files in that folder." The guarantee people actually build on is this one: "Events with the same event key (e.g., a customer or vehicle ID) are written to the same partition, and Kafka guarantees that any consumer of a given topic-partition will always read that partition's events in exactly the same order as they were written." Groups are the other half, from the consumer javadoc: "All consumer instances sharing the same group.id will be part of the same consumer group", "each partition is assigned to exactly one consumer in the group", and therefore "The number of total threads across all processes will be limited by the total number of partitions".
 
@@ -430,9 +430,9 @@ Docs: [Apache Kafka, introduction and main concepts](https://kafka.apache.org/in
 
 Unlocks: Ingestion, transformation, orchestration
 
-*Working knowledge.* ### Polars
+### Polars
 
-Polars is a DataFrame library whose best trick is that it does not run your query when you write it. Reach for it when the work is a transformation rather than a question: reshaping, joining and cleaning in Python, where SQL would need a temporary table for every step. Writing scan_csv instead of read_csv gives you a plan rather than a table, and Polars then rewrites that plan before it touches the file. It is the same pushdown idea as Parquet and DuckDB, applied to code you wrote in Python, and it is why the camp's own scores helper is written in Polars. And for an agent: build the whole chain first and collect once at the end; a collect in the middle throws the optimiser's work away.
+*Working knowledge.* Polars is a DataFrame library whose best trick is that it does not run your query when you write it. Reach for it when the work is a transformation rather than a question: reshaping, joining and cleaning in Python, where SQL would need a temporary table for every step. Writing scan_csv instead of read_csv gives you a plan rather than a table, and Polars then rewrites that plan before it touches the file. It is the same pushdown idea as Parquet and DuckDB, applied to code you wrote in Python, and it is why the camp's own scores helper is written in Polars. And for an agent: build the whole chain first and collect once at the end; a collect in the middle throws the optimiser's work away.
 
 **History.** The user guide draws the line in one sentence: "in the lazy API, the query is only evaluated once it is collected", against an eager mode where "the query is executed immediately". The optimisations it names are the two familiar ones. Predicate pushdown: "Apply filters as early as possible while reading the dataset, thus only reading rows with sepal length greater than 5." Projection pushdown: "Select only the columns that are needed while reading the dataset, thus removing the need to load additional columns." The payoff is stated in the same place: they "will significantly lower the load on memory & CPU thus allowing you to fit bigger datasets in memory and process them faster." The guide's own advice is not subtle: "the lazy API should be preferred unless you are either interested in the intermediate results or are doing exploratory work." Underneath it is Arrow, and Polars "can move data in and out of arrow zero copy".
 
@@ -442,9 +442,9 @@ Docs: [Polars user guide, the lazy API](https://docs.pola.rs/user-guide/concepts
 
 Unlocks: dbt, The medallion layering
 
-*Working knowledge.* ### dbt
+### dbt
 
-dbt turns a folder of SELECT statements into a build system: each file is a model, each model is a table or a view, and one function call says which model depends on which. Reach for it when the transformations have outgrown a single script and somebody other than you has to understand the order they run in. The whole idea rests on ref, because writing ref('runs') instead of the table name is what lets dbt work out the graph and build the pieces in the right order. It is transformation only, and it runs where the data already is: no rows leave the warehouse, which on a laptop means the warehouse is a DuckDB file. And for an agent: never hardcode a table name a model already produces; ref is the edge of the graph, and a hardcoded name is an edge nobody can see.
+*Working knowledge.* dbt turns a folder of SELECT statements into a build system: each file is a model, each model is a table or a view, and one function call says which model depends on which. Reach for it when the transformations have outgrown a single script and somebody other than you has to understand the order they run in. The whole idea rests on ref, because writing ref('runs') instead of the table name is what lets dbt work out the graph and build the pieces in the right order. It is transformation only, and it runs where the data already is: no rows leave the warehouse, which on a laptop means the warehouse is a DuckDB file. And for an agent: never hardcode a table name a model already produces; ref is the edge of the graph, and a hardcoded name is an edge nobody can see.
 
 **History.** The documentation keeps the definition small: "Models are primarily written as a select statement and saved as a .sql file", and "A project is a directory of a .yml file (the project configuration) and either .sql or .py files (the models)". A model is "a single file containing a final select statement, and a project can have multiple models, and models can even reference each other". The execution model is the second half: "When you execute dbt run, you are running a model that will transform your data without that data ever leaving your warehouse." The DuckDB adapter is configured with a profile, and the documented local target is four lines: type: duckdb, path: './my_project.duckdb', schema: main and threads. What installs on a laptop today is the open-source dbt Core plus that adapter, which this topic was checked against at dbt Core 1.12.5 with dbt-duckdb 1.11.0; the documentation site also now describes a dbt v2 in which the DuckDB adapter is bundled, so read the install page before you pin anything.
 
@@ -454,9 +454,9 @@ Docs: [dbt, building models](https://docs.getdbt.com/docs/build/models) · [dbt,
 
 Unlocks: Data quality and contracts, The medallion layering, Apache Airflow
 
-*Working knowledge.* ### Apache Airflow
+### Apache Airflow
 
-Airflow is the scheduler: it holds the graph of what runs, in what order, on what schedule, and what to do when a step fails. Reach for it when the pipeline has more than one moving part and somebody has to be able to see, at eight in the morning, which run failed and where. It does not transform your data and it does not move it; it calls the things that do, which is why it sits next to dbt and dlt rather than replacing either. The hands-on here parses a DAG with the real library instead of starting a server, and the reason is measured below, not assumed. And for an agent: a DAG file is Python that is imported, not run, so anything slow at module level is paid on every parse.
+*Working knowledge.* Airflow is the scheduler: it holds the graph of what runs, in what order, on what schedule, and what to do when a step fails. Reach for it when the pipeline has more than one moving part and somebody has to be able to see, at eight in the morning, which run failed and where. It does not transform your data and it does not move it; it calls the things that do, which is why it sits next to dbt and dlt rather than replacing either. The hands-on here parses a DAG with the real library instead of starting a server, and the reason is measured below, not assumed. And for an agent: a DAG file is Python that is imported, not run, so anything slow at module level is paid on every parse.
 
 **History.** The concepts page is short about what a DAG is: "A Dag is a model that encapsulates everything needed to execute a workflow", with a schedule, tasks, task dependencies and callbacks. "Tasks are discrete units of work that are run on workers", and they "come in the form of Operators, Sensors or TaskFlow". Dependencies are declared with operators: "The recommended one is to use the >> and << operators", or the explicit set_upstream and set_downstream. The schedule is one argument: "You define it via the schedule argument", with values such as "@daily" or a cron string. Running the whole thing locally is documented as one command, where "The airflow standalone command initializes the database, creates a user, and starts all components", served at localhost:8080. That is the part this topic declines to make the exercise: the check against Airflow 3.3.2 on a laptop was a 179 MB environment in which importing the SDK alone took about six seconds, and standalone adds a database migration plus an api-server, a scheduler and a triggerer left running. Parsing the DAG with the real library is the honest twenty-minute version; start standalone yourself when you have the afternoon.
 
@@ -466,9 +466,9 @@ Docs: [Airflow, core concepts: DAGs](https://airflow.apache.org/docs/apache-airf
 
 Unlocks: Dagster and Prefect, Ingestion, transformation, orchestration
 
-*Working knowledge.* ### Data quality and contracts
+### Data quality and contracts
 
-A data contract is the small set of promises a table makes: these columns exist, this one is unique, this one is never null, that one only ever holds these values. Reach for it the moment somebody downstream depends on your table, because the alternative is finding out at the dashboard. The mechanism is the same as in code: write the assertion next to the thing, run it on every build, and fail the build rather than publish. This pack uses dbt tests for the exercise because they run against the same DuckDB file with nothing extra to install; Great Expectations is the fuller framework and is worth knowing exists. And for an agent: a test that has never failed has never been proved. Break the data on purpose once and watch it go red.
+*Working knowledge.* A data contract is the small set of promises a table makes: these columns exist, this one is unique, this one is never null, that one only ever holds these values. Reach for it the moment somebody downstream depends on your table, because the alternative is finding out at the dashboard. The mechanism is the same as in code: write the assertion next to the thing, run it on every build, and fail the build rather than publish. This pack uses dbt tests for the exercise because they run against the same DuckDB file with nothing extra to install; Great Expectations is the fuller framework and is worth knowing exists. And for an agent: a test that has never failed has never been proved. Break the data on purpose once and watch it go red.
 
 **History.** dbt ships four generic tests, and they are the four promises most contracts are made of: unique, not_null, accepted_values and relationships, the last being "each customer_id in the orders model exists as an id in the customers table (also known as referential integrity)". They are declared in YAML under a data_tests key on a column. The other half is a singular test: "when you write a SQL query that returns failing rows, you can save that query in a .sql file within your test directory", and the rule is blunt, "If the data test returns zero failing rows, it passes, and your assertion has been validated". Running them is one command: "When you run dbt test, dbt will tell you if each test in your project passes or fails." Great Expectations names the same ideas differently: "An Expectation is a verifiable assertion about data", "An Expectation Suite is a collection of Expectations", and "A Checkpoint is the primary means for validating data in a production deployment of GX". Soda is the third option in this space, but its published soda-core package does not import on Python 3.12, which is what this camp runs, so it is named here and not used.
 
@@ -478,9 +478,9 @@ Docs: [dbt, data tests: generic and singular](https://docs.getdbt.com/docs/build
 
 Unlocks: The medallion layering, Ingestion, transformation, orchestration
 
-*Working knowledge.* ### The medallion layering
+### The medallion layering
 
-Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. Bronze is append-only and never edited, which is what lets you rebuild everything below it when a cleaning rule turns out to be wrong. It is a convention rather than a rule, and Databricks, who named it, say so in as many words. And for an agent: never clean in bronze. The copy of the source you did not touch is the only thing that makes a mistake recoverable.
+*Working knowledge.* Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. Bronze is append-only and never edited, which is what lets you rebuild everything below it when a cleaning rule turns out to be wrong. It is a convention rather than a rule, and Databricks, who named it, say so in as many words. And for an agent: never clean in bronze. The copy of the source you did not touch is the only thing that makes a mistake recoverable.
 
 **History.** Databricks defines it in one sentence: "The medallion architecture describes a series of data layers that denote the quality of data stored in the lakehouse." Bronze is "Raw data ingestion", holding "Raw, unvalidated data", and it "Contains and maintains the raw state of the data source in its original formats". Silver is "Data cleaning and validation", where you "perform data cleansing, deduplication, and normalization". Gold is "Dimensional modeling and aggregation" and "Consists of aggregated data tailored for analytics and reporting". The caveat is theirs too: "Following the medallion architecture is a recommended best practice but not a requirement." The layers are a good fit for the rest of this pack, because dlt lands bronze, dbt builds silver and gold, tests guard the boundary between them, and a table format such as Iceberg is what lets bronze be rebuilt without anyone reading a half-written table.
 
@@ -490,9 +490,9 @@ Docs: [Databricks, what is a medallion architecture](https://docs.databricks.com
 
 Unlocks: Ingestion, transformation, orchestration
 
-*Deep.* ### Apache Arrow
+### Apache Arrow
 
-Arrow is a columnar layout for data in memory, not a file format you store things in. Reach for it when two tools have to hand a table to each other, because Arrow is what lets DuckDB, Polars and pandas pass the same buffers around instead of each writing and parsing its own copy. Parquet is how a table rests on disk; Arrow is how it sits in RAM while something is working on it. The payoff is the copy that does not happen: the bytes one library allocated are the bytes the other one reads. And for an agent: when a pipeline feels slow for no reason, look for a conversion between two libraries that both already speak Arrow.
+*Deep.* Arrow is a columnar layout for data in memory, not a file format you store things in. Reach for it when two tools have to hand a table to each other, because Arrow is what lets DuckDB, Polars and pandas pass the same buffers around instead of each writing and parsing its own copy. Parquet is how a table rests on disk; Arrow is how it sits in RAM while something is working on it. The payoff is the copy that does not happen: the bytes one library allocated are the bytes the other one reads. And for an agent: when a pipeline feels slow for no reason, look for a conversion between two libraries that both already speak Arrow.
 
 **History.** The columnar format specification calls itself "a language-agnostic in-memory data structure specification, metadata serialization, and a protocol for serialization and generic data transport". Its vocabulary is small: an array is "a sequence of values with known length all having the same type", a buffer is "a sequential virtual address space with a given length", and nullness lives apart from the values in a validity bitmap where "a 1 (set bit) for index j indicates that the value is not null". Layout is deliberate down to the address: the spec recommends "allocating memory on aligned addresses (multiple of 8- or 64-bytes)", the 64 matching the SIMD register width so a loop needs no conditional checks. Because the layout holds no pointers it is "relocatable without 'pointer swizzling', allowing for true zero-copy access in shared memory". Arrow's own introduction says why any of this exists: it "was born from the need for a set of standards around tabular data representation and interchange between systems", and adopting them "reduces computing costs of data serialization/deserialization and implementation costs across systems".
 
@@ -502,9 +502,9 @@ Docs: [Apache Arrow, the columnar format specification](https://arrow.apache.org
 
 Unlocks: Polars, DuckDB beyond the basics
 
-*Deep.* ### Apache Iceberg
+### Apache Iceberg
 
-Iceberg is a table format: a pile of Parquet files plus metadata that says which of them are the table right now. Reach for it when several writers share one dataset, when you need to read the table as it was last Tuesday, or when a column has to change without rewriting terabytes. The unit that makes it work is the snapshot, and a commit is an atomic swap of one metadata pointer for another, so a reader either sees the old table or the new one and never a half-written mixture. Delta Lake solves the same problem with the same ingredients (Parquet files plus a log, ACID transactions, time travel, schema enforcement) and the choice between them is usually made by which engines your employer already runs, not by the formats. And for an agent: Iceberg is the version control of tables, and "which snapshot" is the question to ask when two runs disagree.
+*Deep.* Iceberg is a table format: a pile of Parquet files plus metadata that says which of them are the table right now. Reach for it when several writers share one dataset, when you need to read the table as it was last Tuesday, or when a column has to change without rewriting terabytes. The unit that makes it work is the snapshot, and a commit is an atomic swap of one metadata pointer for another, so a reader either sees the old table or the new one and never a half-written mixture. Delta Lake solves the same problem with the same ingredients (Parquet files plus a log, ACID transactions, time travel, schema enforcement) and the choice between them is usually made by which engines your employer already runs, not by the formats. And for an agent: Iceberg is the version control of tables, and "which snapshot" is the question to ask when two runs disagree.
 
 **History.** The specification states the goal first: "Serializable isolation: Reads will be isolated from concurrent writes and always use a committed snapshot of a table's data. Writes will support removing and adding files in a single operation and are never partially visible. Readers will not acquire locks." The mechanism is one file: "All changes to table state create a new metadata file and replace the old metadata with an atomic swap. The table metadata file tracks the table schema, partitioning config, custom properties, and snapshots of the table contents. A snapshot represents the state of a table at some time". Under a snapshot sit manifests: "Data files in snapshots are tracked by one or more manifest files that contain a row for each data file in the table, the file's partition data, and its metrics", and "The manifests that make up a snapshot are stored in a manifest list file", whose stats "are used to avoid reading manifests that are not required for an operation". Concurrency is optimistic: a writer "commits by swapping the table's metadata file pointer from the base version to the new version". Evolution falls out of the same design, because "Iceberg schema updates are metadata changes, so no data files need to be rewritten" and "Iceberg uses unique IDs to track each column".
 
@@ -514,9 +514,9 @@ Docs: [Apache Iceberg, the table specification](https://iceberg.apache.org/spec/
 
 Unlocks: The medallion layering, Data quality and contracts
 
-*Deep.* ### Dagster and Prefect
+### Dagster and Prefect
 
-Dagster and Prefect are the two orchestrators people reach for when Airflow feels like too much ceremony, and they disagree with it in different directions. Dagster changes the unit: you declare the table you want to exist rather than the step that makes it, and the graph is the lineage of your data. Prefect keeps the unit a function: a decorator turns ordinary Python into a flow, and the flow runs locally the moment you call it. Read this topic when you already know what a DAG is and want to know what the alternatives thought was wrong with it. And for an agent: ask what the nodes of the graph are named after. Tasks name the work; assets name the result, and only one of those is what a stakeholder asks about.
+*Deep.* Dagster and Prefect are the two orchestrators people reach for when Airflow feels like too much ceremony, and they disagree with it in different directions. Dagster changes the unit: you declare the table you want to exist rather than the step that makes it, and the graph is the lineage of your data. Prefect keeps the unit a function: a decorator turns ordinary Python into a flow, and the flow runs locally the moment you call it. Read this topic when you already know what a DAG is and want to know what the alternatives thought was wrong with it. And for an agent: ask what the nodes of the graph are named after. Tasks name the work; assets name the result, and only one of those is what a stakeholder asks about.
 
 **History.** Dagster puts the asset first: "An asset represents a logical unit of data such as a table, dataset, or machine learning model", and "Assets can have dependencies on other assets, forming the data lineage for your pipelines". It calls assets "the core abstraction in Dagster", and a definition written with the @dg.asset decorator "is automatically added to a top-level Definitions object". The project describes itself as "a data orchestrator built for data engineers, with integrated lineage, observability, a declarative programming model, and best-in-class testability". Prefect states its aim differently: it "is an open-source orchestration engine that turns your Python functions into production-grade data pipelines with minimal friction", built on "simple Python decorators for tasks and flows", and its quickstart runs a flow with plain python 01_getting_started.py, with a server needed only for scheduled remote deployments. Airflow's own answer to the same question is the TaskFlow API, so the three have converged on decorators while still disagreeing about what a node is.
 
@@ -530,9 +530,9 @@ Unlocks: Ingestion, transformation, orchestration
 
 How programs talk over HTTP and how to build and consume an API.
 
-*Basics.* ### HTTP and APIs
+### HTTP and APIs
 
-HTTP is request and response: a URL, a method (GET, POST), headers, a body, a status code (200, 404, 500). An API is an HTTP endpoint that returns data instead of a page, usually JSON. Every AI model you call is an HTTP API; MCP is a layer on top of the same idea.
+*Basics.* HTTP is request and response: a URL, a method (GET, POST), headers, a body, a status code (200, 404, 500). An API is an HTTP endpoint that returns data instead of a page, usually JSON. Every AI model you call is an HTTP API; MCP is a layer on top of the same idea.
 
 **History.** HTTP 0.9 in 1991, HTTP/1.1 in 1997 (RFC 2068), HTTP/2 in 2015 (RFC 7540). REST was named in Roy Fielding's 2000 dissertation. The OpenAI API (June 2020) made calling a model one POST request.
 
@@ -542,9 +542,9 @@ Docs: [MDN HTTP overview](https://developer.mozilla.org/en-US/docs/Web/HTTP/Over
 
 Unlocks: Building and consuming APIs, MCP, SSH and remote machines
 
-*Working knowledge.* ### Building and consuming APIs
+### Building and consuming APIs
 
-Consuming: read the docs, get a key, make a request, parse JSON. Building: FastAPI turns a Python function into an endpoint in five lines. Keys are secrets: environment variables, never in git. This is the bridge between your data and every other system.
+*Working knowledge.* Consuming: read the docs, get a key, make a request, parse JSON. Building: FastAPI turns a Python function into an endpoint in five lines. Keys are secrets: environment variables, never in git. This is the bridge between your data and every other system.
 
 **History.** SOAP was designed from 1998 and published in 1999; REST-with-JSON replaced it in the 2010s; GraphQL (open sourced 2015) and gRPC (announced 2015, 1.0 in 2016) added alternatives. Today the agent-facing version of an API is an MCP server.
 
@@ -558,9 +558,9 @@ Unlocks: MCP, Docker and containers
 
 Containers, the cloud, platforms and agents that run without you.
 
-*Working knowledge.* ### Docker and containers
+### Docker and containers
 
-A container is a packaged process: your code, its dependencies, and a slice of an operating system, running the same on any machine. A Dockerfile is the recipe; an image is the result; a container is a running copy. It ends 'works on my machine'.
+*Working knowledge.* A container is a packaged process: your code, its dependencies, and a slice of an operating system, running the same on any machine. A Dockerfile is the recipe; an image is the result; a container is a running copy. It ends 'works on my machine'.
 
 **History.** Chroot arrived with Seventh Edition Unix in 1979; Linux mount namespaces in 2002 (kernel 2.4.19) and cgroups in January 2008 (2.6.24). Docker (Solomon Hykes, dotCloud) was first shown at PyCon in March 2013 and made them usable; Kubernetes (Google, open sourced 2014) made them run in fleets. Much of cloud software today runs in containers.
 
@@ -570,9 +570,9 @@ Docs: [Docker get started](https://docs.docker.com/get-started/) · [OrbStack (l
 
 Unlocks: Cloud and servers, CI/CD and automation, Kubernetes and platforms
 
-*Working knowledge.* ### Cloud and servers
+### Cloud and servers
 
-A server is a computer that is always on. The cloud rents you one by the hour (AWS 2006, Azure 2010, GCP 2008) or runs your code without one (serverless: Lambda 2014, Vercel, Cloudflare Workers). For most people's first project, a static host (GitHub Pages) or a small VPS (Hetzner, Fly.io) is enough.
+*Working knowledge.* A server is a computer that is always on. The cloud rents you one by the hour (AWS 2006, Azure 2010, GCP 2008) or runs your code without one (serverless: Lambda 2014, Vercel, Cloudflare Workers). For most people's first project, a static host (GitHub Pages) or a small VPS (Hetzner, Fly.io) is enough.
 
 **History.** AWS launched S3 in March and EC2 in August 2006; renting compute by the hour changed who could start a company. Google App Engine followed in April 2008 and Windows Azure went live in February 2010. Serverless (AWS Lambda, November 2014) removed the server from view; today agents can provision all of it with one prompt, which is why understanding the bill matters.
 
@@ -582,9 +582,9 @@ Docs: [AWS getting started](https://aws.amazon.com/getting-started/) · [Fly.io 
 
 Unlocks: Kubernetes and platforms, Cost, tokens and model choice
 
-*Deep.* ### Headless agents and scheduling
+### Headless agents and scheduling
 
-claude -p runs the agent as a command: prompt in, result out, no chat. Put it in launchd, cron, a GitHub Action or a webhook and you have automation that reasons. This is where the leverage is for a business: one boring job, done on a timer, forever.
+*Deep.* claude -p runs the agent as a command: prompt in, result out, no chat. Put it in launchd, cron, a GitHub Action or a webhook and you have automation that reasons. This is where the leverage is for a business: one boring job, done on a timer, forever.
 
 **History.** Cron is older than almost everything in this tree: its manual page is in Sixth Edition Unix, dated October 1974. The new part is that the scheduled job can now read a mailbox, decide, and write a note. Programmatic agents (2025) are the successor of the scheduled script.
 
@@ -594,9 +594,9 @@ Docs: [Run Claude Code programmatically](https://code.claude.com/docs/en/headles
 
 Unlocks: Tests and evals, Cost, tokens and model choice
 
-*Deep.* ### Kubernetes and platforms
+### Kubernetes and platforms
 
-Kubernetes runs containers across many machines: scheduling, scaling, self-healing. Most knowledge workers never need to touch it; they need to know it is why 'the cloud' can scale, and that agents can now write its YAML for them.
+*Deep.* Kubernetes runs containers across many machines: scheduling, scaling, self-healing. Most knowledge workers never need to touch it; they need to know it is why 'the cloud' can scale, and that agents can now write its YAML for them.
 
 **History.** Google's internal Borg (running containers for over a decade by 2016) became Kubernetes (open sourced 2014). In the 2020s it became the default substrate of cloud software; platform engineering teams now hide it behind internal tools.
 
@@ -610,9 +610,9 @@ Unlocks: The future perspective
 
 What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost.
 
-*Basics.* ### LLM versus harness
+### LLM versus harness
 
-The LLM is the model: text in, text out, no memory, no hands. The harness is everything around it: the loop that calls it repeatedly, the tools it can run (bash, edit file), the files it reads first (AGENTS.md), permissions, hooks, memory. Claude Code, Codex CLI, Cursor are harnesses. Most of the difference in results comes from the harness and what you put in it, not from the model.
+*Basics.* The LLM is the model: text in, text out, no memory, no hands. The harness is everything around it: the loop that calls it repeatedly, the tools it can run (bash, edit file), the files it reads first (AGENTS.md), permissions, hooks, memory. Claude Code, Codex CLI, Cursor are harnesses. Most of the difference in results comes from the harness and what you put in it, not from the model.
 
 **History.** Transformer 2017 (Google, 'Attention is all you need'). GPT-3 2020. ChatGPT November 2022. Claude March 2023. MCP November 2024. Agentic coding harnesses: Cursor's agent mode November 2024, Claude Code February 2025, Codex CLI April 2025. AGENTS.md August 2025.
 
@@ -622,9 +622,9 @@ Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/
 
 Unlocks: Context window and prompts, Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
 
-*Basics.* ### Context window and prompts
+### Context window and prompts
 
-The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file.
+*Basics.* The context window is the model's working memory for one conversation: everything it can see right now, in tokens. Files, instructions, tool output all compete for it. Specificity, scope and 'what not to touch' win because the model cannot read your mind and cannot remember last week without a file.
 
 **History.** GPT-3 had a 2,048-token window (2020); Claude went to 100k in May 2023; Gemini 1.5 ran a million tokens in February 2024 and Claude Sonnet 4 in August 2025. Bigger windows did not remove the need for good instructions; they moved it to what you load.
 
@@ -634,13 +634,13 @@ Docs: [Claude prompt engineering](https://docs.claude.com/en/docs/build-with-cla
 
 Unlocks: AGENTS.md, Agent Skills standard
 
-*Basics.* ### AGENTS.md
+### AGENTS.md
 
-Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
+*Basics.* Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
 
-*Basics.* ### Prompting: task, goal, hard constraints
+### Prompting: task, goal, hard constraints
 
-A prompt an agent can act on has five parts: the task (what to do), the goal (why, so it can make the small decisions), the hard constraints (what must never change: files, APIs, style rules, budgets), the context it cannot infer (which repo, which conventions, what already exists) and the definition of done (what output, checked how). Anthropic's own rule: show the prompt to a colleague with no context; if they would be confused, the model will be too. Say what to do rather than what not to do, put the steps in order when order matters, and explain the why behind a constraint so the model generalises instead of guessing.
+*Basics.* A prompt an agent can act on has five parts: the task (what to do), the goal (why, so it can make the small decisions), the hard constraints (what must never change: files, APIs, style rules, budgets), the context it cannot infer (which repo, which conventions, what already exists) and the definition of done (what output, checked how). Anthropic's own rule: show the prompt to a colleague with no context; if they would be confused, the model will be too. Say what to do rather than what not to do, put the steps in order when order matters, and explain the why behind a constraint so the model generalises instead of guessing.
 
 **History.** Prompt engineering became a discipline with the instruction-tuned models of 2022; Anthropic's prompting guide (2024, kept current for every model since) codified the same advice for Claude: be clear and direct, add context and motivation, give three to five examples, structure with tags, give a role; OpenAI's guide says the same in other words. The best practices page for the current models keeps the golden rule and adds guidance for agentic work: autonomy versus safety, long-horizon state, not over-thinking.
 
@@ -650,9 +650,9 @@ Docs: [Anthropic, prompting best practices](https://platform.claude.com/docs/en/
 
 Unlocks: Structure: XML tags and Markdown blocks, The symbols: slash, at, bang, hash, Context window and prompts, Agent Skills standard
 
-*Basics.* ### The symbols: slash, at, bang, hash
+### The symbols: slash, at, bang, hash
 
-Every agent chat has a few characters that are not words. In Claude Code, a line that starts with `/` is a command or a skill (`/help`, `/init`, `/compact`, `/memory`), a line that starts with `!` runs a shell command and puts its output in the session, and `@` followed by a path mentions a file so the agent reads it (type a letter after it for completion). In CLAUDE.md, `@path` imports another file at launch; inside backticks it stays literal. `#` is a Markdown heading at the start of a line and a tag inside Obsidian (`#tech`); `[[Note]]` is an Obsidian link; `---` fences frontmatter; three backticks fence code; `<tag>` is structure for the model; `$` starts a shell variable and `~` is your home folder. Knowing which parser reads which symbol is half of not being surprised.
+*Basics.* Every agent chat has a few characters that are not words. In Claude Code, a line that starts with `/` is a command or a skill (`/help`, `/init`, `/compact`, `/memory`), a line that starts with `!` runs a shell command and puts its output in the session, and `@` followed by a path mentions a file so the agent reads it (type a letter after it for completion). In CLAUDE.md, `@path` imports another file at launch; inside backticks it stays literal. `#` is a Markdown heading at the start of a line and a tag inside Obsidian (`#tech`); `[[Note]]` is an Obsidian link; `---` fences frontmatter; three backticks fence code; `<tag>` is structure for the model; `$` starts a shell variable and `~` is your home folder. Knowing which parser reads which symbol is half of not being surprised.
 
 **History.** Slash commands come from IRC (1988), file mentions with `@` from Twitter-era chat, `!` for shell escapes from editors like vi and ed, `#` for headings from Markdown (2004) and for tags from Twitter (2007), double brackets from wikis (WikiWikiWeb, 1995) and Obsidian; Claude Code documents its own set on the interactive-mode page.
 
@@ -662,9 +662,9 @@ Docs: [Claude Code, interactive mode (quick commands)](https://code.claude.com/d
 
 Unlocks: Agent Skills standard, Claude and Obsidian, Bash and shell scripts
 
-*Working knowledge.* ### Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
+### Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents
 
-Your standing instructions, per repo and per machine, in files the agent reads before it starts. AGENTS.md for every agent; CLAUDE.md importing it for Claude; .claude/settings.json for permissions and hooks; ~/.claude/ for personal defaults. This is your operating model, versioned.
+*Working knowledge.* Your standing instructions, per repo and per machine, in files the agent reads before it starts. AGENTS.md for every agent; CLAUDE.md importing it for Claude; .claude/settings.json for permissions and hooks; ~/.claude/ for personal defaults. This is your operating model, versioned.
 
 **History.** Cursor's rules files came first, then CLAUDE.md with Claude Code (February 2025) and AGENTS.md (August 2025, stewarded since December 2025 by the Agentic AI Foundation under the Linux Foundation). In one year instruction files went from a hack to a standard read by dozens of tools and used in tens of thousands of repos.
 
@@ -674,17 +674,17 @@ Docs: [agents.md](https://agents.md) · [Claude Code memory](https://code.claude
 
 Unlocks: Agent Skills standard, Hook, MCP
 
-*Working knowledge.* ### Skills (Agent Skills standard)
+### Skills (Agent Skills standard)
 
-Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
+*Working knowledge.* Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
 
-*Working knowledge.* ### Hooks
+### Hooks
 
-Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
+*Working knowledge.* Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
 
-*Working knowledge.* ### Structure: XML tags and Markdown blocks
+### Structure: XML tags and Markdown blocks
 
-Structure tells the model which words are instructions, which are data and which are examples. XML tags do that unambiguously: wrap each kind of content in its own tag (`<instructions>`, `<context>`, `<input>`, `<example>`), keep the names consistent, nest when the content nests (`<documents>` holding `<document index="1">`), and ask for output in a tag when you need to find it. Markdown does the human side: headings for sections, bullets for parallel items, numbered lists for order, fenced code blocks (three backticks with a language) for anything that must be copied exactly, tables for config. A good agent prompt mixes them: Markdown to read, XML to parse.
+*Working knowledge.* Structure tells the model which words are instructions, which are data and which are examples. XML tags do that unambiguously: wrap each kind of content in its own tag (`<instructions>`, `<context>`, `<input>`, `<example>`), keep the names consistent, nest when the content nests (`<documents>` holding `<document index="1">`), and ask for output in a tag when you need to find it. Markdown does the human side: headings for sections, bullets for parallel items, numbered lists for order, fenced code blocks (three backticks with a language) for anything that must be copied exactly, tables for config. A good agent prompt mixes them: Markdown to read, XML to parse.
 
 **History.** XML tags for prompts are Anthropic's recommendation since the first Claude prompting guide; the current best-practices page keeps them for mixing instructions, context, examples and variable input, and for formatting output. Markdown (2004) became the writing format of READMEs, AGENTS.md and Obsidian, so both the agent and the human read it; fenced code blocks come from GitHub Flavored Markdown (2009) and every agent honours the language tag.
 
@@ -694,9 +694,9 @@ Docs: [Anthropic, structure prompts with XML tags](https://platform.claude.com/d
 
 Unlocks: Markdown and Obsidian, AGENTS.md
 
-*Working knowledge.* ### Building the builder
+### Building the builder
 
-Some of the most valuable work is not the feature: it is the template, the tool, the agent configuration or the maintainer note that makes the next feature, by you, a colleague or an agent, cheaper and safer to build. This is the meta step, and it is easy to skip because it produces nothing a user sees. Engelbart called it bootstrapping: use each gain in your tools to build the next tool. Grove called it leverage: judge a piece of work by how much future output it multiplies. In this repository the template that vibe new copies, the skills, the hooks, AGENTS.md and docs/MAINTAINERS.md are all of that kind; they exist so that building the course, and building your own things inside a camp, costs less next time. Brooks's warning applies: no tool removes the essential difficulty of deciding what to build; the meta work removes the accidental difficulty around it.
+*Working knowledge.* Some of the most valuable work is not the feature: it is the template, the tool, the agent configuration or the maintainer note that makes the next feature, by you, a colleague or an agent, cheaper and safer to build. This is the meta step, and it is easy to skip because it produces nothing a user sees. Engelbart called it bootstrapping: use each gain in your tools to build the next tool. Grove called it leverage: judge a piece of work by how much future output it multiplies. In this repository the template that vibe new copies, the skills, the hooks, AGENTS.md and docs/MAINTAINERS.md are all of that kind; they exist so that building the course, and building your own things inside a camp, costs less next time. Brooks's warning applies: no tool removes the essential difficulty of deciding what to build; the meta work removes the accidental difficulty around it.
 
 **History.** Engelbart's 1962 framework (Augmenting Human Intellect) set out bootstrapping: pursue the quickest gains first and spend the resulting capability on the next gain. Brooks's No Silver Bullet (1986) separated essential from accidental difficulty and argued for growing systems and reusing components over hoping for one tool. Grove's High Output Management (1983) gave the word leverage. AGENTS.md (2025) and Claude Code's memory files are the current form: instructions written once, read at the start of every future session, so the cost is paid once and the benefit compounds.
 
@@ -706,13 +706,13 @@ Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](http
 
 Unlocks: Separation of concerns, Agent Skills standard, AGENTS.md, Semantic Versioning
 
-*Working knowledge.* ### MCP (Model Context Protocol)
+### MCP (Model Context Protocol)
 
-Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
+*Working knowledge.* Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
 
-*Working knowledge.* ### Security and permissions
+### Security and permissions
 
-Agents run commands. Give them the least they need: a folder, a permission list, hooks that veto dangerous commands, secrets in the environment, and a git history to undo. Prompt injection (instructions hidden in data the agent reads) is the new phishing.
+*Working knowledge.* Agents run commands. Give them the least they need: a folder, a permission list, hooks that veto dangerous commands, secrets in the environment, and a git history to undo. Prompt injection (instructions hidden in data the agent reads) is the new phishing.
 
 **History.** Least privilege dates to Saltzer and Schroeder, 1975: 'every program and every user of the system should operate using the least set of privileges necessary to complete the job'. It applies unchanged to agents; the harness enforces it with permissions and hooks.
 
@@ -722,9 +722,9 @@ Docs: [Claude Code permissions](https://code.claude.com/docs/en/permissions) · 
 
 Unlocks: Cost, tokens and model choice
 
-*Working knowledge.* ### Cost, tokens and model choice
+### Cost, tokens and model choice
 
-You pay per token in and out. A big context and a strong model cost more per call; a scheduled job that runs hourly multiplies it. Pick the smallest model that passes your evals, cache what repeats, and read the bill weekly.
+*Working knowledge.* You pay per token in and out. A big context and a strong model cost more per call; a scheduled job that runs hourly multiplies it. Pick the smallest model that passes your evals, cache what repeats, and read the bill weekly.
 
 **History.** Per-token pricing arrived with the OpenAI API (2020). Prices per token for equal capability have fallen steeply since; usage rose faster.
 
@@ -734,9 +734,9 @@ Docs: [Claude Code costs](https://code.claude.com/docs/en/costs) · [Claude pric
 
 Unlocks: The future perspective
 
-*Deep.* ### Agent hooks
+### Agent hooks
 
-The same idea inside a coding agent: shell commands (or HTTP endpoints, MCP tools, prompts) that Claude Code runs at points in its lifecycle. PreToolUse can block a tool call, PostToolUse can react to an edit (this repo backs up data/ after every edit), UserPromptSubmit can add context, Stop can keep the agent working, SessionStart can load state. Configured under hooks in settings.json, filtered by a matcher, fed JSON on stdin; exit 2 blocks, JSON on stdout decides.
+*Deep.* The same idea inside a coding agent: shell commands (or HTTP endpoints, MCP tools, prompts) that Claude Code runs at points in its lifecycle. PreToolUse can block a tool call, PostToolUse can react to an edit (this repo backs up data/ after every edit), UserPromptSubmit can add context, Stop can keep the agent working, SessionStart can load state. Configured under hooks in settings.json, filtered by a matcher, fed JSON on stdin; exit 2 blocks, JSON on stdout decides.
 
 **History.** Claude Code documents thirty-two hook events, from SessionStart and PreToolUse to PreCompact and WorktreeCreate, in five configuration scopes (user, project, local, managed policy, plugins); the vibe-map repo uses one PostToolUse hook and Tom's toolbox ships guard hooks as a template.
 
@@ -746,9 +746,9 @@ Docs: [Claude Code hooks reference](https://code.claude.com/docs/en/hooks) · [C
 
 Unlocks: Security and permissions, Headless agents and scheduling
 
-*Deep.* ### Subagents and multi-agent
+### Subagents and multi-agent
 
-A subagent is a second model instance with its own instructions and context, called by the first for a bounded job (scorekeeper). Teams of agents split large work; the risk is coordination cost and compounding errors, so keep each one's job small and testable.
+*Deep.* A subagent is a second model instance with its own instructions and context, called by the first for a bounded job (scorekeeper). Teams of agents split large work; the risk is coordination cost and compounding errors, so keep each one's job small and testable.
 
 **History.** AutoGPT (March 2023) showed loops of agents; they mostly wandered. 2025 harnesses added typed subagents with their own tools and permissions, which is what made delegation reliable.
 
@@ -762,9 +762,9 @@ Unlocks: Headless agents and scheduling
 
 The README, semantic versioning, changelogs and decision records.
 
-*Basics.* ### README and the quickstart
+### README and the quickstart
 
-The README is the front page: what this is, for whom, and the commands that get a stranger from clone to a working run, on the first screen. GitHub shows it under the file list, agents read it first, and it is the last thing maintainers update, which is why every command in it must be one you just ran.
+*Basics.* The README is the front page: what this is, for whom, and the commands that get a stranger from clone to a working run, on the first screen. GitHub shows it under the file list, agents read it first, and it is the last thing maintainers update, which is why every command in it must be one you just ran.
 
 **History.** The name is older than most of this tree. Seventh Edition Unix (1979) shipped /usr/doc/README, a few lines telling you how to format the manual's papers, and DECUS library tapes for the PDP-10 carried READ.ME files of 'random notes' for whoever installed the software. Markdown and GitHub turned README.md into the page a repository opens on; makeareadme.com is the modern checklist.
 
@@ -774,9 +774,9 @@ Docs: [Make a README](https://www.makeareadme.com) · [GitHub docs, About README
 
 Unlocks: GitHub, pull requests, Pages
 
-*Working knowledge.* ### Semantic Versioning
+### Semantic Versioning
 
-A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.
+*Working knowledge.* A version number that makes a promise: MAJOR.MINOR.PATCH, where a MAJOR change breaks something, MINOR adds, PATCH fixes. Read one and you know whether an upgrade can hurt you; write one and you have to know what you changed. Before 1.0.0 anything may change, which is what this repo's 0.2.0 says out loud.
 
 **History.** Tom Preston-Werner, cofounder of GitHub, wrote the spec. The 1.0.0 text dates from September 2011; 2.0.0, the version everyone links, was merged on 18 June 2013. It is written with the RFC 2119 keywords (MUST, SHOULD, MAY), so a version is something a tool can check, not a feeling.
 
@@ -786,9 +786,9 @@ Docs: [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) · [Sourc
 
 Unlocks: Changelogs (Keep a Changelog)
 
-*Working knowledge.* ### Changelogs (Keep a Changelog)
+### Changelogs (Keep a Changelog)
 
-A CHANGELOG.md lists what changed for the person using your thing: newest first, one section per version with its date, six kinds of change (Added, Changed, Deprecated, Removed, Fixed, Security) and an Unreleased section on top. It is not the git log. Commits are for the people who wrote them; the changelog is for everyone else.
+*Working knowledge.* A CHANGELOG.md lists what changed for the person using your thing: newest first, one section per version with its date, six kinds of change (Added, Changed, Deprecated, Removed, Fixed, Security) and an Unreleased section on top. It is not the git log. Commits are for the people who wrote them; the changelog is for everyone else.
 
 **History.** Olivier Lacan started Keep a Changelog on 31 May 2014 as a CHANGELOG that documents itself, under the motto 'Don't let your friends dump git logs into changelogs.' Version 1.0.0 followed on 20 June 2017, 1.1.0 on 15 February 2019 and 2.0.0 on 7 June 2026. The site is MIT licensed; this repo follows 1.1.0.
 
@@ -798,9 +798,9 @@ Docs: [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) · [Source:
 
 Unlocks: CI/CD and automation
 
-*Deep.* ### Architecture decision records
+### Architecture decision records
 
-An ADR is one short file per decision: Title, Status, Context (the forces), Decision (we will ...), Consequences (all of them). Numbered, never deleted, superseded instead. It is the memory an agent cannot infer from the code: why the repo is MIT, why the game is one file, why XP is verified. AGENTS.md says what the rules are; docs/adr/ says why.
+*Deep.* An ADR is one short file per decision: Title, Status, Context (the forces), Decision (we will ...), Consequences (all of them). Numbered, never deleted, superseded instead. It is the memory an agent cannot infer from the code: why the repo is MIT, why the game is one file, why XP is verified. AGENTS.md says what the rules are; docs/adr/ says why.
 
 **History.** Michael Nygard published Documenting Architecture Decisions on 15 November 2011: a page per decision, kept in the repo with the code, in a form borrowed from Alexandrian patterns. The GitHub adr organisation (adr.github.io) collects the templates and tools that followed; MADR, the Markdown variant with drivers and options, reached 4.0.0 in September 2024.
 
@@ -812,9 +812,9 @@ Docs: [ADR home (the GitHub adr organisation)](https://adr.github.io) · [MADR](
 
 Obsidian feature by feature and the vault as long-term memory.
 
-*Basics.* ### Obsidian features
+### Obsidian features
 
-Obsidian is more than a Markdown editor: properties (typed frontmatter), callouts, embeds, a canvas, bases (database views over your notes), templates, daily notes, bookmarks, a graph, a URI scheme, a CLI, Sync and Publish. The vault carries one note per feature, each with the exact commands, the syntax and a five-minute try taken from the official help; `vibe vault feature --all` writes them.
+*Basics.* Obsidian is more than a Markdown editor: properties (typed frontmatter), callouts, embeds, a canvas, bases (database views over your notes), templates, daily notes, bookmarks, a graph, a URI scheme, a CLI, Sync and Publish. The vault carries one note per feature, each with the exact commands, the syntax and a five-minute try taken from the official help; `vibe vault feature --all` writes them.
 
 **History.** Obsidian left beta with 1.0.0 on 13 October 2022, added Canvas in December 2022, Properties with 1.4 on 31 August 2023, Bases (table and cards views) in the 1.9 line, and a command line interface that needs the 1.12 installer; kanban views arrived in 1.14 early access.
 
@@ -824,17 +824,17 @@ Docs: [Obsidian Help](https://help.obsidian.md/) · [The feature table](https://
 
 Unlocks: Claude and Obsidian
 
-*Working knowledge.* ### Memory: the vault as long-term memory
+### Memory: the vault as long-term memory
 
-Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
+*Working knowledge.* Covered in the workstreams; see `docs/RESOURCES.md` and the vault note.
 
 ## What is coming
 
 What stays the same, what changes, and what to do about it.
 
-*Basics.* ### The future perspective
+### The future perspective
 
-Every age here shortened the distance between an idea and a working thing: the terminal (hours), languages (days), the web (weeks to ship), the cloud (minutes to deploy), agents (a sentence). What does not change: someone has to know what they want, check the result, and own the consequences. For a knowledge worker: learn to specify, verify and version. For a founder: your moat moves from building to judgement, data and distribution. Expect agents to run inside every tool, models on the laptop, memory as files you own, and audits of what agents did as a routine compliance question.
+*Basics.* Every age here shortened the distance between an idea and a working thing: the terminal (hours), languages (days), the web (weeks to ship), the cloud (minutes to deploy), agents (a sentence). What does not change: someone has to know what they want, check the result, and own the consequences. For a knowledge worker: learn to specify, verify and version. For a founder: your moat moves from building to judgement, data and distribution. Expect agents to run inside every tool, models on the laptop, memory as files you own, and audits of what agents did as a routine compliance question.
 
 **History.** 1969 Unix, 1991 Python and the web, 2005 git, 2013 Docker, 2017 Transformer, 2022 ChatGPT, 2024 MCP, 2025 coding agents and AGENTS.md. The interval keeps shrinking.
 

@@ -65,6 +65,9 @@ CHECK_TIMEOUT = 1500
 # All of an order's criteria together when a stop hook runs them: under the
 # hook's own timeout in .claude/settings.json, so the tool ends it, with a reason.
 STOP_BUDGET = 1500
+# How many agents an order remembers in touched.json. Four work at once, so a
+# window this wide holds every agent that could still be running.
+TOUCHED_KEEP = 32
 
 
 class Bad(Exception):
@@ -97,6 +100,21 @@ def git(root: Path, *args: str, must: bool = False) -> str:
     return out.stdout.strip()
 
 
+def names(root: Path, *args: str, must: bool = False) -> list[str]:
+    """Paths from a git command that was asked for them with -z. Splitting on
+    newlines hands back a quoted name for anything with a quote, a backslash or
+    a newline in it, and a quoted name matches no file."""
+    out = subprocess.run(
+        ["git", "-C", str(root), *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if must and out.returncode != 0:
+        raise Bad(f"git {' '.join(args)}: {out.stderr.strip()[:300]}")
+    return [n for n in out.stdout.split("\0") if n]
+
+
 # What the tool writes next to an order is a measurement, not part of the work.
 NOT_OURS = (
     ":(exclude)work/orders/*/result.json",
@@ -106,23 +124,26 @@ NOT_OURS = (
 
 def dirty(root: Path) -> list[str]:
     """Paths with uncommitted changes, every untracked file by name. The first
-    column of a status line is a space for an unstaged change, so the output is
-    read unstripped."""
-    out = subprocess.run(
-        ["git", "-C", str(root), "status", "--porcelain", "-z"]
-        + ["--untracked-files=all", "--", ".", *NOT_OURS],
-        capture_output=True,
-        text=True,
-        check=False,
+    column of a status line is a space for an unstaged change, so the entries
+    are read unstripped."""
+    fields = names(
+        root,
+        "status",
+        "--porcelain",
+        "-z",
+        "--untracked-files=all",
+        "--",
+        ".",
+        *NOT_OURS,
     )
-    names, fields = [], [f for f in out.stdout.split("\0") if f]
+    out = []
     while fields:
         entry = fields.pop(0)
-        names.append(entry[3:])
+        out.append(entry[3:])
         # A rename is two paths, and the one that went away matters as much.
         if entry[0] in "RC" and fields:
-            names.append(fields.pop(0))
-    return names
+            out.append(fields.pop(0))
+    return out
 
 
 def _toml(path: Path) -> dict:
@@ -256,9 +277,7 @@ def load_order(folder: Path, teams: Teams, root: Path) -> Order:
         if any(ch in entry for ch in "*?["):
             raise Bad(f"{path}: owns {entry!r}: name files or folders/, not globs")
         inside = (
-            git(root, "ls-files", "--", entry).splitlines()
-            if entry.endswith("/")
-            else []
+            names(root, "ls-files", "-z", "--", entry) if entry.endswith("/") else []
         )
         for name in (entry, *inside):
             home = teams.of(name)
@@ -347,9 +366,11 @@ def worktrees(root: Path = ROOT) -> list[tuple[Path, str]]:
 
 def landed(root: Path = ROOT) -> set[str]:
     """Orders whose accepting review is on main: it travels with the work."""
-    names = git(root, "ls-tree", "-r", "--name-only", "origin/main", "work/orders/")
+    on_main = names(
+        root, "ls-tree", "-r", "--name-only", "-z", "origin/main", "work/orders/"
+    )
     done = set()
-    for name in names.splitlines():
+    for name in on_main:
         if name.endswith("/review.toml"):
             try:
                 ruling = tomllib.loads(git(root, "show", f"origin/main:{name}"))
@@ -412,13 +433,15 @@ def changed(root: Path, base: str) -> list[str]:
     if loose:
         # An uncommitted file is this branch's work only if it differs from
         # base: in the middle of a merge, everything arriving from main is
-        # uncommitted too, and none of it is ours.
-        differs = set(
-            git(
-                root, "diff", "--name-only", "--no-renames", base, "--", *loose
-            ).splitlines()
+        # uncommitted too, and none of it is ours. The index is asked as well as
+        # the working tree, or a change that is only staged reads as no change.
+        differs: set[str] = set()
+        for where in ((), ("--cached",)):  # the working tree, then the index
+            args = ("diff", *where, "--name-only", "--no-renames", "-z", base, "--")
+            differs |= set(names(root, *args, *loose, must=True))
+        new = set(
+            names(root, "ls-files", "--others", "--exclude-standard", "-z", must=True)
         )
-        new = set(git(root, "ls-files", "--others", "--exclude-standard").splitlines())
         mine |= {n for n in loose if n in differs or n in new}
     return sorted(n for n in mine if n)
 
@@ -426,12 +449,12 @@ def changed(root: Path, base: str) -> list[str]:
 def diff_names(root: Path, base: str, rev: str = "HEAD") -> list[str]:
     """Paths that differ between the merge base and rev. A shallow clone may
     lack the merge base, so deepen once; after that, not knowing is an error."""
-    args = ("diff", "--name-only", "--no-renames", f"{base}...{rev}")
+    args = ("diff", "--name-only", "--no-renames", "-z", f"{base}...{rev}")
     try:
-        return git(root, *args, must=True).splitlines()
+        return names(root, *args, must=True)
     except Bad:
         git(root, "fetch", "--no-tags", "--deepen=500", "origin")
-        return git(root, *args, must=True).splitlines()
+        return names(root, *args, must=True)
 
 
 def strays(order: Order, base: str) -> list[str]:
@@ -827,14 +850,25 @@ def _touched(order: Order) -> dict:
 def _remember(order: Order, who: str, rel: str) -> None:
     """Note which agent worked on which order, so that stopping can be judged by
     what an agent did and not by how it words its report. Someone who only ever
-    wrote into the order's folder is reviewing, not building."""
+    wrote into the order's folder is reviewing, not building.
+
+    The rule that keeps the file from growing without end: the newest
+    TOUCHED_KEEP agents are kept and the oldest are dropped, where an agent is
+    new again when its role changes. An agent is written down once, at its first
+    edit, and four work at once, so an entry that has fallen that far behind
+    belongs to an agent that stopped long ago. If one ever did go missing it
+    would cost that agent a reminder, never a check: what decides is work-check,
+    work-accept and CI."""
     if not who:
         return
     seen = _touched(order)
     role = "builder" if not rel.startswith(order.rel) else seen.get(who, "reviewer")
-    if seen.get(who) != role:
-        seen[who] = role
-        (order.dir / "touched.json").write_text(json.dumps(seen), encoding="utf-8")
+    if seen.get(who) == role:
+        return
+    seen.pop(who, None)
+    seen[who] = role
+    kept = dict(list(seen.items())[-TOUCHED_KEEP:])
+    (order.dir / "touched.json").write_text(json.dumps(kept), encoding="utf-8")
 
 
 def hook_pre_tool(event: dict) -> tuple[int, str]:
@@ -871,10 +905,10 @@ def hook_pre_tool(event: dict) -> tuple[int, str]:
             _remember(order, _who(event), rel)
             return 0, ""
     home = teams.of(rel) or "nobody"
-    names = ", ".join(o.id for o in mine)
+    ids = ", ".join(o.id for o in mine)
     owns = ", ".join(x for o in mine for x in o.owns)
     return 2, (
-        f"{rel} is outside order {names}; it belongs to team {home}. Leave it and "
+        f"{rel} is outside order {ids}; it belongs to team {home}. Leave it and "
         f"report it, or have the manager change owns and cross. Owned here: {owns}"
     )
 
@@ -1045,9 +1079,9 @@ def cmd_ci(a: argparse.Namespace) -> int:
     and every sign-off. Ownership is judged when there is exactly one order: a
     train car carries several, each checked where it was built. A pull request
     that carries no order is left alone."""
-    names = diff_names(ROOT, a.base)
+    files = diff_names(ROOT, a.base)
     orders = {o.id: o for o in orders_in(ROOT, load_teams())}
-    carried = {n.split("/")[2] for n in names if n.startswith("work/orders/")}
+    carried = {n.split("/")[2] for n in files if n.startswith("work/orders/")}
     head = (
         a.head
         or os.environ.get("GITHUB_HEAD_REF")
@@ -1058,7 +1092,7 @@ def cmd_ci(a: argparse.Namespace) -> int:
         o.id for o in orders.values() if head and o.branch == head and o.id not in done
     }
     carried &= set(orders)
-    ships_code = any(not n.startswith("work/") for n in names)
+    ships_code = any(not n.startswith("work/") for n in files)
     bad = []
     for oid in sorted(carried):
         if ships_code:

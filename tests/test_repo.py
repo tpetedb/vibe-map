@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -168,36 +167,62 @@ def test_nightly_runs_on_a_schedule_on_tags_and_on_demand() -> None:
     assert any("-m integration" in r for r in runs)
 
 
-def _browser_test_files() -> set[str]:
-    """The files pytest itself puts in the browser battery, asked of pytest."""
-    out = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "pytest",
-            "-m",
-            "browser and not integration",
-            "--collect-only",
-            "--no-header",
-        ],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    ).stdout
-    # The quiet collect prints one "tests/test_x.py: 4" line per file.
-    return set(re.findall(r"^(tests/\S+\.py)(?=[:\s])", out, re.MULTILINE))
-
-
 def test_every_browser_test_file_is_in_exactly_one_shard() -> None:
     """A browser test file in no shard would never run; in two it runs twice."""
-    from tools.ci_shards import shards
+    from tools.ci_shards import browser_test_files, problems, split_lines
 
-    owned: list[str] = [f for s in shards() for f in s.files]
-    collected = _browser_test_files()
+    collected = browser_test_files()
     assert collected, "collected no browser tests, so this guard proves nothing"
-    assert len(owned) == len(set(owned)), "a file is in two shards"
-    assert collected - set(owned) == set(), "browser test files in no shard"
-    assert set(owned) - collected == set(), "a shard names a file with no browser test"
+    found = problems(collected)
+    # The split comes with the failure: rebalancing needs to see it whole.
+    assert not found, "\n".join([*found, "", *split_lines(collected)])
+
+
+def test_a_browser_test_file_no_pattern_claims_runs_in_the_default_shard() -> None:
+    """The point of the default: a new test file runs without an edit to ci.yml."""
+    from tools.ci_shards import assign, browser_test_files, problems
+
+    new = "tests/test_game_example.py"
+    collected = browser_test_files() | {new}
+    homes = [name for name, files in assign(collected).items() if new in files]
+    assert len(homes) == 1, homes
+    assert not problems(collected)
+
+
+def _matrix(tmp_path: Path, include: list[dict[str, object]]) -> Path:
+    """A workflow with nothing in it but a browser matrix, to test the reading."""
+    import yaml
+
+    flow = tmp_path / "ci.yml"
+    jobs = {"browser-shard": {"strategy": {"matrix": {"include": include}}}}
+    flow.write_text(yaml.safe_dump({"jobs": jobs}), encoding="utf-8")
+    return flow
+
+
+def test_the_guard_names_a_pattern_that_claims_nothing(tmp_path: Path) -> None:
+    """A pattern is a promise that those files exist; a typo would run nothing."""
+    from tools.ci_shards import problems
+
+    flow = _matrix(
+        tmp_path,
+        [
+            {"shard": "a", "files": "tests/test_game_a*.py", "default": True},
+            {"shard": "b", "files": "tests/test_game_a.py tests/test_typo*.py"},
+        ],
+    )
+    found = problems({"tests/test_game_a.py"}, flow)
+    assert any("tests/test_typo*.py" in line for line in found), found
+    assert any("tests/test_game_a.py" in line and "a, b" in line for line in found)
+
+
+def test_the_guard_refuses_a_matrix_with_no_default_shard(tmp_path: Path) -> None:
+    """Without a default, a file no pattern claims would be in no shard."""
+    from tools.ci_shards import problems
+
+    flow = _matrix(tmp_path, [{"shard": "a", "files": "tests/test_game_a.py"}])
+    found = problems({"tests/test_game_a.py", "tests/test_game_new.py"}, flow)
+    assert any("default" in line for line in found), found
+    assert any("tests/test_game_new.py" in line for line in found), found
 
 
 def test_the_required_context_is_its_own_job_and_keeps_its_name() -> None:

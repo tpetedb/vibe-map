@@ -110,14 +110,16 @@ def render() -> tuple[dict[str, dict[str, str]], str, str]:
         ):
             if category(i)[0] != c:
                 continue
-            md += f"*{DEPTHS[category(i)[1]]}.* "
+            # A heading only renders as one when it starts its line, so the
+            # depth label opens the body underneath instead of preceding it.
+            md += f"### {n}\n\n*{DEPTHS[category(i)[1]]}.* "
             if i in EXIST:
                 md += (
-                    f"### {n}\n\nCovered in the workstreams; see "
+                    "Covered in the workstreams; see "
                     "`docs/RESOURCES.md` and the vault note.\n\n"
                 )
                 continue
-            md += f"### {n}\n\n{what}\n\n**History.** {hist}\n\n"
+            md += f"{what}\n\n**History.** {hist}\n\n"
             md += f"**Try in five minutes.** {tr}\n\n"
             if docs:
                 md += "Docs: " + " · ".join(f"[{lb}]({u})" for lb, u in docs) + "\n\n"
