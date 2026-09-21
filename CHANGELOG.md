@@ -12,6 +12,270 @@ A branch never edits this file: it adds a fragment under `changelog.d/`, and
 Nothing here between releases: an entry lives in its own file under
 [`changelog.d/`](changelog.d/) until a release assembles them.
 
+## [0.11.0] - 2026-09-21
+
+### Added
+
+- The island can be zoomed. The mouse wheel, a trackpad pinch, two fingers on a phone, the plus and minus keys and a small control on the right edge of the stage all move one camera between three framings: close on the walker, the whole island (the 0 key, or the middle button), and the archipelago with its bridges. A fresh browser now starts close, so the walker, the companion and the name plates read on a phone; the level is kept in Settings, survives a reload, and "Back to the defaults" resets it. Under reduced motion the zoom steps instead of easing, and while the title screen is up the control sits behind the panel and takes no tab stop. The numbers are in the `CAM` block of `src/config/00-config.js`.
+
+- Messages in a bottle. Two bottles lie near the shore of every island; walking over one opens a note with a lesson that really happened while this game was being built (three red tests with one cause, a flaky test that was the birthday problem, a release that got jumped in the queue, a night lost to a spend limit), with a link to the tech tree topic it belongs to. The Backpack keeps the ones you have read. They are not collectibles: no count, badge or progress code knows them. The text lives in `vibemap/data/items.json` under `bottles`.
+
+- In the game, the companion cheers when a stop is claimed, with the happy row every pack already carried. It is a third larger, its pixels are always a whole number of screen pixels so they stay crisp at every zoom, it keeps its colours at noon and takes the moonlight at night, and it no longer gets left behind a stretch of water or jumps onto the walker when a bridge is crossed.
+
+- Every command block in the game has a Copy button: the lessons, the setup guide, an artifact's task and a stop a camp adds. It says "Copied" where you can see it and where a screen reader can hear it, and when the clipboard is missing or refused it selects the command and names the key to press. A command written with `<your_name>` copies with your name in it, shell safe, and says so when there is no name yet.
+
+- A Continue card on the title screen and at the top of the Roadmap: the next open stop of the island you are on, its goal, the one command for it with a Copy button, and a button that opens it.
+
+- The Roadmap says which island you are standing on, how much of it is delivered, and marks the one row to open next.
+
+- The screen stays awake while a panel is open, where the browser has the Screen Wake Lock API. It is released when you close the panel or leave the tab, and taken again when you come back.
+
+- Settings has a text size (Normal, Large, Larger) and a line spacing (Comfortable) with the numbers XAG 101 names: line 1.5, letter 0.12 and word 0.16 times the size. It grows the lesson, the vault note and the title screen and leaves the HUD, the stick and the minimap where your thumb left them. A command block keeps its own tracking, so monospace still lines up.
+
+- A contrast setting: it follows the platform's own high contrast and forced colours by default, and can be insisted on or turned off. It raises the palette's token values only, so black is still the brand.
+
+- A handedness setting: the stick, the jump button and the zoom column swap sides for a left hand or a one-handed grip.
+
+- A quiet setting for the toasts. What a toast would have said is still recorded, so the achievements and the numbers are whole.
+
+- Settings is grouped under five headings, and a row the browser cannot obey (the buzz, the screen wake lock) is not offered at all. Above Normal a row's value takes the whole width, and the control's own size is capped where its longest option still fits the narrowest phone: a select cannot wrap, so the value is either whole or lost.
+
+- The syllabus is published from this repository: `tools/gen_syllabus.py` writes the repetitive blocks of `docs/SYLLABUS.md` (the course map, the mentors, the artifacts, the tech tree) from `vibemap/data/` and renders the whole file into `docs/site/syllabus.html`, which `pages.yml` deploys next to the game as `syllabus.html`. One file, the game's palette, system fonts, a sticky table of contents, print styles, light and dark, and no third-party request. `just syllabus` regenerates it and `--check` fails when it is stale.
+
+- `config/camp.toml` gains `[game] site_url`, where the product is published. The game's Roadmap now resolves "the syllabus" through it, so the link is the neighbour on that site and the product's URL anywhere else. No link to a page in a personal claude.ai account is left, and a repo test keeps it that way.
+
+- The README, the quickstart and a camp's own README say which browsers the game is supported in: Chrome on desktop and on Android is the one it is built and fixed for, an iPhone is best effort because every iPhone browser runs Apple's WebKit, and Firefox and desktop Safari should work without being tested beyond that.
+
+- A link to the game now previews: the page has a description, a canonical address, Open Graph and Twitter card tags, a theme colour and a tab icon that travels inside the one file, so nothing is fetched and no request misses. The Pages workflow publishes the card image next to the game and serves a 404 page in the game's own look with a way home.
+
+- `LICENSE` carries the MIT text in full, so GitHub reads the repository as MIT instead of "Other", and `src/vendor/` now keeps the three.js and Motion licence texts next to the bundles they cover.
+
+- `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue forms and a pull request template: how to report something privately, and the house rules an outsider needs before the first pull request.
+
+- The camp `vibe new` writes carries an MIT `LICENSE` with the year filled in and the name filled in when you gave one.
+
+- Work orders for agents: a task under `work/orders/` names the files it may touch and its acceptance as commands, a different agent rules on it in `review.toml`, another team's files need that team's sign-off, and `tools/work.py` checks all of it from the `work-*` recipes, from Claude Code hooks and in CI. Teams by theme live in `work/teams.toml`, goals become launch groups with `just work-plan`, and an order's GitHub issue carries one status comment and a thread agents read only from people who can push. The hooks stay out of a learner's camp.
+
+### Changed
+
+- The documents an agent or a newcomer reads first now match the product. `HANDOVER.md` is gone: it was dated, named the retired `vibe.toml`, sent readers to `vibemap/tech.py` and asked for setup that shipped long ago, and everything in it that still held is in `AGENTS.md`, `docs/MAINTAINERS.md`, `docs/BRIEF.md` and the `develop-camp` skill. The README leads with the live game, a quickstart that was run as written, and what you have to bring yourself: your own machine, your own repository and your own coding-agent subscription. `docs/SKILLS.md` lists every skill that ships (`council` and `justfile` were missing), `docs/DESIGN.md` quotes the tokens that really are in `src/style.css`, and both are now guarded by a test. The camp-facing skills stop naming files only a product checkout has: `install-camp`, `python-data`, `duckdb-sql`, `council` and `camp-progress` describe what a camp can actually run.
+
+- The finale offers slots ("Friday evening", "Saturday afternoon") instead of five 2026 dates and a note to the maintainer, so a camp's configuration and the published game never read as out of date. A camp still writes its own evenings over them.
+
+- A browser shard in CI claims its test files by name or by pattern (`tests/test_game_qol*.py`), and one shard is the default: a browser test file no pattern claims runs there. A new browser test is run from the moment it exists, without an edit to `.github/workflows/ci.yml`, which is what made two branches that each added one collide. `tools/ci_shards.py` expands the matrix the same way for the shard jobs and for the guard, and the guard still refuses a file in no shard or in two, now also a pattern that claims nothing, and prints the whole split when it fails.
+
+- Every picture under `docs/media` is rendered from the product again by `just media` and `just tui-media`, and seven of them are new: the archipelago, the Ask panel, the Stats panel, the Backpack, the Settings rows, the More menu on a phone and a message in a bottle on its shore. A shot whose subject is laid out against the window is taken in a window of that size, so the social card carries the whole title card and the More menu all seven of its rows; the gameplay GIF walks to the 18:00 signpost through the controls a player uses, in a window where the zoom control is not drawn over the minimap; and the `just start` Welcome screen and campaign map come from the app instead of being kept by hand.
+
+### Removed
+
+- The published site no longer serves the learner's untouched `workspace/game/index.html` at `/your-game.html`.
+
+- `interestAnswered()` is gone from the game: nothing called it.
+
+### Fixed
+
+- When the browser takes the WebGL context away (a phone short of memory, a tab that slept), the stage says so and the Roadmap opens, instead of a flat blue stage with a HUD that carried on. The island comes back by itself when the context returns.
+
+- Leaving an island gives its memory back. Every crossing and every fast travel used to leave the old island's geometries, plate textures and shadow map on the GPU, about 170 geometries and a shadow map per switch; so did every mote of dust behind the walker and every change of look.
+
+- Browser zoom and a move to a screen with another pixel ratio resize the drawing buffer, so the island is no longer drawn at half resolution until a reload.
+
+- Reduced motion, from the system or from Settings, now stills the 3D view as well: clouds, birds, boats, planes, the windmill, confetti, dust and every pulse stop, and so does Rolinda's typewriter. The walk, the follow camera and the companion's frames stay.
+
+- Arrow keys and space typed into a text field move the caret and no longer steer the walker.
+
+- Name plates are legible from the whole-island view (they hold a minimum size on screen), a long name gets a wider plate instead of a smaller font, overlapping plates give way to the nearest one instead of being drawn on top of each other, and the signpost of a built stop no longer shows its plate again.
+
+- The plates over Tom and Rolinda carry the roles of the theme, the same ones the speech bubble shows.
+
+- A mentor's plaque now grows into view in the session that imports the code, instead of staying invisible until the island is rebuilt, and it keeps its distance from the mentor at every world scale.
+
+- The sea's highlight no longer shows the mesh as a checkerboard, and the sea reaches past the haze from the farthest zoom.
+
+- A bridge opens the moment the stop that opens it is claimed, and the Difficulty setting gates the bridges wherever it was chosen. A shut bridge carries a sign saying why, and its barrier is taller.
+
+- A bridge deck now meets the shore of the island rather than starting several metres inland, a far deck spans the whole gap instead of half of it, and the bench on the rest platform can be sat on like every other bench.
+
+- Production's lava river, lake and flows read as lava rather than white, and the volcano's glowing crater is the one that is kept.
+
+- The winter island's aurora is in frame at night, and the snowman's carrot nose points forward.
+
+- A look changed mid-stride keeps the walker walking instead of stopping dead.
+
+- The More menu on a phone is one opaque sheet on the bottom edge: no row over another, none off screen, every row at least 44px, the island dimmed behind it, and a tap beside it or Escape closes it.
+
+- The HUD on a narrow window keeps its two rows the same width, collapses the secondary buttons into More below 820px instead of 480px, keeps a long name on one line and stops stretching the name pill across an ultrawide screen.
+
+- The stage is never taller than the window, so the page does not scroll and the speech bubble stays on screen, in landscape and with Map size Tall.
+
+- The movement hint shows the finger half on a touch device and the keyboard half on a mouse, and no longer sits under the stick or the jump button.
+
+- The phone chrome honours the notch and the home bar, gives every control a 44px target, keeps fields at 16px so iOS does not zoom, drops hover styles where nothing hovers, and hides Full screen where the browser has no Fullscreen API.
+
+- The Map button on a phone says whether the map is open.
+
+- Blocked roadmap rows, the vault note reader and the settings options are readable again: AA contrast from the palette surfaces, and no value cut off mid-word.
+
+- The disclosure chevron on a command block keeps its space before the word on a phone, where the summary is laid out as a flex row and the trailing space in the marker collapsed: "vCommands" read as one word.
+
+- The title screen is modal until Start: the HUD, the walk hint and the speech bubble no longer sit half readable under the panel, they take no tab stop and no click, and `c`, `Cmd K` and `Escape` no longer open a panel over the form or claim a stop before the game has begun.
+
+- The name field and Start stay on screen while the setup guide is open, and the sticky row no longer prints over the first line of the text below it.
+
+- Resume is offered only when there is a name to resume with; a saved look on its own used to offer a button that then turned you down.
+
+- Enter in the name field starts the game, "Your own name" keeps a name that was already typed, and a returning player can open the five steps again under "Change your setup", so the play mode can still be changed later.
+
+- The in-game setup guide sends you to Roadmap, Sync for the progress code, which is where Sync is, not to World. It stops offering a clone it never gives, and its `--github` line sits in a command block like every other command, so the flag can no longer break across a line and be retyped as two words.
+
+- A progress code is now checked whole before anything is merged, in the game and in the terminal alike: an island neither side has, a field of the wrong shape, a version that is not a number and a companion with no pixels are each refused by name, and a refused code leaves the camp exactly as it was. `vibe import` answers with that one sentence instead of a Python traceback.
+
+- A saved record in the browser is checked field by field before it becomes state: an island the game does not build, stops that are not numbers and a record that is not an object each cost that field and never the evening. The player is told which part started fresh.
+
+- How many stops an island or an evening has is the campaign's to say everywhere: in a progress code, in `vibe status`, which used to read an `8` typed into the command, and in the progress line of the onboarding menu, which counted a hard-coded 32. A camp that adds a ninth stop can send it, and a code cannot invent one.
+
+- The XP inside a code is no longer added on top of the XP an import awards. XP derives from the log, which is what `vibe undo` hands back.
+
+- A code from a camp nobody named no longer names the player `<your_name>`.
+
+- A code from a newer `vibe` now says the game is the old side and how to rebuild it, instead of asking for another export.
+
+- Importing a progress code names what it merged, so a code carrying only mentors or only artifacts no longer reports "0/8 workstreams", and a code can no longer dress the walker in a wearable the Backpack calls locked.
+
+- Export selects the code in the box, so a browser that refuses the clipboard still leaves one keystroke that works, and the box has an accessible name. The Sync panel names the command a camp really has: `vibe import <code>`.
+
+- The stats panel and the `vibe dashboard` report count the same things: XP follows the difficulty multiplier the terminal uses, inspecting an artifact pays nothing, and a day streak is a day something was delivered in both places.
+
+- Time per stop counts every island instead of the campus alone, and a row is coloured by that island's own stops.
+
+- The panel's feed names screens, islands and shelves instead of printing internal ids, and says "1 event recorded".
+
+- A chosen shelf with nothing on it shows 0 of 0, and a shelf name is no longer cut mid-word.
+
+- Every sparkline states its reading, on the panel and in the report.
+
+- The report survives an empty `workspace/data/scores.csv`, plots stops on its stops sparkline, gives a verified mentor or a built artifact the time its check recorded or no time at all, and names a badge the way `vibe status` names it.
+
+- Every winter and desert stop now names the file or folder its own check opens, so a learner who follows a lesson literally lands where `vibe check` looks instead of going red on work that was really done.
+
+- The production island's stops 1, 2, 7 and 8 now name the paths their checks read. They told you to run `brew bundle dump`, to write "your own ghostty config", to put a comparison "in the vault" and to `mkdir ~/dotfiles`, while the checks looked in `workspace/dotfiles/Brewfile`, `workspace/dotfiles/ghostty/config`, `workspace/dotfiles/zshrc`, `workspace/agents/comparison.md` and `workspace/dotfiles/`, so the work was done and the stop still went red. Stop 7 also asks for two agents other than Claude Code, which is what its check counts.
+
+- The desert's vibe dial sends you to Chris Olah, the mentor who is on that island, and says where Karpathy and Cherny are instead of promising both of them on the sand.
+
+- The desert's deterministic-checks stop points at the script you wrote into `workspace/python/` on Evening 1; a fresh camp never shipped `workspace/python/scores.py`.
+
+- The lighthouse walkthrough asks for `family.name`: `AddressFamily` is an `IntEnum`, so since Python 3.11 printing the member itself gives the bare number and the check's `AF_INET` never appeared.
+
+- The school and market stall walkthroughs run `uv init .` before `uv add`, which needs a `pyproject.toml` a camp does not have.
+
+- The production island's first stop no longer promises DevTools in a stop that does not mention them, and its fork challenge names `gh repo fork tpetedb/vibe-map`: with no argument `gh` forks the camp.
+
+- `docs/SYLLABUS.md` repeats the steps the game shows, word for word, and a test now holds the two together.
+
+- `vibe check --world desert 3` is passable on the documented install. One runner now stands behind every stop that runs tests: the camp's own `uv run pytest` when the camp declares pytest, else the interpreter running `vibe`, else a `pytest` on PATH. A machine with none is told which command installs one instead of being marked wrong, and pytest stays out of the product's runtime dependencies. A file with no test in it is not a test.
+
+- The stops stopped passing on filler. A model family has to be named and not spelled inside `ollama`, a `mermaid` block has to close around a diagram, `workspace/evals/run.py` has to have a body, a hook counts as a gate only when it runs ruff, a formatter or the tests, the reflog has to remember a rewrite as its operation and not in a commit subject, and a branch has to have reached the remote.
+
+- The dotfiles stop no longer breaks `git add -A` in the camp: it asks for a commit inside `workspace/dotfiles` and for the camp to ignore that folder, so nothing hides in a gitlink.
+
+- A check says which half failed: the spec names the sections or the lines it still needs, the strict note check names the missing link, the game check names the byte floor it measures and no longer says "exists" about a file that exists, and the words a note needs are counted inside its dated section.
+
+- A fork manifest of an unknown version, or one that will not parse, is refused with that sentence instead of "check crashed", and a scaffolded mentor exercise can never be part of a pass.
+
+- A claimed stop's note loses the line saying the stop is not done, even when the learner wrote their own words into that same dated section.
+
+- An artifact check reads the frontmatter block a Markdown file opens with, so a brief that starts with a horizontal rule is still a brief, and a correct Dockerfile passes when docker is installed but no daemon answers.
+
+- The vault graph keys on the palette: the cyan, violet and pink `docs/DESIGN.md` bans by name are gone, and the Collector badge reads the same in the terminal as in the game.
+
+- `vibe status` draws the same four marks as the campaign map in `vibe start` (`x` checked, `i` claimed but not verified, `>` next, `.` to do) and prints the legend whenever the grid is drawn, so a forced claim no longer shows an unexplained `i`.
+
+- `vibe check` refuses two named targets (`--mentor`, `--artifact`, `--topic`) instead of running the first and exiting 0, and an empty one of them is refused the way an unknown id is rather than quietly checking campus stop 1.
+
+- `vibe check --fork all` claims the forking stop when the four challenges pass, as the source always promised; one challenge says what it proved and claims nothing, instead of telling everyone their fork builds.
+
+- Raising the difficulty no longer pays out again for a stop a check already verified. A stop claimed in the game or with `--force` is still topped up.
+
+- A hint at beginner and easy is the whole hint; at normal and hard it stops after the first sentence, which is the difference the difficulty table promises.
+
+- `vibe fork --force` says what it is about to delete and asks first.
+
+- `vibe toolbelt --install <unknown>` is one red line, not a traceback, and `--install missing` on a complete tier says so instead of printing nothing.
+
+- `vibe council` convenes the mentors of the island you are on, says who did not fit at the four-seat table, and refuses an empty question before it spends a provider call.
+
+- `vibe explain` escapes what the provider wrote, so an answer containing square brackets no longer dies with a markup error; it diffs from the first commit and says so when the history is shorter than `-n`, and `-n 0` blames the argument rather than the repository.
+
+- `vibe news --limit 0` no longer empties `News.md` and `news.json`, and `--limit -1` is refused instead of being read as a Python slice. `vibe news` rebuilds Tonight, so the note it writes is never an orphan.
+
+- The nightly check "every registered feed answers and parses" stopped calling a quiet feed a dead one. It separates the two facts it used to confuse: a feed is alive when it answers and is still a feed the parser reads, and fresh when it has items today. arXiv announces Sunday to Thursday, so its cs.AI feed is legitimately empty every weekend, and made the night, and the `v0.10.0` tag, red for no product reason.
+
+- Empty stays a fault for every source that does not say it rests. The one digest that rests says so in `vibemap/data/sources.json` with a new optional `rests` that carries the reason and the link, the way `trust` carries provenance; the other twenty keep a back catalogue in the feed, so nothing at all from them is an outage or a format this parser lost. The registry version is unchanged, because the key is optional and an older release reads the same file.
+
+- That check still fails, by name, for a feed that is really dead: a 404 or any other answer the request does not survive, a body that is not XML, XML that is not a feed, a full feed whose entries no longer carry a title and a link this parser can read, and a full feed whose entry element itself was renamed, which counts as no entries at all and used to pass for a quiet day. Every failure line names the feed, the URL and what was wrong, and a feed that is alive with nothing new warns, so a green night still names it.
+
+- `vibe scores` in a camp that has not played yet exits 0 with one line, so `just scores` stops reporting day one as a failed recipe.
+
+- `vibe play`, `vibe dashboard` and the play launcher print the path when the machine has no opener, instead of raising `FileNotFoundError`, and `vibe play --offline` reports a network it cannot reach instead of a urllib traceback.
+
+- `vibe start` says it needs a terminal instead of hanging when stdin is a pipe.
+
+- `vibe pet --all` refuses to be combined with a write, rather than printing the gallery and dropping `--species` on the floor.
+
+- `vibe import` writes the companion chosen in the game into `config/camp.toml`, the way `vibe pet` carries it the other way.
+
+- `vibe new --name` writes your name through a real TOML serialiser and reads the file back, so a quote, a backslash, an accent or a newline no longer leaves a camp whose `config/camp.toml` refuses to parse.
+
+- A very long `--name` is cut to a folder name the filesystem accepts instead of ending in an `OSError`.
+
+- `vibe new --github` says the GitHub CLI is missing before it builds half a camp, instead of raising `FileNotFoundError`.
+
+- `vibe name` refuses an empty name, prints a name that looks like markup without crashing, and says `config/camp.toml` the same way `vibe interests` does.
+
+- A command that writes the configuration refuses when there is no camp at `VIBE_HOME`, instead of scattering a config, a state file and a vault at a typo.
+
+- `vibe config --help` promises only what it has.
+
+- The persona recipes name `workspace/data/examples/`, the folder `vibe persona` actually writes to.
+
+- In a camp, `just done n "note" --force` forwards the flag its own error advises, and `just break` refuses to carry uncommitted work onto the play branch.
+
+- The retired `vibe.toml` is gone from the theme file header, the `vibe start` welcome and `env.example`.
+
+- The onboarding terminal fits a small window: the launcher list scrolls and keeps the focused button in view, the toolbelt keeps its rows at 80x24, and a launcher hint wraps instead of running off the side.
+
+- The welcome screen refuses an empty name instead of storing the placeholder, Enter in the name field is Continue, and a theme of your own stays selected and stays in `config/camp.toml` when you press Continue.
+
+- The Terminal setup rows say "installed" as soon as a module is installed, the campaign map speaks the same grid language as `vibe status`, the Campaign status launcher runs the CLI directly instead of `uv run --no-sync`, and the Obsidian launcher opens the vault folder that `[vault] path` names.
+
+- A tool version in the toolbelt arrives without escape codes, so btop no longer prints `^[[1m1.4.7^[[0m` into the table or under `NO_COLOR`.
+
+- In the terminal, the companion keeps its hat on every idle frame, and `vibe pet` on a terminal without truecolor says why forced pixels look flat and how to get the art.
+
+- `vibemap.__version__` now reads `pyproject.toml` when the package is not installed, instead of a pin that was four releases behind and read as a real release. When neither is there it reports `0+unknown`, which cannot be mistaken for one. An installed copy still reads its metadata, so there is one source for the number and nothing to keep in agreement. The `semver` skill says so too: the old "the number lives in two places" rule would have reintroduced the drift it describes.
+
+- `docs/ROADMAP.md` has its headings back. Every topic was written as `*Basics.* ### Unix and the terminal`, one line, so Markdown rendered the whole thing as a paragraph and the seventy topics of the tree had no headings, no anchors and no way to be linked to. The depth label now opens the body underneath the heading.
+
+- `workspace/python/scores.py` says how to run it from the camp root (`python3 workspace/python/scores.py`), the path every other page uses; the one it printed does not exist anywhere.
+
+- The MCP artifact's sample configuration names the camp's real path instead of one from another machine.
+
+- Work orders: a change that is only staged is a stray like any other, a `git diff` the verdict rests on is an error when it cannot run instead of reading as nothing changed, every list of file names is read with `-z` so a name with a quote or an accent in it arrives whole, and `touched.json` keeps the newest thirty-two agents instead of growing without end.
+
+### Security
+
+- A pasted progress code can no longer put markup on the page. Shelf ids and mentor choices in a code went raw into the Roadmap, Settings and the title screen, so a code from a stranger ran script on import and again on every load. The game now checks every id in a code before it merges anything and refuses a code that fails, naming the field; the panels escape those values on their own as well, along with the dashboard feed and the setup commands.
+
+- The build writes data into the game through one helper, `js_json()`, so a value in `config/camp.toml` that contains a closing script tag is a string again instead of running, and a feed headline containing a comment opener can no longer leave the built game dead. `tools/build.py` also refuses any script that could end its own element.
+
+- `vibe news` leaves no angle bracket in a title, a name or a summary (a tag the feed never closed used to survive), requires a host in a link and encodes the characters that would end a Markdown link or an attribute.
+
+- Notes reach the game character for character: a backslash or `${` in a topic is text. Two CSV notes were showing `\n` as a line break and had lost the backslashes of a quoted command.
+
+- The chat bridge refuses a `Content-Length` that is not a plain number (a negative one held a thread until the peer hung up) and marks its JSON answers `nosniff`.
+
+- New: `docs/SECURITY-MODEL.md`, ADR 0014 on why the game ships no Content-Security-Policy yet, and `just sinks-check`, which fails when a new value reaches HTML without `esc()` (`tools/reviewed_sinks.json` is the register of the ones that were looked at).
+
 ## [0.10.0] - 2026-09-19
 
 ### Added
@@ -30,7 +294,7 @@ Nothing here between releases: an entry lives in its own file under
 
 - `.github/CODEOWNERS` in the product, naming the generated folders so a review request that points at one means a generator was skipped, and a commented teaching example in the camp template.
 
-- A command palette over everything the game holds. **Cmd K** or **Ctrl K**, and the Search button in the HUD, open one box that searches the stops of the island you are on, every vault note, every tech-tree topic, the twelve mentors, the twenty artifacts and the forty collectibles; the arrow keys move, Enter opens the stop, the note, the topic, the mentor or the artifact, Escape closes. The index is derived from the same data the panels render, so a new note or a new artifact is in it without a second list to maintain (`src/game/41-search.js`).
+- A command palette over everything the game holds. **Cmd K** or **Ctrl K**, and the Search button in the HUD, open one box that searches the stops of the island you are on, every vault note, every tech-tree topic, the twelve mentors, the twenty-one artifacts and the forty collectibles; the arrow keys move, Enter opens the stop, the note, the topic, the mentor or the artifact, Escape closes. The index is derived from the same data the panels render, so a new note or a new artifact is in it without a second list to maintain (`src/game/41-search.js`).
 
 - **The data engineering pack**, sixteen topics in `vibemap/data/topics/data-engineering/`, written from each project's own documentation and read as one path: the formats data arrives in (CSV to RFC 4180, JSON Lines, Parquet, Arrow, schemas and schema evolution), the engines and table formats it rests in (DuckDB beyond the basics, Iceberg with Delta Lake alongside it), ingestion (dlt, Kafka concepts), transformation (Polars, dbt), orchestration (Airflow, Dagster and Prefect), quality (data contracts and dbt tests), and the two maps that tie it together (the medallion layering, and ingestion versus transformation versus orchestration). Every hands-on runs on a laptop with uv, with no account and no paid service, and every one was run before it landed: the folder built, the commands run, the check confirmed green on the result and red on an empty folder. Where a tool was too heavy for twenty minutes the topic says so with the measurement instead of pretending, so Airflow's exercise parses a DAG with the real library rather than starting `airflow standalone`, and Kafka is concepts only because both its and Redpanda's documented local runs need Docker and gigabytes.
 
@@ -66,7 +330,7 @@ Nothing here between releases: an entry lives in its own file under
 - `vibe topics` lists the packs and what is in them, `vibe topic <id>` prints one the way the vault note reads it, `vibe topic <id> --start` scaffolds its hands-on folder, and `vibe check --topic <id>` runs that hands-on with the same exit-code contract as the other checks: 0 when it passes, 1 when it does not. A pass records the topic, and the progress code carries the topics that are done as `topics`, added inside version 2 and merged as a set, so a topic read on one machine is news on the other and never a correction.
 - `tools/new_topic.py` scaffolds a topic file, or a whole pack, with the keys in the right order, today as the date of check and TODO markers where the author has to read the official documentation and write; it adds the new id to the pack's reading order. `docs/TOPICS.md` is how to write one, the content rule and the review checklist, and `tests/test_topics.py` holds every rule an author can break by hand.
 
-- `vibe artifact`: the artifact walkthroughs in the terminal, with the parity the mentors already had. `vibe artifact` lists the twenty with their island, their task and whether they were built for real; `vibe artifact <id>` prints what the artifact sheet in the game prints (the concept, the documentation page it was written from, the numbered steps, the commands, the definition of done and the check that verifies it); `vibe artifact <id> --start` scaffolds `workspace/artifacts/<id>/` with an honest TODO stub for the file the task names and a `notes.md`, never overwriting work that is already there. A task whose files come from its own commands (`uv init`, `git`) gets no stub and says so.
+- `vibe artifact`: the artifact walkthroughs in the terminal, with the parity the mentors already had. `vibe artifact` lists the twenty-one with their island, their task and whether they were built for real; `vibe artifact <id>` prints what the artifact sheet in the game prints (the concept, the documentation page it was written from, the numbered steps, the commands, the definition of done and the check that verifies it); `vibe artifact <id> --start` scaffolds `workspace/artifacts/<id>/` with an honest TODO stub for the file the task names and a `notes.md`, never overwriting work that is already there. A task whose files come from its own commands (`uv init`, `git`) gets no stub and says so.
 
 - `vibe dashboard` writes `workspace/dashboard.html` from `.vibe/state.json`, the vault and `workspace/data/scores.csv` and opens it (`--no-open` to skip, `--out` to place it elsewhere, `--json` to print the numbers instead). It is one self-contained file with no script and no network, in the same design as the game panel: the tokens come from `vibemap/palette.py` (`css_tokens()`), and a test keeps them equal to the game's `:root` in `src/style.css`.
 
@@ -106,7 +370,7 @@ Nothing here between releases: an entry lives in its own file under
 
 ### Fixed
 
-- The artifact sheet says what its number counts ("3 of 20 artifacts found") instead of reading as an index.
+- The artifact sheet says what its number counts ("3 of 21 artifacts found") instead of reading as an index.
 
 - `main` is protected on GitHub: pull requests only, both CI jobs green and up to date, no force pushes or deletion, enforced for admins; release tags are immutable; merged branches are deleted automatically; secret scanning with push protection and Dependabot security updates are on. `docs/MAINTAINERS.md` and `AGENTS.md` say so.
 
@@ -402,7 +666,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/tpetedb/vibe-map/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/tpetedb/vibe-map/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/tpetedb/vibe-map/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/tpetedb/vibe-map/compare/v0.7.0...v0.8.0

@@ -1,0 +1,24 @@
+# The docs team's manager agreeing to what this order does to the docs team's
+# files. Same rule as a review: it covers one commit and lapses when the owned
+# files move.
+v = 1
+order = "release-0-11-0"
+team = "docs"
+by = "manager-docs"
+reviewed = "c83ee7c13b013e1b05fe688fdf770e39cb314bcf"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = '''
+What I checked. The order, findings.md and both review rounds, then `git diff origin/main...c83ee7c` sorted by the tool's own matching rule: 61 of the changed files are ours. 29 are the fragments under changelog.d (the `*.md` glob makes them ours): main has 30 files there, README.md alone is left, and the 29 are what a release assembles, so agreed. One is docs/media/README.md and 31 are pictures. No other file of ours changed, and no document of ours names a version, so the bump asks nothing of docs. `tests/test_repo.py` is green on this commit and `tools/checks.py style` is clean.
+docs/media/README.md: 45 files in the folder, each with a row, each row with a file. Used in, checked: README.md, docs/ABOUT.md, CHANGELOG.md (island-campus-start.png) and pages.yml (hero.png). The recipes `media` and `tui-media` exist and render what their rows say. The sentence on line 5 about tests holds: tests/test_game_pet.py writes the six pets-game crops, tests/test_media.py only reads, issue 148 is open.
+Pictures I opened: hero, onboarding-start, island-campus, island-campus-start, island-winter, island-desert, island-prod, island-winter-artifacts, archipelago, roadmap, vault, tree, phone, phone-more, backpack, ask, dashboard, settings, bottle, artifact-cafe, two pets-game crops, tui-welcome, tui-map, tui-pet.png and ten frames of gameplay.gif, and main's onboarding-start and artifact-cafe next to the new ones. All show the product as it is, whole, and I read every caption of ours against its picture.
+
+Accept. Nothing below is worth a third review round of a release. Docs takes it as one order of its own after this lands, owning README.md and docs/media/README.md:
+1. docs/media/README.md line 32: `just tui-media --pets` is not a command, the recipe takes no argument; it is `uv run python tools/tui_media.py --pets`. Line 5 says `just tui-media` renders "the terminal screens and the pets": it renders the two screens and the strolling pet, not the gallery. Wrong on main too, but the row was reworded here.
+2. docs/media/README.md lines 25 and 42 say five headings; settings.png holds four, Interruptions is under the fold.
+3. docs/media/README.md line 5 sends a reader to `tools/campus_shots.py`, which also writes island-campus-expanded.png, a picture this folder retired and that has no row. Asked of harness: drop that shot, or move island-campus-start into tools/media.py behind a real start. Until then line 5 says so.
+4. README.md line 58, alt text "character, difficulty, how to play": the new onboarding-start.png is a 1280x760 window and shows step 1 and the companion; How hard and How do you want to play are under the card's fold, where main's picture showed all three. The paragraph above it is still true of the product. Docs rewrites the alt text to what is in the picture.
+5. README.md line 105, alt text: names a 200 that artifact-cafe.png does not show, and main's did not either. Docs fixes it with item 4.
+6. Eight rows say "Used in: this page". That keeps the folder's rule (a picture nobody links to goes to a document or to the bin) on a technicality. Issue 59 still lists docs for the dashboard, the avatar and the archipelago as open; docs writes them into docs/ABOUT.md with these pictures, and the rows then name a real reader.
+Not ours, passed on: src/head.html line 21 (panels) says "at dusk, seen from above" of what is now the title card over a daytime island with a black band under the stage; and the owner uploads the new hero.png as the social preview after the tag.
+'''
