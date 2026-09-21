@@ -72,12 +72,20 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-sm
    is the window minus the talk band, so the scene and the bubble together fill
    the screen and nothing is left over as a black letterbox. The stage is never
    taller than that: a floor under its height turns the 3D view into a page
-   scroll surface and puts the speech bubble below the fold on a short screen. */
-#stage{position:relative;height:calc(100vh - var(--talk-band));height:calc(100dvh - var(--talk-band));overflow:hidden;background:#9BD3F5}
-#stage.map-compact{height:min(56vh,520px)}
+   scroll surface and puts the speech bubble below the fold on a short screen.
+   The height is a value of its own because what hangs inside the stage has to
+   measure the room it has: the bar takes the top of it, the button columns the
+   bottom, and the toast stack what is left between them. The plain vh line is
+   the fallback for a browser without dvh. */
+#stage{position:relative;--stage-h:calc(100vh - var(--talk-band));height:var(--stage-h);overflow:hidden;background:#9BD3F5}
+#stage.map-compact{--stage-h:min(56vh,520px)}
 /* The whole window: the band stops being a strip under the stage and becomes
    the bottom of it, so the line that says what to do stays on screen. */
-#stage.map-tall{height:100vh;height:100dvh}
+#stage.map-tall{--stage-h:100vh}
+@supports (height:100dvh){
+  #stage{--stage-h:calc(100dvh - var(--talk-band))}
+  #stage.map-tall{--stage-h:100dvh}
+}
 body:has(#stage.map-tall) #talk{position:fixed;left:0;right:0;bottom:0;z-index:20}
 /* The band lies over the bottom of the tall stage, so what lives there steps
    up by its height instead of hiding behind it. */
@@ -155,7 +163,7 @@ h3 .ic{width:13px;height:13px;margin-right:6px;vertical-align:-2px}
 /* The HUD is the app bar: it stays above the sheet overlay, so Ask, Search and
    the menu work while a stop is open. The name pill steps aside then, and the
    sheet's Close button lives on the other side of the bar. */
-#hud{z-index:40;top:calc(10px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;gap:8px;row-gap:6px;flex-wrap:wrap}
+#hud{z-index:40;--hud-top:calc(10px + env(safe-area-inset-top,0px));top:var(--hud-top);left:calc(12px + env(safe-area-inset-left,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;gap:8px;row-gap:6px;flex-wrap:wrap}
 body:has(#sheet.on) #hud-name,body:has(#sheet.on) #kpis,
 body:has(#sheet.on) #hud-stoplabel,body:has(#sheet.on) #hud-okrs{display:none}
 body:has(#sheet.on) #hud{justify-content:flex-end}
@@ -559,14 +567,23 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
    column. A message moves nothing.
    It keeps to the left half of the row: the right half under the bar is the
    map's column, and the half is the wider of the two at every width the game
-   is played at. Bounded on purpose: a batch of unlocks shows the newest
-   messages rather than filling the window, because a column packed from the
-   bottom overflows at the top, which is the oldest end. */
-#toast{position:absolute;top:calc(100% + 8px);left:0;width:min(340px,50%);display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:8px;max-height:40vh;overflow:hidden;pointer-events:none}
-/* A stack over its bound is cut by that edge, so the oldest card fades into
-   it instead of ending mid sentence. Only then: on a stack that fits, the
-   same fade would dim the message itself. */
-#toast:has(.tst:nth-child(4)){-webkit-mask-image:linear-gradient(to bottom,transparent,#000 56px);mask-image:linear-gradient(to bottom,transparent,#000 56px)}
+   is played at.
+   Its height is the room between the two, not a fraction of the window: the
+   stage, less the bar it hangs from (100% is that bar, however many rows it
+   wrapped to) and less the button column at the bottom, so no batch of
+   unlocks can reach the zoom buttons in either hand. Never more than 40vh,
+   because a message is not a page, and never less than one card: a phone
+   lying down has no free band at all, and a message over a button is still
+   better than a message nobody sees.
+   The newest message is at the top, nearest the bar it hangs from, so the
+   stack gives way at the far end and the message just raised is always whole.
+   The fade is the last of that room and nothing switches it on: it marks a
+   card that reaches the bound, and on a stack that ends above it there is
+   nothing under the gradient to dim. */
+#toast{--keep:192px;position:absolute;top:calc(100% + 8px);left:0;width:min(340px,50%);display:flex;flex-direction:column-reverse;justify-content:flex-end;align-items:flex-start;gap:8px;height:max(96px,min(40vh,calc(var(--stage-h) - 100% - var(--hud-top) - 8px - var(--keep))));overflow:hidden;pointer-events:none;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 24px),transparent)}
+/* The room to keep at the bottom: where #zoom stands and how tall it is, plus
+   a gap, so the lowest card and the highest button never meet. */
+@media (hover:none),(pointer:coarse){#toast{--keep:274px}}
 /* The title hides the HUD and covers it, and the record is repaired before
    the island is entered, so what that repair says has to stay on screen: the
    row comes forward with the panel, and it is the only thing in the HUD that
@@ -575,9 +592,15 @@ body:has(#title:not(.off)) #toast{visibility:visible}
 body:has(#title:not(.off)) #hud{z-index:51}
 /* The vault takes the page below the HUD, so the stack anchors to the window
    for as long as it is open, on the same side as on the island. Nothing of
-   the reader lives in that corner. */
-body:has(#vault.on) #toast{position:fixed;inset:auto auto 14px 14px;width:min(340px,calc(100vw - 28px))}
-.tst{flex:none;width:min(340px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+   the reader lives in that corner. It hangs from the bottom edge there, so
+   the newest message is the lowest one and the stack gives way at the top:
+   the same rule, read from the other end. */
+body:has(#vault.on) #toast{position:fixed;inset:auto auto 14px 14px;width:min(340px,calc(100vw - 28px));height:40vh;flex-direction:column;justify-content:flex-end;-webkit-mask-image:linear-gradient(to bottom,transparent,#000 24px);mask-image:linear-gradient(to bottom,transparent,#000 24px)}
+/* The card is read over the island, over an open panel and inside the fade at
+   the bound, so it carries its own surface: a translucent card leans on a
+   backdrop blur, and a blur is worth nothing behind a mask and not enough
+   over a page of text. Same colour as the pills, without the alpha. */
+.tst{flex:none;width:min(340px,100%);background:var(--surface-1);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift)}
 .tst b{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;color:var(--yellow)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}

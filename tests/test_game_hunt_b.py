@@ -17,17 +17,27 @@ Every surface finding is measured on the three the course is played on: the
 1440x900 laptop it is written for, Chromium with Pixel 7 metrics, and WebKit
 with iPhone metrics. Where the finding is about the chrome around a panel the
 measurement is repeated with the largest text size and the left-handed
-layout, because both of those move what a player reads.
+layout, because both of those move what a player reads: left-handed the zoom
+column swaps to the side the stack hangs on, which is the hand the stack has
+to be measured in.
+
+A message is measured with the longest one the game can raise, the widest
+bottle lesson out of the package data, because a message is as tall as its
+words and the bound is about height. It is measured over an open panel as
+well as over the island, because that is where a batch of unlocks is raised
+and where a card that leans on what is behind it stops being readable.
 """
 
 from __future__ import annotations
 
+import io
 import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
 import pytest
+from PIL import Image
 from playwright.sync_api import Browser
 
 from tests.conftest import (
@@ -65,6 +75,11 @@ def browsers(chromium: Browser, webkit: Browser) -> dict[str, Browser]:
     return {"desktop": chromium, "android": chromium, "iphone": webkit}
 
 
+def _options(surface: str) -> dict[str, Any]:
+    """The context a surface is played in: the laptop, or one of the phones."""
+    return DESKTOP if surface == "desktop" else phone_options(surface)
+
+
 @contextmanager
 def _surface(
     browsers: dict[str, Browser],
@@ -80,8 +95,7 @@ def _surface(
     who chose them last night arrives with them; seeding the record is how
     that player is reproduced rather than a way around the dropdown.
     """
-    options = DESKTOP if surface == "desktop" else phone_options(surface)
-    context = browsers[surface].new_context(**options)
+    context = browsers[surface].new_context(**_options(surface))
     page = context.new_page()
     game = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, game.errors)
@@ -206,18 +220,58 @@ WATCH = """() => {
 # The markup toast() writes: the icon, the title, the line under it. The real
 # path test asserts a raised message has exactly this shape, so what is
 # measured here is the message a player gets and not a box of the test's own.
-FILL = """(n) => {
+FILL = """([n, title, body]) => {
   const stack = document.getElementById('toast');
   for (let i = 0; i < n; i++) {
     const node = document.createElement('div');
     node.className = 'tst';
     node.innerHTML =
       '<b><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"></svg>' +
-      'Achievement: First light</b><span>You delivered your first stop. ' +
-      'Unlocked: the head torch, in the Backpack.</span>';
+      title + '</b><span>' + body + '</span>';
     stack.appendChild(node);
   }
   return document.querySelectorAll('#toast .tst').length;
+}"""
+
+# The message a claim raises, as 18-avatar.js writes it.
+CLAIMED = (
+    "Achievement: First light",
+    "You delivered your first stop. Unlocked: the head torch, in the Backpack.",
+)
+
+
+def _widest() -> tuple[str, str]:
+    """The tallest message the game can raise, as 19c-bottles.js writes it.
+
+    A bound on a stack is a bound on height, and height is words: the widest
+    message is the longest bottle lesson and its link, read out of the package
+    data so that a longer lesson written tomorrow is what this measures.
+    """
+    import json
+    from pathlib import Path
+
+    items = json.loads(
+        (Path(__file__).resolve().parents[1] / "vibemap/data/items.json").read_text()
+    )
+    bottle = max(items["bottles"], key=lambda b: len(b["lesson"]))
+    return (
+        "A message in a bottle: " + bottle["title"],
+        bottle["lesson"] + ' <a href="#">Read the topic</a>',
+    )
+
+
+WIDEST = _widest()
+
+# One card, and the colour it is painted in. The strip measured is inside the
+# border and left of the text, where the card draws nothing of its own: what a
+# player sees there is the card's colour, or a blend of it and whatever is
+# behind, which is what a card without its own surface shows.
+CARD = """(which) => {
+  const cards = [...document.querySelectorAll('#toast .tst')];
+  const card = which === 'newest' ? cards[cards.length - 1] : cards[0];
+  const b = card.getBoundingClientRect();
+  return {x: b.left, y: b.top, w: b.width, h: b.height,
+          colour: getComputedStyle(card).backgroundColor};
 }"""
 
 # Every control the HUD offers, the minimap that hangs under it, the zoom
@@ -290,11 +344,34 @@ def _settled(game: GamePage) -> None:
     game.still(MAP_TOP)
 
 
-def _fill(game: GamePage, n: int) -> int:
+def _fill(game: GamePage, n: int, message: tuple[str, str] = CLAIMED) -> int:
     """Put n messages of the shape toast() writes into the HUD's stack."""
-    count = int(game.page.evaluate(FILL, n))
+    count = int(game.page.evaluate(FILL, [n, *message]))
     _settled(game)
     return count
+
+
+def _reads_as_itself(game: GamePage, which: str = "newest") -> dict[str, Any]:
+    """The card shows its own colour, not a mix of it and what is behind it.
+
+    A translucent card leans on a backdrop blur, which nothing behind a mask
+    keeps and which a page of text defeats anyway. The strip is read off the
+    screenshot, so this is the colour a player sees and not a declaration.
+    """
+    card = game.page.evaluate(CARD, which)
+    want = tuple(int(v) for v in re.findall(r"\d+", card["colour"])[:3])
+    clip = {
+        "x": card["x"] + 3,
+        "y": card["y"] + 16,
+        "width": 6,
+        "height": max(8, card["h"] - 32),
+    }
+    image = Image.open(io.BytesIO(game.page.screenshot(clip=clip))).convert("RGB")
+    raw = image.tobytes()
+    seen = {tuple(raw[i : i + 3]) for i in range(0, len(raw), 3)}
+    off = [p for p in seen if max(abs(p[i] - want[i]) for i in range(3)) > 1]
+    assert not off, ("what is behind the card reads through it", want, off[:6], card)
+    return card
 
 
 def test_a_claimed_stop_puts_its_message_in_the_huds_stack(
@@ -338,26 +415,37 @@ def test_a_message_covers_no_control(
         assert info["covered"] == [], info
         assert info["box"]["r"] <= info["view"]["w"] + 1, info
         assert info["box"]["b"] <= info["view"]["h"] + 1, info
+        _reads_as_itself(game)
         _shot(game, f"hunt_b2_{_tag(surface, settings)}")
         game.assert_clean()
 
 
+@pytest.mark.parametrize("settings", CONDITIONS)
 @pytest.mark.parametrize("surface", SURFACES)
 def test_a_full_stack_is_bounded_and_moves_nothing(
-    browsers: dict[str, Browser], server: str, surface: str
+    browsers: dict[str, Browser],
+    server: str,
+    surface: str,
+    settings: dict[str, str],
 ) -> None:
     """B3: a batch of unlocks leaves a stack, and a stack is only itself.
 
     It is bounded, so it never runs off the top of the window, and it is out
     of the HUD's own box, so the minimap that hangs under that box stays
     where it was instead of stepping down the window onto the zoom column.
+
+    The bound is the room between the bar and the buttons at the bottom, so it
+    is measured in both hands: left-handed the zoom column swaps to the side
+    the stack hangs on and stands straight under it. The stack is filled with
+    the widest message the game has, because a bound reached by two messages
+    is not reached by nine short ones.
     """
-    with _surface(browsers, server, surface, settings=FAST) as game:
+    with _surface(browsers, server, surface, settings={**settings, **FAST}) as game:
         _settled(game)
         before = game.page.evaluate(NEIGHBOURS)
         assert before["map"] or before["btn"], ("no map on screen", before)
         assert before["onZoom"] == 0, before
-        assert _fill(game, 9) == 9
+        assert _fill(game, 9, WIDEST) == 9
         after = game.page.evaluate(NEIGHBOURS)
         info = game.page.evaluate(TOAST_OVER)
         for part in ("map", "btn", "hudBottom"):
@@ -367,7 +455,37 @@ def test_a_full_stack_is_bounded_and_moves_nothing(
         assert info["box"]["t"] >= 0, info
         assert info["box"]["b"] <= info["view"]["h"] + 1, info
         assert info["box"]["b"] - info["box"]["t"] <= info["view"]["h"] * 0.4 + 1, info
-        _shot(game, f"hunt_b3_{surface}_stack")
+        # The message just raised is whole: the stack gives way at the far end
+        # from the bar, never on the card a player is being shown.
+        newest = _reads_as_itself(game)
+        assert newest["y"] >= info["box"]["t"] - 0.5, (newest, info)
+        assert newest["y"] + newest["h"] <= info["box"]["b"] + 0.5, (newest, info)
+        _shot(game, f"hunt_b3_{_tag(surface, settings)}_stack")
+        game.assert_clean()
+
+
+@pytest.mark.parametrize("surface", SURFACES)
+def test_a_full_stack_over_an_open_panel_covers_nothing_and_hides_it(
+    browsers: dict[str, Browser], server: str, surface: str
+) -> None:
+    """B3 where a batch is really raised: over the panel that raised it.
+
+    The import button is in the Roadmap, so the messages come up over an open
+    panel, and on a phone that panel is the whole window. Two things have to
+    hold there: the stack still covers no control, the panel's own Close among
+    them, and a message is still read, which a card without a surface of its
+    own is not over a page of text.
+    """
+    with _surface(browsers, server, surface, settings=FAST) as game:
+        game.open_workstream(1)
+        assert _fill(game, 9, WIDEST) == 9
+        info = game.page.evaluate(TOAST_OVER)
+        assert info["covered"] == [], info
+        assert info["box"]["t"] >= 0, info
+        assert info["box"]["b"] <= info["view"]["h"] + 1, info
+        assert info["box"]["b"] - info["box"]["t"] <= info["view"]["h"] * 0.4 + 1, info
+        _reads_as_itself(game)
+        _shot(game, f"hunt_b3_{surface}_stack_on_panel")
         game.assert_clean()
 
 
@@ -425,17 +543,19 @@ TITLE_STACK = """() => {
 }"""
 
 
-@pytest.mark.parametrize("profile", PHONES)
+@pytest.mark.parametrize("surface", SURFACES)
 def test_a_message_raised_on_the_title_is_not_left_behind_it(
-    browsers: dict[str, Browser], server: str, profile: str
+    browsers: dict[str, Browser], server: str, surface: str
 ) -> None:
     """A repaired record is announced before the island is entered.
 
     The title owns the window then and the HUD is hidden under it, so the row
     the stack lives in has to come forward with the message in it. On a phone
-    the panel covers the whole window, which is where this would be lost.
+    the panel covers the whole window, which is where this would be lost; on
+    the laptop it is a box in the middle of the sky, and the message lands
+    somewhere else, so both are photographed.
     """
-    context = browsers[profile].new_context(**phone_options(profile))
+    context = browsers[surface].new_context(**_options(surface))
     page = context.new_page()
     game = GamePage(page=page, url=server + GAME_PATH)
     _attach_error_collectors(page, game.errors)
@@ -457,7 +577,7 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
         seen = page.evaluate("window.__seen")
         assert len(seen) >= 1, seen
         assert seen[0]["parent"] == "toast", seen
-        game.page.evaluate(FILL, 1)
+        game.page.evaluate(FILL, [1, *CLAIMED])
         game.still("document.getElementById('toast').getBoundingClientRect().height")
         info = page.evaluate(TITLE_STACK)
         assert info["visibility"] == "visible", info
@@ -466,7 +586,7 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
         assert info["hud"] > info["title"], info
         assert info["top"] >= 0 and info["bottom"] <= info["view"]["h"] + 1, info
         assert info["right"] <= info["view"]["w"] + 1, info
-        _shot(game, f"hunt_b2_{profile}_title_message")
+        _shot(game, f"hunt_b2_{surface}_title_message")
         game.assert_clean()
     finally:
         context.close()
@@ -495,7 +615,7 @@ def test_the_stack_is_still_on_screen_while_the_vault_is_read(
     with _surface(browsers, server, "desktop", settings=FAST) as game:
         game.open_vault()
         game.still("window.scrollY")
-        game.page.evaluate(FILL, 1)
+        game.page.evaluate(FILL, [1, *CLAIMED])
         game.still("document.getElementById('toast').getBoundingClientRect().height")
         info = game.page.evaluate(VAULT_STACK)
         assert info["hudBottom"] <= 0, ("the HUD is still on screen", info)
@@ -616,7 +736,7 @@ LEADING = """() => {
 }"""
 
 
-@pytest.mark.parametrize("surface", ("desktop", "android"))
+@pytest.mark.parametrize("surface", SURFACES)
 def test_a_wrapped_heading_keeps_its_leading(
     browsers: dict[str, Browser], server: str, surface: str
 ) -> None:
@@ -802,12 +922,17 @@ DIMMED = """() => {
 }"""
 
 
-@pytest.mark.parametrize("profile", PHONES)
+@pytest.mark.parametrize("surface", SURFACES)
 def test_a_shelf_you_did_not_choose_still_reads_without_a_hover(
-    browsers: dict[str, Browser], server: str, profile: str
+    browsers: dict[str, Browser], server: str, surface: str
 ) -> None:
-    """B8: a finger has no hover, so a set-back shelf has to read as it is."""
-    with _surface(browsers, server, profile, record={"interests": ["data"]}) as game:
+    """B8: a finger has no hover, so a set-back shelf has to read as it is.
+
+    The laptop is here for the picture rather than for the hover: the colours
+    a shelf keeps when nothing is pointing at it are the same on all three,
+    and the tree is a wide grid there and a column on a phone.
+    """
+    with _surface(browsers, server, surface, record={"interests": ["data"]}) as game:
         game.hud_action("#hud button:has-text('Tree')")
         game.page.wait_for_selector("#vtree.on", state="attached")
         game.page.wait_for_selector("#vtree .age.faded", state="attached")
@@ -820,5 +945,5 @@ def test_a_shelf_you_did_not_choose_still_reads_without_a_hover(
         assert info is not None and info["shelves"] >= 1, info
         for part in info["parts"]:
             assert part["ratio"] >= 4.5, (part, info["opacity"])
-        _shot_element(game, "#vtree", f"hunt_b8_{profile}_tree")
+        _shot_element(game, "#vtree", f"hunt_b8_{surface}_tree")
         game.assert_clean()
