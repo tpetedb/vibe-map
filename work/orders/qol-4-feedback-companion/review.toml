@@ -1,160 +1,130 @@
-# Review of this order, round 1, by someone who did not build it. Every checked
-# criterion was run again on the reviewed commit. Twelve fixes were taken out
-# one at a time in a copy under /tmp, the game rebuilt and the order's tests run
-# against each. The game was used in Chromium at 1440x900, on the Android
-# profile and in WebKit on the iPhone profile, each with reduced motion off and
-# on. Playwright cannot hide a page (headless, headed, a second tab, a minimised
-# window and focus emulation switched off were all tried, and the page stayed
-# visible), so the hidden page was measured in Chrome for Testing started by
-# hand and driven over raw CDP, where a second foreground tab really hides the
-# first. Eighteen bad records were seeded and each one played. Nothing in the
-# tree but this file was written; the pet pictures that tests/test_game_pet.py
-# rewrites under docs/media when it runs were put back before the commit.
+# Review of this order, round 2, by someone who did not build it and did not
+# write round 1. Every checked criterion was run again on the reviewed commit.
+# Seven fixes were taken out one at a time in a copy under /tmp, the game
+# rebuilt and the test that names each one run against it. The game was used in
+# Chromium at 1440x900, on the Android profile and in WebKit on the iPhone
+# profile, each with reduced motion off and on, six runs. Playwright can neither
+# hide a page nor withhold user activation from one, so the hidden tab and the
+# untouched title were measured in Chrome for Testing started by hand and driven
+# over raw CDP with userGesture false. Thirty-one bad records were seeded on the
+# Android profile and seven of them again in WebKit, and each one was played.
+# The four regression suites were run in the copy, because tests/test_game_pet.py
+# rewrites pictures under docs/media. Nothing in the tree but this file was
+# written. For whoever lands it: the order names cross = state, panels, and the
+# folder holds no sign-off from either team yet.
 v = 1
 order = "qol-4-feedback-companion"
-by = "reviewer-qol-4-feedback-companion-r1"
-reviewed = "ca9ecbea55283a4fc9ce76263c3340a881d63074"
-verdict = "improve"
+by = "reviewer-qol-4-feedback-companion-r2"
+reviewed = "7a6208f23b28501fe0f6a7df30aff33de7825d73"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = '''
-Ran it on ca9ecbe: 17 passed, exit 0. Whether the command proves the sentence was tried by taking fixes out in a scratch copy, rebuilding and running the file. Ten of twelve are noticed, each by the test that names it and for the right reason: the clock no longer stopped on a hidden page (`assert 8.589 == 6.36`), notes not validated per entry (the seeded `{'ts': 'soon'}` survives), hints not validated per entry (`[{'id': 1}]` survives), a hint shown every time (two Tip lines), quiet raising the card anyway (`assert 1 == 0`), reduced motion no longer silencing the buzz (`[[22,40,22],[16,30,16]] == []`), the saved mark unthrottled (`44 <= 5`), the log uncapped, the log keeping markup, the log written into the panel raw (all three profiles fail). The two that nobody notices are both buzz call sites and are ruled under c4.
-The two hidden page tests fake `document.hidden` while the frames keep coming, because the harness cannot hide a page. That proves the listener and the clock, not the browser. So it was measured for real, Chrome for Testing over raw CDP, the game's tab sent to the background for 12 s. Branch, saver auto: `visibilityState` hidden, `__debug().frame` 385 before and 385 after (0 frames drawn), `__awake().t` 6.4733 before and after (0 s), and on the way back the largest step of the ambient clock between two frames was 0.29 s, 13 frames in the first 500 ms, no burst. The same build with the pause taken out (which is what main does): 0 frames while hidden as well, because the browser stops the loop, and then one frame in which the clock steps 13.05 s. The fix does what the changelog says it does.
-Also ran, as asked: `tests/test_game_state.py` and `tests/test_game_avatar.py` together exit 0, so `window.__toasts` is still the count they wait on; `tests/test_game_smoke.py`, `test_game_pet.py`, `test_game_bottles.py` and `test_game_phone.py` together exit 0.
+Ran it on 7a6208f: 21 passed, exit 0, tree clean afterwards. Whether the command proves the sentence: seven fixes taken out one at a time in a scratch copy, rebuilt, and the test that names each one run. All seven are noticed, each for the right reason. The four that round 1 asked for: the buzz allowed before any touch (`assert [[16, 30, 16]] == []` in test_an_untouched_page_is_never_asked_to_buzz), `buzz(BUZZ.find)` removed from 19-items.js (`assert 16 in []`), `buzz(BUZZ.unlock)` removed (`[[22, 40, 22]] == [[22, 40, 22], [16, 30, 16]]`), the cap on the cards removed (`assert 4 <= 3`). Three older ones still hold: Quiet raising the card (`assert 1 == 0`), the Buzz setting ignored (`assert 4 == 2`), the visibilitychange listener not wired (the wait on `__awake().hidden` runs out). Round 1 showed nine more, and those tests are unchanged since.
+The two hidden page tests fake `document.hidden`, so the browser was measured instead. Chrome for Testing over raw CDP, a second tab brought to the front for 13 s: `visibilityState` hidden, `__debug().frame` 219 before and 219 after (0 frames), `__awake().t` 4.2211 before and after (0 s), no saved mark raised by a write made while hidden. On the way back the frame numbers run 220, 221, 222 without a gap, the ambient clock steps 0.0142 s across the whole absence, the largest step between two frames afterwards is 0.0185 s and the largest gap 18.5 ms, 6 frames in the first 100 ms and 30 in the first 500 ms: no jump and no burst. With Battery saver off the same 13 s arrive as one step of 13.05 s, which is what off means and what the builder's note hands to the settings team.
+The untouched title, the same way, nothing clicked and `userGesture` false: a record with `doneW.campus = [1]` unlocks First light behind the title, `navigator.userActivation.hasBeenActive` is false, `navigator.vibrate` was called 0 times and the log has no entry at any level. Round 1's first finding is fixed in the browser it was found in.
+Also ran, in the scratch copy: tests/test_game_state.py and tests/test_game_avatar.py, 33 passed, so `window.__toasts` is still the count they wait on; tests/test_game_smoke.py, test_game_pet.py, test_game_bottles.py and test_game_phone.py, 83 passed.
 '''
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = '''
-Ran the whole command on ca9ecbe: exit 0, ruff check and format clean, `style OK: no em dashes, no emoji`, the sink guard clean, the battery without browser and integration green, `git status` clean afterwards. One clause proves less than it reads: the sink guard counts `.innerHTML =` assignments per file, and this change puts three new values (`n.t`, `n.b`, the time) into an assignment that already existed in `renderPack`, so the guard cannot see them. They were checked by hand instead: all three go through `esc()`; with `esc()` taken off `n.t` in the scratch copy the Notifications test fails on all three profiles; and a seeded note whose title is `<img src=x onerror=...>` and whose body is a script tag and a `javascript:` link is shown as text and runs nothing, in the panel and after an import that tried to carry such notes.
+Ran the whole command on 7a6208f: exit 0, ruff check and format clean, `style OK: no em dashes, no emoji`, `checks.py sinks` exit 0, the battery without browser and integration green, `git status` clean afterwards. The sink guard counts assignments per file, and the log's three values (`n.t`, `n.b`, the time) sit inside an assignment `renderPack` already had, so the guard cannot see them. By hand instead: all three go through `esc()`, and a seeded note whose title is `<img src=x onerror=...>` and whose body is a script tag and a `javascript:` link is shown as text on the Android profile and in WebKit (0 img, script or a elements in the panel, the flag the payload would set stays unset). A progress code that tries to carry `notes` and `hints` of its own imports with "That code held nothing new" and changes neither list. CI on this commit agrees on every step of the lint job but the last, which is the one that waits for this file.
 '''
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = '''
-Ran all six: `build OK: game/vibe-map.html matches src/`, `tree OK`, `cookbook OK`, `syllabus OK`, and `sync_template.py --check` and `sync_fork_source.py --check` exit 0. The four changed modules under `vibemap/data/fork_source/src/game/` carry the same diff as `src/game/`. The check can fail: every mutation above needed a rebuild before the tests saw it.
+Ran all six: `build OK: game/vibe-map.html matches src/`, `tree OK`, `cookbook OK`, `syllabus OK`, and `sync_template.py --check` and `sync_fork_source.py --check` exit 0. `cmp` says the five modules the order owns are byte for byte the same under `vibemap/data/fork_source/src/game/`. The check can fail: every mutation above needed a rebuild before a test saw it, and the copy reported `build OK` again once each was put back.
 '''
 
 [[criteria]]
 id = "c4"
-verdict = "fail"
+verdict = "pass"
 evidence = '''
-Proposal by proposal, used in the browser on the three profiles, reduced motion off and on, zero page errors from the game in all six runs (WebKit has no `navigator.vibrate` at all and logs nothing).
-7, the hidden page: built and measured, see c1. The second half of the proposal, half rate after sixty idle seconds, is not built and not mentioned anywhere.
-10, the buzz: feature detected, gated on the Buzz setting, silent under reduced motion, no error in WebKit. Three call sites, one test. With `buzz(BUZZ.find)` taken out of `19-items.js`, which is the only change in that file, 17 passed; with `buzz(BUZZ.unlock)` taken out, 17 passed. That is two fixes without a test that fails without them. The bridge that opens, which the proposal names, does not buzz, and the pull request does not say so. And the achievement buzz is called from the frame loop before the player has touched the page, which Chrome reports as an error (first finding).
-20, quiet and the log: a toast's words are in the Backpack after the card is gone, on all three profiles and across a reload; quiet raises no `.tst`, `__toasts()` still counts, the log still grows. The on-screen queue with a cap that the proposal asks for is not built and not mentioned. The changelog says a refused import can be read late, and it cannot (second finding).
-21, the pet cheer: rejected with evidence that holds. `5eae261` is an ancestor of origin/main, `19b-pet.js` has the `cheer` state on the `happy` row with the idle fallback, this branch does not touch the file, and `tests/test_game_camera.py -k companion_cheers` passes here (2 passed).
-22, hints: shown once, not again after a reload (one Tip line, `hints == ['pack']`), brought back by the button in Settings. One hint exists, about this order's own new tab; none of the three moments the proposal describes. The pull request says so for the files it does not own.
-24, the saved mark: raised after the write, throttled, `aria-hidden`, no transition under reduced motion, never while the page is hidden.
-So: two fixes with no failing test, and three parts of proposals left out without a word. The criterion says none is silently skipped.
+Round 1 failed this on two counts and both are dealt with. The two buzz call sites without a test each have one now, and each fails with its call taken out (c1). The parts left out in silence are named one by one at the end of findings.md and again in the pull request, with the file and the batch each belongs to; the sentence that issue 127 gives "the idle half-rate half of proposal 7" to batch 2 was checked against the issue and is true. The changelog no longer promises a refused import.
+Proposal by proposal, used in the browser on the three profiles, reduced motion off and on, zero page errors in all six runs (WebKit has no `navigator.vibrate`, shows no Buzz row and logs nothing).
+7: built and measured, see c1. The idle half rate is named for batch 2.
+10: feature detected, gated on the Buzz setting, silent under reduced motion (0 calls on the Android profile with it on, `[22,40,22]` then `[16,30,16]` with it off, 16 on a find reached with the arrow keys), silent before a touch. The bridge is named as a swap.
+20: a toast's words are in the Backpack after the card is gone, on all three profiles and across a reload; Quiet raises 0 cards while `__toasts()` goes 2 to 3 and the log 2 to 3; four achievements in one pass put 3 cards up and 4 lines in the log. The Stats list is named for batch 5.
+21: rejected with evidence that holds. `5eae261` is an ancestor of origin/main, `19b-pet.js` has the `cheer` state on the `happy` row, the file is untouched here and `tests/test_game_camera.py -k companion_cheers` passes (2 passed).
+22: one Tip line, `hints == ['pack']`, still one after a reload and a second opening, and the button in Settings empties the list, after which the next opening logs the line again. The other call sites are named.
+24: raised after the write, throttled, `aria-hidden`, transition 0s under reduced motion, never while hidden.
+State: `hints` and `notes` have defaults, are validated entry by entry in the pattern of pull request 146, come back identical after a reload, do not travel in the progress code (the same as `events` and `settings`) and are left alone by an import. Thirty-one seeded records, each one walked and its log opened: no page error, nothing executed, and wherever `load()` repaired a list the repair line names it (`hints` or `notes`). Nothing was added to a path that runs every frame: the changed code runs on an unlock, a pickup, a save, a toast and a visibility event, 31-animate.js is untouched, and the one toast the frame loop raises (Not open yet) sits behind its `lastSay` guard, so its new write happens once per plot approached.
+One value of proposal 20 is not built and not named (the middle level of the Toasts setting); it is a low finding below, because the setting and its two values are batch 1's and already on main.
 '''
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
 evidence = '''
-Looked at the three pictures the order's tests take of the Notifications tab (desktop, Android, WebKit iPhone): the fourth tab wraps to a second row on both phones and reads well, newest first, the time in a pill on the right, `<b>not markup</b>` shown as text. The builder's set stops there: the test that photographed the saved mark was dropped, the leftover `tests/out/qol4-desktop-saved-mark.png` shows no mark, and the pull request's sentence that the mark is visible in the iPhone picture is not true of the picture that test produces here. So the mark and the toast were photographed and measured for this review, six runs, headed, right after a real claim. Phones: SAVED sits at the right end of the name bar, box [336,14,398,40] on Android and [317,14,379,40] on the iPhone, legible, clear of the buttons. Desktop: box [1364,14,1426,40], printed straight over the More button of the HUD for the 1.3 s it lives. The toast covers the STOPS row on both phones, which is filed bug B2 and not this order's. Under reduced motion the mark's computed transition is 0s.
-Copy: the tab's paragraph, the empty state and the hint are plain sentences in nobody's voice, no em-dash, no emoji; `checks.py style` agrees. The quiet option in Settings is batch 1's and unchanged.
+Looked at the builder's four pictures from this run (the Notifications tab on the desktop, Android and WebKit iPhone, and the quiet log) and at fifteen of my own, taken across the six runs: the claim's toast with and without reduced motion, the log, Quiet, a find, the capped stack and the saved mark, each surface on the desktop and on both phones. The tab reads well everywhere: four buttons in one row on the desktop, three and one on Android, two and two on the iPhone, newest first, the time in a pill, `<b>not markup</b>` as text. The capped stack shows Full evening, Campaign and Ten things with First light gone from the screen and kept in the log. In WebKit the cards let the title behind them show through more than in Chromium, which is the stylesheet's `.tst` and the same on main. The mark is legible at the right end of the top bar, box [1364,14,1426,40] on the desktop, [336,14,398,40] on Android, [317,14,379,40] on the iPhone; with a sheet open it prints over the More button for the second it lives, and the hint's card covers the sheet's Close button on a phone for five seconds. Both are the placement bug B2, which the pull request names, and taps pass through.
+Copy: the tab's paragraph, the empty state, the hint and the changelog are plain sentences in nobody's voice, no em-dash, no emoji, in the files and in the pull request text; `checks.py style` agrees.
 '''
 
 [[findings]]
-severity = "medium"
+severity = "low"
 file = "src/game/18-avatar.js"
 text = '''
-`unlock()` now calls `buzz()`, and `unlock()` is reached from `achCheck()`, which `tickAvatar` runs once a second from the frame loop, title screen included. So Chrome is asked to vibrate before the player has touched the page, and it says so at error level. Measured in Chrome for Testing over raw CDP with no gesture given: a returning record `{"doneW":{"campus":[1]}}` unlocks First light at the title, `navigator.userActivation.hasBeenActive` is false, and the log has "Blocked call to navigator.vibrate because user hasn't tapped on the frame or any embedded frame yet" (source intervention, level error). A brand new player with the hour at 23 gets the same from Night owl, so after eleven at night this is every first visit in Chrome, desktop and Android. Main logs nothing there. The order's tests cannot see it: Playwright's evaluate hands the page user activation (`hasBeenActive` was already true before any click in a Playwright probe), so the call is allowed and silent. The proposal's own rule is that the buzz "fires in the click handler, never from a frame", and the bar in AGENTS.md is zero page errors. The buzz must not reach `navigator.vibrate` on a page nobody has touched, and a test has to show it without being given activation by the harness.
+The island's own answer to "has anyone touched the page" is wider than Chrome's. Measured over raw CDP, first input on a fresh page: Escape, Shift, a finger held down and a finger that drags all set `touched` and leave `navigator.userActivation.hasBeenActive` false; Tab, an arrow key and a tap set both. Tried: Escape at the title, then the First light unlock from the frame loop, and the log has "Blocked call to navigator.vibrate because user hasn't tapped on the frame" at error level, which is round 1's finding again through a narrower door. The door is narrow: an unlock comes from the frame loop only in the first second after a load or when the hour turns eleven, and the first input has to be one of those four. The comment says `navigator.userActivation` was left out because a harness hands it out for free; asking both where the API exists costs the test nothing, since the test watches what was asked of `navigator.vibrate`.
 '''
 
 [[findings]]
-severity = "medium"
-file = "changelog.d/qol-feedback-and-the-companion.added.md"
+severity = "low"
+file = "src/game/18-avatar.js"
 text = '''
-"so a repaired record or a refused import can be read late" is half true. A refused import is not a toast: `80-sync.js` writes it to `#syncmsg` and never calls `toast()`. Tried: imported `this-is-not-a-code`, the page said "That is not a valid code.", `window.__log()` had 0 lines before and 0 after. The sentence goes into CHANGELOG.md at the next release and the pull request repeats it. Either the refusal goes through `toast()` (not a file of this order) or the sentence names only what the log keeps.
+Under Quiet the saved mark is built and never seen. `body.quiet #toast{display:none}` hides the stack the mark is put in: on all three profiles the mark's parent computes to display none and its box is [0,0,0,0]. The changelog promises the mark without a condition. Either Quiet means the mark too, and a line says so, or the mark needs a parent that Quiet does not hide.
 '''
 
 [[findings]]
-severity = "medium"
-file = "tests/test_game_qol_feedback.py"
+severity = "low"
+file = "src/game/18-avatar.js"
 text = '''
-Two of the three buzz call sites have no test. In the scratch copy, `buzz(BUZZ.find)` removed from `19-items.js`: 17 passed. `buzz(BUZZ.unlock)` removed from `18-avatar.js`: 17 passed. The claim's pattern is the only one asserted, and the test even notes that the achievement "has another" without checking it. The change to `19-items.js` is the whole of that file's diff and nothing proves it. c4 asks for a test that fails without the fix.
+`plainText()` keeps a link's words. A find is logged as "A commit is a labelled save point in your work that you can always return to. Read the topic", and the last three words are an instruction the log cannot carry out. Still true from round 1 in the same function: tags go and entities stay, so a toast built with `esc()` would show `&#39;` in the log. No bottle has such a character today; one item concept has an apostrophe and is safe only because `collect()` does not escape it.
 '''
 
 [[findings]]
-severity = "medium"
+severity = "low"
 file = "work/orders/qol-4-feedback-companion/findings.md"
 text = '''
-Three parts of proposals in scope are left out and nobody says so, in the pull request or anywhere in the order's folder. Proposal 7: after sixty idle seconds render every second frame (`31-animate.js`). Proposal 10: the buzz when a bridge opens (`22-archipelago.js`); an achievement buzzes in its place and the swap is not named. Proposal 20: a queue with a cap for the cards on screen; the cap that exists is on the log. Each sits in a file this order does not own, which is a reason to tell the manager, as the pull request does for the hint call sites and for the pet cheer. Silence is what c4 rules out. Name them, and say where they go.
+Proposal 20's State line is `S.settings.toasts (all, important, quiet)`. Two values exist, `toast()` has no notion of an important message, and the builder's note does not name the third. The setting is batch 1's and on main with two values, so nothing here is wrong; it is one more line for the note, with the team it goes to.
 '''
 
 [[findings]]
 severity = "low"
 file = "src/game/18-avatar.js"
 text = '''
-Proposal 22 gets the player a line the first time they stand on a bridge, sit on a bench or open the vault. What shipped is the helper and one hint, about this order's own Notifications tab. The bridge and the vault are other teams' files and the pull request says so. The bench is not: `toggleSit()` and `nearestSeat()` are in `18-avatar.js`, which this order owns, so that hint was within reach.
+`noteWhen()` prints hours and minutes. The log keeps sixty lines for as long as the record lives, so yesterday's 22:26 and today's read the same; the order's own seeded note is a year old and shows as 22:26. A day on a line that is not from today would do.
 '''
 
 [[findings]]
 severity = "low"
 file = "src/game/00-state.js"
 text = '''
-The comment on `save()` says the mark is withheld for "a write the player did not ask for", so that "Saved" stays a word about progress, and only the log write passes `false`. `track()` still calls `save()` bare. Measured: one minute tick of a player standing still raises one mark, and reading the Roadmap for three seconds and closing it (a dwell event) raises one. On the desktop each of those prints SAVED over the More button. The placement is B2's; how often it happens is this order's.
+Round 1's lows on the state, measured again and unchanged. `track()` still calls `save()` bare, so a minute tick of a player standing still raises the mark, against the comment that keeps "Saved" a word about progress. `load()` lets a finite `ts` outside the range of Date through and the panel prints NaN:NaN for it (1e308 and 9e15, Chromium and WebKit); `t` and `b` have no length limit (a 400 KB record is kept and written back); 5000 hint ids are all kept. `NOTE_CAP` is declared in 18-avatar.js and read by `load()` here. Every one of those records was playable.
 '''
 
 [[findings]]
 severity = "low"
 file = "src/game/18-avatar.js"
 text = '''
-A hint that falls under Quiet is recorded as seen without ever being raised. Measured on all three profiles: Quiet on, hints emptied through Settings, Backpack opened: no card, `hints == ['pack']`, and with Toasts back on "Show them" the hint is not said again (toasts 1 -> 1). The line is in the log and the button in Settings brings it back, so nothing is lost for good, but "shown once" is "shown never" for a player who starts in Quiet.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/00-state.js"
-text = '''
-What load() lets through for a note. A finite `ts` outside the range of Date (9e15, 1e308) passes `isFinite` and the panel prints NaN:NaN for it. `t` and `b` have no length limit: a seeded note with two 200000 character strings is kept and written back, a record of 400623 characters. `hints` has no cap: 5000 seeded ids are all kept. All eighteen seeded records were playable (walked, opened the log, no page error, nothing executed), so this is tidiness, not safety.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/18-avatar.js"
-text = '''
-`plainText()` takes the tags out and leaves the entities in. A toast built with `esc()` (the bottle's title and lesson, the repaired field's name) stores `&amp;` or `&#39;`, and the panel escapes it again, so the player would read `&#39;`. Latent today: none of the 8 bottles and none of the 40 items has such a character. The first apostrophe in a bottle will show it.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/18-avatar.js"
-text = '''
-Keyboard and names, tried with the keyboard only: Backpack button, Enter, four Tabs, Enter, and the log is on screen; the tab is a button named by its text. Two things inherited from the three older tabs and now true of a fourth: the selected tab is only a class (no `aria-pressed`, no `aria-selected`), and activating a tab leaves focus on BODY because `renderPack` replaces the markup the focused button was in. New here: a toast that arrives while the log is open calls `renderPack("log")` again, which is one more way to lose the place. For the panels team when the tabs get their roles.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/18-avatar.js"
-text = '''
-The mark's whole look is an inline `cssText` of twelve declarations in a script, because `src/style.css` is not in owns. It reads the tokens, so more contrast reaches it, but it is a style the stylesheet does not know about: the forced colours rule that names `.tst` cannot name it, and the next person to restyle the toasts will not find it. When B2 moves the toasts, the mark's rule belongs next to theirs. In the same spirit, `NOTE_CAP` is declared in `18-avatar.js` and read by `load()` in `00-state.js`; it works because `load()` is first called from `90-boot.js`, but `EVENT_CAP` sits in the state module next to the list it caps, and this one does not.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/85-settings.js"
-text = '''
-Not this order's file, but this order gave the option its meaning: "Battery saver: Keep running" cannot keep anything running. In a really hidden tab Chrome drew 0 frames in 12 s with the option off exactly as with it on, and the one difference on the way back is a single frame in which the ambient clock steps 13.03 s. The option buys the jump and nothing else. A line for the settings team: drop it, or say what it does.
+Round 1's lows on the panel and the hint, measured again and unchanged. A hint that falls under Quiet is recorded as seen and never raised (Quiet on, hints emptied with the button, Backpack opened: 0 cards, `hints == ['pack']`, the line only in the log). The bench hint is in reach in this file and is deferred by the builder's note. The selected tab is a class and nothing else (role, `aria-pressed` and `aria-selected` all null on the focused Notifications button), and activating it leaves focus on BODY on all three profiles; four Tabs and Enter reach the log with the keyboard alone. The mark's look is twelve inline declarations because `src/style.css` is not in owns; it belongs next to `.tst` when B2 moves the toasts.
 '''
 
 [[findings]]
 severity = "low"
 file = "tests/test_game_qol_feedback.py"
 text = '''
-Small things in the tests and the pull request text. The throttle test calls `setSetting()` forty times through evaluate, the mechanism rather than the dropdown; fair for forty, but the comment should not call it the real control. `test_a_message_that_mattered_outlives_the_five_seconds` asserts no `<` in a message that never had one, so that line cannot fail (the sixty lines test is what catches it). No picture of the saved mark or of the hint exists in the builder's set, and the pull request says the mark shows in the iPhone picture, which it does not. The pull request also speaks of "the zoom button", which no test here drives.
+Small things in the tests. The module docstring says every test drives the real control, and the throttle test calls `setSetting()` forty times through evaluate. `test_a_message_that_mattered_outlives_the_five_seconds` asserts no `<` in a message that never had one, so that line cannot fail. `test_an_untouched_page_is_never_asked_to_buzz` proves the island's flag, not the browser's: the Escape case above passes it. The CI shard that runs this file (browser shard, qol) was still queued on 7a6208f when this was written.
 '''
 
 [[findings]]
 severity = "low"
-file = "tests/test_game_pet.py"
+file = "docs/media/README.md"
 text = '''
-Not this order's, found on the way: running `tests/test_game_pet.py` rewrites six pictures under `docs/media/pets-game/` in the working tree (cat, crab, dog, duck, snail, turtle; `snail.png` went from 49100 to 37496 bytes). It is how this branch came to need commit ca9ecbe. A test that leaves tracked files changed will catch the next builder too; one for the harness team.
+Not this order's file: `backpack.png` and its caption say the Backpack holds "the inventory, the achievements and the wardrobe". After this lands it holds a fourth tab. One for the docs team at the next `just media`.
 '''
