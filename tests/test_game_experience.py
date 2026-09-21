@@ -17,50 +17,96 @@ How the pictures are made comparable, in order of what would otherwise move:
   and the shot waits for it to land rather than for a clock.
 * Motion is off, so the ambient clock stands at zero: no cloud, no boat, no
   blade and no pulse is anywhere but where it started.
+* Every frame is the same length. Reduced motion does not stop what the player
+  causes, and the mentor who follows the walker takes steps as long as the
+  last frame took: on the machine's own clock he comes to rest a pixel or two
+  from where the record has him, and his dusk shadow lies across four more
+  regions. Measured that way he was the whole of the noise, in four unchanged
+  pictures of twenty-eight on this Mac and in all eight on the runner. So the
+  page's clock moves by one capped frame per drawn frame, and the shot waits
+  until nothing in the scene differs from the frame before.
 * Math.random is replaced before the page loads, so the flowers, the stars and
   the dunes fall in the same places every time.
-* The companion is set to none: its sprite cycles on real seconds, which is
-  the one thing in the scene that reduced motion does not stop.
+* The companion is set to none: its sprite cycles on real seconds.
 * Three stops are delivered, so the buildings, the annexes and a dusk sky with
   its lamps lit are all in the picture rather than an empty green disc.
 
 What is compared is structure, not pixels. A pixel-exact comparison cannot
 survive another machine's rasteriser, and a flaky guard is worse than none
-(issue 148), so each picture is reduced to a grid of mean colours and two
-numbers are taken: the mean distance over all 160 regions and the worst
-single region, both in colour levels out of 255. Every run prints them, so
-the numbers below can be measured again on any machine:
+(issue 148), so each picture is reduced to a grid of mean colours, kept as
+fractions, and two numbers are taken: the mean distance over all 160 regions
+and the worst single region, both in colour levels out of 255. Every run
+prints them, so everything below can be measured again on any machine.
 
-    the same tree twice on this Mac        mean 0.00, worst 0.00
-    these pictures, made on a Mac,
-      against Linux on this branch's own
-      CI run (the software renderer, the
-      other architecture)                  mean 0.00, worst 0.33
-    one island colour nudged by eleven
-      levels in src/game/20-worlds.js,
-      rebuilt in a scratch copy            mean 2.84, worst 10.33 on that
-                                           island, worst 8.33 and 9.33 on the
-                                           two that carry its silhouette
+The noise, which is what the tolerances follow:
 
-Two machines agree to a third of a colour level, which is what taking the
-text out bought. So the tolerances are set an order of magnitude above that
-and still below the smallest change worth catching: the mean at 1.0 against a
-recoloured island's 2.84, and the worst region at 6.0, which even a changed
-island seen as a silhouette in someone else's picture goes past. A missing
-picture is never a silent pass: the test writes it and fails, so somebody
-looks at it before it becomes the record.
+    an unchanged tree on this Mac, 56 pictures,
+      three at a time to load the machine     no pixel differs from the record
+    the record, made on a Mac, against Linux
+      on the runner (CI runs 35619326089 and
+      35622986955: the same software
+      renderer, the other architecture, the
+      machine's own clock)
+        outside the follower's ten regions    mean 0.0002, worst 0.010, the
+                                              same numbers in both runs
+        his ten regions, with his wander      mean 0.004, worst 0.553
+
+So the rasterisers differ by a hundredth of a level, and by the same hundredth
+every time, and the tolerances are ten times that: the worst region at 0.1,
+the mean at 0.002. What the runner makes of the follower's own regions under
+the frame clock is not in that table; every run prints it, and the arithmetic
+of his walk is the same on both machines, so it should be the same hundredth.
+
+What that sees, each one edit of the built game, measured on the campus as
+mean and worst. The first and the fourth are tests below, so the guard cannot
+go blind to them again without failing:
+
+    grass, eleven levels on one channel       0.819, 2.949  (and 0.027, 2.375
+                                              from the desert, 0.069, 2.764
+                                              from prod, where the campus is a
+                                              silhouette on the horizon)
+    grass, one level on one channel           0.075, 0.289
+    the paths, eleven levels on one channel   0.025, 0.438
+    the well taken away                       0.028, 1.008
+    the windmill taken away                   0.238, 10.238
+    the well moved by one unit                0.007, 0.438
+    the well moved by a fifth of a unit       0.002, 0.119  (seen, only just)
+    exposure 1.06 to 1.08                     0.950, 1.363
+
+What it cannot see:
+
+* Anything smaller than the tolerance. The stone of the well alone, moved by
+  thirty levels on one channel, comes out at 0.001 and 0.091 and passes; so
+  does its roof made a ninth narrower, at 0.001 and 0.064. A region is 40 by
+  40 pixels, so a change passes when it moves a region's summed colour by less
+  than about 480 levels, and that is a recolour of one small prop or a few
+  pixels of its shape. One level on the campus paths is the edge: 0.00205 on
+  the mean, and seen by that alone.
+* Anything that is not in the picture. The words on the plates and every font
+  (stubbed out above, on purpose); the overlays and the HUD (hidden); whatever
+  the ambient clock moves, which is seen only where it starts; the companion;
+  dust and confetti; every zoom level but the fitted one and every window but
+  this one; the day and the night sky, and the buildings of the five stops
+  that are not delivered here.
+* A new renderer. Another Chromium or another three.js draws another picture,
+  and then the record is made again: delete the four files, run the test,
+  look at what it wrote.
+
+A missing picture is never a silent pass: the test writes it and fails, so
+somebody looks at it before it becomes the record.
 """
 
 from __future__ import annotations
 
+from array import array
 from pathlib import Path
-from statistics import median
 from typing import Any
 
 import pytest
 from PIL import Image
+from playwright.sync_api import Route
 
-from tests.conftest import OUT, ROOT, WAIT_MS, GamePage
+from tests.conftest import GAME_PATH, ROOT, WAIT_MS, GamePage
 
 GOLDEN = ROOT / "tests" / "golden"
 ISLANDS = ("campus", "winter", "desert", "prod")
@@ -76,15 +122,28 @@ GRID = (16, 10)
 ZOOM = 0
 # Delivered on the island in the picture: buildings, annexes, a dusk sky.
 DONE = [1, 2, 3]
-# Measured, both halves of it, on two machines (see the module docstring).
-MEAN_TOL = 1.0
-WORST_TOL = 6.0
+# Ten times what two machines differ by on an unchanged island (the module
+# docstring has the measurements, and what passes underneath these).
+MEAN_TOL = 0.002
+WORST_TOL = 0.1
+# What the guard has to go on seeing: the smallest honest example of a changed
+# colour and of a missing prop, each as one edit of the built game on its way
+# to the browser. The first is a colour of src/game/20-worlds.js moved by
+# eleven levels on one channel; the second takes the well off the campus.
+CHANGES = {
+    "grass": ('grass:"#79CC72"', 'grass:"#79CC7D"'),
+    "well": ('"stall","well","birds"', '"stall","birds"'),
+}
 
-# Both go in before anything on the page runs, so the world is built with
+# All three go in before anything on the page runs, so the world is built with
 # them in force. The random numbers come from a linear congruential generator,
 # because what is wanted is the same numbers every time rather than good ones;
 # the text stub leaves every plate its pill and takes away its letters, and
-# gives the pill a width that follows the words instead of the font.
+# gives the pill a width that follows the words instead of the font. The frame
+# clock makes every frame as long as the longest one the loop accepts (it caps
+# a frame at a twentieth of a second), so a runner that draws two frames a
+# second needs no more of them than a laptop does, and both walk the follower
+# along the same steps to the same place.
 SEED = """(() => {
   let s = 0x2F6E2B1;
   Math.random = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
@@ -95,7 +154,30 @@ SEED = """(() => {
   };
   g.fillText = function () {};
   g.strokeText = function () {};
+  let now = 0, stamp = -1;
+  const raf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = cb => raf(ts => {
+    if (ts !== stamp) { stamp = ts; now += 50; }
+    cb(ts);
+  });
+  performance.now = () => now;
 })()"""
+# The scene has come to rest: two drawn frames in a row in which no object of
+# it and nothing about the camera differs from the frame before. A frame that
+# was not drawn is not evidence, so the question is only asked of a new one.
+AT_REST = """() => {
+  const f = window.__debug().frame;
+  const k = window.__rest || (window.__rest = {frame: -1, sig: "", same: 0});
+  if (f === k.frame) return false;
+  const g = window.__gfx();
+  const sig = [g.cam.dist, g.cam.off, g.rim, g.zoom.level, g.zoom.dist];
+  window.__scene().traverse(o => { sig.push.apply(sig, o.matrixWorld.elements); });
+  const now = sig.join();
+  k.same = now === k.sig ? k.same + 1 : 0;
+  k.frame = f;
+  k.sig = now;
+  return k.same >= 2;
+}"""
 # The picture is the island, so everything the page draws over it goes. Hidden
 # rather than removed, because the stage keeps its size either way.
 HIDE_OVERLAYS = (
@@ -118,58 +200,77 @@ def _golden_state(island: str) -> dict[str, Any]:
     }
 
 
-def _regions(path: Path) -> list[tuple[int, int, int]]:
-    """A picture as a grid of mean colours.
+Picture = list[tuple[float, float, float]]
+
+
+def _regions(path: Path) -> Picture:
+    """A picture as a grid of mean colours, kept as the fractions they are.
 
     BOX over an exact integer ratio is the mean of each region and nothing
     else, so this is the structure of the picture with its pixels averaged
     away: a shape that moved by a pixel is the same picture, a colour that
-    changed is not.
+    changed is not. The mean is taken per channel in floating point, because
+    a mean rounded to a whole level turns a difference of a hundredth into
+    nothing or into a third of a level, whichever side of a half it fell on.
     """
     with Image.open(path) as im:
-        small = im.convert("RGB").resize(GRID, Image.Resampling.BOX)
-        raw = small.tobytes()
-    return [tuple(raw[i : i + 3]) for i in range(0, len(raw), 3)]  # type: ignore[misc]
-
-
-Picture = list[tuple[int, int, int]]
+        bands = [
+            array("f", band.convert("F").resize(GRID, Image.Resampling.BOX).tobytes())
+            for band in im.convert("RGB").split()
+        ]
+    return list(zip(*bands, strict=True))
 
 
 def _distance(golden: Picture, live: Picture) -> tuple[float, float]:
     """(mean, worst) region distance between two pictures, in colour levels.
 
-    The median difference over every region is taken out first: a machine
-    whose rasteriser renders the whole picture a shade darker is still showing
-    the same island, and what a changed island does instead is move some
-    regions and not others. That is the part that is left and measured. The
-    cost is that a change which moves the whole picture by one flat amount is
-    invisible here; the colour pipeline itself is watched by
-    tests/test_game_graphics.py.
+    Nothing is taken out first. The two machines this was measured on agree on
+    the level of the whole picture exactly, so a picture that is one flat
+    amount brighter is a changed picture and is counted as one.
     """
-    diff = [[b[c] - a[c] for c in range(3)] for a, b in zip(golden, live, strict=True)]
-    shift = [median([d[c] for d in diff]) for c in range(3)]
-    per = [sum(abs(d[c] - shift[c]) for c in range(3)) / 3 for d in diff]
+    per = [
+        sum(abs(b[c] - a[c]) for c in range(3)) / 3
+        for a, b in zip(golden, live, strict=True)
+    ]
     return sum(per) / len(per), max(per)
 
 
-def _shoot(game: GamePage, island: str) -> Path:
+def _moved(island: str, shot: Path) -> str:
+    """Why this picture is not the recorded one, or nothing when it is."""
+    mean, worst = _distance(_regions(GOLDEN / f"{island}.png"), _regions(shot))
+    print(f"\n{shot.stem} against golden {island}: mean {mean:.4f}, worst {worst:.3f}")
+    if mean <= MEAN_TOL and worst <= WORST_TOL:
+        return ""
+    return (
+        f"{island} has moved: mean {mean:.4f} (max {MEAN_TOL}),"
+        f" worst region {worst:.3f} (max {WORST_TOL})."
+        f" Compare {shot.relative_to(ROOT)} with tests/golden/{island}.png"
+    )
+
+
+def _shoot(game: GamePage, island: str, name: str | None = None) -> Path:
     """The island under the camera the record was taken with."""
     game.page.add_init_script(SEED)
     game.goto(state=_golden_state(island))
     game.page.set_viewport_size(VIEW)
     game.resume()
-    # Two facts the page produces: the camera has landed on the frame it was
-    # asked for, and the whole island is inside it (rim over one is a crop).
-    game.page.wait_for_function(
-        "() => window.__gfx().cam.off < 0.05 && window.__gfx().rim < 1",
-        timeout=WAIT_MS,
+    # Three facts the page produces: the camera has landed on the frame it was
+    # asked for, the whole island is inside it (rim over one is a crop), and
+    # nothing in the scene is still on its way somewhere.
+    game.until(
+        "window.__gfx().cam.off < 0.05 && window.__gfx().rim < 1",
+        what=f"the fitted view of {island} to land",
     )
+    with game.named_wait(f"{island} to come to rest"):
+        game.page.wait_for_function(AT_REST, timeout=WAIT_MS)
+    # The clock the loop read is the frame clock: whole frames, nothing else.
+    assert game.page.evaluate("performance.now() % 50") == 0
     game.page.add_style_tag(content=HIDE_OVERLAYS)
     game.frames(3)
-    OUT.mkdir(parents=True, exist_ok=True)
-    shot = OUT / f"experience_{island}.png"
-    game.page.locator("#c").screenshot(path=str(shot))
-    return shot
+    # The canvas is the whole window, so the window is the clip.
+    return game.screenshot(
+        name or f"experience_{island}", clip={"x": 0, "y": 0, **VIEW}
+    )
 
 
 # ---- the contract -------------------------------------------------------------
@@ -359,12 +460,78 @@ def test_an_island_looks_the_way_it_is_recorded(
         GOLDEN.mkdir(parents=True, exist_ok=True)
         golden.write_bytes(shot.read_bytes())
         pytest.fail(f"wrote {golden.relative_to(ROOT)}; look at it, then run again")
-    mean, worst = _distance(_regions(golden), _regions(shot))
     with capsys.disabled():
-        print(f"\ngolden {island}: mean {mean:.2f}, worst {worst:.2f}")
-    assert mean <= MEAN_TOL and worst <= WORST_TOL, (
-        f"{island} has moved: mean {mean:.2f} (max {MEAN_TOL}),"
-        f" worst region {worst:.2f} (max {WORST_TOL})."
-        f" Compare {shot.relative_to(ROOT)} with {golden.relative_to(ROOT)}"
-    )
+        moved = _moved(island, shot)
+    assert not moved, moved
     game.assert_clean()
+
+
+@pytest.mark.parametrize("change", sorted(CHANGES))
+def test_a_changed_campus_does_not_pass_for_the_recorded_one(
+    game: GamePage, change: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A guard is worth what goes past it, so two small changes are tried on
+    it: one colour of the island on one channel, and one prop taken away."""
+    old, new = CHANGES[change]
+    found: list[int] = []
+
+    def edited(route: Route) -> None:
+        response = route.fetch()
+        html = response.text()
+        found.append(html.count(old))
+        route.fulfill(response=response, body=html.replace(old, new))
+
+    game.page.route(f"**{GAME_PATH}", edited)
+    shot = _shoot(game, "campus", name=f"experience_campus_changed_{change}")
+    # An edit that found nothing to change would prove nothing.
+    assert found and set(found) == {1}, (old, found)
+    with capsys.disabled():
+        moved = _moved("campus", shot)
+    assert moved, f"the campus with its {change} changed passed for the record"
+    game.assert_clean()
+
+
+# ---- the comparison itself ----------------------------------------------------
+
+
+def _flat(path: Path, level: int, patch: tuple[int, int] | None = None) -> Path:
+    """A window of one grey, and optionally one region of it a level up in
+    this many of its 1600 pixels."""
+    im = Image.new("RGB", (VIEW["width"], VIEW["height"]), (level, level, level))
+    if patch is not None:
+        region, pixels = patch
+        side = VIEW["width"] // GRID[0]
+        x0, y0 = (region % GRID[0]) * side, (region // GRID[0]) * side
+        for i in range(pixels):
+            im.putpixel((x0 + i % side, y0 + i // side), (level + 1,) * 3)
+    im.save(path)
+    return path
+
+
+def test_the_same_picture_is_at_no_distance(tmp_path: Path) -> None:
+    same = _regions(_flat(tmp_path / "a.png", 100))
+    assert _distance(same, same) == (0.0, 0.0)
+
+
+def test_a_picture_that_is_one_flat_amount_brighter_has_moved(tmp_path: Path) -> None:
+    """Nothing is taken out before the comparison: exposure up by two hundredths
+    moves every region by about a level, and that is a changed island."""
+    mean, worst = _distance(
+        _regions(_flat(tmp_path / "a.png", 100)),
+        _regions(_flat(tmp_path / "b.png", 101)),
+    )
+    assert mean == pytest.approx(1.0) and worst == pytest.approx(1.0)
+    assert mean > MEAN_TOL and worst > WORST_TOL
+
+
+def test_a_region_that_moves_by_less_than_a_level_is_measured(tmp_path: Path) -> None:
+    """The tolerances are fractions of a level, so the means have to be: 640
+    of one region's 1600 pixels a level up is 0.4 there, which a mean rounded
+    to a whole level calls nothing."""
+    mean, worst = _distance(
+        _regions(_flat(tmp_path / "a.png", 100)),
+        _regions(_flat(tmp_path / "b.png", 100, patch=(37, 640))),
+    )
+    assert worst == pytest.approx(0.4, abs=1e-4)
+    assert mean == pytest.approx(0.4 / (GRID[0] * GRID[1]), abs=1e-6)
+    assert worst > WORST_TOL
