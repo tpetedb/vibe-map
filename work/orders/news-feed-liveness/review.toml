@@ -1,0 +1,97 @@
+# Review of this order, round 2, by someone who did not build it. Every feed
+# case was served by my own local server, the nightly's own command was run
+# against a registry on 127.0.0.1 through a pytest plugin, twelve fixes were
+# undone one at a time in a `git archive` copy of the reviewed commit, and the
+# product was run in a scratch camp made with `vibe new`. All of it lives under
+# /tmp; nothing in the tree but this file was written.
+v = 1
+order = "news-feed-liveness"
+by = "reviewer-news-feed-liveness-r2"
+reviewed = "90c3c3e07c536e40ca9c53a897f742e175ac3c25"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran it on 90c3c3e: 44 passed, the live check among them, so all 21 registered feeds are alive under the stricter rules on Monday 2026-09-21; the offline half alone is 43 passed. `each new one seen failing first` is not something the command can show, so I undid twelve fixes one at a time in a copy of the commit and ran the offline file each time. No renamed-entry rule: the three renamed spellings fail and nothing else. Empty fine for every source (round 1's rule): only test_an_empty_feed_from_a_source_that_never_rests_is_dead. `rests` ignored (main's rule): both quiet cases, the metadata guard and the three-source test. No repeated-metadata exclusion: the metadata guard and the quiet Atom case. The quiet list printed instead of warned: test_a_quiet_feed_is_warned_about fails. `rests` misspelt in sources.json: the registry test. Entries looked for at the root and never in the channel: the two rss spellings. The URL out of the failure line: all four dead cases and the three renamed ones. A request error escaping check_one: the 404, the closed port and the three-source test. No root element check: the A_PAGE case. Unreadable entries accepted: the RENAMED case. One undo moved nothing, see the third low. The copy was restored byte for byte and is green. No new test sleeps; what the fixture costs in time is the fifth low.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the whole command on 90c3c3e: exit 0 (ruff check, ruff format, style `no em dashes, no emoji`, sinks, 610 tests of the battery without browser and integration). CI run 35569906388 on the same commit agrees: steps 5 to 13 green, step 14 `work orders are readable, reviewed and inside their files` the only red one, and it waits for this file. I grepped the diff for an em dash, an en dash and emoji myself: none. The diff stays inside `owns`, the order folder and the changelog fragment, and `work.py validate` reads 15 orders with no collision. The command is the sentence.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+All six `--check` runs exit 0 on this commit, each run on its own so that the loop could not hide an exit code. Nothing a generator reads changed: `vibemap/news.py` and `vibemap/data/sources.json` exist once in the tree, neither is mirrored into fork_source or the template. The registry still holds the same 21 ids and URLs in the same order as origin/main; the only difference is `rests` on arxiv-cs-ai.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Forty-two verdicts from `news.check_one` against my own sockets on 127.0.0.1 (one name under .invalid), nothing over the network.
+Alive: a full RSS feed and a full Atom feed (`alive, 2 of 2 entries read`), a feed where one item of two parses (`1 of 2`), and a well-formed RSS channel and Atom feed with no items from a source that says it rests (`alive, nothing published yet today`, fresh False), also with repeated atom:link, category and skipHours in the channel.
+The same two empty feeds from a source that does not say it rests are dead: `a feed with no entries at all. If this source rests between announcements, say why with "rests" in sources.json`. That is main's rule kept for the twenty feeds that carry a back catalogue, and the line tells the maintainer what to do.
+Dead, each line `id (url): what`, every one of them with the source id and the full URL in it: 404, 410, 500, 503 (`HTTPError: HTTP Error 404: Not Found`), a closed port (`URLError ... Connection refused`), a name under .invalid (`URLError ... nodename nor servname`), a server that accepts and never answers (`TimeoutError: timed out` at the 1 s I gave it), a body cut short of its Content-Length (`IncompleteRead`), an HTML5 page, JSON and an empty 200 (`not XML: ...`), well-formed HTML, XHTML and a 302 landing on HTML (`not a feed: the root element is 'html'`), RSS 1.0 under rdf:RDF, items whose title and link were renamed (`format changed: 2 entries, none of them with a title and a link this parser could read`).
+The case the old rule existed for, and round 1's high finding: a FULL feed whose entry element was renamed. `<article>` under rss, a namespaced `<n:item>`, `<post>` under an Atom feed: all three dead for a resting source and for a busy one, `format changed: 3 'article' elements where this parser reads an RSS item or an Atom entry`. Then with real data: today's arXiv cs.AI body, 214 items, every `<item>` renamed `<paper>`, served as arxiv-cs-ai with the registry's own `rests`, run through the nightly's exact command (`uv run pytest -m integration tests/test_news.py`, a plugin swapping only `load_sources`): red, `arxiv-cs-ai (http://127.0.0.1:.../arxiv.xml): format changed: 214 'paper' elements ...`. A 404 in its place: red with the 404. `Empty is fine` no longer swallows it. What still slips through for the one resting source is the first low.
+The weekend itself: arXiv's own generator is serving empty channels right now for small categories (cs.OS, cs.GL, nlin.CG, math.KT, q-bio.SC, physics.atm-clus: 0 items, every channel child once, skipDays Sunday and Saturday). All six, judged as the resting digest, are alive and not fresh; as a source that never rests, dead. Today's cs.AI with its items stripped, through the nightly's command: `1 passed, 1 warning`, and the warnings summary reads `QuietFeed: alive with nothing new today: arxiv-cs-ai (url): alive, nothing published yet today`. Two quiet sources in one night are both named. On a weekday the run is green with no warning. Round 1's medium finding is dealt with: I saw the line on a passing run with no `-rP`.
+The reason in the registry is true: I opened both pages. availability.html says `posted publicly Sunday through Thursday, with no announcements Friday or Saturday`, rss.html says `Feeds are updated daily at midnight Eastern Standard Time`, and the live channel declares skipDays.
+Registry version: the key is optional and `SOURCES_VERSION` stays 1. origin/main's news.py and v0.10.0's news.py both load the new file (21 sources, no `rests` field, no error), and this release loads main's file with nobody resting. Version 2, 0, a missing version and `"1"` as a string are each refused with the number in the sentence. `1.0` and `true` load because Python says they equal 1; that is main's comparison, not this diff. What `rests` accepts is the second low.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+This round the diff does touch the learner's path: `parse` now delegates to `items_of` and `fetch_one` reads through `_get`. So I compared origin/main's `parse` with this one on today's 214-item arXiv body and on the empty weekend body, as an ad hoc source and as the registry source, at limits 1, 3, 8 and 500: the Items are equal field for field in all sixteen runs, and a body that is not XML raises the same ParseError from both.
+A camp from `vibe new` with `[news] feeds` set to three URLs on my server (a full feed, the real empty arXiv channel, a 404): `vibe news --dry-run` and `vibe news` print the two items and one `feed 127.0.0.1:8766: HTTPError: HTTP Error 404: File not found`. The server log shows the quiet feed fetched with a 200, and it is mentioned nowhere: not in the terminal, not in .vibe/news.json (version 2, two items), not in vault/Camp/News.md, whose `Feeds that did not answer` lists only the 404. `vibe vault lint` says vault OK.
+The card: a scratch Playwright test outside the tree, the repo's own `game` fixture loaded as a plugin, `./news.json` routed to the baked feed minus every arxiv-cs-ai item and dated 2026-09-20. Twelve rows, `Pulled 2026-09-20 from the sources in vibemap/data/sources.json. Unofficial, not affiliated; every line links to the publisher.`, no word about a missing source, zero page errors. With an empty item list: `Nothing pulled yet. Run uv run vibe news, then just build; a forked repo does it every day.` I looked at both screenshots: the card reads as on any other day. `Liveness.__str__`, `rests` and the QuietFeed warning reach no learner: only the nightly test calls them, and `src/` and cli.py are untouched.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+`_renamed_entries` reads only the direct children of the channel (or of the Atom feed) and needs a run of two. For the one source that rests, four renames still answer `alive, nothing published yet today`: a single renamed entry, renamed entries one level down (`<items><article>...`), renamed entries beside `<channel>` instead of inside it, and a rename to a local name on the exclusion list (`<x:link>`). For the other twenty the registry rule calls all four dead, and for arXiv the QuietFeed warning on a weekday night is what is left. In the other direction a resting digest whose quiet channel repeats a child that is not on the list (two `dc:creator`) is reported as a format change; the real empty arXiv channels repeat nothing, and that mistake is loud and names the element. I would land it: every rename round 1 named is caught, and so is a real 214-entry body. A follow-up could count over the whole tree below the feed body, or treat quiet on a day the feed's own skipDays does not name as a fault.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+`rests=str(raw.get("rests", ""))` takes anything. `false`, `null`, `0`, a list and `"   "` all load, become `'False'`, `'None'`, `'0'`, `"['x']"`, `'   '`, and count as resting, so the natural way to write "this one does not rest" switches the empty-is-a-fault rule off for that source. The loader refuses a bad kind and a URL that is not https by name; a `rests` that is not a string with a reason in it belongs in the same refusals. Low because the shipped file is guarded: with `"rests": false` on openai-news in my copy, test_the_registry_says_which_source_rests_and_why fails in the fast battery.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+`day` and `hour` in REPEATED_META never match: they live inside `skipDays` and `skipHours`, and `_renamed_entries` reads direct children only, where each of those two appears once. Taking both off the list leaves all 43 offline tests green, and the comment's `a digest lists the days and hours it rests` describes elements the function never sees. Two dead entries and half a sentence.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/news.py"
+text = '''
+ENTRY_TAGS is introduced as `The two elements this parser reads as one piece of news`, but the parser does not read it: `items_of` still spells `root.iter("item")` and `root.iter(f"{ATOM}entry")` itself. AGENTS.md: one helper per concept. The day the parser learns a third element the count in `liveness()` can silently disagree with it.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_news.py"
+text = '''
+Every use of `serve_feed` costs 0.50 s in teardown (`--durations` shows it on each one): `httpd.shutdown()` waits out `serve_forever`'s default poll interval. Thirteen uses, about 6.5 s of the fast battery spent waiting on a timer. `serve_forever(poll_interval=0.01)`, or one server for the module with routes per test, gives it back.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/news-feed-liveness/order.toml"
+text = '''
+Carried over from round 1, for the manager and not the builder: c1 is `uv run pytest -q tests/test_news.py` with no `-m 'not integration'`, so `just work-check` and every reviewer's run of c1 fetch all 21 registered feeds from the open internet (44 tests, not 43). The order's own text says the tests run offline. On a night when one publisher is down, c1 goes red for a reason the diff cannot fix.
+'''
