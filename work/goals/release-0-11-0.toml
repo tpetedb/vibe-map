@@ -1,0 +1,17 @@
+v = 1
+id = "release-0-11-0"
+statement = "0.11.0 goes out: the twenty-eight changelog fragments on main are assembled into one dated section that reads as one changelog, the version is 0.11.0 everywhere a tool reads it, and every picture under docs/media is rendered from the product as main has it rather than from an older one. The last red thing the nightly suite still reports, a world feed that answers with nothing new at a weekend, is fixed at the source first, so the release goes out on a green night."
+# What this goal deliberately leaves out.
+not = [
+  "The tag, the GitHub release and the repository's social preview image: the orchestrator's and the owner's, after this lands.",
+  "Anything behind an open pull request that has not landed: a release assembles what is on main, and a fragment that arrives later belongs to the next one.",
+  "The full documentation audit Tom asked for at the end of cycle 4: its own goal.",
+  "1.0.0: the course is still changing shape, so this is a minor.",
+]
+# Two orders, and the release cannot start until the feed fix has landed.
+budget = 2
+# Order ids, in the order you would like them; needs and owns decide the rest.
+orders = [
+  "news-feed-liveness",
+  "release-0-11-0",
+]
