@@ -1,0 +1,129 @@
+# Review of this order, round 2, by someone who did not build it and did not
+# write round 1. Every checked criterion was run again on the reviewed commit,
+# in the worktree and in a clone under /tmp. Three things were undone one at a
+# time in that clone and the checks seen failing: the three cut pictures as
+# round 1 had them, the GIF window back at 640x480, the version back at 0.10.0.
+# Every picture under docs/media was opened, the GIF frame by frame. The media
+# tool was run end to end in the clone (26 files, 7m52s, exit 0) and so was
+# `tools/tui_media.py --screens`; the real window was measured at 1200x630,
+# 393x852, 800x640 and 640x480; and a dozen changelog lines were tried in a
+# camp made with `vibe new`. Each finding of round 1 was checked against what
+# the branch now holds. Nothing in the tree but this file was written.
+v = 1
+order = "release-0-11-0"
+by = "reviewer-release-0-11-0-r2"
+reviewed = "5e86e12450315efcbaa36e349f99d439e18951e5"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran it on 5e86e12 in the worktree: 78 passed. In a clone of the same commit: 77 passed and one skipped, the one that wants a GitHub origin. The command proves the sentence for a release: with `version` put back to 0.10.0 in the clone, `tests/test_build.py::test_game_matches_a_fresh_build_of_src` fails, because the built game carries the number in CONFIG. `tests/test_changelog.py` is owned and untouched; a new version needed nothing from it.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran it: prints `0.11.0 []`, exit 0. Two clauses tried the other way in the clone: the version at 0.10.0 exits 1, a file `changelog.d/leftover.fixed.md` exits 1 and is named. The version agrees in every place it lives: `pyproject.toml` 0.11.0, the `vibe-map` entry of `uv.lock` 0.11.0, `const CONFIG={"version": "0.11.0"` in `game/vibe-map.html`, `uv run vibe --version` prints `vibe, version 0.11.0`, and the `vibe` of this checkout prints the same inside a camp made with `vibe new`. Each of the three diffs is one line, and `git grep 0.10.0` outside CHANGELOG.md, uv.lock and work/ finds nothing. The section is `## [0.11.0] - 2026-09-21`; `[Unreleased]` compares v0.11.0...HEAD and `[0.11.0]` compares v0.10.0...v0.11.0. The 29 fragments the branch deletes are exactly the 29 that origin/main carries today (fd2877d, which has moved on by one merge that adds work orders and no fragment), and every backticked term of those 29 is still in the section.
+No tag and no release: `git ls-remote --tags origin` has nothing for 0.11, the local tags end at v0.10.0, and `gh release list` ends at "vibe-map 0.10.0, Latest". Pull request 159 is open and auto-merge is not armed.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the whole command on 5e86e12 in the worktree: exit 0, ruff check and format clean, `style OK: no em dashes, no emoji`, the sink guard clean, the battery without browser and integration green, and `git status` clean afterwards. The four picture tests of the new `tests/test_media.py` are part of that battery; its four browser tests are claimed by the smoke shard (`tools/ci_shards.py` lists the file there). On the same commit CI has six of seven browser shards green, smoke among them, qol still queued, and the lint job green on every step except the last, which waits for this file and for the docs sign-off.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Ran the loop in the clone: build OK, tree OK, cookbook OK, syllabus OK, and `sync_template.py --check` and `sync_fork_source.py --check` exit 0. It can fail: with the version put back, `tools/build.py --check` says the game differs from a fresh build. `game/vibe-map.html` differs from main by the one CONFIG line and nothing else.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Read the section top to bottom as a stranger. Keep a Changelog order: Added 20, Changed 4, Removed 2, Fixed 94, Security 6, no empty heading, no Deprecated because nothing was, one bullet per paragraph, no non-ASCII character in the section. I found no line that contradicts another. Two things are still said from two sides and one fix is still listed for a feature first released here (low, below): that is what round 1 found and chose to land, and I make the same call.
+True of main, tried myself: the `CAM` block in `src/config/00-config.js`; eight bottles in `items.json`, two per island; the sizes Normal, Large, Larger and the spacing Comfortable in `85-settings.js`, the five Settings headings read off the running game (The game, Reading, Controls, The screen, Interruptions); letter 0.12em and word 0.16em as computed style (1.92px and 2.56px on 16px); 21 sources with `rests` on `arxiv-cs-ai` alone and the registry version still 1; `TOUCHED_KEEP = 32`; `0+unknown` in `vibemap/__init__.py`; the `Content-Length` refusal and `nosniff` in `vibemap/chat.py`; no `interestAnswered` in src or the built game; no HANDOVER.md; no `your-game` in pages.yml; SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, two issue forms and the pull request template; four licence texts in `src/vendor/`. In the running game: `c` and Escape under the title open nothing, arrows and space typed into the Ask field leave the walker at (2.8, 5.2), and in a 393x852 phone window the More menu has seven rows from 477 to 831, each 44px, the sheet ending at 840 of 852. In a camp made by `vibe new --name 'R2 "quo\te'`: the name reads back through tomllib character for character, the LICENSE carries it, `vibe scores` on day one is one line and exit 0, `vibe check --mentor cherny --artifact cafe` is "pick one of --mentor, --artifact" and exit 1 (the line round 1 found too wide now says "two named targets", which is what the command does), `vibe check --mentor ""`, `vibe news --limit -1`, `vibe name ""`, `vibe pet --all --species cat` and `vibe start` on a pipe are each refused in one line. One number does not hold: the Comfortable line height is 1.75, not 1.5 (low, below). The new Changed line about the pictures says one tool too few (low, below).
+Released sections: CHANGELOG.md with the 0.11.0 section cut out differs from main's in three lines, all inside 0.10.0 (the palette line, the `vibe artifact` line, "3 of 21 artifacts found"), all the one count, plus the two link lines. `campaign.json` has 21 artifacts; 0.9.0's "twenty" is left alone, rightly, since the switchboard is 0.10.0's own twenty-first.
+'''
+
+[[criteria]]
+id = "c6"
+verdict = "pass"
+evidence = '''
+Opened all 31 changed files and the unchanged pets.png. The ones that failed round 1:
+hero.png and onboarding-start.png carry the whole title card: the name field, Start and "Type your name plainly." under it. I measured a plain 1200x630 window: the card ends at 599, Start sits at 502 to 548, and my own photograph of that window shows the same card and the same black band under the stage (that band is the product, low below). phone-more.png is the whole 393x852 window with seven rows, Backpack to Settings. gameplay.gif, 35 frames at 800x640: she leaves the cafe in frame 3, is on the path by frame 8, "Enter Innovation Hub" comes up at frame 16 with Rolinda's next line, then the Roadmap with the Continue card, the stop sheet, and from frame 23 the confetti, "Revisit Innovation Hub", the First light toast and Tom's "OKR unlocked". The minimap ends at 277 and the zoom column starts at 352; at 640x480 they overlap (192 against 277), which is issue 161, open. tui-welcome.png reads "every choice lives in config/camp.toml" and tui-map.png draws x x x i > with the four-mark legend and "4/32 stops ... 400 XP".
+Current and whole as round 1 found them, looked at again: island-campus, island-winter, island-desert, island-prod (orange lava), island-winter-artifacts (data centre, library, energy grid), archipelago (four islands and the bridges), roadmap (Continue card on top), settings, backpack, ask, dashboard, artifact-cafe ("3 OF 21 ARTIFACTS FOUND", the 429, "v Commands" with its space), vault (palette colours only), tree, phone (the whole stage now, so the stick and the jump button are whole, two-row HUD, More, Map, the zoom column), bottle (a bottle on the grass at the shore beside the walker), the six pets-game crops (crisp sprites beside the capped walker), tui-pet.png and tui-pet.gif. None is blank, mid fly-over or from before the rework. island-campus-start.png has the current chrome in a state no player reaches; its tool is not this order's (low, carried).
+The tools reproduce them: `tools/media.py` end to end in the clone, 26 files, 7m52s, exit 0, the walk included (it raises when she does not arrive); the thirteen pictures I compared with the committed ones pixel by pixel differ only where the island moves, and tree.png not at all. `tools/tui_media.py --screens` gives both terminal screens back pixel for pixel. Reverts in the clone: with the three round 1 pictures put back, `tests/test_media.py` fails three times and says why ("the Start button runs to the bottom edge (1259 of 1260)", "phone-more.png is (786, 1496), which is not a 393x852 window"); with `GIF_WINDOW` back at (640, 480) the window test fails and the walk test fails with "the walker moved 3.4 after the tap".
+Issue 148: the six pets-game crops committed here are the media tool's. `pytest tests/test_game_pet.py -k every_pet_can_be_chosen` in the clone still rewrites all six, and docs/media/README.md and tools/media.py now say exactly that, so the sentence round 1 found untrue is true.
+docs/media/README.md: every file in the folder has a row, every "Used in" checked against README.md, docs/ABOUT.md, pages.yml and CHANGELOG.md, every renderer right except one command that was never a command (low, below).
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+"a line spacing (Comfortable) with the numbers XAG 101 names: line 1.5, letter 0.12 and word 0.16 times the size" is right about two of three. In the running game Comfortable computes to a 28px line on 16px text, 1.75, and Normal is already 1.6; `src/style.css` says `line-height:1.75` under a comment that says 1.5. The setting meets the floor XAG names, it does not ship that number. The sentence came from a reviewed fragment and the stylesheet comment has the same slip, so it is for the panels team as much as for this file; it is worth one word before the section is a released one.
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+The Changed line this round added says "Every picture under `docs/media` is rendered from the product again by `just media` and `just tui-media`". island-campus-start.png, which the branch re-rendered, comes from `tools/campus_shots.py`, as docs/media/README.md says two files away, and the thirteen files of the terminal pets gallery are unchanged and are not something `just tui-media` renders (that is `tools/tui_media.py --pets`). The rest of the line holds: seven new pictures, the whole title card, seven rows, a GIF that walks through the player's controls, the two terminal screens from the app.
+'''
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = '''
+Carried from round 1, unchanged: the progress code being checked whole before anything merges is told in Fixed and again in the first Security bullet; the four marks are told once as `vibe status` drawing the campaign map's marks and once as the campaign map speaking `vibe status`'s grid language; "Work orders: a change that is only staged ..." is a fix to a feature first released in this same section; and the three news feed bullets are one paragraph cut in three, the second and third leaning on the first. None misleads.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/README.md"
+text = '''
+The row for `pets.png`, `pets/*`, which this order reworded, keeps "Rendered by `just tui-media --pets`". `just` answers "justfile does not contain recipe `--pets`. Did you mean `pets`?", and `pets` repacks the vendored sprites, which is not what the reader wanted. The command is `uv run python tools/tui_media.py --pets`. It was wrong on main too. Also: the settings.png row and its caption say "five headings" and the picture holds four; Interruptions is below the fold of a 900pt sheet.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_media.py"
+text = '''
+`test_the_gif_window_keeps_the_zoom_column_off_the_minimap` is parametrised with (640, 480) and asserts that the two controls DO overlap there. That pins issue 161 as expected behaviour: the order that fixes 161 for the panels team will turn a harness test red in a file it does not own, with a message ("in a 640x480 window the minimap ends at ... and the zoom column starts at ...") that does not say the overlap was wanted. The promise this order makes is only that the GIF's own window is clear. Say so on issue 161, or drop the second parameter when 161 is picked up.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/media.py"
+text = '''
+Carried from round 1, part fixed: the GIF's walk, open and claim now wait on the page. These fixed waits remain: 400ms in `_load`, 1500ms in `_start`, 2200ms before hero.png and onboarding-start.png, 2600ms after `runDemo`, 2500ms before vault.png, 600ms before tree.png, 400ms per step of `_fill_stage`; the pull request's "rather than fixed waits everywhere it synchronises" is wider than the code. `STILL` resolves true at its 20 second deadline whether or not the number settled, and `_walk_near` returns without a word when six taps did not bring her to the bottle, so bottle.png has no guard of the kind `_whole()` gives the three window shots. The docstring of `_start` ("make the old one-line click wrong") narrates a change, which AGENTS.md rules out. All four pictures concerned came out whole here and in my run.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/hero.png"
+text = '''
+The picture is true: a plain 1200x630 window shows exactly this. What it shows is a black band across the bottom sixth of the social card, 526 to 630, because the talk band is empty while the title is modal and the stage stops above it. That is the product in a short window and a question for the panels team, next to `og:image:alt` in `src/head.html`, which still says "at dusk, seen from above" of a daytime title screen. On phone-more.png the hairline above Settings is `#hud-ter`'s top border carrying a 12px radius, so it reads as the top of a row tucked under Settings; also the product, also small.
+'''
+
+[[findings]]
+severity = "low"
+file = "docs/media/island-campus-start.png"
+text = '''
+Carried from round 1, unchanged and still not this order's tool: `tools/campus_shots.py` hides the title by script without starting, so the picture has a HUD pill that reads "EVENING 1" with no name, a walker called "Player" and no minimap, a state no player reaches now that the title is modal. The chrome is current. Also carried: dashboard.png shows "7/32 stops delivered" beside "300 XP earned, 100 a stop" because `rich()` seeds seven done stops and three claim events; bottle.png is soft and carries half a name plate on its left edge; the sea in archipelago.png shows the lattice of two crossing swells that a reader of "no longer shows the mesh as a checkerboard" will still call a checkerboard.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/release-0-11-0/order.toml"
+text = '''
+For the orchestrator, none of it the builder's to fix. The sweep removed nothing on this branch: under work/ the branch adds this order, its findings, this review and the goal, so every other order, active or landed, is byte for byte main's. `work.landed()` names exactly five (harness-ci-shards, harness-work-followups, harness-work-orders, hunt-q-docs-generators, news-feed-liveness) and `python3 tools/work.py sweep` in my clone removed exactly those five folders and no other; it is a commit of the orchestrator's own after this lands, as the pull request now says. `owns` gained `tools/tui_media.py` and `tests/test_media.py` in the builder's own commit, on round 1's suggestion; `just work-validate` reads 16 orders with no collision, and none of the orders main has gained since owns a file of this one. The branch is one merge behind main (fd2877d, work orders and `work/teams.toml` only), which `just sync-main` closes without touching an owned file, so this review survives it. `signoff-docs.toml` is still missing and the last CI step stays red until the docs team signs.
+'''

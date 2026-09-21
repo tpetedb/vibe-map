@@ -1,0 +1,12 @@
+# University of California, Irvine. Irvine, California. Roy Fielding's dissertation named REST here.
+id = "uc-irvine"
+name = "University of California, Irvine"
+kind = "university"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 33.641
+lon = -117.844
+look = "campus"
+landmark = "aldrich-park"
+source = "https://uci.edu/about/"

@@ -1,0 +1,98 @@
+# A re-review after the branch synced with main, by someone who did not build
+# the order and wrote none of the earlier reviews. The accept at 2dfb484 stands
+# for what did not change; this one read the delta since then (the split of the
+# page helper, one new test, the two files main landed) and ran the merged tree
+# as a whole. Every experiment that changed a file ran in throwaway clones
+# under /tmp; the runs in this worktree wrote only into tests/out and left
+# `git status` empty. The machine was shared the whole time (load 10 to 28).
+# Main has moved once more since the sync, to 322895f: merged into a scratch
+# clone it touches no file this order owns, and the guards, tests/test_repo.py
+# and the two test files it brings pass there (112 passed, 1 skipped).
+v = 1
+order = "harness-test-determinism"
+by = "reviewer-harness-test-determinism-r2"
+reviewed = "20b95260d005eec54dac5301f84baf3ec2ccb3d1"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+The packet served the cache, so I ran it myself in the worktree at 20b9526, together with tests/test_repo.py: 72 passed (40 and 32 by collection), exit 0, `git status` empty. `Each seen failing before its fix`, for what is new since 2dfb484, in a clone under /tmp. The one new test, `test_a_page_with_no_wrapper_gets_the_same_three_rules`, with each of the three lines of game_context() taken out in turn: without the clock script `the page thinks it is 17 o'clock`; without writes_only_to_out() `DID NOT RAISE`, and the picture it aimed outside tests/out landed in the temporary directory and not in docs/media, which is what its comment promises; without RECORD_TOASTS `the page keeps no record of the toasts it raises`. Restored, 1 passed each time. The two converted files put back to main's text, one at a time: `test_a_game_page_comes_from_the_fixture` fails and names test_media.py:100, 126 and 152, then test_game_hunt_f.py:456 and 458. CI had said the same without being asked: at the merge commit b682464 (run 35600251158) the lint job's pytest step is `1 failed, 651 passed` on exactly those five lines, and at 20b9526 the same step is `652 passed`.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the whole command in the worktree, with one `-q` so that pytest prints its summary: ruff twice silent, `style OK: no em dashes, no emoji`, the sink guard silent, `652 passed, 380 deselected`, exit 0, `git status` empty. `Which is what CI runs`: the same step of run 35617455228 on this head printed `652 passed, 380 deselected`; main at cb03e8b (run 35596102600) printed `626 passed, 364 deselected`. The 26 more are the tests of tests/test_harness_determinism.py that take no browser (40 collected, 14 of them browser) and the 16 more deselected are those 14 and the two Night owl legs. Every test id on both sides, collected with `-o addopts=`: 990 on main, 1032 here, none only on main, and only here the 40 of the new file and the two Night owl legs. The job is red on its last step alone, `work orders are readable, reviewed and inside their files`; `python3 tools/work.py ci --base origin/main --head HEAD` gives the reason, the review lapsed when owned files changed, and this file is what answers it.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the loop myself at 20b9526: `build OK: game/vibe-map.html matches src/`, `tree OK: outputs match vibemap/tech.py`, `cookbook OK`, `syllabus OK`, the two sync checks silent, every exit 0. The command proves the sentence, and it matters more after a merge than before one: main brought a rebuilt game and a new build path (harness-build-finds-modules), and the merged tree is still in sync. The order's own diff feeds no generator: test files, one fragment and the order's folder.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+The accept at 2dfb484 stands for D1 to D4 as they were. What I produced again on the merged tree, and what is new:
+D1, reproduced on main as it is now. A clone at cb03e8b under `TZ=Asia/Shanghai` at 23:34 local: the pickup test fails with `assert 'Picked up' in 'Achievement: Night owlOn the island after eleven at night.'`. This head under the same TZ in the same minute: 11 passed, which is the pickup test, both Night owl legs, noon for all four fixtures, the page with no wrapper and the three clock tests.
+D2 and D3, the guards and the question of an exemption. Nothing was exempted in this delta. Both lists are what they were at the last review, and the two files main landed were converted, with the helper split for the one case that did not fit (tools/media.py is handed a bare Page, so game_context() carries the three rules and game_page() is that plus the wrapper) instead of a third name on a list. I ran opens_its_own_game_page() over every test file: it flags test_game_news.py once and test_game_phone.py four times, the two named files, and nothing else. tests/test_dashboard.py and tests/test_syllabus.py open contexts and pass by rule, not by name: their source mentions neither vibe-map.html nor GAME_PATH nor GamePage, and `test_the_page_guard_tells_the_game_from_the_other_pages` holds that rule to a sample of each kind. test_media.py imports GAME_PATH, so the guard does see it as a game file, and it comes back clean because no new_context is left in it.
+The two converted files kept everything. Test ids on main and here: 24 and 24, identical (16 and 8, the three profiles among them). The command as suggested prints only a count per file, because `addopts` already carries `-q`; my first comparison was of two empty lists and said `identical`, so I collected again with `-o addopts=`. Assertion lines: 52 and 12 on both sides, and the diff holds no assert, raises or parametrize line; with `-w` it is 15 and 27 lines of context handling. Both files in full in the worktree: 24 passed in 268 s, `git status` empty. I opened hunt_f_sheet_android.png (412 by 915, the cafe sheet with its transcript whole) and hunt_f_fountain_iphone.png (393 by 852, the ring and `Inspect the fountain`). Was hunt_f a victim of the hour on main: not that I could show. Main's Android photograph test under the same TZ at 23:32 passed and its fountain picture carries no toast, so this conversion is the rule reaching the file and not a reproduced failure, which is also all the pull request claims.
+D3 once more: tests/test_game_pet.py and tests/test_game_camera.py, 35 passed in 760 s; `shasum` of docs/media/pets-game/* identical before and after, `git status` empty. What the write rule does not reach is the first low.
+D4, which is this order's fix, read on CI. Main at cb03e8b is red, twice, on `test_every_zoom_level_holds_the_phone_budget[game_android]` alone, and it shows both waits in each run. Run 35596102600 (push): first attempt `Page.wait_for_function: Timeout 20000ms exceeded` at `_island` -> `game.until(LANDED)`, retry `Page.screenshot: Timeout 30000ms exceeded` at the zoom picture; `1 failed, 32 passed` and then `1 failed, 23 deselected`. Run 35606772551 (schedule): the same two the other way round. I read main's last seven finished webkit shards: 26a8ed2 and da0b2ab green, then four of the last five with a first attempt red at one of these two waits (2c48466 at the landing in the plus and minus test, fd2877d at the landing in this test, both green on the retry, 939d550 green, cb03e8b red twice and red on both retries). On this branch the test passed at the first attempt on four heads in a row: 231 s at 2dfb484, 222 s at 0b3ec6d (run 35592414701), 239 s at b682464 (run 35600251158) and 235 s at 20b9526 (run 35617455228), each shard `33 passed` with one summary line and no retry. Four greens do not prove an intermittent failure gone; what they sit on is that both waits that run out on main have a name and a budget here (30 s for the landing, 60 s for the picture), so a fifth red would say which one and how many frames.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Ran, in the worktree on the merged tree, tests/test_game_dashboard.py, tests/test_dashboard.py, tests/test_game_state.py and tests/test_game_avatar.py: 64 passed in 638 s, exit 0, `git status` empty. What is new under the clock since the last review, and how it uses time. Every fixture now opens its page through `with game_page(...)`, so all of the above is also the test of that change; a body that raises inside game_context() or game_page() leaves no context behind (my probe: `chromium.contexts` 0 before and 0 after two raised errors). The 16 tests of hunt_f and the 8 of test_media run at noon for the first time: neither file reads Date or time; the artifact demo types on `setTimeout` at 320 ms a line (src/game/16-artifacts.js) and the shift replaces Date only; tools/media.py stamps events from time.time() in rich() alone, and the three browser tests load PLAYED or nothing. 24 passed. The late hour is in c4: 11 passed at 23:34 local, the Night owl legs at 23 and at 12 among them.
+CI on this head, run 35617455228, against main's run 35596102600 at cb03e8b, which is the tree this branch merged, shard by shard, passed counts: smoke 61 and 47 (the 14 browser tests of the new file; the file list differs by that file alone, and hunt_f and test_media are on both), ui 50 and 50, phone 45 and 45, bridges 57 and 57, panels 74 and 72 (the two Night owl legs), qol 54 and 54, webkit 33 and 32 with 1 failed. The file lists each shard printed are otherwise the same, every log here carries a single summary line, so no shard needed its retry, and `Playwright tests (Chromium and WebKit)` is green. The converted tests cost what they cost before on a runner: the three photograph legs 330, 306 and 89 s here against 332, 315 and 89 s at b682464, where they still built their own page.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+The write rule reaches less than the sentence that now advertises it. writes_only_to_out() replaces `screenshot` on the one page game_context() hands out. In a clone, inside game_context(): `page.locator("body").screenshot(path=<a temporary file>)` wrote the file, and a second page from `page.context.new_page()` had the clock and the record, which hang off the context, and wrote outside too. The source guard leaves the same door open from its side: it accepts any path expression that holds a bare name `OUT`, and tools/media.py, which test_media.py imports, has an OUT of its own that is docs/media. A planted test with `from tools.media import OUT` and `game.page.locator("#vault").screenshot(path=str(OUT / "vault.png"))` passed `test_no_test_names_its_own_path_for_a_screenshot`. And the tool's two entry points, screenshots(browser, url) and gameplay_gif(browser, url), take a browser and open contexts of their own inside tools/, where neither guard reads: a test that called one would write docs/media with nothing said. What the rule does hold is the tool's page-taking helper, `_sheet(page, ...)`, which goes through `page.screenshot(path=...)` and would be refused. No test does any of this today (the three browser tests of test_media.py use _load, _start, _settled, _stage, _signpost, _tap_towards, _still and _walked, none of which takes a picture), so nothing is written, and that is why this lands. Wanted in a follow-up: hold the locator's screenshot and later pages of the context to the rule, have the source guard ask for the OUT of tests/conftest.py, or say `a page screenshot` in the docstring of game_context(), the fragment and the pull request, which say `a picture only ever lands in tests/out` and `cannot write outside tests/out`.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+Carried over from the review at 2dfb484, unchanged at this head: the comment above SHOT_MS still explains the runner's thirty seconds with a laptop's frame arithmetic. The job it cites had just fitted a 25 frame landing inside 30 s, so by that model the picture costs under ten seconds, and it took over thirty, twice. Main's two red runs at cb03e8b say the same from the other side: the picture ran out at 30 s on runs whose landing beside it had fitted in 20. Neither budget depends on the explanation. Wanted: the comment, the fragment and the note to the scene team say what is known and leave the why open, and the block comes down to the one or two lines AGENTS.md asks for, without a run id and without `the device scale it used to be taken at`.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = '''
+Carried over, checked again at this head: the toast guard matches by substring, so `game.page.text_content("#title .tstats .done b")` is still reported as a toast read (`.tst` inside `.tstats`, a real class of the title screen), and the uneven half stands (`is_visible` on the stack passes, `is_hidden` and `expect(...).to_be_visible()` are refused). A word boundary after the selector closes the first.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = '''
+Carried over, checked again at this head: opens_its_own_game_page() sees `GamePage(` by that bare name only. It comes back empty for `from tests.conftest import GamePage as GP` with `chromium.new_page()`, and for `conftest.GamePage(...)` reached as an attribute. With game_page() and game_context() now the documented way to open a page of one's own, matching `new_page` on a browser next to `new_context`, and the attribute spelling, would cover what is left.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/conftest.py"
+text = '''
+Carried over, unchanged: frames() takes its starting count from frame_count(), which swallows every exception and answers 0. An evaluate that fails at that moment makes `frame >= 0 + n` true at once on any page that has drawn n frames, so frames() returns without having waited and says nothing. No test leans on it today. The plain evaluate in frames() and the forgiving one for the failure path keeps both.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = '''
+What is left for the follow-up on issue 148, outside or at the edge of this order. tests/test_game_bottles.py:69 and 70 wait for `#toast .tst` and read `#toast`, and tests/test_game_ui.py:416 reaches a notice through a locator; tests/test_game_phone.py (the phone shard, 45 tests) and tests/test_game_news.py still run on the runner's clock with no record and no write rule. Both lists are kept from growing by review and not by a test. New with the merge: tools/media.py::_load ends in `page.wait_for_timeout(400)`, a fixed wait that three tests this order now owns run through; the tool is not this order's file. And the photograph test of hunt_f takes seven pictures a leg and 330 s on a runner for the Android leg: on main those are pictures with Playwright's bare 30 s, the same wait that turns main's webkit shard red, and here they go through GamePage.screenshot() with a name and 60 s, which is one more reason to land this before it shows up there.
+'''

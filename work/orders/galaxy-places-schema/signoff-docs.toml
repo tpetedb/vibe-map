@@ -1,0 +1,43 @@
+# The docs team's manager on what this order does to docs files. By
+# work/teams.toml that is 6 of the 73: docs/TOPICS.md, docs/GALAXY.md, ADR 0015,
+# the ADR index, the generated docs/ROADMAP.md, and the changelog fragment,
+# which the `*.md` glob hands to docs.
+v = 1
+order = "galaxy-places-schema"
+team = "docs"
+by = "manager-docs"
+reviewed = "61e9c6f7f0b06265daca88d6c05e2468dde36aac"
+verdict = "accept"
+note = '''
+Accepted. Nothing in docs's files has to change before this lands. Every sentence this order wrote into them is true of the code and of the pages it cites. What I want changed is one rule that can be read two ways, some wording, and three lines the order left standing that its own changes made stale. All of it is one docs order that collides with nothing in the galaxy goal, and its first item should land before the first research order is reviewed.
+
+What I read and ran, at the commit above, in the worktree:
+- `git diff origin/main...HEAD` on every path `Teams.of()` gives to docs: docs/TOPICS.md (+78), docs/GALAXY.md (27 lines), docs/adr/0015-experiences-share-one-core.md (8), docs/adr/README.md (1), docs/ROADMAP.md (1, generated) and changelog.d/galaxy-places.added.md.
+- Against the code. The kinds, globes, looks, era ids, era names and year ranges in both documents are the tuples of vibemap/places.py word for word, and `us-east` is one of its regions. "Refused for a place that is not on Earth", "two primary origins or none", "a missing or non-https source" and "a topic that has none still loads" are each what `_check` in places.py and `_check_origins` in topics.py do, each with a test in tests/test_places.py. The Bell Labs block in both documents equals bell-labs.toml, and tests/test_places.py:389 now keeps it so.
+- Ran what the documents tell a reader to run. The `places.problems(packs=['core'])` line of docs/TOPICS.md:121 gives 45 sentences, each naming its file, and `shelves=['shell']` gives none. `uv run vibe places bell-labs` and `uv run vibe topic unix` print the two origins TOPICS.md shows as its example, the first with the clause "begun on a PDP-7" that the example leaves off, which is fine for an example.
+- Opened the three pages the docs now print. ethw.org/UNIX: "A small team of researchers at Bell Labs released the first version of the UNIX computer operating system in 1969", begun on a PDP-7; the words Murray Hill are not on it. The Open Group's brand3725.htm: Apple Inc., macOS version 26.0 Tahoe, UNIX 03, 29-Aug-2025; no town. The ETHW milestone page: Murray Hill, NJ, 600 Mountain Ave, thirteen plaques in the main lobby, "UNIX operating system (1969)", 40.684042, -74.400856. So the place block is supported, landmark included.
+- ADR 0015 reads Accepted, 2026-09-21, and the index row says the same. The amendment gives a reason and the reason is true: work/goals/galaxy.toml has five galaxy-origins orders. Correcting the decision text of a record in the act of accepting it, with the dated amendment underneath, is inside the house form: nothing was deleted and no accepted record was rewritten.
+- docs/ROADMAP.md moved by one link because unix.toml's own source did. `regen_tree.py --check` and `gen_syllabus.py --check` exit 0, so docs/SYLLABUS.md and docs/site/syllabus.html carry nothing of this order.
+- `python3 tools/checks.py style`: no em dashes, no emoji. tests/test_repo.py and tests/test_places.py pass. Nothing else of docs's depends on what changed: no other document under docs/ and not README.md names places.toml, `vibe places` or origins, and no active order owns docs/TOPICS.md, docs/GALAXY.md or ADR 0015.
+
+What I want changed, in the docs order that follows (owns docs/TOPICS.md, docs/GALAXY.md and docs/adr/0015-experiences-share-one-core.md, and edits the fragment, which anyone may; none of it before this lands):
+1. docs/TOPICS.md:109 to 112, the reviewer's second finding, and the one that matters. The rule says the page says "the year, the place, the people or the organisation". Both origins printed as the example at lines 93 to 104 stand on a page that names no town (I opened both, above), and so do five of the thirteen that ship. The reading docs will write, unless content's manager says otherwise on that order: an origin's page carries the year, what happened and the organisation or the people by name; where that organisation stands is the place file's claim, and the place file's own source carries it. When the origin's page does name a town, it is the place's town, or the origin goes to another place or is left out. A place is the organisation's town, not the building it was in that year, which is what the quarter of a degree at line 137 already allows. Until that lands, this paragraph is the reading for the five research orders and their reviewers.
+2. docs/adr/0015-experiences-share-one-core.md:33. "The loader makes a gap a failing test instead of an empty planet" now contradicts line 21 of the same record, which this order changed to say a topic with no origin still loads and is reported. What makes a gap red today is tests/test_places.py:291, one shelf at a time. The consequence is reworded to say so, and the amendment at line 41 gains the sentence it is missing: the proposal had the loader refuse a topic without an origin once its pack was migrated, and what was accepted reports it instead.
+3. docs/TOPICS.md:72. "while the pack is migrated" in the Required column reads as the opposite of what is meant. The other cells are yes, no and "new topics"; this one becomes "once its shelf is sourced".
+4. docs/TOPICS.md:107. "Rules, all of them checked" does not say by whom, and at lines 73 and 74 of the same page "checked" means the loader. The loader checks https, one line, one primary, a year from 1940 to now and a place that exists; a reviewer opens the page. Say both.
+5. docs/GALAXY.md:3 still says "Status: proposal, not built" under a decision that is now Accepted, and once this lands phase 1 is on main. It becomes: accepted, phase 1 (the data) built, the view not yet.
+6. changelog.d/galaxy-places.added.md:2 and docs/GALAXY.md:276 say every place the two packs need is seeded. The order's own findings.md lists organisations that are not (ISO and ANSI answer 403, Mozilla and Meta publish no address), and the reviewer found six more that fall back on an abstract place. The fragment is what a reader of the release is told, so it says what is: forty-two places, each with a source that was opened, and an organisation no source puts anywhere sits at an abstract place. It can be edited until the release is cut.
+7. docs/TOPICS.md:121 prints a Python list. `print('\n'.join(...))`, as the order's own criterion c2 does, reads.
+
+What other teams should know, because docs's sentences lean on their files:
+- tests/test_places.py:389 binds docs/GALAXY.md and docs/TOPICS.md to vibemap/data/places/bell-labs.toml. An order that corrects Bell Labs owns both documents and crosses docs, or its own test goes red.
+- docs/TOPICS.md:32 to 34 says the scaffold carries TODO where the author has to write. With the scaffold's unmarked `place = "the-internet"` and this year, that sentence is no longer quite true; harness's sign-off already plans the markers, and when they land docs changes nothing. If harness decides against them, tell docs and the page will say which two values to replace.
+- docs/TOPICS.md:94 and :153 send a builder to `uv run vibe places`, which cuts 22 of the 42 ids at 80 columns (cli's first finding). The fix is cli's and docs will not paper over it; until it lands a research builder reads the folder.
+- AGENTS.md:32 still calls docs/GALAXY.md "the proposed second experience". That row is harness's and belongs in the file-map order harness has planned.
+- vault/Camp/Unix and the terminal.md:15 still carries the Open Group register link unix.toml dropped. vault/ is an output of `vibe vault build`, this order did not regenerate it, no --check covers it, and the branch already contains main, so `just sync-main` will not do it by accident. For the orchestrator: regenerate it in the train car.
+- For the orchestrator and content's manager: the proposal had a gap fail the loader once a pack was migrated, and nothing planned in work/goals/galaxy.toml does that after the fifth research order lands. Decide before galaxy-v0 draws a topic that has no origin whether the loader then requires one or the per-shelf tests stay the guard, and tell docs, because ADR 0015 records whichever it is.
+
+What docs does after this lands: plans the order above with item 1 first, and, when version zero is on main, adds the Galaxy request of 2026-09-21 to docs/BRIEF.md, which does not know it yet.
+
+This sign-off covers the commit above and lapses when an owned file moves.
+'''

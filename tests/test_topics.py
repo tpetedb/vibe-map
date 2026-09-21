@@ -186,6 +186,33 @@ def test_a_topic_without_prose_has_to_say_it_is_covered_elsewhere(
         load_from(root)
 
 
+def test_where_a_topic_happened_is_part_of_the_schema(tmp_path: Path) -> None:
+    # Origins are additive: the schema knows them, a topic that has none still
+    # loads, and a key the origin schema does not know is refused by file name.
+    # The rest of the rules live in tests/test_places.py, next to the registry.
+    origin = (
+        '[[origins]]\nplace = "bell-labs"\nyear = 1969\nwhat = "w"\n'
+        'source = "https://example.org/"\nprimary = true\n'
+    )
+    root = _camp(
+        tmp_path,
+        {
+            "demo/pack.toml": PACK,
+            "demo/one.toml": TOPIC.format(i="one", u="[]") + origin,
+        },
+    )
+    assert load_from(root)[2][0].origins[0].year == 1969
+    bad = _camp(
+        tmp_path / "again",
+        {
+            "demo/pack.toml": PACK,
+            "demo/one.toml": TOPIC.format(i="one", u="[]") + origin + 'city = "x"\n',
+        },
+    )
+    with pytest.raises(ValueError, match="demo/one.toml does not match"):
+        load_from(bad)
+
+
 def test_an_unknown_key_in_a_topic_file_fails_loudly(tmp_path: Path) -> None:
     extra = TOPIC.format(i="one", u="[]") + 'colour = "red"\n'
     root = _camp(tmp_path, {"demo/pack.toml": PACK, "demo/one.toml": extra})

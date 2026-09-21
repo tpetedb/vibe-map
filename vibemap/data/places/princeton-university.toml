@@ -1,0 +1,12 @@
+# Princeton University. Princeton, New Jersey. Paul Falstad wrote zsh here as a student.
+id = "princeton-university"
+name = "Princeton University"
+kind = "university"
+region = "us-east"
+era = "personal"
+globe = "earth"
+lat = 40.343
+lon = -74.655
+look = "campus"
+landmark = "nassau-hall"
+source = "https://www.princeton.edu/meet-princeton"

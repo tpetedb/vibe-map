@@ -12,6 +12,16 @@ try_it = "python3 -m http.server 8000 in the game folder, open http://localhost:
 
 unlocks = ["http", "docker", "mcp"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "usc-isi"
+year = 1986
+what = "RFC 990, by Reynolds and Postel at ISI, assigns the class A network number 127 the loopback function."
+source = "https://www.rfc-editor.org/rfc/rfc990.html"
+primary = true
+
 [[sources]]
 label = "MDN: How the web works"
 url = "https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works"

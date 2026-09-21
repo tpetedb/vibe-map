@@ -1,0 +1,10 @@
+# A data centre. The building the cloud is actually in, wherever that happens to be.
+id = "a-data-centre"
+name = "A data centre"
+kind = "cloud"
+region = "everywhere"
+era = "open-source"
+globe = "datacentre"
+look = "racks"
+landmark = "cooling-towers"
+source = "https://datacenters.google/"

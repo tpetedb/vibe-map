@@ -1,0 +1,209 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "hunt-f-artifacts"
+by = "reviewer-hunt-f-artifacts-r2"
+# The commit that was read.
+reviewed = "b05f9c028e8d1c67575677c717f9b4cf903213fb"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the file in a scratch clone at b05f9c0: 17 passed, exit 0, no page errors, 18 screenshots \
+written. Then took fixes away in the scratch copy, rebuilt, and ran the 13 tests that are not \
+photographs, in three batches. Batch one (main's stall line back, textContent += back, RING_Y \
+.05, radius 1.2 off the campus, one ragged mountain line): exactly five fail, each the one \
+that belongs. The stall test says 'assert 400 == 404', the live-region test gets lines 1 to 2 \
+as its second added node, the ground test names cafe, fountain, dock and bridge, the \
+every-island test names eight ids starting with data-centre, the columns test reports \
+{27, 32}. Batch two (no demoStop in runDemo, no reducedMotion branch, the fountain at 1.2, a \
+span for the anchor, 0.0208, vibe/cli.py): exactly seven fail, F1, F3, F4, F5, F6, F7 and the \
+module path. Batch three (the ligature style off .lesson): the F2 guard fails with 'normal' \
+== 'none'. So I saw twelve of the thirteen fail for their own reason; the thirteenth compares \
+a list with the island's data and cannot pass by accident. After each batch the source was \
+restored, build --check said OK and git status was clean. What the command does not prove: \
+the ground test reads a fresh campus only (finding 1), and the three photographs are most of \
+what this file costs on CI (finding 3)."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran each part in the scratch clone at b05f9c0: ruff check 0, ruff format --check 0, 'style \
+OK: no em dashes, no emoji', checks.py sinks exit 0 with no output, the non-browser battery \
+exit 0 with one skip (test_repo.py, no GitHub origin in a local clone). The sink guard proves \
+its sentence for this diff: the file has three raw interpolations fewer than the register \
+allows and none more (finding 7 is the register, outside owns). On pull request 155 at \
+b05f9c0 all seven browser shards pass, the aggregator passes, and the one red job is lint at \
+step 14, 'work orders are readable, reviewed and inside their files', which waits for this \
+file; steps 1 to 13, the non-browser battery among them, are green. Beyond the command, the \
+scene. The diff allocates on the GPU what main did, one TorusGeometry and one \
+MeshBasicMaterial per ring, not shared, so nothing to keep(); this file removes nothing from \
+a scene, and the rings leave with it through trash and release() in buildWorld; ringGround \
+makes a Raycaster, a Box3, a Matrix3 and vectors, nothing the GPU holds. Measured, not read: \
+eight World presses with done = all in desktop Chromium give geometries 223, 218, 178, 204, \
+221, 225, 180, 204, 221 and textures 7, 11, 7, 9, 7, 11, 7, 9, 7 on main and the same \
+numbers on the branch with __rings() called twice on every island; twelve openArtifact and \
+runDemo calls leave mem at 221, 7, 20 before and after. The memory test is in \
+tests/test_game_camera.py (renderer.info.memory after eight travels, last at most 1.15 times \
+first, textures at most first plus 4, peak at most 1.6 times first): it passes on the branch, \
+and so do the dust test and test_a_finished_island_holds_the_phone_draw_call_budget. Draw \
+calls on the iphone profile in WebKit with every island finished: main 207, 139, 116, 120 \
+(campus, winter, desert, prod), branch 212, 137, 116, 120, against a budget of 300. The five \
+more on the campus are larger rings inside the frustum."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran all six generators with --check in the scratch clone: 'build OK: game/vibe-map.html \
+matches src/', 'tree OK', 'cookbook OK', sync_template exit 0, sync_fork_source exit 0, \
+'syllabus OK'. diff -q says the fork_source copy of 16-artifacts.js is the source file. The \
+built game every measurement below was taken from is therefore the committed one, and after \
+the last revert experiment build --check was OK again with a clean status."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Each finding measured with my own Playwright probe in Chromium, on the built game of \
+origin/main (2c48466, scratch clone) and of the branch. F1, with the finding's 200 ms gap: \
+main prints one merged transcript ('200 OK (412 ms)', the coffee body and the protocol line \
+inside the unicorn-milk answer); the branch prints the second demo alone, three presses 100 \
+and 350 ms apart leave exactly the last demo, and a demo still printing when another \
+artifact is opened leaves the new terminal alone. F3 under reduced motion: main has an empty \
+terminal in the task of the press, one line at 60 ms and no aria-live; the branch has all \
+four lines in the same task and aria-live polite. F4 and F5, read from window.__scene(): \
+main draws the thirteen campus rings at y .05 with r 1.2 (factory 2.15, post office 1.95, \
+switchboard 1.85) against zones of 2.3 to 5.6; on the branch all 21 rings on four islands \
+have r equal to their zone at y .2. F6: main is a SPAN, tabIndex -1, rgb(139,147,167) like \
+its parent, cursor auto; the branch is an A, tabIndex 0, rgb(0,136,204), 1 px underline, \
+cursor pointer, Tab reaches it, Enter opens 'HTTP and APIs' in the vault with the URL and \
+the hash unchanged, and a tap opens it on the android and the iphone profile. F7: main \
+0.0208 and 15.00, branch 0.0228 and 16.42; I opened aws-pricing.com/t3.small.html, which \
+lists 0.0208 for us-east-1 and 0.0228 for eu-west-1, and 0.0228 x 720 is 16.416. P9, the \
+first finding of round 1: main answers /scoresss with '400 Bad Request: unknown path; and \
+player must be a string'; the branch answers it with 404 and then the same body on /scores \
+with 400, and its test fails with main's line put back. F2, the second finding of round 1, \
+is rejected, and I reproduced the evidence: 'GET /coffee -> 200 --region != <= fi ffl' at \
+40 px with ligatures normal against none gives identical screenshot bytes and identical \
+widths in both stacks in Chromium and in WebKit (657 body in both, 963.28 and 989.06 mono); \
+the computed family on main is system-ui and ui-monospace; f00a348, which took Inter out, \
+is an ancestor of main. The comments over artifactReal and #art-term and the test's \
+docstring now say guard, and the pull request lists F2 under Rejected. The other round 1 \
+points: one node per line (test, seen failing), the exceptions to 'the ring is the zone' \
+named with a test (still short of two, finding 4), RING_Y held by a test (finding 1 for its \
+reach), all four islands in the zone test, the photographs read back before the shot, the \
+mountain columns in line with a test. The register and the second spelling of a vault link \
+are outside owns and named in the pull request (findings 7 and 8). None is skipped."""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+The builder's 18 screenshots are in the worktree's tests/out, written 10:51 to 10:53, after \
+the last commit at 10:42; of theirs I looked at the stall on android and the balloon on the \
+desktop. I regenerated all 18 in the scratch clone and looked at the fountain on desktop, \
+android and iphone (the ring out on the grass, the walker on it, 'Inspect the fountain' \
+fully up on all three), the stall on iphone, the mountain on android (one column, nothing \
+wrapped but the closing sentence) and the links on desktop and iphone (blue, underlined, \
+wrapping cleanly). My own pictures besides: the finished campus from above, the mountain's \
+ring around its foot, the library's ring on the finished winter island, and the focused \
+link. Measured on both phone profiles for every demo of the stall, the mountain, the \
+balloon and the cafe: scrollWidth minus clientWidth of the terminal, of the sheet and of \
+the page is 0 each time, so nothing scrolls sideways. Copy: every changed line is terminal \
+output or a closing sentence in the demos' own flat voice, Rolinda's lines are untouched, \
+checks.py style is OK, and the commit messages and the pull request body carry no em-dash \
+and no emoji. One thing the stall picture shows: the sentence above the terminal says 'you \
+get a 400' and the first answer under it is a 404 (finding 6, outside owns)."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+The ground test reads a fresh campus only, and the seam disagrees with it elsewhere. With \
+every island finished, window.__rings() itself reports ground 0.2 for the library (winter), \
+the bank (desert) and the school (prod): a level slab 3.7 by 6.9 with its top at 0.20, \
+crossed at 9 to 11 of 96 points, and y 0.2 <= ground 0.2 is the test's own failure \
+condition. I looked at the library's ring on the finished winter island: the top half of the \
+tube still shows over the slab, so this is a tie in the constant and a gap in the test, not \
+an invisible ring. Walk the four islands in a finished state, as the zone test already \
+does, and let RING_Y clear what that finds."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+The mountain's ring goes under the mountain at its corners. 21 of 96 points of the ring \
+(r 5.6) lie under the pyramid's own faces, between y .20 and .47, because the model is 11.7 \
+across and four-sided while the obstacle is a circle of 4.5. ringGround leaves slopes out by \
+design, so nothing reports it. Visible in my screenshot as the ring running into the corner \
+by the signpost. About four fifths of the ring shows, which is four fifths more than on \
+main."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+The three photograph tests cost 354, 316 and 92 seconds on CI, and the smoke shard, the \
+default one 'with headroom', went from 10 minutes on main to 25 on this pull request. The \
+walk to the fountain in software WebGL is most of it. The wall clock does not move (qol 35, \
+bridges 30), so it can land; whoever owns the shards should move the file or the walk \
+should get shorter."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+The comment over placeArtifacts says two things answer ahead of a ring, and the walk-up \
+test has four. A mentor within 2.4 comes first (Amodei's zone reaches the library's ring on \
+winter by 0.15), and on a finished island so does the finale within 6.6 of the inn, which \
+covers nearly all of the cafe's ring (centre 4.67 out, r 2.3) and part of the stall's, the \
+fountain's and the well's, the data centre's on winter and the office's on prod. My picture \
+of the finished campus has the walker inside the cafe's green ring with 'Calendar \
+alignment' up. Both predate the branch and are by design; the test that holds the list \
+models two of the four branches."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+Comments run long for a house that asks for one or two lines: 11 over placeArtifacts, 11 \
+over and inside ringGround, 8 added over artifactReal, 6 in the stall, 5 in the balloon. \
+The one over placeArtifacts names places by signpost number, which the test already holds, \
+so the two go stale together. 'As a guard, not as a repair' and 'measured at 40 px in \
+Chromium and in WebKit' tell the story of the review where a constraint would do."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/campaign.json"
+text = """
+Outside owns, named in the pull request: the stall's sentence, 'Order without reading it \
+and you get a 400', now stands directly above a terminal whose first answer is a 404. It is \
+still literally true, because the second answer is the 400. Its owner should let it name \
+both codes; vault/Camp/Artifacts.md carries the same sentence."""
+
+[[findings]]
+severity = "low"
+file = "tools/reviewed_sinks.json"
+text = """
+Carried from round 1, outside owns, named in the pull request: the register still allows \
+the three interpolations this branch removed from 16-artifacts.js ('n', 'JSON.stringify(n)' \
+and the a.links.map template). The guard only fails on an increase, so a raw ${n} could \
+come back unnoticed until someone who owns tools/ runs checks.py sinks --write."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+For a panels order, partly carried from round 1. A link into the vault is spelled twice \
+(wlSpan() in 60-vault.js, an anchor with href '#' here) and the ligature rule is an inline \
+style at two call sites, because .wl and the focus rule live in src/style.css. The focused \
+link shows the browser's own ring (outline auto 1 px) where a button gets the 2 px yellow \
+one, since that rule names button, input and textarea only; on a phone the link is 18 px \
+high. ringGround is 20 lines of raycasting with three thresholds (a metre wide, under .4, \
+normal over .95) shipped in the game and the fork source to serve one test; I measured the \
+same thing from outside with window.THREE and window.__scene(), and only obstacles is out \
+of reach, so exposing that would let the measuring live in the test. props.artR in \
+21-world-build.js is now written and never read."""

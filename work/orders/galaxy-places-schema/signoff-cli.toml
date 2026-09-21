@@ -1,0 +1,33 @@
+# The cli team's manager on what this order does under vibemap/. By
+# work/teams.toml that is 47 of the 71 files: cli.py, topics.py, the new
+# places.py, the fork mirror, and all 42 place files (see the last paragraph).
+v = 1
+order = "galaxy-places-schema"
+team = "cli"
+by = "manager-cli"
+reviewed = "1136930fe95950fef3f3dca910ee0964bbf1ec21"
+verdict = "accept"
+note = '''
+Accepted. Nothing in cli's files has to change before this lands; what I want changed is display only, touches no data the research orders write, and becomes one cli order after it lands.
+
+What I read and ran, at the commit above, in the worktree:
+- `git diff origin/main...HEAD` on every path `Teams.of()` gives to cli: vibemap/cli.py (+104), vibemap/topics.py (+58), vibemap/places.py (new, 348), vibemap/data/fork_source/tools/build.py and tools/generated/notes.js, and the 42 files under vibemap/data/places/.
+- House style holds. places.py is written the way topics.py is: pydantic with extra = forbid, a frozen slotted dataclass for Era, `_fail(where, msg)` with the file name first, one cached loader over `project.data_dir`, `load_from(root)` split off so a test can hand it a folder. In cli.py `_place_or_fail` is `_topic_or_fail` again, `_list_places` is `_list_topics` again, every value from a file goes through `escape()`, and the unknown-id message names ids that exist. One helper per concept: `origins_of`, `origin_at`, `sort_key`, and no call site re-spells them. No import cycle: places imports topics, topics names places only in prose.
+- Additive, as AGENTS.md asks: `origins: list[Origin] = []`, so the 61 unmigrated topics load, and no stored format moved (state.json, the progress code and config/camp.toml are untouched).
+- Nothing else of cli's reads what changed. vibemap/tech.py picks its fields by name (label and url of sources), vault.py, chat.py, quests.py and dashboard.py never see `origins`, and nobody dumps a whole Topic, so the new field reaches no note, no generated file and no bridge. tools/generated/notes.js moved by one link, because unix.toml's own source did.
+- The mirror: fork_source/tools/build.py is byte for byte tools/build.py, `sync_fork_source.py --check` and `sync_template.py --check` exit 0, and uv_build ships everything under vibemap/, so an installed `vibe` carries places.py and the 42 files (the reviewer's wheel says the same). A fork made by an older vibe keeps its older build.py and never imports places, so there is no skew that way round.
+- Ran: tests/test_places.py, test_topics.py, test_cli.py and test_cli_rest.py, all pass. basedpyright on cli.py, places.py and topics.py: 4 errors, all in lines of cli.py this order did not write (637, 692, 1352, 1647), none new. `FIRST_YEAR = 1940` is true of the tree: no topic file names a year before 1960.
+- Ran the commands by hand at 80 columns: `vibe places`, `vibe places bell-labs`, seven other places, `vibe places nope` (exit 1, eight ids offered), `vibe places lab` (offers bell-labs), `vibe topic unix` (Where and Echo lines under History, the same year, line and source as PLACES).
+
+What I want changed, in the cli order that follows (owns vibemap/cli.py, vibemap/places.py and a test file of its own; no other order, active or planned in the galaxy goal, owns any of them):
+1. vibemap/cli.py:1386. At 80 columns `vibe places` cuts 22 of the 42 ids (a-standards..., carnegie-me..., helsinki-un...), 6 at 100, 1 at 120. 80 is what rich gives a command that is not on a terminal (piped with no COLUMNS set, the same 22 are cut), so it is what every research builder gets when tools/new_topic.py's comment tells them to run `uv run vibe places` and take one. The id column is `no_wrap`, and a test reads the list at COLUMNS=80 and finds every id whole; tests/test_places.py:408 and :428 only ever look at 200.
+2. vibemap/cli.py:1415. For the 12 places that are not on Earth the sentence is not one: "On the cloud globe at cloud, in everywhere, drawn as a lanes.", "On the datacentre globe at datacentre, in everywhere, drawn as a racks around its cooling towers." Round 2 fixed "a nebula around its nebula" and left the rest of the template. `Place.where` answering with the globe is right for a table column and wrong inside this sentence; say the coordinates and the region only when the place has them, and do not put an article in front of a plural look.
+3. vibemap/places.py:255 and :263. Two origins of one topic at one place load, reach PLACES and `vibe topic` correctly, and then `topics_by_place()` lists the topic twice and `origin_at()` hands back the first both times (tried in memory: unix at bell-labs in 1969 and 1973 gives 1969 twice). The cli team's position, so that nobody writing origins has to wait for it: that is valid data and stays valid. C in 1972 and C++ in 1985 are both Bell Labs and both true. The fix is in the display (one row per topic in the list, every origin at the place in `vibe places <id>`), never a refusal in the loader, so nothing a research order writes can be broken by it.
+4. vibemap/places.py:333 promises a `--json` no command has (a comment that says something untrue), :149 reports a TOML error as `bell-labs.toml` without the `places/` every other message carries, `problems(shelves=[])` is an empty selection that passes, and `year = "1969"` is quietly made a number. All four are the reviewer's, all four are ours to close in the same order.
+
+Until that order lands, a research builder who needs a place id runs `COLUMNS=200 uv run vibe places` or reads the folder. A cut id copied by mistake fails loudly: the loader refuses it with the topic's file name.
+
+For the harness team, because it decides who signs what from here on: work/teams.toml gives content `vibemap/data/places.toml`, the file ADR 0015 planned. This order amends that to a folder, so the path covers nothing and `vibemap/data/places/` falls through to cli under `vibemap/`. I signed for the 42 files on their form (one file per id, the schema, https sources, coordinates only on the earth globe) and on the reviewer's reading of the pages behind them; what a place claims about a real organisation is content's to answer for, as the topics are. Until teams.toml says `vibemap/data/places/` under content, every order that adds or corrects a place needs `cross = ["cli"]`, and docs/TOPICS.md tells five content orders to add a place when none fits. One line in teams.toml, in a harness order, ideally before the research orders start. AGENTS.md's file map also does not know vibemap/places.py, vibemap/topics.py's origins or vibemap/data/places/; that row is harness's too.
+
+This sign-off covers the commit above and lapses when an owned file moves.
+'''
