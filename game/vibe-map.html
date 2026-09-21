@@ -3396,6 +3396,10 @@ function checkCrossing(pos){
   crossTo(b.b===here?b.a:b.b)}
 function crossTo(id){
   const d=worldOffset(id,S.world),L=chars.lotte,p=L.g.position.clone().sub(d);
+  // A destination is a point on the island it was picked on. The next island
+  // has its own coordinates, so the walk ends at the shore rather than
+  // carrying on towards a place that is no longer there.
+  clearAim();
   camShift(d,id);
   buildWorld(id,{x:p.x,z:p.z,rot:L.g.rotation.y,vel:L.vel?L.vel.clone():null});
   if(typeof track==="function")track("world",id);
@@ -3411,7 +3415,7 @@ function tickFlight(dt){
   const WS=WORLD_SCALE,to=new T.Vector3(flight.at.x,26*WS,flight.at.z+20*WS);
   camera.position.copy(flight.from).lerp(to,e);camera.lookAt(flight.at.x,0,flight.at.z);
   if(x<1)return;
-  const id=flight.to;flight=null;
+  const id=flight.to;flight=null;clearAim();
   // The flight ended over the new island; from there the camera glides down
   // to the walker at whatever zoom the player keeps.
   buildWorld(id);renderWorldPicker();
@@ -3581,16 +3585,59 @@ function setupZoom(){const c=$("c");
   syncZoom()}
 const ray=new T.Raycaster(),ndc=new T.Vector2(),target=new T.Vector3(),keys={};let hasTarget=false,downPos=null,marker=null;
 let joy={x:0,y:0,on:false},wantJump=false;
+// When the player last did anything: a key, a tap, the stick, a button. Every
+// input path writes it through one helper, so the battery saver in
+// 31-animate.js has one answer to "is anyone there" and a new control cannot
+// forget to say so.
+let lastInput=0;
+function touched(){lastInput=performance.now()}
+function idleMs(){return performance.now()-lastInput}
+// Hurrying: hold the key, or push the stick to its rim. Holding a key is more
+// motor ability than pressing one, so Settings keeps the alternative: at
+// "Tap to hurry" the same key turns it on and leaves it on.
+const RUN_MULT=1.5,RUN_RIM=.92;
+let runOn=false;
+function running(){return (settings().run==="toggle"?runOn:!!keys.shift)||(joy.on&&Math.hypot(joy.x,joy.y)>RUN_RIM)}
+function runMult(){return running()?RUN_MULT:1}
+// The keys that steer, in one list, because a destination lets go of them and
+// the frame loop reads them.
+const STEER=["arrowup","arrowdown","arrowleft","arrowright","w","a","s","d"];
 // A key typed into a field belongs to the field: the caret moves, the walker
 // does not. One test for it, because the walk, the jump and the zoom all ask.
 function inField(el){return !!el&&(el.isContentEditable||/^(input|textarea|select)$/i.test(el.tagName||""))}
+// A walk ends here, however it ended: arrived, steered away from, walked into
+// the sea or carried onto another island. The marker goes out with it,
+// because a lit marker means a walk is still on its way.
+function clearAim(){hasTarget=false;if(marker)marker.material.opacity=0}
+// One place writes a destination: the tap on the ground, the tap on the map
+// and walkTo all land here, so the marker, the line to it and the arrival are
+// one path. Whatever was steering is let go, or the walk would fight it.
+function aim(x,z){target.set(x,0,z);hasTarget=true;
+  joy={x:0,y:0,on:false};const kn=$("knob");if(kn)kn.style.transform="";
+  STEER.forEach(k=>{keys[k]=false});
+  marker.position.set(x,.06,z);marker.material.opacity=1;touched()}
+// Walk me there: the seam a panel calls to send the walker to a stop of this
+// island. It refuses what cannot be reached from here rather than half
+// obeying, and says so, so that a caller can offer something else.
+window.walkTo=function(n){const p=PLOT_POS[n-1];
+  // The flight to another island owns the frame while it lasts and lands on
+  // an island this one's coordinates say nothing about.
+  if(!started||flight||!marker||!p||!onLandW(p.x,p.z))return false;
+  aim(p.x,p.z);const c=CH[n-1];
+  // Said as well as drawn: the toast is the announcement for anyone who
+  // cannot see the marker land, and the quiet setting still silences it.
+  toast(icon("compass")+"Walking there",esc(c?c.h+", "+c.n:"stop "+n));
+  return true};
 function setupInput(){
   const c=$("c");
-  c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
+  c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY];touched()});
   c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
-    target.copy(hit.point);target.y=0;hasTarget=true;marker.position.set(target.x,.06,target.z);marker.material.opacity=1});
-  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+    aim(hit.point.x,hit.point.z)});
+  addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;touched();if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
+    // A held key repeats, so the toggle listens to the press and not to the
+    // repeat: otherwise hurrying would flicker while the key is down.
+    if(k==="shift"&&!e.repeat&&settings().run==="toggle")runOn=!runOn;
     // Enter is the keyboard twin of the proximity button, so it only fires
     // while the page itself has focus and nothing is standing in front of it:
     // a form field and an open panel keep their own Enter.
@@ -3603,12 +3650,17 @@ function setupInput(){
   j.addEventListener("pointermove",e=>{if(e.pointerId===jid)jm(e)});
   const je=e=>{if(e.pointerId!==jid)return;jid=null;joy={x:0,y:0,on:false};kn.style.transform=""};
   j.addEventListener("pointerup",je);j.addEventListener("pointercancel",je);
-  function jm(e){const r=j.getBoundingClientRect();let dx=(e.clientX-r.left-r.width/2)/(r.width/2),dy=(e.clientY-r.top-r.height/2)/(r.height/2);const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}joy.x=dx;joy.y=dy;kn.style.transform=`translate(${dx*30}px,${dy*30}px)`}
-  $("jump").addEventListener("pointerdown",e=>{e.preventDefault();wantJump=true});
-  $("c").addEventListener("dblclick",()=>{wantJump=true});
+  function jm(e){const r=j.getBoundingClientRect();let dx=(e.clientX-r.left-r.width/2)/(r.width/2),dy=(e.clientY-r.top-r.height/2)/(r.height/2);const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}joy.x=dx;joy.y=dy;kn.style.transform=`translate(${dx*30}px,${dy*30}px)`;touched()}
+  $("jump").addEventListener("pointerdown",e=>{e.preventDefault();wantJump=true;touched()});
+  $("c").addEventListener("dblclick",()=>{wantJump=true;touched()});
 }
 function nearestPlot(){let best=-1,bd=99;PLOT_POS.forEach((p,i)=>{const d=p.distanceTo(chars.lotte.g.position);if(d<bd){bd=d;best=i}});return {i:best,d:bd}}
 let nearK=0,started=false,inited=false,lastSay="";
+// What the walk is doing, for the tests: the destination, whether one is set,
+// how lit its marker is, and whether the walker is hurrying.
+window.__walk=()=>({target:[target.x,target.z],has:hasTarget,
+  marker:marker?Math.round(marker.material.opacity*1000)/1000:0,
+  run:running(),mult:runMult(),line:pathShown(),idle:Math.round(idleMs())});
 // Scratch vectors for the frame loop. It runs sixty times a second for as
 // long as the tab is open, so nothing in it allocates.
 const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.Vector3();
@@ -3618,8 +3670,41 @@ const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.V
 let enterHtml=null;
 function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
 function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
+// The line to where you are going: a dashed thread from the walker to the
+// marker, so a tap says where the walk ends and not only that it started. It
+// belongs to the island it was drawn on, so a rebuilt scene gets a new one
+// rather than keeping a line into a world that is gone.
+let pathL=null;
+function pathLine(){
+  if(pathL&&pathL.parent===scene)return pathL;
+  const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute(new Float32Array(6),3));
+  pathL=new T.Line(g,new T.LineDashedMaterial({color:PALETTE.blueBright,dashSize:.34,gapSize:.26,transparent:true,opacity:.7}));
+  // Added after the island was built, so it converts its own colour the way
+  // fixColors would have, and it is two points: culling it by a box is work
+  // for nothing.
+  pathL.material.color.convertSRGBToLinear();pathL.material.userData.cs=1;pathL.frustumCulled=false;
+  scene.add(pathL);return pathL}
+function pathShown(){return !!(pathL&&pathL.parent===scene&&pathL.visible)}
+function tickPath(from){
+  const l=pathLine();
+  if(!hasTarget){l.visible=false;return}
+  const a=l.geometry.attributes.position;
+  a.setXYZ(0,from.x,.09,from.z);a.setXYZ(1,target.x,.09,target.z);a.needsUpdate=true;
+  l.geometry.computeBoundingSphere();l.computeLineDistances();l.visible=true}
+// Battery saver: a minute with no key, no tap and no stick, and nothing open
+// that somebody could be typing into, means half the frames are enough. Any
+// input is full rate again on the next one. The minute is a constant the
+// tests shorten, so a test waits for a fact the page produced and never for a
+// wall clock.
+let IDLE_MS=60000,idleSkip=false;
+function saverIdle(){return started&&settings().saver!=="off"&&idleMs()>IDLE_MS&&
+  !document.querySelector("#sheet.on,#vault.on,#pal.on")}
+window.__saver=()=>({after:IDLE_MS,idle:Math.round(idleMs()),half:saverIdle()});
+window.__saverAfter=ms=>{IDLE_MS=Math.max(0,+ms||0)};
 function animate(){
-  requestAnimationFrame(animate);if(!scene||gfxLost)return;const dt=Math.min(.05,clock.getDelta());
+  requestAnimationFrame(animate);if(!scene||gfxLost)return;
+  if(saverIdle()){idleSkip=!idleSkip;if(idleSkip)return}else idleSkip=false;
+  const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the
   // ambient animation runs on: the clouds, the birds, the boats, the blades,
   // every pulse and flicker. What the player does still moves: the walk, the
@@ -3632,19 +3717,19 @@ function animate(){
   const L=chars.lotte,pos=L.g.position,mv=_mv.set(0,0,0);
   if(keys.arrowup||keys.w)mv.z-=1;if(keys.arrowdown||keys.s)mv.z+=1;if(keys.arrowleft||keys.a)mv.x-=1;if(keys.arrowright||keys.d)mv.x+=1;
   if(joy.on&&(Math.abs(joy.x)>.12||Math.abs(joy.y)>.12)){mv.set(joy.x,0,joy.y)}
-  let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
-  else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){hasTarget=false;marker.material.opacity=0;mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
+  let steer=false;if(mv.lengthSq()>0){clearAim();const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
+  else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){clearAim();mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
-  const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult(),ACC=22*WS,FRIC=14;
+  const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult()*runMult(),ACC=22*WS,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
   if(started&&sp>.01){const prev=_prev.copy(pos);pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
-    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
+    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);clearAim()}}
     // obstacles: push out
     obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+.45;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
-    if(hasTarget&&target.distanceTo(pos)<.6){hasTarget=false;marker.material.opacity=0}
+    if(hasTarget&&target.distanceTo(pos)<.6)clearAim();
     const ang=Math.atan2(L.vel.x,L.vel.z);let da=ang-L.g.rotation.y;while(da>Math.PI)da-=Math.PI*2;while(da<-Math.PI)da+=Math.PI*2;L.g.rotation.y+=da*Math.min(1,12*dt);
   }
   // jump
@@ -3663,7 +3748,11 @@ function animate(){
   const Tm=chars.tom,tp=Tm.g.position,dv=_dv.subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
   if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*(calm?1:.05)}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
-  marker.material.opacity*=.985;marker.rotation.z+=adt*2;
+  // The destination stays lit for as long as the walk lasts and fades once it
+  // is over: a marker that faded out from under a walk in progress answered
+  // the wrong question.
+  if(hasTarget)marker.material.opacity=1;else marker.material.opacity*=.9;
+  marker.rotation.z+=adt*2;tickPath(pos);
   tickCamera(dt,t,pos,L.vel||ZERO);
   // water: the surface moves on the GPU, so the frame only advances its clock
   if(water.material.userData.u)water.material.userData.u.uTime.value=t;
@@ -3758,63 +3847,196 @@ function hud(){const k4=$("k4");if(k4)k4.textContent=String((S.artifacts||[]).le
 // 2D canvas rather than a second camera, so it costs no draw call in the
 // scene. Like everything else on screen it is derived: it reads S, WORLDS and
 // the bridges of this frame and holds no state of its own beyond whether it
-// is open on a phone.
+// is open on a phone and whether it has been made big.
+//
+// It is also where the island says where to go next: the map knows the next
+// stop and the state of every bridge, so the arrow at the edge of the screen
+// reads the same two facts rather than working them out a second time.
 //
 // The element is built here instead of in body.html because it belongs to the
 // archipelago, not to the HUD, and a fork that drops this file should lose the
 // map and nothing else.
 
 const MM_SIZE=136,MM_PHONE=560;
+// A finger target, the same 44 px every other control on a phone keeps.
+const MM_TAP=44;
+// How close to a plot a tap has to land, in canvas pixels of the drawn map.
+const MM_HIT=14;
 // mmPaints counts the times the map has actually been painted, so a test can
 // wait for a drawn map rather than for a number of frames: the paint is
 // throttled and a fast frame loop can pass three times before one lands.
-let mmCv=null,mmCtx=null,mmBtn=null,mmOpen=false,mmT=0,mmPaints=0;
+let mmCv=null,mmCtx=null,mmBtn=null,mmBig=false,mmBigBtn=null,mmList=null,mmBack=null,mmOpen=false,mmT=0,mmPaints=0,mmW=0;
+// Where the HUD ends, measured when the map lays itself out and read by the
+// arrow every frame: asking the layout engine sixty times a second for a
+// number that changes when the window does is work a phone feels.
+let mmTopY=60;
 const mmPhone=()=>innerWidth<=MM_PHONE;
+// How tall the list of stops is when the map is big: two and a half rows, so
+// that it reads as a list that scrolls rather than as a list that is cut off.
+const MM_LIST=120;
+// How wide the map is drawn, in CSS pixels. Big it takes the window, because
+// a dark sheet behind it has taken the island and the controls at the foot of
+// the screen with it: while the map is what you are looking at, it is the
+// only thing to press.
+function mmDim(){return mmBig
+  ?Math.max(MM_SIZE,Math.min(MM_PHONE,innerWidth-24,
+    innerHeight-mmTopY-MM_TAP-MM_LIST-56))
+  :MM_SIZE}
 function mmBuild(){
   if(mmCv)return;
   mmCv=document.createElement("canvas");mmCv.id="minimap";mmCv.width=mmCv.height=MM_SIZE*2;
-  mmCv.setAttribute("aria-label","Map of the archipelago");
+  mmCv.setAttribute("role","img");
+  mmCv.setAttribute("aria-label","Map of the archipelago. The stops are listed as buttons under the big map.");
   mmCv.style.cssText="position:fixed;right:10px;z-index:6;width:"+MM_SIZE+"px;height:"+MM_SIZE+
-    "px;border-radius:12px;background:rgba(0,0,0,.55);border:1px solid rgba(241,241,248,.18);display:none";
+    "px;border-radius:12px;background:rgba(0,0,0,.55);border:1px solid rgba(241,241,248,.18);display:none;touch-action:none";
   document.body.appendChild(mmCv);mmCtx=mmCv.getContext("2d");
+  mmTaps();
   // On a phone the map would cover a quarter of the screen, so it stays shut
   // behind a button of its own until it is asked for.
-  mmBtn=document.createElement("button");mmBtn.id="minimap-btn";mmBtn.type="button";
-  mmBtn.textContent="Map";
-  mmBtn.style.cssText="position:fixed;right:10px;z-index:6;display:none;padding:6px 10px;font-size:12px;"+
-    "border-radius:10px;background:rgba(0,0,0,.55);color:#F1F1F8;border:1px solid rgba(241,241,248,.18)";
+  mmBtn=mmChrome("minimap-btn","Map");
   // Opening the map paints it on the next frame instead of waiting out the
   // throttle, so it is never shown blank.
-  mmBtn.addEventListener("click",()=>{mmOpen=!mmOpen;mmT=1;mmLayout()});
-  document.body.appendChild(mmBtn);mmBtnState();
+  mmBtn.addEventListener("click",()=>{mmOpen=!mmOpen;if(!mmOpen)mmBig=false;mmT=1;mmLayout()});
+  mmBigBtn=mmChrome("minimap-big","Bigger");
+  mmBigBtn.addEventListener("click",()=>mmSetBig(!mmBig));
+  mmList=document.createElement("div");mmList.id="minimap-stops";
+  mmList.setAttribute("role","group");mmList.setAttribute("aria-label","Walk to a stop");
+  mmList.style.cssText="position:fixed;z-index:6;display:none;flex-direction:column;gap:6px;overflow-y:auto;"+
+    "padding:8px;border-radius:12px;background:rgba(0,0,0,.55);border:1px solid rgba(241,241,248,.18)";
+  document.body.appendChild(mmList);
+  // The sheet behind the big map. It is what makes the big map a place you
+  // are in: the island, the stick and the jump button are behind it, and a
+  // press on it is the way out, like every other overlay in the game.
+  mmBack=document.createElement("div");mmBack.id="minimap-back";
+  mmBack.style.cssText="position:fixed;inset:0;z-index:19;display:none;background:rgba(0,0,0,.72)";
+  mmBack.addEventListener("pointerdown",()=>mmSetBig(false));
+  document.body.appendChild(mmBack);
+  // Escape closes it, the way it closes the palette and the panels.
+  addEventListener("keydown",e=>{if(e.key==="Escape"&&mmBig)mmSetBig(false)});
+  mmBtnState();guideBuild();
   addEventListener("resize",mmLayout);mmLayout()}
+// The map's own chrome: one look for the two buttons beside it, built here
+// because the map builds itself and the stylesheet never hears of it.
+function mmChrome(id,text){const b=document.createElement("button");b.id=id;b.type="button";
+  b.textContent=text;
+  b.style.cssText="position:fixed;right:10px;z-index:6;display:none;padding:6px 12px;font-size:12px;"+
+    "min-height:"+MM_TAP+"px;border-radius:10px;background:rgba(0,0,0,.55);color:#F1F1F8;"+
+    "border:1px solid rgba(241,241,248,.18)";
+  document.body.appendChild(b);return b}
+function mmSetBig(on){mmBig=on;mmT=1;mmLayout();drawMinimap()}
 // A toggle says whether it is on: the button carries its own state rather
 // than leaving a screen reader to guess from the canvas it controls.
 function mmBtnState(){if(!mmBtn)return;
   mmBtn.setAttribute("aria-pressed",mmOpen?"true":"false");
   mmBtn.setAttribute("aria-expanded",mmOpen?"true":"false");
   mmBtn.setAttribute("aria-controls","minimap");
-  mmBtn.setAttribute("aria-label",(mmOpen?"Hide":"Show")+" the map of the archipelago")}
+  mmBtn.setAttribute("aria-label",(mmOpen?"Hide":"Show")+" the map of the archipelago");
+  if(!mmBigBtn)return;
+  mmBigBtn.textContent=mmBig?"Smaller":"Bigger";
+  mmBigBtn.setAttribute("aria-pressed",mmBig?"true":"false");
+  mmBigBtn.setAttribute("aria-controls","minimap");
+  mmBigBtn.setAttribute("aria-label",(mmBig?"Shrink":"Enlarge")+" the map of the archipelago")}
 function mmLayout(){
   if(!mmCv)return;
   // Under everything the HUD has already put at the top, whatever it holds.
   const below=["hud","kpis"].map(id=>$(id)).filter(Boolean)
     .reduce((y,el)=>Math.max(y,el.getBoundingClientRect().bottom),60),top=below+8;
-  mmCv.style.top=top+"px";mmBtn.style.top=top+"px";
+  mmTopY=below;
   // A full-screen panel owns the screen while it is open; the map waits.
   const busy=!!document.querySelector("#sheet.on, #vault.on"),
     phone=mmPhone(),show=!busy&&(!phone||mmOpen);
+  const y=top+(phone&&!mmBig?MM_TAP+8:0),D=mmDim(),
+    left=Math.max(12,(innerWidth-D)/2),under=y+D+8;
+  // Resizing a canvas clears it, so it is only ever resized when the size it
+  // is drawn at has actually changed.
+  if(mmW!==D){mmW=D;mmCv.width=mmCv.height=D*2;mmCv.style.width=mmCv.style.height=D+"px"}
+  mmCv.style.top=y+"px";mmBtn.style.top=top+"px";
   mmCv.style.display=show?"block":"none";
-  mmBtn.style.display=phone&&!busy?"block":"none";mmBtnState();
-  if(phone&&show)mmCv.style.top=(top+34)+"px"}
+  // Big, the map and its two controls are one column down the middle; small,
+  // the map keeps its corner and its button sits under it there.
+  mmCv.style.right=mmBig?"":"10px";mmCv.style.left=mmBig?left+"px":"";
+  mmBtn.style.display=phone&&!busy?"block":"none";
+  mmBigBtn.style.display=show?"block":"none";
+  mmBigBtn.style.top=under+"px";
+  mmBigBtn.style.right=mmBig?"":"10px";mmBigBtn.style.left=mmBig?left+"px":"";
+  mmList.style.display=show&&mmBig?"flex":"none";
+  mmList.style.top=(under+MM_TAP+8)+"px";
+  mmList.style.left=left+"px";
+  mmList.style.width=D+"px";
+  mmList.style.maxHeight=MM_LIST+"px";
+  // Big, the map and what belongs to it stand in front of the sheet.
+  mmBack.style.display=show&&mmBig?"block":"none";
+  [mmCv,mmBigBtn,mmList].forEach(el=>{el.style.zIndex=mmBig?"20":"6"});
+  mmBtnState();if(mmBig)mmStops();guideLayout()}
+// The stops of this island as buttons: the map is a canvas, so a tap on a
+// plot needs a twin that a keyboard and a screen reader can reach. The list is
+// laid out six times a second and rebuilt only when what it says has changed:
+// a list rebuilt under a keyboard is a list that loses the focus in it.
+let mmSaid="";
+function mmStops(){
+  if(!mmList)return;
+  const done=S.done||[];
+  const said=(S.world||"campus")+":"+CH.length+":"+done.join(",");
+  if(said===mmSaid&&mmList.firstChild)return;
+  mmSaid=said;mmList.textContent="";
+  CH.forEach((c,i)=>{const k=i+1,was=done.includes(k),locked=k>1&&!done.includes(k-1);
+    const b=document.createElement("button");b.type="button";b.className="mm-stop";b.dataset.stop=String(k);
+    b.textContent=c.h+", "+c.n+(was?" (delivered)":locked?" (not open yet)":"");
+    b.setAttribute("aria-label","Walk to "+c.h+", "+c.n);
+    b.style.cssText="display:block;width:100%;text-align:left;min-height:"+MM_TAP+"px;padding:8px 12px;"+
+      "font-size:13px;border-radius:10px;background:rgba(241,241,248,.08);color:#F1F1F8;"+
+      "border:1px solid rgba(241,241,248,.18)";
+    // A stop a camp added has a lesson but no plot on the island, so there is
+    // nowhere to walk to and the row says so by being unavailable.
+    if(!PLOT_POS[i])b.disabled=true;
+    b.addEventListener("click",()=>{if(walkTo(k))mmShut()});
+    mmList.appendChild(b)})}
+// What the map does once the walker is on its way: it has said what it had to
+// say, and on a phone it was covering the island the walk happens on.
+function mmShut(){mmSetBig(false);if(mmPhone()){mmOpen=false;mmLayout()}}
 // Archipelago coordinates to canvas pixels. The square of four origins plus
 // the widest island is what has to fit, whichever island is active.
-function mmScale(){const half=ISLAND_GAP/2+WORLDS.campus.land[0][2]+6;return MM_SIZE/(half*2)}
+function mmScale(){const half=ISLAND_GAP/2+WORLDS.campus.land[0][2]+6;return mmDim()/(half*2)}
+// The next stop of this island, the one the map circles and the arrow points
+// at. One answer, because two would drift apart.
+function mmNext(){const done=(S.done||[]).length;
+  return done<stopCount()?PLOT_POS[done]||null:null}
+// A tap on a plot is a walk to it, which is the whole point of a map you can
+// reach. A long press on a touch screen makes the map big; every pointer has
+// the Bigger button, so nothing here has to be held down.
+function mmTaps(){
+  let at=null,press=null;
+  const end=()=>{clearTimeout(press);press=null};
+  mmCv.addEventListener("pointerdown",e=>{at=[e.clientX,e.clientY];
+    if(e.pointerType==="touch")press=setTimeout(()=>{press=null;at=null;mmSetBig(true)},500)});
+  mmCv.addEventListener("pointermove",e=>{if(at&&Math.hypot(e.clientX-at[0],e.clientY-at[1])>10){at=null;end()}});
+  mmCv.addEventListener("pointercancel",()=>{at=null;end()});
+  mmCv.addEventListener("pointerup",e=>{const from=at;at=null;end();
+    if(!from||Math.hypot(e.clientX-from[0],e.clientY-from[1])>10)return;
+    const k=mmPlotAt(e.clientX,e.clientY);if(k&&walkTo(k))mmShut()})}
+// Which plot a point on the canvas is over, or 0. The map's own projection
+// read backwards, so the plot a finger lands on is the plot that was drawn
+// under it at whatever size the map has.
+function mmPlotAt(clientX,clientY){
+  if(!mmCv||!started)return 0;
+  const r=mmCv.getBoundingClientRect(),D=mmDim();
+  if(!r.width)return 0;
+  const x=(clientX-r.left)/r.width*D,y=(clientY-r.top)/r.height*D;
+  const s=mmScale(),o=islandOrigin(S.world||"campus"),c=D/2;
+  let best=0,bd=MM_HIT;
+  PLOT_POS.forEach((p,i)=>{const d=Math.hypot(c+(p.x+o.x)*s-x,c+(p.z+o.z)*s-y);
+    if(d<bd){bd=d;best=i+1}});
+  return best}
+// Where a plot is on the screen, for the tests: the same projection the map
+// draws with, so a test taps where the plot actually is at whatever size the
+// map has rather than working the place out a second time.
+function mmClientAt(p){const r=mmCv.getBoundingClientRect(),D=mmDim(),s=mmScale(),o=islandOrigin(S.world||"campus");
+  return [r.left+D/2+(p.x+o.x)*s,r.top+D/2+(p.z+o.z)*s]}
 function drawMinimap(){
   if(!mmCtx||mmCv.style.display==="none")return;
   mmPaints++;
-  const g=mmCtx,s=mmScale()*2,c=MM_SIZE,here=S.world||"campus";
-  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,MM_SIZE*2,MM_SIZE*2);
+  const D=mmDim(),g=mmCtx,s=mmScale()*2,c=D,here=S.world||"campus";
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,D*2,D*2);
   // Canvas x is world x, canvas y is world z, both centred on the square.
   const px=(x,z)=>[c+x*s,c+z*s];
   bridges.forEach(b=>{const o=islandOrigin(here);
@@ -3826,20 +4048,111 @@ function drawMinimap(){
     g.fillStyle=w.swatch;g.globalAlpha=id===here?1:.45;
     g.beginPath();g.arc(p[0],p[1],w.land[0][2]*s,0,Math.PI*2);g.fill();g.globalAlpha=1;
     if(id===here){g.strokeStyle=PALETTE.text;g.lineWidth=2;g.stroke()}});
-  // The next stop on this island, and the walker.
-  const o=islandOrigin(here),next=PLOT_POS[(S.done||[]).length];
+  // Every plot of this island, so a tap has something to aim at, and the next
+  // one ringed. Big, each carries its number: a map you walk from says which
+  // stop is which.
+  const o=islandOrigin(here),next=mmNext();
+  g.font="bold "+(mmBig?22:14)+"px Inter,sans-serif";g.textAlign="center";g.textBaseline="middle";
+  PLOT_POS.forEach((p,i)=>{const q=px(p.x+o.x,p.z+o.z),was=(S.done||[]).includes(i+1);
+    g.fillStyle=was?PALETTE.greenBright:PALETTE.text;g.globalAlpha=was?.9:.55;
+    g.beginPath();g.arc(q[0],q[1],mmBig?9:4,0,Math.PI*2);g.fill();g.globalAlpha=1;
+    if(!mmBig)return;
+    g.fillStyle=PALETTE.black;g.fillText(String(i+1),q[0],q[1]+1)});
   if(next){const p=px(next.x+o.x,next.z+o.z);
-    g.strokeStyle=PALETTE.orange;g.lineWidth=3;g.beginPath();g.arc(p[0],p[1],7,0,Math.PI*2);g.stroke()}
+    g.strokeStyle=PALETTE.orange;g.lineWidth=3;g.beginPath();g.arc(p[0],p[1],mmBig?14:7,0,Math.PI*2);g.stroke()}
   const L=chars.lotte;if(L){const p=px(L.g.position.x+o.x,L.g.position.z+o.z);
-    g.fillStyle=PALETTE.greenBright;g.beginPath();g.arc(p[0],p[1],5,0,Math.PI*2);g.fill();
+    g.fillStyle=PALETTE.greenBright;g.beginPath();g.arc(p[0],p[1],mmBig?8:5,0,Math.PI*2);g.fill();
     g.strokeStyle=PALETTE.black;g.lineWidth=2;g.stroke()}}
+
+/* ---------------- the arrow at the edge of the screen ---------------- */
+// Where the next stop is, always, so nobody circles the island looking for
+// the signpost; once the island is finished it points at the bridge that has
+// opened instead. Pressing it walks you there, so the cue and the way to
+// follow it are one control. The mode is S.settings.guide: on, next (the stop
+// and never the bridge) or off, and the two hardest difficulties, where
+// finding your own way is the game, start it off.
+let gEl=null,gArrow=null,gText=null,gSaid="",gGoal=null;
+const _gv=new T.Vector3();
+function guideMode(){const g=(S.settings||{}).guide;
+  if(g==="on"||g==="next"||g==="off")return g;
+  return ["expert","god"].includes(typeof difficulty==="function"?difficulty():"normal")?"off":"on"}
+function guideBuild(){
+  if(gEl)return;
+  gEl=document.createElement("button");gEl.id="guide";gEl.type="button";
+  // Placed by its middle, so the point it is put on is the point it marks and
+  // no width has to be measured every frame.
+  gEl.style.cssText="position:fixed;z-index:6;display:none;align-items:center;gap:8px;"+
+    "transform:translate(-50%,-50%);min-height:"+MM_TAP+"px;padding:6px 12px;font-size:12px;"+
+    "font-weight:700;border-radius:22px;background:rgba(0,0,0,.55);color:#F1F1F8;"+
+    "border:1px solid rgba(241,241,248,.18)";
+  // The chevron is two borders and no glyph: a triangle renders the same in
+  // every font, and it is the one thing on screen that has to rotate.
+  gArrow=document.createElement("span");
+  gArrow.style.cssText="width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;"+
+    "border-bottom:13px solid "+PALETTE.orange+";display:block";
+  gText=document.createElement("span");
+  gEl.appendChild(gArrow);gEl.appendChild(gText);
+  gEl.addEventListener("click",guideGo);
+  document.body.appendChild(gEl)}
+// What the arrow is pointing at: the next stop of this island, or, once they
+// are all delivered, the nearest open bridge off it.
+function guideGoal(){
+  const mode=guideMode();if(mode==="off"||!started)return null;
+  const next=mmNext();
+  if(next)return {x:next.x,z:next.z,stop:(S.done||[]).length+1,name:stopName((S.done||[]).length+1),colour:PALETTE.orange};
+  if(mode!=="on")return null;
+  const p=chars.lotte?chars.lotte.g.position:null;
+  let b=null,bd=1e9;
+  bridges.forEach(x=>{if(!x.open||!x.near)return;const d=p?Math.hypot(p.x-x.mid.x,p.z-x.mid.z):0;
+    if(d<bd){bd=d;b=x}});
+  if(!b)return null;
+  const other=b.a===(S.world||"campus")?b.b:b.a;
+  return {x:b.mid.x,z:b.mid.z,stop:0,name:"the bridge to "+((WORLDS[other]||{}).name||other),colour:PALETTE.text}}
+function stopName(n){const c=CH[n-1];return c?c.h+", "+c.n:"the next stop"}
+function guideGo(){if(!gGoal)return;
+  if(gGoal.stop){walkTo(gGoal.stop);return}
+  aim(gGoal.x,gGoal.z);toast(icon("compass")+"Walking there",esc(gGoal.name))}
+// Placed every frame, because it tracks the camera; the words under it are
+// written only when they change, which is once a walk.
+function guideLayout(){
+  if(!gEl)return;
+  const busy=!!document.querySelector("#sheet.on, #vault.on, #pal.on");
+  gGoal=busy?null:guideGoal();
+  if(!gGoal||!chars.lotte){gEl.style.display="none";return}
+  const p=chars.lotte.g.position,away=Math.round(Math.hypot(p.x-gGoal.x,p.z-gGoal.z));
+  const v=_gv.set(gGoal.x,1.2,gGoal.z).project(camera);
+  const w=innerWidth,h=innerHeight,cx=w/2,cy=h/2;
+  // Behind the camera the projection comes out mirrored, so it is turned back.
+  const back=v.z>1;let dx=(back?-v.x:v.x)*cx,dy=(back?v.y:-v.y)*cy;
+  if(Math.abs(dx)<1e-3&&Math.abs(dy)<1e-3)dy=-1;
+  // The rectangle the arrow is allowed to sit in: clear of the HUD at the top
+  // and of the stick, the jump button and the Enter button at the bottom.
+  const l=60-cx,r=w-60-cx,t=Math.min(cy-30,mmTopY+60)-cy,b=h-170-cy;
+  const s=Math.min(dx>0?r/dx:dx<0?l/dx:1e9,dy>0?b/dy:dy<0?t/dy:1e9);
+  if(s<1){dx*=s;dy*=s}
+  gEl.style.display="flex";
+  gEl.style.left=Math.round(cx+dx)+"px";gEl.style.top=Math.round(cy+dy)+"px";
+  // The triangle is drawn pointing up, so zero degrees is up and the angle is
+  // measured from there.
+  gArrow.style.transform="rotate("+Math.round(Math.atan2(dx,-dy)*180/Math.PI)+"deg)";
+  gArrow.style.borderBottomColor=gGoal.colour;
+  const said=away+" m";
+  if(said!==gSaid){gSaid=said;gText.textContent=said;
+    gEl.setAttribute("aria-label","Walk to "+gGoal.name+", "+away+" metres away")}}
 // Six times a second is plenty for a map of four islands, and it keeps the
-// canvas work off the frame budget.
+// canvas work off the frame budget. The arrow is placed every frame: it
+// follows the camera, and a chevron that lagged a sixth of a second behind
+// the turn would point at where the island used to be.
 function tickMinimap(dt){
   if(!started)return;
-  mmBuild();mmT+=dt;if(mmT<.16)return;mmT=0;mmLayout();drawMinimap()}
+  mmBuild();guideLayout();mmT+=dt;if(mmT<.16)return;mmT=0;mmLayout();drawMinimap()}
 window.__minimap=()=>({open:mmCv?mmCv.style.display!=="none":false,phone:mmPhone(),
-  islands:WORLD_IDS.length,bridges:bridges.length,size:MM_SIZE,painted:mmPaints});
+  islands:WORLD_IDS.length,bridges:bridges.length,size:mmDim(),big:mmBig,
+  stops:mmList?mmList.querySelectorAll("button").length:0,painted:mmPaints,
+  plots:mmCv&&mmCv.style.display!=="none"?PLOT_POS.map(p=>mmClientAt(p)):[],
+  at:PLOT_POS.map(p=>[p.x,p.z]),
+  guide:gGoal?{name:gGoal.name,stop:gGoal.stop,shown:gEl.style.display!=="none",
+    at:[parseFloat(gEl.style.left),parseFloat(gEl.style.top)],said:gSaid}:null});
 window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line
 // their own headline and their own words with the link next to it. Never a
@@ -4063,7 +4376,9 @@ let PAL=[],PALHITS=[],palSel=0;
 function palIndex(){
   const out=[];
   const stopLabel=CONFIG.theme.stopLabel||"Stop";
-  CH.forEach((c,i)=>out.push({k:stopLabel,t:c.h+", "+c.n,s:c.d,go:()=>openCh(i+1)}));
+  // n is the stop's number on this island: the row that has one can be walked
+  // to as well as opened.
+  CH.forEach((c,i)=>out.push({k:stopLabel,t:c.h+", "+c.n,s:c.d,go:()=>openCh(i+1),n:i+1}));
   const unlocked=typeof computeUnlocked==="function"?computeUnlocked():null;
   const topics={};
   if(typeof TREE!=="undefined")Object.keys(TREE).forEach(c=>TREE[c].forEach(t=>topics[t.n]=c));
@@ -4087,10 +4402,40 @@ function palScore(row,q){
   return s.indexOf(q)>=0?3:-1}
 function palRender(){
   const list=$("pal-list");
-  if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';return}
+  if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';palWalkSync();return}
   list.innerHTML=PALHITS.map((r,i)=>`<button class="pal-row${i===palSel?" sel":""}" role="option" aria-selected="${i===palSel}" data-i="${i}"><span class="pal-what">${palShelf(r)===0?interestDot(r.c):""}${esc(r.t)}<span class="pal-sub">${esc(r.s||"")}</span></span><span class="pal-kind">${esc(r.k)}</span></button>`).join("");
   list.querySelectorAll(".pal-row").forEach(b=>b.onclick=()=>palGo(+b.dataset.i));
-  const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"})}
+  const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"});
+  palWalkSync()}
+/* ---------------- walk me there ---------------- */
+// The palette opens a stop; this walks to it, for when the question is where
+// on the island it is rather than what the lesson says. It is a button of its
+// own rather than a second control inside a row: the list is a listbox, and
+// an option with a button inside it is an option a screen reader cannot read
+// out as one thing. Built here, the way the map builds its own chrome,
+// because the palette's markup belongs to body.html and this does not.
+let palWalk=null;
+function palWalkBuild(){
+  if(palWalk)return;
+  palWalk=document.createElement("button");palWalk.type="button";palWalk.id="pal-walk";
+  palWalk.title="Shift and Enter";
+  palWalk.style.cssText="display:none;margin:var(--space-3) var(--space-4) 0;min-height:44px;align-self:flex-start";
+  palWalk.addEventListener("click",()=>palWalkGo());
+  // Before the list, not after it: every result is a button, so a control
+  // behind forty of them is a control no keyboard reaches.
+  const box=$("pal").querySelector(".pal-box");box.insertBefore(palWalk,$("pal-list"))}
+// Shown only when the selected row is a stop of the island being walked on,
+// so the control is never there with nothing to do.
+function palWalkSync(){
+  palWalkBuild();
+  const r=PALHITS[palSel],n=r&&r.n;
+  const can=!!n&&started&&!!PLOT_POS[n-1];
+  palWalk.style.display=can?"block":"none";
+  if(!can){palWalk.removeAttribute("aria-label");return}
+  palWalk.textContent="Walk there";
+  palWalk.setAttribute("aria-label","Walk to "+r.t)}
+function palWalkGo(){const r=PALHITS[palSel];if(!r||!r.n)return;
+  closePalette();walkTo(r.n)}
 window.palTyped=function(){const q=$("pal-q").value.trim().toLowerCase();
   PALHITS=(q?PAL.map(r=>[palScore(r,q),r]).filter(([s])=>s>=0).sort((a,b)=>a[0]-b[0]||palShelf(a[1])-palShelf(b[1])).map(([,r])=>r):PAL.slice()).slice(0,40);
   palSel=0;palRender()};
@@ -4099,6 +4444,9 @@ window.palKey=function(e){
   if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();
     if(!PALHITS.length)return;
     palSel=(palSel+(e.key==="ArrowDown"?1:PALHITS.length-1))%PALHITS.length;palRender();return}
+  // Shift and Enter walks there instead of opening it, for the hand that is
+  // already on the keyboard; the button under the box is the other way.
+  if(e.key==="Enter"&&e.shiftKey){e.preventDefault();palWalkGo();return}
   if(e.key==="Enter"){e.preventDefault();palGo(palSel)}};
 window.openPalette=function(){closeHudMenu();PAL=palIndex();$("pal-q").value="";palTyped();
   $("pal").classList.add("on");fx($("pal").querySelector(".pal-box"));$("pal-q").focus()};
