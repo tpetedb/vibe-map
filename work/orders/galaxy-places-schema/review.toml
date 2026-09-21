@@ -1,290 +1,257 @@
-# A review of one order, by someone who did not build it.
+# A review of one order, by someone who did not build it. Round 2.
 v = 1
 order = "galaxy-places-schema"
-by = "reviewer-galaxy-places-schema-r1"
+by = "reviewer-galaxy-places-schema-r2"
 # The commit that was read.
-reviewed = "31264b87193502a08368187729a4ed2afef8d508"
-verdict = "improve"
+reviewed = "f7353518cf48b9f3ca967ed77acdb5ddb3bdf952"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = """
-Ran the command in the worktree and again in a scratch copy of 31264b8 (git archive into \
-/tmp, PYTHONPATH on the copy): 49 passed both times. Seen failing first cannot be witnessed \
-after the fact, so I took the code away instead. Without the _check_origins call in \
-vibemap/topics.py exactly four tests fail (two primaries, no primary, a source that is not \
-https, an impossible year). Without the id check in places.load_from and the unknown place \
-refusal in places.origins_of exactly two fail (the file that does not match its id, the \
-unknown place refused with the topic's file name). Restored, 49 passed again. The tests read \
-what the command prints with the colour taken out and wait on nothing. What they do not \
-cover is in the low findings: two origins at one place, a `what` with a line break, a shelf \
-name that does not exist."""
+Ran the command in the worktree: 55 passed. Then in a scratch copy of f735351 (git archive \
+into /tmp, PYTHONPATH on the copy, 55 passed there too) I took round 2's fixes away one at a \
+time and ran the two files again. The year window back at today.year + 1: \
+test_an_origin_dated_next_year_fails_loudly fails. The line-break check off: \
+test_an_origin_whose_what_is_not_one_line_fails_loudly fails. The unknown-name check in \
+_selected off: test_problems_reports_a_shelf_or_a_pack_that_does_not_exist fails. Apache's \
+landmark back to feather: test_no_landmark_names_an_organisation_s_mark fails. \
+bell-labs.toml back to horn-antenna with the docs left alone, and docs/TOPICS.md back to \
+horn-antenna with the file left alone: test_the_place_the_docs_print_is_the_place_that_ships \
+fails both ways. openai-sf.toml removed: \
+test_the_places_the_research_orders_will_need_are_seeded fails. Any change to a place or an \
+origin also fails test_the_built_game_carries_places_as_one_json_blob, so the built file \
+cannot drift from the data. Each mutation was restored and vibemap/data compared clean \
+against a pristine copy. Two of round 2's fixes carry no test: with escape() taken off \
+origin.source, and with the nebula sentence put back, 55 still pass (low). No test sleeps \
+or waits on time."""
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = """
-Ran it: empty list, exit 0. The command alone only asks whether a topic has origins and \
-whether each place exists; exactly one primary, the year and https are the loader's, and \
-problems() turns a loader refusal into its first line. So I checked the pair in the scratch \
-copy: zsh.toml without its origin prints 'core/zsh.toml has no origin' and exits 1; ssh.toml \
-with a second primary prints 'core/ssh.toml: has 2 primary origins' and exits 1. The command \
-proves the sentence as written. It does not prove that a source says what the claim says, \
-which is c5."""
+Ran it: nothing printed, exit 0. In the scratch copy, zsh.toml without its origin prints \
+'core/zsh.toml has no origin: a topic needs a place, a year, one line and an https source \
+that says so.' and exits 1. The command by itself only asks whether a topic has origins \
+and whether each place exists; exactly one primary, the year and https are the loader's, \
+and problems() hands a loader refusal back as its one sentence. I checked that pairing on \
+core/unix.toml: two primaries, no primary, an http source, an empty source and the year \
+1066 each came back through problems() naming the file. New in round 2 and checked: \
+problems(shelves=['shell', 'nope']) returns 'unknown shelf 'nope'; the shelves are: ...' \
+and packs=['nope'] the same for packs, so a misspelt name in one of the five follow-on \
+commands fails instead of passing empty. The command proves its sentence. Whether a source \
+says what the claim says is c5."""
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = """
 Ran the whole command myself in the worktree, not the cached result: ruff check, ruff \
-format, checks.py style, checks.py sinks and the non-browser battery, exit 0, and git status \
-was clean afterwards. On the pull request the same steps are green in run 35603724888; the \
-one red step is 'work orders are readable, reviewed and inside their files', which waits for \
-this file and the three sign-offs."""
+format, checks.py style, checks.py sinks and the non-browser battery, exit 0, and git \
+status was clean afterwards. basedpyright on vibemap/places.py and vibemap/topics.py: 0 \
+errors. On pull request 166, run 35609324919 on f735351, the only red step is 'work orders \
+are readable, reviewed and inside their files'; `python3 tools/work.py ci` says locally what \
+it waits for: this review and the sign-offs of cli, harness and docs."""
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
 evidence = """
 Ran the six --check commands one by one: build, regen_tree, gen_cookbook, sync_template, \
-sync_fork_source, gen_syllabus, each exit 0. Beyond the command: the built game at HEAD \
-without its one `const PLACES=` line is the merge base's game line for line (6202 lines, \
-equal), so the injection is the only change. vibemap/data/template/ and tools/sync_template.py \
-are untouched. The fork mirror carries the new tools/build.py and no places folder, and it \
-does not need one: I built a wheel from the scratch copy (38 place files and places.py are \
-in it), installed it into a fresh venv, ran `vibe new`, `vibe fork`, then /usr/bin/python3 \
-tools/build.py in the fork with only vibe on PATH. The build handed over to vibe's own \
-python and the fork's game carries 38 places and 9 topics with origins; `vibe places cern` \
-and `vibe topic unix` work from the installed tool."""
+sync_fork_source, gen_syllabus, each exit 0. Beyond the command, line by line against \
+origin/main's game (6202 lines, now 6203): exactly two differences, the inserted `const \
+PLACES=` line and the Docs line of the unix note, where the Open Group link is now the \
+certificate because unix.toml's own [[sources]] changed. Nothing else moved. PLACES sits at \
+offset 894199, in front of 00-state.js at 908880. A `what` holding a closing script tag and \
+a comment opener reaches the built file as \\u003c escapes and parses back to the same \
+text, so js_json() does its job here. vibemap/data/template/ and tools/sync_template.py are \
+untouched. The fork mirror carries the new tools/build.py and no places folder, and it needs \
+none: I built a wheel from the scratch copy (42 place files and places.py in it), installed \
+it into a fresh venv, ran `vibe new`, `vibe fork`, then /usr/bin/python3 tools/build.py in \
+the fork with only vibe on PATH. The build borrowed vibe's python, and the fork's game \
+carries 42 places and 9 topics with origins, bash at uc-santa-barbara and the unix echo in \
+2025; `vibe places openai-sf` and `vibe topic bash` work from the installed tool."""
 
 [[criteria]]
 id = "c5"
-verdict = "fail"
+verdict = "pass"
 evidence = """
-Downloaded all twelve source pages behind the shell shelf's thirteen origins and read the \
-text. Fully supported, year, place and actor: localhost (RFC 990, Reynolds and Postel, ISI, \
-November 1986, 4676 Admiralty Way, Marina del Rey, and the sentence about network 127 word \
-for word), ssh primary (Ylonen, Helsinki University of Technology, 15 November 1995, \
-Otakaari 1, Espoo), ssh echo ('OpenSSH 1.2.2 release, which was shipped with OpenBSD 2.6 in \
-December 1, 1999'), files primary (Daley, MIT, Cambridge; Neumann, Bell Telephone \
-Laboratories, Murray Hill; 1965 Fall Joint Computer Conference), unix primary ('A small team \
-of researchers at Bell Labs released the first version ... in 1969', 'began the project on a \
-PDP-7'), interfaces echo ('Nov 25, 2024 ... open-sourcing the Model Context Protocol (MCP), \
-a new standard for connecting AI assistants to the systems where data lives'), justfile \
-(tag 1.0.0, created 2022-02-22). Not supported: the unix echo's year 2026 (the register \
-carries no year and the certificate page says 'Registered on: 29-Aug-2025'), the zsh year \
-2019 (Apple's page says 'Starting with macOS 10.15' and its only date is 'Published Date: \
-June 15, 2026'), the bash place (the bulletin says 'Brian Fox is still working for us at UC \
-Santa Barbara. He is beta-releasing BASH' and gives the FSF's address as 675 Massachusetts \
-Avenue, Cambridge; the origin stands at 'The Free Software Foundation, Boston'). Wording \
-the page does not carry: interfaces primary, dotfiles, the files echo, justfile (finding 4). \
-Ten places drawn with random.Random(commit id): bell-labs, carnegie-mellon, databricks-sf, \
-github-sf, helsinki-university-of-technology, ibm-san-jose, ietf, linux-foundation, \
-the-cloud, uc-berkeley. Each page supports the name and the where: Murray Hill and 600 \
-Mountain Ave with 'UNIX operating system (1969), the C and S languages'; 5000 Forbes Avenue; \
-'founded in 2013' and 160 Spear Street; 88 Colin P. Kelly Jr. St.; the merger of 1 January \
-2010 and the Otaniemi campus; 'IBM San Jose Research Lab in San Jose, California' and Codd \
-1970; 'founded in 1986 ... standards development organization'; 'a neutral, trusted hub'; \
-SP 800-145, 'Date Published: September 2011'. The Berkeley page says nothing about BSD or \
-POSTGRES, which its file's comment claims. The Bell Labs page never mentions a horn antenna \
-(finding 5). All 38 place sources answer 200. Coordinates of ten more, geocoded from the \
-address in each file through OpenStreetMap: cern, confluent-mountain-view, docker-palo-alto, \
-eindhoven-university, free-software-foundation, github-sf, \
-helsinki-university-of-technology, parc, sri-menlo-park, university-of-helsinki. All within \
-0.01 degrees, and the IEEE page's own 37.402370, -122.148354 for PARC matches the file. The \
-coordinates pass; the claims do not yet."""
+Downloaded all twelve pages behind the shell shelf's thirteen origins and read the text. \
+Every one carries the year, the actor and what the line says. unix: 'A small team of \
+researchers at Bell Labs released the first version of the UNIX computer operating system \
+in 1969' and 'began the project on a PDP-7 computer'. unix echo: 'Company Name: Apple Inc. \
+Product Name: macOS version 26.0 Tahoe ... Registered on: 29-Aug-2025'. bash: \"GNU's \
+Bulletin, vol. 1 no. 7, June, 1989\", 'Brian Fox is still working for us at UC Santa Barbara. \
+He is beta-releasing BASH ... the GNU version of sh'. zsh: 'October 7, 2019, macOS Catalina \
+is available today'. files: 'R. C. Daley, Massachusetts Institute of Technology, Cambridge' \
+and 'P. G. Neumann, Bell Telephone Laboratories, Inc., Murray Hill, New Jersey', '1965 Fall \
+Joint Computer Conference'. dotfiles: 'GitHub is officially live', Chris Wanstrath, April \
+10, 2008. justfile: '[1.0.0] - 2022-2-22' in CHANGELOG.md. localhost: Reynolds and Postel, \
+ISI, November 1986, 4676 Admiralty Way, Marina del Rey, 'The class A network number 127 is \
+assigned the \"loopback\" function'. ssh: T. Ylonen, Helsinki University of Technology, 15 \
+November 1995, Otakaari 1, FIN-02150 Espoo; 'first' rests on the draft's -00. ssh echo: \
+'the OpenSSH 1.2.2 release, which was shipped with OpenBSD 2.6 in December 1, 1999'. \
+interfaces: 'PARC researchers developed ... The Alto incorporated a high-resolution \
+display, mouse, and PARC-developed Ethernet networking', 1972-1983, 3333 Coyote Hill Road. \
+interfaces echo: 'Nov 25, 2024 ... open-sourcing the Model Context Protocol (MCP), a new \
+standard for connecting AI assistants to the systems where data lives'. All three of round \
+1's contradictions are gone and none of the thirteen lines carries a judgement, a reason or \
+an inference any more. On place: six pages name the town themselves, two origins stand on \
+an abstract place, and five pages are silent on the town (ethw.org/UNIX has no Murray Hill; \
+the certificate and the Catalina post no Cupertino; GitHub's post and Anthropic's no San \
+Francisco). For those five the town comes from the place file's own source, which I opened: \
+the Bell Labs milestone page has Murray Hill, 600 Mountain Avenue, UNIX and 1969; \
+apple.com/contact has One Apple Park Way, Cupertino; GitHub's statement 88 Colin P. Kelly \
+Jr. St.; Anthropic's page 548 Market St. I rule that as supported and name the reading in \
+the second finding. Ten places drawn with random.Random(commit id): a-data-centre, \
+apple-cupertino, carnegie-mellon, confluent-mountain-view, ecma-international, github-sf, \
+microsoft-redmond, obsidian, the-cloud, uc-santa-barbara, plus the two new ones the draw \
+missed, openai-sf and amazon-seattle. Each page carries the name and the where: 5000 Forbes \
+Avenue, Pittsburgh; 899 West Evelyn, Mountain View; Rue du Rhone 114, 1204 Geneva; One \
+Microsoft Way, Redmond; 'Erica started Obsidian in 2020'; SP 800-145, 'Date Published: \
+September 2011'; 'Santa Barbara, California 93106' and 'where the land meets the sea'; \
+EDGAR's 410 TERRY AVENUE NORTH, SEATTLE WA 98109 (the page answers 403 to an undeclared \
+client and 200 to a declared one); ProPublica's 'Openai Inc, San Francisco, CA, EIN \
+81-0861541', with '3180 18TH ST' only in the page's embedded data. All 42 place sources \
+answer. Coordinates of twelve, none of them round 1's ten, geocoded through OpenStreetMap \
+from the address the page gives: amazon-seattle, openai-sf, ecma-international, \
+uc-santa-barbara, apple-cupertino, microsoft-redmond, carnegie-mellon, usc-isi, \
+ibm-san-jose, google-mountain-view, mit, cwi-amsterdam. Eleven within 0.004 degrees; \
+ibm-san-jose, whose page gives only 'San Jose, California', within 0.03 of 650 Harry Road \
+and within 0.01 of 5600 Cottle Road. Five \
+landmarks found on the map at their place (Hoover Tower, the Campanile, Nassau Hall, \
+Aldrich Park, Helsinki's main building). What is left is low: see the findings."""
 
 [[criteria]]
 id = "c6"
 verdict = "pass"
 evidence = """
-Tried each refusal in the scratch copy by editing a real file and loading: an unknown place \
-('core/unix.toml: names the place 'atlantis', and no file in vibemap/data/places/ declares \
-it'), a missing source ('core/unix.toml does not match the Topic schema ... origins.0.source \
-Field required'), an http source, two primaries, no primary, a place whose id is not its \
-file name ('places/bell-labs.toml: declares id 'bell''), an unknown kind, an unknown globe, \
-a place without a source and with an http one. Each is refused and each message names the \
-file. A topic without origins loads: 61 of 70 do today, and problems() lists them, 45 with \
-packs=['core'], 16 with packs=['data-engineering'], 18 with shelves=['data'], 2 with both. \
-Additive is the right reading of AGENTS.md here: no stored format changes meaning, and \
-PLACES is baked into the same file as the code that will read it. The same facts: I parsed \
-`const PLACES=` out of the built game and ran `vibe topic <id>` for all nine topics and \
-`vibe places <id>` for all 38 places plus the list; every place name, year, `what`, source, \
-kind, era name, globe, region, look, landmark and coordinate in the blob is in the \
-terminal's output, the primary comes first in both, nothing missing. tools/new_topic.py \
-scaffolds an origin that loads (tried: `topic core scratchy`), and the TOML examples in \
-docs/TOPICS.md and docs/GALAXY.md load through Origin and Place, the place example being \
-equal to the real bell-labs.toml. ADR 0015 reads Accepted, 2026-09-21 with the amendment, \
-and the index row says the same."""
+Tried each refusal in the scratch copy by breaking a real file, loading, and restoring: an \
+unknown place ('core/unix.toml: names the place 'atlantis', and no file in \
+vibemap/data/places/ declares it'), a missing source ('core/unix.toml does not match the \
+Topic schema ... origins.0.source Field required'), an http source and an empty one, two \
+primaries, no primary, an unknown key on an origin, the year 1066, a place whose id is not \
+its file name ('places/bell-labs.toml: declares id 'bell''), a second file declaring the \
+same id, an unknown kind, globe, era and look, a place without a source and with an http \
+one, an earth place without lat, a cloud place with coordinates, lat 140, a landmark in \
+prose. Each is refused and each message names the file. A topic without origins loads: 61 \
+of 70 do today. problems() works both ways: shelves=['shell'] 0, packs=['core'] 45, \
+packs=['data-engineering'] 16, shelves=['data'] 18, shelves=['data'] with packs=['core'] 2, \
+none 61. Additive is the right reading of AGENTS.md: no stored format changes meaning and \
+PLACES is baked into the file that reads it. The same facts: I parsed `const PLACES=` out \
+of the built game (42 places, 13 origins, 5 eras) and ran `vibe topic <id>` for the nine \
+topics, `vibe places <id>` for all 42 places and the list, at 300 columns; every place \
+name, year, `what`, source, kind, era name, globe, region, look, landmark, coordinate and \
+topic id in the blob is in the terminal, primary first in both, nothing missing. Rich \
+markup fed through a name, a `what` and both sources is printed as text, no traceback. \
+tools/new_topic.py scaffolds an origin that loads (tried `topic core scratchy`), and \
+tests/test_topics.py refuses the TODO it leaves in a shipped file. The origin examples in \
+docs/TOPICS.md and docs/GALAXY.md load through Origin and name places that exist, and the \
+place example in both equals bell-labs.toml, now under test. ADR 0015 reads Accepted, \
+2026-09-21, with the amendment, and the index row says the same. What slips through is \
+low: year = \"1969\" as a string loads, and two origins at one place (first finding)."""
 
-# What has to change before this lands, most severe first.
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/topics/core/unix.toml"
-text = """
-The echo carries year = 2026 and the page does not. \
-https://www.opengroup.org/openbrand/register/ lists 'Apple Inc.: macOS version 26.0 Tahoe' \
-with no date at all, and the certificate it links (brand3725.htm) says 'Registered on: \
-29-Aug-2025'. 2026 is the year the page was read, not a year the source gives, and the line \
-goes stale the day the next macOS is registered. docs/TOPICS.md teaches the same origin as \
-its model example."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/topics/core/bash.toml"
-text = """
-The cited bulletin puts the actor somewhere else than the origin does. \
-https://www.gnu.org/bulletins/bull7.html: 'Brian Fox is still working for us at UC Santa \
-Barbara. He is beta-releasing BASH', and the FSF's address in it is 675 Massachusetts \
-Avenue, Cambridge, MA. The origin is pinned on 'The Free Software Foundation, Boston', whose \
-own source (fsf.org/about) names Boston only in the datelines of 2026 press releases. Year \
-(June 1989) and actor hold; the place is what the page contradicts. The place file's \
-comment, 'The GNU tools, bash among them, were paid for here', is on neither page."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/topics/core/zsh.toml"
-text = """
-The primary origin says 2019 and its source never does. \
-https://support.apple.com/en-us/102360 says 'Starting with macOS 10.15, your Mac uses zsh as \
-the default login shell and interactive shell'; the only date on the page is 'Published \
-Date: June 15, 2026', and Cupertino is not on it. The topic already lists Apple's newsroom \
-page of October 2019 under sources, which does carry the year."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/topics/core/interfaces.toml"
-text = """
-Four `what` lines say more than their page, against ADR 0010 and against the rule this \
-order wrote into docs/TOPICS.md ('plainly what happened, not why it matters'). \
-interfaces.toml: 'whose graphical user interface proved widely and profoundly influential' \
-is the IEEE citation's judgement, unquoted and narrowed; the citation says that of seven \
-fields together ('programming languages, graphical user interfaces, printing, graphics, \
-word processing, networking, and email were widely and profoundly influential'). \
-dotfiles.toml: 'and a repository becomes somewhere to keep a dotfile' is not in GitHub's \
-launch post, which says 'GitHub is officially live', Chris Wanstrath, April 10, 2008, and \
-names no city. files.toml, the echo: 'Neumann writes his half of that file system paper at' \
-is inferred from an affiliation line; the page gives his employer and its town and nothing \
-about who wrote which half or where. justfile.toml: 'rather than at any address' is the \
-map's reasoning, not something the release says."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/places/bell-labs.toml"
-text = """
-landmark = "horn-antenna" is a fact about another town. The horn antenna stands on Crawford \
-Hill in Holmdel (40.391, -74.185), 0.29 degrees of latitude from Murray Hill, and the \
-place's own source never mentions it. It is already printed to a person: `vibe places \
-bell-labs` says 'drawn as a campus around its horn antenna'. The slip came with the design's \
-example, and docs/GALAXY.md and docs/TOPICS.md both repeat it, but the file and both docs \
-are this order's."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/places/apache-software-foundation.toml"
-text = """
-Four landmarks name an organisation's mark, and a landmark is 'one silhouette the diorama \
-builder draws'. ADR 0010: 'No logo, no wordmark, no product imagery, no app icon, no trade \
-dress', and docs/GALAXY.md says places inherit that rule unchanged. feather (Apache's logo), \
-two-snakes (python-software-foundation.toml, the Python logo), puffer-fish \
-(openbsd-project.toml, OpenBSD's mascot), helm (cncf.toml, which is Kubernetes' mark and \
-not CNCF's). Nothing draws them yet, which is why now is the cheap moment: PLACES already \
-ships them in the built game."""
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/places/"
-text = """
-Not every place the packs need is seeded, and the orders that follow are told not to create \
-one. OpenAI is the one that matters: findings.md names it, and the history fields of eight \
-topics name it or its products (http, github, prompting, cost, llm, context, subagents, \
-future), six of them on the agents and future shelves whose order must give every topic an \
-origin. The reason given is that the site refuses an automated fetch; I confirm openai.com \
-answers 403 to curl, but that is a reason to read it another way, not evidence that no \
-primary source exists. For Amazon the claim is wrong as stated: data.sec.gov answers 200 \
-with 410 Terry Avenue North, Seattle, and aboutamazon.com answers 200. From fifteen topics \
-drawn at random (apis, concerns, config, context, data, datamap, dataquality, hooks, jsonl, \
-languages, medallion, polars, readme, schemas, symbols) eleven have a fitting specific \
-place and four only an abstract one (config, polars, dataquality, and context without \
-OpenAI). The pull request names the gaps honestly; the order asked for every place."""
-
-[[findings]]
-severity = "low"
-file = "vibemap/data/topics/core/justfile.toml"
-text = """
-The source is https://api.github.com/repos/casey/just/releases/tags/1.0.0: raw JSON to \
-whoever clicks it, and an endpoint limited to 60 anonymous requests an hour, which the \
-weekly link check shares with everything else on its address. \
-https://github.com/casey/just/releases/tag/1.0.0 answers 200 and says the same."""
-
-[[findings]]
-severity = "low"
-file = "vibemap/data/places/anthropic-sf.toml"
-text = """
-Two places take a mailbox for an office. Anthropic's page says 'registered address at 548 \
-Market St, PMB 90375' and Docker's '3790 El Camino Real, #1052', which OpenStreetMap names \
-Greenmail; the files turn them into landmark market-street-office and a harbour of stacked \
-containers in Palo Alto. A research order that pins Docker's 2013 release on this place \
-will be citing a letterbox. Also apple-cupertino.toml: 'Apple Park' opened long after the \
-era the file gives it (personal, 1980 to 1999), and both origins at it are 2019 and later; \
-the other companies are named 'Google, Mountain View' and 'Microsoft, Redmond'."""
-
-[[findings]]
-severity = "low"
-file = "vibemap/data/places/uc-berkeley.toml"
-text = """
-Comments in the place files make claims their own source does not carry: 'Where BSD and \
-POSTGRES were written' (berkeley.edu/about says neither), 'Paul Falstad wrote zsh here as a \
-student' (princeton-university.toml), 'Roy Fielding's dissertation named REST here' \
-(uc-irvine.toml), and 'Somebody else's computers' set next to NIST's name in the-cloud.toml. \
-A comment is not shipped, but it is the first thing the next researcher reads and copies. \
-The ones I checked that do hold: Obsidian ('Erica started Obsidian in 2020'), CWI \
-('kick-started the development of ... Python', Science Park 123), OpenBSD ('a Canadian \
-not-for-profit corporation')."""
+# Nothing here has to change before this lands. All low, most useful first.
 
 [[findings]]
 severity = "low"
 file = "vibemap/places.py"
 text = """
-problems(shelves=['nope']) and problems(packs=['nope']) return an empty list, which the \
-docstring calls 'nothing is wrong with what was asked about'. Five orders use this call as \
-their acceptance command; a misspelt shelf would pass with nothing checked. The names they \
-use today all exist. In the same module: two origins at one place load, and `vibe places \
-<id>` then prints the first of them twice, because origin_at() takes the first match; \
-payload()'s docstring promises a --json that no command has; a TOML syntax error is \
-reported as 'bell-labs.toml is not valid TOML' without the places/ the other messages carry."""
+Still open from round 1, and the one to close before five orders write 61 topics: two \
+origins of one topic at the same place load, PLACES carries both, and `vibe places \
+bell-labs` prints the first of them twice, because origin_at() returns the first match. \
+Tried it: a second unix origin at bell-labs in 1973 printed the 1969 line twice and the \
+1973 line never. No data does it today, so c6 holds; nothing refuses it either. Also still \
+open in this module: payload()'s docstring promises a --json no command has, a TOML syntax \
+error reads 'bell-labs.toml is not valid TOML' without the places/ the other messages \
+carry, problems(shelves=[]) is an empty selection that returns an empty list, and year = \
+\"1969\" as a string is quietly turned into a number."""
 
 [[findings]]
 severity = "low"
-file = "vibemap/topics.py"
+file = "docs/TOPICS.md"
 text = """
-docs/TOPICS.md says 'Rules, all of them checked', and '`what` is one line' is not: a `what` \
-with a line break loads. The year window lets next year through (today.year + 1) while the \
-message says 'outside 1940 to now'; 2027 loads today."""
+The rule says the page 'has to say what the line says: the year, the place, the people or \
+the organisation'. Five of the thirteen shipped origins stand on a page that never names \
+the town: unix at bell-labs, the unix echo and zsh at apple-cupertino, dotfiles at \
+github-sf, the interfaces echo at anthropic-sf. I accepted them because the place file's \
+own source gives the organisation's address and nothing contradicts it, which is not what \
+the sentence says. Five research orders will read that sentence five ways; say which \
+reading is meant. One consequence to know: github-sf is the office GitHub's page gives \
+today, and the 2008 post names no office at all."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/places/"
+text = """
+Round 2 wrote 'The place's own source has to carry what the file says about it, the \
+landmark included', and fifteen of the 42 pages do not: thirteen carry no word of their \
+landmark (the-cut, great-dome, hoover-tower, campanile, nassau-hall, aldrich-park, \
+seaside-bluff, auditorium, city-office, cooling-towers, vault-door, grants-desk, \
+eighteenth-street-office) and two miss the word that matters (the annex of research-annex, \
+the globe of globe-of-science). Four of them I found on the map at the place, so they are \
+true rather than sourced; research-annex and city-office stand on no page and no map. free-software-foundation.toml is named for Boston and its page carries Boston \
+only in the tooltips of two news links that will rotate away; the FSF's contact page now \
+calls 51 Franklin Street its previous office. No origin stands there today. OpenAI's street \
+is in the page's embedded data, not in what a person reads. Still open from round 1: \
+Anthropic's and Docker's addresses are mailboxes (PMB 90375, #1052). Landmarks that are an \
+address make an odd sentence: 'drawn as a campus around its one apple park way'. And for \
+galaxy-v0: ADR 0010 also rules out product imagery and a building modelled on a real one, \
+while alto-workstation, stacked-containers at a harbour (one step from Docker's mark) and \
+the named towers and halls ask for exactly that; docs/GALAXY.md's answer is 'a suggestion, \
+not a likeness', and the test only names marks."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/zsh.toml"
+text = """
+Cut back to their page, two primary origins no longer mention their topic: zsh lives at \
+'Apple releases macOS Catalina on 7 October 2019' and dotfiles at 'Chris Wanstrath posts \
+that GitHub is officially live'. Both are true and sourced, and the pull request says why \
+for zsh. In `vibe topic zsh` the History line above explains it; on a map there will be no \
+History line. The Multics echo has the same flavour: 'gives his address as' is what a page \
+says, not something that happened in 1965."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/places/uc-berkeley.toml"
+text = """
+Round 1's low on comments was not taken up. Eight place files still say in a comment what \
+their own source does not: 'Where BSD and POSTGRES were written' (uc-berkeley), 'Paul \
+Falstad wrote zsh here as a student' (princeton-university), 'Roy Fielding's dissertation \
+named REST here' (uc-irvine), 'Somebody else's computers' next to NIST's name (the-cloud), \
+'Linux's first home' (university-of-helsinki), 'Project MAC and Multics were here' (mit), \
+'It managed the RFC series for decades' (usc-isi), 'created DuckDB' (cwi-amsterdam). Not \
+shipped, but it is what the next researcher reads first and copies. Every address in a \
+comment that I checked is on its page. In tests/test_places.py the comment 'Each of these \
+is named in more than one topic's history' is not true of uc-santa-barbara or \
+ecma-international."""
 
 [[findings]]
 severity = "low"
 file = "vibemap/cli.py"
 text = """
-At 80 columns `vibe places` cuts the id column ('carnegie-me...', 'a-standards...'), and \
-the id is what the last line tells you to type next. `vibe places the-cloud` reads 'On the \
-cloud globe at cloud, in everywhere, drawn as a nebula around its nebula.' origin.source and \
-place.source go into rich markup without escape(): a link with '[/b]' in it ends `vibe \
-topic` in a MarkupError traceback (the neighbouring source.url line has the same weakness)."""
+Still open from round 1: at 80 columns `vibe places` cuts the id column ('a-standards', \
+'carnegie-me', each ending in an ellipsis), and the id is what the last line tells you to \
+type next. Round 2's two fixes here, escape() on the sources and the nebula sentence, work \
+(tried both by hand) and have no test."""
 
 [[findings]]
 severity = "low"
 file = "tools/build.py"
 text = """
-For the orchestrator, not for this builder: boot is not last. In the scratch copy a \
-src/galaxy/01-x.js lands at offset 1644575 of the built game, after 90-boot.js's content at \
-1640593, exactly as on main. The pull request says so and says why it stopped: \
-tests/test_build.py pins boot before the galaxy modules and belongs to \
-harness-build-finds-modules. Stopping was the right call under the skill; PLACES itself is \
-written in front of 00-state.js and is not affected. Someone has to own both files before \
-galaxy-v0 adds a top-level const. Two more for the same desk: AGENTS.md's file map does not \
-know vibemap/places.py or vibemap/data/places/ (not in this order's owns), and the shelf \
-'data' holds the sixteen topics of the data-engineering pack, so galaxy-origins-data-net's \
-shelves=['data', 'net'] cannot be empty before galaxy-origins-data-engineering lands."""
+For the orchestrator, not for this builder. Boot is still not last: in a scratch build a \
+src/galaxy/01-x.js lands at offset 1645750, after 90-boot.js's content at 1643416. That is \
+main's behaviour and tests/test_build.py pins it (boot before the galaxy modules); the pull \
+request explains why the builder wrote the fix and took it back. Someone has to own both \
+files before galaxy-v0 adds a top-level const. Four more for the same desk. The follow-on \
+orders own no place file, yet docs/TOPICS.md tells them to add a place when none fits; the \
+hook will refuse, and the histories still name Heroku, Twitter, Cloudera, Snowflake, Cursor \
+and Dagster with only an abstract place to fall back on (of fifteen topics drawn at random \
+ten have a fitting specific place and five, changelog, parquet, kafka, datamap and dagster, \
+a foundation or the internet, which the docs allow). tools/checks.py's weekly link check \
+reads vibemap/data/topics and not vibemap/data/places, so 42 sources are never probed, and \
+the EDGAR link answers 403 to its user agent. AGENTS.md's file map does not know \
+vibemap/places.py or vibemap/data/places/. vault/Camp/Unix and the terminal.md still \
+carries the Open Group link unix.toml dropped, and no --check covers the vault."""
