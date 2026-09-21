@@ -20,7 +20,7 @@ unlocks = ["github", "hooks", "ci", "semver"]
 [[origins]]
 place = "the-internet"
 year = 2005
-what = "The Linux development community, and Linus Torvalds in particular, write git after BitKeeper's free-of-charge status is revoked."
+what = "The Linux development community, and in particular Linus Torvalds, develop their own tool, Git, after BitKeeper's free-of-charge status is revoked."
 source = "https://git-scm.com/book/en/v2/Getting-Started-A-Short-History-of-Git"
 primary = true
 

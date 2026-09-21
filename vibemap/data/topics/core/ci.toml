@@ -15,19 +15,19 @@ unlocks = ["headless", "tests"]
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. The service
 # this camp runs its checks on is the primary; Jenkins is an echo, and its
-# renaming was a vote of a project with no address.
+# renaming was a vote of a project with no address, told to its mailing lists.
 
 [[origins]]
 place = "github-sf"
 year = 2019
-what = "GitHub Actions adds CI/CD, with every workflow written as YAML in the repository."
+what = "GitHub announces that Actions now supports CI/CD, with workflows written in a syntax based on YAML and kept as code in a repository."
 source = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
 primary = true
 
 [[origins]]
 place = "the-internet"
 year = 2011
-what = "A community vote renames the Hudson project to Jenkins, 214 votes to 14."
+what = "The vote on renaming Hudson closes with 214 votes to rename and 14 for the status quo, and Andrew Bayer tells the project's mailing lists that Jenkins lives."
 source = "https://www.jenkins.io/blog/2011/01/29/jenkins/"
 
 [[sources]]

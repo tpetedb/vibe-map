@@ -3,8 +3,10 @@
 `places.problems()` says whether an origin loads at all; that is the generic
 half and the order checks it separately. What is specific to these fifteen
 topics is written here: each one sits at one place, the line under it names
-the thing the topic is about, and no topic stands twice at the same place,
-because the map draws one dome per place and would print the same topic twice.
+the thing the topic is about, a line at a real address names who is at that
+address, a year spelled in a line is the year of its origin, and no topic
+stands twice at the same place, because the map draws one dome per place and
+would print the same topic twice.
 """
 
 from __future__ import annotations
@@ -39,6 +41,27 @@ NAMES: dict[str, tuple[str, ...]] = {
 }
 
 
+# What a line has to name when it stands at a real organisation, as its page
+# spells it. An origin at an address is a statement about who is at that
+# address: a line that names somebody else there is how Bash ended up at the
+# Free Software Foundation's door. A place missing from this table is an
+# abstract one (the network, a standards body), where no address is claimed.
+ACTORS: dict[str, str] = {
+    "anthropic-sf": "anthropic",
+    "bell-labs": "bell telephone laboratories",
+    "carnegie-mellon": "carnegie-mellon university",
+    "cern": "cern",
+    "cwi-amsterdam": "cwi",
+    "ecma-international": "ecma international",
+    "github-sf": "github",
+    "google-mountain-view": "google",
+    "microsoft-redmond": "microsoft",
+    "obsidian": "obsidian",
+    "w3c": "w3c",
+}
+ABSTRACT = {"the-internet", "a-standards-body"}
+
+
 def _shelved() -> list[topics.Topic]:
     return [t for t in topics.all_topics() if t.shelf in SHELVES]
 
@@ -71,7 +94,33 @@ def test_every_topic_has_one_primary_origin_whose_line_names_it() -> None:
         )
 
 
-def test_every_origin_stands_on_a_place_that_exists_and_an_opened_source() -> None:
+def test_a_line_at_an_address_names_who_is_at_that_address() -> None:
+    for topic in _shelved():
+        for origin in places.origins_of(topic):
+            if origin.place in ABSTRACT:
+                continue
+            where = f"{topic.pack}/{topic.id}.toml at {origin.place}"
+            assert origin.place in ACTORS, f"{where}: say who the line has to name"
+            assert ACTORS[origin.place] in origin.what.lower(), (
+                f"{where}: the line has to name {ACTORS[origin.place]!r},"
+                f" and it says: {origin.what}"
+            )
+
+
+def test_a_year_written_in_a_line_agrees_with_the_year_of_the_origin() -> None:
+    # The year is the one the page gives for what happened. A line that spells
+    # out years and an origin dated to none of them have been read off two
+    # different things, and one of them is wrong.
+    for topic in _shelved():
+        for origin in places.origins_of(topic):
+            spelled = {int(y) for y in re.findall(r"\b(?:19|20)\d\d\b", origin.what)}
+            assert not spelled or origin.year in spelled, (
+                f"{topic.pack}/{topic.id}.toml: dated {origin.year},"
+                f" and the line says: {origin.what}"
+            )
+
+
+def test_every_origin_stands_on_a_place_that_exists_and_an_https_source() -> None:
     this_year = dt.date.today().year
     for topic in _shelved():
         for origin in places.origins_of(topic):

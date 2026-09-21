@@ -27,7 +27,7 @@ primary = true
 [[origins]]
 place = "obsidian"
 year = 2020
-what = "Erica Xu starts Obsidian, a note app whose data stays on your own device in open file formats."
+what = "Erica Xu starts Obsidian to build a note-taking app for her notes; it stores data on your device in simple, open file formats."
 source = "https://obsidian.md/about"
 
 [[sources]]

@@ -20,14 +20,14 @@ unlocks = ["pylibs"]
 [[origins]]
 place = "the-internet"
 year = 2021
-what = "TOML 1.0.0, Tom Preston-Werner's minimal configuration file format, is published."
+what = "TOML v1.0.0, a minimal configuration file format by Tom Preston-Werner, Pradyun Gedam and others, is published."
 source = "https://toml.io/en/v1.0.0"
 primary = true
 
 [[origins]]
 place = "a-standards-body"
 year = 2016
-what = "PEP 518 introduces pyproject.toml, the file that says what a project's build needs."
+what = "Brett Cannon, Nathaniel J. Smith and Donald Stufft write PEP 518, which stores a project's build system dependencies in a file named pyproject.toml."
 source = "https://peps.python.org/pep-0518/"
 
 [[sources]]

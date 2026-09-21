@@ -21,14 +21,14 @@ unlocks = ["http", "localhost"]
 [[origins]]
 place = "cern"
 year = 1990
-what = "Tim Berners-Lee has the first web server and browser up and running at CERN."
+what = "By the end of 1990, Tim Berners-Lee has the first web server and browser up and running at CERN."
 source = "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/"
 primary = true
 
 [[origins]]
 place = "w3c"
 year = 1996
-what = "The W3C publishes Cascading Style Sheets level 1 as a Recommendation, on 17 December 1996."
+what = "The W3C publishes Cascading Style Sheets, level 1, by Håkon Wium Lie and Bert Bos, as a Recommendation on 17 December 1996."
 source = "https://www.w3.org/TR/REC-CSS1-961217"
 
 [[origins]]

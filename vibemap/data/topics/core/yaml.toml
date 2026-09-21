@@ -27,7 +27,7 @@ primary = true
 [[origins]]
 place = "github-sf"
 year = 2019
-what = "GitHub gives Actions a workflow syntax based on YAML, in the release that adds CI/CD."
+what = "GitHub announces a new syntax for expressing Actions workflows, based on YAML, in the post that says Actions now supports CI/CD."
 source = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
 
 [[sources]]

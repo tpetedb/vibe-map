@@ -21,7 +21,7 @@ unlocks = ["apis", "tests"]
 [[origins]]
 place = "the-internet"
 year = 2005
-what = "NumPy is created on the earlier Numeric and Numarray libraries, with Travis Oliphant as its founder."
+what = "NumPy is created in 2005, building on the early work of the Numeric and Numarray libraries; Travis Oliphant is the project's founder."
 source = "https://numpy.org/about/"
 primary = true
 
