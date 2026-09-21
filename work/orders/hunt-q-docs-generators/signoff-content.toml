@@ -1,0 +1,30 @@
+# The content team's manager on what this order does to workspace/, and on
+# whether finding Q3 has its cause in vibemap/data/topics/. Read at the commit
+# below; the branch's whole change inside content's paths is one docstring line.
+v = 1
+order = "hunt-q-docs-generators"
+team = "content"
+by = "manager-content"
+reviewed = "8b809dd91a8701217dd968b197e56177c91e4661"
+verdict = "accept"
+note = '''
+Accepted. `git diff origin/main...HEAD -- workspace/ vibemap/data/ docs/SYLLABUS.md` is one line: the docstring of workspace/python/scores.py, `Run: python3 python/scores.py` became `Run from the camp root: python3 workspace/python/scores.py`. Nothing else in content's paths moved, and finding Q4 explains that line.
+
+Q4, run as the docstring says:
+- From the camp root (the folder with config/camp.toml): `python3 workspace/python/scores.py` exits 0 and prints the table for Lotte, Rolinda and Tom. The old command `python3 python/scores.py` exits 2, no such file, so the finding was real.
+- workspace/data/scores.csv is untouched: sha256 5bbbdcd4...9d9379, 296 bytes and the same mtime before and after, `git status` clean. The script only opens the file for reading.
+- `camp root` is a phrase the product already uses (vibemap/scores.py, docs/CONFIG.md, vibemap/project.py), and the three queries in workspace/sql/ read 'workspace/data/scores.csv' relative to the same root, so the worked example now has one place to stand in. The script finds the CSV from its own path, so it also runs from elsewhere; the docstring names the one place every page assumes, which is the right thing to tell a learner.
+- The same path everywhere: grep for the script over the whole tree finds `python3 workspace/python/scores.py` in AGENTS.md, src/body.html (the Data Warehouse lesson), docs/SYLLABUS.md, vibemap/data/topics/core/python.toml and ci.toml, and `uv run python workspace/python/scores.py` in the python-data skill and its template copy. A lookbehind grep for `python/scores.py` without `workspace/` in front finds nothing outside this order's folder. workspace/README.md and its template copy say `python/*.py` relative to the folder they sit in, which is correct there. No place still names the old path, so nobody else gets a finding from this.
+- Still a worked example: 26 lines, standard library only as ADR 0003 asks, one new concept named at the top, a `__main__` guard, `ruff check` and `ruff format --check` clean. It has no `from __future__ import annotations` and opens the CSV without `with`; both are older than this order, neither is a bug, and the file teaches a dict comprehension, not file handling. Left alone on purpose.
+
+Q3, located myself: the cause is not in content's topic files, and the builder's conclusion is right.
+- vibemap/data/topics/core/git.toml and python.toml are complete: summary, history, try_it, unlocks, six and five sources. `tools/regen_tree.py` `render()` turns each topic that is not in EXIST into `notes[title] = {t: shelf, md: ...}`: Git is t "git", 1305 characters, Python is t "code", 1151 characters.
+- The stub is the handwritten concept card of the same title in src/game/50-notes.js (team panels): `"Python":{t:"c"` at line 117, 443 characters, and `"Git":{t:"c"` at line 194, 290 characters. tools/build.py `_notes_js()` writes one object literal, generated notes first and the handwritten module after, and the later duplicate key wins. The built game holds both pairs (game/vibe-map.html lines 4185 and 4840 for Git, 4193 and 4763 for Python). vault/Camp/Git.md on disk is the full topic note, so only the game is wrong.
+- Counted: 70 topics, 66 generated notes, 40 handwritten notes, exactly 2 titles in both, Git and Python, none differing only by case. The five topics with no prose (agentsmd, skills, hooks, mcp, vault) are `covered_elsewhere = true` as docs/TOPICS.md describes, and all five alias targets exist in 50-notes.js. No topic that should have prose has an empty field; the shortest generated note is 812 characters.
+
+What content wants from whoever takes Q3 (a panels order owning src/game/50-notes.js, with tests/test_hunt_q.py's KNOWN_SHADOWED emptied): delete the two cards, do not reorder tools/build.py. The topic is the one source for what the course says about Git and Python; two notes of one title is the defect, and putting the generated notes last would hide the next collision instead of failing on it. The wikilinks [[Git]] (seven) and [[Python]] (two) in the other cards then land on the topic notes. Commit, Rollback, Business continuity and Template repo stay linked from cards other than those two (2, 3, 4 and 3 links), so nothing is orphaned. Extending EXIST is wrong for the reason the builder gives: it would delete the prose from docs/ROADMAP.md and keep the player on the stub.
+
+Content's own follow-up, one small order owning vibemap/data/topics/core/python.toml, to land before or with the panels order so nothing the card offered is lost: add the source `Kaggle Learn`, https://www.kaggle.com/learn, which only the handwritten Python card carries (the lesson in src/body.html and docs/SYLLABUS.md name it, the topic does not), opened on the day as docs/TOPICS.md asks, then `just tree` and the generators. git.toml needs no change: what the Git card adds is links to concept cards, which topic prose cannot carry because the same text is written to docs/ROADMAP.md, and those cards link back to [[Git]] themselves.
+
+This sign-off covers the commit above and lapses when workspace/python/scores.py or another owned file moves.
+'''
