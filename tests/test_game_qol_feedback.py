@@ -9,6 +9,7 @@ five seconds and a loaded runner loses that race.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import pytest
@@ -41,6 +42,21 @@ RECORD_VIBRATIONS = """(() => {
   window.__vibes = [];
   Object.defineProperty(navigator, 'vibrate', {configurable: true,
     value: p => { window.__vibes.push(p); return true; }});
+})()"""
+
+# How many cards were ever on screen together. A card removes itself after
+# five seconds, so the count is taken as each one arrives rather than read off
+# the screen afterwards, which is the race this file does not run.
+RECORD_STACK = """(() => {
+  window.__stackMax = 0;
+  const seen = () => {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    const n = el.querySelectorAll('.tst').length;
+    if (n > window.__stackMax) window.__stackMax = n;
+  };
+  const root = document.documentElement || document;
+  new MutationObserver(seen).observe(root, {childList: true, subtree: true});
 })()"""
 
 # The saved mark lives for about a second, so where it was put and how it was
@@ -87,6 +103,14 @@ def _open_pack(game: GamePage, tab: str) -> None:
     game.page.wait_for_selector("#s-pack.on", state="attached")
     game.page.click(f"#s-pack .packtabs button:has-text('{tab}')")
     game.sheet_in_place()
+
+
+def _nearest_item(game: GamePage) -> dict[str, Any]:
+    """The collectible closest to the walker, from the game's own debug seam."""
+    pos = game.page.evaluate("window.__debug().pos")
+    on_ground = game.page.evaluate("window.__avatar().onGround")
+    assert on_ground, "no collectibles on the island"
+    return min(on_ground, key=lambda i: math.hypot(i["x"] - pos[0], i["z"] - pos[2]))
 
 
 def _started(game: GamePage, state: dict[str, Any] | None = None) -> GamePage:
@@ -151,12 +175,63 @@ def test_a_claim_buzzes_the_phone_and_the_setting_silences_it(
     game.start("Tom")
     game.claim(1)
     game.until("(window.__vibes || []).length > 0")
-    # The claim's own pattern first: the achievement that follows has another.
+    # The claim's own pattern first; the achievement it earns has its own and
+    # is the next test.
     assert game.page.evaluate("window.__vibes[0]") == [22, 40, 22]
     _set(game, "haptics", "off")
     silent_from = int(game.page.evaluate("window.__vibes.length"))
     game.claim(2)
     assert int(game.page.evaluate("window.__vibes.length")) == silent_from
+    game.assert_clean()
+
+
+def test_an_achievement_buzzes_with_its_own_pattern(game_android: GamePage) -> None:
+    """The second call site. A claim that earns one gives two patterns in the
+    order they happened, the claim's and then the achievement's."""
+    game = game_android
+    game.page.add_init_script(RECORD_VIBRATIONS)
+    game.goto()
+    game.start("Tom")
+    game.claim(1)
+    game.until("(window.__S().ach || []).includes('first-light')")
+    # The tail, not the whole list: after eleven at night Night owl unlocks
+    # first, and that is the island being right rather than the test failing.
+    vibes = game.page.evaluate("window.__vibes")
+    assert vibes[-2:] == [[22, 40, 22], [16, 30, 16]], vibes
+    game.assert_clean()
+
+
+def test_walking_over_a_collectible_buzzes_the_phone(game_android: GamePage) -> None:
+    """The third call site, reached the way a player reaches it: the arrow keys
+    and a thing on the ground. The find's pattern is a single number, so no
+    other call site can be mistaken for it."""
+    game = game_android
+    game.page.add_init_script(RECORD_VIBRATIONS)
+    game.goto()
+    game.start("Tom")
+    item = _nearest_item(game)
+    game.walk_to(item["x"], item["z"], tol=0.9)
+    game.until(f"window.__avatar().items.includes({item['id']!r})")
+    assert 16 in game.page.evaluate("window.__vibes")
+    game.assert_clean()
+
+
+def test_an_untouched_page_is_never_asked_to_buzz(game_android: GamePage) -> None:
+    """An achievement unlocks from the frame loop, which runs behind the title
+    screen, so a returning record reaches the buzz before anybody has tapped.
+    Chrome blocks a vibration there and reports the refusal at error level, and
+    zero page errors is the bar. The harness cannot show this by itself:
+    Playwright's evaluate hands the page user activation, so the browser would
+    take the call. What the island asks for is what this watches, and nothing
+    here is ever clicked.
+    """
+    game = game_android
+    game.page.add_init_script(RECORD_VIBRATIONS)
+    game.goto(state={"name": "Tom", "doneW": {"campus": [1]}})
+    game.until("(window.__S().ach || []).includes('first-light')")
+    # The unlock really happened, and it said so: only the buzz was withheld.
+    assert game.page.evaluate("window.__log().some(n => n.t.includes('Achievement'))")
+    assert game.page.evaluate("window.__vibes") == []
     game.assert_clean()
 
 
@@ -228,6 +303,26 @@ def test_the_log_keeps_the_last_sixty_lines(game: GamePage) -> None:
     game.assert_clean()
 
 
+def test_the_stack_shows_a_few_cards_and_the_tab_keeps_them_all(
+    game_android: GamePage,
+) -> None:
+    """A record that arrives having earned four achievements: one pass of the
+    check unlocks all four, so four cards want the screen at once. Three is
+    what a phone can read, and the tab keeps every line.
+    """
+    game = game_android
+    game.page.add_init_script(RECORD_STACK)
+    # Thirty-two stops and ten things picked up: First light, Full evening,
+    # Campaign and Ten things all answer true on the same pass.
+    done = {w: [1, 2, 3, 4, 5, 6, 7, 8] for w in ("campus", "winter", "desert", "prod")}
+    state = {"name": "Tom", "doneW": done, "items": [f"item-{i}" for i in range(10)]}
+    game.goto(state=state)
+    game.until("window.__log().filter(n => n.t.includes('Achievement')).length >= 4")
+    seen = int(game.page.evaluate("window.__stackMax"))
+    assert 0 < seen <= 3, seen
+    game.assert_clean()
+
+
 @pytest.mark.parametrize(
     ("field", "value"),
     [
@@ -272,6 +367,9 @@ def test_a_first_time_hint_shows_once_and_never_again(game_desktop: GamePage) ->
     # island has other things to say while an evening runs.
     tips = game.page.evaluate("window.__log().filter(n => n.t.includes('Tip'))")
     assert len(tips) == 1, tips
+    # The line was raised with an icon in front of it; what is kept is the
+    # words, because the tab writes them back as text.
+    assert tips[0]["t"] == "Tip", tips
     assert game.state()["hints"] == ["pack"]
     game.assert_clean()
 

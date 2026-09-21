@@ -147,8 +147,18 @@ function achCheck(){ACH.forEach(a=>{if(a.when()&&!sl("ach").includes(a.id))unloc
 // what it returns. Reduced motion asks for fewer things moving and a buzz
 // moves the phone, so under it the island stays still and quiet.
 const BUZZ={claim:[22,40,22],unlock:[16,30,16],find:16};
+// Has anyone touched this page yet, answered by the island itself. An
+// achievement unlocks from the frame loop, which runs behind the title screen,
+// so a returning record or the hour past eleven reaches buzz() before the
+// first tap; Chrome refuses a vibration there and reports the refusal at error
+// level. navigator.userActivation answers the same question, but a test
+// harness hands a page an activation nobody gave it, so the island watches
+// for the pointer or the key itself.
+let touched=false;
+["pointerdown","keydown","touchstart"].forEach(t=>
+  addEventListener(t,()=>{touched=true},{capture:true,passive:true,once:true}));
 function buzz(pattern){
-  if(typeof navigator.vibrate!=="function")return false;
+  if(typeof navigator.vibrate!=="function"||!touched)return false;
   if(settings().haptics!=="on"||reducedMotion())return false;
   try{return !!navigator.vibrate(pattern)}catch(e){return false}}
 
@@ -156,12 +166,13 @@ function buzz(pattern){
 // One stack, created on demand so the page keeps its markup. A toast is a
 // message, never state: it says what just happened and goes away. What it said
 // is state and outlives it, in the Backpack's Notifications tab: progress
-// repaired and an import refused are worth more than five seconds, and quiet
-// mode has to leave the player something to read.
+// repaired, and an achievement or a find that arrived while the Roadmap was
+// open, are worth more than five seconds, and quiet mode has to leave the
+// player something to read.
 // The count is what a test waits for: a toast removes itself after a few
 // seconds, so looking for the element is a race on a loaded machine. Quiet
 // counts too, because the message happened.
-const NOTE_CAP=60,TOAST_MS=5000;
+const NOTE_CAP=60,TOAST_MS=5000,TOAST_CARDS=3;
 let toastN=0;
 window.__toasts=()=>toastN;
 window.__log=()=>sl("notes").slice();
@@ -183,7 +194,13 @@ function toast(title,body){
   // whatever it was about still happened, only the card is not raised.
   if(typeof settings==="function"&&settings().toasts==="quiet")return;
   const n=document.createElement("div");n.className="tst";
-  n.innerHTML=`<b>${title}</b><span>${body}</span>`;toastStack().appendChild(n);fx(n);
+  n.innerHTML=`<b>${title}</b><span>${body}</span>`;const stack=toastStack();stack.appendChild(n);fx(n);
+  // The cap is on the cards, not on the messages: a record that earns four
+  // achievements at once fills a phone with them and the newest, the one being
+  // waited for, is pushed off the screen. The oldest card goes instead, and
+  // nothing is lost, because the Notifications tab keeps every line.
+  const cards=stack.querySelectorAll(".tst");
+  for(let i=0;i<cards.length-TOAST_CARDS;i++)cards[i].remove();
   setTimeout(()=>n.remove(),TOAST_MS)}
 // When a note was written, in this browser's own clock. Two digits either
 // side, so a list of them lines up whatever the locale.
