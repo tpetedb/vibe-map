@@ -1,0 +1,37 @@
+v = 1
+id = "harness-work-followups"
+title = "The work order tool: a staged stray, a checked diff, names read with -z, a pruned touched.json"
+team = "harness"
+branch = "fix/work-followups"
+goal = "second-wave"
+issue = 149
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "tools/work.py",
+  "AGENTS.md",
+  "tests/test_work.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The order's own tests pass: one test per finding, each seen failing before its fix."
+check = "uv run pytest -q tests/test_work.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the HTML sink guard and the whole non-browser battery pass, which is what CI runs."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "Every finding in findings.md is either fixed with a test that fails without the fix, or rejected with the evidence that it does not reproduce on main. None is silently skipped."
+judge = "reviewer"

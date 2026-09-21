@@ -1,0 +1,37 @@
+v = 1
+id = "harness-ci-shards"
+title = "A new browser test file lands in a shard by its name, without an edit to ci.yml"
+team = "harness"
+branch = "chore/ci-shards-by-pattern"
+goal = "second-wave"
+issue = 148
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  ".github/workflows/ci.yml",
+  "tools/ci_shards.py",
+  "tests/test_repo.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Lint, style, the HTML sink guard and the whole non-browser battery pass, which is what CI runs."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c2"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c3"
+text = "Every finding in findings.md is either fixed with a test that fails without the fix, or rejected with the evidence that it does not reproduce on main. None is silently skipped."
+judge = "reviewer"
+
+[[criteria]]
+id = "c4"
+text = "Adding a file `tests/test_game_example.py` with one browser test, and nothing else, leaves the guard green and the file in exactly one shard. The reviewer tries it."
+judge = "reviewer"
