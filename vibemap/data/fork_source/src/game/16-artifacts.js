@@ -136,8 +136,10 @@ const ART_DEMOS={
     {l:"Score on a benchmark",o:["benchmark scores-qa-v2:  1 000 questions nobody trained on","this model  76.4 %     last month  71.2 %     a person on a good day  92 %","One number, the same questions for everyone. That is what a benchmark is, and all it is."]}
   ]
 };
-// High enough to lie on top of the flat ground the ring crosses: the path
-// slabs, the river and the lake disc, and the inn's terrace deck.
+// High enough to lie on top of the flat ground a ring crosses: the path
+// slabs, the river where the fountain's and the bridge's rings run over it,
+// and the dock's planks, which are the highest of them. ringGround() measures
+// what is under each ring and a test holds this above it.
 const RING_Y=.2;
 // The ring is the zone, not a decoration around the model: it is drawn at the
 // radius nearArtifact() tests, so crossing the yellow ring is what offers
@@ -216,13 +218,15 @@ window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const 
   el._demo=d.o.map((line,k)=>setTimeout(()=>{el.append((k?"\n":"")+line);el.scrollTop=el.scrollHeight},k*320))};
 // The flat ground under the ring itself: the highest upward-facing surface a
 // ray straight down finds at the points of the circle a player can stand on.
-// That is what RING_Y has to clear. A face that is not level is a slope or a
-// tuft of grass, which stands on the ground rather than being it, and nothing
-// is laid down tipped over, so the face normal keeps its up in world space. A
-// point inside an obstacle is left out, because there the prop is in front of
-// the ring at any height, and so is anything above the knee. The rings are
-// skipped, or every sample would hit the one it is measuring.
+// That is what RING_Y has to clear. A face that is not level in world space
+// is a slope or a tuft of grass, which stands on the ground rather than being
+// it, so the face normal is taken through the object's own rotation before it
+// is asked which way is up. A point inside an obstacle is left out, because
+// there the prop is in front of the ring at any height, and so is anything
+// above the knee. The rings are skipped, or every sample would hit the one it
+// is measuring.
 function ringGround(x,z,r){const ray=new T.Raycaster(),down=new T.Vector3(0,-1,0),bb=new T.Box3();
+  const nm=new T.Matrix3(),up=new T.Vector3();
   // Ground is wide. A level top under a metre across is something standing on
   // it, a bottle or a crate or a collectible, which the ring passes behind.
   const floor=[];scene.traverse(o=>{if(!o.isMesh||(o.geometry&&o.geometry.type==="TorusGeometry"))return;
@@ -232,7 +236,9 @@ function ringGround(x,z,r){const ray=new T.Raycaster(),down=new T.Vector3(0,-1,0
     if((obstacles||[]).some(o=>Math.hypot(o[0]-px,o[1]-pz)<o[2]))continue;
     ray.set(new T.Vector3(px,6,pz),down);
     ray.intersectObjects(floor,false).forEach(h=>{
-      if(h.point.y<=.4&&h.point.y>top&&h.face&&h.face.normal.y>.95)top=h.point.y})}
+      if(h.point.y>.4||h.point.y<=top||!h.face)return;
+      up.copy(h.face.normal).applyMatrix3(nm.getNormalMatrix(h.object.matrixWorld)).normalize();
+      if(up.y>.95)top=h.point.y})}
   return +top.toFixed(4)}
 // Test seam: the ring each artifact of this island is drawn with, the radius
 // the walk-up test uses, the radius the walker is pushed out of at the same
