@@ -4,6 +4,7 @@ title = "Origins for the agents, future shelves: where and when each topic happe
 team = "content"
 branch = "feat/galaxy-origins-agents"
 goal = "galaxy"
+issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
 builder = ""
 
