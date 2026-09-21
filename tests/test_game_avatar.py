@@ -135,12 +135,12 @@ def test_night_owl_follows_the_clock_the_page_was_given(
 ) -> None:
     """The achievement reads the hour, so the page's clock decides it.
 
-    A shard running between eleven and midnight used to unlock this in the
-    middle of any other test, and its toast took the place of the one that
-    test was waiting for. The fixtures put every page at noon; this one asks
-    for the night. First light is true from the seeded record, so its toast is
-    the page's own word that the achievement pass ran, and Night owl was
-    judged in that same pass.
+    On a shard running between eleven and midnight this unlocks in the middle
+    of any other test and its toast takes the place of the one that test is
+    waiting for, which is why the fixtures put every page at noon. A test
+    about the time of day asks for its own hour instead. First light is true
+    from the seeded record, so its toast is the page's own word that the
+    achievement pass ran, and Night owl was judged in that same pass.
     """
     game.set_clock(hour, 30)
     game.goto(state={"name": "Lotte", "done": [1], "doneW": {"campus": [1]}})

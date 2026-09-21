@@ -27,16 +27,16 @@ PHONES = ["game_android", "game_webkit_iphone"]
 
 # How long the camera may take to land, which is not the usual budget.
 #
-# The landing is an animation of a fixed length in the game's own time: the
-# glide is CAM.glide, 1.4 s, and the frame loop advances that time by at most
-# 0.05 s a frame (the clamp in `src/game/31-animate.js`). A page drawing fewer
-# than twenty frames a second therefore takes longer than 1.4 s of wall clock
-# to land, in proportion: measured on a laptop, the same landing is 1.4 s in
-# WebKit at 60 frames a second and 4.7 s in headless Chromium on SwiftShader
-# at 5.7, both on the heaviest island. A loaded CI runner draws fewer still,
-# which is what ran the usual 20 s budget out on the Android leg of the zoom
-# budget test. Below one frame a second this budget runs out too, and that is
-# the point: a landing that slow is a performance finding, not a slow runner.
+# A landing is an animation of a fixed length in the game's own time: the
+# glide onto a fresh island is CAM.glide, 1.4 s, a zoom step is the eased zoom
+# and settles in 8 to 16 frames. The frame loop advances that time by at most
+# 0.05 s a frame (the clamp in `src/game/31-animate.js`), so a page drawing
+# fewer than twenty frames a second takes longer than the animation in wall
+# clock, in proportion: measured on a laptop, the glide is 1.4 s in WebKit at
+# 60 frames a second and 4.7 s in headless Chromium on SwiftShader at 5.7,
+# both on the heaviest island. A loaded CI runner draws fewer still. Below one
+# frame a second this budget runs out too, and that is the point: a landing
+# that slow is a performance finding, not a slow runner.
 LAND_MS = 30_000
 
 

@@ -14,7 +14,8 @@ import http.server
 import json
 import math
 import threading
-from collections.abc import Iterator
+import time
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -144,25 +145,38 @@ STILL = """expr => new Promise(done => {
 NOON = 12
 
 
-def clock_script(hour: int, minute: int = 0) -> str:
+def clock_script(hour: int, minute: int = 0, anchor_ms: float | None = None) -> str:
     """An init script that moves the page's clock to an hour of the same day.
 
     The clock is shifted, never frozen: sheet dwell, the speed run achievement
     and the dashboard's days are all measured with Date, and a stopped clock
     breaks those instead. The day is kept, so a page and the Python that seeds
     its record agree on what today is.
+
+    The shift is a constant, pinned to one instant passed in from here, so a
+    context that loads twice keeps one clock and a test that measures across a
+    reload reads a forward interval. The hour itself is still worked out in
+    the page, in the browser's own time zone, which is the zone the game reads
+    the hour off.
     """
+    anchor = int(anchor_ms if anchor_ms is not None else time.time() * 1000)
     return f"""(() => {{
   const Real = window.__realDate || Date;
   window.__realDate = Real;
-  const now = new Real();
-  const want = new Real(now.getFullYear(), now.getMonth(), now.getDate(),
+  const at = new Real({anchor});
+  const want = new Real(at.getFullYear(), at.getMonth(), at.getDate(),
     {hour}, {minute}, 0, 0);
-  const shift = want.getTime() - now.getTime();
-  class Shifted extends Real {{
-    constructor(...a) {{ a.length ? super(...a) : super(Real.now() + shift); }}
-    static now() {{ return Real.now() + shift; }}
+  const shift = want.getTime() - {anchor};
+  // A function and not a class, because `Date()` without `new` answers with a
+  // string where a class constructor throws.
+  function Shifted(...a) {{
+    if (!new.target) return new Real(Real.now() + shift).toString();
+    return a.length ? new Real(...a) : new Real(Real.now() + shift);
   }}
+  Shifted.now = () => Real.now() + shift;
+  Shifted.parse = Real.parse;
+  Shifted.UTC = Real.UTC;
+  Shifted.prototype = Real.prototype;
   window.Date = Shifted;
 }})()"""
 
@@ -172,11 +186,19 @@ def clock_script(hour: int, minute: int = 0) -> str:
 # or another toast has taken its place. The page keeps a record of every toast
 # it raised instead, and GamePage.toasts() is what a test asks. The name is not
 # __toasts: the game already has that seam, for the count.
-# An init script is a body, not a function the page calls, so it is an IIFE.
+# One entry per notice, whatever the observer is handed: the first toast of a
+# page arrives as two records in one batch, the stack and the notice inside
+# it, and a notice noted twice makes every count written against the record
+# wrong. An init script is a body, not a function the page calls, so it is an
+# IIFE.
 RECORD_TOASTS = """(() => {
   window.__toastLog = [];
-  const note = n => { if (n.nodeType === 1 && n.classList.contains('tst'))
-    window.__toastLog.push(n.textContent || ''); };
+  const noted = new WeakSet();
+  const note = n => {
+    if (n.nodeType !== 1 || !n.classList.contains('tst') || noted.has(n)) return;
+    noted.add(n);
+    window.__toastLog.push(n.textContent || '');
+  };
   const root = document.documentElement || document;
   new MutationObserver(rs => rs.forEach(r => r.addedNodes.forEach(n => {
     note(n);
@@ -228,7 +250,12 @@ class _NamedWait:
     """
 
     def __init__(
-        self, game: GamePage, what: str, budget: int, frame: int | None = None
+        self,
+        game: GamePage,
+        what: str,
+        budget: int,
+        frame: int | None = None,
+        detail: Callable[[], str] | None = None,
     ) -> None:
         self.game = game
         self.what = what
@@ -236,6 +263,9 @@ class _NamedWait:
         # A caller that has just read the frame count hands it over rather
         # than paying for a second round trip: walk_to waits hundreds of times.
         self.frame = frame
+        # What else the failure should say, asked of the page at the moment it
+        # fails: what the page did instead is the half a timeout leaves out.
+        self.detail = detail
 
     def __enter__(self) -> _NamedWait:
         if self.frame is None:
@@ -247,9 +277,17 @@ class _NamedWait:
             return False
         drawn = self.game.frame_count() - (self.frame or 0)
         seconds = self.budget / 1000
+        said = ""
+        if self.detail is not None:
+            try:
+                said = f"; {self.detail()}"
+            except Exception:
+                # A page that is closing answers nothing, and a wait that ran
+                # out is a poor moment to raise a second failure.
+                said = ""
         raise AssertionError(
             f"{self.what} did not happen inside {seconds:.0f} s; the page drew "
-            f"{drawn} frames while waiting, {drawn / seconds:.1f} a second"
+            f"{drawn} frames while waiting, {drawn / seconds:.1f} a second{said}"
         ) from error
 
 
@@ -285,24 +323,36 @@ class GamePage:
         """Wait for a toast that carried this text, expired or not.
 
         The record is a fact the page produced, so this never sleeps and never
-        races the five second timer that takes a toast off the screen.
+        races the five second timer that takes a toast off the screen. Every
+        converted toast test hangs on this one wait, so its failure carries
+        the text it wanted and every toast the page did raise: that is what
+        tells a wrong expectation from a page that said nothing at all.
         """
-        self.page.wait_for_function(
-            "t => (window.__toastLog || []).some(m => m.includes(t))",
-            arg=text,
-            timeout=WAIT_MS,
-        )
+        with self.named_wait(
+            f"a toast saying {text!r}",
+            detail=lambda: f"the page said {self.toasts()}",
+        ):
+            self.page.wait_for_function(
+                "t => (window.__toastLog || []).some(m => m.includes(t))",
+                arg=text,
+                timeout=WAIT_MS,
+            )
 
     def named_wait(
-        self, what: str, budget: int | None = None, frame: int | None = None
+        self,
+        what: str,
+        budget: int | None = None,
+        frame: int | None = None,
+        detail: Callable[[], str] | None = None,
     ) -> _NamedWait:
         """A context manager that names the wait inside it when it runs out.
 
         Playwright's message says which line waited, never what it was waiting
         for or how the page was doing, so a timeout on a loaded runner reads
-        the same as a broken page. This adds both.
+        the same as a broken page. This adds both, and `detail` adds whatever
+        else the page can be asked once the wait has failed.
         """
-        return _NamedWait(self, what, budget or WAIT_MS, frame)
+        return _NamedWait(self, what, budget or WAIT_MS, frame, detail)
 
     def goto(self, *, state: dict[str, Any] | None = None) -> GamePage:
         """Load the game, optionally seeding localStorage first."""
@@ -637,10 +687,10 @@ def _attach_error_collectors(page: Page, errors: list[str]) -> None:
 def game_page(browser: Browser, server: str, **options: Any) -> Iterator[GamePage]:
     """The one page every browser fixture hands out, whatever its size.
 
-    Four fixtures once repeated these lines, so what one of them learned the
-    others did not: the clock runs at noon of today, every toast the page
-    raises is kept where a test can ask for it, and a picture only ever lands
-    in tests/out.
+    One helper, so the three rules hold for every fixture rather than for
+    whichever one was taught them: the clock runs at noon of today, every
+    toast the page raises is kept where a test can ask for it, and a picture
+    only ever lands in tests/out.
     """
     context = browser.new_context(**options)
     context.add_init_script(clock_script(NOON))
