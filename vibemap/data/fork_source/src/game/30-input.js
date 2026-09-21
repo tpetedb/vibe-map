@@ -5,7 +5,9 @@ let joy={x:0,y:0,on:false},wantJump=false;
 // 31-animate.js is the only reader, and it is listened for on the window in
 // the capture phase rather than added to each control, so a control added
 // later cannot forget to say that somebody is there.
-let lastInput=0;
+// The clock starts when the page does: a browser that has just opened the
+// island is not a browser nobody is at, however long the first frames took.
+let lastInput=performance.now();
 function touched(){lastInput=performance.now()}
 function idleMs(){return performance.now()-lastInput}
 // Hurrying: hold the key, or push the stick to its rim. Holding a key is more
