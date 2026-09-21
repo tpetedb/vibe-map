@@ -1,0 +1,109 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "hunt-q-docs-generators"
+by = "reviewer-hunt-q"
+# The commit that was read. The two sign-off commits on top of it touch no owned file.
+reviewed = "8b809dd91a8701217dd968b197e56177c91e4661"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran it in a scratch clone at 8b809dd: 4 passed. Then took each fix away, uncommitted, to see \
+whether the test is a test. Q2: with tools/regen_tree.py and docs/ROADMAP.md from origin/main, \
+test_q2 fails ('a ### that is not at the start of its line is not a heading'). Q4: with main's \
+scores.py, test_q4 fails with ['python/scores.py']. Q1 has no fix to revert, so I mutated the \
+brief: 'twenty artifacts' fails ('says [twenty] artifacts; the data has twenty-one'), and \
+'20 artifacts on' fails ('no longer counts the artifacts'). Q3 is a guard over a set of two. \
+One thing the command does not prove by itself: test_q2 reads the committed file, not render(); \
+with only the generator reverted it still passes, and it is regen_tree.py --check (exit 1, \
+'stale tech tree outputs: docs/ROADMAP.md') that ties the file to the generator. CI runs both, \
+so the pair holds."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the whole command in the scratch clone at 8b809dd: ruff check and format clean, 'style OK: \
+no em dashes, no emoji', sinks clean, the non-browser battery all dots with one skip \
+(test_repo.py, no GitHub origin in a local clone). basedpyright on tests/test_hunt_q.py and \
+tools/regen_tree.py: 0 errors. On the pull request, run 35560183209, steps 5 to 13 of the lint \
+job are green, including 'a changelog fragment for a product change'; the only red step is 14, \
+the work-order step, which waited for this file and the two sign-offs. The command is what CI \
+runs, so it proves the sentence."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran all six with --check in the order's worktree: build OK, tree OK, cookbook OK, sync_template \
+and sync_fork_source exit 0, syllabus OK. The fix is in the generator (tools/regen_tree.py, the \
+heading now opens its own line and the depth label opens the body), not in the output. I \
+rewrote main's ROADMAP.md with one regex that moves each label under its heading and compared it \
+with the branch's file: byte for byte identical, 70 topics in the same order, so nothing else \
+moved. Rendered both through markdown-it: main gives h1 1, h2 11, h3 0; the branch gives h1 1, \
+h2 11, h3 70, every h3 followed by its depth label in italics. Nothing else in the repository \
+reads the old one-line form. vault/Camp/Map.md changed by its date and hash only, which is the \
+regenerate after the merge and is a path anyone may touch. CHANGELOG.md is identical to main's."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Q1, rejected, and the evidence holds: origin/main's docs/BRIEF.md line 11 already says \
+'twenty-one artifacts' and line 77 'Each of them'; commit 81d153f did that and is an ancestor of \
+main; campaign data gives 21 artifacts, 32 stops, 12 mentors. The brief is untouched on this \
+branch and a test now ties those three counts to the data. CHANGELOG.md line 33 still says \
+twenty and is left for the release, as the order's note requires. \
+Q2, fixed: grep -c '^### ' is 0 on main and 70 here, see c3. \
+Q4, fixed: main's docstring names python/scores.py, no such folder exists; the new command run \
+from the camp root exits 0 and scores.csv keeps its checksum; no other file names the old path. \
+Q3, reproduced and handed on, which is neither of the two outcomes the sentence names but is \
+not a silent skip: I clicked all 70 tree topics in the built game in Chromium; Git opens a 421 \
+character concept card and Python 348, no History, no Try (screenshot looked at), and the only \
+other short ones are the five EXIST aliases, by design. The cause is located well enough for \
+another order: game/vibe-map.html holds both keys twice (4185 and 4840, 4193 and 4763), because \
+_notes_js in tools/build.py writes one NOTES literal with src/game/50-notes.js last, and that \
+file's cards at lines 117 and 194 win. src/game/ is panels, which this order does not cross. \
+Extending EXIST, as the finding proposed, would indeed drop the prose and keep the stub."""
+
+[[findings]]
+severity = "low"
+file = "src/game/50-notes.js"
+text = """
+Q3 is still open for the player after this lands, and no work order owns it yet: the handover \
+lives in the pull request body, in content's comment on issue 110 and in a test comment. It \
+needs a panels order that deletes the handwritten Git and Python cards (content asks for that, \
+not for reordering the build) and empties KNOWN_SHADOWED in tests/test_hunt_q.py. Until then \
+the hunt cannot count Q3 as done."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_hunt_q.py"
+text = """
+The Q1 guard covers a count only when the number word stands directly before stops, mentors or \
+artifacts. I changed line 78 to 'Each of the eleven has' and all four tests still passed; \
+'Four islands' (line 11), 'Four winter stops ... stops 2, 4, 5 and 7' (line 79, which has \
+quests.READING_ONLY to be held against) and '35 features' (line 50, obsidian.json) are equally \
+unguarded. All four are true today. It is also brittle the other way: a true sentence such as \
+'two mentors were added' would fail it. So the brief's counts are tested, not derived, and \
+three of seven."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_hunt_q.py"
+text = """
+The Q3 guard sees only keys written as a line-start literal in src/game/50-notes.js. \
+src/game/51-notes-dynamic.js assigns NOTES[...] at run time for every workstream, evening and \
+mentor title and would shadow a generated topic of the same name without this test noticing. \
+No such collision exists today (my browser pass over all 70 topics found only Git and Python)."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_hunt_q.py"
+text = """
+The comment above KNOWN_SHADOWED tells the story of the order ('Q3 is not fixed here', 'This \
+order owns neither file') where the house rule wants the constraint: two handwritten cards \
+shadow the generated note of the same title because the handwritten module is concatenated \
+last, and the set may only shrink. It goes stale the day the panels order lands."""
