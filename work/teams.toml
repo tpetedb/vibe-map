@@ -17,7 +17,7 @@ tests = ["tests/test_game_state.py", "tests/test_config_levels.py", "tests/test_
 [[teams]]
 id = "scene"
 title = "The 3D view: world, walker, camera, input, items"
-paths = ["src/game/1*.js", "src/game/2*.js", "src/game/3*.js", "src/config/"]
+paths = ["src/game/1*.js", "src/game/2*.js", "src/game/3*.js", "src/galaxy/", "src/config/"]
 tests = ["tests/test_game_camera.py", "tests/test_game_graphics.py", "tests/test_game_smoke.py"]
 
 [[teams]]

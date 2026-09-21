@@ -1,0 +1,21 @@
+v = 1
+id = "galaxy"
+statement = "Next to the island game and sharing its progress, a second experience in which every topic sits where it happened: a tiny planet with the place lit at its real coordinates and a glass dome holding a miniature of it, one line that shows the whole journey, and a list that can do everything the picture can. The islands look exactly as they did."
+not = [
+  "The spaceship and its flight, building on a finished site, era arms and echoes as jumps: phases 4 and 5 of docs/GALAXY.md, planned when version zero is on main.",
+  "Playing together through each player's own repository: section 8 of docs/GALAXY.md, prepared for by version zero and built after it.",
+  "Offering Galaxy on the title screen: decided when version zero has been reviewed against sections 5 and 6.",
+]
+# Three build while one slot stays free for a reviewer or a team manager.
+budget = 3
+orders = [
+  "harness-build-finds-modules",
+  "galaxy-seam",
+  "galaxy-places-schema",
+  "galaxy-origins-code-git",
+  "galaxy-origins-data-net",
+  "galaxy-origins-ship-docs",
+  "galaxy-origins-agents",
+  "galaxy-origins-data-engineering",
+  "galaxy-v0",
+]

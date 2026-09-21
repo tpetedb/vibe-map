@@ -1,0 +1,35 @@
+v = 1
+id = "harness-build-finds-modules"
+title = "The build finds the game's modules by their numbered names, so a new module needs no edit to the build"
+team = "harness"
+branch = "chore/build-finds-modules"
+goal = "galaxy"
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "tools/build.py",
+  "tests/test_build.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The build tests pass, the new ones seen failing first."
+check = "uv run pytest -q tests/test_build.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync, and the built game is byte-identical to the one the hand-written list produced."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && git diff --quiet origin/main -- game/vibe-map.html"
+
+[[criteria]]
+id = "c4"
+text = "Adding a file `src/game/24-example.js` and nothing else puts it into the built game at its numbered place, and into the fork mirror; a file whose name does not start with two digits is refused with a message that names it. The reviewer tries both."
+judge = "reviewer"
