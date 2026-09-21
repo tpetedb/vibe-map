@@ -19,6 +19,7 @@ import html
 import json
 import re
 import xml.etree.ElementTree as ET
+from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
@@ -58,6 +59,10 @@ class Source:
     tags: tuple[str, ...] = ()
     # A high volume feed would fill the card on its own; 0 means the run's cap.
     cap: int = 0
+    # Why this source may answer with an empty feed: a digest announces on some
+    # days and rests on the others. Empty from any other source is a fault,
+    # because a feed that keeps its back catalogue never runs out of entries.
+    rests: str = ""
 
     @property
     def item_kind(self) -> str:
@@ -125,6 +130,10 @@ def load_sources(path: Path = SOURCES_PATH) -> tuple[Source, ...]:
                 building=raw.get("building", ""),
                 tags=tuple(raw.get("tags", ())),
                 cap=int(raw.get("cap", 0)),
+                # Optional, so a file written by this release still loads in an
+                # older one and the version stays 1: an older release reads a
+                # resting source the way it always did.
+                rests=str(raw.get("rests", "")),
             )
         )
     if not out:
@@ -246,9 +255,13 @@ def _item(src: Source, title: str, link: str, when: str, body: str) -> Item:
 
 def parse(xml: bytes | str, src: Source | str, *, limit: int = 8) -> list[Item]:
     """Items from an RSS 2.0 or Atom document; unknown shapes give nothing."""
+    return items_of(ET.fromstring(xml), src, limit=limit)
+
+
+def items_of(root: ET.Element, src: Source | str, *, limit: int = 8) -> list[Item]:
+    """The same items from a document already parsed, so nobody parses twice."""
     if isinstance(src, str):
         src = Source(src, "organisation", src, "", src, "ad hoc")
-    root = ET.fromstring(xml)
     items: list[Item] = []
     for it in root.iter("item"):
         title, link = _text(it.find("title")), safe_link(_text(it.find("link")))
@@ -278,19 +291,33 @@ def parse(xml: bytes | str, src: Source | str, *, limit: int = 8) -> list[Item]:
     return items[:limit]
 
 
-def fetch_one(src: Source, *, limit: int = 8, timeout: int = 20) -> list[Item]:
+def _get(src: Source, timeout: int) -> bytes:
+    """One request for one feed: the user agent and the reason live here only."""
     req = Request(src.url, headers={"User-Agent": USER_AGENT})
     with urlopen(req, timeout=timeout) as r:  # noqa: S310 (feeds are config)
-        return parse(r.read(), src, limit=limit)
+        return r.read()
+
+
+def fetch_one(src: Source, *, limit: int = 8, timeout: int = 20) -> list[Item]:
+    return parse(_get(src, timeout), src, limit=limit)
 
 
 # ---- is the feed still there --------------------------------------------------
 # Two facts a liveness check must not confuse: a feed that answers and still
 # parses is alive, and a feed with items today is fresh. A digest rests between
 # announcements (arXiv announces Sunday to Thursday and declares the gap in its
-# own skipDays), so only the first is a fault.
+# own skipDays), so only the first is a fault. Empty stays a fault for every
+# source that does not say in the registry that it rests: those feeds keep a
+# back catalogue, so nothing at all from them is a format change or an outage.
 
 FEED_ROOTS = ("rss", f"{ATOM}feed")
+# The two elements this parser reads as one piece of news.
+ENTRY_TAGS = ("item", f"{ATOM}entry")
+# Feed metadata that is allowed to repeat, by local name, so that a run of it
+# is not read as entries under another name: a GitHub Atom feed carries a self
+# link and an alternate one, Blogger lists every category of the blog, a digest
+# lists the days and hours it rests.
+REPEATED_META = frozenset({"category", "link", "author", "contributor", "day", "hour"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -319,13 +346,40 @@ class Liveness:
         return f"{head}: alive, {self.items} of {self.entries} entries read"
 
 
+def _feed_body(root: ET.Element) -> ET.Element:
+    """Where the entries live: an RSS channel, or the Atom feed element itself."""
+    channel = root.find("channel")
+    return channel if channel is not None else root
+
+
+def _renamed_entries(root: ET.Element) -> tuple[str, int]:
+    """The entry element under another name, when the document carries one.
+
+    A feed with nothing to announce says each piece of metadata once; a feed
+    that renamed its entry element still repeats that element, and the run of
+    it is the difference between a quiet day and a format this parser lost.
+    """
+    counts = Counter(
+        el.tag
+        for el in _feed_body(root)
+        # A comment or a processing instruction has a callable for a tag.
+        if isinstance(el.tag, str)
+        and el.tag not in ENTRY_TAGS
+        and el.tag.rpartition("}")[2] not in REPEATED_META
+    )
+    tag, n = counts.most_common(1)[0] if counts else ("", 0)
+    return (tag, n) if n > 1 else ("", 0)
+
+
 def liveness(src: Source, body: bytes | str) -> Liveness:
     """Read what a feed answered: is this still a feed this parser knows?
 
-    Dead is a body that is not XML, XML that is not a feed, or a feed whose
-    entries none of the parser's fields fit, which is how a changed format
-    looks from out here. An empty feed is not dead: it has nothing to announce
-    today, and a digest between announcements looks exactly like this.
+    Dead is a body that is not XML, XML that is not a feed, a feed whose
+    entries none of the parser's fields fit, a feed whose entry element was
+    renamed, and a feed with nothing in it at all from a source that never
+    rests: five ways a changed format or an outage looks from out here. A
+    source the registry says rests may answer with an empty feed, and that is
+    the only reason nothing is not a fault.
     """
     try:
         root = ET.fromstring(body)
@@ -338,9 +392,8 @@ def liveness(src: Source, body: bytes | str) -> Liveness:
             False,
             fault=f"not a feed: the root element is {root.tag!r}",
         )
-    entries = sum(1 for _ in root.iter("item"))
-    entries += sum(1 for _ in root.iter(f"{ATOM}entry"))
-    items = len(parse(body, src, limit=entries))
+    entries = sum(1 for tag in ENTRY_TAGS for _ in root.iter(tag))
+    items = len(items_of(root, src, limit=entries))
     if entries and not items:
         return Liveness(
             src.id,
@@ -353,15 +406,35 @@ def liveness(src: Source, body: bytes | str) -> Liveness:
                 "title and a link this parser could read"
             ),
         )
+    if not entries:
+        tag, n = _renamed_entries(root)
+        if tag:
+            return Liveness(
+                src.id,
+                src.url,
+                False,
+                fault=(
+                    f"format changed: {n} {tag!r} elements where this parser "
+                    "reads an RSS item or an Atom entry"
+                ),
+            )
+        if not src.rests:
+            return Liveness(
+                src.id,
+                src.url,
+                False,
+                fault=(
+                    "a feed with no entries at all. If this source rests "
+                    'between announcements, say why with "rests" in sources.json'
+                ),
+            )
     return Liveness(src.id, src.url, True, entries, items)
 
 
 def check_one(src: Source, *, timeout: int = 20) -> Liveness:
     """Ask one feed whether it is still there; one step of the nightly check."""
-    req = Request(src.url, headers={"User-Agent": USER_AGENT})
     try:
-        with urlopen(req, timeout=timeout) as r:  # noqa: S310 (feeds are config)
-            body = r.read()
+        body = _get(src, timeout)
     except Exception as e:  # reason: a feed that will not answer is the answer
         return Liveness(
             src.id, src.url, False, fault=f"{type(e).__name__}: {str(e)[:120]}"

@@ -11,6 +11,7 @@ import http.server
 import json
 import socket
 import threading
+import warnings
 from collections.abc import Callable, Iterator
 from pathlib import Path
 
@@ -293,13 +294,21 @@ def test_a_camp_feed_from_camp_toml_becomes_a_source() -> None:
 # Every case here is served by a local server, so the check is tested on what a
 # server answers without a single packet leaving the machine.
 
-# A daily digest between announcements: a whole feed, no items. arXiv says so
-# itself with skipDays, and the nightly check used to read this as death.
+# A daily digest between announcements: a whole feed, no items. arXiv declares
+# the gap itself with skipDays, which is why its empty weekend is not death.
 QUIET = b"""<?xml version="1.0"?><rss version="2.0"><channel>
 <title>cs.AI updates on arXiv.org</title><link>https://x.test/</link>
 <description>Announcements Sunday to Thursday.</description>
 <skipDays><day>Saturday</day><day>Sunday</day></skipDays>
 </channel></rss>"""
+
+# The same, in Atom, with the self and alternate links a real feed carries:
+# repeated metadata is not a renamed entry element.
+QUIET_ATOM = b"""<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">
+<title>a</title><id>urn:x</id><updated>2026-09-19T00:00:00Z</updated>
+<link rel="self" href="https://x.test/atom"/>
+<link rel="alternate" href="https://x.test/"/>
+</feed>"""
 
 # A full feed the parser no longer understands: the elements it reads were
 # renamed. This is what a changed format looks like from the outside.
@@ -307,6 +316,29 @@ RENAMED = b"""<?xml version="1.0"?><rss version="2.0"><channel><title>t</title>
 <item><headline>Second</headline><url>https://x.test/2</url></item>
 <item><headline>First</headline><url>https://x.test/1</url></item>
 </channel></rss>"""
+
+# The other half of a changed format: the entry element itself is renamed, so
+# the parser counts no entries at all and the feed looks quiet. Three
+# spellings, because a rename can drop the name, move it into a namespace or
+# swap the Atom one.
+RENAMED_ENTRY = {
+    "an rss item called article": b"""<?xml version="1.0"?>
+<rss version="2.0"><channel><title>t</title><link>https://x.test/</link>
+<article><title>Second</title><link>https://x.test/2</link></article>
+<article><title>First</title><link>https://x.test/1</link></article>
+</channel></rss>""",
+    "an rss item moved into a namespace": b"""<?xml version="1.0"?>
+<rss version="2.0" xmlns:n="https://n.test/"><channel><title>t</title>
+<n:item><title>Second</title><link>https://x.test/2</link></n:item>
+<n:item><title>First</title><link>https://x.test/1</link></n:item>
+</channel></rss>""",
+    "an atom entry called post": b"""<?xml version="1.0"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>a</title><id>urn:x</id>
+<link rel="self" href="https://x.test/atom"/>
+<post><title>Second</title><link rel="alternate" href="https://x.test/2"/></post>
+<post><title>First</title><link rel="alternate" href="https://x.test/1"/></post>
+</feed>""",
+}
 
 A_PAGE = b"<!DOCTYPE html><html><body><h1>This feed has moved.</h1></body></html>"
 NOT_XML = b"<html><p>410 gone & nothing here"
@@ -346,19 +378,87 @@ def serve_feed() -> Iterator[Callable[..., str]]:
         thread.join(timeout=5)
 
 
-def source_at(url: str, sid: str = "feed-under-test") -> news.Source:
-    return news.Source(sid, "organisation", "Feed under test", url, "x.test", "test")
+def source_at(url: str, sid: str = "feed-under-test", rests: str = "") -> news.Source:
+    return news.Source(
+        sid, "organisation", "Feed under test", url, "x.test", "test", rests=rests
+    )
 
 
+DIGEST = "Announces Sunday to Thursday and says so in skipDays."
+
+
+@pytest.mark.parametrize("body", [QUIET, QUIET_ATOM], ids=["rss", "atom"])
 def test_a_feed_with_nothing_new_today_is_alive(
-    serve_feed: Callable[..., str],
+    serve_feed: Callable[..., str], body: bytes
 ) -> None:
     """The weekend case: the digest answered, it just has nothing to announce."""
-    url = serve_feed("/quiet.xml", QUIET)
-    verdict = news.check_one(source_at(url))
+    url = serve_feed("/quiet.xml", body)
+    verdict = news.check_one(source_at(url, rests=DIGEST))
     assert verdict.alive and not verdict.fresh
     assert verdict.entries == 0 and verdict.items == 0 and not verdict.fault
     assert "nothing published" in str(verdict)
+
+
+def test_an_empty_feed_from_a_source_that_never_rests_is_dead(
+    serve_feed: Callable[..., str],
+) -> None:
+    """Twenty of the twenty-one keep a back catalogue: empty is a fault there.
+
+    Only a source the registry says rests may answer with nothing, so the
+    failure line says where to write that down.
+    """
+    url = serve_feed("/empty.xml", QUIET)
+    verdict = news.check_one(source_at(url, "busy-feed"))
+    assert not verdict.alive and "no entries at all" in verdict.fault
+    assert "rests" in verdict.fault and "sources.json" in verdict.fault
+
+
+@pytest.mark.parametrize("spelling", sorted(RENAMED_ENTRY))
+def test_a_renamed_entry_element_is_dead_even_for_a_resting_source(
+    serve_feed: Callable[..., str], spelling: str
+) -> None:
+    """A full feed the parser reads as empty is a format change, not a quiet day.
+
+    The entry element itself carries the new name, so counting items and
+    entries sees nothing; a run of the same unread child is what tells the two
+    apart. The source rests here, so nothing but that run can catch it.
+    """
+    url = serve_feed("/renamed.xml", RENAMED_ENTRY[spelling])
+    verdict = news.check_one(source_at(url, "renamed-feed", rests=DIGEST))
+    assert not verdict.alive and not verdict.fresh
+    line = str(verdict)
+    assert "format changed" in line and "renamed-feed" in line and url in line
+
+
+def test_repeated_metadata_is_not_read_as_entries_under_another_name(
+    serve_feed: Callable[..., str],
+) -> None:
+    """The guard on the rule above: real feeds repeat links and categories.
+
+    Every Atom release feed in the registry carries a self link and an
+    alternate one, and Blogger lists every category of the blog in the
+    channel, so a run of those must not read as a renamed entry element.
+    """
+    channel = b"""<?xml version="1.0"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>
+<title>t</title><link>https://x.test/</link>
+<category>a</category><category>b</category>
+<atom:link rel="self" href="https://x.test/f"/>
+<atom:link rel="hub" href="https://hub.test/"/>
+</channel></rss>"""
+    url = serve_feed("/busy-metadata.xml", channel)
+    verdict = news.check_one(source_at(url, "quiet-feed", rests=DIGEST))
+    assert verdict.alive and not verdict.fresh and not verdict.fault
+
+
+def test_the_registry_says_which_source_rests_and_why() -> None:
+    """A rest is data with its reason, like trust, and the digest is the one."""
+    rests = {s.id: s.rests for s in news.load_sources() if s.rests}
+    assert "arxiv-cs-ai" in rests
+    for sid, why in rests.items():
+        assert len(why) > 40, sid
+    # A source that says nothing rests never: that is what keeps empty a fault.
+    assert all(not s.rests for s in news.load_sources() if s.id != "arxiv-cs-ai")
 
 
 def test_a_feed_with_items_is_alive_and_fresh(serve_feed: Callable[..., str]) -> None:
@@ -403,7 +503,7 @@ def test_a_registered_source_is_checked_by_id_and_url(
 ) -> None:
     """A run over several sources reports each one, dead or quiet, by name."""
     live = source_at(serve_feed("/live.xml", RSS), "live-feed")
-    quiet = source_at(serve_feed("/quiet.xml", QUIET), "quiet-feed")
+    quiet = source_at(serve_feed("/quiet.xml", QUIET), "quiet-feed", rests=DIGEST)
     dead = source_at(serve_feed("/missing.xml", b"", 404), "dead-feed")
     checks = [news.check_one(s, timeout=5) for s in (live, quiet, dead)]
     assert [c.alive for c in checks] == [True, True, False]
@@ -414,20 +514,49 @@ def test_a_registered_source_is_checked_by_id_and_url(
 # ---- the live check, nightly only ---------------------------------------------
 
 
+class QuietFeed(UserWarning):
+    """A feed that answered with nothing new: a warning, so a green night says so."""
+
+
+def report_liveness(checks: list[news.Liveness]) -> None:
+    """The nightly's verdict: a dead feed fails, a quiet one warns.
+
+    A warning is what survives a passing run. pytest captures a print and
+    shows it only with `-rP` or `-s`, neither of which the nightly passes, so
+    a feed that goes quiet for good would leave no trace on a green night.
+    """
+    for c in checks:
+        if c.alive and not c.fresh:
+            warnings.warn(f"alive with nothing new today: {c}", QuietFeed, stacklevel=2)
+    dead = [str(c) for c in checks if not c.alive]
+    assert not dead, "\n".join(dead)
+
+
+def test_a_quiet_feed_is_warned_about_so_a_green_night_still_names_it() -> None:
+    quiet = news.Liveness("quiet-feed", "https://x.test/q.xml", True)
+    with pytest.warns(QuietFeed, match="quiet-feed"):
+        report_liveness([quiet, news.Liveness("live", "https://x.test/l", True, 2, 2)])
+
+
+def test_a_dead_feed_fails_the_nightly_and_a_live_one_warns_about_nothing() -> None:
+    dead = news.Liveness("gone", "https://x.test/g.xml", False, fault="HTTPError: 404")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", QuietFeed)
+        with pytest.raises(AssertionError, match="gone"):
+            report_liveness(
+                [news.Liveness("live", "https://x.test/l", True, 2, 2), dead]
+            )
+
+
 @pytest.mark.integration
 def test_every_registered_feed_is_alive() -> None:
     """The nightly liveness check. Not in the default battery: it needs network.
 
     Alive is the fact this job is for: the feed answered and is still a feed
     this parser reads. Whether it published today is the weather, so a digest
-    resting over the weekend is printed and not failed.
+    resting over the weekend warns and does not fail.
     """
-    checks = [news.check_one(src) for src in news.load_sources()]
-    quiet = [str(c) for c in checks if c.alive and not c.fresh]
-    if quiet:
-        print("\nAlive with nothing new today:\n" + "\n".join(quiet))
-    dead = [str(c) for c in checks if not c.alive]
-    assert not dead, "\n".join(dead)
+    report_liveness([news.check_one(src) for src in news.load_sources()])
 
 
 @pytest.mark.parametrize(
