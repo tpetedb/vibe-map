@@ -1,0 +1,206 @@
+# A review of one order, by someone who did not build it. Round 1.
+v = 1
+order = "galaxy-origins-ship-docs"
+by = "reviewer-galaxy-origins-ship-docs-r1"
+# The commit that was read.
+reviewed = "1ecc0a788419dcb10b592d1a6d438460334e4e26"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the command in the worktree: every test passes. Then in a scratch copy of 1ecc0a7 (git \
+archive into /tmp, PYTHONPATH on the copy, all green there too) I broke the data four ways \
+and ran the three files again. vault.toml without its origin: four tests of \
+test_origins_ship_docs.py fail (the defect list, one place that exists, the primary line, \
+the game's payload). docker's primary line without the word Docker: \
+test_the_primary_line_of_every_topic_names_the_topic fails and prints the file and the line. \
+The kubernetes echo moved to google-mountain-view: \
+test_no_topic_of_them_stands_twice_at_the_same_place fails. A second primary on cloud: the \
+loader refuses 'core/cloud.toml: has 2 primary origins' and both older test files error. \
+Every one of the four also fails test_the_built_game_carries_places_as_one_json_blob, so \
+the built file cannot drift from the data. Each file was restored and the topics folder \
+compared clean against a pristine copy. No test sleeps or waits on time. What the tests \
+cannot prove is whether a page says what a line says; that is c5."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran it: nothing printed, exit 0, and problems() without a filter returns 51 lines, none of \
+them from these three shelves. In the scratch copy, vault.toml without its origin makes the \
+same command print 'core/vault.toml has no origin: a topic needs a place, a year, one line \
+and an https source that says so.' and a second primary comes back through problems() as \
+its one sentence naming the file. 14 origins in ten files: ten primary, four echoes, every \
+place one of the 42 on main. The command proves its sentence."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the whole command myself in the worktree, not the cached result: ruff check, ruff \
+format, checks.py style, checks.py sinks and the non-browser battery, exit 0, and git \
+status was clean afterwards. On pull request 170, run 35624904224 on 1ecc0a7, the only red \
+step is 'work orders are readable, reviewed and inside their files', and `python3 \
+tools/work.py ci` says locally that it waits for this review. Beyond the command I booted \
+the built game in Chromium from the file, waited for a rendered frame and looked at the \
+screenshot: the camp draws, zero page errors. No module under src/ reads PLACES yet, so \
+nothing a player sees can have moved."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Ran the six --check commands one by one: build, regen_tree, gen_cookbook, sync_template, \
+sync_fork_source, gen_syllabus, each exit 0. Beyond the command, line by line against \
+origin/main's game (6203 lines both): exactly one line differs, `const PLACES=`, and parsed \
+as JSON the eras and the places are equal and `origins` gained exactly the ten topics of \
+this order with the 14 origins of the diff, nothing else. No place file is in the diff. One \
+generated note moved for a reason that is not this order's: vault/Camp/Unix and the \
+terminal.md now carries the Open Group certificate link, because unix.toml changed on main \
+and main's note was stale (the schema's review said so). `vibe vault build` in the scratch \
+copy changes nothing, so the vault is in sync at this commit. All 14 new sources are \
+collected whole by tools/checks.py and answer 200 to its own probe, the two TUHS query \
+strings and the AWS address ending in ---beta/ included."""
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = """
+Downloaded all 14 pages and read the text; the two that matter I also rendered in Chromium \
+and read what a person sees. Eleven hold. adr: 'Michael Nygard - November 15, 2011', \
+'architecturally significant', 'ADRs will be numbered sequentially', 'in the project \
+repository'. changelog: '## [0.0.1] - 2014-05-31', the lowest entry. cloud: 'Announcing \
+Amazon Elastic Compute Cloud (Amazon EC2) - beta, Posted On: Aug 24, 2006', 'a web service \
+that provides resizable compute capacity in the cloud'; the announcement is the event, so \
+the post date is its date. cloud echo: 'Date Published: September 2011, Peter Mell (NIST), \
+Tim Grance (NIST)'. docker (curl was answered 429 twice, Chromium 200): '0.1.0 \
+(2013-03-23) Initial public release'. docker echo: 'formed under the auspices of the Linux \
+Foundation', 'launched on June 22nd 2015 by Docker, CoreOS', 'Docker is donating its \
+container format and runtime, runC, to the OCI'. headless echo: 'May 22, 2025', 'Claude \
+Code is now generally available', 'background tasks via GitHub Actions'. kubernetes echo: \
+'accepted to CNCF on March 10, 2016 at the Incubating maturity level'. obsidian: 'October \
+13, 2022, 1.0.0, Desktop', 'The workspace now supports tabs'. vault: 'March 30, 2020, 0.0.1, \
+Initial release', 'Choose vault and list all the compatible files'. semver: 'v2.0.0, Mark \
+2.0.0 as RTM, Jun 18, 2013' (see the lows). Three do not hold. kubernetes: the text a \
+person reads carries 'July 23, 2016' and 'It was Summer 2013' and no 2014 anywhere; the \
+sentence the line copies sits only in the meta description and the share tags (eight hits \
+in the source, none in the rendered body). headless and readme: the cron page is \
+'V6/usr/man/man8/cron.8' and the manual source with '.th CRON VIII 10/25/74', the listing \
+is 'V7/usr/doc' and a table with 'README 314 1979-01-11'; year and what are there, but \
+neither page carries the word Bell, a person or an organisation, and the only Unix on \
+either is 'Mini-Unix', another tree in the cron page's compare list. On place: \
+no page names a town, which is the reading the schema's review settled on, and it said \
+'nothing contradicts it'; for kubernetes something does (first finding). On what was left \
+out: the pull request names its gaps (three specs and Docker at the-internet, Cognitect \
+without a page to stand on), and the builder listed the wished places on issue 168 with \
+the PyCon page, which I opened: 'PyCon US 2013 | Santa Clara, CA | March 13th'. \
+docker-palo-alto was rightly left unused. No line carries a judgement."""
+
+# What has to change before this lands: the two mediums. The lows I would land.
+
+[[findings]]
+severity = "medium"
+file = "vibemap/data/topics/core/kubernetes.toml"
+text = """
+The primary origin's year and its whole sentence are not in what a person reads at the \
+source. I rendered the page in Chromium and searched the body text: 'July 23, 2016', 'It \
+was Summer 2013', no 2014. 'originally developed at Google and released as open source in \
+2014' exists only in the page's meta description and social share tags, which is what a \
+fetch tool summarises and a learner never sees. The same defect was a low on the schema \
+order for a street in a place file; here it is the year and the line of a primary origin, \
+the one sentence a dome gets. A page that says it in plain sight exists: kubernetes.io's \
+ten year post, which I opened, reads 'on June 6th, 2014, the first commit of Kubernetes was \
+pushed to GitHub'. The place needs a second look too. The article names no office (a room \
+with Urs Hölzle, a shuttle ride). SiliconANGLE, 17 December 2018, opened: Joe Beda and Craig McLuckie \
+'migrated to Google LLC's lab in Seattle a few years later and worked on a little-known \
+project at the time to build a container orchestration tool'; Joe Beda on The Podlets, \
+opened: 'I then went to Google in the office up here in Seattle. It was actually in \
+Kirkland'. The settled reading takes the town from the place file when nothing contradicts \
+it, and the builder refused docker-palo-alto on exactly this ground. Either a source that \
+puts the work in Mountain View, or say in the pull request why the dome stands there and \
+wish for the Seattle office on issue 168."""
+
+[[findings]]
+severity = "medium"
+file = "vibemap/data/topics/core/headless.toml"
+text = """
+Also vibemap/data/topics/core/readme.toml. The two Bell Labs primaries stand on TUHS pages \
+that name no actor at all. The cron page's text is its path, 'V6/usr/man/man8/cron.8', a \
+list of similar files and the manual source; the /usr/doc page is 'V7/usr/doc' and a file \
+table. Neither carries the word Bell, a person or an organisation, and the title tag is \
+empty (grep on the raw HTML; the one Unix on either page is 'Mini-Unix', the name of \
+another tree in the cron page's compare list). c5 asks for 'the year, the place, the \
+people or organisation', and the reading the schema's review settled on takes the town from \
+the place file but the actor from the origin's own page. Here the step from 'V6' to Bell \
+Labs is made by the reader: it is on TUHS's tree index ('These are the versions of Unix \
+developed at Bell Laboratories', opened), which is not the page cited, and the V7 README \
+itself says only 'The UNIX Programmer's Manual, 7th Edition'. True and plausible, which is \
+what the criterion rules out. The lines add 'Unix' to what the page says ('the V6 Unix \
+manual page', 'The V7 Unix tree'). A source whose own text ties the edition to Bell Labs, \
+or a line and a place that claim no more than the page does."""
+
+[[findings]]
+severity = "low"
+file = "changelog.d/galaxy-origins-ship-docs.added.md"
+text = """
+'plus five echoes' is wrong: there are four (cloud, docker, headless, kubernetes), 14 \
+origins of which ten are primary. The pull request says five above a table that shows \
+four, and the comment on issue 168 says five. The fragment becomes a line of CHANGELOG.md. \
+The pull request also wishes for 'the Santa Clara Convention Center' where the issue, \
+correctly, wishes for the city because the PyCon page names the city and not the building. \
+Neither text mentions that vault/Camp/Unix and the terminal.md moved, or why."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/changelog.toml"
+text = """
+Four of the ten primary lines say what a document says instead of what happened: 'Keep a \
+Changelog's own CHANGELOG dates its first release', 'Docker's own changelog dates its \
+initial public release', cron 'is in the V6 Unix manual page dated', the V7 tree 'carries \
+... a file of 314 bytes listed at 11 January 1979 in the TUHS archive'. All true to their \
+page, and the same flavour as the schema review's low on 'gives his address as'. On the map \
+this is the only sentence next to the dome, and `vibe places the-internet` already reads as \
+a list of changelogs dating things. 'Docker 0.1.0, the initial public release, is dated 23 \
+March 2013' claims no more and is an event. obsidian's 'and the workspace supports tabs' is \
+a rider the line does not need."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/semver.toml"
+text = """
+The tags page prints the date of the commit a tag points at: 'Merge pull request #120 from \
+mojombo/release-2.0, Mark 2.0.0 as RTM, Jun 18, 2013'. The line says 'tags v2.0.0 on 18 \
+June 2013'; the topic's own history says 'merged on', which is what the page says. The \
+page is also a moving list, and changelog.toml cites blob/main, while docker.toml pins a \
+tag: a permalink does not drift. Choice of moment is uneven and nowhere explained: docker, \
+changelog and vault live at their first release, semver at 2.0.0 although its own source \
+shows v1.0.0 on Sep 7, 2011, and obsidian at 1.0.0 in 2022, so on one place the product's \
+dome is two years younger than its feature's (vault, 2020)."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/cloud.toml"
+text = """
+The line is the announcement, which is Amazon's act, so amazon-seattle holds under the \
+settled reading. Where EC2 was built is another town: Wikipedia's EC2 article, opened, a \
+tertiary source, says it 'was developed mostly by a team in Cape Town, South Africa led by \
+Chris Pinkham'. Not among the gaps the pull request names; a wish for galaxy-places-more \
+with a primary source, not a change here. The history also names App Engine and Azure, \
+whose places exist, with no echo; the order makes echoes optional, so this is a note."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_origins_ship_docs.py"
+text = """
+test_the_three_shelves_hold_the_topics_this_order_sourced fails with a bare list diff; the \
+reason (give the new topic an origin and a word in NAMES) is only in a comment, and the \
+person who meets it is whoever runs tools/new_topic.py on one of these shelves next. The \
+naming check is a substring: 'cloud' is met by the product name Elastic Compute Cloud, and \
+'schedul' is the scheduling half of 'Headless agents and scheduling', so the primary line \
+never says headless or agent; the echo does. The primary is found by hand there (`next(o \
+for o in topic.origins if o.primary)`) one test after origins_of() was used for the same \
+thing. In docker.toml the comment 'no page opened for this order' puts the work order into \
+package data a learner forks; the constraint is that no source puts Docker's first release \
+at an address."""
