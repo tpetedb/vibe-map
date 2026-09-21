@@ -1,0 +1,190 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "hunt-f-artifacts"
+by = "reviewer-hunt-f-artifacts-r1"
+# The commit that was read.
+reviewed = "ff6bedb8ec872f01d8296a719ae16fdc2bbf30da"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the file in a scratch clone at ff6bedb: 11 passed, no page errors, 15 screenshots written. \
+Then took fixes away, uncommitted, rebuilt, and ran the test that belongs to each. Without \
+demoStop(el) in runDemo, the F1 test fails with the merged transcript ('+ cafe <- 200 OK' and \
+'+ body: one coffee' inside the unicorn-milk answer). With the old ring radius and without the \
+reducedMotion() branch, F3, F4 and F5 fail ('assert 1.2 > 3.1', and all 13 campus ids in the \
+ring-is-not-the-zone list). With main's 16-artifacts.js as a whole, the F2, F6, F7 and \
+module-path tests fail. So every test is a test of the line it names. What the command does \
+not prove: the F2 test asserts a computed style, not that any glyph was ever joined (see c4); \
+nothing asserts RING_Y (with .05 put back both ring tests still pass); the F5 test reads the \
+campus only, 13 of 21 rings (I read the other three islands by hand: all 21 equal their zone \
+and clear the obstacle at their centre); and the finding the triage recorded as P9 has no test \
+because it was not the one worked on (c4)."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran each part in the scratch clone at ff6bedb: ruff check and ruff format --check clean, \
+'style OK: no em dashes, no emoji', checks.py sinks exit 0 with no output, the non-browser \
+battery exit 0 with one skip (test_repo.py, no GitHub origin in a local clone). The sink guard \
+does prove its sentence for this diff: the scan of 16-artifacts.js now has three raw \
+interpolations fewer than the register, none more. On the pull request the same steps are \
+green; the red 'lint' job is only the work-order step that waits for this file. One shard is \
+red for a reason that is not this order: browser shard webkit, \
+test_every_zoom_level_holds_the_phone_budget[game_android] runs out of its 20 s wait for the \
+camera to land, first run and retry, and fix/hunt-b-panel-chrome failed the same test the same \
+way in the same ten minutes without touching this file. It passes here on the branch (both \
+phones), and so do the finished-island budget and the memory test. It needs a rerun before a \
+car takes it."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran all six generators with --check in the scratch clone: build, tree, cookbook and syllabus \
+print OK, sync_template and sync_fork_source exit 0. After every revert experiment I restored \
+the source, rebuilt and saw 'build OK: game/vibe-map.html matches src/' with a clean git \
+status, so the built game I measured is the committed one. The fork_source copy of \
+16-artifacts.js carries the same 67 lines."""
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = """
+Each finding measured in Chromium on origin/main (da0b2ab, scratch clone, built game) and on \
+the branch. F1: with the finding's own 200 ms gap main prints one merged transcript, the \
+branch prints the second demo alone. F3: under reduced motion main has one line at 60 ms and \
+no aria-live, the branch has all four lines and aria-live polite. F4 and F5: read from \
+window.__scene(), main draws the fountain ring at r 1.2, y .05 inside a 3.1 obstacle and the \
+mountain ring at 1.2 inside 4.5, against zones of 3.68 and 5.6; on the branch all 13 campus \
+rings equal their zone, and standing 0.15 inside and outside each ring flips the Inspect \
+prompt. I looked at my own screenshots of the mountain, dock, cafe and bridge rings on both. \
+F6: main is a SPAN, tabIndex -1, rgb(139,147,167) like its parent; the branch is an A, blue, \
+1 px underline, reached with Tab (seven presses from the first demo button, :focus-visible \
+outline), Enter opens the note, location.href unchanged, and a tap opens it on both phone \
+profiles. F7: main charges 0.0208 in eu-west-1; I opened the page the test cites and it lists \
+0.0208 for us-east-1 and 0.0228 for eu-west-1, and 0.0228 x 720 is 16.416. Those six are \
+fixed. Two are not what the criterion asks. P9: the triage text exists (finding 1) and is the \
+stall demo answering an unknown path with 400; it reproduces on main and is byte for byte the \
+same on the branch. What was fixed under that name, vibe/cli.py, is a real defect on main but \
+a different one. F2: it does not reproduce on main, and the pull request says all seven did \
+(finding 2)."""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+The builder's 15 screenshots are in tests/out (sheet, links, balloon, mountain, fountain, each \
+on desktop, android and iphone, written 08:47 to 08:48). I regenerated the same 15 in the \
+scratch clone and looked at the fountain on all three, the links on desktop and iphone, the \
+sheet on iphone, the balloon on android and the mountain on iphone. The fountain ring is out \
+on the grass and the walker stands on it with 'Inspect the fountain' showing; the vault links \
+are blue and underlined and wrap cleanly on a phone with no sideways scroll; the balloon's \
+meter line fits one row on android. Copy: only two demo lines changed, both terminal output, \
+and Rolinda's lines are untouched; the fragment and the comments carry no em-dash and no \
+emoji (checks.py style). Two things a look at the pictures shows, both low: the iphone \
+fountain shot catches the Inspect button half faded in, and the mountain transcript's \
+'(layer 5)' column is further out of line than it was."""
+
+[[findings]]
+severity = "medium"
+file = "src/game/16-artifacts.js"
+text = """
+P9 is not the finding that was worked on. The builder asked for the triage text; it is in \
+~/.claude/projects/-Users-maxgroupit-vibe-map/recovered-triage/TRIAGE-01-15.md, line 970: \
+'P9 (10-6) The stall demo answers an unknown path with 400 - low, content. Repro: open the \
+market stall and press Order without reading it; compare with the cafe. Seen: POST /scoresss \
+then 400 Bad Request: unknown path; and player must be a string, while the cafe teaches 404 \
+for an unknown path and the stall's own source (FastAPI First Steps) says 404. Expected: 404 \
+for the path, 400 or 422 for the body. File: src/game/16-artifacts.js:50.' It reproduces on \
+origin/main and the branch leaves it as it was: window.__demos().stall[1].o is identical on \
+both. Fix it with a test that fails without the fix, or reject it with evidence. The \
+artifact's 'what' line in vibemap/data/campaign.json also says 'you get a 400' and is outside \
+owns; if the demo and that sentence have to move together, say so rather than edit around it. \
+The vibe/cli.py correction can stay: main does print a path the package does not have."""
+
+[[findings]]
+severity = "medium"
+file = "src/game/16-artifacts.js"
+text = """
+F2 does not reproduce on main, was reported as reproduced, and the comment that justifies the \
+fix says something untrue. Inter and JetBrains Mono left the stylesheet in f00a348, which has \
+been on main since 2026-09-19 18:32; the computed family of the step is system-ui on main and \
+on the branch. I rendered 'GET /coffee -> 200 --region' at 40 px in system-ui and in \
+ui-monospace, once with ligatures normal and once with none, in Chromium and in WebKit on \
+this Mac: the two element screenshots are the same bytes in both browsers and both fonts, and \
+the zoomed step 4 is identical on main and branch. So SF does not draw '->' as an arrow or \
+'--' as one dash; what looks like a long dash in the WebKit shots is SF Mono's wide hyphen, \
+and font-variant-ligatures:none leaves it exactly as it was, in the terminal too. The order's \
+rule is that a finding that does not reproduce is rejected with the evidence. Keeping the \
+rule as a guard for a fork that puts a ligating font back is defensible, but then the comment \
+in artifactReal and the one over #art-term have to say that, not 'Inter and SF draw', the \
+pull request has to stop saying all seven reproduced, and the test should own up to being a \
+guard on a style."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+The live region is handed the whole transcript again on every line when motion is on. runDemo \
+appends with el.textContent +=, which replaces the one text node each time: a MutationObserver \
+on #art-term during the cafe's first demo records added nodes of 30, 57, 106 and 188 \
+characters. A reader that speaks additions gets line 1, then lines 1 to 2, then 1 to 3, then \
+all four. Only reduced motion gets the 'one announcement' the comment promises. Appending a \
+node per line, or announcing once at the end, would do it. Reasoned from the mutations, not \
+heard in a screen reader."""
+
+[[findings]]
+severity = "low"
+file = "tools/reviewed_sinks.json"
+text = """
+The register still allows the three interpolations this branch removed from 16-artifacts.js \
+('n', 'JSON.stringify(n)' and the a.links.map template). The guard only fails on an increase, \
+so a raw ${n} could come back into this file unnoticed. Outside owns: whoever owns tools/ runs \
+checks.py sinks --write."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+'The ring is the zone ... true wherever you cross it' has two exceptions the comment does not \
+admit. The cafe ring (r 2.3) and the stall ring (r 2.56) now visibly overlap by 0.86, and in \
+the overlap the nearer artifact wins: standing 0.15 inside the stall's ring on the hub side \
+offers 'Inspect the cafe'. And signpost 4 stands inside the mountain's ring, where the stop \
+wins by design (tests/test_game_smoke.py says so). Both predate the branch as zones; they are \
+new as something drawn."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+Three gaps in what the tests hold. RING_Y has a comment and no test: with .05 put back, both \
+ring tests pass. The every-ring test reads the campus only, 13 of 21. The photograph test \
+asserts nothing about what it photographs, walk_to returns quietly if it never arrives, and \
+the iphone fountain shot is taken while the Inspect button is still fading in; waiting for \
+window.__debug().near to be 'a:fountain' before the shot would make the picture the one the \
+comment describes."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+The mountain's second demo was padded by hand for 'vibe/cli.py'. With 'vibemap/cli.py' the \
+first line's '(layer 5)' starts at column 32 against 27 and 28 for the lines under it (it was \
+29 on main, so already ragged). Visible in hunt_f_mountain_iphone.png."""
+
+[[findings]]
+severity = "low"
+file = "src/game/16-artifacts.js"
+text = """
+Two concepts are now spelled twice. 'A link into the vault' is wlSpan() in 60-vault.js (span, \
+role link, tabindex 0, the locked rule) and an anchor with href '#' here; the ligature rule \
+is an inline style string at two call sites. The builder named both under 'Outside this \
+order' and could not reach src/style.css or 60-vault.js; a panels order should give .wl one \
+rule that holds everywhere and code and pre one ligature rule, then take these out. Also for \
+the record: the pull request says the scene is not reachable from a test, but \
+window.__scene() exists and is how I measured main's rings; __rings() is still justified, \
+because obstacles is not reachable."""
