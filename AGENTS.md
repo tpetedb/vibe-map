@@ -48,7 +48,7 @@ Start with `docs/BRIEF.md`: every request Tom made, what was delivered, and the 
 - Python dependencies are welcome when they remove real work. Declare them in `pyproject.toml`, install with `uv`, never bare pip.
 - The changelog entry is a fragment, not an edit. Add `changelog.d/<slug>.<type>.md` (type: added, changed, deprecated, removed, fixed, security) in the same commit as the change, and leave `CHANGELOG.md` alone; a release assembles it. CI refuses a change under `src/`, `vibemap/` or `tools/` that carries no fragment.
 - Generated files are never merged by hand. `game/vibe-map.html`, `game/news.json`, `tools/generated/`, `docs/ROADMAP.md`, `docs/RESOURCES.md`, `docs/OBSIDIAN.md`, `docs/COOKBOOK.md`, `docs/site/syllabus.html`, `vibemap/data/fork_source/`, `vibemap/data/template/_agents` and `_claude` and `vault/` are outputs: on a conflict take either side and regenerate. `just sync-main` does exactly that.
-- A task for an agent is a work order. It names the files it owns and its acceptance as commands, a different agent reviews it against the task, the criteria and the output, and another team's files need that team's sign-off. `just work-check <id>` is what done means; a hook holds an agent to it. One-line fixes by a person need no order.
+- A task for an agent is a work order. It names the files it owns and its acceptance as commands, a different agent reviews it against the task, the criteria and the output, and another team's files need that team's sign-off. `just work-check <id>` is what done means; a hook reminds an agent of it, and the checks decide. One-line fixes by a person need no order.
 - After every change, end with one line: what changed.
 
 ## Test loop
