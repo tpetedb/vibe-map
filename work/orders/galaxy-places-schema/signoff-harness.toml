@@ -1,0 +1,35 @@
+# The harness team's manager on what this order does to harness files. By
+# work/teams.toml that is 7 of the 72: tools/build.py, tools/new_topic.py,
+# tools/generated/notes.js and the order's own folder under work/.
+v = 1
+order = "galaxy-places-schema"
+team = "harness"
+by = "manager-harness"
+reviewed = "c1a89e711f4ec282081b9efc30c456018d774e0b"
+verdict = "accept"
+note = '''
+Accepted. Nothing in harness's files has to change before this lands. Two lines of ours say a little more than is true, no order that waits on this one reads either of them, and both go into the harness order that follows, with three things this order leaves for us.
+
+What I read and ran, at the commit above, in the worktree:
+- `git diff origin/main...HEAD` on every path `Teams.of()` gives to harness. Since the reviewed commit f735351 only review.toml and signoff-cli.toml moved, so the review and the cli sign-off still cover the owned files.
+- tools/build.py (+15). `_places_js()` is `_pets_js()` again: the same `sys.path.insert`, the same late import with the same noqa, package data read through the package and written through `js_json()`, so `python3 tools/checks.py sinks` stays green (ran it, and `style`). `"places"` joins INJECTED as the other parts do, through `_part()`, so the script-element net covers it. The anchor is right: in front of game/00-state.js, after the config parts, inside the one function, so the modules of both folders can read it. The comment on INJECT_BEFORE states the order and the reason and narrates nothing. Nothing else of ours reads the two tables by shape: tests/test_build.py, tools/sync_main.py and tools/sync_fork_source.py do not name them.
+- In the built file PLACES is one line of 14,666 bytes, 0.89 per cent of the game, and no module under src/ reads it yet; the order says so and tests/test_places.py:369 says so. It is there for galaxy-v0.
+- The fork. vibemap/data/fork_source/tools/build.py is byte for byte tools/build.py (`cmp`), `sync_fork_source.py --check`, `build.py --check` and `regen_tree.py --check` exit 0. PLACES has no fork-local copy under tools/generated/ the way campaign.json and items.json have; it follows the pets, which a fork does not edit either, and uv_build ships everything under vibemap/, so the installed tool carries the 42 files. The reviewer built the wheel and a fork from it; I did not repeat that. A fork keeps the build.py it was made with, so an older fork never imports places.
+- tools/new_topic.py (+12). Rendered the template in memory and put the result through `Topic` and `_check_origins`: it loads, `the-internet` exists, and `year=` is passed to the one `format()` call that needs it (the pack template has no origin).
+- tools/generated/notes.js moved by one link because unix.toml's own `[[sources]]` did; generated, in sync.
+- The order's folder: `builder` is filled in, findings.md gained the round 2 section and what it says about 403s and missing addresses matches the review. `just work-validate`: 25 orders, 0 collisions. `python3 tools/work.py ci` names only this sign-off and docs's.
+- Harness's own tests (tests/test_build.py, tests/test_work.py, tests/test_repo.py, not browser): all pass.
+
+What I want changed, in the harness order that follows (none of it before this lands):
+1. tools/new_topic.py:47 and :48. The scaffold writes `place = "the-internet"` and `year = <this year>` with no marker. The file's own docstring (lines 4 to 6) says the scaffold carries TODO where the author has to read and write, and that the schema test refuses a file that still carries one. `what` and `source` do; place and year do not, and both are valid as they stand. An author who fills in the two marked fields ships "the internet, 2026" past the loader, past `places.problems()` and past tests/test_topics.py:55. That is a guess pre-filled by a tool, in a schema whose point is that nothing is guessed. A trailing `# {todo}` comment on both lines is enough: the test reads the raw text. The five research orders edit existing topic files and never run the scaffold, which is why this waits.
+2. tools/build.py:171. "the same blob vibe places prints" is not what happens: `vibe places` has no `--json` and prints a table. The changelog fragment says "the same facts", which is true. The cli manager has the same sentence open at vibemap/places.py:333. My preference, for cli to decide: `vibe places --json` printing `places.payload()`, which makes both sentences true and gives galaxy-v0's tests the blob without parsing the game. If cli rewords instead, our line is reworded with it. tools/build.py is also owned by hunt-w-settings-news and qol-5-continuity-photo, so this word rides in a later launch group.
+
+What harness does after this lands, in one order (work/teams.toml, AGENTS.md, tools/checks.py, tools/new_topic.py and a test; no active order owns any of them):
+- work/teams.toml gives content `vibemap/data/places.toml`, the file ADR 0015 planned. This order made it a folder, so that path covers nothing and `Teams.of("vibemap/data/places/bell-labs.toml")` answers cli (tried it). One line, `vibemap/data/places/` under content, ideally before the research orders start: docs/TOPICS.md tells them to add a place when none fits, and until then each such order needs the file in `owns` and `cross = ["cli"]`.
+- AGENTS.md's file map does not know vibemap/places.py, vibemap/data/places/ or that the build injects PLACES.
+- tools/checks.py:57. LINK_SOURCES reads vibemap/data/topics, so the origins' sources are probed weekly, and not vibemap/data/places, so the 42 place sources never are. Add the folder. A 403 is already soft (SOFT_STATUSES), so the EDGAR link, which the reviewer saw answer 403 to an undeclared client, will be reported and not failed.
+
+For the orchestrator, from the reviewer's last finding and true of main, not of this order: tests/test_build.py:237 pins src/galaxy/ after src/game/, so 90-boot.js runs before any galaxy module's top-level `const` exists. galaxy-v0 owns 90-boot.js and src/galaxy/ and not tools/build.py. Either galaxy-v0 keeps its top level to function declarations and lets boot call in, or a harness order that owns tools/build.py and tests/test_build.py moves boot last across folders in a launch group before it. I will plan the second if galaxy-v0's manager asks for it on that order.
+
+This sign-off covers the commit above and lapses when an owned file moves.
+'''

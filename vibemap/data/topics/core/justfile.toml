@@ -13,6 +13,16 @@ try_it = "just --list in this repository, then just --dump --dump-format json | 
 
 unlocks = ["agentsmd", "ci", "githooks"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "the-internet"
+year = 2022
+what = "just reaches 1.0.0, dated 22 February 2022 in its own changelog."
+source = "https://github.com/casey/just/blob/master/CHANGELOG.md"
+primary = true
+
 [[sources]]
 label = "just manual"
 url = "https://just.systems/man/en/"

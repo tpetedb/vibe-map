@@ -1,0 +1,12 @@
+# Eindhoven University of Technology. De Zaale, Eindhoven. Founded in 1956 by industry, local government and academia.
+id = "eindhoven-university"
+name = "Eindhoven University of Technology"
+kind = "university"
+region = "europe-west"
+era = "mainframe"
+globe = "earth"
+lat = 51.448
+lon = 5.487
+look = "campus"
+landmark = "auditorium"
+source = "https://www.tue.nl/en/our-university"

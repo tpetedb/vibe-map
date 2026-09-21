@@ -1,0 +1,12 @@
+# Microsoft, Redmond. One Microsoft Way, Redmond, Washington.
+id = "microsoft-redmond"
+name = "Microsoft, Redmond"
+kind = "company"
+region = "us-west"
+era = "personal"
+globe = "earth"
+lat = 47.64
+lon = -122.128
+look = "campus"
+landmark = "one-microsoft-way"
+source = "https://news.microsoft.com/facts-about-microsoft/"

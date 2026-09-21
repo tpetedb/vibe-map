@@ -1,0 +1,12 @@
+# Confluent, Mountain View. 899 West Evelyn Avenue, Mountain View.
+id = "confluent-mountain-view"
+name = "Confluent, Mountain View"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.388
+lon = -122.083
+look = "tower"
+landmark = "evelyn-avenue-office"
+source = "https://www.confluent.io/about/"
