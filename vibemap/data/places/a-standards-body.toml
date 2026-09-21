@@ -1,0 +1,10 @@
+# A standards body. Where a specification becomes a document anyone can read.
+id = "a-standards-body"
+name = "A standards body"
+kind = "standards"
+region = "everywhere"
+era = "mainframe"
+globe = "cloud"
+look = "station"
+landmark = "document-series"
+source = "https://www.rfc-editor.org/about/"

@@ -39,6 +39,17 @@ try_it = """{todo} the smallest real thing, under twenty minutes, no cloud accou
 unlocks = []
 prerequisites = []
 
+# Where this happened. `place` is a file in vibemap/data/places/, so run
+# `uv run vibe places` and take one; add the place first if none of them fits.
+# Exactly one origin carries `primary = true`: that is where the topic lives,
+# and any others are echoes. Open the source and read it before you cite it.
+[[origins]]
+place = "the-internet"
+year = {year}
+what = """{todo} what happened there, in one line."""
+source = "https://{todo}.invalid"
+primary = true
+
 [[sources]]
 label = "{todo} the official page this topic is written from"
 url = "https://{todo}.invalid"
@@ -115,6 +126,7 @@ def new_topic(args: argparse.Namespace) -> None:
             depth=args.depth,
             minutes=args.minutes,
             checked=dt.date.today().isoformat(),
+            year=dt.date.today().year,
             todo=TODO,
         ),
     )

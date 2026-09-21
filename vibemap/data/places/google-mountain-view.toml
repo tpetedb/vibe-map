@@ -1,0 +1,12 @@
+# Google, Mountain View. 1600 Amphitheatre Parkway, Mountain View.
+id = "google-mountain-view"
+name = "Google, Mountain View"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 37.422
+lon = -122.084
+look = "campus"
+landmark = "amphitheatre-parkway-lawn"
+source = "https://policies.google.com/privacy"

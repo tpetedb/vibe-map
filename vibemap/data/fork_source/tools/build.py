@@ -63,7 +63,8 @@ MODULE_NAME = re.compile(r"\d{2}[a-z]?-[a-z0-9-]+\.js")
 # belongs before. The anchor is a module, so renaming one is a loud fault
 # instead of a generated part that quietly slid somewhere else.
 INJECT_BEFORE = {
-    "game/00-state.js": ("config",),  # CONFIG, NEWS and src/config/*.js
+    # CONFIG, NEWS and src/config/*.js, then the places every experience reads.
+    "game/00-state.js": ("config", "places"),
     "game/16-artifacts.js": ("campaign",),
     "game/18-avatar.js": ("items",),
     "game/19b-pet.js": ("pets",),
@@ -164,6 +165,18 @@ def _pets_js() -> str:
         for name in sprites.available()
     }
     return "const PETS=" + js_json(data) + ";\n"
+
+
+def _places_js() -> str:
+    """Where every topic happened: the same blob vibe places prints.
+
+    One source: vibemap/places.py reads vibemap/data/places/ and the origins
+    on the topics, so the game and the terminal cannot disagree about a year.
+    """
+    sys.path.insert(0, str(ROOT))
+    from vibemap import places  # noqa: PLC0415
+
+    return "const PLACES=" + js_json(places.payload()) + ";\n"
 
 
 def _notes_js() -> str:
@@ -450,6 +463,7 @@ def _config_parts() -> list[str]:
 # The generated parts by the name INJECT_BEFORE calls them.
 INJECTED = {
     "config": _config_parts,
+    "places": lambda: [_part("the places", _places_js())],
     "campaign": lambda: [_part("the campaign", _campaign_js())],
     "items": lambda: [_part("the items", _items_js())],
     "pets": lambda: [_part("the pixel pets", _pets_js())],

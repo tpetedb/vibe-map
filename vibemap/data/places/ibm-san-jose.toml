@@ -1,0 +1,12 @@
+# IBM San Jose Research Lab. San Jose, California, where Ted Codd published the relational model in 1970.
+id = "ibm-san-jose"
+name = "IBM San Jose Research Lab"
+kind = "lab"
+region = "us-west"
+era = "mainframe"
+globe = "earth"
+lat = 37.24
+lon = -121.796
+look = "lab"
+landmark = "research-annex"
+source = "https://www.ibm.com/history/relational-database"

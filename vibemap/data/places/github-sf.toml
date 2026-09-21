@@ -1,0 +1,12 @@
+# GitHub, San Francisco. 88 Colin P. Kelly Jr. Street, San Francisco.
+id = "github-sf"
+name = "GitHub, San Francisco"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 37.782
+lon = -122.392
+look = "tower"
+landmark = "colin-p-kelly-street-office"
+source = "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"

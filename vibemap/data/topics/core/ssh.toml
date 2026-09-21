@@ -12,6 +12,22 @@ try_it = "ssh-keygen -t ed25519, then gh ssh-key add ~/.ssh/id_ed25519.pub, then
 
 unlocks = ["cloud", "docker"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "helsinki-university-of-technology"
+year = 1995
+what = "Tatu Ylonen of Helsinki University of Technology publishes the first SSH protocol draft, from Otakaari 1 in Espoo."
+source = "https://www.ietf.org/archive/id/draft-ylonen-ssh-protocol-00.txt"
+primary = true
+
+[[origins]]
+place = "openbsd-project"
+year = 1999
+what = "OpenSSH 1.2.2 ships with OpenBSD 2.6 on 1 December 1999."
+source = "https://www.openssh.org/history.html"
+
 [[sources]]
 label = "OpenSSH manual"
 url = "https://www.openssh.com/manual.html"

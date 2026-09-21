@@ -1,0 +1,11 @@
+# The OpenBSD project. A Canadian not-for-profit corporation that funds the projects'
+# infrastructure and "developer events and initiatives", typically hackathons.
+id = "openbsd-project"
+name = "The OpenBSD project"
+kind = "foundation"
+region = "everywhere"
+era = "personal"
+globe = "cloud"
+look = "station"
+landmark = "hackathon-hall"
+source = "https://www.openbsdfoundation.org/"

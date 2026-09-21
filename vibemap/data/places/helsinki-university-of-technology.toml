@@ -1,0 +1,12 @@
+# Helsinki University of Technology, Otaniemi. Otakaari 1, Espoo. It merged into Aalto University on 1 January 2010.
+id = "helsinki-university-of-technology"
+name = "Helsinki University of Technology, Otaniemi"
+kind = "university"
+region = "europe-north"
+era = "personal"
+globe = "earth"
+lat = 60.187
+lon = 24.827
+look = "campus"
+landmark = "otaniemi-main-building"
+source = "https://www.aalto.fi/en/aalto-university"

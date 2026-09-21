@@ -1,0 +1,12 @@
+# University of California, Berkeley. Where BSD and POSTGRES were written.
+id = "uc-berkeley"
+name = "University of California, Berkeley"
+kind = "university"
+region = "us-west"
+era = "personal"
+globe = "earth"
+lat = 37.872
+lon = -122.258
+look = "campus"
+landmark = "campanile"
+source = "https://www.berkeley.edu/about/"
