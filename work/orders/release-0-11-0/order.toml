@@ -1,0 +1,56 @@
+v = 1
+id = "release-0-11-0"
+title = "Release 0.11.0: the changelog assembled, the version bumped, the pictures showing the product as it is"
+team = "harness"
+branch = "release/0.11.0"
+goal = "release-0-11-0"
+issue = 59
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-release-0-11-0"
+
+owns = [
+  "CHANGELOG.md",
+  "pyproject.toml",
+  "uv.lock",
+  "docs/media/",
+  "tools/media.py",
+  # The two `just start` screens of docs/media are rendered from here: the
+  # review found them stale against this release's own changelog, and they
+  # are this team's files (harness), owned by no other active order.
+  "tools/tui_media.py",
+  "tests/test_changelog.py",
+  "tests/test_media.py",
+  "work/goals/release-0-11-0.toml",
+]
+cross = ["docs"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The changelog, build and repository guards pass."
+check = "uv run pytest -q tests/test_changelog.py tests/test_build.py tests/test_repo.py"
+
+[[criteria]]
+id = "c2"
+text = "The version is 0.11.0 in pyproject.toml, CHANGELOG.md has its dated section and its compare link, and no fragment is left in changelog.d."
+check = "python3 -c \"import tomllib,pathlib,sys; v=tomllib.load(open('pyproject.toml','rb'))['project']['version']; t=pathlib.Path('CHANGELOG.md').read_text(); left=[f.name for f in pathlib.Path('changelog.d').glob('*.md') if f.name!='README.md']; ok=v=='0.11.0' and '## [0.11.0] - ' in t and '[0.11.0]:' in t and not left; print(v, left); sys.exit(0 if ok else 1)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The 0.11.0 section reads as one changelog, not as 28 pasted fragments: Keep a Changelog order, nothing said twice, nothing contradicting another line, every line true of main. The one edit to a released section is the artifact count in 0.10.0 (twenty to twenty-one), which the stale-artifact audit asked for."
+judge = "reviewer"
+
+[[criteria]]
+id = "c6"
+text = "Every picture under docs/media shows the product as it is on main (the phone HUD and More menu, the zoom control, the Continue card, the Settings rows, a bottle on a shore): none is blank, mid-transition or from before those changes. The reviewer opens each one. The pet screenshots that a test rewrites (issue 148) are rendered by the media tool here, not by a test."
+judge = "reviewer"
