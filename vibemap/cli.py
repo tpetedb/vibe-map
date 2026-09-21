@@ -1413,7 +1413,7 @@ def _show_place(place: places.Place) -> None:
     )
     console.print(f"  [muted]{place.source}[/]")
     for topic in places.topics_by_place()[place.id]:
-        origin = next(o for o in topic.origins if o.place == place.id)
+        origin = places.origin_at(topic, place.id)
         mark = "where it lives" if origin.primary else "echo"
         console.print(
             f"[accent]{topic.id}[/] {origin.year} [muted]({mark})[/]: "
