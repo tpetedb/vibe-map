@@ -117,9 +117,13 @@ def test_a_step_that_says_print_exactly_is_drawn_without_ligatures(
         )
         assert step.count() == 1, target["id"]
         assert "->" in (step.text_content() or ""), target["id"]
-        # The commands under it are typed as they stand, so they are held to
-        # the same rule.
-        for part in (step, game.page.locator("#s-artifact .lesson pre code")):
+        # The commands under it are typed as they stand, and the terminal
+        # prints command lines of its own, so both are held to the same rule.
+        for part in (
+            step,
+            game.page.locator("#s-artifact .lesson pre code"),
+            game.page.locator("#art-term"),
+        ):
             assert (
                 part.first.evaluate("el => getComputedStyle(el).fontVariantLigatures")
                 == "none"

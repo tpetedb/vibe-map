@@ -162,8 +162,10 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
   $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
     // The terminal answers a button press, so it is a live region: a reader
-    // that is not looking at it hears what came back.
-    `<pre class="term" id="art-term" aria-live="polite">Press a button. Watch what comes back.</pre>`+
+    // that is not looking at it hears what came back. It prints command lines,
+    // so it gets the walkthrough's ligature rule: a terminal shows two
+    // hyphens in front of a flag, never one long dash.
+    `<pre class="term" id="art-term" aria-live="polite" style="font-variant-ligatures:none">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+
     artifactReal(a)+
     `<p class="small muted" id="art-links">In the vault: </p>`;
