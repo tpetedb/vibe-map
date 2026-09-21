@@ -1,0 +1,65 @@
+v = 1
+id = "galaxy-places-schema"
+title = "Where a topic happened is data: places, origins, a loader that refuses what it cannot vouch for, and the first shelf sourced"
+team = "content"
+branch = "feat/galaxy-places-schema"
+goal = "galaxy"
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/places.py",
+  "vibemap/data/places/",
+  "vibemap/topics.py",
+  "vibemap/tech.py",
+  "vibemap/cli.py",
+  "tools/build.py",
+  "tools/new_topic.py",
+  "docs/adr/0015-experiences-share-one-core.md",
+  "docs/adr/README.md",
+  "docs/TOPICS.md",
+  "docs/GALAXY.md",
+  "tests/test_places.py",
+  "tests/test_topics.py",
+  "vibemap/data/topics/core/bash.toml",
+  "vibemap/data/topics/core/dotfiles.toml",
+  "vibemap/data/topics/core/files.toml",
+  "vibemap/data/topics/core/interfaces.toml",
+  "vibemap/data/topics/core/justfile.toml",
+  "vibemap/data/topics/core/localhost.toml",
+  "vibemap/data/topics/core/ssh.toml",
+  "vibemap/data/topics/core/unix.toml",
+  "vibemap/data/topics/core/zsh.toml",
+]
+cross = ["cli", "harness", "docs"]
+needs = ["harness-build-finds-modules"]
+
+[[criteria]]
+id = "c1"
+text = "The places and topics tests pass, the new ones seen failing first."
+check = "uv run pytest -q tests/test_places.py tests/test_topics.py"
+
+[[criteria]]
+id = "c2"
+text = "Every topic of the shell shelf has exactly one primary origin, and every origin names a place that exists, a year, a claim and an https source."
+check = "uv run python -c \"from vibemap import places; import sys; bad = places.problems(shelves=['shell']); print('\\n'.join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The reviewer opens every source link of the shell shelf's origins and of ten places chosen at random, and each page says what the claim says: the year, the place, the people or organisation. A claim the page does not support is a finding, however plausible. Coordinates are within a quarter of a degree of the place named (checked against a map or the organisation's own address)."
+judge = "reviewer"
+
+[[criteria]]
+id = "c6"
+text = "The schema is versioned or additive in the way AGENTS.md demands: an older topic file without origins still loads until its pack is migrated, an unknown place, a missing source, two primaries or none are refused with the file's name, and `vibe places` and `vibe topic <id>` show the same facts the game will be given (`PLACES` in the built file)."
+judge = "reviewer"
