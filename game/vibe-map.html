@@ -118,7 +118,10 @@ body.no-live .live-feed{display:none!important}
 #gfxlost .card{max-width:440px}
 h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0 0 .4em;line-height:1.1;letter-spacing:-.02em}
 h1{font-size:calc(clamp(28px,7vw,40px)*var(--type-scale))} h2{font-size:calc(clamp(22px,5vw,28px)*var(--type-scale))}
-h3{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
+/* A display heading is one line, so it takes the tight leading above. A group
+   label is small caps with wide tracking and wraps on a narrow panel, where
+   1.1 puts the second line on top of the first. */
+h3{font-size:12px;font-weight:600;line-height:1.45;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:12px}
 p{margin:0 0 .9em;max-width:38em}
 button{font:inherit;font-weight:600;font-size:.875em;color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:11px 18px;cursor:pointer;box-shadow:var(--ring);transition:transform .12s,box-shadow .2s,border-color .2s}
 @media (hover:hover){button:hover{border-color:var(--blue-bright);transform:translateY(-1px)}}
@@ -177,9 +180,6 @@ body:has(#sheet.on) #hud{justify-content:flex-end}
 #hud-ter button,#hud-menu>#hud-sec>button{white-space:nowrap}
 #hud-ter button{justify-content:flex-start;text-align:left;width:100%}
 #hud-more-btn[aria-expanded="true"]{border-color:var(--yellow)}
-/* The menu drops through the KPI row, which is the HUD's own next line: the
-   numbers step aside while it is open rather than showing through it. */
-body:has(#hud-more.open) #kpis{visibility:hidden}
 /* The KPI row is the HUD's own last row, so it sits under the pills however
    many of them wrap; no offset to keep in step with the button count. */
 #kpis{position:relative;z-index:0;flex-basis:100%;display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;pointer-events:none}
@@ -211,12 +211,16 @@ body:has(#hud-more.open) #kpis{visibility:hidden}
 
 /* The sheet is an overlay with its own scroll container: the page behind it
    never moves, the reading column is framed instead of floating on black, and
-   the action row of the open screen sticks to the bottom of that container. */
-#sheet{display:none;position:fixed;inset:0;width:min(820px,100%);margin-inline:auto;z-index:30;background:var(--bg);box-shadow:var(--lift)}
+   the action row of the open screen sticks to the bottom of that container.
+   The HUD floats above this overlay, so the sheet keeps a band clear for it:
+   the scroll container starts under the bar, which is why no amount of
+   scrolling can put a line of the lesson behind a pill. One number, because
+   the Close button sits in the same band. */
+#sheet{display:none;position:fixed;inset:0;width:min(820px,100%);margin-inline:auto;z-index:30;background:var(--bg);box-shadow:var(--lift);--sheet-top:calc(62px + env(safe-area-inset-top,0px));padding-top:var(--sheet-top)}
 #sheet.on{display:flex;flex-direction:column}
 @media (min-width:821px){#sheet{border-left:1px solid var(--line2);border-right:1px solid var(--line2)}}
 #sheet .grab{display:none}
-#sheet .inner{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-bottom:96px;padding:52px 22px 0;max-width:680px;width:100%;margin:0 auto}
+#sheet .inner{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scroll-padding-bottom:96px;padding:10px 22px 0;max-width:680px;width:100%;margin:0 auto}
 #sheet .x{position:absolute;top:12px;left:16px;right:auto;padding:6px 12px;font-size:12px;border-radius:999px;z-index:3}
 /* The action row of the open screen: Mark as done and Back, always reachable. */
 #sheet .inner .row.actions{position:sticky;bottom:0;z-index:2;margin:18px -22px 0;padding:14px 22px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1px solid var(--line)}
@@ -312,8 +316,11 @@ details.brief summary::before,details.cmds summary::before,#obfold>summary::befo
 .callout.why{border-color:rgba(0,136,204,.4);background:rgba(0,136,204,.08)}.callout.why b{color:var(--blue-bright)}
 .callout.try{border-color:rgba(255,213,0,.4);background:rgba(255,213,0,.08)}.callout.try b{color:var(--gold)}
 .hour{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a1);background:rgba(0,136,204,.12);border:1px solid rgba(0,136,204,.3);border-radius:999px;padding:5px 12px;margin-bottom:10px}
-/* The artifact demos print like a terminal: mono, one line per step. */
-.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--text)}
+/* The artifact demos print like a terminal: mono, one line per step. The
+   columns are the point, so a line wider than the panel scrolls sideways
+   rather than folding: wrapped, the second half of a line starts flush left
+   under the first column and a number breaks in two. */
+.term{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0 12px;min-height:110px;font-family:var(--font-mono);font-size:.78em;line-height:1.6;white-space:pre;overflow-x:auto;overscroll-behavior-x:contain;color:var(--text)}
 /* The workstream 2 demo component: one card, two change requests. */
 .demo{margin:10px 0}
 .demo-card{border:1px solid var(--line);border-left-width:3px;border-radius:var(--radius-m);padding:12px 14px;background:var(--panel2)}
@@ -379,10 +386,17 @@ pre.out.err{color:var(--red-bright);border-color:var(--red)}
 .tech em.d{float:right;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-left:6px}
 .tech em.d2{color:var(--yellow)}.tech em.d3{color:var(--orange-bright)}
 .tech i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
-/* Interests: a shelf you did not choose is dimmed, never hidden or disabled. */
-.age.faded{opacity:.45}
-.age.faded:focus-within{opacity:1}
-@media (hover:hover){.age.faded:hover{opacity:1}}
+/* Interests: a shelf you did not choose is set back, never hidden, disabled
+   or unreadable. It loses its surface and keeps its hairline, the way every
+   other level here is told apart; the words keep their own contrast, because
+   opacity takes the 11px description down with the card and a screen with no
+   hover has no way to bring it back. */
+.age.faded{background:transparent}
+.age.faded .tech{opacity:.85}
+.age.faded:focus-within{background:var(--surface-2)}
+.age.faded:focus-within .tech{opacity:1}
+@media (hover:hover){.age.faded:hover{background:var(--surface-2)}
+  .age.faded:hover .tech{opacity:1}}
 .idot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
 .setting.wide{display:block}
 .setting.wide label{display:block;margin-bottom:8px}
@@ -488,13 +502,11 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
   #hud-menu .ic{display:inline-block}
   #hud-search .lbl{display:none}
   #hud-search .ic{display:inline-block;margin-right:0;width:16px;height:16px}
-  /* The menu hangs under the numbers rather than through them. */
-  body:has(#hud-more.open) #kpis{visibility:visible}
   /* Over a sheet the bar is back to its own width, so the sheet's Close
-     button has the other side of the row to itself, and the screen starts
-     below the bar rather than behind it. */
+     button has the other side of the row to itself. The band the panel keeps
+     clear grows with the pill, which a finger makes taller. */
   body:has(#sheet.on) #hud-bar{flex:0 1 auto}
-  #sheet .inner{padding-top:86px}
+  #sheet{--sheet-top:calc(86px + env(safe-area-inset-top,0px))}
 }
 /* A finger gets the same menu as a sheet on the bottom edge, where the thumb
    is and where the window can always hold it, with the island dimmed behind
@@ -530,10 +542,27 @@ button.link{background:none;border:0;padding:0;box-shadow:none;color:var(--blue-
   #hud-sec{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   #bottom{bottom:10px;left:calc(110px + env(safe-area-inset-left,0px));right:calc(84px + env(safe-area-inset-right,0px))}
 }
-/* The toast stack: what just happened, top right, gone in five seconds. It is
-   a message and never state, so nothing below it depends on one being there. */
-#toast{position:fixed;top:14px;right:14px;left:auto;z-index:60;display:flex;flex-direction:column;gap:8px;max-width:min(340px,calc(100vw - 28px));pointer-events:none}
-.tst{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* The toast stack: what just happened, gone in five seconds. It is a message
+   and never state, so nothing below it depends on one being there.
+   It is the HUD's own last row, under the numbers, rather than a box at an
+   offset of its own: that way it clears every button at any width and any
+   wrap, and the minimap, which puts itself under whatever the HUD holds,
+   steps down with it instead of disappearing behind it. Empty it is a row of
+   no height, so the region a screen reader listens to is never taken out of
+   the page. Bounded on purpose: a batch of unlocks shows the newest messages
+   and clips the older ones rather than filling the window, because a column
+   packed from the bottom overflows at the top, which is the oldest end. */
+#toast{flex-basis:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-end;gap:8px;max-height:40vh;overflow:hidden;pointer-events:none}
+/* The title hides the HUD and covers it, and the record is repaired before
+   the island is entered, so what that repair says has to stay on screen: the
+   row comes forward with the panel, and it is the only thing in the HUD that
+   is visible there, so nothing else comes with it. */
+body:has(#title:not(.off)) #toast{visibility:visible}
+body:has(#title:not(.off)) #hud{z-index:51}
+/* The vault takes the page below the HUD, so the stack anchors to the window
+   for as long as it is open. Nothing of the reader lives in that corner. */
+body:has(#vault.on) #toast{position:fixed;inset:auto 14px 14px auto;width:min(340px,calc(100vw - 28px))}
+.tst{flex:none;width:min(340px,100%);background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:var(--lift);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 .tst b{display:flex;align-items:center;gap:6px;font-family:var(--font-display);font-size:13px;color:var(--yellow)}
 .tst span{display:block;font-size:12px;line-height:1.45;color:var(--muted);margin-top:2px}
 .tst a{pointer-events:auto;color:var(--a1)}
@@ -680,6 +709,10 @@ h3+.setting{border-top:0}
     <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
     <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
   </div>
+  <!-- The toast stack belongs to the HUD, so it hangs under the bar however
+       many rows the bar wraps to instead of covering it. 18-avatar.js fills
+       this one when it is here and makes its own when it is not. -->
+  <div id="toast" aria-live="polite"></div>
 </div>
 
 <div class="ui" id="bottom">
@@ -740,7 +773,12 @@ h3+.setting{border-top:0}
     <p class="pal-hint small muted">Up and down to move, Enter to open, Escape to close.</p>
   </div>
 </div>
-<div id="sheet" role="dialog">
+<!-- The panel is modal: it covers the page, Escape closes it and opening it
+     puts the focus on Close, so a screen reader stays inside it rather than
+     wandering through the island behind it. The name is the panel itself;
+     naming the screen that is open needs the screen's own title and belongs
+     to openSheet(). -->
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Camp panel">
   <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
   <div class="inner">
     <section class="screen" id="s-map">
