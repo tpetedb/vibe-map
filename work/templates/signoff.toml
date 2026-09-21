@@ -1,0 +1,11 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = ""
+team = ""
+by = ""
+reviewed = ""
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = ""

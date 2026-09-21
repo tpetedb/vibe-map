@@ -1,0 +1,51 @@
+# The teams, by theme, and the paths each one answers for. A path belongs to
+# the FIRST team below that covers it, so the specific teams come before the
+# general ones. `dir/` is everything under it; anything else is a glob.
+# An order owns files of its own team; files of another team need that team's
+# sign-off (cross). tools/work.py reads this; work/README.md explains it.
+v = 1
+
+# Any team may own a test file; two active orders still may not own the same one.
+shared = ["tests/"]
+
+[[teams]]
+id = "state"
+title = "Saved state, progress codes, configuration"
+paths = ["src/game/00-state.js", "src/game/80-sync.js", "vibemap/state.py", "vibemap/config.py", "vibemap/project.py", "config/"]
+tests = ["tests/test_game_state.py", "tests/test_config_levels.py", "tests/test_camp_config.py", "tests/test_project.py", "tests/test_reset.py"]
+
+[[teams]]
+id = "scene"
+title = "The 3D view: world, walker, camera, input, items"
+paths = ["src/game/1*.js", "src/game/2*.js", "src/game/3*.js", "src/config/"]
+tests = ["tests/test_game_camera.py", "tests/test_game_graphics.py", "tests/test_game_smoke.py"]
+
+[[teams]]
+id = "panels"
+title = "Everything that is not the canvas: sheet, search, vault, settings, onboarding, chat, stats"
+paths = ["src/game/", "src/body.html", "src/head.html", "src/style.css", "src/errors.js", "src/icon.svg"]
+tests = ["tests/test_game_qol.py", "tests/test_game_qol_settings.py", "tests/test_game_smoke.py"]
+
+[[teams]]
+id = "content"
+title = "What the course says: topics, campaign, items, the syllabus"
+paths = ["vibemap/data/topics/", "vibemap/data/campaign.json", "vibemap/data/items.json", "vibemap/data/resources.md", "vibemap/data/obsidian.json", "vibemap/data/places.toml", "docs/SYLLABUS.md", "workspace/", "data/"]
+tests = ["tests/test_topics.py", "tests/test_syllabus.py", "tests/test_stops.py"]
+
+[[teams]]
+id = "cli"
+title = "The vibe command and everything behind it"
+paths = ["vibemap/"]
+tests = ["tests/test_cli.py", "tests/test_cli_rest.py"]
+
+[[teams]]
+id = "harness"
+title = "How the work is done: tools, checks, hooks, skills, CI, these orders"
+paths = ["tools/", "work/", ".claude/", ".agents/", ".github/", "justfile", "agents.just", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".gitignore", ".gitattributes", ".python-version", "env.example", "scripts/", ".devcontainer/", "src/vendor/", "CHANGELOG.md"]
+tests = ["tests/test_work.py", "tests/test_repo.py", "tests/test_build.py"]
+
+[[teams]]
+id = "docs"
+title = "What a reader is told: the docs, the README, the decisions"
+paths = ["docs/", "site/", "*.md", "LICENSE"]
+tests = ["tests/test_repo.py"]

@@ -1,0 +1,10 @@
+v = 1
+id = "ways-of-working"
+statement = "Several agents in themed teams can plan, build, test, review and land work at the same time, and every step between a task and main is proven by a command or by a second agent's written ruling, enforced by the harness rather than by a prompt."
+not = [
+  "More than four agents building at once: the budget is the machine's and the account's.",
+  "A server, a queue or a database: files in git and one issue thread per order.",
+  "Replacing AGENTS.md: the orders carry what a task adds to it.",
+]
+budget = 4
+orders = ["harness-work-orders"]

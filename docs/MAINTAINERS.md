@@ -61,6 +61,10 @@ flowchart LR
 
 People who want the engine press **Use this template** on GitHub or clone this repository; then they have a product checkout that is also a valid camp (it has a `config/camp.toml` and a `workspace/`), which is how the tests and the played instance work.
 
+## How agents share the work
+
+Several agents build at once, so a task is a work order and not a prompt: `work/orders/<id>/order.toml` names the files it owns and its acceptance as commands, a different agent reviews it, and another team's files need that team's sign-off. `work/teams.toml` has the teams, `just work-plan <goal>` the launch groups, `just work-board` what is running. Hooks remind an agent of its order; `work-check`, `work-accept` and the CI step on the pull request decide. `work/README.md` is the short version, ADR 0016 the reasons, the skill `work-order` the how-to.
+
 ## Branch protection
 
 `main` is protected on GitHub, and the rules hold for admins too:

@@ -17,5 +17,6 @@ One file per decision, in Michael Nygard's form (Title, Status, Context, Decisio
 | [0013](0013-topics-as-data.md) | A topic of the tech tree is one TOML file in a pack, not a row in a Python list | Accepted, 2026-09-18 |
 | [0014](0014-no-decorative-csp.md) | No Content-Security-Policy until it can block an injected script | Accepted, 2026-09-19 |
 | [0015](0015-experiences-share-one-core.md) | An experience is a view over one shared core, and where a topic happened is data | Proposed, 2026-09-21 |
+| [0016](0016-work-orders.md) | A task for an agent is a work order, and its acceptance is a command | Proposed, 2026-09-21 |
 
-Next number: 0016. 0011 and 0012 were reserved for work that did not land and are never reused: a number names one decision, forever. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+Next number: 0017. 0011 and 0012 were reserved for work that did not land and are never reused: a number names one decision, forever. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions

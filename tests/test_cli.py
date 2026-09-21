@@ -466,9 +466,13 @@ def test_skills_are_counted_once() -> None:
 
     paths = _skills()
     assert len(paths) == len({p.resolve() for p in paths})
-    # Only a skill the camp did not ship counts; develop-camp is the product's.
+    # Only a skill the camp did not ship counts, and here those are exactly the
+    # product's own, named once in the template sync.
+    from tools.sync_template import PRODUCT_ONLY_SKILLS
+
+    ours = sorted(PRODUCT_ONLY_SKILLS)
     ok, detail = _c2_skill(Config())
-    assert ok and detail == "1 skill(s) of your own: develop-camp"
+    assert ok and detail == f"{len(ours)} skill(s) of your own: {', '.join(ours)}"
 
 
 def test_a_tool_without_a_version_flag_still_reads_as_installed() -> None:

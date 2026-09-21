@@ -15,3 +15,7 @@ node_modules/
 .env
 # symlinks that `just setup` creates so Claude Code sees .agents/skills
 .claude/skills/
+
+# What tools/work.py last measured; good only for the tree it saw.
+work/orders/*/result.json
+work/orders/*/touched.json

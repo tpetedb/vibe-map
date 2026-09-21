@@ -1,0 +1,63 @@
+# Fourth review of this order, by someone who did not build it. Every experiment
+# ran in scratch git repositories under $TMPDIR, never in this worktree.
+v = 1
+order = "harness-work-orders"
+by = "reviewer-fable-1"
+reviewed = "2da05b7500be60150eb6049b519e9f2b11f08f18"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+The packet served the builder's cache, so I measured myself under a runner's conditions: `GITHUB_HEAD_REF=chore/work-orders GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null python3 tools/work.py check harness-work-orders --force`: c1 pass in 10.3s. On the runner itself, CI run 35554050458 on this commit: `580 passed, 345 deselected in 163.87s`, the first green pytest step this branch has had. 64 tests; the sentence's subjects (schema, ownership, collisions, plan groups, review currency, both hooks) each have tests that go through the command line as well as the functions, and the autouse fixture now clears the git configuration and GITHUB_HEAD_REF.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Forced check on this commit, after the merge of main: c2 pass. tools/sync_template.py and the camp's settings.json are unchanged since the first review, where a pasted hook and a single added newline each made `--check` exit 1.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Forced check: c3 pass, `python3 tools/work.py validate` exit 0 with one order read. Shown in earlier rounds and unchanged: a draft elsewhere is named and does not fail it, two orders on one branch are a collision, a path no team covers is said plainly.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Forced check here: c4 pass in 111.3s. The sentence says `which is what CI runs`, and CI ran it on this commit: run 35554050458, steps 5 to 13 green, pytest `580 passed`. The merge of main is clean: no conflict marker in the tree, docs/adr/README.md carries both rows 0015 and 0016 and `Next number: 0017`, both ADR files exist, and work/teams.toml names the two test files that came with car F (the test that every named test file exists passes).
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Unchanged for the builder since round two, where I walked it from `work.py new` to `Ready to land` with only README and skill. This round I rehearsed the landing of this very order in a throwaway clone: an accepting review and a docs sign-off, committed together and then as two separate commits, both give `work: 1 orders in this pull request, 0 problems`, exit 0, from `work.py ci` with GITHUB_HEAD_REF set.
+'''
+
+[[criteria]]
+id = "c6"
+verdict = "pass"
+evidence = '''
+Hook code changed in one place since round three, where twelve malformed events gave exit 0 on both hooks, a draft's order.toml stayed editable and a second stop was let go: _who() is now the subagent's id only. Checked: a session's edit writes no touched.json, a subagent's writes `{"sub-1": "builder"}`; a stop-hook run with a budget of 4s over two `sleep 3` criteria returns (c1 0, c2 124) and writes no result.json.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = '''
+For a follow-up; none of these opens a landing, because each is caught once the change is committed and CI judges commits. The new rule in changed() compares the working tree with base, not the index: with a stray staged and the working copy put back (`MM vibemap/pet.py`), `work.py check` prints OK; after `git commit` it prints `STRAY vibemap/pet.py`. The same function calls git() without must: an untracked file named `:(bogus)x` makes `git diff origin/main -- ...` fail with `fatal: Invalid pathspec magic`, the failure reads as nothing differs, and a tracked uncommitted stray next to it drops off the list (the odd file is itself reported, so the check is still NOT OK). Names git quotes even with quotepath off are read without -z there: an untracked or staged `vibemap/a"b.py` is no stray until it is committed. I tried the rule as asked and found no other way round it: a stray during a merge, and one on top of a file that arrived from main, are both caught.
+'''
+
+[[findings]]
+severity = "low"
+file = "AGENTS.md"
+text = '''
+AGENTS.md still says `a hook holds an agent to it`; the ADR, work/README.md, CLAUDE.md and docs/MAINTAINERS.md now say reminder. Known and accepted in the ADR, repeated here so the follow-up has one list: edits through a shell are seen by no hook, touched.json is never pruned, `by` is free text, and on a fork's pull request the step is safe to run and is not a gate. The three docs slips of round three are fixed (accepting review, no count of reviews before acceptance, `Hooks remind`).
+'''

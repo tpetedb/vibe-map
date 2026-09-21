@@ -1,0 +1,63 @@
+v = 1
+id = "harness-work-orders"
+title = "Work orders: a task for an agent is data, and its acceptance is a command"
+team = "harness"
+branch = "chore/work-orders"
+goal = "ways-of-working"
+builder = "fable-orchestrator"
+
+owns = [
+  "tools/work.py",
+  "tools/sync_template.py",
+  "work/",
+  "tests/test_work.py",
+  "tests/test_cli.py",
+  "agents.just",
+  ".claude/settings.json",
+  ".claude/agents/builder.md",
+  ".claude/agents/reviewer.md",
+  ".claude/agents/team-manager.md",
+  ".agents/skills/work-order/",
+  ".github/workflows/ci.yml",
+  ".gitignore",
+  "justfile",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "docs/adr/0016-work-orders.md",
+  "docs/adr/README.md",
+  "docs/MAINTAINERS.md",
+  "docs/SKILLS.md",
+]
+# The decision and the explanation live in the docs team's folder.
+cross = ["docs"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The tool's own tests pass: schema, ownership, collisions, plan groups, review currency, both hooks."
+check = "uv run pytest -q tests/test_work.py"
+
+[[criteria]]
+id = "c2"
+text = "No harness hook reaches a learner's camp, and the template is in sync."
+check = "uv run python tools/sync_template.py --check && ! grep -q 'tools/work.py' vibemap/data/template/_claude/settings.json"
+
+[[criteria]]
+id = "c3"
+text = "Every order in the repository is readable and no two active orders own the same file."
+check = "python3 tools/work.py validate"
+
+[[criteria]]
+id = "c4"
+text = "Lint, style and the whole non-browser battery still pass, which is what CI runs."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c5"
+text = "A builder who has never seen this can follow work/README.md and the work-order skill from an empty order to a landed one without asking."
+judge = "reviewer"
+
+[[criteria]]
+id = "c6"
+text = "The hooks cannot trap an agent: a blocked stop is released on the second try, and an unreadable event lets the tool call through."
+judge = "reviewer"
