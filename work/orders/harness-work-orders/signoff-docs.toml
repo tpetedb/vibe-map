@@ -1,0 +1,37 @@
+# The docs team's manager on what this order does to docs/: the ADR, its index
+# row, the MAINTAINERS section and the SKILLS row. Read at the commit below;
+# the only commit after the merge of main is the fourth review, which touches
+# none of these files.
+v = 1
+order = "harness-work-orders"
+team = "docs"
+by = "docs-manager-fable-1"
+reviewed = "e264d357133dbbcb71e9ccdcab597458ac577eaf"
+verdict = "accept"
+note = '''
+Accepted: everything this order wrote in the four documents is true of the code, in the house form and in the house voice. What is left is low, sits in sentences next to the new ones, and is the docs team's own upkeep, so it goes to a docs order after this lands and does not hold the landing. That is the bar the fourth review used.
+
+Truth, checked against tools/work.py, .claude/settings.json, ci.yml and work/README.md, by running the tool where that was quicker:
+- The edit hook fails open. `hook pre-tool` with stdin that is not JSON prints `work hook let go: JSONDecodeError` and exits 0; a JSON list exits 0; an edit of src/style.css exits 2 and names team panels; an edit of result.json exits 2.
+- The stop hook lets go on the second attempt (`stop_hook_active` exits 0), holds a session only by a first line `order: <id>` (the same line further down exits 0), and a subagent by touched.json. STOP_BUDGET is 1500 s under the hook's 1800 s timeout. The matcher is Edit|Write|MultiEdit|NotebookEdit, so a shell edit is seen by no hook, as the ADR says.
+- `landed` reads review.toml files on origin/main and wants verdict accept. `board` prints 1 active, 0 landed; `validate` 0 collisions; `plan ways-of-working` one group.
+- The CI step is the last step of `lint, unit tests, generated files in sync`, after pytest, on pull_request only, branch names through env, workflow permissions contents: read, and `acceptance(run=False)` executes no criterion. Ownership is judged only when exactly one order is carried.
+- `reviewed` has to match 40 hex characters and be an ancestor of HEAD, and the contribution is a `git patch-id --verbatim` that leaves review.toml and signoff-*.toml out. The fifteen test cases behind these claims run green here (a review names a commit, lapses, indentation, clean sync, committing the review, landed once on main, every tracked file has a team, no hook reaches a camp, sign-off not by the reviewer, a hook never falls over, the stop hook ends inside its time).
+- A camp's settings.json holds no `tools/work.py` (grep count 0), `sync_template.py --check` exits 0, the template has no work-order skill and no work recipes. tools/sync_main.py, the one local import, is standard library too. `just release` calls `work.py sweep`.
+- The history bullet is exact: the first review has sixteen findings, three of them high.
+Two abridgements in the ADR, true as far as they go, left as they are: a subagent the edit hook never saw is still held by a first line `order: <id>`, and an agent that wrote only into the order's folder (a reviewer, and a manager writing this file) is held to a readable review and not to the checks. work/README.md says the second one in full.
+
+House form: Title, Status, Context, Decision, Consequences, bold lead sentences in the Decision as in 0013 and 0015. `Proposed, 2026-09-21` is the right status until Tom accepts, as for 0015. The index row is the title word for word. `Next number: 0017` is true: 0015 is on main and no other branch holds a 0016 or 0017.
+
+Voice: `python3 tools/checks.py style` is OK, no em dash and no emoji in any of the files read. History appears only in the ADR's Context and Consequences, where it is the evidence. One sentence is too long to read once: in the Decision under `One tool decides`, the sentence that starts `tools/work.py (standard library only` carries the whole patch-id rule in a parenthesis. The docs team splits it on the day the status changes. Seconding the review on a file that is not ours: AGENTS.md says `a hook holds an agent to it` where the ADR, work/README.md, CLAUDE.md and MAINTAINERS say reminder.
+
+Fit: the MAINTAINERS section sits after what a camp contains and before branch protection, which is where the file turns from layout to how work lands, and it repeats nothing. The SKILLS row says what the skill's own description says, keeps the house rows above the vendored ones, and its phrases match the description's `Use when`.
+
+Made stale by this order, outside its hunks, low, taken by the docs team:
+1. docs/MAINTAINERS.md, the paragraph under the zones table: `.agents/skills/ (fifteen skills; develop-camp is product-only and stays out of the template), .claude/ (the backup hook and the scorekeeper subagent)`. There are sixteen skills, develop-camp and work-order are product-only, .claude/ also holds the three work hooks and the builder, reviewer and team-manager subagents, and the list of top-level configuration for agents does not name work/. `Where the rules live` gets a line for work/ as well.
+2. docs/SKILLS.md: `Every folder in .agents/skills/ has a row in both tables above`. work-order has a row in the first table only, and tests/test_repo.py asks for one row anywhere, so it stays green. The trigger row wants phrases somebody typed in a fresh session and a negative, which is docs work and not the builder's to invent. The paragraph `Not a skill but in the same family` names only scorekeeper and the backup hook.
+
+What the docs team does after this lands, as one order owning docs/MAINTAINERS.md, docs/SKILLS.md and docs/BRIEF.md: the two fixes above; docs/BRIEF.md records the request (themed teams with managers, every stage proven by a command, review by another agent, the issue as the conversation) in section 2 with what was delivered, and section 5, the rule for agents, names the order and `just work-check` before the issue. When Tom accepts the decision, Status and the index row change to Accepted with the date in one commit. No contracts file is needed: the docs team's contract is its paths in work/teams.toml.
+
+If the builder edits an owned file again for any other reason, the two sentences above can ride along; each such edit ends this sign-off as it ends the review, and the docs team reads again.
+'''
