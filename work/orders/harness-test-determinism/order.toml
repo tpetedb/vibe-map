@@ -6,7 +6,7 @@ branch = "fix/test-determinism"
 goal = "second-wave"
 issue = 148
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-test-determinism"
 
 owns = [
   "tests/conftest.py",
@@ -15,6 +15,9 @@ owns = [
   "tests/test_game_pet.py",
   "tests/test_game_camera.py",
   "tests/test_harness_determinism.py",
+  # Landed after this order was built; its own guard asks them to use the page fixture.
+  "tests/test_game_hunt_f.py",
+  "tests/test_media.py",
 ]
 cross = []
 needs = ["harness-ci-shards"]
