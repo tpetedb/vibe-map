@@ -1,0 +1,45 @@
+v = 1
+id = "galaxy-places-more"
+title = "Places, second pass: the ones the histories still need, landmarks that stand at their place, and sources that get probed"
+team = "content"
+branch = "feat/galaxy-places-more"
+goal = "galaxy"
+issue = 168
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/data/places/",
+  "vibemap/places.py",
+  "docs/TOPICS.md",
+  "tools/checks.py",
+  "AGENTS.md",
+  "tests/test_places.py",
+]
+cross = ["cli", "docs", "harness"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The places tests pass, the new ones seen failing first."
+check = "uv run pytest -q tests/test_places.py tests/test_topics.py"
+
+[[criteria]]
+id = "c2"
+text = "No place or origin has a defect."
+check = "uv run python -c \"from vibemap import places; import sys; bad = places.problems(); print('\\n'.join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The reviewer opens the source of every place this order adds or changes: the page carries what the file says about the place, the landmark included, and the coordinates are within a quarter of a degree. No landmark is an organisation's mark, a product, or a likeness of a real building (ADR 0010)."
+judge = "reviewer"

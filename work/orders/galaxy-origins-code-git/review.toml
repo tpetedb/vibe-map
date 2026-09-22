@@ -1,0 +1,237 @@
+# A review of one order, by someone who did not build it. Round 1.
+v = 1
+order = "galaxy-origins-code-git"
+by = "reviewer-galaxy-origins-code-git-r1"
+# The commit that was read.
+reviewed = "115a675ffd89322229b4c7ac303bc01d963b7eba"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the command in the worktree: every test passes, exit 0. Then in a scratch copy of \
+115a675 (git archive into /tmp, PYTHONPATH on the copy, vibemap imported from the copy) I \
+broke one origin at a time and ran tests/test_origins_code_git.py. The github line without \
+the word GitHub, and the tests line without py.test: \
+test_every_topic_has_one_primary_origin_whose_line_names_it fails. yaml dated 2001 under a \
+line that says 2004: test_a_year_written_in_a_line_agrees_with_the_year_of_the_origin \
+fails. concerns moved to eindhoven-university: \
+test_a_line_at_an_address_names_who_is_at_that_address fails. A second web origin at cern \
+whose line names CERN: test_no_topic_stands_twice_at_the_same_place fails. git.toml with no \
+origin at all: the primary test fails with 'has no origin'. A line without its full stop: \
+the last test fails. Two primaries, no primary, an http source and an unknown place stop \
+the load, and every test fails with the loader's sentence. Each change was restored and \
+vibemap/data in the copy compared equal to the worktree. What the file does not catch, \
+tried the same way and still green: toml dated 2020 (its line spells no year), python dated \
+1990 and languages dated 1969 (a line that spells several years is satisfied by any of \
+them), a cern line that says 'concerns' and never CERN (the actor check is a substring, the \
+topic check is a word), and an echo written above its primary (origins_of sorts, so 'the \
+primary origin comes first' cannot fail from data). NAMES was written to fit the lines: \
+'modules' for concerns, 'web' for web, and 'go' and 'c' match as ordinary words. So this \
+file guards these 24 lines against drift; whether they are true is c5. No test sleeps; the \
+only clock is today's year as an upper bound."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran it: nothing printed, exit 0, and len(problems) is 0 for the three shelves. In the \
+scratch copy the same command exits 1 and names the file for each way an origin of these \
+shelves can be wrong: git.toml without origins ('core/git.toml has no origin: a topic needs \
+a place, a year, one line and an https source that says so.'), an http source on env.toml, \
+two primaries on github.toml, no primary on yaml.toml, the place 'cwi' on python.toml, \
+toml.toml without its year (the schema's 'origins.0.year Field required'), and an empty \
+what on git.toml. Restored, it exits 0 again. The command proves its sentence; 'a claim' is \
+proven as a line that is not empty, and whether the line is true is c5."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the whole command myself in the worktree, not the cached result: ruff check, ruff \
+format, checks.py style ('no em dashes, no emoji'), checks.py sinks and the non-browser \
+battery. My first run piped pytest through tail, which hides its exit code, so I ran the \
+battery and the sink guard once more with their codes written to a log: pytest exit 0, \
+sinks exit 0. git status was clean afterwards. On pull request 172, run 35627797134 on \
+115a675, the lint job's only failing step is step 14, 'work orders are readable, reviewed \
+and inside their files'; `python3 tools/work.py ci` says locally what it waits for: this \
+review, 'no review yet', one problem, and nothing about a file outside the order. When I \
+looked, the phone and ui browser shards had passed and the other five were still running."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Ran the six --check commands one by one: build, regen_tree, gen_cookbook, sync_template, \
+sync_fork_source, gen_syllabus, each exit 0. Beyond the command, the built game line by \
+line against origin/main's: 6203 lines on both sides and exactly one differs, line 1345, \
+`const PLACES=`. Parsed out of both files: eras and places are identical, the nine topics \
+main already had are identical, and the blob gained exactly fifteen topic keys (ci, \
+concerns, config, env, git, githooks, github, languages, markdown, pylibs, python, tests, \
+toml, web, yaml) with 24 origins at 13 places, each equal field by field to its TOML file. \
+The line holds no '<', and Håkon survives as text. `git diff origin/main...HEAD --stat` is \
+empty for vibemap/data/places, tools/generated, docs, vibemap/data/fork_source, \
+vibemap/data/template and src: no place file was touched. One generated file changed for a \
+reason that is not these origins: vault/Camp/Unix and the terminal.md now cites the Open \
+Group certificate. That is main's debt (main's note was stale against main's unix.toml, the \
+last low of the schema's review), paid by the 'Regenerate after origin/main' commit. I ran \
+`vibe vault build` in the scratch copy: 128 notes, not one file changed, so the vault is in \
+sync, and the fifteen notes did not move because a note does not print origins. No module \
+under src/ reads PLACES yet, so the played game is the same game. `uv run vibe topic` for \
+web, concerns, toml and ci prints 'Where.' with the place name, the year, the line and the \
+link, and 'Echo.' for each echo, primary first; `uv run vibe places the-internet` lists \
+this order's eight primaries and the ci echo next to main's justfile."""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+Downloaded all 23 pages behind the 24 origins (the Actions post serves two) and read the \
+text myself; each also answers 200 to tools/checks.py's own probe. Every page carries the \
+year, the actor and what the line says. ci: 'GitHub Actions now supports CI/CD', August 8, \
+2019, 'a clean new syntax for expressing workflows based on YAML', 'GitHub Actions are \
+code ... When you fork a repository, you fork the actions along with the source code'. ci \
+echo: Andrew Bayer, January 29, 2011, 'sent as an email to the Hudson dev and users mailing \
+lists', '214 votes to rename, and 14 for the status quo', 'it means Jenkins lives'. \
+concerns: the PDF has a text layer (pymupdf reads it): 'D.L. Parnas, Carnegie-Mellon \
+University', 'Author's address: Department of Computer Science, Carnegie-Mellon University, \
+Pittsburgh, PA 15213', 'December 1972, Volume 15, Number 12', and on page 1058 'one begins \
+with a list of difficult design decisions or design decisions which are likely to change. \
+Each module is then designed to hide such a decision from the others'. config: 'ECMA-404, \
+1st edition, October 2013', 'The JSON data interchange syntax', Rue du Rhône 114, 1204 \
+Geneva in the footer. env: 'dotenv 0.1.0, July 24, 2012', 'Loads environment variables from \
+`.env`', Authors: Brandon Keepers. git: 'In 2005 ... the tool's free-of-charge status was \
+revoked. This prompted the Linux development community (and in particular Linus Torvalds, \
+the creator of Linux) to develop their own tool', 'Since its birth in 2005'. githooks: June \
+13, 2016, 'The open source Git project has just released Git 2.9.0', 'store the hooks in \
+one place and point all of the repositories at them with the new core.hooksPath config'. \
+github: 'GitHub is officially live. Thanks for the awesome beta everyone', Chris Wanstrath, \
+April 10, 2008. github echo: the dateline is REDMOND, Wash., June 4, 2018, then 'Microsoft \
+Corp. on Monday announced it has reached an agreement to acquire GitHub' and 'for $7.5 \
+billion in Microsoft stock'. languages: 'Dennis M. Ritchie, Bell Labs/Lucent \
+Technologies, Murray Hill, NJ', 'C \
+came into being in the years 1969-1973, in parallel with the early development of the Unix \
+operating system; the most creative period occurred during 1972', 'Bell Telephone \
+Laboratories'. languages echo: 'Robert Griesemer, Rob Pike and Ken Thompson started \
+sketching the goals for a new language on the white board on September 21, 2007', 'Go \
+became a public open source project on November 10, 2009', 'the work we were doing at \
+Google'. markdown: 'By John Gruber', the download 'Markdown 1.0.1 (18 KB)' dated 17 Dec 2004, '(1) a \
+plain text formatting syntax; and (2) a software tool, written in Perl, that converts the \
+plain text formatting to HTML'. markdown echo: 'Erica started Obsidian in 2020 to build the \
+perfect note-taking app' for her notes, 'simple, open file formats', 'your data is stored \
+on your device'. pylibs: 'created in 2005 building on the early work of the Numeric and Numarray \
+libraries', 'Travis Oliphant (project founder, 2005-2012)'. python: Guido van Rossum's \
+post, '1990 Internal releases at CWI', 'February 20, 1991 0.9.0 (released to alt.sources)'. \
+tests: 'for Europython 2004, @hpk42 started a project originally called std', 'Around \
+September/October 2004, the std project was renamed to py and std.utest became py.test', \
+'In the same month, the py library gets split off from PyPy'; the page says earlier that \
+@hpk42 is Holger Krekel. tests echo: 'Challenges in evaluating AI systems', Oct 4, 2023, \
+'how difficult it is to build robust and reliable model evaluations'. toml: 'Published on \
+1/11/2021', 'TOML v1.0.0', 'By Tom Preston-Werner, Pradyun Gedam, et al.', 'a minimal \
+configuration file format'. toml echo: PEP 518, authors Brett Cannon, Nathaniel J. Smith, \
+Donald Stufft, Created 10-May-2016, 'The build system dependencies will be stored in a file \
+named pyproject.toml'. web: 'By the end of 1990, Tim Berners-Lee had the first Web server \
+and browser up and running at CERN'. web echoes: 'Cascading Style Sheets, level 1, W3C \
+Recommendation 17 Dec 1996, Authors: Håkon Wium Lie, Bert Bos' (w3.org answers 403 to a \
+Chrome user agent and 200 to curl and to the link check); 'ECMA-262, 1st edition, June \
+1997'. yaml: 'YAML 1.0, Final Draft 2004-JAN-29', Oren Ben-Kiki, Clark Evans, Brian \
+Ingerson. yaml echo: the Actions post again. No year is only the date a page was written: \
+where the year is the post's date (Actions, Jenkins, Git 2.9, the launch, Microsoft, \
+Anthropic) the post is the event; the Python timeline was posted in 2009 and the origin \
+says 1991, which the page gives. No line carries a judgement or a reason its page does not \
+give; three lines carry more than an event (low). Place. Of the twelve origins on the \
+earth globe, five pages name the town themselves (Pittsburgh, Redmond, Murray Hill, Geneva \
+twice), two name the lab that is the place (CERN, CWI), and five name only the company \
+(GitHub three times, Google, Anthropic); for those the town is the place file's, the \
+reading the schema's review accepted, and nothing I know contradicts any of them. No page \
+puts its person or its work somewhere other than the place chosen. The twelve on the cloud \
+globe are honest: git, Git 2.9, dotenv, Markdown, NumPy, py.test, TOML, YAML and the Jenkins \
+vote are projects or people whose page gives no address, PEP 518 is a specification with \
+three authors and a mailing list, and the W3C and Obsidian are what their place files are. \
+The builder's three refusals hold: EWD 447 is signed '30th August 1974, Burroughs, \
+Plataanstraat 5, NUENEN' (I opened it), so eindhoven-university would be a guess; no page \
+puts the writing of git at linux-foundation; PEP 518 never names the foundation. One origin \
+was left out for want of a place, Dijkstra's, and the pull request and issue 168 both say \
+so; issue 168 carries the wish for `nuenen` with coordinates and a source, and says why no \
+other place was wished for."""
+
+# Nothing here has to change before this lands. All low, most useful first.
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/concerns.toml"
+text = """
+Two primary lines do not name their topic in its own words. 'Separation of concerns' lives \
+at a line about decomposing systems into modules, and 'HTML, CSS and JavaScript' at a line \
+about the first web server and browser. Both are true, both are sourced, and the pull \
+request says why for each: Parnas never uses the phrase and Dijkstra signed from a town the \
+map does not have; CERN's page never says HTML. I rule them acceptable because each line is \
+about the thing the topic teaches, and a guess would be worse. But the test agrees only \
+because NAMES was written after the lines ('modules', 'web'). When `nuenen` exists, EWD 447 \
+is the primary and Parnas the echo; for web, the draft the topic already cites is headed \
+'Hypertext Markup Language (HTML), Tim Berners-Lee, CERN, June 1993' (I opened it)."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/github.toml"
+text = """
+Five origins stand on a page that names the company and no town: ci, github and the yaml \
+echo at github-sf, Go at google-mountain-view, the evals post at anthropic-sf. That is the \
+reading the schema's review accepted and the builder says so in the comment, the pull \
+request and the issue. The one to know about is github in 2008: github-sf is drawn as the \
+Colin P. Kelly Street office, which is the address GitHub's page gives today, and the 2008 \
+post names no office at all. San Francisco is right; the building is later. Also, dotfiles \
+(from the schema order) and github now live at the same place on the same sentence, 'Chris \
+Wanstrath posts that GitHub is officially live'; it belongs to github, and dotfiles is the \
+one that should find its own line."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/markdown.toml"
+text = """
+Three lines carry more than what happened. The Obsidian echo ends 'it stores data on your \
+device in simple, open file formats', which is a product statement in the page's second \
+person, not an event of 2020. The python line ends 'in Guido van Rossum's own timeline', \
+which is what a page is, not what happened. The C line keeps 'Dennis Ritchie puts its most \
+creative period in 1972': it is attributed and it is why the year is 1972, but it is a \
+judgement all the same. All three are on their page."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/languages.toml"
+text = """
+Sources that will age. Ritchie's paper is cited from a course account at Harvard \
+(~dce-lib113) while Bell Labs's own copy answers 200 with the same sentences \
+(https://www.bell-labs.com/usr/dmr/www/chist.html, which lands on nokia.com); the topic's \
+[[sources]] had the Harvard copy before this order. https://github.blog/2008-04-10-we-launched/ \
+and the news.microsoft.com link are old permalinks that redirect to \
+/news-insights/the-library/we-launched/ and /source/2018/06/04/...; they work today. And the \
+comment in concerns.toml, the pull request and the issue all say the Parnas PDF is a scan \
+with no words for a text fetcher: the file has a text layer, pymupdf reads 3370 characters \
+from page 1053 including the affiliation, the address and 'December 1972'. The comment \
+tells the next researcher something untrue about the file."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_origins_code_git.py"
+text = """
+What the tests let through, each tried in a scratch copy and still green. The actor check is \
+`ACTORS[place] in what.lower()`, a substring, while the topic check is a word match: a cern \
+line that says 'concerns' and never CERN passes. The year check is satisfied by any year \
+the line spells, so python dated 1990 and languages dated 1969 pass, and a line that spells \
+no year (toml, githooks, markdown) is not checked at all. 'The primary origin comes first' \
+asserts on origins_of, which sorts, so it cannot fail from data. In NAMES, 'go' and 'c' \
+match the ordinary words. None of this lets a wrong fact in by itself; it means the file \
+is a guard on wording, and the pages stay the proof."""
+
+[[findings]]
+severity = "low"
+file = "changelog.d/galaxy-origins-code-git.added.md"
+text = """
+'No primary source puts a format or an open-source project at an address' is wider than \
+what was done; the pull request's own wording, 'no page I opened', is the true one. For the \
+orchestrator: the pull request body ends with a session link after the 'Generated with' \
+line, and vault/Camp/Unix and the terminal.md rides along in this branch because no --check \
+covers the vault on main; the sibling origin orders will regenerate the same note to the \
+same text."""

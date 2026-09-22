@@ -4,6 +4,7 @@ title = "Galaxy, version zero: the journey and its list twin, tiny globes, domes
 team = "scene"
 branch = "feat/galaxy-v0"
 goal = "galaxy"
+issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
 builder = ""
 
@@ -17,7 +18,7 @@ owns = [
   "tests/test_game_galaxy.py",
 ]
 cross = ["panels", "state"]
-needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "hunt-w-settings-news", "hunt-k-lesson-copy"]
+needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "hunt-w-settings-news", "hunt-k-lesson-copy", "harness-boot-stays-last"]
 
 [[criteria]]
 id = "c1"
