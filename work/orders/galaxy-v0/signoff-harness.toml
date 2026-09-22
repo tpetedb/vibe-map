@@ -4,10 +4,10 @@ v = 1
 order = "galaxy-v0"
 team = "harness"
 by = "manager-harness"
-reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
+reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
 verdict = "accept"
 note = '''
-Accepted for the harness team at a94d640392b2e390b72bc3f04b922f184ebb8be9.
+Accepted for the harness team at f9d9a6b80f8330b02143dcb354da0fcee447f31e.
 
 The Galaxy browser test now uses the 1440 by 900 desktop fixture and runs the
 same phone assertions on Chromium with Pixel 7 metrics and WebKit with iPhone
@@ -29,4 +29,8 @@ module folders, removes game/90-boot.js from that sequence, then appends it.
 The focused build, module and Galaxy selection passed 12 tests, including the
 optional second folder, late game modules, missing boot and invalid module
 names.
+
+The final metadata-only change runs the style and sink checks through
+`uv run python`, where the project's Rich dependency is available. Both
+corrected commands pass.
 '''
