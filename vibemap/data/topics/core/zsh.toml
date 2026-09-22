@@ -14,11 +14,12 @@ unlocks = ["dotfiles"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. Apple's support
-# page carries the shell but no year, so the year comes from the release
-# announcement and the shell from the sources below.
+# page carries the shell but no year, so the online Catalina availability
+# announcement supplies the release milestone and the sources below establish
+# zsh as the default shell.
 
 [[origins]]
-place = "apple-cupertino"
+place = "the-internet"
 year = 2019
 what = "Apple releases macOS Catalina on 7 October 2019."
 source = "https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/"

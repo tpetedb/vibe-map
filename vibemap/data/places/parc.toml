@@ -1,4 +1,5 @@
-# PARC, Palo Alto. 3333 Coyote Hill Road, Palo Alto, where the Alto plaque hangs.
+# PARC, Palo Alto. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "parc"
 name = "PARC, Palo Alto"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.403
 lon = -122.148
 look = "lab"
-landmark = "alto-workstation"
+landmark = "generic-marker"
 source = "https://ethw.org/Milestones:The_Xerox_Alto_Establishes_Personal_Networked_Computing,_1972-1983"

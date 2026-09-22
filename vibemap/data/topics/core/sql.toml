@@ -12,6 +12,25 @@ try_it = "duckdb < workspace/sql/streaks.sql, then change limit 3 to limit 10 an
 
 unlocks = ["data", "apis"]
 
+[[origins]]
+place = "ibm-san-jose"
+year = 1974
+what = "In 1974 Don Chamberlin and Ray Boyce of IBM Research in San Jose write two papers on SEQUEL, the query language later renamed SQL."
+source = "https://www.mcjones.org/System_R/SQL_Reunion_95/sqlr95-System.html"
+primary = true
+
+[[origins]]
+place = "a-standards-body"
+year = 1986
+what = "In 1986 the American National Standards Institute publishes X3.135-1986, the first de jure SQL standard, and ISO follows with ISO 9075-1987 early in 1987."
+source = "https://archive.opengroup.org/public/tech/datam/sql.htm"
+
+[[origins]]
+place = "cwi-amsterdam"
+year = 2018
+what = "In 2018 Hannes Mühleisen and Mark Raasveldt create DuckDB at CWI Amsterdam."
+source = "https://duckdb.foundation/"
+
 [[sources]]
 label = "DuckDB docs"
 url = "https://duckdb.org/docs/"

@@ -8,8 +8,8 @@ depth = 2
 checked = 2026-09-18
 minutes = 15
 
-summary = '''Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. Bronze is append-only and never edited, which is what lets you rebuild everything below it when a cleaning rule turns out to be wrong. It is a convention rather than a rule, and Databricks, who named it, say so in as many words.'''
-for_agents = '''And for an agent: never clean in bronze. The copy of the source you did not touch is the only thing that makes a mistake recoverable.'''
+summary = '''Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. In this camp, keep bronze append-only so you can rebuild the later layers when a cleaning rule turns out to be wrong. That is an exercise choice: Databricks also documents updates in Bronze to apply change-data capture (CDC). It is a convention rather than a rule, and Databricks, who named it, say so in as many words.'''
+for_agents = '''And for an agent: in this exercise, keep bronze unchanged and clean in silver. The copy of the source you did not touch is the only thing that makes a mistake recoverable.'''
 
 history = '''Databricks defines it in one sentence: "The medallion architecture describes a series of data layers that denote the quality of data stored in the lakehouse." Bronze is "Raw data ingestion", holding "Raw, unvalidated data", and it "Contains and maintains the raw state of the data source in its original formats". Silver is "Data cleaning and validation", where you "perform data cleansing, deduplication, and normalization". Gold is "Dimensional modeling and aggregation" and "Consists of aggregated data tailored for analytics and reporting". The caveat is theirs too: "Following the medallion architecture is a recommended best practice but not a requirement." The layers are a good fit for the rest of this pack, because dlt lands bronze, dbt builds silver and gold, tests guard the boundary between them, and a table format such as Iceberg is what lets bronze be rebuilt without anyone reading a half-written table.'''
 
@@ -17,6 +17,18 @@ try_it = '''Name the three tables you touched at work this week bronze, silver o
 
 unlocks = ["datamap"]
 prerequisites = ["duckdblab", "dbt"]
+
+[[origins]]
+place = "the-internet"
+year = 2022
+what = "Databricks publishes online guidance for Bronze, Silver and Gold data layers on 24 June 2022."
+source = "https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html"
+primary = true
+
+[[sources]]
+label = "Source: Databricks, data layers and modeling (2022)"
+url = "https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html"
+checked = 2026-09-22
 
 [[sources]]
 label = "Databricks, what is a medallion architecture"

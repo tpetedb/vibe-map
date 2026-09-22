@@ -27,3 +27,10 @@ url = "https://github.com/tpetedb/vibe-map/blob/main/.claude/settings.json"
 [[sources]]
 label = "Source: Claude Code hooks reference (events, scopes, exit codes)"
 url = "https://code.claude.com/docs/en/hooks"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic announces the release of Claude Code hooks online in the version 1.0.38 changelog."
+source = "https://github.com/anthropics/claude-code/commit/390f11039c4986f2172aae21c6380d2b5a8b251e"
+primary = true

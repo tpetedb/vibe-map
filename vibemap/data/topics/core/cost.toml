@@ -23,3 +23,10 @@ url = "https://claude.com/pricing"
 [[sources]]
 label = "Source: OpenAI API announcement (June 2020)"
 url = "https://openai.com/index/openai-api/"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic announces Claude 3.7 Sonnet pricing online: $3 per million input tokens and $15 per million output tokens, including thinking tokens."
+source = "https://www.anthropic.com/news/claude-3-7-sonnet"
+primary = true

@@ -1,0 +1,13 @@
+# The contact page names a San Francisco office; it does not locate the first release.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "dagster-sf"
+name = "Dagster Labs, San Francisco"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.78
+lon = -122.42
+look = "tower"
+landmark = "generic-marker"
+source = "https://dagster.io/contact"

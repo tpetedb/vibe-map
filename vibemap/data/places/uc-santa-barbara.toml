@@ -1,6 +1,5 @@
-# UC Santa Barbara. The university gives its address as Santa Barbara, California
-# 93106, on a campus "where the land meets the sea". GNU's Bulletin of June 1989
-# places Brian Fox here while he beta-released bash.
+# UC Santa Barbara. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "uc-santa-barbara"
 name = "UC Santa Barbara"
 kind = "university"
@@ -10,5 +9,5 @@ globe = "earth"
 lat = 34.415
 lon = -119.846
 look = "campus"
-landmark = "seaside-bluff"
+landmark = "generic-marker"
 source = "https://www.ucsb.edu/"

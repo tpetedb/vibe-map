@@ -1,0 +1,45 @@
+v = 1
+id = "galaxy-integrated-origin-locations"
+title = "Correct unsupported city attributions in ten integrated topic origins"
+team = "content"
+branch = "codex/fix-integrated-origin-locations"
+goal = "galaxy"
+issue = 168
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "codex-integrated-origin-locations"
+
+owns = [
+  "vibemap/data/topics/core/ci.toml",
+  "vibemap/data/topics/core/dotfiles.toml",
+  "vibemap/data/topics/core/github.toml",
+  "vibemap/data/topics/core/languages.toml",
+  "vibemap/data/topics/core/tests.toml",
+  "vibemap/data/topics/core/interfaces.toml",
+  "vibemap/data/topics/core/unix.toml",
+  "vibemap/data/topics/core/yaml.toml",
+  "vibemap/data/topics/core/zsh.toml",
+  "vibemap/data/topics/core/config.toml",
+  "tests/test_integrated_origin_locations.py",
+]
+cross = []
+needs = ["galaxy-origins-code-git"]
+
+[[criteria]]
+id = "c1"
+text = "The ten audited topics use only locations their historical source supports, with no duplicate place entries."
+check = "uv run pytest -q tests/test_integrated_origin_locations.py tests/test_places.py tests/test_topics.py"
+
+[[criteria]]
+id = "c2"
+text = "The repaired topics retain one primary origin, valid places, dated claims and https sources."
+check = "uv run python -c \"from vibemap import places; import sys; ids = {'ci', 'dotfiles', 'github', 'languages', 'tests', 'interfaces', 'unix', 'yaml', 'zsh', 'config'}; bad = [p for p in places.problems() if any(f'/{i}.toml' in p for i in ids)]; print('\\n'.join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, formatting and the generated topic outputs are in sync."
+check = "uv run ruff check -q tests/test_integrated_origin_locations.py && uv run ruff format --check -q tests/test_integrated_origin_locations.py && uv run python tools/regen_tree.py --check && uv run python tools/build.py --check"
+
+[[criteria]]
+id = "c4"
+text = "The reviewer opens every historical source listed in findings.md and verifies that the actor, year and event are supported without inferring a city from a current office or footer."
+judge = "reviewer"

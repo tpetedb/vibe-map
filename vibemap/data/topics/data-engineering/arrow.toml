@@ -18,6 +18,18 @@ try_it = '''python3 -c "import polars as pl; pl.DataFrame({'a':[1,2]}).write_ipc
 unlocks = ["polars", "duckdblab"]
 prerequisites = ["parquet"]
 
+[[origins]]
+place = "apache-software-foundation"
+year = 2016
+what = "The Apache Software Foundation announces Arrow as a top-level project on 17 February 2016."
+source = "https://news.apache.org/foundation/entry/the_apache_software_foundation_announces87"
+primary = true
+
+[[sources]]
+label = "Source: Apache Software Foundation, Arrow announcement"
+url = "https://news.apache.org/foundation/entry/the_apache_software_foundation_announces87"
+checked = 2026-09-22
+
 [[sources]]
 label = "Apache Arrow, the columnar format specification"
 url = "https://arrow.apache.org/docs/format/Columnar.html"

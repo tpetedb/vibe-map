@@ -98,7 +98,6 @@ def test_no_landmark_names_an_organisation_s_mark() -> None:
 def test_the_places_the_research_orders_will_need_are_seeded() -> None:
     # The orders that source the packs reference places and do not invent them,
     # so an organisation several topics name has to be here before they start.
-    # Each of these is named in more than one topic's history.
     for place_id in (
         "openai-sf",
         "amazon-seattle",
@@ -301,15 +300,19 @@ def test_the_shell_shelf_is_sourced_and_every_origin_resolves() -> None:
             assert places.get(origin.place)
 
 
-def test_problems_names_the_file_of_every_topic_that_has_no_origin() -> None:
-    # The research orders that follow read this list: one sentence per defect,
-    # each naming a file, narrowed by shelf or by pack.
-    by_pack = places.problems(packs=["data-engineering"])
-    assert by_pack, "the data pack is not sourced yet, so it has to be reported"
-    for line in by_pack:
-        assert line.startswith("data-engineering/") and line.endswith(".")
-    assert places.problems(shelves=[SHELL], packs=["core"]) == []
-    assert len(places.problems()) == len(places.problems(packs=None))
+def test_problems_names_the_file_of_every_topic_that_has_no_origin(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The fixture stays incomplete even after every shipped pack is sourced.
+    made = load_topics_from(_topics(tmp_path, ""))
+    monkeypatch.setattr(topics, "all_topics", lambda: made[2])
+    by_pack = places.problems(packs=["demo"])
+    assert by_pack == [
+        "demo/one.toml has no origin: a topic needs a place, a year, one line"
+        " and an https source that says so."
+    ]
+    assert places.problems(shelves=[SHELL], packs=["demo"]) == by_pack
+    assert places.problems() == places.problems(packs=None) == by_pack
 
 
 def test_problems_reports_a_shelf_or_a_pack_that_does_not_exist() -> None:
@@ -438,3 +441,39 @@ def test_vibe_topic_shows_the_same_origins_the_game_is_given() -> None:
     origin = places.payload()["origins"]["ssh"][0]
     assert " ".join(origin["what"].split()) in out
     assert origin["source"] in out
+
+
+@pytest.mark.parametrize("year", ['"1969"', "true", "1969.0"])
+def test_an_origin_year_must_be_a_toml_integer(tmp_path: Path, year: str) -> None:
+    text = ORIGIN.format(**{**GOOD, "y": year})
+    with pytest.raises(ValueError, match="demo/one.toml.*Topic schema"):
+        load_topics_from(_topics(tmp_path, text))
+
+
+def test_two_origins_at_the_same_place_fail_loudly(tmp_path: Path) -> None:
+    text = ORIGIN.format(**GOOD) + ORIGIN.format(**{**GOOD, "y": 1970, "m": ""})
+    with pytest.raises(ValueError, match="demo/one.toml:.*duplicate.*bell-labs"):
+        load_topics_from(_topics(tmp_path, text))
+
+
+def test_invalid_place_toml_names_the_places_folder(tmp_path: Path) -> None:
+    root = _places(tmp_path, {"one.toml": 'id = "unfinished'})
+    with pytest.raises(ValueError, match="places/one.toml is not valid TOML"):
+        load_from(root)
+
+
+@pytest.mark.parametrize("selection", [{"shelves": []}, {"packs": []}])
+def test_empty_selection_reports_no_topic_defects(selection: dict) -> None:
+    assert places.problems(**selection) == []
+
+
+def test_link_check_collects_place_sources(tmp_path: Path, monkeypatch) -> None:
+    from tools import checks
+
+    folder = tmp_path / "vibemap/data/places"
+    folder.mkdir(parents=True)
+    (folder / "one.toml").write_text('source = "https://example.org/place"')
+    monkeypatch.setattr(checks, "ROOT", tmp_path)
+    assert checks._collect_links()["https://example.org/place"] == {
+        "vibemap/data/places"
+    }

@@ -18,6 +18,18 @@ try_it = '''uv run --with "pyiceberg[sql-sqlite,pyarrow]" python -c "from pyiceb
 unlocks = ["medallion", "dataquality"]
 prerequisites = ["parquet", "schemas"]
 
+[[origins]]
+place = "apache-software-foundation"
+year = 2020
+what = "Apache Iceberg graduates from the Apache Incubator on 20 May 2020."
+source = "https://incubator.apache.org/projects/iceberg.html"
+primary = true
+
+[[sources]]
+label = "Source: Apache Incubator, Iceberg project status"
+url = "https://incubator.apache.org/projects/iceberg.html"
+checked = 2026-09-22
+
 [[sources]]
 label = "Apache Iceberg, the table specification"
 url = "https://iceberg.apache.org/spec/"

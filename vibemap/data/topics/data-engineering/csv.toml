@@ -18,6 +18,18 @@ try_it = '''python3 -c "import csv,io;print(list(csv.reader(io.StringIO('a,\"b,c
 unlocks = ["jsonl", "parquet", "schemas"]
 prerequisites = []
 
+[[origins]]
+place = "a-standards-body"
+year = 2005
+what = "RFC 4180 documents the CSV format and registers its text/csv media type in October 2005."
+source = "https://www.rfc-editor.org/rfc/rfc4180.txt"
+primary = true
+
+[[sources]]
+label = "Source: RFC Editor, RFC 4180"
+url = "https://www.rfc-editor.org/rfc/rfc4180.txt"
+checked = 2026-09-22
+
 [[sources]]
 label = "RFC 4180, Common Format and MIME Type for CSV Files"
 url = "https://www.rfc-editor.org/rfc/rfc4180"

@@ -1,4 +1,5 @@
-# University of Helsinki. Fabianinkatu 33, Helsinki. Finland's oldest university, and Linux's first home.
+# University of Helsinki. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "university-of-helsinki"
 name = "University of Helsinki"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 60.169
 lon = 24.95
 look = "campus"
-landmark = "main-building-colonnade"
+landmark = "generic-marker"
 source = "https://www.helsinki.fi/en/about-us"

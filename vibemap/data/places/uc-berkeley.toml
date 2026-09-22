@@ -1,4 +1,5 @@
-# University of California, Berkeley. Where BSD and POSTGRES were written.
+# University of California, Berkeley. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "uc-berkeley"
 name = "University of California, Berkeley"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.872
 lon = -122.258
 look = "campus"
-landmark = "campanile"
+landmark = "generic-marker"
 source = "https://www.berkeley.edu/about/"

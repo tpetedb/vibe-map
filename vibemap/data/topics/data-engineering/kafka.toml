@@ -18,6 +18,18 @@ try_it = '''Count the partitions of a topic you use at work, then count its cons
 unlocks = ["datamap"]
 prerequisites = ["jsonl"]
 
+[[origins]]
+place = "linkedin-mountain-view"
+year = 2011
+what = "LinkedIn advertises a Kafka talk by Neha Narkhede at its Mountain View headquarters, scheduled for 27 July 2011."
+source = "https://www.linkedin.com/blog/engineering/archive/come-linkedin-hear-talk-about-kafka-our-open-source-distributed-pub-sub-messaging-system"
+primary = true
+
+[[sources]]
+label = "Source: LinkedIn, invitation to the Mountain View Kafka talk"
+url = "https://www.linkedin.com/blog/engineering/archive/come-linkedin-hear-talk-about-kafka-our-open-source-distributed-pub-sub-messaging-system"
+checked = 2026-09-22
+
 [[sources]]
 label = "Apache Kafka, introduction and main concepts"
 url = "https://kafka.apache.org/intro"

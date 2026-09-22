@@ -23,9 +23,9 @@ source = "https://ethw.org/UNIX"
 primary = true
 
 [[origins]]
-place = "apple-cupertino"
+place = "a-standards-body"
 year = 2025
-what = "Apple's macOS 26.0 Tahoe is registered as a UNIX 03 product on 29 August 2025."
+what = "The Open Group registers Apple's macOS 26.0 Tahoe as a UNIX 03 product on 29 August 2025."
 source = "https://www.opengroup.org/openbrand/register/brand3725.htm"
 
 [[sources]]

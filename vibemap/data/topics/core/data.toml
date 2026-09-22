@@ -12,6 +12,37 @@ try_it = '''duckdb -c "copy 'workspace/data/scores.csv' to 'workspace/data/score
 
 unlocks = ["apis", "tests"]
 
+[[origins]]
+place = "ibm-san-jose"
+year = 1970
+what = "In 1970 Edgar F. Codd of the IBM San Jose Research Lab publishes the paper A Relational Model of Data for Large Shared Data Banks."
+source = "https://www.ibm.com/history/relational-database"
+primary = true
+
+[[origins]]
+place = "uc-berkeley"
+year = 1986
+what = "In 1986 the implementation of POSTGRES begins at the University of California at Berkeley, in a project led by Professor Michael Stonebraker."
+source = "https://www.postgresql.org/docs/current/history.html"
+
+[[origins]]
+place = "the-internet"
+year = 2011
+what = "On 14 November 2011 Google announces online that BigQuery is opening to more companies after a limited preview, with a web interface and an improved REST API."
+source = "https://developers.googleblog.com/google-bigquery-service-big-data-analytics-at-google-speed/"
+
+[[origins]]
+place = "amazon-seattle"
+year = 2012
+what = "On 28 November 2012 Amazon Web Services issues a Seattle-datelined announcement of the limited preview of Amazon Redshift, a managed cloud data warehouse."
+source = "https://press.aboutamazon.com/2012/11/amazon-web-services-announces-amazon-redshift"
+
+[[origins]]
+place = "apache-software-foundation"
+year = 2015
+what = "On 27 April 2015 the Apache Software Foundation announces that Parquet has graduated from the Apache Incubator to a Top-Level Project."
+source = "https://news.apache.org/foundation/entry/the_apache_software_foundation_announces75"
+
 [[sources]]
 label = "Parquet"
 url = "https://parquet.apache.org/docs/"
@@ -46,7 +77,7 @@ url = "https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-
 
 [[sources]]
 label = "Source: AWS, Announcing Amazon Redshift (November 2012)"
-url = "https://aws.amazon.com/about-aws/whats-new/2012/11/28/announcing-amazon-redshift/"
+url = "https://press.aboutamazon.com/2012/11/amazon-web-services-announces-amazon-redshift"
 
 [[sources]]
 label = "Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)"
