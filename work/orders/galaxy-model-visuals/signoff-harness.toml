@@ -1,0 +1,32 @@
+# The harness team's manager on the order's harness-owned test and generated
+# output contracts. This agreement covers the contribution checkpoint below.
+v = 1
+order = "galaxy-model-visuals"
+team = "harness"
+by = "manager-harness"
+reviewed = "541df67d002c22579d48d009c922886930454753"
+verdict = "accept"
+note = '''
+Accepted. Nothing in the harness-owned change needs to move before landing.
+
+Evidence for the contribution at 541df67:
+- The only owned harness test change is in `tests/test_build.py`. Its fixture
+  now removes the repository's newly present `src/galaxy` directory before it
+  proves that the second source folder remains optional. This preserves the
+  test's original contract instead of weakening its assertions.
+- The exact model and visuals criteria passed: three pure JavaScript contract
+  tests through pytest, covering stable derived state, immutable injected
+  data, exact Earth pins, separated dense domes, rejected invalid inputs,
+  finite geometry and independently disposable resources.
+- Ruff check and format, the style guard and the sink guard passed.
+- `tools/build.py --check` and `tools/sync_fork_source.py --check` passed, so
+  the built game and packaged fork mirror match their sources.
+- The full `tests/test_build.py` module passed all 27 tests.
+- `just work-validate` read 29 orders and found zero collisions among active
+  orders. Its separate note about an empty draft in another worktree does not
+  affect this order.
+
+The later train commit through 967cf59 changes only an unrelated camera test.
+This sign-off lapses if this order's contribution changes after the reviewed
+checkpoint.
+'''
