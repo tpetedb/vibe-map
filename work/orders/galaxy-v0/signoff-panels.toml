@@ -1,0 +1,28 @@
+# The panels team's manager agreeing to the Galaxy order's panel and
+# accessibility changes. It covers the implementation commit reviewed below.
+v = 1
+order = "galaxy-v0"
+team = "panels"
+by = "manager-panels"
+reviewed = "5871724c8cbfcbaccfe3bf83f8c96761bc092683"
+verdict = "accept"
+note = '''
+Accepted for the panels team at 5871724c8cbfcbaccfe3bf83f8c96761bc092683.
+
+The Experience setting switches through the shared registry while preserving
+the open sheet and restoring focus to the select. The existing live region
+announces the selected experience. Journey, Globe and Dome are named buttons,
+and every Galaxy button measures at least 44 by 44 CSS pixels on the phone
+profile.
+
+The accessible twin is topic ordered and carries the topic, state, year and
+place from listing(). State is written as text, and the next topic has
+aria-current="step". Focusing a list action creates a yellow Torus focus ring
+at its place in the 3D scene; blurring removes it. The same list actions select
+the place and open its Dome view, matching the canvas interaction.
+
+Focused evidence passed: tests/test_game_galaxy.py and the readable-fragment
+test, plus the style and sink checks. The built game and fork source both match
+their sources. Commit c349a0e follows the reviewed commit only by adding an
+unrelated docs-owned review file, so none of the panels evidence changed.
+'''
