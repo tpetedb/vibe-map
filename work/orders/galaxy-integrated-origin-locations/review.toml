@@ -1,0 +1,65 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "galaxy-integrated-origin-locations"
+by = "reviewer-galaxy-content-train"
+reviewed = "4c710619c2efa1dc52eb1fbf78f2fbe8c2e50536"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the stated pytest command at 4c710619 with a writable UV cache: 66 tests passed, \
+exit 0. Read tests/test_integrated_origin_locations.py and the ten topic files. The \
+regression test asserts the complete ordered place tuple for every audited topic, refuses \
+duplicate places, and requires exactly one primary. tests/test_places.py and \
+tests/test_topics.py exercise the loader and registry around those assertions. The test \
+proves the stored mappings and structural rules; the source-to-location judgement is \
+independently established under c4.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the exact places.problems() command at 4c710619: it printed no problems and exited 0. \
+Read places.problems(), origins_of(), and the ten TOML records. The loader validates the \
+place ids, one primary, year range, one-line claim, and HTTPS source, while the command \
+filters any resulting problem to all ten audited ids. c1 separately proves that there is \
+no repeated place within an audited topic.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the exact four-part command at 4c710619 with a writable UV cache: ruff check and ruff \
+format both exited 0; regen_tree.py --check printed 'tree OK: outputs match \
+vibemap/tech.py'; build.py --check printed 'build OK: game/vibe-map.html matches src/'. \
+The command directly checks the only new Python test and both generated outputs affected \
+by topic data. No browser or full verification suite was run, as requested for this train \
+review.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Opened every historical source listed in findings.md. GitHub's Actions post is dated \
+8 August 2019 and says Actions supports CI/CD, stores workflows as repository code, and \
+uses YAML; its only San Francisco text is a current 2026 event footer. GitHub's launch \
+post is by Chris Wanstrath, dated 10 April 2008, and says GitHub is officially live; its \
+only San Francisco text is the same current footer. The Go FAQ names Robert Griesemer, \
+Rob Pike and Ken Thompson, describes work at Google, and dates the public open source \
+release to 10 November 2009; it contains no Mountain View. Anthropic's evaluation page is \
+dated 4 October 2023 and discusses the difficulty of robust, reliable evaluations; its \
+MCP page is dated 25 November 2024 and calls MCP a standard connecting assistants to \
+systems where data lives; neither page contains San Francisco. The Open Group register \
+names Apple Inc., macOS 26.0 Tahoe, UNIX 03, and registration on 29 August 2025 without a \
+Cupertino event location. Apple's page dates Catalina availability to 7 October 2019 and \
+says it is available as a software update without locating the release in Cupertino. The \
+ECMA-404 PDF identifies Ecma International, the JSON Data Interchange Format, first \
+edition October 2013, and adoption by postal vote that month; it contains no Geneva \
+imprint. These pages support the actor, year, and event written in the topic data and do \
+not support the removed office-city attributions.
+"""
