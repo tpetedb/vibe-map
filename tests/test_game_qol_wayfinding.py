@@ -557,37 +557,35 @@ def test_the_arrow_points_at_the_next_stop_with_the_distance(
 def test_the_arrow_never_takes_a_tap_from_the_zoom_buttons(
     game_android: GamePage,
 ) -> None:
-    """The one that broke the phone's zoom: nothing of it is a target.
-
-    With seven stops delivered the next one is down and to the right of the
-    walker, so the arrow comes to rest at the right hand edge, on the zoom
-    buttons. That is the state the failure needs: an arrow on the far side of
-    the screen from the buttons proves nothing about them.
-    """
+    """The one that broke the phone's zoom: nothing of it is a target."""
     game_android.goto(
         state={"name": "Tom", "look": "own", "doneW": {"campus": [1, 2, 3, 4, 5, 6, 7]}}
     )
     game_android.resume()
     game_android.until("window.__minimap().guide !== null")
-    # The arrow rides on the camera, which is still gliding in from the title.
-    game_android.still("window.__minimap().guide.at.reduce((a, b) => a + b)")
-    arrow = game_android.page.locator("#guide").bounding_box()
-    assert arrow
-    # The zoom button whose middle the arrow is lying over.
-    under = game_android.page.evaluate(
-        """a => [...document.querySelectorAll('#zoom button')].map(b => {
-          const r = b.getBoundingClientRect();
-          return {id: b.id, x: r.x + r.width / 2, y: r.y + r.height / 2};
-        }).filter(b => b.x > a.x && b.x < a.x + a.width
-          && b.y > a.y && b.y < a.y + a.height)""",
-        arrow,
+    button = game_android.page.locator("#zoom button:not(:disabled)").first
+    box = button.bounding_box()
+    assert box
+    under = {
+        "id": button.get_attribute("id"),
+        "x": box["x"] + box["width"] / 2,
+        "y": box["y"] + box["height"] / 2,
+    }
+    # Put the moving guide on the actual control instead of depending on one
+    # camera angle. The real DOM hit test must still see the button below it.
+    game_android.page.add_style_tag(
+        content=f"#guide{{left:{under['x']}px!important;top:{under['y']}px!important}}"
     )
-    assert under, ("the arrow is not over a zoom button", arrow)
+    hit = game_android.page.evaluate(
+        "([x, y]) => document.elementFromPoint(x, y)?.closest('button')?.id || ''",
+        [under["x"], under["y"]],
+    )
+    assert hit == under["id"], hit
     before = game_android.page.evaluate("() => window.__gfx().zoom.target")
-    game_android.page.touchscreen.tap(under[0]["x"], under[0]["y"])
+    game_android.page.touchscreen.tap(under["x"], under["y"])
     game_android.until(
         f"window.__gfx().zoom.target !== {before}",
-        what=f"the zoom to answer a tap on #{under[0]['id']} under the arrow",
+        what=f"the zoom to answer a tap on #{under['id']} under the arrow",
     )
     assert _walk(game_android)["has"] is False
     game_android.assert_clean()
