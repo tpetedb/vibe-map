@@ -1,0 +1,19 @@
+v = 1
+order = "galaxy-v0"
+team = "state"
+by = "manager-state"
+reviewed = "5871724c8cbfcbaccfe3bf83f8c96761bc092683"
+verdict = "accept"
+note = '''
+Accepted at exact implementation commit 5871724. Galaxy remains a derived view over the existing shared record: completed topics come from S.topics, and the implementation adds no second progress store, no new progress-code field, and no version change. The experience choice is the existing browser-local S.settings.experience preference; setSetting writes it through save(), switching disposes and rebuilds the view without replacing S, and a URL override selects a view without writing the record. Unknown and inherited-property ids fall back to islands.
+
+State-owned scope is clean for this order. vibemap/config.py is named in owns but has no diff in the implementation stack. The state files changed in the integrated branch belong to prerequisite order qol-4-feedback-companion and already carry their own state signoff; galaxy-v0 does not change src/game/00-state.js, src/game/80-sync.js, vibemap/state.py, vibemap/config.py, vibemap/project.py, or config/. The Galaxy source reads S.topics and the shared contract keeps state, saving, progress codes, settings, panels, search, and the vault in core.
+
+Evidence from an isolated git archive of commit 5871724:
+- 54 focused tests passed: tests/test_config_levels.py, tests/test_camp_config.py, tests/test_project.py, the two experience preference and URL-precedence tests, and both Galaxy gameplay/switching tests.
+- The switch test proves selecting islands from Galaxy keeps the settings sheet open, restores focus to set-experience, and announces the new experience. The contract tests prove preference reads do not write, URL selection does not overwrite the saved preference, and invalid ids fall back safely.
+- tools/build.py --check and tools/sync_fork_source.py --check passed. src/galaxy/20-experience.js, src/game/85-settings.js, and src/game/90-boot.js match their fork-source mirrors byte for byte.
+- A broader run from the shared worktree also completed all browser assertions, including the four island golden images at mean and worst distance 0.0000. Its later build check correctly noticed concurrent uncommitted source edits by another agent, so the exact-commit archive above is the acceptance evidence.
+
+No findings.
+'''
