@@ -1,0 +1,55 @@
+v = 1
+order = "galaxy-v0"
+by = "codex-galaxy-v0-reviewer"
+reviewed = "5871724c8cbfcbaccfe3bf83f8c96761bc092683"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Ran `UV_CACHE_DIR=/private/tmp/codex-uv-cache uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.py` with Chromium and WebKit allowed outside the macOS sandbox. All 20 tests passed. The four live island captures matched their goldens at mean 0.0000 and worst 0.000, and the two deliberate mutations were detected."
+
+[[criteria]]
+id = "c2"
+verdict = "fail"
+evidence = "Ran the criterion command through the first failing stage. `ruff check -q .` fails E501 at tests/test_game_galaxy.py:31 and :35 because each JavaScript expression is 89 characters. The later style, sink, and non-browser stages therefore cannot make this criterion pass. Independently, `uv run pytest -q tests/test_galaxy_model.py` passed both model/visual tests, including the dense-planet draw budget."
+
+[[criteria]]
+id = "c3"
+verdict = "fail"
+evidence = "The six generated-output checks reported in sync during review, but the declared size comparison fails at this integrated head: `game/vibe-map.html` is 1,757,565 bytes at the reviewed implementation base and 1,652,529 bytes on origin/main, a 105,036-byte increase, over the 80,000-byte limit. The Galaxy-only model, visuals, gameplay, and lighting commits add about 26.8 KB, so the command measures integrated prerequisite work rather than the sentence it claims to prove."
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = "Inspected docs/GALAXY.md section 6, the rendered DOM, src/galaxy/20-experience.js, src/body.html, and the browser tests. Commit 5871724 adds an ordered topic list with state/year/place, aria-current, and a canvas focus ring; the phone test proves 44 px targets and preserves the open Settings sheet, focus, and live announcement. Camera changes are immediate cuts and planet drift stops under reduced motion. However O1 has no Galaxy Arrow/Escape keyboard handler, and O5b specifies four plain level buttons (journey, chart, globe, dome) while the DOM and tests expose only Journey, Globe, and Dome. Those critical rows are neither implemented nor tested."
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = "Viewed tests/out/galaxy_desktop_dome.png at original resolution beside the approved concept and inspected the place registry at 5871724. The screenshot shows a readable Bell Labs campus dome and the procedural kit includes a distinct rack-filled data-centre globe, but `git grep` finds no China or Hangzhou place/topic at this commit and the only Galaxy screenshot exercises one Bell Labs dome. The required California campus, Chinese city, and data-centre side-by-side recognition check therefore cannot be performed or pass."
+
+[[findings]]
+severity = "high"
+file = "src/galaxy/20-experience.js"
+text = "The version-zero learning loop stops at the visual dome. `galaxyPlace()` only selects the place and calls `galaxyShow(\"dome\")`; `goTo()` delegates to it, and neither path opens the unchanged lesson sheet or identifies which topic at a multi-topic place was selected. A player can browse history but cannot land in the lesson required by the order."
+
+[[findings]]
+severity = "high"
+file = "src/galaxy/20-experience.js"
+text = "The critical keyboard and zoom contract is incomplete. There is no Galaxy key handler for Arrow navigation or Escape back to the chart, and `src/body.html` offers three scale buttons although docs/GALAXY.md O5b requires journey, chart, globe, and dome as four plain buttons. The tests cover clicks, focus rings, and targets but do not exercise the missing keyboard path."
+
+[[findings]]
+severity = "medium"
+file = "vibemap/data/places"
+text = "The integrated registry at 5871724 has no Chinese city or Hangzhou entry, so criterion c5's required California campus, Chinese city, and data-centre comparison cannot exist. Add the intended sourced Chinese place and a screenshot/test that presents all three targets side by side."
+
+[[findings]]
+severity = "medium"
+file = "tests/test_game_galaxy.py"
+text = "The acceptance lint command fails E501 on lines 31 and 35: both `window.__scene().children.some(...)` strings are 89 characters under an 88-character limit."
+
+[[findings]]
+severity = "low"
+file = "work/orders/galaxy-v0/order.toml"
+text = "Criterion c3's size command compares the whole integrated train with origin/main and reports a 105,036-byte increase, although the isolated Galaxy implementation is about 26.8 KB. The order needs a baseline that isolates this order or an integrated budget large enough for its declared prerequisites."
