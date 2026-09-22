@@ -1,14 +1,14 @@
 v = 1
 order = "qol-2-wayfinding"
 by = "reviewer-qol-2-wayfinding-r2"
-reviewed = "ec2a8dcd1b9dc93cd3c1446b39ea163c0f2ec3ea"
+reviewed = "b666d31aec8a68226a0587f40d81ba3820907675"
 verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = '''
-Ran `uv run pytest -q tests/test_game_qol_wayfinding.py` at b45ec62 with Chromium allowed outside the filesystem sandbox: all 36 tests passed. The file drives the real palette, map, route, marker, arrow, run controls and frame loop. I read the regressions and the source they exercise. The recovery tests directly cover every former blocker: a cross-island route goes around the hub and arrives; an unreachable target stops with feedback; ordinary flight and the reduced-motion cut clear marker and path; path buffers are allocated once; rendered dashes meet the contrast assertion on desktop and Android; the arrow is first placed over a phone zoom button before the underlying button is tapped; Shift plus Tab does not latch running; and window blur releases held movement. The tests wait on page-produced state rather than fixed sleeps. This completed run supplies the proof the stale review lacked.
+Ran `uv run pytest -q tests/test_game_qol_wayfinding.py` before the final test-only delta: all 36 tests passed. At b666d31 I inspected the only contribution change and reran its exact test with `-k arrow_never_takes_a_tap_from_the_zoom_buttons`: one passed. The deterministic regression chooses a real enabled zoom button, forces the real guide over that control, proves the DOM hit target is still that button, performs a touchscreen tap and waits for the real zoom target to change; it would fail if the guide took pointer events. The rest of the file drives the real palette, map, route, marker, arrow, run controls and frame loop. Its recovery tests directly cover every former blocker: a cross-island route goes around the hub and arrives; an unreachable target stops with feedback; ordinary flight and the reduced-motion cut clear marker and path; path buffers are allocated once; rendered dashes meet the contrast assertion on desktop and Android; Shift plus Tab does not latch running; and window blur releases held movement. The tests wait on page-produced state rather than fixed sleeps.
 '''
 
 [[criteria]]
