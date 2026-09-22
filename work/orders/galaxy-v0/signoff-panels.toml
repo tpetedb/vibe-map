@@ -4,10 +4,10 @@ v = 1
 order = "galaxy-v0"
 team = "panels"
 by = "manager-panels"
-reviewed = "4dbe99b9094fcacf08f2c3444733edd6f8039588"
+reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
 verdict = "accept"
 note = '''
-Accepted for the panels team at 4dbe99b9094fcacf08f2c3444733edd6f8039588.
+Accepted for the panels team at a94d640392b2e390b72bc3f04b922f184ebb8be9.
 
 The Experience setting switches through the shared registry while preserving
 the open sheet and restoring focus to the select. The existing live region
@@ -24,9 +24,12 @@ the topic or lands at the place. Learn opens the existing topic view.
 
 The Chart groups places under real era headings, includes textual state and
 completion counts, marks the current place, and shows the California campus,
-Hangzhou and data centre examples in the reviewed showcase.
+Hangzhou and data centre examples in the reviewed showcase. Chart keeps the
+overview framing. Landing renders the chosen place's Dome before opening its
+topic, so the topic view does not replace the selected place.
 
 Focused evidence passed: tests/test_game_galaxy.py on desktop, WebKit iPhone
 and Android, plus the style and sink checks. The built game and fork source
-both match their sources.
+both match their sources. The test captures the chart and the three distinct
+showcase domes.
 '''
