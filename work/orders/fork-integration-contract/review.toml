@@ -1,0 +1,20 @@
+v = 1
+order = "fork-integration-contract"
+by = "codex-review-fork-contract"
+reviewed = "1b7abe07ef5f64c1cc0c9708066835e1d79076ab"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Independently ran UV_CACHE_DIR=/tmp/vibe-review-uv just work-check fork-integration-contract: the targeted pytest criterion passed in 33.6s. Read the test and CLI paths: actual subprocesses build customized source, inspect persisted status after one challenge, and exercise both refusal and consent. Original build-content assertions remain, with added exit-code, no-partial-claim, preservation, and replacement assertions. Fresh committed diff matches the independently tested working diff."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Independent work-check ran just lint && just generated successfully in 1.2s. Only the test module, changelog fragment, and order were committed; no product or generated source changed."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Independently loaded the original tests from pre-fix HEAD with git show and ran their three integration functions against separate temporary camps: the config test failed on obsolete all-challenges success text, force replacement failed without interactive consent, and packaged-source forking passed. Inspected _check_fork and fork in vibemap/cli.py and existing test_cli_rest coverage to confirm delivered behavior. The replacement assertions strengthen coverage without modifying product behavior. No findings."

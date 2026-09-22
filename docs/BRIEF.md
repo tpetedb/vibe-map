@@ -33,7 +33,7 @@ Three zones, and it must be obvious where to do what: configuration, source, wor
 - Keep working through the night; add new requests to the backlog and parallelise, never stop a task midway because a message arrived.
 - Push branches, open PRs, merge only green PRs, release with a tag and notes, install the tool from the tag, regenerate the played instance, leave main clean.
 - Nothing that was made may get lost. Review every branch before deleting; every merge is tested in an ephemeral environment by an independent agent; fixes get tests.
-- Fable steers; Opus agents play, test, review and fix. Keep the agents aligned with this document and with a dependency plan so that parallel work does not overwrite itself.
+- Fable steers, and since 21 September 2026 every Claude Code work-order role uses Fable: overall usage with Opus builders in the mix was higher than with Fable alone. Keep the agents aligned with this document and with a dependency plan so that parallel work does not overwrite itself.
 
 ## 2. What happened, request by request
 

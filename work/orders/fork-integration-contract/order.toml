@@ -1,0 +1,26 @@
+v = 1
+id = "fork-integration-contract"
+title = "Verify current fork confirmation and single-challenge behavior"
+team = "harness"
+branch = "codex/fork-integration"
+goal = ""
+issue = 175
+builder = "codex-root"
+owns = ["tests/test_config_levels.py"]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Fork integration tests verify build customization, no claim after one challenge, and explicit replacement consent."
+check = "uv run pytest tests/test_config_levels.py tests/test_cli_rest.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint and generated files pass."
+check = "just lint && just generated"
+
+[[criteria]]
+id = "c3"
+text = "The reviewer confirms the two original integration failures reproduce and no product behavior or assertion coverage is weakened."
+judge = "reviewer"

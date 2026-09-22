@@ -1,0 +1,30 @@
+v = 1
+id = "fable-claude-roles"
+title = "Keep every Claude Code work-order role on the measured Fable model"
+team = "harness"
+branch = "chore/fable-only-agents"
+issue = 149
+builder = "claude-fable"
+
+owns = [
+  ".claude/agents/builder.md",
+  "CLAUDE.md",
+  "docs/BRIEF.md",
+]
+cross = ["docs"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The Claude Code builder uses Fable, matching the reviewer and team-manager roles, and the configuration remains valid."
+check = "uv run pytest -q tests/test_work.py tests/test_repo.py"
+
+[[criteria]]
+id = "c2"
+text = "CLAUDE.md and docs/BRIEF.md scope the Fable policy to Claude Code work-order roles and do not claim that Codex or every agent runtime uses Fable."
+judge = "reviewer"
+
+[[criteria]]
+id = "c3"
+text = "Style and generated camp configuration remain current."
+check = "uv run python tools/checks.py style && uv run python tools/sync_template.py --check"
