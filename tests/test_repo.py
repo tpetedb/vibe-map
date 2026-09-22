@@ -142,6 +142,241 @@ def test_every_workflow_parses_and_has_jobs() -> None:
         assert flow.get(True) or flow.get("on"), name
 
 
+def _owner_cost_workflow_violations(path: Path, source: str) -> list[str]:
+    import yaml
+
+    workflow = yaml.safe_load(source)
+    assert isinstance(workflow, dict), path
+    violations: list[str] = []
+    triggers = workflow.get("on", workflow.get(True, ()))
+    if triggers == "pull_request_target" or (
+        isinstance(triggers, (dict, list)) and "pull_request_target" in triggers
+    ):
+        violations.append("pull_request_target trigger")
+
+    model_actions = {
+        "actions/ai-inference",
+        "anthropics/claude-code-action",
+        "aws-actions/bedrock-agent",
+        "google-github-actions/run-gemini-cli",
+        "openai/codex-action",
+    }
+
+    def walk(value: object) -> None:
+        if isinstance(value, dict):
+            for key, child in value.items():
+                normalized_key = str(key).casefold()
+                if normalized_key == "secrets":
+                    violations.append("workflow secret")
+                if normalized_key == "permissions" and isinstance(child, dict):
+                    model_permission = child.get("models")
+                    if (
+                        model_permission is not None
+                        and str(model_permission).casefold() != "none"
+                    ):
+                        violations.append("model permission")
+                if normalized_key == "uses" and isinstance(child, str):
+                    action = child.casefold().split("@", 1)[0].rstrip("/")
+                    if action in model_actions:
+                        violations.append(f"paid model action: {child}")
+                walk(child)
+        elif isinstance(value, list):
+            for child in value:
+                walk(child)
+        elif isinstance(value, str) and re.search(
+            r"\$\{\{.*?\bsecrets\b.*?\}\}", value, flags=re.IGNORECASE | re.DOTALL
+        ):
+            violations.append("workflow secret expression")
+
+    walk(workflow)
+    return violations
+
+
+def _lfs_attribute_markers(source: str) -> set[str]:
+    rules = "\n".join(
+        line
+        for line in source.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ).lower()
+    return {
+        marker for marker in ("filter=lfs", "diff=lfs", "merge=lfs") if marker in rules
+    }
+
+
+def test_owner_cost_workflow_guard() -> None:
+    """Committed automation cannot put model, secret or LFS usage on the owner."""
+    workflow_roots = (
+        ROOT / ".github" / "workflows",
+        ROOT / "vibemap" / "data" / "template" / "_github" / "workflows",
+    )
+    workflow_files = sorted(
+        path
+        for folder in workflow_roots
+        for pattern in ("*.yml", "*.yaml")
+        for path in folder.glob(pattern)
+    )
+    assert workflow_files
+    for path in workflow_files:
+        assert not _owner_cost_workflow_violations(
+            path, path.read_text(encoding="utf-8")
+        ), path
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+    ).stdout.split(b"\0")
+    attribute_files = sorted(
+        ROOT / name.decode() for name in tracked if name.endswith(b".gitattributes")
+    )
+    assert attribute_files
+    for path in attribute_files:
+        assert not _lfs_attribute_markers(path.read_text(encoding="utf-8")), path
+
+
+def test_owner_cost_lfs_guard_recognizes_nested_attribute_rules(tmp_path: Path) -> None:
+    nested = tmp_path / "vibemap" / "data" / "template" / ".gitattributes"
+    nested.parent.mkdir(parents=True)
+    nested.write_text("*.bin filter=lfs diff=lfs merge=lfs -text\n")
+
+    assert _lfs_attribute_markers(nested.read_text()) == {
+        "filter=lfs",
+        "diff=lfs",
+        "merge=lfs",
+    }
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        (
+            "on: workflow_dispatch\njobs:\n  call:\n    uses: ./called.yml\n"
+            "    secrets: inherit\n",
+            "workflow secret",
+        ),
+        (
+            "on: push\njobs:\n  check:\n    runs-on: ubuntu-latest\n"
+            "    steps:\n      - run: 'echo ${{ toJSON(secrets) }}'\n",
+            "workflow secret expression",
+        ),
+        (
+            "on: push\njobs:\n  ask:\n    runs-on: ubuntu-latest\n"
+            "    steps:\n      - uses: anthropics/claude-code-action@v1\n",
+            "paid model action",
+        ),
+        (
+            "on: push\npermissions:\n  models: read\njobs:\n  ask:\n"
+            "    runs-on: ubuntu-latest\n    steps: []\n",
+            "model permission",
+        ),
+        (
+            "on: push\njobs:\n  ask:\n    runs-on: ubuntu-latest\n"
+            "    steps:\n      - uses: actions/ai-inference@v1\n",
+            "paid model action",
+        ),
+        (
+            "on: push\njobs:\n  ask:\n    runs-on: ubuntu-latest\n"
+            "    steps:\n      - uses: aws-actions/bedrock-agent@v1\n",
+            "paid model action",
+        ),
+        (
+            "on: pull_request_target\njobs:\n  check:\n"
+            "    runs-on: ubuntu-latest\n    steps: []\n",
+            "pull_request_target trigger",
+        ),
+    ],
+)
+def test_owner_cost_workflow_guard_catches_billing_paths(
+    source: str, expected: str
+) -> None:
+    violations = _owner_cost_workflow_violations(Path("fixture.yml"), source)
+    assert any(expected in violation for violation in violations)
+
+
+def test_owner_cost_workflow_guard_allows_provider_names_in_prose() -> None:
+    source = """\
+name: Explain why OpenAI and Claude are not used here
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Document the Gemini and Copilot boundary
+        run: echo 'No provider action runs'
+"""
+    assert not _owner_cost_workflow_violations(Path("fixture.yml"), source)
+
+
+def test_owner_cost_workflow_guard_allows_unrelated_action_names() -> None:
+    source = """\
+on: push
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: example/openai-doc-format@v1
+      - uses: example/ai-inference@v1
+"""
+    assert not _owner_cost_workflow_violations(Path("fixture.yml"), source)
+
+
+def test_owner_cost_workflow_guard_allows_models_outside_permissions() -> None:
+    source = """\
+on: push
+jobs:
+  check:
+    strategy:
+      matrix:
+        models: [small, large]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: example/check-models@v1
+        with:
+          models: all
+"""
+    assert not _owner_cost_workflow_violations(Path("fixture.yml"), source)
+
+
+def test_ownership_cost_contract() -> None:
+    """Every durable starting document says whose repository and bill this is."""
+    adr = (ROOT / "docs" / "adr" / "0017-own-camp-own-bill.md").read_text(
+        encoding="utf-8"
+    )
+    adr_words = " ".join(adr.split())
+    assert "Status: Accepted" in adr_words
+    for phrase in (
+        "learner's own repository",
+        "learner's own account",
+        "zero",
+        "static test cannot prove it",
+        "Settings, Codespaces, Prebuild configuration",
+    ):
+        assert phrase in adr_words
+
+    long_game = (ROOT / "docs" / "LONG-GAME.md").read_text(encoding="utf-8")
+    long_game_words = " ".join(long_game.split())
+    for phrase in (
+        "your own repository",
+        "your own subscription",
+        "free",
+        "zero product-level Codespaces budget",
+        "Stop usage when budget limit is reached",
+        "first billing cycle",
+    ):
+        assert phrase in long_game_words
+
+    quickstart = (ROOT / "docs" / "QUICKSTART.md").read_text(encoding="utf-8")
+    codespaces = quickstart.split("## Path D:", 1)[1]
+    assert "gh codespace create --repo tpetedb/vibe-map" not in codespaces
+    assert "your own repository" in codespaces
+    assert "vibe new" in codespaces and "--github" in codespaces
+    assert "full product repository" in codespaces
+    assert "slim camp" in codespaces
+    assert "Stop usage when budget limit is reached" in codespaces
+    assert "before" in codespaces and "first billing cycle" in codespaces
+
+
 def test_the_fast_ci_never_runs_the_slow_tests() -> None:
     """ci.yml is the gate on a pull request; integration runs belong to nightly."""
     steps = [

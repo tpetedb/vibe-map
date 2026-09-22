@@ -171,16 +171,30 @@ in it. Works from a Chromebook, a borrowed laptop or an iPad. A personal
 account gets free Codespaces hours every month and GitHub Pro raises the
 allowance; you can also open a codespace on a machine type you pay for.
 
-1. Open a codespace. On the repository page: **Code**, **Codespaces**, **Create
-   codespace on main**. Or from a terminal with `gh`:
+1. Create your own repository before you start compute. Choose one route:
+
+   - For a full product repository with the engine source and test suite, press
+     **Use this template** on this repository, choose the visibility, and create
+     the repository under your account.
+   - For the slim camp from Path B, use a terminal where `vibe` is installed.
+     This repository contains your workspace, vault and configuration, without
+     the engine source:
 
    ```bash
-   gh codespace create --repo tpetedb/vibe-map
+   vibe new --name you --github YOU/camp
+   ```
+
+   On your own repository's page, press **Code**, **Codespaces**, **Create
+   codespace on main**. Or use its name from a terminal with `gh`:
+
+   ```bash
+   gh codespace create --repo YOU/camp
    gh codespace code                     # or --web for the browser editor
    ```
 
-   This works on a camp made by `vibe new` too: every camp carries its own
-   `.devcontainer/`.
+   These are different kinds of repository, but both belong to you and carry a
+   `.devcontainer/`. Create the Codespace only from that learner-owned
+   repository. Do not open compute on `tpetedb/vibe-map`.
 
 2. Wait for the setup to finish. `.devcontainer/setup.sh` installs uv, just,
    duckdb and the GitHub CLI, syncs the Python environment and, in this
@@ -199,8 +213,9 @@ allowance; you can also open a codespace on a machine type you pay for.
    tab. Port 7717 is labelled **Chat bridge** for `vibe chat serve`. A forwarded
    port is private to you until you change its visibility in that panel.
 
-4. Everything else is Path B or Path C, unchanged: `just start`, `vibe status`,
-   `just verify`.
+4. Continue with the path that made the repository. In a slim camp, use
+   `just start`, `vibe status` and the Path B checks. In a full product
+   repository, use Path C, including `just verify`.
 
 The container is `mcr.microsoft.com/devcontainers/python:1-3.12-bookworm` with
 the `github-cli` dev container feature. The same file opens in VS Code locally
@@ -208,13 +223,18 @@ the `github-cli` dev container feature. The same file opens in VS Code locally
 nothing there.
 
 Who pays: "compute usage is charged to the account that owns the codespace", so
-a codespace you create is yours, on your own free monthly hours, whichever
-repository you opened it from. Set a spending limit of zero on your account if
-you want the hours to be the hard stop. Prebuilds would make a codespace start
-faster, and they bill the repository's owner for Actions minutes and storage,
-so none are configured here; the slow work sits in `onCreateCommand` anyway,
-which is the part a prebuild would cache if you ever enable one on a repository
-of your own.
+the Codespace from your own repository uses your personal account's included
+monthly usage first. Before creating it, make a zero product-level Codespaces
+budget. Select **Stop usage when budget limit is reached** where that option is
+available; GitHub says personal user-level budgets always enforce a hard stop.
+A budget only counts metered usage from the date you create it, so earlier
+usage is excluded during its first billing cycle.
+
+Prebuilds can make a Codespace start faster, but consume Actions minutes and
+storage for the repository owner. This repository keeps prebuilds disabled in
+**Settings, Codespaces, Prebuild configuration**. That setting is on GitHub,
+not in this checkout. The slow work sits in `onCreateCommand`, which a prebuild
+would cache if you choose to enable one on a repository of your own.
 
 ## Playing over weeks
 
