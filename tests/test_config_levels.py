@@ -27,13 +27,16 @@ difficulty = "hard"
 """
 
 
-def _run(camp: Path, *args: str) -> subprocess.CompletedProcess[str]:
+def _run(
+    camp: Path, *args: str, stdin: str | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "vibemap.cli", *args],
         cwd=camp,
         env=dict(os.environ, VIBE_HOME=str(camp), COLUMNS="200"),
         capture_output=True,
         text=True,
+        input=stdin,
     )
 
 
@@ -149,7 +152,12 @@ def test_vibe_fork_builds_and_is_checked_end_to_end(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     second = _run(camp, "check", "--fork", "config")
-    assert "your fork builds and is yours" in second.stdout, second.stdout
+    assert second.returncode == 0, second.stdout + second.stderr
+    assert "config passes" in second.stdout, second.stdout
+    assert "vibe check --fork all to claim the stop" in second.stdout
+    progress = _run(camp, "status", "--json")
+    assert progress.returncode == 0, progress.stderr
+    assert 6 not in json.loads(progress.stdout)["done"].get("prod", [])
     built = (fork / "game" / "vibe-map.html").read_text(encoding="utf-8")
     assert "const WORLD_SCALE=2.4;" in built
     assert built != (ROOT / "game" / "vibe-map.html").read_text(encoding="utf-8")
@@ -162,7 +170,17 @@ def test_the_fork_refuses_a_second_one_without_force(tmp_path: Path) -> None:
     assert _run(camp, "fork", "--from", str(ROOT)).returncode == 0
     again = _run(camp, "fork", "--from", str(ROOT))
     assert again.returncode != 0 and "--force" in again.stdout
-    assert _run(camp, "fork", "--from", str(ROOT), "--force").returncode == 0
+    marker = camp / quests.FORK_DIR / "learner-work.txt"
+    marker.write_text("Keep this until replacement is confirmed.", encoding="utf-8")
+    refused = _run(camp, "fork", "--from", str(ROOT), "--force", stdin="n\n")
+    assert refused.returncode != 0
+    assert marker.read_text(encoding="utf-8") == (
+        "Keep this until replacement is confirmed."
+    )
+    agreed = _run(camp, "fork", "--from", str(ROOT), "--force", stdin="y\n")
+    assert agreed.returncode == 0, agreed.stdout + agreed.stderr
+    assert not marker.exists()
+    assert (camp / quests.FORK_DIR / "src/config/00-config.js").is_file()
 
 
 def test_fork_needs_a_product_checkout(tmp_path: Path) -> None:
