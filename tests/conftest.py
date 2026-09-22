@@ -207,13 +207,19 @@ def clock_script(hour: int, minute: int = 0, anchor_ms: float | None = None) -> 
 # it, and a notice noted twice makes every count written against the record
 # wrong. An init script is a body, not a function the page calls, so it is an
 # IIFE.
+# How many notices were up together is the same race read as a number, so the
+# peak is taken here too, as each notice arrives: the game trims the stack in
+# the task that raised the notice, which is before the observer hears of it.
 RECORD_TOASTS = """(() => {
   window.__toastLog = [];
+  window.__toastPeak = 0;
   const noted = new WeakSet();
   const note = n => {
     if (n.nodeType !== 1 || !n.classList.contains('tst') || noted.has(n)) return;
     noted.add(n);
     window.__toastLog.push(n.textContent || '');
+    const up = document.querySelectorAll('#toast .tst').length;
+    if (up > window.__toastPeak) window.__toastPeak = up;
   };
   const root = document.documentElement || document;
   new MutationObserver(rs => rs.forEach(r => r.addedNodes.forEach(n => {
@@ -334,6 +340,10 @@ class GamePage:
     def toasts(self) -> list[str]:
         """Every toast the page has raised, expired or still on screen."""
         return list(self.page.evaluate("window.__toastLog || []"))
+
+    def toast_peak(self) -> int:
+        """The most toasts that were on screen together since the page loaded."""
+        return int(self.page.evaluate("window.__toastPeak || 0"))
 
     def toast_said(self, text: str) -> None:
         """Wait for a toast that carried this text, expired or not.

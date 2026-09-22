@@ -134,35 +134,113 @@ const ACH=[
 function unlock(id){const a=ACH.find(x=>x.id===id);if(!a||sl("ach").includes(id))return false;
   sl("ach").push(id);save();
   const w=WEAR.find(x=>x.by===id);
+  buzz(BUZZ.unlock);
   toast(icon("trophy")+"Achievement: "+a.name,a.what+(w?" Unlocked: the "+w.name.toLowerCase()+", in the Backpack.":""));
   if(typeof track==="function")track("achievement",id);
   return true}
 function achCheck(){ACH.forEach(a=>{if(a.when()&&!sl("ach").includes(a.id))unlock(a.id)})}
 
-/* ---------------- toast ---------------- */
+/* ---------------- haptics ---------------- */
+// A short buzz where the platform has one. MDN, Vibration API: sticky user
+// activation is required and iOS has none at all, so this is a real answer on
+// Android Chrome and a silent no-op everywhere else. Nothing may depend on
+// what it returns. Reduced motion asks for fewer things moving and a buzz
+// moves the phone, so under it the island stays still and quiet.
+const BUZZ={claim:[22,40,22],unlock:[16,30,16],find:16};
+// Has anyone touched this page yet, answered by the island itself. An
+// achievement unlocks from the frame loop, which runs behind the title screen,
+// so a returning record or the hour past eleven reaches buzz() before the
+// first tap; Chrome refuses a vibration there and reports the refusal at error
+// level. navigator.userActivation answers the same question, but a test
+// harness hands a page an activation nobody gave it, so the island watches
+// for the pointer or the key itself.
+let touched=false;
+["pointerdown","keydown","touchstart"].forEach(t=>
+  addEventListener(t,()=>{touched=true},{capture:true,passive:true,once:true}));
+function buzz(pattern){
+  if(typeof navigator.vibrate!=="function"||!touched)return false;
+  if(settings().haptics!=="on"||reducedMotion())return false;
+  try{return !!navigator.vibrate(pattern)}catch(e){return false}}
+
+/* ---------------- toast, the log and the first-time hints ---------------- */
 // One stack, created on demand so the page keeps its markup. A toast is a
-// message, never state: it says what just happened and goes away.
+// message, never state: it says what just happened and goes away. What it said
+// is state and outlives it, in the Backpack's Notifications tab: progress
+// repaired, and an achievement or a find that arrived while the Roadmap was
+// open, are worth more than five seconds, and quiet mode has to leave the
+// player something to read.
 // The count is what a test waits for: a toast removes itself after a few
-// seconds, so looking for the element is a race on a loaded machine.
+// seconds, so looking for the element is a race on a loaded machine. Quiet
+// counts too, because the message happened.
+const NOTE_CAP=60,TOAST_MS=5000,TOAST_CARDS=3;
 let toastN=0;
 window.__toasts=()=>toastN;
+window.__log=()=>sl("notes").slice();
+function toastStack(){let el=$("toast");
+  if(!el){el=document.createElement("div");el.id="toast";el.setAttribute("aria-live","polite");document.body.appendChild(el)}
+  return el}
+// Markup in, words out. The log is written back into the panel with esc(), so
+// what it keeps is what the message said, not the icon and the link it was
+// said with.
+function plainText(html){return String(html==null?"":html).replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim()}
 function toast(title,body){
   toastN++;
-  let el=$("toast");
-  if(!el){el=document.createElement("div");el.id="toast";el.setAttribute("aria-live","polite");document.body.appendChild(el)}
+  const log=sl("notes");log.push({ts:Date.now(),t:plainText(title),b:plainText(body)});
+  if(log.length>NOTE_CAP)log.splice(0,log.length-NOTE_CAP);
+  // Keeping what was said is not progress, so this write raises no mark.
+  save(false);
+  if($("s-pack")&&$("s-pack").classList.contains("on")&&packTab==="log")renderPack("log");
+  // Quiet is the player asking not to be interrupted: the message is kept and
+  // whatever it was about still happened, only the card is not raised.
+  if(typeof settings==="function"&&settings().toasts==="quiet")return;
   const n=document.createElement("div");n.className="tst";
-  n.innerHTML=`<b>${title}</b><span>${body}</span>`;el.appendChild(n);fx(n);
-  setTimeout(()=>n.remove(),5000)}
+  n.innerHTML=`<b>${title}</b><span>${body}</span>`;const stack=toastStack();stack.appendChild(n);fx(n);
+  // The cap is on the cards, not on the messages: a record that earns four
+  // achievements at once fills a phone with them and the newest, the one being
+  // waited for, is pushed off the screen. The oldest card goes instead, and
+  // nothing is lost, because the Notifications tab keeps every line.
+  const cards=stack.querySelectorAll(".tst");
+  for(let i=0;i<cards.length-TOAST_CARDS;i++)cards[i].remove();
+  setTimeout(()=>n.remove(),TOAST_MS)}
+// When a note was written, in this browser's own clock. Two digits either
+// side, so a list of them lines up whatever the locale.
+function noteWhen(ts){const d=new Date(ts);const p=n=>String(n).padStart(2,"0");
+  return p(d.getHours())+":"+p(d.getMinutes())}
+// A first-time line: shown once for an id and remembered, so the island
+// explains a thing the first time you meet it and never again. Settings has
+// the way back ("Show the hints again"), which empties the list.
+function hintSeen(id){return sl("hints").includes(id)}
+function hint(id,text){if(hintSeen(id))return false;
+  sl("hints").push(id);save(false);toast(icon("flag")+"Tip",text);return true}
+// The mark that says the record was written. save() is called on every pickup,
+// every claim and every setting, so it is throttled, it is raised in the toast
+// stack rather than in the HUD's own flow, and it writes styles it never reads
+// back: nothing here asks the page for a layout.
+const SAVED_EVERY=1500,SAVED_SHOWN=900,SAVED_FADE=400;
+let savedAt=0,savedN=0;
+function savedTick(){const now=Date.now();
+  if(document.hidden||now-savedAt<SAVED_EVERY)return;
+  savedAt=now;savedN++;
+  const el=document.createElement("div");el.className="saved";el.setAttribute("aria-hidden","true");
+  el.textContent="Saved";
+  el.style.cssText="align-self:flex-end;font-size:10px;font-weight:700;letter-spacing:.1em;"+
+    "text-transform:uppercase;color:var(--muted);background:var(--panel);border:1px solid var(--line2);"+
+    "border-radius:999px;padding:4px 10px;opacity:1;transition:"+(reducedMotion()?"none":"opacity "+SAVED_FADE/1000+"s ease");
+  toastStack().appendChild(el);
+  setTimeout(()=>{el.style.opacity="0"},SAVED_SHOWN);
+  setTimeout(()=>el.remove(),SAVED_SHOWN+SAVED_FADE)}
+window.__saved=()=>({n:savedN,on:!!document.querySelector(".saved")});
 
 /* ---------------- the backpack panel ---------------- */
 // The tech tree topic a collectible points at, by its note title.
 function topicName(id){for(const k in TREE){const t=TREE[k].find(x=>x.id===id);if(t)return t.n}return null}
 window.openTopic=function(id){const n=topicName(id);if(n)openNote(n)};
 let packTab="inventory";
-window.openPack=function(tab){renderPack(tab||packTab);openSheet("s-pack")};
+window.openPack=function(tab){renderPack(tab||packTab);openSheet("s-pack");
+  hint("pack","The Notifications tab in here keeps every message the island has shown you, so one that faded is not lost.")};
 window.renderPack=renderPack;
 function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"),worn=sl("wear");
-  const tabs=[["inventory","Inventory"],["achievements","Achievements"],["wardrobe","Wardrobe"]]
+  const tabs=[["inventory","Inventory"],["achievements","Achievements"],["wardrobe","Wardrobe"],["log","Notifications"]]
     .map(([k,l])=>`<button class="${packTab===k?"pick":""}" onclick="renderPack('${k}')">${l}</button>`).join("");
   let body="";
   if(packTab==="inventory"){
@@ -175,6 +253,13 @@ function renderPack(tab){packTab=tab||packTab;const got=sl("items"),ach=sl("ach"
   else if(packTab==="achievements"){
     body=`<p class="small muted">${ach.length} of ${ACH.length} unlocked. Six of them are the badges the terminal hands out, so a progress code keeps the two in step.</p>`+
       ACH.map(a=>`<div class="pathrow"><span><b>${a.name}</b><br><span class="muted small">${a.what}</span></span><span class="st ${ach.includes(a.id)?"deep":""}">${ach.includes(a.id)?"unlocked":"locked"}</span></div>`).join("")}
+  else if(packTab==="log"){
+    // Newest first: the last thing that happened is the one being looked for.
+    const log=sl("notes").slice().reverse();
+    body=`<p class="small muted">Everything the island has told you, newest first. A toast goes away after five seconds; this is what it said. Quiet in Settings keeps the list and stops the interruption.</p>`+
+      (log.length
+        ?log.map(n=>`<div class="pathrow"><span><b>${esc(n.t)}</b><br><span class="muted small">${esc(n.b)}</span></span><span class="st">${esc(noteWhen(n.ts))}</span></div>`).join("")
+        :`<div class="pathrow"><span class="muted small">Nothing yet. The island speaks when something happens.</span></div>`)}
   else{
     body=`<p class="small muted">Earned by achievements, worn one per slot. What you wear shows on the walker, on the title screen and in the terminal.</p>`+
       WEAR.map(w=>`<div class="pathrow"><span><b>${w.name}</b><br><span class="muted small">${w.slot} · from ${(ACH.find(a=>a.id===w.by)||{}).name}</span></span>`+
@@ -200,7 +285,8 @@ function wireAvatar(){if(avatarWired)return;avatarWired=true;
   window.claim=function(n){const before=(S.done||[]).includes(n);claimed.apply(this,arguments);
     if(before||!(S.done||[]).includes(n))return;
     const now=Date.now();if(lastClaimAt&&now-lastClaimAt<300000)speedRun=true;lastClaimAt=now;
-    cheer();achCheck()};
+    // The claim is a button, so the buzz rides the gesture that asked for it.
+    buzz(BUZZ.claim);cheer();achCheck()};
   // Sitting is a key, so it joins the half of the hint the keyboard reads.
   const h=$("hint").querySelector(".keys");if(h&&h.textContent.indexOf("sit")<0)h.textContent+=" · x to sit";
   setPose(chars.rolinda,"carry");
