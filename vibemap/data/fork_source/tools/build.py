@@ -48,15 +48,16 @@ GENERATED = ROOT / "tools" / "generated"
 CONFIG_DIR = SRC / "config"
 
 # The folders of modules, in load order: the game, then the second experience
-# (src/galaxy/, which need not exist). Each is read on its own and the later
-# one loads after the earlier one.
+# (src/galaxy/, which need not exist). Boot must follow every module folder:
+# its load-time calls read consts that have to be initialized already.
 MODULE_DIRS = ("game", "galaxy")
+BOOT_MODULE = "game/90-boot.js"
 
 # A module's name is its place in the load order: two digits, an optional
 # letter that splits a number, a dash, the rest. The build sorts by that and
 # reads what it finds, so a new module is a new file and nothing here changes.
-# 00-state.js sorts first (S, save, load) and 90-boot.js last (it reads
-# localStorage and paints the title screen).
+# 00-state.js sorts first (S, save, load). Boot is moved to the end after
+# all folders are read, even when a game module has a higher number.
 MODULE_NAME = re.compile(r"\d{2}[a-z]?-[a-z0-9-]+\.js")
 
 # The parts the build makes itself, each written in front of the module it
@@ -508,8 +509,12 @@ def _module(rel: str) -> str:
 
 
 def _game_script() -> str:
-    """Every part of the game, in the order the file names ask for."""
+    """Named modules in folder order, then boot after their declarations."""
     rels = [f"{d}/{n}" for d in MODULE_DIRS for n in _modules(d)]
+    if BOOT_MODULE not in rels:
+        raise SystemExit(f"src/{BOOT_MODULE} is required to start the game.")
+    rels.remove(BOOT_MODULE)
+    rels.append(BOOT_MODULE)
     missing = sorted((set(INJECT_BEFORE) | set(MADE)) - set(rels))
     if missing:
         raise SystemExit(

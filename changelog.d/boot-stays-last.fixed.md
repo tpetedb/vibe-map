@@ -1,0 +1,1 @@
+- Load every game and experience module before boot so startup can read their initialized declarations, and refuse a source tree missing boot.
