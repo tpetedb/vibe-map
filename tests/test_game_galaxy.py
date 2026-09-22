@@ -23,6 +23,17 @@ def test_galaxy_journey_globe_and_dome_share_one_listing(game: GamePage) -> None
     assert rows and {row["state"] for row in rows} >= {"next", "ahead"}
     assert game.page.locator("#galaxy-list .galaxy-place").count() == len(rows)
     assert game.page.locator("#galaxy-list").get_by_text("NEXT", exact=False).count()
+    assert game.page.locator('#galaxy-list [aria-current="step"]').count() == 1
+    assert all(row["year"] and row["placeTitle"] for row in rows)
+    first_place = game.page.locator("[data-galaxy-place]").first
+    first_place.focus()
+    assert game.page.evaluate(
+        "window.__scene().children.some(item => item.geometry?.type === 'TorusGeometry')"
+    )
+    first_place.blur()
+    assert not game.page.evaluate(
+        "window.__scene().children.some(item => item.geometry?.type === 'TorusGeometry')"
+    )
 
     for view in ("journey", "globe", "dome"):
         game.page.get_by_role("button", name=view.title(), exact=True).click()
@@ -30,9 +41,9 @@ def test_galaxy_journey_globe_and_dome_share_one_listing(game: GamePage) -> None
             game.page.locator(f'[data-galaxy-view="{view}"]').get_attribute("class")
             == "on"
         )
-    game.page.locator("[data-galaxy-place]").first.click()
+    first_place.click()
     assert game.page.locator('[data-galaxy-view="dome"]').get_attribute("class") == "on"
-    assert game.page.locator("#galaxy-title").inner_text() == rows[0]["title"]
+    assert game.page.locator("#galaxy-title").inner_text() == rows[0]["placeTitle"]
     game.screenshot("galaxy_desktop_dome", clip_height=760)
     game.assert_clean()
 
