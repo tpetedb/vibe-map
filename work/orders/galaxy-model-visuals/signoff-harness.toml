@@ -4,12 +4,15 @@ v = 1
 order = "galaxy-model-visuals"
 team = "harness"
 by = "manager-harness"
-reviewed = "541df67d002c22579d48d009c922886930454753"
+reviewed = "514369418bc1dce3c900e55b190cf095b8988bcc"
 verdict = "accept"
 note = '''
 Accepted. Nothing in the harness-owned change needs to move before landing.
 
-Evidence for the contribution at 541df67:
+Evidence for the contribution at 5143694:
+- Since the prior harness sign-off, the only owned-file delta changes the
+  changelog phrase `walkable domes` to the accurate `dome dioramas`.
+  `tools/changelog.py check` and the repository style guard pass.
 - The only owned harness test change is in `tests/test_build.py`. Its fixture
   now removes the repository's newly present `src/galaxy` directory before it
   proves that the second source folder remains optional. This preserves the
@@ -26,7 +29,7 @@ Evidence for the contribution at 541df67:
   orders. Its separate note about an empty draft in another worktree does not
   affect this order.
 
-The later train commit through 967cf59 changes only an unrelated camera test.
+The intervening train commit 967cf59 changes only an unrelated camera test.
 This sign-off lapses if this order's contribution changes after the reviewed
 checkpoint.
 '''
