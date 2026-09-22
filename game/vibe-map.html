@@ -7379,8 +7379,10 @@ $("c").addEventListener("pointerup",event=>{if(experienceId()!=="galaxy"||!galax
 EXPERIENCES.galaxy={
   name:"Galaxy",
   build(){const model=galaxyModel(PLACES,TREE,galaxyDone()),groups=galaxyGroups(model),visuals=createGalaxyVisuals({three:T,palette:PALETTE,material:mat,finish:fixColors});
-    scene=new T.Scene();scene.background=new T.Color(PALETTE.black);scene.add(new T.AmbientLight(PALETTE.snow,.55));
-    const light=new T.DirectionalLight(PALETTE.snow,1.5);light.position.set(3,8,8);scene.add(light);
+    scene=new T.Scene();scene.background=new T.Color(PALETTE.black);scene.add(new T.AmbientLight(PALETTE.snow,1.15));
+    scene.add(new T.HemisphereLight(PALETTE.blueBright,PALETTE.orange,.95));
+    const light=new T.DirectionalLight(PALETTE.snow,2.5);light.position.set(3,8,8);scene.add(light);
+    const rim=new T.PointLight(PALETTE.yellow,1.4,18);rim.position.set(-5,3,-3);scene.add(rim);
     const planets={};Object.entries(groups).forEach(([kind,places])=>{const planet=visuals.makePlanet(places,{states:Object.fromEntries(places.map(p=>[p.id,p.state])),domeScale:.22});planet.root.position.set(...(GALAXY_POS[kind]||[0,0,0]));planet.root.scale.setScalar(1.7);scene.add(planet.root);planets[kind]=planet});
     const kinds=Object.keys(planets),nodes=kinds.map(kind=>({position:GALAXY_POS[kind]||[0,0,0],state:groups[kind].some(p=>p.state==="next")?"next":groups[kind].every(p=>p.state==="done")?"done":"ahead"}));
     const journey=visuals.makeJourney(nodes);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,detail:null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
