@@ -69,6 +69,9 @@ window.__saver=()=>({after:IDLE_MS,idle:Math.round(idleMs()),half:saverIdle()});
 window.__saverAfter=ms=>{IDLE_MS=Math.max(0,+ms||0)};
 function animate(){
   requestAnimationFrame(animate);if(!scene||gfxLost)return;
+  if(experienceId()!=="islands"){
+    const dt=Math.min(.05,clock.getDelta()),t=reducedMotion()?0:clock.elapsedTime;
+    activeExperience().tick(dt,t);renderer.render(scene,camera);return}
   if(saverIdle()){idleSkip=!idleSkip;if(idleSkip)return}else idleSkip=false;
   const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the

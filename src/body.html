@@ -1,6 +1,17 @@
 <body>
 <div id="stage">
 <canvas id="c"></canvas>
+<div id="galaxy-ui" class="ui" hidden aria-label="Galaxy journey">
+  <div class="galaxy-head">
+    <div><p class="kicker">Your programming journey</p><h2 id="galaxy-title">Galaxy</h2><p id="galaxy-summary" class="small muted"></p></div>
+    <div class="galaxy-scale" role="group" aria-label="Galaxy view">
+      <button onclick="galaxyView('journey')" data-galaxy-view="journey">Journey</button>
+      <button onclick="galaxyView('globe')" data-galaxy-view="globe">Globe</button>
+      <button onclick="galaxyView('dome')" data-galaxy-view="dome">Dome</button>
+    </div>
+  </div>
+  <div id="galaxy-list" role="list"></div>
+</div>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
 <!-- One hierarchy, one DOM: Roadmap and Search are always in the pill, the

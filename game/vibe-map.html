@@ -78,6 +78,13 @@ body{font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-sm
    bottom, and the toast stack what is left between them. The plain vh line is
    the fallback for a browser without dvh. */
 #stage{position:relative;--stage-h:calc(100vh - var(--talk-band));height:var(--stage-h);overflow:hidden;background:#9BD3F5}
+body[data-experience="galaxy"] #stage{background:var(--bg)}
+body[data-experience="galaxy"] #bottom,body[data-experience="galaxy"] #joy,body[data-experience="galaxy"] #jump,body[data-experience="galaxy"] #zoom{display:none}
+#galaxy-ui{position:absolute;z-index:5;left:14px;top:104px;width:min(390px,calc(100% - 28px));max-height:calc(100% - 120px);overflow:auto;padding:14px;border:1px solid var(--hairline-2);border-radius:var(--radius-m);background:rgba(0,0,0,.78);backdrop-filter:blur(14px)}
+.galaxy-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}.galaxy-head h2,.galaxy-head p{margin:0}.galaxy-scale{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.galaxy-scale button{min-height:44px}.galaxy-scale button.on{border-color:var(--yellow);color:var(--yellow-bright)}
+#galaxy-list{display:grid;gap:8px;margin-top:12px}.galaxy-place{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:9px 10px;border:1px solid var(--hairline);border-radius:var(--radius-s);background:var(--surface-1)}.galaxy-place[data-state="next"]{border-color:var(--yellow)}.galaxy-place b,.galaxy-place span{grid-column:1}.galaxy-place button{grid-column:2;grid-row:1 / span 2;min-width:70px;min-height:44px}.galaxy-state{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.galaxy-place[data-state="done"] .galaxy-state{color:var(--green-bright)}.galaxy-place[data-state="next"] .galaxy-state{color:var(--yellow)}
+body:has(#title:not(.off)) #galaxy-ui{visibility:hidden}
+@media (max-width:620px){#galaxy-ui{top:auto;bottom:8px;max-height:48%;}.galaxy-head{display:block}.galaxy-scale{justify-content:flex-start;margin-top:10px}}
 #stage.map-compact{--stage-h:min(56vh,520px)}
 /* The whole window: the band stops being a strip under the stage and becomes
    the bottom of it, so the line that says what to do stays on screen. */
@@ -754,6 +761,17 @@ h3+.setting{border-top:0}
 <body>
 <div id="stage">
 <canvas id="c"></canvas>
+<div id="galaxy-ui" class="ui" hidden aria-label="Galaxy journey">
+  <div class="galaxy-head">
+    <div><p class="kicker">Your programming journey</p><h2 id="galaxy-title">Galaxy</h2><p id="galaxy-summary" class="small muted"></p></div>
+    <div class="galaxy-scale" role="group" aria-label="Galaxy view">
+      <button onclick="galaxyView('journey')" data-galaxy-view="journey">Journey</button>
+      <button onclick="galaxyView('globe')" data-galaxy-view="globe">Globe</button>
+      <button onclick="galaxyView('dome')" data-galaxy-view="dome">Dome</button>
+    </div>
+  </div>
+  <div id="galaxy-list" role="list"></div>
+</div>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
 <!-- One hierarchy, one DOM: Roadmap and Search are always in the pill, the
@@ -3152,7 +3170,7 @@ function init3d(){
   addEventListener("resize",fitRenderer);watchContext($("c"));
   // The zoom listens before the walk does, so a pinch is known to be a pinch
   // by the time the tap handler sees the same finger lift.
-  buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
+  inited=true;activeExperience().build();setupZoom();setupInput();animate();
 }
 // The browser may take the WebGL context back: a phone short of memory, a tab
 // that slept, a driver reset. three.js stops drawing and says nothing, and a
@@ -3878,7 +3896,7 @@ const pinch={pts:new Map(),on:false,span:0,dist:0};
 const pinching=()=>pinch.on;
 function pinchSpan(){const p=[...pinch.pts.values()];return Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1])}
 function setupZoom(){const c=$("c");
-  c.addEventListener("wheel",e=>{if(!started||flight)return;e.preventDefault();
+  c.addEventListener("wheel",e=>{if(experienceId()!=="islands"||!started||flight)return;e.preventDefault();
     const px=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*VIEW.h:e.deltaY;
     zoomSet(zoomRaw+px*CAM.zoom.wheel*(e.ctrlKey?CAM.zoom.pinch:1))},{passive:false});
   // A pinch is over when the last finger lifts, but the tap handler runs after
@@ -3898,7 +3916,7 @@ function setupZoom(){const c=$("c");
   // them; the stage keeps its size and the camera takes the gesture.
   ["gesturestart","gesturechange","gestureend"].forEach(n=>
     $("stage").addEventListener(n,e=>e.preventDefault(),{passive:false}));
-  addEventListener("keydown",e=>{if(!started||e.ctrlKey||e.metaKey||e.altKey||inField(e.target))return;
+  addEventListener("keydown",e=>{if(experienceId()!=="islands"||!started||e.ctrlKey||e.metaKey||e.altKey||inField(e.target))return;
     if(document.querySelector("#sheet.on,#vault.on,#pal.on"))return;
     if(e.key==="+"||e.key==="=")zoomStep(1);else if(e.key==="-"||e.key==="_")zoomStep(-1);
     else if(e.key==="0")zoomFit();else return;
@@ -4183,7 +4201,7 @@ function setupInput(){
   // reading a panel is here, and the saver's minute is about nobody being.
   ["pointerdown","keydown","wheel"].forEach(k=>addEventListener(k,noteInput,true));
   c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
-  c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
+  c.addEventListener("pointerup",e=>{if(experienceId()!=="islands"){downPos=null;return}if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     aim(hit.point.x,hit.point.z)});
   addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
@@ -4299,6 +4317,9 @@ window.__saver=()=>({after:IDLE_MS,idle:Math.round(idleMs()),half:saverIdle()});
 window.__saverAfter=ms=>{IDLE_MS=Math.max(0,+ms||0)};
 function animate(){
   requestAnimationFrame(animate);if(!scene||gfxLost)return;
+  if(experienceId()!=="islands"){
+    const dt=Math.min(.05,clock.getDelta()),t=reducedMotion()?0:clock.elapsedTime;
+    activeExperience().tick(dt,t);renderer.render(scene,camera);return}
   if(saverIdle()){idleSkip=!idleSkip;if(idleSkip)return}else idleSkip=false;
   const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the
@@ -6270,9 +6291,10 @@ window.reset=function(){if(!confirm("Decommission the campus and reset to greenf
 // config/camp.toml still sets the defaults for a fresh browser; these override them.
 // They belong to this browser and not to the journey: the progress code carries
 // the stops, so an import never moves a setting.
-const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start,
+const SETTINGS_DEFAULTS={experience:"islands",difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start,
   text:"normal",spacing:"normal",contrast:"auto",hand:"right",run:"hold",haptics:"on",saver:"auto",awake:"on",toasts:"all",breaks:"on"};
 const SETTINGS_OPTIONS={
+  experience:[["islands","Islands: walk the camp"],["galaxy","Galaxy: follow programming history"]],
   difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
   vault:[["config","From config/camp.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
@@ -6292,12 +6314,12 @@ const SETTINGS_OPTIONS={
   toasts:[["all","Show them"],["quiet","Quiet: none shown"]],
   breaks:[["on","Suggest a break"],["off","No break card"]]
 };
-const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",live:"Live world",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed",
+const SETTINGS_LABELS={experience:"Experience",difficulty:"Difficulty",map:"Map size",vault:"Vault",live:"Live world",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed",
   text:"Text size",spacing:"Line spacing",contrast:"Contrast",hand:"Handedness",run:"Hurrying",haptics:"Buzz",saver:"Battery saver",awake:"Screen",toasts:"Toasts",breaks:"Break card"};
 // The rows in the order a player looks for them. A key outside a group has no
 // dropdown: zoom is written by the wheel, the pinch and the stage buttons.
 const SETTINGS_GROUPS=[
-  ["The game",["difficulty","vault","live","pairings"]],
+  ["The game",["experience","difficulty","vault","live","pairings"]],
   ["Reading",["text","spacing","contrast"]],
   ["Controls",["hand","speed","run","haptics"]],
   ["The screen",["map","shadows","motion","saver","awake"]],
@@ -6341,8 +6363,10 @@ function applySettings(){const s=settings();
   if(typeof refreshBridges==="function")refreshBridges();
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
-window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
-function settingRow(k,s){return `<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`}
+window.setSetting=function(key,value,control){const focus=(control&&control.id)||(document.activeElement&&document.activeElement.id),before=key==="experience"?activeExperience():null;if(!S.settings)S.settings={};S.settings[key]=value;save();
+  if(key==="experience"&&before!==activeExperience()){before.dispose();activeExperience().build();announceExperience()}
+  applySettings();if(focus&&$(focus)){$(focus).focus();requestAnimationFrame(()=>{if($(focus))$(focus).focus()})}if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
+function settingRow(k,s){return `<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value,this)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`}
 // A first-time hint shows once and records its id, so the way back to them is
 // a button that empties the record. Offered only once there is one to show.
 function hintsRow(){return (S.hints&&S.hints.length)?`<button onclick="showHintsAgain()">Show the hints again</button>`:""}
@@ -7318,6 +7342,55 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
   }
   return {surface,makeDome,makePlanet,makeJourney};
 }
+/* ---------------- Galaxy experience ---------------- */
+let galaxyState=null;
+const GALAXY_POS={earth:[-3.35,0,0],datacentre:[0,.75,-.7],cloud:[3.35,0,0]};
+function galaxyDone(){return Array.isArray(S.topics)?S.topics:[]}
+function galaxyGroups(model){const groups={};model.places.forEach(place=>{(groups[place.globe]||(groups[place.globe]=[])).push(place)});return groups}
+function galaxyCamera(view){const at=view==="journey"?[0,5.5,14]:view==="globe"?[0,2.8,7]:[0,2.2,4.3];
+  camera.position.set(...at);camera.lookAt(0,0,0);camera.near=.05;camera.far=100;camera.updateProjectionMatrix()}
+function galaxySelected(){if(!galaxyState)return null;return galaxyState.model.places.find(place=>place.id===galaxyState.selected)||galaxyState.model.places[0]}
+function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();state.view=view;
+  state.journey.visible=view==="journey";
+  Object.entries(state.planets).forEach(([kind,planet])=>{const journey=view==="journey",chosen=kind===selected.globe;
+    planet.root.visible=journey||(view==="globe"&&chosen);planet.root.position.set(...(journey?(GALAXY_POS[kind]||[0,0,0]):[0,0,0]));planet.root.scale.setScalar(journey?1.7:2.45)});
+  if(state.detail){discard(state.detail);state.detail=null}
+  if(view==="dome"&&selected){state.detail=state.visuals.makeDome(selected,selected.state);state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail)}
+  galaxyCamera(view);renderGalaxyList()}
+window.galaxyView=function(view){if(["journey","globe","dome"].includes(view))galaxyShow(view)};
+window.galaxyPlace=function(id){if(!galaxyState||!galaxyState.model.places.some(place=>place.id===id))return;
+  galaxyState.selected=id;galaxyShow("dome");const row=document.querySelector(`[data-galaxy-place="${id}"]`);if(row)row.focus()};
+function renderGalaxyList(){const ui=$("galaxy-ui");if(!ui)return;ui.hidden=false;
+  const state=galaxyState,model=state?state.model:galaxyModel(PLACES,TREE,galaxyDone()),selected=state?galaxySelected():model.places[0];
+  $("galaxy-title").textContent=selected?selected.name:"Galaxy";
+  $("galaxy-summary").textContent=model.topics.filter(topic=>topic.state==="done").length+" of "+model.topics.length+" topics complete";
+  $("galaxy-list").innerHTML=model.places.map(place=>`<div class="galaxy-place" role="listitem" data-state="${place.state}"><b>${esc(place.name)}</b><span class="galaxy-state">${place.state} · ${place.done} of ${place.count}</span><button data-galaxy-place="${place.id}" onclick="galaxyPlace('${place.id}')">Show</button></div>`).join("");
+  document.querySelectorAll("[data-galaxy-view]").forEach(button=>button.classList.toggle("on",state&&button.dataset.galaxyView===state.view))}
+function announceExperience(){const name=activeExperience().name;document.body.dataset.experience=experienceId();copySay(name+" experience shown")}
+let galaxyDown=null;
+$("c").addEventListener("pointerdown",event=>{if(experienceId()==="galaxy")galaxyDown=[event.clientX,event.clientY]});
+$("c").addEventListener("pointerup",event=>{if(experienceId()!=="galaxy"||!galaxyState||!galaxyDown)return;
+  const moved=Math.hypot(event.clientX-galaxyDown[0],event.clientY-galaxyDown[1]);galaxyDown=null;if(moved>10)return;
+  const box=$("c").getBoundingClientRect(),pointer=new T.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1),pick=new T.Raycaster();pick.setFromCamera(pointer,camera);
+  const hit=pick.intersectObjects(scene.children,true)[0];if(!hit)return;let node=hit.object;
+  while(node&&node!==scene&&!node.userData.placeId&&!node.userData.globe)node=node.parent;
+  if(node&&node.userData.placeId)galaxyPlace(node.userData.placeId);
+  else if(node&&node.userData.globe){const place=(galaxyState.groups[node.userData.globe]||[])[0];if(place)galaxyPlace(place.id)}});
+EXPERIENCES.galaxy={
+  name:"Galaxy",
+  build(){const model=galaxyModel(PLACES,TREE,galaxyDone()),groups=galaxyGroups(model),visuals=createGalaxyVisuals({three:T,palette:PALETTE,material:mat,finish:fixColors});
+    scene=new T.Scene();scene.background=new T.Color(PALETTE.black);scene.add(new T.AmbientLight(PALETTE.snow,.55));
+    const light=new T.DirectionalLight(PALETTE.snow,1.5);light.position.set(3,8,8);scene.add(light);
+    const planets={};Object.entries(groups).forEach(([kind,places])=>{const planet=visuals.makePlanet(places,{states:Object.fromEntries(places.map(p=>[p.id,p.state])),domeScale:.22});planet.root.position.set(...(GALAXY_POS[kind]||[0,0,0]));planet.root.scale.setScalar(1.7);scene.add(planet.root);planets[kind]=planet});
+    const kinds=Object.keys(planets),nodes=kinds.map(kind=>({position:GALAXY_POS[kind]||[0,0,0],state:groups[kind].some(p=>p.state==="next")?"next":groups[kind].every(p=>p.state==="done")?"done":"ahead"}));
+    const journey=visuals.makeJourney(nodes);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,detail:null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
+    document.body.dataset.experience="galaxy";galaxyShow("journey");renderGalaxyList()},
+  dispose(){const ui=$("galaxy-ui");if(ui)ui.hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
+  tick(dt,t){if(!galaxyState||reducedMotion())return;Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)})},
+  goTo(to){if(!to||!to.place)return false;galaxyPlace(to.place);return true},
+  where(){const place=galaxySelected();return place?{kind:"place",id:place.id}:null},
+  listing(){return galaxyModel(PLACES,TREE,galaxyDone()).places.map(place=>({id:place.id,title:place.name,state:place.state,count:place.count,done:place.done}))},
+};
 // Resume is offered to anyone who has been here before, but only when there is
 // something to resume with: start() refuses an empty name, so a saved look on
 // its own would be a button that turns you down. Once a stop is done the five
@@ -7371,7 +7444,7 @@ applyTheme();stamp();wrapCommands();renderOnboarding();iconize();say("title");hu
 document.addEventListener("visibilitychange",onVisibility);
 // The island is the backdrop of the title, so the scene builds at once;
 // start() only flips the flag. A failure here is reported again by start().
-try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){}
+try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){if(experienceId()==="galaxy"&&typeof renderGalaxyList==="function")renderGalaxyList()}
 })();
 </script>
 </body>

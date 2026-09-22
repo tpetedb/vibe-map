@@ -8,7 +8,7 @@ function init3d(){
   addEventListener("resize",fitRenderer);watchContext($("c"));
   // The zoom listens before the walk does, so a pinch is known to be a pinch
   // by the time the tap handler sees the same finger lift.
-  buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
+  inited=true;activeExperience().build();setupZoom();setupInput();animate();
 }
 // The browser may take the WebGL context back: a phone short of memory, a tab
 // that slept, a driver reset. three.js stops drawing and says nothing, and a

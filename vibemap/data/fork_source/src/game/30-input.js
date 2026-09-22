@@ -165,7 +165,7 @@ function setupInput(){
   // reading a panel is here, and the saver's minute is about nobody being.
   ["pointerdown","keydown","wheel"].forEach(k=>addEventListener(k,noteInput,true));
   c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
-  c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
+  c.addEventListener("pointerup",e=>{if(experienceId()!=="islands"){downPos=null;return}if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     aim(hit.point.x,hit.point.z)});
   addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()

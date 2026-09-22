@@ -51,4 +51,4 @@ applyTheme();stamp();wrapCommands();renderOnboarding();iconize();say("title");hu
 document.addEventListener("visibilitychange",onVisibility);
 // The island is the backdrop of the title, so the scene builds at once;
 // start() only flips the flag. A failure here is reported again by start().
-try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){}
+try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){if(experienceId()==="galaxy"&&typeof renderGalaxyList==="function")renderGalaxyList()}
