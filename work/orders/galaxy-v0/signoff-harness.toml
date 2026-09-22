@@ -4,10 +4,10 @@ v = 1
 order = "galaxy-v0"
 team = "harness"
 by = "manager-harness"
-reviewed = "4dbe99b9094fcacf08f2c3444733edd6f8039588"
+reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
 verdict = "accept"
 note = '''
-Accepted for the harness team at 4dbe99b9094fcacf08f2c3444733edd6f8039588.
+Accepted for the harness team at a94d640392b2e390b72bc3f04b922f184ebb8be9.
 
 The Galaxy browser test now uses the 1440 by 900 desktop fixture and runs the
 same phone assertions on Chromium with Pixel 7 metrics and WebKit with iPhone
@@ -17,7 +17,12 @@ both deliberate mutations were detected.
 
 Ruff check and format are clean for the changed Galaxy test. All six generated
 checks pass. The size check uses commit 541df67 as the pre-Galaxy baseline and
-reports a 36,640 byte increase, within the order's 80 KB limit.
+reports a 36,689 byte increase, within the order's 80 KB limit.
+
+The final delta adds three place-specific dome captures to the desktop browser
+test. That focused test and the shared Android and iPhone test pass. The built
+game and packaged fork source match the corrected Chart camera and place
+landing source byte for byte. The final isolated increase is 36,689 bytes.
 
 Boot remains last by construction: tools/build.py gathers the game and Galaxy
 module folders, removes game/90-boot.js from that sequence, then appends it.
