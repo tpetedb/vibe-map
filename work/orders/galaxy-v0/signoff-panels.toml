@@ -4,10 +4,10 @@ v = 1
 order = "galaxy-v0"
 team = "panels"
 by = "manager-panels"
-reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
+reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
 verdict = "accept"
 note = '''
-Accepted for the panels team at a94d640392b2e390b72bc3f04b922f184ebb8be9.
+Accepted for the panels team at f9d9a6b80f8330b02143dcb354da0fcee447f31e.
 
 The Experience setting switches through the shared registry while preserving
 the open sheet and restoring focus to the select. The existing live region
