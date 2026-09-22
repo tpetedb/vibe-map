@@ -10,6 +10,7 @@ five seconds and a loaded runner loses that race.
 from __future__ import annotations
 
 import math
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
@@ -436,4 +437,29 @@ def test_the_notifications_tab_reads_a_record_it_did_not_write(
     assert "<b>not markup</b>" in shown
     assert "Picked up: The mug" in shown
     game.screenshot(f"qol4-{fixture}-notifications", clip_height=900)
+    game.assert_clean()
+
+
+@pytest.mark.parametrize("motion", ["on", "off"])
+def test_earned_achievements_follow_elapsed_time_not_frame_count(
+    game: GamePage, motion: str
+) -> None:
+    """A sparse frame still notices earned progress, even with calm animation."""
+    instant = datetime(2026, 9, 22, 12, tzinfo=UTC)
+    game.page.clock.install(time=instant)
+    game.page.clock.pause_at(instant)
+    game.goto(
+        state={
+            "name": "Tom",
+            "doneW": {"campus": [1]},
+            "settings": {"motion": motion, "shadows": "off"},
+        }
+    )
+    before = game.frame_count()
+    assert "first-light" not in game.page.evaluate("window.__S().ach || []")
+    # Fast-forward fires each due callback once, representing two seconds
+    # between rendered frames without sleeping or running sixty frames a second.
+    game.page.clock.fast_forward(2000)
+    assert 0 < game.frame_count() - before <= 2
+    assert "first-light" in game.page.evaluate("window.__S().ach || []")
     game.assert_clean()

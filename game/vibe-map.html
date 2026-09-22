@@ -2534,10 +2534,9 @@ function tickAvatar(dt,t,sp){
   // is applied here, where the loop has not yet touched them this frame.
   (props.mentors||[]).forEach(c=>{if(isSitting(c))poseChar(c,dt,t)});
   tickItems(dt,t);
-  // The derived achievements read the whole state, so they are answered about
-  // once a second rather than every frame; the earned-by-a-moment ones unlock
-  // where they happen.
-  achT+=dt;if(achT>1){achT=0;achCheck()}
+  // The page clock pauses while hidden but does not cap long frames like
+  // movement dt. A rebuilt island starts a new clock and needs a fresh check.
+  const now=clock.elapsedTime;if(now<achT||now-achT>=1){achT=now;achCheck()}
 }
 // Collectibles and seats, placed from vibemap/data/items.json (ITEMS).
 // Every spot in that file is relative to a plot, an annex or the path of its

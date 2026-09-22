@@ -339,7 +339,7 @@ def test_the_toast_record_outlives_the_toast(game: GamePage) -> None:
     game.page.evaluate(
         "() => document.querySelectorAll('#toast .tst').forEach(n => n.remove())"
     )
-    assert game.page.text_content("#toast") == ""
+    assert game.page.locator("#toast .tst").count() == 0
     assert any("could not be read" in said for said in game.toasts())
     game.toast_said("could not be read")
 
@@ -354,8 +354,8 @@ def test_the_toast_record_holds_each_notice_once(game: GamePage) -> None:
     that disagrees with it is wrong from the first toast.
     """
     # An island the game does not build is repaired away and the player is
-    # told, which is one toast on load; the campus stop is what First light
-    # reads, which is the second toast, on resume.
+    # told once; the campus stop earns First light, which may be noticed
+    # behind the title screen or after resume, depending on rendering speed.
     game.goto(
         state={
             "name": "Marsman",
@@ -366,13 +366,15 @@ def test_the_toast_record_holds_each_notice_once(game: GamePage) -> None:
     game.toast_said("could not be read")
     both = "() => [window.__toasts(), (window.__toastLog || []).length]"
     raised, kept = game.page.evaluate(both)
-    assert raised == 1, f"the page raised {raised} toasts, so this proves less"
+    assert raised >= 1
     assert kept == raised, f"the record holds {kept} of {raised} toasts"
+    assert sum("could not be read" in said for said in game.toasts()) == 1
     game.resume()
     game.toast_said("Achievement: First light")
     raised, kept = game.page.evaluate(both)
     assert raised >= 2, raised
     assert kept == raised, f"the record holds {kept} of {raised} toasts"
+    assert sum("Achievement: First light" in said for said in game.toasts()) == 1
 
 
 def test_a_toast_that_never_comes_says_what_the_page_did_say(
