@@ -1,16 +1,23 @@
 # The panels team's manager on what this order does to the panels files. One
 # of ours is changed, src/game/90-boot.js, by three lines; src/body.html,
 # src/head.html, src/style.css, src/errors.js, src/icon.svg and every other
-# module of ours under src/game/ are untouched by this branch. Read at the
-# commit below: the only commits after 7a6208f, which the second review read,
-# are that review and the state team's sign-off, and neither touches source.
+# panels-owned module are untouched by this branch. Read at the current review
+# head below, including the recovery change to the scene-owned avatar loop.
 v = 1
 order = "qol-4-feedback-companion"
 team = "panels"
 by = "manager-panels"
-reviewed = "53291a9bfe910eee5c087fff94796ffd7e590c7c"
+reviewed = "bf0d1a2ce38060d479aec731a2db4f56928acc85"
 verdict = "accept"
 note = '''
+Refresh at bf0d1a2: accepted again after the recovery review. The panels-owned
+delta remains only the visibility listener in src/game/90-boot.js. The recovery
+changes the achievement cadence in scene-owned src/game/18-avatar.js from a
+capped movement delta to the same elapsed clock that onVisibility pauses. A
+sparse visible frame may therefore raise an earned achievement and its recorded
+toast on schedule; hidden time still raises nothing, and the panels interaction
+contract accepted below is unchanged.
+
 Accepted: the change to src/game/90-boot.js is true of the code, is the listener proposal 7 asks for in that file by name, and is written the way the file is. Nothing I want changed holds the landing. What follows from it for the panels team is real and is mostly work in our own files, through our own orders, named below.
 
 What I read and ran, as the owner of the files:
