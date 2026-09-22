@@ -1,1 +1,1 @@
-- Galaxy now has a pure journey model and a procedural planet kit for sourced places, tiny globes and distinct walkable domes.
+- Galaxy now has a pure journey model and a procedural planet kit for sourced places, tiny globes and distinct dome dioramas.
