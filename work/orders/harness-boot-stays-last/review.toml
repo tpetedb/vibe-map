@@ -1,0 +1,35 @@
+# order: harness-boot-stays-last
+# role: reviewer
+v = 1
+order = "harness-boot-stays-last"
+by = "codex-review-boot-final"
+reviewed = "6eb7bfb25e568c75bdd78e50421cabbe1564d461"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `just work-review harness-boot-stays-last` at the reviewed commit with the project virtual environment first on PATH: `tests/test_build.py` passed all 27 tests in 2.9 seconds. The command exercises the real build entry point in temporary fork-shaped trees and directly checks both the required boot and the order around boot. I also exported HEAD to a separate scratch tree, replaced only `tools/build.py` with origin/main's version, and ran the two changed test functions: all three cases failed. Both galaxy cases showed boot before the galaxy constants, and the missing-boot case showed the old build incorrectly exiting 0 and writing a game. Thus the new regression tests demonstrably fail before the fix and pass with it.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the criterion through `just work-review` at 6eb7bfb: ruff check and format check passed, the style guard reported no em dashes or emoji, the sink guard passed, and the complete non-browser selection passed 695 tests in 115.9 seconds. I read the complete contribution diff as well as the surrounding module-discovery and build tests. The change removes exactly one discovered path, verifies that the required boot path exists, appends it after all module folders, and adds no new data sink, timed wait, or learner-facing copy. The full pre-sync verification log supplied with the order records 1075 passing tests for the identical product contribution.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the criterion through `just work-review`: build, tree, cookbook, template, fork-source and syllabus checks all exited 0, and the final diff check against origin/main exited 0. Independently hashed both built artifacts: the worktree's `game/vibe-map.html` and origin/main's blob are both `1dcaf6ef1734c37a1860e39353e676d6f95a8decaf513e1b600a1288d70b2471`. `tools/build.py` is byte-identical to `vibemap/data/fork_source/tools/build.py`. The verbatim contribution patch ID is `dce74cc9a11924df01947850cbe976b76c3c3278` both at implementation commit 6d3c42e and synced HEAD, so the merge/regeneration did not change the reviewed contribution.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Exported reviewed HEAD into `/tmp/vibe-boot-review.KUWe59`, added `src/game/95-c4.js` with a top-level const and `src/galaxy/01-x.js` with a second top-level const, then made boot read both at load time. The built HTML byte offsets were 1648361 for the late game marker, 1648458 for the galaxy marker and 1648860 for the boot read, proving strict game, galaxy, boot order. Served that scratch build on bounded localhost and opened it in headless Chromium. The page reached rendered frame 4 with `window.__BOOT_C4__ == "late-game-before-galaxy:declared-before-boot"`, both body data markers held their expected values, and the page emitted zero errors. I inspected `c4-browser.png`: the title form and 3D island rendered normally. The browser, server and thread were all closed by the bounded proof.
+'''

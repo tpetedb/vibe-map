@@ -231,11 +231,15 @@ def test_a_new_module_lands_at_the_place_its_name_asks_for(tmp_path) -> None:
     assert _order(script, before, "const EXAMPLE_MARK=24;", after)
 
 
-def test_a_second_source_folder_loads_after_the_game_and_is_optional(
+@pytest.mark.parametrize("late_game", [False, True])
+def test_a_second_source_folder_loads_before_boot_and_is_optional(
     tmp_path,
+    late_game: bool,
 ) -> None:
-    """src/galaxy/ is read the same way, after src/game/, and may be absent."""
+    """All modules must exist before boot's load-time calls read their consts."""
     root = _fork_root(tmp_path)
+    if late_game:
+        (root / "src" / "game" / "95-example.js").write_text("const LATE_GAME=95;\n")
     assert not (root / "src" / "galaxy").exists()
     plain = _run("tools/build.py", "--root", str(root))
     assert plain.returncode == 0, plain.stdout + plain.stderr
@@ -247,7 +251,23 @@ def test_a_second_source_folder_loads_after_the_game_and_is_optional(
     assert r.returncode == 0, r.stdout + r.stderr
     script = _game_script_of(root)
     boot = (root / "src" / "game" / "90-boot.js").read_text()
-    assert _order(script, boot, "const GALAXY_MARK=0;", "const GALAXY_LATE=10;")
+    last_game = (
+        "const LATE_GAME=95;"
+        if late_game
+        else (root / "src" / "game" / "87-onboarding.js").read_text()
+    )
+    assert _order(
+        script, last_game, "const GALAXY_MARK=0;", "const GALAXY_LATE=10;", boot
+    )
+
+
+def test_a_missing_boot_module_stops_the_build(tmp_path) -> None:
+    root = _fork_root(tmp_path)
+    (root / "src" / "game" / "90-boot.js").unlink()
+    result = _run("tools/build.py", "--root", str(root))
+    assert result.returncode != 0
+    assert "90-boot.js" in result.stdout + result.stderr
+    assert not (root / "game" / "vibe-map.html").exists()
 
 
 @pytest.mark.parametrize("folder", ["game", "galaxy"])
