@@ -2592,7 +2592,13 @@ def new(
     console.print(
         f"[ok]camp ready[/] at {target}\nNext:\n  cd {target}\n"
         "  just start          # or: vibe start\n"
-        "  vibe play           # the game, hosted; vibe play --offline caches it"
+        "  vibe play           # the game, hosted; vibe play --offline caches it\n\n"
+        "This camp repository, your coding-agent subscription and usage are yours.\n"
+        "The Vibe Map project owner is not billed for your camp.\n"
+        "The camp and hosted game are free; models and Codespaces can charge "
+        "your account.\n"
+        "Before using Codespaces, create a zero product-level Codespaces budget.\n"
+        "Enable Stop usage when budget limit is reached."
     )
 
 
