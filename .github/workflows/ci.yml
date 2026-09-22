@@ -144,10 +144,9 @@ jobs:
       # run after it restores.
       - id: pw
         name: The resolved Playwright version
-        run: >-
-          echo "version=$(uv run python -c
-          'import importlib.metadata as m; print(m.version(\"playwright\"))')"
-          >> "$GITHUB_OUTPUT"
+        run: |
+          playwright_version=$(uv run python -c 'import importlib.metadata as m; print(m.version("playwright"))')
+          echo "version=$playwright_version" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
