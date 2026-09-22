@@ -25,7 +25,7 @@ Regenerate with `just media` (the game, through Playwright, from the built file)
 | `settings.png` | The Settings rows, grouped under their five headings | `just media` | this page |
 | `bottle.png` | A message in a bottle where it lies, on the shore | `just media` | this page |
 | `artifact-cafe.png` | The cafe sheet: order five in one second, get a 429 | `just media` | `README.md` |
-| `gameplay.gif` | Walking to the 18:00 signpost, opening the workstream, lighting the OKR | `just media` | `README.md` |
+| `gameplay.gif` | Walking across the campus bridge to winter, opening its first workstream and claiming it | `just media` | `README.md` |
 | `island-campus-start.png` | The campus as a first visit finds it | `tools/campus_shots.py` | `CHANGELOG.md` |
 | `pets-game/*` | The six pixel species as the browser game draws them, beside the walker | `just media` | this page |
 | `tui-pet.png`, `tui-pet.gif` | The pet strolling under the launch screen | `just tui-media` | `README.md` |

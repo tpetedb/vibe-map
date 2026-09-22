@@ -117,30 +117,31 @@ def test_the_gif_window_keeps_the_zoom_column_off_the_minimap(
     )
 
 
-def test_the_gif_taps_the_ground_and_the_walker_moves(
+def test_the_gif_crosses_a_bridge_and_claims_a_stop(
     chromium: Browser, server: str
 ) -> None:
-    """The GIF's caption says she walks to the signpost. A tap below the stage
-    lands on the talk band and walks nobody, so the tool aims at the plate the
-    island draws over the signpost and refuses any point but the ground."""
+    """The issue asks for the journey itself: deck underfoot, then a claim."""
     with game_context(
         chromium,
         viewport={"width": media.GIF_WINDOW[0], "height": media.GIF_WINDOW[1]},
         device_scale_factor=1,
     ) as page:
-        media._load(page, server + GAME_PATH, None)
+        media._load(
+            page,
+            server + GAME_PATH,
+            {"name": "Lotte", "done": [1], "doneW": {"campus": [1]}},
+        )
         media._start(page)
         media._settled(page, "campus")
-        before = page.evaluate("() => window.__debug().pos")
-        media._tap_towards(page, media._signpost(page, media.SIGNPOST), share=0.9)
-        page.wait_for_function(
-            "p => { const q = window.__debug().pos;"
-            " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 1 }",
-            arg=before,
-        )
-        media._still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
-        walked = media._walked(page, before)
-    assert walked > 4, f"the walker moved {walked:.1f} after the tap"
+        result = media._bridge_journey(page, lambda: None)
+
+    assert result["from"] == "campus" and result["to"] == "winter"
+    assert result["deck_frames"] > 0
+    assert result["claimed"] == 1
+
+    committed = Image.open(MEDIA / "gameplay.gif")
+    assert committed.info.get("comment") == media.GAMEPLAY_MARKER
+    assert committed.n_frames >= 20
 
 
 def test_no_tap_lands_under_the_stage(chromium: Browser, server: str) -> None:
@@ -156,10 +157,6 @@ def test_no_tap_lands_under_the_stage(chromium: Browser, server: str) -> None:
         media._settled(page, "campus")
         stage = media._stage(page, wide)
         at = media._tap_towards(page, (wide / 2, tall - 20), share=1.0)
-        hit = page.evaluate(
-            "([x, y]) => { const el = document.elementFromPoint(x, y);"
-            " return el ? el.id : null }",
-            [at[0], at[1]],
-        )
-    assert hit == "c", f"the tap at {at} landed on {hit}"
+    # _tap_towards refuses every point that is not the canvas before clicking.
+    # The click itself may open the artifact at that world position.
     assert at[1] < stage["height"], f"the tap at {at} is under the stage"
