@@ -1,0 +1,31 @@
+# The harness team's manager on the order's changes to harness-owned files and
+# generated-file gates. This agreement covers the reviewed tip below.
+v = 1
+order = "galaxy-places-more"
+team = "harness"
+by = "manager-harness"
+reviewed = "73c2107ac39110cf17102dd06f74c8bfcb0954ed"
+verdict = "accept"
+note = '''
+Accepted. Nothing in the harness-owned changes needs to move before landing.
+
+Evidence at the reviewed tip:
+- The product implementation is 4c71061 plus the source correction 3c85fa5;
+  later commits through 73c2107 contain review and work-order metadata only.
+- `tools/checks.py` adds `vibemap/data/places` to the existing link-source
+  registry. The focused regression proves `_collect_links()` attributes a
+  place URL to that folder.
+- `uv run pytest -q tests/test_places.py tests/test_build.py
+  tests/test_work.py tests/test_repo.py` passed all 169 tests.
+- The check-mode loop for build, regen_tree, gen_cookbook, sync_template,
+  sync_fork_source and gen_syllabus passed, including the generated game,
+  roadmap, notes and fork-source mirrors.
+- `uv run python tools/checks.py style` and `uv run python tools/checks.py
+  sinks` passed.
+- `just work-validate` read 29 orders and found zero collisions among active
+  orders. It also reported one unrelated draft order in another worktree with
+  empty ownership; that draft is outside this order and is not active here.
+
+This sign-off lapses if a harness-owned implementation or generated output
+covered by this order changes after the reviewed commit.
+'''
