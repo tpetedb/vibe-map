@@ -98,7 +98,7 @@ source = "https://ethw.org/UNIX"
 primary = true          # exactly one: where the topic lives
 
 [[origins]]             # any others are echoes: the same topic, somewhere else
-place = "apple-cupertino"
+place = "a-standards-body"
 year = 2025
 what = "Apple's macOS 26.0 Tahoe is registered as a UNIX 03 product on 29 August 2025."
 source = "https://www.opengroup.org/openbrand/register/brand3725.htm"
@@ -107,9 +107,12 @@ source = "https://www.opengroup.org/openbrand/register/brand3725.htm"
 Rules, all of them checked:
 
 - The source is https, it was opened while writing, and the page says what the
-  line says: the year, the place, the people or the organisation. If no primary
-  source puts the thing in a place, leave the origin out and say so; a gap is
-  honest, a guess is a false statement about a real company.
+  line says: the year, the actor and what happened. The town may instead come
+  from the place file's own source only when that source locates the actor or
+  event there at the relevant date. A current contact address does not prove
+  an earlier event's town, building or exact address. If neither source supports
+  the historical location, leave the origin out and record the gap, or use an
+  appropriate abstract place supported by the event source.
 - `year` is a year the page gives, never the year you read the page. A page
   that carries the fact but no date needs a second page that carries the date,
   and then the line says what that page says.
@@ -117,12 +120,17 @@ Rules, all of them checked:
   ("widely influential"), a reason the source does not give, and anything
   inferred from an address line all belong to somebody else, not to us.
 - Exactly one origin is `primary`. Two, or none, is refused by file name.
+  A topic cannot have two origins at the same place. `year` must be a TOML
+  integer, not a quoted number, boolean or float.
 - A topic with no origin at all still loads: packs are sourced one at a time.
   `uv run python -c "from vibemap import places; print(places.problems(packs=['core']))"`
   lists what is still missing, one sentence per file. `shelves=[...]` narrows it
   to one shelf.
 
-A place that does not exist yet is a new file under `vibemap/data/places/`:
+If a place is missing, name the requested place and its primary source on the
+work order's issue. The content team assigns its place file to an order that
+owns `vibemap/data/places/`; a topic order does not edit around its ownership.
+An assigned place writer uses this format:
 
 ```toml
 # vibemap/data/places/bell-labs.toml
@@ -146,7 +154,11 @@ source = "https://ethw.org/Milestones:Bell_Telephone_Laboratories,_Inc.,_1925-19
 
 The place's own source has to carry what the file says about it, the landmark
 included: a thing that stands in the next town is a wrong fact, printed by
-`vibe places <id>` and drawn on the map.
+`vibe places <id>` and drawn on the map. Use `generic-marker` when no physical
+landmark is supported. It requests a plain marker, not a claim that an object
+stands there. Never model a real building, organisation mark or product.
+`look` is a fictional diorama kit, not evidence about the location. City-level
+coordinates locate a town, not a historical office or a private home.
 
 An open-source project with no single address is not a guess about an office:
 it sits at `the-internet`, the way a hosted service sits at `the-cloud` and a
@@ -199,7 +211,8 @@ as done and the progress code carries as `topics`.
 - [ ] Shelf, age and depth exist in `tree.toml` and the depth is honest.
 - [ ] Every factual sentence is covered by a cited URL that was fetched today.
 - [ ] Exactly one origin is primary, its place exists, and every origin's source
-      was opened and says the year, the place and the organisation it claims.
+      was opened and says the year, actor and event it claims; its town is
+      supported at the relevant date by that page or the place file's source.
 - [ ] Three to six sources, all https, each with a label that says what it is.
 - [ ] `try_it` is a command a learner can paste, and it works.
 - [ ] The hands-on is under twenty minutes, offline, and its check fails before

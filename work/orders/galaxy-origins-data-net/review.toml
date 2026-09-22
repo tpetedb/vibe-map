@@ -1,0 +1,30 @@
+v = 1
+order = "galaxy-origins-data-net"
+by = "codex-reviewer-galaxy-origins-data-net"
+reviewed = "8a30f05ad62c36e6ddb7cd97d8329f5e18502d76"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Ran the stated focused pytest selection with an isolated uv cache: all 72 tests passed. Read tests/test_origins_data_net.py as well: it pins the four core topics and their primary homes, checks every line's actor, year, style, unique place and unique wording, resolves every place, and pins the relational-model/Postgres example."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Ran places.problems(shelves=['data', 'net']); it returned no problems. Read both layers the command exercises: topics._check_origins enforces exactly one primary, a nonempty single-line claim, an integer year in range and an https source, while places.problems rejects missing origins and unknown place ids for every selected topic."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Ruff check, Ruff format check, the style guard and the sink guard passed. The full pytest selection marked neither browser nor integration passed outside the sandbox; the sandbox-only run failed solely where tests needed denied loopback sockets or the Docker socket."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "Ran build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus with --check. Each exited zero; the commands that print status reported build, tree, cookbook and syllabus OK, and both sync checks were silent and successful."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "Opened all 15 origin links and checked their actual page text. IBM supports Codd, San Jose, 1970 and the named paper; PostgreSQL supports Berkeley, Stonebraker and the 1986 POSTGRES start; Google's dated post supports the 2011 BigQuery announcement and features; Amazon's dated Seattle release supports the 2012 Redshift preview; Apache supports Parquet's 27 April 2015 graduation; the SQL Reunion supports Chamberlin, Boyce, San Jose, the 1974 SEQUEL papers and later SQL name; the Open Group page supports both 1986 ANSI and early-1987 ISO standards; DuckDB Foundation supports both creators, CWI and 2018; Fielding's dissertation supports UCI, 2000 and REST; W3C supports the dated SOAP Note and its XML protocol/discussion status; Amazon supports its Seattle-datelined 16 July 2002 web-services launch through XML and SOAP; Google supports the dated 2015 gRPC open-source HTTP/2/API/microservices announcement; W3C supports Berners-Lee at CERN, httpd, October 1990 and his HTTP specifications; RFC 2068 supports January 1997, HTTP/1.1, Fielding and UC Irvine; RFC 7540 supports May 2015, IETF and HTTP/2."

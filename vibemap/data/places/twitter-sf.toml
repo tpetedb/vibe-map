@@ -1,0 +1,13 @@
+# Twitter describes its San Francisco move in June 2012. The marker represents the city.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "twitter-sf"
+name = "Twitter, San Francisco"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 37.78
+lon = -122.42
+look = "tower"
+landmark = "generic-marker"
+source = "https://blog.x.com/en_us/a/2012/our-new-nest"

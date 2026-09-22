@@ -1,0 +1,13 @@
+# Cursor lists San Francisco engineering roles. This page does not date an early office.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "cursor-sf"
+name = "Cursor, San Francisco"
+kind = "company"
+region = "us-west"
+era = "agents"
+globe = "earth"
+lat = 37.78
+lon = -122.42
+look = "tower"
+landmark = "generic-marker"
+source = "https://cursor.com/careers"

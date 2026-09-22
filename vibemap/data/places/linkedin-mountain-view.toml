@@ -1,0 +1,13 @@
+# The 2011 Kafka event invitation names LinkedIn headquarters in Mountain View.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "linkedin-mountain-view"
+name = "LinkedIn, Mountain View"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 37.39
+lon = -122.08
+look = "tower"
+landmark = "generic-marker"
+source = "https://www.linkedin.com/blog/engineering/archive/come-linkedin-hear-talk-about-kafka-our-open-source-distributed-pub-sub-messaging-system"

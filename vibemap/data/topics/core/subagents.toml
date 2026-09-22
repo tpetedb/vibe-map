@@ -19,3 +19,10 @@ url = "https://code.claude.com/docs/en/sub-agents"
 [[sources]]
 label = "Source: Significant-Gravitas/AutoGPT repository (created March 2023)"
 url = "https://github.com/Significant-Gravitas/AutoGPT"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic describes its Research system in an online article, where a lead agent delegates parallel investigations to subagents with separate context windows."
+source = "https://www.anthropic.com/engineering/multi-agent-research-system"
+primary = true

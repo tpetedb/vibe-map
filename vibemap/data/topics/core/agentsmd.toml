@@ -12,3 +12,10 @@ unlocks = ["adr"]
 [[sources]]
 label = "Source: agents.md"
 url = "https://agents.md"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "The Linux Foundation reports online that OpenAI released AGENTS.md in August as a shared format for project instructions read by coding agents."
+source = "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation"
+primary = true

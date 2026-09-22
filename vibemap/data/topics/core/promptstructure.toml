@@ -27,3 +27,10 @@ url = "https://github.github.com/gfm/#fenced-code-blocks"
 [[sources]]
 label = "Source: Anthropic, prompting best practices, XML tags and output format sections"
 url = "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices"
+
+[[origins]]
+place = "the-internet"
+year = 2024
+what = "Anthropic announces a prompt generator online, explaining how its templates use XML tags to separate variable inputs and structure prompt sections."
+source = "https://claude.com/blog/prompt-generator"
+primary = true

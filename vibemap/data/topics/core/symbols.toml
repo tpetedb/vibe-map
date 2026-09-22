@@ -31,3 +31,10 @@ url = "https://code.claude.com/docs/en/interactive-mode"
 [[sources]]
 label = "Source: Claude Code memory page, import additional files with @path"
 url = "https://code.claude.com/docs/en/memory"
+
+[[origins]]
+place = "the-internet"
+year = 2004
+what = "John Gruber announces Markdown online, offering a readable plain-text formatting syntax and a tool that converts it to HTML."
+source = "https://daringfireball.net/2004/03/introducing_markdown"
+primary = true

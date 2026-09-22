@@ -18,6 +18,18 @@ try_it = '''duckdb -c "copy (from 'workspace/data/scores.csv') to 'scores.parque
 unlocks = ["arrow", "duckdblab", "iceberg"]
 prerequisites = ["csv"]
 
+[[origins]]
+place = "apache-software-foundation"
+year = 2015
+what = "The Apache Software Foundation announces Parquet as a top-level project on 27 April 2015."
+source = "https://news.apache.org/foundation/entry/the_apache_software_foundation_announces75"
+primary = true
+
+[[sources]]
+label = "Source: Apache Software Foundation, Parquet graduation"
+url = "https://news.apache.org/foundation/entry/the_apache_software_foundation_announces75"
+checked = 2026-09-22
+
 [[sources]]
 label = "Apache Parquet, the file format"
 url = "https://parquet.apache.org/docs/file-format/"

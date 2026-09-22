@@ -12,3 +12,10 @@ unlocks = []
 [[sources]]
 label = "Source: Model Context Protocol"
 url = "https://modelcontextprotocol.io"
+
+[[origins]]
+place = "the-internet"
+year = 2024
+what = "Anthropic announces online that it is open-sourcing the Model Context Protocol to connect AI assistants with data sources and tools."
+source = "https://www.anthropic.com/news/model-context-protocol"
+primary = true

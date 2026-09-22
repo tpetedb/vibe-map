@@ -1,4 +1,5 @@
-# Microsoft, Redmond. One Microsoft Way, Redmond, Washington.
+# Microsoft, Redmond. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "microsoft-redmond"
 name = "Microsoft, Redmond"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 47.64
 lon = -122.128
 look = "campus"
-landmark = "one-microsoft-way"
+landmark = "generic-marker"
 source = "https://news.microsoft.com/facts-about-microsoft/"

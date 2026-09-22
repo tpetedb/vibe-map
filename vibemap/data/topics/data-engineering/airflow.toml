@@ -18,6 +18,18 @@ try_it = '''uv run --with "apache-airflow==3.3.2" python -c "from airflow.sdk im
 unlocks = ["dagster", "datamap"]
 prerequisites = ["dbt"]
 
+[[origins]]
+place = "the-internet"
+year = 2015
+what = "Maxime Beauchemin announces the open-sourcing of Airflow on the Airbnb engineering blog on 2 June 2015."
+source = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+primary = true
+
+[[sources]]
+label = "Source: Airbnb Engineering, Airflow announcement"
+url = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+checked = 2026-09-22
+
 [[sources]]
 label = "Airflow, core concepts: DAGs"
 url = "https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html"

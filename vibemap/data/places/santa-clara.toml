@@ -1,0 +1,13 @@
+# The PyCon 2013 site names Santa Clara. No particular venue is modelled.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "santa-clara"
+name = "Santa Clara, California"
+kind = "city"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.35
+lon = -121.96
+look = "hall"
+landmark = "generic-marker"
+source = "https://us.pycon.org/2013/"

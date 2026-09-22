@@ -1,5 +1,5 @@
-# Amazon, Seattle. Amazon.com, Inc.'s EDGAR record gives 410 Terry Avenue North,
-# Seattle, WA 98109, as its business address. AWS is theirs.
+# Amazon, Seattle. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "amazon-seattle"
 name = "Amazon, Seattle"
 kind = "company"
@@ -9,5 +9,5 @@ globe = "earth"
 lat = 47.622
 lon = -122.337
 look = "tower"
-landmark = "terry-avenue-north-office"
-source = "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001018724&type=10-K"
+landmark = "generic-marker"
+source = "https://www.aboutamazon.com/news/amazon-offices/amazon-headquarters-tour-seattle"

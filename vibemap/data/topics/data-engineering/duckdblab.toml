@@ -18,6 +18,18 @@ try_it = '''duckdb camp.duckdb -c "create table runs as from read_csv('workspace
 unlocks = ["dbt", "medallion"]
 prerequisites = ["sql", "parquet"]
 
+[[origins]]
+place = "cwi-amsterdam"
+year = 2018
+what = "Hannes Muehleisen and Mark Raasveldt create DuckDB at CWI Amsterdam in 2018."
+source = "https://duckdb.foundation/"
+primary = true
+
+[[sources]]
+label = "Source: DuckDB Foundation, the co-creators"
+url = "https://duckdb.foundation/"
+checked = 2026-09-22
+
 [[sources]]
 label = "DuckDB, Friendly SQL"
 url = "https://duckdb.org/docs/stable/sql/dialect/friendly_sql"
