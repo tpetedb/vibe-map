@@ -14,47 +14,7 @@ from typing import Any
 
 import pytest
 
-from tests.conftest import STORAGE_KEY, WAIT_MS, GamePage
-
-# A toast is removed on a five second timer, so reading the screen for one is a
-# race a slow runner loses: by the time the test looks, the notice has expired
-# or another toast has taken its place. These two helpers make the page keep a
-# record of every toast it ever raised, and assert against that record.
-# They move into tests/conftest.py with issue #148, which generalises them.
-# The name is not __toasts: the game already has that seam for the count.
-# An init script is a body, not a function the page calls, so it is an IIFE.
-RECORD_TOASTS = """(() => {
-  window.__toastLog = [];
-  const note = n => { if (n.nodeType === 1 && n.classList.contains('tst'))
-    window.__toastLog.push(n.textContent || ''); };
-  const root = document.documentElement || document;
-  new MutationObserver(rs => rs.forEach(r => r.addedNodes.forEach(n => {
-    note(n);
-    if (n.nodeType === 1) n.querySelectorAll('.tst').forEach(note);
-  }))).observe(root, {childList: true, subtree: true});
-})()"""
-
-
-def _record_toasts(game: GamePage) -> None:
-    """Keep every toast the page raises, from before the first script runs.
-
-    Installed as an init script, so it survives the reload goto() does to seed
-    a record. Moves into tests/conftest.py with issue #148.
-    """
-    game.page.add_init_script(RECORD_TOASTS)
-
-
-def _toast_said(game: GamePage, text: str) -> None:
-    """Wait for a toast that carried this text, expired or not.
-
-    The record is a fact the page produced, so this never sleeps. Moves into
-    tests/conftest.py with issue #148.
-    """
-    game.page.wait_for_function(
-        "t => (window.__toastLog || []).some(m => m.includes(t))",
-        arg=text,
-        timeout=WAIT_MS,
-    )
+from tests.conftest import STORAGE_KEY, GamePage
 
 
 def _code(payload: dict[str, Any]) -> str:
@@ -74,7 +34,6 @@ def _seed_raw(game: GamePage, raw: str) -> None:
 def test_a_record_naming_an_island_the_game_lacks_still_plays(game: GamePage) -> None:
     """S.done is the island's own list, so an island that is not there is a
     blank page one frame later."""
-    _record_toasts(game)
     game.goto(
         state={
             "name": "Marsman",
@@ -84,7 +43,7 @@ def test_a_record_naming_an_island_the_game_lacks_still_plays(game: GamePage) ->
     )
     # The repair is not silence: the player is told. The toast expires on a
     # timer, so this asks what the page raised, never what is on screen now.
-    _toast_said(game, "could not be read")
+    game.toast_said("could not be read")
     assert game.page.evaluate("() => window.__S().world") == "campus"
     assert game.page.evaluate("() => window.__S().done") == [1]
     assert game.page.evaluate("() => window.__loadFault()") != ""

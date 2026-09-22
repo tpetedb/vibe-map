@@ -12,6 +12,21 @@ try_it = "Open your camp. For each top-level folder and file write one line in a
 
 unlocks = ["meta", "agentsmd", "toml", "files"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. Dijkstra coined
+# the phrase, but EWD 447 is signed from Nuenen, which is no place in this
+# map, so the origin is the paper that gave the criterion and prints its
+# author's university under his name. The source is a scan of the journal
+# pages: a fetcher that reads text sees no words in it, a person sees the
+# affiliation and "December 1972" on page 1053 and the conclusion on 1058.
+
+[[origins]]
+place = "carnegie-mellon"
+year = 1972
+what = "D.L. Parnas of Carnegie-Mellon University publishes On the Criteria To Be Used in Decomposing Systems into Modules: begin with the design decisions likely to change, and design each module to hide one from the others."
+source = "https://www.cse.sc.edu/~mgv/csce590f20/ParnasCriteria.pdf"
+primary = true
+
 [[sources]]
 label = "Dijkstra, On the role of scientific thought (EWD 447), 1974"
 url = "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html"

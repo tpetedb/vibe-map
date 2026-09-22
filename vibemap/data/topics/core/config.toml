@@ -12,6 +12,19 @@ try_it = "Open .claude/settings.json (JSON) and .agents/skills/duckdb-sql/SKILL.
 
 unlocks = ["env", "yaml", "toml", "agentsmd", "skills"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. Of the four
+# formats only JSON became a standard with a body behind it and a dated
+# edition, so that is where this topic stands; the other three have their own
+# topics.
+
+[[origins]]
+place = "ecma-international"
+year = 2013
+what = "Ecma International publishes the first edition of ECMA-404, the JSON data interchange syntax, in October 2013."
+source = "https://ecma-international.org/publications-and-standards/standards/ecma-404/"
+primary = true
+
 [[sources]]
 label = "JSON"
 url = "https://www.json.org/json-en.html"
