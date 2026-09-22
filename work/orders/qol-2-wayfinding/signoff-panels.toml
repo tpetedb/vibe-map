@@ -1,0 +1,35 @@
+# The panels team's manager on the one panels-owned source file this scene
+# order changes. This agreement covers the contribution at the checkpoint below.
+v = 1
+order = "qol-2-wayfinding"
+team = "panels"
+by = "manager-panels"
+reviewed = "efc64e2e817c4ad5696faa4663e52e5311493e3e"
+verdict = "accept"
+note = '''
+Accepted: the panels-owned delta is confined to src/game/41-search.js. It gives
+stop results a separate Walk there button before the result list and the Shift
+and Enter shortcut, keeps that control absent for notes and mentors, and hands
+the selected stop number to the scene team's walkTo() seam. The control uses
+textContent and setAttribute for its changing text, retains the listbox rows as
+single options, and has a 44 px minimum height. Nothing here blocks landing.
+
+Evidence at efc64e2:
+- Read the full origin/main...HEAD diff for src/game/41-search.js and the current
+  recovery notes. The recovery changed routing and cancellation in scene-owned
+  files; this panels-owned palette contribution is unchanged from the original
+  batch and still matches proposal 2 on issue #127.
+- `uv run pytest -q tests/test_game_qol_wayfinding.py -k palette` passed both
+  focused browser tests. They drive the real palette: one walks to the named
+  stop, and one proves notes and mentors do not offer the action.
+- `tools/build.py --check` passed; src/game/41-search.js is byte-identical to
+  its fork-source mirror; the style check and `git diff --check` passed.
+
+The remaining panels work stays explicit rather than holding this contribution:
+the proposed qol-2b-wayfinding-panels follow-up adds the guide setting in
+src/game/85-settings.js and Roadmap walk action in src/game/40-sheet.js after
+hunt-w-settings-news releases those files. It also owns the cross-island
+flight-then-walk chain. The review's low finding that palWalkGo() closes the
+palette when walkTo() refuses remains follow-up work with the other deferred
+palette and map polish.
+'''
