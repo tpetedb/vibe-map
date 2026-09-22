@@ -228,7 +228,7 @@ Unlocks: Python libraries: what they are for
 
 **Try in five minutes.** Read .github/workflows/ci.yml and change the Python version in one place.
 
-Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions) · [Docker Compose file reference](https://docs.docker.com/reference/compose-file/) · [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/) · [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/) · [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
+Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions) · [Docker Compose file reference](https://docs.docker.com/reference/compose-file/) · [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/) · [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/) · [Source: GitHub Actions adds YAML workflows (August 2019)](https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/) · [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
 
 Unlocks: CI/CD and automation, Docker and containers
 
@@ -304,7 +304,7 @@ Unlocks: Docker and containers
 
 **Try in five minutes.** Ask Claude: 'write pytest tests for workspace/python/scores.py and run them'. Then break scores.py and watch them fail.
 
-Docs: [pytest](https://docs.pytest.org) · [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/)
+Docs: [pytest](https://docs.pytest.org) · [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/) · [Source: Anthropic, Challenges in evaluating AI systems (October 2023)](https://www.anthropic.com/news/evaluating-ai-systems)
 
 Unlocks: CI/CD and automation
 

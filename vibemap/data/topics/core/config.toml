@@ -14,15 +14,15 @@ unlocks = ["env", "yaml", "toml", "agentsmd", "skills"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. Of the four
-# formats only JSON became a standard with a body behind it and a dated
-# edition, so that is where this topic stands; the other three have their own
-# topics.
+# formats only JSON became a standard with a body behind it and a dated first
+# edition, so this topic stands at the standards body; the other three have
+# their own topics.
 
 [[origins]]
-place = "ecma-international"
+place = "a-standards-body"
 year = 2013
 what = "Ecma International publishes the first edition of ECMA-404, the JSON data interchange syntax, in October 2013."
-source = "https://ecma-international.org/publications-and-standards/standards/ecma-404/"
+source = "https://ecma-international.org/wp-content/uploads/ECMA-404_1st_edition_october_2013.pdf"
 primary = true
 
 [[sources]]

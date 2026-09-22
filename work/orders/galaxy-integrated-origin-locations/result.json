@@ -1,0 +1,37 @@
+{
+ "order": "galaxy-integrated-origin-locations",
+ "tree": "809631e5035c8d4c5706c95ad01ec5e9cec8ed9c",
+ "strays": [],
+ "criteria": [
+  {
+   "id": "c1",
+   "check": "uv run pytest -q tests/test_integrated_origin_locations.py tests/test_places.py tests/test_topics.py",
+   "exit": 0,
+   "seconds": 0.6,
+   "tail": "..........................................................               [100%]\n",
+   "text": "The ten audited topics use only locations their historical source supports, with no duplicate place entries."
+  },
+  {
+   "id": "c2",
+   "check": "uv run python -c \"from vibemap import places; import sys; ids = {'ci', 'dotfiles', 'github', 'languages', 'tests', 'interfaces', 'unix', 'yaml', 'zsh', 'config'}; bad = [p for p in places.problems() if any(f'/{i}.toml' in p for i in ids)]; print('\\n'.join(bad)); sys.exit(1 if bad else 0)\"",
+   "exit": 0,
+   "seconds": 0.1,
+   "tail": "\n",
+   "text": "The repaired topics retain one primary origin, valid places, dated claims and https sources."
+  },
+  {
+   "id": "c3",
+   "check": "uv run ruff check -q tests/test_integrated_origin_locations.py && uv run ruff format --check -q tests/test_integrated_origin_locations.py && uv run python tools/regen_tree.py --check && uv run python tools/build.py --check",
+   "exit": 0,
+   "seconds": 0.5,
+   "tail": "tree OK: outputs match vibemap/tech.py\nbuild OK: game/vibe-map.html matches src/\n",
+   "text": "Lint, formatting and the generated topic outputs are in sync."
+  },
+  {
+   "id": "c4",
+   "judge": "reviewer",
+   "text": "The reviewer opens every historical source listed in findings.md and verifies that the actor, year and event are supported without inferring a city from a current office or footer."
+  }
+ ],
+ "ok": true
+}

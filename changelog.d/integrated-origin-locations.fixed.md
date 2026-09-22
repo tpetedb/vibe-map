@@ -1,0 +1,1 @@
+- Correct ten topic origins that inferred historical event locations from current offices or institutional footers.
