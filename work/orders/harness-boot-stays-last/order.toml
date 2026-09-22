@@ -1,0 +1,36 @@
+v = 1
+id = "harness-boot-stays-last"
+title = "Boot stays the last module, whatever folders the build reads"
+team = "harness"
+branch = "fix/boot-stays-last"
+goal = "galaxy"
+issue = 168
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "tools/build.py",
+  "tests/test_build.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The build tests pass, the new ones seen failing first."
+check = "uv run pytest -q tests/test_build.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync, and the built game is byte-identical to main's."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && git diff --quiet origin/main -- game/vibe-map.html"
+
+[[criteria]]
+id = "c4"
+text = "With `src/galaxy/01-x.js` added in a scratch copy, its text sits in the built game BEFORE the text of `90-boot.js` and after every other `src/game/` module, and a top-level `const` it declares is defined when boot's load-time calls run (the reviewer proves it in a browser, not by reading)."
+judge = "reviewer"
