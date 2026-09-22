@@ -1,7 +1,7 @@
 v = 1
 order = "galaxy-v0"
 by = "codex-galaxy-v0-reviewer"
-reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
+reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
 verdict = "accept"
 
 [[criteria]]
@@ -12,7 +12,7 @@ evidence = "Ran `UV_CACHE_DIR=/private/tmp/codex-uv-cache uv run pytest -q tests
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "Ruff check, Ruff format check, style, and sink checks passed. The host's bare `python3` lacked the project's `rich`, so I repeated the same checks with `.venv/bin` first on PATH; the complete `pytest -q -m 'not browser and not integration'` battery then reached 100% with no failures."
+evidence = "Ruff check, Ruff format check, style, and sink checks passed directly with the corrected `uv run python tools/checks.py` commands. The complete `pytest -q -m 'not browser and not integration'` battery reached 100% with no failures on the product-identical accepted commit."
 
 [[criteria]]
 id = "c3"
