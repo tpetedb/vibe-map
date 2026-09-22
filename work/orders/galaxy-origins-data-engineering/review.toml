@@ -1,0 +1,30 @@
+v = 1
+order = "galaxy-origins-data-engineering"
+by = "codex-reviewer-data-engineering-origins"
+reviewed = "256b5e9f86e1448af58740ae39cd13ffd874bc8b"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """I read the new 36-case suite and confirmed it tests the declared 16-topic pack membership, complete origins, one primary per topic, valid place and HTTPS source references, a year in each claim, subject-bearing event text, the public CLI rendering, and the corrected historical-location cases. The order's 17 owned implementation and test files are byte-for-byte identical in the integrated train tree. Running tests/test_origins_data_engineering.py there with bytecode and pytest cache writes disabled passed all 36 cases, exit 0. The supplied final train log /tmp/vibe-content-train-full-verify-final.log records the three-file criterion as part of 1,141 passing tests, exit 0; the full suite is a strict superset of this criterion's command."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """I inspected every [[origins]] block in the 16 data-engineering topic files. Each has exactly one primary origin with a year, a complete event sentence, an HTTPS source duplicated in [[sources]], and one of the declared place IDs. In the dependency-complete train tree, the exact validator command returned `problems: []`, exit 0. The focused 36-case suite independently exercises every topic and the aggregate validator, including the sibling-provided linkedin-mountain-view place."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """The supplied final train log records ruff check passing, ruff format reporting all 354 files formatted, the style guard reporting no em dashes or emoji, and the complete pytest battery finishing with 1,141 passed. That complete battery is stronger than the requested non-browser subset and contains this order's byte-identical files. On the reviewed commit I also ran ruff check and ruff format --check against tests/test_origins_data_engineering.py, both exit 0, and ran tools/checks.py sinks, exit 0. The command therefore covers each part of the criterion rather than merely a neighbouring check."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """I read the generated diffs and confirmed that ROADMAP, game, generated notes, and fork-source notes carry the added source entries and the medallion clarification from the topic sources. The supplied dependency-complete final train log ran all six checks named by this criterion: regen_tree, gen_cookbook, gen_syllabus, build, sync_template, and sync_fork_source. Each completed successfully; the checks with messages reported tree OK, cookbook OK, syllabus OK, and build OK. No unexpected hand-edited file appeared in the commit, and git diff --check passed."""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """I independently opened all 13 distinct HTTPS sources used by the 16 new origins. Airbnb's 2 June 2015 post says Maxime Beauchemin is announcing and open-sourcing Airflow; ASF announcements give Arrow on 17 February 2016 and Parquet on 27 April 2015 as top-level projects; RFC 4180 is dated October 2005 and says it documents CSV and registers text/csv; Dagster's 5 August 2022 post announces 1.0 and says software-defined assets are stable; the dbt release thread says 1.0.0 was available 3 December 2021 and explicitly renames schema tests to generic tests and data tests to singular tests; dlt's 16 September 2024 post names Marcin Rudolf, 1.0.0, and database, file, and REST API code moved into core; DuckDB Foundation names Hannes Muehleisen and Mark Raasveldt as co-creators at CWI Amsterdam in 2018; Apache's Iceberg record gives graduation on 20 May 2020 and the specification move to git and the ASF site on 23 June 2019; GitHub's commit API for 92c32d4496d1f0b789cc4840e6cd65e11ef51e94 identifies Ian Ward on 10 October 2013 and shows the patch numbering the three requirements; LinkedIn's 21 July 2011 invitation says Neha Narkhede was scheduled to present Kafka at its Mountain View headquarters on 27 July; Databricks' article is dated 24 June 2022, describes Bronze, Silver, and Gold, and permits CDC updates in Bronze; Polars' post names Ritchie Vink, 1 July 2024, and the Python Polars 1.0 release. The places are also faithful to the evidence: publication and foundation events use cloud/everywhere registry entries, while the two Earth locations are directly supported as CWI Amsterdam and LinkedIn Mountain View. I found no unsupported claim or borrowed later office location."""
