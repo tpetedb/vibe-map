@@ -1,8 +1,8 @@
 v = 1
 order = "galaxy-places-more"
 by = "codex-review-places-more"
-reviewed = "4c710619c2efa1dc52eb1fbf78f2fbe8c2e50536"
-verdict = "improve"
+reviewed = "3c85fa53f37fcfb20ac30e0ea613b5a7448eb805"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
@@ -11,13 +11,13 @@ evidence = "With an isolated writable uv cache, `uv run pytest -q tests/test_pla
 
 [[criteria]]
 id = "c2"
-verdict = "fail"
-evidence = "The exact defect probe exited 0 with no output and proves that the loaded registry has no schema, missing-origin, or unresolved-place defect. It does not inspect external source content, and my c5 audit found that google-mountain-view's cited current privacy page does not carry the Mountain View claim, so it does not prove the criterion's unqualified sentence."
+verdict = "pass"
+evidence = "The exact defect probe exited 0 with no output, proving that the loaded registry has no schema, missing-origin, or unresolved-place defect. The manual c5 source audit supplies the external evidence this command cannot inspect; after the replacement Google source was checked, no semantic place defect remains."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "The exact lint, format, style, sink, and non-browser/non-integration battery passed unchanged when run with the worktree virtual environment, a writable uv cache, loopback sockets, and the local Docker daemon available. The restricted first run failed only where unrelated tests were denied sockets or Docker; 757 pytest cases then passed outside that restriction. No browser or integration test was run."
+evidence = "At 3c85fa5, the exact lint, format, style, sink, and non-browser/non-integration battery passed with the worktree virtual environment, a writable uv cache, loopback sockets, and the local Docker daemon available. The selected pytest run reached 100 percent with no failures. No browser or integration test was run."
 
 [[criteria]]
 id = "c4"
@@ -26,10 +26,5 @@ evidence = "The exact loop over build, regen_tree, gen_cookbook, sync_template, 
 
 [[criteria]]
 id = "c5"
-verdict = "fail"
-evidence = "I opened all 45 exact source URLs changed by this order, using direct official-page retrieval for the two pages the web reader could not extract. Forty-four carry the declared organisation, abstract place, or city association. The current Google privacy page cited by google-mountain-view identifies Google LLC but contains no Mountain View location. I independently queried structured Nominatim references for all 27 distinct Earth locations and compared every changed marker: after qualifying Mountain View and Santa Clara as California cities, every maximum latitude/longitude delta is under 0.25 degrees (largest 0.1433 for UC Santa Barbara). Forty-four changed landmarks are generic-marker; the-cloud retains the explicitly fictional nebula. None is a mark, product, building likeness, or unsupported physical landmark."
-
-[[findings]]
-severity = "medium"
-file = "vibemap/data/places/google-mountain-view.toml"
-text = "The file declares `Google, Mountain View`, but its exact source, https://policies.google.com/privacy, currently names Google LLC without locating it in Mountain View. This violates c5's requirement that the place source carry what the file says. Cite a current primary Google page that explicitly locates Google LLC in Mountain View, or narrow the place claim to what a suitable source actually supports."
+verdict = "pass"
+evidence = "I opened all 45 exact source URLs changed by this order, using direct official-page retrieval for the two pages the web reader could not extract. At 3c85fa5 the corrected official Google Legal Help page explicitly lists Google LLC at 1600 Amphitheater Parkway, Mountain View, CA 94043, resolving the sole prior gap. I independently queried structured Nominatim references for all 27 distinct Earth locations and compared every changed marker: after qualifying Mountain View and Santa Clara as California cities, every maximum latitude/longitude delta is under 0.25 degrees (largest 0.1433 for UC Santa Barbara). Forty-four changed landmarks are generic-marker; the-cloud retains the explicitly fictional nebula. None is a mark, product, building likeness, or unsupported physical landmark."
