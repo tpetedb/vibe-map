@@ -28,6 +28,12 @@ year = 2011
 what = "NIST publishes SP 800-145, The NIST Definition of Cloud Computing, by Peter Mell and Tim Grance."
 source = "https://csrc.nist.gov/pubs/sp/800/145/final"
 
+[[origins]]
+place = "a-data-centre"
+year = 2006
+what = "Google opens its first data centre in The Dalles, Oregon, in 2006."
+source = "https://www.datacenters.google/locations/oregon/"
+
 [[sources]]
 label = "AWS getting started"
 url = "https://aws.amazon.com/getting-started/"
@@ -59,3 +65,7 @@ url = "https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availab
 [[sources]]
 label = "Source: AWS, Introducing AWS Lambda (November 2014)"
 url = "https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/"
+
+[[sources]]
+label = "Source: Google, The Dalles data centre milestones"
+url = "https://www.datacenters.google/locations/oregon/"

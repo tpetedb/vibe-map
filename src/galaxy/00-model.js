@@ -17,8 +17,12 @@ function galaxyModel(data=PLACES,tree=TREE,done=[]){
   const next=topics.find(topic=>topic.state!=="done");if(next)next.state="next";
   const topicByPlace=new Map();
   topics.forEach(topic=>{
-    if(!topicByPlace.has(topic.place))topicByPlace.set(topic.place,[]);
-    topicByPlace.get(topic.place).push(topic)
+    (data.origins[topic.id]||[]).forEach(origin=>{
+      const originPlace=placeById[origin.place];if(!origin.primary&&!originPlace.showcase)return;
+      if(!topicByPlace.has(origin.place))topicByPlace.set(origin.place,[]);
+      topicByPlace.get(origin.place).push(Object.assign({},topic,{place:origin.place,
+        year:origin.year,what:origin.what,source:origin.source,echo:!origin.primary}))
+    })
   });
   const places=data.places.filter(place=>topicByPlace.has(place.id)).map(place=>{
     const at=topicByPlace.get(place.id),doneCount=at.filter(topic=>topic.state==="done").length;

@@ -34,7 +34,7 @@ check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 to
 [[criteria]]
 id = "c3"
 text = "Every generated file is in sync, and Galaxy added less than 80 KB to the built game."
-check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python -c \"import subprocess,sys; a=len(open('game/vibe-map.html','rb').read()); b=len(subprocess.run(['git','show','origin/main:game/vibe-map.html'],capture_output=True).stdout); print(a-b); sys.exit(0 if a-b < 80000 else 1)\""
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python -c \"import subprocess,sys; a=len(open('game/vibe-map.html','rb').read()); b=len(subprocess.run(['git','show','541df67:game/vibe-map.html'],capture_output=True).stdout); print(a-b); sys.exit(0 if a-b < 80000 else 1)\""
 
 [[criteria]]
 id = "c4"

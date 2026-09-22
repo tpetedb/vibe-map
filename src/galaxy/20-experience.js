@@ -15,20 +15,26 @@ window.galaxyFocus=function(id,on){if(!galaxyState)return;clearGalaxyFocus();if(
 function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();state.view=view;
   clearGalaxyFocus();
   state.journey.visible=view==="journey";
-  Object.entries(state.planets).forEach(([kind,planet])=>{const journey=view==="journey",chosen=kind===selected.globe;
-    planet.root.visible=journey||(view==="globe"&&chosen);planet.root.position.set(...(journey?(GALAXY_POS[kind]||[0,0,0]):[0,0,0]));planet.root.scale.setScalar(journey?1.7:2.45)});
+  Object.entries(state.planets).forEach(([kind,planet])=>{const overview=view==="journey"||view==="chart",chosen=kind===selected.globe;
+    planet.root.visible=overview||(view==="globe"&&chosen);planet.root.position.set(...(overview?(GALAXY_POS[kind]||[0,0,0]):[0,0,0]));planet.root.scale.setScalar(overview?1.7:2.45)});
   if(state.detail){discard(state.detail);state.detail=null}
   if(view==="dome"&&selected){state.detail=state.visuals.makeDome(selected,selected.state);state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail)}
   galaxyCamera(view);renderGalaxyList()}
-window.galaxyView=function(view){if(["journey","globe","dome"].includes(view))galaxyShow(view)};
+window.galaxyView=function(view){if(["journey","chart","globe","dome"].includes(view))galaxyShow(view)};
+window.galaxyKey=function(event){if(!galaxyState)return;const buttons=[...document.querySelectorAll("[data-galaxy-place]")],at=buttons.indexOf(event.currentTarget);
+  if(["ArrowDown","ArrowRight","ArrowUp","ArrowLeft"].includes(event.key)){event.preventDefault();const step=["ArrowDown","ArrowRight"].includes(event.key)?1:-1;buttons[(at+step+buttons.length)%buttons.length].focus()}
+  else if(event.key==="Escape"){event.preventDefault();galaxyShow("chart");document.querySelector('[data-galaxy-view="chart"]').focus()}}
+window.galaxyTopic=function(id){if(!galaxyState)return;const topic=galaxyState.model.topics.find(item=>item.id===id);if(!topic)return;
+  galaxyState.topic=id;galaxyState.selected=topic.place;galaxyShow("dome");openTopic(id)};
 window.galaxyPlace=function(id){if(!galaxyState||!galaxyState.model.places.some(place=>place.id===id))return;
-  galaxyState.selected=id;galaxyShow("dome");const row=document.querySelector(`[data-galaxy-place="${id}"]`);if(row)row.focus()};
+  galaxyState.selected=id;const topic=galaxySelected().topics[0];if(topic)galaxyTopic(topic.id);else galaxyShow("dome")};
 function renderGalaxyList(){const ui=$("galaxy-ui");if(!ui)return;ui.hidden=false;
   const state=galaxyState,model=state?state.model:galaxyModel(PLACES,TREE,galaxyDone()),selected=state?galaxySelected():model.places[0];
   $("galaxy-title").textContent=selected?selected.name:"Galaxy";
   $("galaxy-summary").textContent=model.topics.filter(topic=>topic.state==="done").length+" of "+model.topics.length+" topics complete";
   const places=Object.fromEntries(model.places.map(place=>[place.id,place]));
-  $("galaxy-list").innerHTML=model.topics.map(topic=>{const place=places[topic.place];return `<div class="galaxy-place" role="listitem" data-state="${topic.state}"><b>${esc(topic.name)}</b><span class="galaxy-state">${topic.state} · ${topic.year} · ${esc(place.name)}</span><button data-galaxy-place="${place.id}"${topic.state==="next"?' aria-current="step"':""} onfocus="galaxyFocus('${place.id}',true)" onblur="galaxyFocus('${place.id}',false)" onclick="galaxyPlace('${place.id}')">Show</button></div>`}).join("");
+  if(state&&state.view==="chart")$("galaxy-list").innerHTML=model.eras.map(era=>`<section class="galaxy-era" role="listitem"><h3>${esc(era.name)}</h3>${model.places.filter(place=>place.era===era.id).map(place=>`<div class="galaxy-place" data-state="${place.state}"><b>${esc(place.name)}</b><span class="galaxy-state">${place.state} · ${place.done} of ${place.count}</span><button data-galaxy-place="${place.id}"${place.id===selected.id?' aria-current="location"':""} onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true)" onblur="galaxyFocus('${place.id}',false)" onclick="galaxyPlace('${place.id}')">Land</button></div>`).join("")}</section>`).join("");
+  else $("galaxy-list").innerHTML=model.topics.map(topic=>{const place=places[topic.place];return `<div class="galaxy-place" role="listitem" data-state="${topic.state}"><b>${esc(topic.name)}</b><span class="galaxy-state">${topic.state} · ${topic.year} · ${esc(place.name)}</span><button data-galaxy-topic="${topic.id}" data-galaxy-place="${place.id}"${topic.state==="next"?' aria-current="step"':""} onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true)" onblur="galaxyFocus('${place.id}',false)" onclick="galaxyTopic('${topic.id}')">Learn</button></div>`}).join("");
   document.querySelectorAll("[data-galaxy-view]").forEach(button=>button.classList.toggle("on",state&&button.dataset.galaxyView===state.view))}
 function announceExperience(){const name=activeExperience().name;document.body.dataset.experience=experienceId();copySay(name+" experience shown")}
 let galaxyDown=null;
@@ -49,7 +55,7 @@ EXPERIENCES.galaxy={
     const rim=new T.PointLight(PALETTE.yellow,1.4,18);rim.position.set(-5,3,-3);scene.add(rim);
     const planets={};Object.entries(groups).forEach(([kind,places])=>{const planet=visuals.makePlanet(places,{states:Object.fromEntries(places.map(p=>[p.id,p.state])),domeScale:.22});planet.root.position.set(...(GALAXY_POS[kind]||[0,0,0]));planet.root.scale.setScalar(1.7);scene.add(planet.root);planets[kind]=planet});
     const kinds=Object.keys(planets),nodes=kinds.map(kind=>({position:GALAXY_POS[kind]||[0,0,0],state:groups[kind].some(p=>p.state==="next")?"next":groups[kind].every(p=>p.state==="done")?"done":"ahead"}));
-    const journey=visuals.makeJourney(nodes);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,detail:null,focusRing:null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
+    const journey=visuals.makeJourney(nodes);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,detail:null,focusRing:null,topic:(model.next||{}).id||null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
     document.body.dataset.experience="galaxy";galaxyShow("journey");renderGalaxyList()},
   dispose(){const ui=$("galaxy-ui");if(ui)ui.hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
   tick(dt,t){if(!galaxyState||reducedMotion())return;Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)})},

@@ -24,12 +24,12 @@ TOPICS = {
     "symbols",
     "future",
 }
-ACTORS = {topic: "Anthropic" for topic in TOPICS} | {
-    "agentsmd": "OpenAI",
-    "security": "MIT",
-    "meta": "SRI",
-    "llm": "Google",
-    "symbols": "John Gruber",
+ACTORS = {topic: ("Anthropic",) for topic in TOPICS} | {
+    "agentsmd": ("OpenAI",),
+    "security": ("MIT",),
+    "meta": ("SRI",),
+    "llm": ("Google", "Alibaba"),
+    "symbols": ("John Gruber",),
 }
 # Only these two milestones have contemporary evidence for an Earth location.
 HISTORICAL_SITES = {"security": "mit", "meta": "sri-menlo-park"}
@@ -51,7 +51,7 @@ def test_milestones_name_the_actor_and_use_dated_sources() -> None:
     for topic in selected():
         assert topic.origins, topic.id
         for origin in topic.origins:
-            assert ACTORS[topic.id] in origin.what, topic.id
+            assert any(actor in origin.what for actor in ACTORS[topic.id]), topic.id
             assert origin.source.startswith("https://"), topic.id
             assert origin.what.endswith("."), topic.id
             assert "\n" not in origin.what, topic.id

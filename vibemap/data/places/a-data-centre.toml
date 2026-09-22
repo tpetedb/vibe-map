@@ -9,3 +9,4 @@ globe = "datacentre"
 look = "racks"
 landmark = "generic-marker"
 source = "https://datacenters.google/"
+showcase = true
