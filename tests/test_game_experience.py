@@ -284,18 +284,18 @@ def _island(game: GamePage, **over: Any) -> GamePage:
     return game
 
 
-def test_the_islands_are_registered_under_the_contract(game: GamePage) -> None:
-    """One experience, under its id, with the seven things core may ask for."""
+def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
+    """Both experiences answer the seven questions core may ask."""
     _island(game)
     shape = game.page.evaluate(
         "() => { const x = window.__experiences();"
-        " return {ids: Object.keys(x),"
-        " types: Object.keys(x.islands).map(k => k + ':' + typeof x.islands[k])} }"
+        " return {ids: Object.keys(x), types: Object.fromEntries("
+        " Object.entries(x).map(([id,view]) => [id, Object.keys(view).map("
+        " k => k + ':' + typeof view[k])]))} }"
     )
-    assert shape["ids"] == ["islands"], shape
-    for name in CONTRACT:
-        kind = "string" if name == "name" else "function"
-        assert f"{name}:{kind}" in shape["types"], (name, shape["types"])
+    assert shape["ids"] == ["islands", "galaxy"], shape
+    expected = ["name:string"] + [f"{name}:function" for name in CONTRACT[1:]]
+    assert shape["types"] == {"islands": expected, "galaxy": expected}
     game.assert_clean()
 
 

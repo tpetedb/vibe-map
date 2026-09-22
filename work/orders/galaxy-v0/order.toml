@@ -16,8 +16,9 @@ owns = [
   "src/style.css",
   "vibemap/config.py",
   "tests/test_game_galaxy.py",
+  "tests/test_game_experience.py",
 ]
-cross = ["panels", "state"]
+cross = ["panels", "state", "harness"]
 needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "hunt-w-settings-news", "hunt-k-lesson-copy", "harness-boot-stays-last"]
 
 [[criteria]]
