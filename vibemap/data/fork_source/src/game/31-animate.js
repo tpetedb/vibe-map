@@ -7,8 +7,44 @@ const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.V
 let enterHtml=null;
 function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
 function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
+// The line to where you are going: a dashed thread from the walker to the
+// marker, so a tap says where the walk ends and not only that it started. It
+// belongs to the island it was drawn on, so a rebuilt scene gets a new one
+// rather than keeping a line into a world that is gone.
+let pathL=null;
+function pathLine(){
+  if(pathL&&pathL.parent===scene)return pathL;
+  const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute(new Float32Array(6),3));
+  pathL=new T.Line(g,new T.LineDashedMaterial({color:PALETTE.blueBright,dashSize:.34,gapSize:.26,transparent:true,opacity:.7}));
+  // Added after the island was built, so it converts its own colour the way
+  // fixColors would have, and it is two points: culling it by a box is work
+  // for nothing.
+  pathL.material.color.convertSRGBToLinear();pathL.material.userData.cs=1;pathL.frustumCulled=false;
+  scene.add(pathL);return pathL}
+function pathShown(){return !!(pathL&&pathL.parent===scene&&pathL.visible)}
+function tickPath(from){
+  const l=pathLine();
+  if(!hasTarget){l.visible=false;return}
+  const a=l.geometry.attributes.position;
+  a.setXYZ(0,from.x,.09,from.z);a.setXYZ(1,target.x,.09,target.z);a.needsUpdate=true;
+  // The dashes are spaced along the line's own length, so that is the one
+  // thing recomputed; the line is never culled, so its bounds are nobody's
+  // question.
+  l.computeLineDistances();l.visible=true}
+// Battery saver: a minute with no key, no tap and no stick, and nothing open
+// that somebody could be typing into, means half the frames are enough. Any
+// input is full rate again on the next one. The minute is a constant the
+// tests shorten, so a test waits for a fact the page produced and never for a
+// wall clock.
+let IDLE_MS=60000,idleSkip=false;
+function saverIdle(){return started&&settings().saver!=="off"&&idleMs()>IDLE_MS&&
+  !document.querySelector("#sheet.on,#vault.on,#pal.on")}
+window.__saver=()=>({after:IDLE_MS,idle:Math.round(idleMs()),half:saverIdle()});
+window.__saverAfter=ms=>{IDLE_MS=Math.max(0,+ms||0)};
 function animate(){
-  requestAnimationFrame(animate);if(!scene||gfxLost)return;const dt=Math.min(.05,clock.getDelta());
+  requestAnimationFrame(animate);if(!scene||gfxLost)return;
+  if(saverIdle()){idleSkip=!idleSkip;if(idleSkip)return}else idleSkip=false;
+  const dt=Math.min(.05,clock.getDelta());
   // Reduced motion, from the system or from Settings, stops the clock the
   // ambient animation runs on: the clouds, the birds, the boats, the blades,
   // every pulse and flicker. What the player does still moves: the walk, the
@@ -21,19 +57,19 @@ function animate(){
   const L=chars.lotte,pos=L.g.position,mv=_mv.set(0,0,0);
   if(keys.arrowup||keys.w)mv.z-=1;if(keys.arrowdown||keys.s)mv.z+=1;if(keys.arrowleft||keys.a)mv.x-=1;if(keys.arrowright||keys.d)mv.x+=1;
   if(joy.on&&(Math.abs(joy.x)>.12||Math.abs(joy.y)>.12)){mv.set(joy.x,0,joy.y)}
-  let steer=false;if(mv.lengthSq()>0){hasTarget=false;marker.material.opacity=0;const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
-  else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){hasTarget=false;marker.material.opacity=0;mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
+  let steer=false;if(mv.lengthSq()>0){clearAim();const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
+  else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){clearAim();mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
-  const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult(),ACC=22*WS,FRIC=14;
+  const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult()*runMult(),ACC=22*WS,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
   else{L.vel.x-=L.vel.x*Math.min(1,FRIC*dt);L.vel.z-=L.vel.z*Math.min(1,FRIC*dt)}
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
   if(started&&sp>.01){const prev=_prev.copy(pos);pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
-    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);hasTarget=false;marker.material.opacity=0}}
+    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);clearAim()}}
     // obstacles: push out
     obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+.45;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
-    if(hasTarget&&target.distanceTo(pos)<.6){hasTarget=false;marker.material.opacity=0}
+    if(hasTarget&&target.distanceTo(pos)<.6)clearAim();
     const ang=Math.atan2(L.vel.x,L.vel.z);let da=ang-L.g.rotation.y;while(da>Math.PI)da-=Math.PI*2;while(da<-Math.PI)da+=Math.PI*2;L.g.rotation.y+=da*Math.min(1,12*dt);
   }
   // jump
@@ -52,7 +88,11 @@ function animate(){
   const Tm=chars.tom,tp=Tm.g.position,dv=_dv.subVectors(pos,tp);dv.y=0;const dd=dv.length();let tw=false;
   if(dd>3.2&&started){dv.normalize();tp.addScaledVector(dv,3.6*WS*dt);Tm.g.rotation.y=Math.atan2(dv.x,dv.z);tw=true}else if(started){Tm.g.rotation.y+= (Math.atan2(dv.x,dv.z)-Tm.g.rotation.y)*(calm?1:.05)}
   animChar(Tm,tw,dt,t+1);animChar(chars.rolinda,false,dt,t+2);
-  marker.material.opacity*=.985;marker.rotation.z+=adt*2;
+  // The destination stays lit for as long as the walk lasts and fades once it
+  // is over: a marker that faded out from under a walk in progress answered
+  // the wrong question.
+  if(hasTarget)marker.material.opacity=1;else marker.material.opacity*=.9;
+  marker.rotation.z+=adt*2;tickPath(pos);
   tickCamera(dt,t,pos,L.vel||ZERO);
   // water: the surface moves on the GPU, so the frame only advances its clock
   if(water.material.userData.u)water.material.userData.u.uTime.value=t;
