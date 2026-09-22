@@ -1,128 +1,40 @@
-# First review of this order, by someone who did not build it. Every probe ran
-# from /tmp against this worktree's build, and every reverted fix in a git
-# archive of it under /tmp; nothing in the worktree was edited but this file.
 v = 1
 order = "qol-2-wayfinding"
-by = "reviewer-qol-2-wayfinding-r1"
-reviewed = "5be82f55812c649dfd8640b54e94d5bdc8cebb70"
-verdict = "improve"
+by = "reviewer-qol-2-wayfinding-r2"
+reviewed = "ec2a8dcd1b9dc93cd3c1446b39ea163c0f2ec3ea"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = '''
-The packet served the builder's cache, so I ran the command myself at 5be82f5: 27 passed, exit 0, about six minutes on software WebGL. Does it prove its sentence? For `each seen failing before its fix` I ran the same file against main's built game (47097ca) in a scratch copy: 27 of 27 failed. That is a blunt proof, since most of them fail there for want of `__walk()` or of a control rather than for the behaviour, so then I reverted five fixes in a git archive of HEAD, rebuilt there and ran the file again. The marker fading as on main turned `test_the_marker_and_its_line_stay_up_for_the_whole_walk` red (marker 0.97), the frame loop ignoring the saver turned `test_an_island_nobody_is_touching_draws_half_the_frames` red (16 of 16 drawn), the window's presence listener removed turned `test_a_key_brings_the_frames_back` and `test_a_press_anywhere_counts_as_somebody_being_there` red, and `pointer-events:auto` on the arrow turned `test_the_arrow_points_at_the_next_stop_with_the_distance` red. So each of the six built proposals has a test that fails without it, which is what this sentence asks. Two things the same run showed are not this criterion's to fail and are ruled under c4: a fix with no test at all, and a test that cannot fail for the reason in its name.
+Ran `uv run pytest -q tests/test_game_qol_wayfinding.py` at b45ec62 with Chromium allowed outside the filesystem sandbox: all 36 tests passed. The file drives the real palette, map, route, marker, arrow, run controls and frame loop. I read the regressions and the source they exercise. The recovery tests directly cover every former blocker: a cross-island route goes around the hub and arrives; an unreachable target stops with feedback; ordinary flight and the reduced-motion cut clear marker and path; path buffers are allocated once; rendered dashes meet the contrast assertion on desktop and Android; the arrow is first placed over a phone zoom button before the underlying button is tapped; Shift plus Tab does not latch running; and window blur releases held movement. The tests wait on page-produced state rather than fixed sleeps. This completed run supplies the proof the stale review lacked.
 '''
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = '''
-Ran every part myself at 5be82f5 and read each exit code separately: `ruff check` 0, `ruff format --check` 0, `checks.py style` 0 (`style OK: no em dashes, no emoji`), `checks.py sinks` 0, and `pytest -m 'not browser and not integration'` 0 with every test a dot. The sink guard is the right guard for this diff: the one new value into HTML is the toast's second argument and it goes through `esc()`; the map's list and the palette's button are written with `textContent` and `setAttribute`. On the sentence's `which is what CI runs`: the pull request's run 35620407442 has the same steps green in the lint job, whose one red step is the review step that waits for this file.
+Ran the complete criterion in the project environment at b45ec62. Ruff check and format exited 0, style printed `style OK: no em dashes, no emoji`, sinks exited 0, and the full `pytest -m 'not browser and not integration'` selection reached 100 percent with exit 0. I also inspected the new value flows: stop names entering toast HTML pass through `esc()`, while map and palette labels use `textContent` or `setAttribute`. The command proves the lint, copy, sink and neighboring non-browser claims.
 '''
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = '''
-Ran the loop myself with the exit code taken from each tool: `build OK`, `tree OK`, `cookbook OK`, `syllabus OK`, the two sync checks silent, all six exit 0, and `git status` clean afterwards. I also read the diff of `vibemap/data/fork_source/src/game/` against `src/game/`: the five mirrored files carry the same hunks line for line.
+Ran all six checks at b45ec62. Build, tree, cookbook and syllabus reported OK; sync_template and sync_fork_source exited 0 without differences. `git diff --check` is clean on every owned source, test and changelog path. The built game and fork mirror therefore match the source reviewed here.
 '''
 
 [[criteria]]
 id = "c4"
-verdict = "fail"
+verdict = "pass"
 evidence = '''
-I took the pull request's list of what is done and used each one in a real browser: Chromium on a real GPU at 1440x900, Chromium with the Pixel 7 profile, WebKit with the iPhone profile, by mouse, by touch and by keyboard only, reduced motion on. What holds: the palette's button is one Tab from the query, 110x46, named `Walk to 20:00, Data Warehouse`, and Enter or Shift and Enter starts the walk; every plot on the small map walks to its own stop by mouse and by touch on both phones, a tap on the map where no plot is does nothing, and a finger anywhere on the map's area reaches only `#minimap`; Bigger, Smaller, Escape and the dark sheet all work, the eight stops are buttons of 44 px with names, reachable by Tab, and Enter on one walks there and gives the keys back to the island; Map is 51x44, Bigger 65x44, Smaller 71x44, the arrow 80x44 and clear of the controls on all three; W, S, the arrows, Space, Enter at a stop and Escape work as before, Shift with D moves at 10.9 against 7.3; the saver is real, 120 animation frames gave 60 rendered after 63 s with nothing touched and no seam used, and the wheel gave full rate back at once; draw calls are 169 on the desktop and 112 on Android during a walk against a budget of 300. The neighbours hold: run here at 5be82f5, `tests/test_game_smoke.py` 24 passed, `tests/test_game_camera.py` with `tests/test_game_phone.py` 69 passed, `tests/test_game_qol.py` 18 passed. The pull request's run 35620407442 has one red browser test, `test_every_zoom_level_holds_the_phone_budget[game_android]` in the webkit shard, twice, and it is not this branch's own: it fails with the same 20 s timeout in `_island` on main itself at cb03e8b (runs 35606772551 and 35596102600) and on both branches the body cites (35602311851, 35596561161), it passes here, and the order that owns that file landed on main as 47097ca while I was reviewing. The other red step is the one that waits for this file.
-What does not hold, and why this criterion fails. (1) Proposal 2 is `your walker starts walking to it instead of you hunting for the signpost`, and no test waits for a walk to arrive: `_arrived` is only used after a tap a few paces away and the palette test asks for 1.5 m of progress. I walked every ordered pair of stops on every island: of 216 counted pairs 7 never end and 1 ends short, and stop 7 to stop 3 is stuck on all four islands (finding 1). (2) With both `clearAim()` calls removed from `22-archipelago.js` no test goes red, so that fix has no test that fails without it, and under reduced motion the island change does not reach either call (findings 3 and 4). (3) `test_the_arrow_never_takes_a_tap_from_the_zoom_buttons` still passes with the arrow taking presses again (finding 4). (4) Two proposals are half built and the pull request does not say so: proposal 3's Settings row and proposal 2's Roadmap button and flight-then-walk chain are only in builder-notes.md, while the body's `Not in this pull request` names 12, 13 and 15 and says none is half built (finding 6). (5) Half of proposal 6 is a dashed line, and on the grass of the first island it has a contrast of 1.04 to 1 on the phone profile; the tests assert a `visible` flag (finding 5). Proposals 12, 13 and 15 themselves are left out in the open with a reason each, which is not silent, and I would not fail the criterion for them.
+Read findings.md, the current builder notes, the recovery diff and the regression for each implemented proposal. Proposals 2, 3, 6, 7, 14 and 16 are implemented within the order's owned files and have direct entry-point tests. The Roadmap/flight chain and Settings-row halves of proposals 2 and 3 are explicitly disclosed in builder notes and the changelog and assigned to the panels follow-up; proposals 12, 13 and 15 are explicitly listed as not built. The previous review's high and medium defects each have a focused regression as described under c1. The remaining low polish observations are named in builder notes rather than silently skipped.
 '''
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
 evidence = '''
-I looked at the seven screenshots the tests write (the arrow on the desktop, Android and iPhone, the big map on all three, the walk on the desktop) and they show what they claim. The builder's set has no picture of the palette's Walk there button on any profile, and none of the small map or of the marker and its line on a phone, so I took those myself on all three profiles and looked: the button sits under the query and above the list at 110x46, the small map opens under the Map button with Bigger under it, and the marker reads well. What I saw that is not right is in the findings: the dashed line is clear on snow and close to invisible on grass (finding 5, measured), the toast stack lies over the top half of the big map on a phone, and the list under it shows two and a half of eight rows with a third of the screen empty below. None of that is a reason to fail this criterion, whose sentence is about looking and about copy; the surfaces were looked at, by the builder and then by me, and what the looking found is written down. Copy: I listed every new string (`Walk there`, `Walking there`, `Bigger`, `Smaller`, `Map`, `(delivered)`, `(not open yet)`, `Walk to a stop`, the aria labels) and it is plain interface wording with nobody's voice to keep; a scan of every added line in the diff and of the pull request body finds no em-dash, no en-dash and no emoji.
-'''
-
-[[findings]]
-severity = "high"
-file = "src/game/30-input.js"
-text = '''
-Walk there does not always get there, and when it does not, it never ends. `walkTo()` hands `aim()` a point and the frame loop steers at it in a straight line, which was fine for a tap a few paces off and is not for a walk across an island with a building in the middle. Through the palette's own Shift and Enter, standing at stop 7 of the campus and asking for `20:00, Data Warehouse`: the walker is pinned against the Hospitality Hub at (2.41, 1.33), and after 30 s `__walk()` still says has true, marker 1, line true, speed 0.15, the arrow still says 23 m, and nothing tells the player. I then walked every ordered pair of stops on every island (an Eulerian tour, 56 walks an island, real GPU). Counted pairs that never end: campus 2 of 54 (7 to 3, 6 to 2), winter 3 of 53 (4 to 8, 7 to 3, 6 to 3), desert 1 of 54 (7 to 3), prod 1 of 55 (7 to 3). One more on the desert, 6 to 7, ends 1.9 m from the plot because the shore branch calls `clearAim()` and says nothing; hurrying at the fast speed on the winter island, 7 to 6 ends 7.7 m short the same way. Before this order a stuck walk at least lost its marker after a second; now the marker and the line stay lit for as long as it lasts, and see finding 2 for what each of those frames costs. A walk that stops closing the distance has to end and say so, or go round, and the test file needs one walk that crosses the island and arrives.
-'''
-
-[[findings]]
-severity = "medium"
-file = "src/game/31-animate.js"
-text = '''
-`tickPath()` allocates on every frame of a walk. It calls `computeLineDistances()`, and in the vendored three r128 that is `n=[0]` and `setAttribute("lineDistance", new Float32BufferAttribute(n,1))`: a new array, a new typed array, a new attribute, and on the next render a new GL buffer for it, with the old one left for the garbage collector. Measured by counting `createBuffer`: during a `walkTo` the branch made 94 buffers in 90 frames and deleted none, on the desktop and on the Android profile alike; main makes 0 during a walk; standing still both make 3 in 120 frames. In the stuck walk of finding 1 that is 1806 buffers in 30 s with no end. The comment above the call says the distances are `the one thing recomputed`, which is not what the call does. The line has two points, so its distances are 0 and its length, and they fit an attribute made once with the geometry.
-'''
-
-[[findings]]
-severity = "medium"
-file = "src/game/31-animate.js"
-text = '''
-With reduced motion on, a walk survives the change of island. `setWorld()` skips the flight and calls `buildWorld(id)` directly, so neither `clearAim()` this order added is on that path. Pressed the real World button during a `walkTo(5)` with `reduced_motion: reduce`: on the winter island `__walk()` says has true, marker 1, line true, the toast still reads `Walking there, 21:30, Stakeholder Alignment Bridge`, a campus stop, the dashed line runs off towards the campus coordinates, and the walker goes from (3.0, 3.8) to (3.6, -3.4) with nobody steering. Without reduced motion the same steps end the walk. Main has the stale walk underneath too (its walker drifts the same way), but there the marker had faded and there was no line; here the pull request says `every place a walk ends now goes through one helper, clearAim(), including a crossing and a flight, which is what stops a marker being left lit over an island that is no longer there`, and for anyone with reduced motion that is not so. `setWorld` is in a file this order does not own; the frame loop it does own already notices a rebuilt scene in `pathLine()`.
-'''
-
-[[findings]]
-severity = "medium"
-file = "tests/test_game_qol_wayfinding.py"
-text = '''
-Two of the fixes have no test that fails without them. With both `clearAim()` calls taken out of `22-archipelago.js` and the game rebuilt, the whole file passes apart from the tests my other reverts broke: nothing crosses a bridge or flies with a walk on. And `test_the_arrow_never_takes_a_tap_from_the_zoom_buttons` passes with `pointer-events:auto` back on `#guide`: in its state the arrow sits at x 20 on the left edge and the zoom buttons are on the right, so the tap never meets it and the test cannot fail for the reason in its name. The property is held today only by the `elementFromPoint` line in the desktop arrow test. The test wants a state in which the arrow is where the zoom buttons are, or an assertion on the arrow itself on the phone.
-'''
-
-[[findings]]
-severity = "medium"
-file = "src/game/31-animate.js"
-text = '''
-The line to the marker is in the scene and hardly on the screen. It is a WebGL line, so one device pixel wide whatever the screen, in `PALETTE.blueBright` at opacity 0.7, and on grass that is a difference of hue and almost none of lightness. From my own screenshots of a walk on the campus, the line's most visible pixel against the grass beside it: (41, 140, 126) on (78, 136, 67) on the Pixel profile, a contrast ratio of 1.04 to 1, and (25, 152, 167) on (122, 174, 91) on the desktop, 1.32 to 1, where 3 to 1 is the usual floor for a graphic. At 2.6 device pixels to the CSS pixel it is a hairline I had to crop and enlarge to find. On the winter island's snow it is plain. The two marker tests assert `__walk().line === true`, which is the object's `visible` flag and says nothing about whether anybody can see it; findings.md quotes `a clear visual path on the ground`. The marker itself, a ring, reads well on every island.
-'''
-
-[[findings]]
-severity = "medium"
-file = "changelog.d/qol-wayfinding-and-movement.added.md"
-text = '''
-Two proposals are half built, and the two places a reader looks do not say so. Proposal 3 asks that `a Settings row turns it off anywhere`: there is no row, `guide` is not in `SETTINGS_DEFAULTS` or `SETTINGS_OPTIONS`, so a player at normal difficulty cannot turn the arrow off and one at expert cannot turn it on, short of editing localStorage. Proposal 2 is titled `from the Roadmap and the search palette`: the Roadmap has no button, and the flight-then-walk chain for a stop on another island is not there. builder-notes.md says both, with the reason (files this order does not own). The pull request body lists only 12, 13 and 15 as left out and says `none of the three is half built here`, and the changelog fragment, which a player reads, says `S.settings.guide (on, next, off) is the answer anywhere`. An arrow that is always on with no switch is the opposite of what Xbox guideline 109 in findings.md asks for (`options to enable`). Either the row comes in through the manager (a cross sign-off or a wider `owns`), or the body and the fragment say what is missing and name the order that will bring it.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/30-input.js"
-text = '''
-`Tap to hurry` latches on every press of Shift, and the Shift of Shift and Tab is one: with `run: toggle` and the focus on a HUD button, one Shift and Tab left `__walk().run` true, and nothing on the screen or for a screen reader says hurrying is on (I searched the page for it). The people that setting is for are the ones most likely to move through the page by keyboard.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/32-minimap.js"
-text = '''
-`guideLayout()` is on the frame path and allocates too: `guideGoal()` returns a new object and builds the stop's name with two concatenations every frame, the `#sheet.on, #vault.on, #pal.on` query runs every frame, and on the frames where `mmLayout()` runs the arrow is laid out twice. Small next to finding 2, but the comment above `mmTopY` makes the same argument against asking sixty times a second.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/32-minimap.js"
-text = '''
-On a phone the big map's list is fixed at 120 px, two and a half of eight rows, with 190 px of window empty under it on the Pixel profile and 109 px on the iPhone; and the `Walking there` toast, with whatever else is in the stack, lies over the top half of the big map and over the small map the player has just tapped. On the small phone map the whole island is about 40 px across with plots 11.5 px apart inside a 14 px hit radius, so a fingertip covers all eight and the tap walks to whichever is nearest; the big map is what makes it usable there. The plot numbers on the big map are about 11 CSS px.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/41-search.js"
-text = '''
-`palWalkGo()` closes the palette and ignores what `walkTo()` returns, so during a flight, or for a plot that is not on land, the palette shuts and nothing happens and nothing is said. The comment on `walkTo` says it `says so, so that a caller can offer something else`; no caller does.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/30-input.js"
-text = '''
-`keys.shift` has no way back if the window loses focus while Shift is down (there is no blur handler; that is older than this order and true of every key), but for the arrows the walker walking off shows it, and for Shift the only sign is a walker that is half again as fast until Shift is pressed once more. During the 0.9 s of a flight the walk also carries on with its marker and line lit, and is only ended on landing.
-'''
-
-[[findings]]
-severity = "low"
-file = "src/game/32-minimap.js"
-text = '''
-Smaller things. The arrow is `aria-hidden` and its comment says the same fact is a row in the map's list, but the list marks `(delivered)` and `(not open yet)` and never which stop is next. The screenshots for c5 leave out the palette's button on every profile and the small map and the marker on a phone. `#F1F1F8` and the two rgba greys are now spelled in four more style strings of this file instead of coming from `PALETTE`, following the one that was there.
+Inspected all nine screenshots freshly written by the focused run: desktop walking, path, arrow and large map; Android path, map and arrow; iPhone map and arrow. The outlined light-on-dark route reads clearly over grass on desktop and Android, the marker is distinct, and the edge arrow remains inside the usable HUD on both phones. The expanded map exposes numbered stops and labeled buttons. The phone screenshots also show the already-recorded low polish limits: the toast can cover the map and only part of the scrollable stop list is initially visible. Copy is plain interface language, and the style scan found no em dash or emoji. The panels signoff at efc64e2 remains applicable because `src/game/41-search.js` has not changed since it was accepted; it confirms the control semantics, safe text APIs and 44 px target.
 '''
