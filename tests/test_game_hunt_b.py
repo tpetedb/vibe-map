@@ -41,12 +41,11 @@ from PIL import Image
 from playwright.sync_api import Browser
 
 from tests.conftest import (
-    GAME_PATH,
     OUT,
     WAIT_MS,
     GamePage,
-    _attach_error_collectors,
     encode_progress,
+    game_page,
     phone_options,
 )
 
@@ -95,20 +94,14 @@ def _surface(
     who chose them last night arrives with them; seeding the record is how
     that player is reproduced rather than a way around the dropdown.
     """
-    context = browsers[surface].new_context(**_options(surface))
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    seed: dict[str, Any] = {"name": "Tom", "look": "own"}
-    seed.update(record or {})
-    if settings:
-        seed["settings"] = settings
-    game.goto(state=seed)
-    game.start("Tom")
-    try:
+    with game_page(browsers[surface], server, **_options(surface)) as game:
+        seed: dict[str, Any] = {"name": "Tom", "look": "own"}
+        seed.update(record or {})
+        if settings:
+            seed["settings"] = settings
+        game.goto(state=seed)
+        game.start("Tom")
         yield game
-    finally:
-        context.close()
 
 
 def _shot(game: GamePage, name: str) -> None:
@@ -216,14 +209,16 @@ def test_a_touch_screen_wider_than_a_phone_keeps_the_same_band(
     in it when it is touched. The check that it is a touch screen comes first,
     because with a mouse this window proves nothing.
     """
-    context = chromium.new_context(
-        viewport=size, has_touch=True, is_mobile=True, device_scale_factor=2
-    )
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    try:
-        game.goto(state={"name": "Tom", "look": "own"})
+    with game_page(
+        chromium,
+        server,
+        viewport=size,
+        has_touch=True,
+        is_mobile=True,
+        device_scale_factor=2,
+    ) as game:
+        page = game.page
+        game.goto(state={"name": "Tom", "look": "own", "settings": FAST})
         game.start("Tom")
         assert page.evaluate("matchMedia('(pointer:coarse)').matches"), (
             "a fine pointer, so the pill is the laptop's and this proves nothing"
@@ -237,8 +232,6 @@ def test_a_touch_screen_wider_than_a_phone_keeps_the_same_band(
             assert info["hits"] == [], info
         _shot(game, f"hunt_b1_touch_{size['width']}x{size['height']}")
         game.assert_clean()
-    finally:
-        context.close()
 
 
 # ---- B2 and B3: the toast stack -----------------------------------------------
@@ -255,8 +248,8 @@ WATCH = """() => {
       if (node.nodeType === 1 && node.classList &&
           node.classList.contains('tst'))
         window.__seen.push({
-          parent: node.parentElement ? node.parentElement.id : null,
-          hud: !!node.closest('#hud'),
+          parent: change.target.id || null,
+          hud: !!change.target.closest('#hud'),
           cls: node.className,
           kids: [...node.children].map(k => k.tagName),
           text: (node.textContent || '').trim().slice(0, 40)});
@@ -660,11 +653,8 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
     the heading. A message about the record belongs on the panel that is about
     to load it, and it is gone in five seconds, but it is not in the sky.
     """
-    context = browsers[surface].new_context(**_options(surface))
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    try:
+    with game_page(browsers[surface], server, **_options(surface)) as game:
+        page = game.page
         # The repair happens while the page boots, so the record of it has to
         # be running before the first script does.
         page.add_init_script(f"({WATCH})()")
@@ -693,8 +683,6 @@ def test_a_message_raised_on_the_title_is_not_left_behind_it(
         assert info["right"] <= info["view"]["w"] + 1, info
         _shot(game, f"hunt_b2_{surface}_title_message")
         game.assert_clean()
-    finally:
-        context.close()
 
 
 VAULT_STACK = """() => {
@@ -808,11 +796,8 @@ def test_the_menu_leaves_the_numbers_on_screen(
     chromium: Browser, server: str, width: int
 ) -> None:
     """B5: the open menu is nowhere near the pills, so they stay readable."""
-    context = chromium.new_context(viewport={"width": width, "height": 900})
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    try:
+    with game_page(chromium, server, viewport={"width": width, "height": 900}) as game:
+        page = game.page
         game.goto(state={"name": "Tom", "look": "own"})
         game.start("Tom")
         page.click("#hud-more-btn")
@@ -823,8 +808,6 @@ def test_the_menu_leaves_the_numbers_on_screen(
         assert info["covered"] == [], info
         game.screenshot(f"hunt_b5_more_{width}", clip_height=320)
         game.assert_clean()
-    finally:
-        context.close()
 
 
 # ---- B6: a wrapped heading has colliding lines --------------------------------

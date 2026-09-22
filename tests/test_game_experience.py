@@ -408,6 +408,66 @@ def test_going_to_another_island_is_the_fast_travel(game: GamePage) -> None:
     game.assert_clean()
 
 
+def test_going_to_a_stop_on_another_island_finishes_the_trip(
+    game: GamePage,
+) -> None:
+    """A compound destination survives the flight and starts its walk."""
+    _island(game, doneW={"winter": [1]})
+    assert (
+        game.page.evaluate("window.__experience().goTo({island: 'winter', stop: 2})")
+        is True
+    )
+    game.page.wait_for_function(
+        "() => window.__debug().world === 'winter' && !window.__debug().flying",
+        timeout=WAIT_MS,
+    )
+    game.page.wait_for_selector("#sheet.on", state="attached")
+    plot = game.page.evaluate("window.__data().worlds.winter.plots[1]")
+    game.page.wait_for_function(
+        "p => Math.hypot(window.__debug().pos[0] - p[0],"
+        " window.__debug().pos[2] - p[1]) < 2.5",
+        arg=plot,
+        timeout=WAIT_MS,
+    )
+    game.page.wait_for_function(
+        "() => { const w = window.__experience().where();"
+        " return !!w && w.kind === 'stop' && w.stop === 2 }",
+        timeout=WAIT_MS,
+    )
+    where = game.page.evaluate("window.__experience().where()")
+    assert where == {"kind": "stop", "stop": 2, "island": "winter"}
+    game.assert_clean()
+
+
+def test_a_new_destination_replaces_a_compound_trip(game: GamePage) -> None:
+    """A destination accepted during flight is the destination that lands."""
+    _island(game)
+    assert game.page.evaluate("window.__experience().goTo({island: 'winter', stop: 2})")
+    assert game.page.evaluate("window.__experience().goTo({island: 'desert'})")
+    game.page.wait_for_function(
+        "() => window.__debug().world === 'desert' && !window.__debug().flying",
+        timeout=WAIT_MS,
+    )
+    assert game.page.evaluate("window.__experience().where()") is None
+    game.assert_clean()
+
+
+def test_the_campus_finale_is_not_a_ninth_plot(game: GamePage) -> None:
+    """The inn finale is a place, but it is not a listed or navigable stop."""
+    _island(game, doneW={"campus": list(range(1, 9))})
+    game.page.wait_for_function(
+        "() => { const w = window.__experience().where();"
+        " return !!w && w.kind === 'finale' }",
+        timeout=WAIT_MS,
+    )
+    where = game.page.evaluate("window.__experience().where()")
+    assert where == {"kind": "finale", "island": "campus"}
+    rows = game.page.evaluate("window.__experience().listing()")
+    assert [r["stop"] for r in rows if r["island"] == "campus"] == list(range(1, 9))
+    assert game.page.evaluate("window.__experience().goTo({stop: 9})") is False
+    game.assert_clean()
+
+
 def test_the_view_is_advanced_through_the_contract(game: GamePage) -> None:
     """tick() moves the island's own frame on: the camera eases towards the
     level the zoom control asked for, by the seconds it is handed."""
@@ -443,6 +503,22 @@ def test_the_island_is_given_back_and_built_again(game: GamePage) -> None:
     game.frames(3)
     assert game.page.evaluate("window.__gfx().mem.geometries") > freed
     assert game.page.evaluate("window.__debug().world") == "campus"
+    game.assert_clean()
+
+
+def test_dispose_cancels_flight_walk_and_proximity(game: GamePage) -> None:
+    """A disposed experience cannot finish or accept abandoned navigation."""
+    _island(game)
+    assert game.page.evaluate("window.__experience().goTo({island: 'winter', stop: 2})")
+    game.page.evaluate("window.__experience().dispose()")
+    assert game.page.evaluate("window.__experience().where()") is None
+    assert game.page.evaluate("window.__experience().goTo({stop: 1})") is False
+    game.page.evaluate(
+        "() => new Promise(resolve => requestAnimationFrame("
+        "() => requestAnimationFrame(resolve)))"
+    )
+    assert game.page.evaluate("window.__debug().flying") is False
+    assert game.page.evaluate("() => window.__scene() === null") is True
     game.assert_clean()
 
 

@@ -115,10 +115,6 @@ function checkCrossing(pos){
   crossTo(b.b===here?b.a:b.b)}
 function crossTo(id){
   const d=worldOffset(id,S.world),L=chars.lotte,p=L.g.position.clone().sub(d);
-  // A destination is a point on the island it was picked on. The next island
-  // has its own coordinates, so the walk ends at the shore rather than
-  // carrying on towards a place that is no longer there.
-  clearAim();
   camShift(d,id);
   buildWorld(id,{x:p.x,z:p.z,rot:L.g.rotation.y,vel:L.vel?L.vel.clone():null});
   if(typeof track==="function")track("world",id);
@@ -134,7 +130,7 @@ function tickFlight(dt){
   const WS=WORLD_SCALE,to=new T.Vector3(flight.at.x,26*WS,flight.at.z+20*WS);
   camera.position.copy(flight.from).lerp(to,e);camera.lookAt(flight.at.x,0,flight.at.z);
   if(x<1)return;
-  const id=flight.to;flight=null;clearAim();
+  const id=flight.to;flight=null;
   // The flight ended over the new island; from there the camera glides down
   // to the walker at whatever zoom the player keeps.
   buildWorld(id);renderWorldPicker();

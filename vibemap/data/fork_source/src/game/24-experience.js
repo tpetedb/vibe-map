@@ -22,6 +22,16 @@ const EXPERIENCE_DEFAULT="islands";
 // The first stop of a list that is not delivered, or 0 when it is finished:
 // nextStop()'s rule, asked of any island rather than only the one underfoot.
 function firstUndone(done,count){for(let n=1;n<=count;n++)if(done.indexOf(n)<0)return n;return 0}
+let stopTravel=null;
+function walkToStop(n){if(!window.walkTo(n))return false;openCh(n);return true}
+// A world flight owns the scene until it lands. Keep only the request in
+// memory, then use the plot the rebuilt world produced for the actual walk.
+function finishStopTravel(trip){if(stopTravel!==trip)return;
+  const here=S.world||"campus";
+  if(here!==trip.island){if(!flight)setWorld(trip.island);
+    requestAnimationFrame(()=>finishStopTravel(trip));return}
+  if(flight){requestAnimationFrame(()=>finishStopTravel(trip));return}
+  stopTravel=null;if(trip.stop)walkToStop(trip.stop)}
 
 EXPERIENCES.islands={
   name:"Islands",
@@ -36,7 +46,8 @@ EXPERIENCES.islands={
   // a rebuild would put it in, and the frame loop draws nothing until there is
   // another one. The trash is emptied here rather than after the next render,
   // because a disposed experience has no next render to wait for.
-  dispose(){if(!scene)return;trash.push(scene);scene=null;island=null;emptyTrash()},
+  dispose(){stopTravel=null;flight=null;clearAim();nearK=0;
+    if(!scene)return;trash.push(scene);scene=null;island=null;emptyTrash()},
   // The island's frame is still the frame loop's (src/game/31-animate.js), so
   // this is the part of it that belongs to the view and can be advanced on its
   // own: the camera rig, the name plates and the minimap. Each honours
@@ -50,18 +61,23 @@ EXPERIENCES.islands={
   // it. On this island it is the walk-to the ground tap uses, and the lesson
   // opens the way every other way in opens it.
   goTo(to){to=to||{};
+    if(!started||!scene)return false;
     const here=S.world||"campus";
-    if(to.island&&to.island!==here){if(!WORLDS[to.island])return false;setWorld(to.island);return true}
-    const n=Number(to.stop);if(!started||!n||!PLOT_POS[n-1])return false;
-    target.copy(PLOT_POS[n-1]);target.y=0;hasTarget=true;
-    marker.position.set(target.x,.06,target.z);marker.material.opacity=1;
-    openCh(n);return true},
+    if(to.island){if(!WORLDS[to.island])return false;
+      const n=Number(to.stop)||0;
+      if(n&&!WORLDS[to.island].plots[n-1])return false;
+      if(to.island===here&&!flight)return n?walkToStop(n):true;
+      const trip={island:to.island,stop:n};stopTravel=trip;
+      if(!flight)setWorld(to.island);
+      requestAnimationFrame(()=>finishStopTravel(trip));return true}
+    return walkToStop(Number(to.stop))},
   // What the player is standing at, for the sheet and for the list twin. The
   // proximity check writes nearK once a frame and is the one place that
   // decides what is near enough; this reads it and never asks again.
-  where(){if(!started)return null;
+  where(){if(!started||!scene)return null;
     const k=nearK,at=S.world||"campus";
-    if(typeof k==="number"&&k>0)return {kind:"stop",stop:k,island:at};
+    if(typeof k==="number"&&k===finaleStop())return {kind:"finale",island:at};
+    if(typeof k==="number"&&k>0&&PLOT_POS[k-1])return {kind:"stop",stop:k,island:at};
     if(typeof k==="string"&&k.indexOf("m:")===0)return {kind:"mentor",id:k.slice(2),island:at};
     if(typeof k==="string"&&k.indexOf("a:")===0)return {kind:"artifact",id:k.slice(2),island:at};
     return null},

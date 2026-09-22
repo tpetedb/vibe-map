@@ -11,10 +11,15 @@ stays a fact rather than a minute of sleeping.
 
 from __future__ import annotations
 
+import io
 import math
+from collections.abc import Iterator
 from typing import Any
 
-from tests.conftest import WAIT_MS, GamePage
+import pytest
+from playwright.sync_api import Browser
+
+from tests.conftest import SHOT_MS, WAIT_MS, GamePage, game_page
 
 # A returning player two stops in: stop 3 is the next one, on the campus.
 RETURNING: dict[str, Any] = {
@@ -39,6 +44,19 @@ FRAME_RATIO = """n => new Promise(done => {
   requestAnimationFrame(step);
 })"""
 TICKS = 16
+
+
+@pytest.fixture
+def game_small(chromium: Browser, server: str) -> Iterator[GamePage]:
+    """A window a quarter of the laptop's, for the one walk that is a long one.
+
+    A software renderer is paid by the pixel, and the game moves the walker by
+    a frame's worth of ground per frame however long the frame took. A walk
+    right across the island is a hundred frames and more, so it is watched
+    through a window that draws them three times as fast.
+    """
+    with game_page(chromium, server, viewport={"width": 640, "height": 400}) as gp:
+        yield gp
 
 
 def _walk(game: GamePage) -> dict[str, Any]:
@@ -84,16 +102,25 @@ def _closing_in(game: GamePage, target: list[float], by: float = 1.5) -> None:
     )
 
 
-def _arrived(game: GamePage) -> None:
-    """Wait for the walk to end, which is the walker reaching the marker.
+def _over(game: GamePage) -> None:
+    """Wait for the walk to end, however it ends.
 
     A walk is the one thing here that takes the renderer's own time rather
     than a moment, so it is given three of the usual budgets. It is still a
     fact the page produced: the walk is over when the game says it is.
     """
-    game.page.wait_for_function(
-        "() => window.__walk().has === false", timeout=WAIT_MS * 3
+    game.until(
+        "window.__walk().has === false",
+        what="the end of the walk",
+        budget=WAIT_MS * 3,
     )
+
+
+def _arrived(game: GamePage, target: list[float]) -> None:
+    """The walk is over because the walker is standing at its destination."""
+    _over(game)
+    assert _distance(game, target) < 0.7, game.page.evaluate("window.__debug().pos")
+    assert not [t for t in game.toasts() if "Stopped short" in t], game.toasts()
 
 
 def _open_palette(game: GamePage, query: str) -> None:
@@ -210,7 +237,104 @@ def test_shift_and_enter_walks_instead_of_opening(game_desktop: GamePage) -> Non
     game_desktop.assert_clean()
 
 
-# ---- the marker stays, and the line to it -------------------------------------
+# East of the hub, level with the corner between the hub and its terrace. From
+# here the straight line to stop 3 runs into that corner, which is where a
+# walker steered straight at its destination was pinned for good.
+EAST_OF_THE_HUB = (9.0, 1.4)
+
+
+def test_a_walk_with_the_hub_in_the_way_goes_round_it_and_arrives(
+    game_small: GamePage,
+) -> None:
+    game_small.goto(state=RETURNING)
+    game_small.resume()
+    game_small.walk_to(*EAST_OF_THE_HUB, tol=1.0)
+    _walk_there_from_the_palette(game_small)
+    walk = _aimed_at(game_small, NEXT_STOP)
+    # The way is planned when the destination is taken, and it has corners:
+    # the hub is between here and there.
+    assert walk["corners"], walk
+    assert _distance(game_small, walk["target"]) > 25
+    _arrived(game_small, walk["target"])
+    game_small.assert_clean()
+
+
+def test_a_walk_that_cannot_get_nearer_ends_and_says_so(
+    game_desktop: GamePage,
+) -> None:
+    """The hub stands on the origin of every island, on ground a tap can reach.
+
+    Nobody can stand there, so the walk gets as near as it can, and then it
+    has to end and say so rather than press against the wall under a lit
+    marker for as long as the page is open.
+    """
+    game_desktop.goto(state=RETURNING)
+    game_desktop.resume()
+    x, y = game_desktop.page.evaluate("() => window.__groundAt(0, 0)")
+    game_desktop.page.mouse.click(x, y)
+    game_desktop.until("window.__walk().has === true")
+    target = _walk(game_desktop)["target"]
+    assert math.hypot(*target) < 2, target
+    _over(game_desktop)
+    game_desktop.toast_said("Stopped short")
+    assert _distance(game_desktop, target) > 1.5
+    game_desktop.frames(2)
+    done = _walk(game_desktop)
+    assert done["marker"] == 0, done
+    assert done["line"] is False, done
+    game_desktop.assert_clean()
+
+
+# ---- a walk belongs to the island it was taken on -----------------------------
+
+
+def test_flying_to_another_island_ends_the_walk_at_take_off(
+    game_desktop: GamePage,
+) -> None:
+    game_desktop.goto(state=RETURNING)
+    game_desktop.resume()
+    _walk_there_from_the_palette(game_desktop)
+    game_desktop.hud_action("#hud button:has-text('World')")
+    game_desktop.until("window.__debug().flying === true")
+    # The flight owns the frame from here on, and the walk is over with it:
+    # no marker and no way left lit over an island that is being left.
+    game_desktop.frames(1)
+    departing = _walk(game_desktop)
+    assert departing["has"] is False, departing
+    assert departing["marker"] == 0, departing
+    assert departing["line"] is False, departing
+    game_desktop.until("window.__S().world !== 'campus'")
+    game_desktop.frames(2)
+    landed = _walk(game_desktop)
+    assert landed["has"] is False, landed
+    assert landed["marker"] == 0, landed
+    assert landed["line"] is False, landed
+    game_desktop.assert_clean()
+
+
+def test_reduced_motion_cuts_to_the_island_and_ends_the_walk_too(
+    game_desktop: GamePage,
+) -> None:
+    """The flight is a cut under reduced motion, and a cut is leaving as well.
+
+    A walk that outlived it steered the walker across the new island towards
+    a point of the old one, with nobody at the keys.
+    """
+    game_desktop.page.emulate_media(reduced_motion="reduce")
+    game_desktop.goto(state=RETURNING)
+    game_desktop.resume()
+    _walk_there_from_the_palette(game_desktop)
+    game_desktop.next_world()
+    landed = _walk(game_desktop)
+    assert landed["has"] is False, landed
+    assert landed["marker"] == 0, landed
+    assert landed["line"] is False, landed
+    game_desktop.still(SPEED)
+    assert float(game_desktop.page.evaluate(f"() => {SPEED}")) < 0.3
+    game_desktop.assert_clean()
+
+
+# ---- the marker stays, and the way to it --------------------------------------
 
 
 def test_the_marker_and_its_line_stay_up_for_the_whole_walk(
@@ -233,7 +357,7 @@ def test_the_marker_and_its_line_stay_up_for_the_whole_walk(
         assert walking["line"] is True, walking
     # And both go out when the walk is over, which a few paces away is.
     _tap_the_ground(game_desktop)
-    _arrived(game_desktop)
+    _arrived(game_desktop, _walk(game_desktop)["target"])
     game_desktop.frames(2)
     done = _walk(game_desktop)
     assert done["marker"] == 0, done
@@ -254,6 +378,150 @@ def test_steering_away_puts_the_marker_out(game_desktop: GamePage) -> None:
     assert walk["marker"] == 0, walk
     assert walk["line"] is False, walk
     game_desktop.assert_clean()
+
+
+# Every GL buffer the page asks for from here on is counted. A buffer made in
+# a frame is a buffer made sixty times a second, and the renderer's own
+# counters say nothing about it: they count what is alive, not what was made.
+COUNT_BUFFERS = """() => {
+  window.__buffers = 0;
+  for (const C of [window.WebGLRenderingContext, window.WebGL2RenderingContext]) {
+    if (!C) continue;
+    const make = C.prototype.createBuffer;
+    C.prototype.createBuffer = function () {
+      window.__buffers++;
+      return make.call(this);
+    };
+  }
+}"""
+
+
+def test_a_walk_makes_its_buffers_once_and_not_every_frame(
+    game_desktop: GamePage,
+) -> None:
+    game_desktop.goto(state=RETURNING)
+    game_desktop.resume()
+    game_desktop.page.evaluate(COUNT_BUFFERS)
+    _walk_there_from_the_palette(game_desktop)
+    # The first frames of a walk draw the way for the first time, and what it
+    # is drawn with is made then.
+    game_desktop.frames(3)
+    made = int(game_desktop.page.evaluate("() => window.__buffers"))
+    game_desktop.frames(12)
+    assert _walk(game_desktop)["has"] is True
+    after = int(game_desktop.page.evaluate("() => window.__buffers"))
+    assert after - made <= 2, (made, after)
+    game_desktop.assert_clean()
+
+
+# The two colours a dash is made of, as the screen shows them, and how far a
+# pixel may be from one and still count: the edge of a plate is blended with
+# what is next to it, its middle is not.
+DASH_LIGHT = (241, 241, 248)
+DASH_DARK = (0, 0, 0)
+DASH_NEAR = 24
+
+
+def _luminance(rgb: tuple[float, float, float]) -> float:
+    """Relative luminance, as WCAG defines it for a contrast ratio."""
+
+    def lin(c: float) -> float:
+        c /= 255
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = rgb
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+
+
+def _contrast(a: tuple[float, float, float], b: tuple[float, float, float]) -> float:
+    la, lb = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def _the_ground(game: GamePage) -> dict[str, Any]:
+    """The middle of the island as the screen shows it: dashes, and the ground.
+
+    The band leaves out the HUD and the toasts above it and the controls
+    under it, and it is taken at one image pixel per CSS pixel: what is
+    counted is what somebody looking at the screen has to find. A dash is a
+    light plate lying on a dark one, so what counts as a pixel of a dash is a
+    pixel of the light colour with the dark colour right beside it; a name
+    plate or a white flower has one of the two and not the other.
+    """
+    from PIL import Image, ImageChops, ImageFilter
+
+    size = game.page.viewport_size
+    assert size
+    clip = {
+        "x": 0,
+        "y": round(size["height"] * 0.3),
+        "width": size["width"],
+        "height": round(size["height"] * 0.42),
+    }
+    shot = game.page.screenshot(clip=clip, scale="css", timeout=SHOT_MS)
+    image = Image.open(io.BytesIO(shot)).convert("RGB")
+
+    def mask(colour: tuple[int, int, int]) -> Image.Image:
+        found = None
+        for channel, want in zip(image.split(), colour, strict=True):
+            table = [255 if abs(v - want) <= DASH_NEAR else 0 for v in range(256)]
+            part = channel.point(table)
+            found = part if found is None else ImageChops.multiply(found, part)
+        assert found is not None
+        return found
+
+    beside_dark = mask(DASH_DARK).filter(ImageFilter.MaxFilter(7))
+    dashes = ImageChops.multiply(mask(DASH_LIGHT), beside_dark)
+    # The ground is the pixel in the middle when they are laid out from dark to
+    # light: most of the band is ground, whatever stands on it.
+    total = image.width * image.height
+    seen, ground = 0, (0, 0, 0)
+    colours = image.getcolors(total) or []
+    for n, c in sorted(colours, key=lambda nc: _luminance(nc[1])):
+        seen += n
+        if seen >= total / 2:
+            ground = c
+            break
+    return {"dashes": dashes.histogram()[255], "ground": ground}
+
+
+def _the_way_is_on_the_screen(game: GamePage, shot: str) -> None:
+    game.goto(state=dict(RETURNING, settings={"guide": "off"}))
+    game.resume()
+    game.frames(4)
+    before = _the_ground(game)
+    _walk_there_from_the_palette(game)
+    game.frames(3)
+    walk = _walk(game)
+    assert walk["line"] is True, walk
+    assert len(walk["dashes"]) >= 10, walk
+    during = _the_ground(game)
+    game.screenshot(shot, clip_height=820)
+    # A flag that says the way is visible is not a way anybody can see. Each
+    # dash has to have arrived on the screen as itself, light on dark, and a
+    # good many pixels of it.
+    assert during["dashes"] - before["dashes"] >= 60, (before, during)
+    # Three to one is the floor for a graphic. No single colour has it against
+    # snow and against lava rock alike, which is why there are two: whatever
+    # the ground is, one of them stands out from it, and they do from each
+    # other.
+    ground = during["ground"]
+    assert max(_contrast(DASH_LIGHT, ground), _contrast(DASH_DARK, ground)) >= 3, ground
+    assert _contrast(DASH_LIGHT, DASH_DARK) >= 3
+    game.assert_clean()
+
+
+def test_the_way_to_the_marker_can_be_seen_on_the_laptop(
+    game_desktop: GamePage,
+) -> None:
+    _the_way_is_on_the_screen(game_desktop, "wayfinding-desktop-way")
+
+
+def test_the_way_to_the_marker_can_be_seen_on_a_phone(
+    game_android: GamePage,
+) -> None:
+    """Grass on the Pixel profile is where a one pixel line measured 1.04 to 1."""
+    _the_way_is_on_the_screen(game_android, "wayfinding-android-way")
 
 
 # ---- the arrow at the edge of the screen --------------------------------------
@@ -289,15 +557,37 @@ def test_the_arrow_points_at_the_next_stop_with_the_distance(
 def test_the_arrow_never_takes_a_tap_from_the_zoom_buttons(
     game_android: GamePage,
 ) -> None:
-    """The one that broke the phone's zoom: nothing of it is a target."""
-    game_android.goto(state=RETURNING)
+    """The one that broke the phone's zoom: nothing of it is a target.
+
+    With seven stops delivered the next one is down and to the right of the
+    walker, so the arrow comes to rest at the right hand edge, on the zoom
+    buttons. That is the state the failure needs: an arrow on the far side of
+    the screen from the buttons proves nothing about them.
+    """
+    game_android.goto(
+        state={"name": "Tom", "look": "own", "doneW": {"campus": [1, 2, 3, 4, 5, 6, 7]}}
+    )
     game_android.resume()
     game_android.until("window.__minimap().guide !== null")
+    # The arrow rides on the camera, which is still gliding in from the title.
+    game_android.still("window.__minimap().guide.at.reduce((a, b) => a + b)")
+    arrow = game_android.page.locator("#guide").bounding_box()
+    assert arrow
+    # The zoom button whose middle the arrow is lying over.
+    under = game_android.page.evaluate(
+        """a => [...document.querySelectorAll('#zoom button')].map(b => {
+          const r = b.getBoundingClientRect();
+          return {id: b.id, x: r.x + r.width / 2, y: r.y + r.height / 2};
+        }).filter(b => b.x > a.x && b.x < a.x + a.width
+          && b.y > a.y && b.y < a.y + a.height)""",
+        arrow,
+    )
+    assert under, ("the arrow is not over a zoom button", arrow)
     before = game_android.page.evaluate("() => window.__gfx().zoom.target")
-    for _ in range(2):
-        game_android.page.tap("#zoom-in")
-    game_android.page.wait_for_function(
-        "z => window.__gfx().zoom.target < z", arg=before, timeout=WAIT_MS
+    game_android.page.touchscreen.tap(under[0]["x"], under[0]["y"])
+    game_android.until(
+        f"window.__gfx().zoom.target !== {before}",
+        what=f"the zoom to answer a tap on #{under[0]['id']} under the arrow",
     )
     assert _walk(game_android)["has"] is False
     game_android.assert_clean()
@@ -482,6 +772,23 @@ def test_nothing_has_to_be_held_down_to_hurry(game_desktop: GamePage) -> None:
     assert run > walk * 1.25, (walk, run)
     game_desktop.page.keyboard.press("Shift")
     assert _walk(game_desktop)["run"] is False
+    # A latch is said as well as set: nothing else on the screen shows it.
+    assert [t for t in game_desktop.toasts() if t.startswith("Hurrying")]
+    assert [
+        t for t in game_desktop.toasts() if t.startswith("Walking") and "Shift" in t
+    ]
+    game_desktop.assert_clean()
+
+
+def test_the_shift_of_shift_and_tab_is_not_a_request_to_hurry(
+    game_desktop: GamePage,
+) -> None:
+    """Whoever this setting is for is likely to move through the page by keyboard."""
+    game_desktop.goto(state=dict(RETURNING, settings={"run": "toggle"}))
+    game_desktop.resume()
+    game_desktop.page.keyboard.press("Shift+Tab")
+    assert _walk(game_desktop)["run"] is False
+    assert not [t for t in game_desktop.toasts() if t.startswith("Hurrying")]
     game_desktop.assert_clean()
 
 
@@ -625,3 +932,15 @@ def test_the_arrow_fits_both_phones(
         assert box["y"] >= 0 and box["y"] + box["height"] <= size["height"] - 90, box
         game.screenshot(f"wayfinding-{shot}-arrow", clip_height=820)
         game.assert_clean()
+
+
+def test_losing_window_focus_releases_the_hurry_key(game_small: GamePage) -> None:
+    game_small.goto(state=RETURNING)
+    game_small.resume()
+    game_small.page.keyboard.down("Shift")
+    assert _walk(game_small)["run"] is True
+    # A focus-loss event is the browser signal sent when the player switches apps.
+    game_small.page.evaluate("() => window.dispatchEvent(new Event('blur'))")
+    assert _walk(game_small)["run"] is False
+    game_small.page.keyboard.up("Shift")
+    game_small.assert_clean()

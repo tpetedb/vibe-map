@@ -7,30 +7,56 @@ const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.V
 let enterHtml=null;
 function enterShow(html){if(html===enterHtml)return;enterHtml=html;$("enterbtn").innerHTML=html;$("enter").classList.add("on")}
 function enterHide(){if(enterHtml===null)return;enterHtml=null;$("enter").classList.remove("on")}
-// The line to where you are going: a dashed thread from the walker to the
-// marker, so a tap says where the walk ends and not only that it started. It
-// belongs to the island it was drawn on, so a rebuilt scene gets a new one
-// rather than keeping a line into a world that is gone.
-let pathL=null;
-function pathLine(){
-  if(pathL&&pathL.parent===scene)return pathL;
-  const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute(new Float32Array(6),3));
-  pathL=new T.Line(g,new T.LineDashedMaterial({color:PALETTE.blueBright,dashSize:.34,gapSize:.26,transparent:true,opacity:.7}));
-  // Added after the island was built, so it converts its own colour the way
-  // fixColors would have, and it is two points: culling it by a box is work
-  // for nothing.
-  pathL.material.color.convertSRGBToLinear();pathL.material.userData.cs=1;pathL.frustumCulled=false;
-  scene.add(pathL);return pathL}
-function pathShown(){return !!(pathL&&pathL.parent===scene&&pathL.visible)}
+// The way to where you are going: dashes on the ground from the marker back to
+// the walker, round whatever the way goes round, so a tap says where the walk
+// ends and how it gets there. A line drawn by the GPU is one device pixel wide
+// on any screen, which on grass is a hairline nobody finds, so a dash is a
+// plate with a width of its own: a light one on a dark one, because no single
+// colour stands out from snow and from lava rock alike, and of the two one
+// always does. Unlit, outside the fog and the tone curve, so it is the same
+// two colours at noon and at midnight.
+//
+// Every dash is one instance of one mesh, so the whole way is one draw call,
+// and its buffers are made once: a frame of a walk writes matrices into them
+// and makes nothing. It belongs to the island it was drawn on, so a rebuilt
+// scene gets a new one rather than keeping a way into a world that is gone.
+const PATH_MAX=96,PATH_STEP=1.1,PATH_Y=.08;
+let pathM=null;const _pm=new T.Matrix4();
+function pathPlate(w,l,y,hex){const c=new T.Color(hex).convertSRGBToLinear(),x=l/2,z=w/2;
+  return {pos:[-x,y,-z, -x,y,z, x,y,z, -x,y,-z, x,y,z, x,y,-z],col:[0,1,2,3,4,5].flatMap(()=>[c.r,c.g,c.b])}}
+function pathMesh(){
+  if(pathM&&pathM.parent===scene)return pathM;
+  const under=pathPlate(.46,.8,0,PALETTE.black),over=pathPlate(.2,.54,.012,PALETTE.text),g=new T.BufferGeometry();
+  g.setAttribute("position",new T.Float32BufferAttribute(under.pos.concat(over.pos),3));
+  g.setAttribute("color",new T.Float32BufferAttribute(under.col.concat(over.col),3));
+  const m=new T.MeshBasicMaterial({vertexColors:true,fog:false,toneMapped:false});m.userData.cs=1;
+  pathM=new T.InstancedMesh(g,m,PATH_MAX);pathM.instanceMatrix.setUsage(T.DynamicDrawUsage);
+  // Its dashes move every frame and lie all over the island: culling it by a
+  // box that was right when it was made would hide it.
+  pathM.frustumCulled=false;pathM.count=0;pathM.visible=false;
+  scene.add(pathM);return pathM}
+// Flights skip tickPath, so cancelling a walk must hide its mesh immediately.
+function hidePath(){if(pathM){pathM.visible=false;pathM.count=0}}
+function pathShown(){return !!(pathM&&pathM.parent===scene&&pathM.visible&&pathM.count>0)}
+// Where the dashes lie, for the tests, which look for them on the screen.
+function pathDashes(){const out=[];if(!pathShown())return out;
+  for(let i=0;i<pathM.count;i++){pathM.getMatrixAt(i,_pm);out.push([_pm.elements[12],_pm.elements[14]])}
+  return out}
+// Laid from the marker backwards, so a dash stays where it is on the ground
+// while the walker comes up to it, rather than sliding along ahead of them.
 function tickPath(from){
-  const l=pathLine();
-  if(!hasTarget){l.visible=false;return}
-  const a=l.geometry.attributes.position;
-  a.setXYZ(0,from.x,.09,from.z);a.setXYZ(1,target.x,.09,target.z);a.needsUpdate=true;
-  // The dashes are spaced along the line's own length, so that is the one
-  // thing recomputed; the line is never culled, so its bounds are nobody's
-  // question.
-  l.computeLineDistances();l.visible=true}
+  const m=pathMesh();
+  if(!hasTarget){hidePath();return}
+  let n=0,ax=target.x,az=target.z,due=PATH_STEP;
+  for(let i=route.length-1;i>=-1&&n<PATH_MAX;i--){
+    const b=i<0?from:route[i],dx=b.x-ax,dz=b.z-az,len=Math.hypot(dx,dz);
+    // The last stretch stops short of the walker: the way starts at their feet.
+    const upto=i<0?len-.8:len;
+    if(len>1e-4){const ry=-Math.atan2(dz,dx);
+      for(;due<=upto&&n<PATH_MAX;due+=PATH_STEP){const t=due/len;
+        m.setMatrixAt(n++,_pm.makeRotationY(ry).setPosition(ax+dx*t,PATH_Y,az+dz*t))}}
+    due-=len;ax=b.x;az=b.z}
+  m.count=n;m.visible=n>0;m.instanceMatrix.needsUpdate=true}
 // Battery saver: a minute with no key, no tap and no stick, and nothing open
 // that somebody could be typing into, means half the frames are enough. Any
 // input is full rate again on the next one. The minute is a constant the
@@ -50,6 +76,7 @@ function animate(){
   // every pulse and flicker. What the player does still moves: the walk, the
   // follow camera, the companion's frames. adt is that clock's step.
   const calm=reducedMotion(),t=calm?0:clock.elapsedTime,adt=calm?0:dt;
+  if(aimStale())clearAim();
   // Fast travel owns the camera and the frame while it lasts; the walker and
   // the proximity checks wait until it lands.
   if(flight){tickFlight(dt);renderer.render(scene,camera);return}
@@ -58,7 +85,9 @@ function animate(){
   if(keys.arrowup||keys.w)mv.z-=1;if(keys.arrowdown||keys.s)mv.z+=1;if(keys.arrowleft||keys.a)mv.x-=1;if(keys.arrowright||keys.d)mv.x+=1;
   if(joy.on&&(Math.abs(joy.x)>.12||Math.abs(joy.y)>.12)){mv.set(joy.x,0,joy.y)}
   let steer=false;if(mv.lengthSq()>0){clearAim();const l=mv.length();mv.normalize().multiplyScalar(Math.min(1,l));steer=true}
-  else if(hasTarget){mv.subVectors(target,pos);mv.y=0;const d=mv.length();if(d<.25){clearAim();mv.set(0,0,0)}else{mv.normalize().multiplyScalar(Math.min(1,d/1.5));steer=true}}
+  // A walk steers at the next corner of its way at full pace, and eases off
+  // only into the destination itself.
+  else if(hasTarget){const to=routeNext(pos),last=to===target;mv.subVectors(to,pos);mv.y=0;const d=mv.length();if(last&&d<.25){clearAim();mv.set(0,0,0)}else{mv.normalize().multiplyScalar(last?Math.min(1,d/1.5):1);steer=true}}
   if(!L.vel)L.vel=new T.Vector3();if(L.jy===undefined){L.jy=0;L.jv=0}
   const WS=WORLD_SCALE,MAXV=4.6*WS*speedMult()*runMult(),ACC=22*WS,FRIC=14;
   if(steer&&started){L.vel.x+=(mv.x*MAXV-L.vel.x)*Math.min(1,ACC*dt/MAXV*1.5);L.vel.z+=(mv.z*MAXV-L.vel.z)*Math.min(1,ACC*dt/MAXV*1.5)}
@@ -66,12 +95,16 @@ function animate(){
   const sp=Math.hypot(L.vel.x,L.vel.z);const walking=sp>.35&&started;
   if(started&&sp>.01){const prev=_prev.copy(pos);pos.x+=L.vel.x*dt;pos.z+=L.vel.z*dt;
     // land edge: try axis slide
-    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2);clearAim()}}
+    // A walk is not ended by the shore it brushes on its way round a bay; if
+    // the shore is all there is between it and the destination, walkWatch()
+    // ends it, and says so.
+    if(!onLandW(pos.x,pos.z)){const px=onLandW(pos.x,prev.z),pz=onLandW(prev.x,pos.z);if(px)pos.z=prev.z;else if(pz)pos.x=prev.x;else{pos.copy(prev);L.vel.multiplyScalar(-.2)}}
     // obstacles: push out
-    obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+.45;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
+    obstacles.forEach(o=>{const dx=pos.x-o[0],dz=pos.z-o[1],d=Math.hypot(dx,dz),m=o[2]+WALK_R;if(d<m&&d>1e-4){pos.x=o[0]+dx/d*m;pos.z=o[1]+dz/d*m;const dot=L.vel.x*dx/d+L.vel.z*dz/d;if(dot<0){L.vel.x-=dx/d*dot;L.vel.z-=dz/d*dot}}});
     if(hasTarget&&target.distanceTo(pos)<.6)clearAim();
     const ang=Math.atan2(L.vel.x,L.vel.z);let da=ang-L.g.rotation.y;while(da>Math.PI)da-=Math.PI*2;while(da<-Math.PI)da+=Math.PI*2;L.g.rotation.y+=da*Math.min(1,12*dt);
   }
+  if(hasTarget&&started)walkWatch(pos,dt);
   // jump
   if(wantJump&&started){wantJump=false;if(L.jy<=0.001){L.jv=7}}
   if(L.jv!==0||L.jy>0){L.jv-=22*dt;L.jy=Math.max(0,L.jy+L.jv*dt);if(L.jy===0)L.jv=0}

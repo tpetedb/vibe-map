@@ -240,6 +240,7 @@ def test_a_second_source_folder_loads_before_boot_and_is_optional(
     root = _fork_root(tmp_path)
     if late_game:
         (root / "src" / "game" / "95-example.js").write_text("const LATE_GAME=95;\n")
+    shutil.rmtree(root / "src" / "galaxy", ignore_errors=True)
     assert not (root / "src" / "galaxy").exists()
     plain = _run("tools/build.py", "--root", str(root))
     assert plain.returncode == 0, plain.stdout + plain.stderr
