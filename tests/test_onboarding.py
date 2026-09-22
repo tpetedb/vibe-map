@@ -87,6 +87,48 @@ def test_vibe_new_makes_a_slim_camp_from_the_template(
     assert "Innovation Hub done" in out.stdout, out.stdout
 
 
+def test_vibe_new_names_ownership_and_cost(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    out = CliRunner().invoke(cli, ["new", "camp", "--name", "Frank"])
+    assert out.exit_code == 0, out.output
+    closing = " ".join(out.output.lower().split())
+    for phrase in (
+        "this camp repository, your coding-agent subscription and usage are yours",
+        "vibe map project owner is not billed for your camp",
+        "camp and hosted game are free",
+        "models and codespaces can charge your account",
+        "before using codespaces, create a zero product-level codespaces budget",
+        "enable stop usage when budget limit is reached",
+    ):
+        assert phrase in closing, phrase
+    assert "spending limit of zero" not in closing
+
+
+def test_template_agents_names_ownership_and_cost(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    out = CliRunner().invoke(cli, ["new", "camp", "--name", "Frank"])
+    assert out.exit_code == 0, out.output
+    agents = (tmp_path / "camp" / "AGENTS.md").read_text().lower()
+    for phrase in (
+        "camp repository, coding-agent subscription and usage belong to the learner",
+        "vibe map project owner is not billed for the learner's camp",
+        "camp and hosted game are free",
+        "models and codespaces can charge the learner's account",
+        "before using codespaces, create a zero product-level codespaces budget",
+        "enable stop usage when budget limit is reached",
+    ):
+        assert phrase in agents, phrase
+    assert "spending limit of zero" not in agents
+    readme = (tmp_path / "camp" / "README.md").read_text().lower()
+    for phrase in (
+        "zero product-level codespaces budget",
+        "stop usage when budget limit is reached",
+        "first billing cycle",
+    ):
+        assert phrase in readme, phrase
+    assert "spending limit of zero" not in readme
+
+
 def _fake_gh(bin_dir: Path, log: Path) -> None:
     """A gh on PATH that records its arguments and succeeds."""
     bin_dir.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,25 @@
+v = 1
+order = "p1-new-camp-cost-copy"
+by = "codex-p1-new-camp-reviewer"
+reviewed = "ce4e38f5e08233d63aa901ba6f804654a39fdde4"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Ran the exact focused pytest selection: both tests passed. Read the assertions and the implementation, then ran `vibe new camp --name Frank` in a fresh temporary directory. The actual closing output and generated AGENTS.md name the learner's repository, coding-agent subscription and usage as theirs, state that Vibe Map's owner is not billed, distinguish the free camp and hosted game from chargeable models and Codespaces, and instruct the learner to create a zero product-level Codespaces budget before use with Stop usage enabled. The command therefore exercises the public entry point and proves the stated copy, rather than only a helper."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Independently ran ruff check, ruff format --check, the style check, and the sink guard; all passed. An independent non-browser pytest run reached the suite but sandbox policy denied loopback socket binds and Docker access, producing only environment failures in unrelated chat, news, cafe, and dock tests. Used the supplied unrestricted full-verification log for the remaining battery: it records the same 352-file lint/format result, matching style and generated-output checks, and 1113 passed. The checkout was clean at the required commit, and the focused tests plus all cheap gates independently matched that log's source-tree results."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Ran all six commands from the criterion with a writable temporary UV cache. build, regen_tree, gen_cookbook, sync_template, sync_fork_source, and gen_syllabus all exited successfully; the commands compare generated outputs to their sources and therefore directly prove sync."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "Read the complete commit diff and inspected the real `vibe new` output plus generated README.md and AGENTS.md. The added copy is short, plain, and explicit that learner-owned models and Codespaces may charge the learner while the Vibe Map owner is not billed. It makes no template-conversion promise and adds no provider selection, title-screen prerequisite, online-mode configuration, browser onboarding, or journey changes reserved for issues 92 and 82."
