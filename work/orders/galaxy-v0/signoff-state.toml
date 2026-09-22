@@ -2,7 +2,7 @@ v = 1
 order = "galaxy-v0"
 team = "state"
 by = "manager-state"
-reviewed = "a94d640392b2e390b72bc3f04b922f184ebb8be9"
+reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
 verdict = "accept"
 note = '''
 Accepted at exact implementation commit a94d640. Galaxy remains a derived view over the existing shared record: completed topics come from S.topics, and the implementation adds no second progress store, no new progress-code field, and no version change. The experience choice is the existing browser-local S.settings.experience preference; setSetting writes it through save(), switching disposes and rebuilds the view without replacing S, and a URL override selects a view without writing the record. Unknown and inherited-property ids fall back to islands.
