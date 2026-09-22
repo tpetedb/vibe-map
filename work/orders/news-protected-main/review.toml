@@ -1,0 +1,15 @@
+v = 1
+order = "news-protected-main"
+by = "codex-news-final-reviewer"
+reviewed = "3a5082db25c455641b19e986390aeb50bfda96e5"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Read issue #174, the order, recovery notes, workflow, publisher, complete diff, and all seven regression tests. Independently ran tests/test_news_publish.py: 7 passed. The disposable real Git remotes prove main remains unchanged, only the four generated files reach automation/daily-news, an open PR is not duplicated or overwritten, an orphan branch is preserved, unrelated staged work is refused, and denied PR creation retains the branch plus a manual gh handoff. The workflow checks out main, serializes publishers, and uploads news-snapshot before publication. Live repository inspection confirms main requires both named CI checks and can_approve_pull_request_reviews=false; the documented branch/artifact recovery therefore matches current settings without another secret. GitHub's current official trigger documentation confirms GITHUB_TOKEN-created pull_request runs await a writer's approval. The shared full verification log records 1113 passed."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Independently ran ruff check and ruff format --check on tools/publish_news.py and tests/test_news_publish.py, plus tools/checks.py style; all passed. A writable uv cache rerun of just work-review news-protected-main reports both criteria passing at reviewed commit 3a5082db25c455641b19e986390aeb50bfda96e5. git diff --check also passed."
