@@ -1,0 +1,1 @@
+Daily news now proposes a pull request instead of pushing to protected main, preserving pending updates and a downloadable snapshot when publishing needs attention.
