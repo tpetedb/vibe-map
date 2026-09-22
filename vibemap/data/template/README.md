@@ -71,10 +71,13 @@ camp in a browser tab. Two ports are labelled for you: 8000 for your game
 `vibe chat serve`. A forwarded port is private to you until you say otherwise.
 
 It is your repository, so the codespace is yours: the compute is charged to the
-account that owns it, out of the free hours every personal account gets. Set a
-spending limit of zero if you want those hours to be a hard stop. Prebuilds make
-a codespace start faster and cost Actions minutes and storage, so none is set up
-here; switch one on only if you decide you want to pay for it.
+account that owns it, out of the free hours every personal account gets. Before
+using Codespaces, create a zero product-level Codespaces budget and select
+**Stop usage when budget limit is reached** where GitHub offers it. A budget
+excludes usage from before it was created during its first billing cycle, so
+create it before using metered services. Prebuilds make a codespace start faster
+and cost Actions minutes and storage, so none is set up here; switch one on only
+if you decide you want to pay for it.
 
 ## Public camp or private camp
 

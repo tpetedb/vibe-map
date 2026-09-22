@@ -29,4 +29,5 @@ A Vibe Code Camp: a learner's own workspace, their notes, and the configuration 
 - Tests before claims: a workstream is done when `vibe check <n>` says so, not when the code looks right.
 - Commit after every change you would be sad to lose. Message: what and why, one line. `git add -A` includes the regenerated `vault/Camp` notes; that is intended, not noise.
 - No secrets in the repo. Tokens go in `.env` (ignored) or the OS keychain.
+- The camp repository, coding-agent subscription and usage belong to the learner. The Vibe Map project owner is not billed for the learner's camp. The camp and hosted game are free; models and Codespaces can charge the learner's account. Before using Codespaces, create a zero product-level Codespaces budget and enable Stop usage when budget limit is reached.
 - After every change, end with one line: what changed.

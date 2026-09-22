@@ -1,0 +1,20 @@
+v = 1
+order = "fable-claude-roles"
+by = "codex-gpt5-reviewer"
+reviewed = "121100f22d80f185c3930db7ba84d0409e1df557"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "UV_CACHE_DIR=/tmp/vibe-uv-cache uv run pytest -q tests/test_work.py tests/test_repo.py exited 0. Direct inspection found model: fable in builder.md, reviewer.md, and team-manager.md; the builder frontmatter keeps the same valid shape as the two established Fable roles."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Read both changed passages and their surrounding sections. CLAUDE.md says 'Claude Code subagents' and docs/BRIEF.md says 'every Claude Code work-order role'; neither passage claims that Codex or all agent runtimes use Fable."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "UV_CACHE_DIR=/tmp/vibe-uv-cache uv run python tools/checks.py style && UV_CACHE_DIR=/tmp/vibe-uv-cache uv run python tools/sync_template.py --check exited 0; style reported no em dashes or emoji and the template check found no drift. The supplied final shared verification log also records 1113 passing tests at this integrated tree."

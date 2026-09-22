@@ -37,6 +37,17 @@ The repository is the install source until the package is published; once it is 
 
 The convention is your name, vibe-map, the date you started: `vibe-map-tom-2026-09-17`. It sorts by date, and a progress code or a note always says which camp it came from. The game's own setup guide (title screen, The full experience, or Roadmap, Setup guide) prints these commands with your name filled in.
 
+This camp is yours. `vibe new` creates a local git repository with your own
+history; add `--github you/camp` when you want your own repository on GitHub.
+The hosted game, the checks and the vault are free and use no model key. A
+coding agent runs on your own subscription or a provider's free allowance, and
+a Codespace uses the allowance and payment method on your own account. The Vibe
+Map project owner is not billed for your camp. Before setting up Codespaces, make a
+zero product-level Codespaces budget and select **Stop usage when budget limit
+is reached** where GitHub offers it; personal user-level budgets always enforce
+a hard stop. A budget excludes usage from before it was created during its
+first billing cycle, so create it before using metered services.
+
 You should see `ready: just start`, with the skills linked and the vault already built by `vibe new`. A camp has no Python environment of its own and no test browsers: the engine lives inside the installed `vibe` command. (`just setup` in the product repository is a different recipe with the same name; that one makes a `.venv` and installs Playwright.) Then make the terminal yours (optional, recommended):
 
 ```bash
