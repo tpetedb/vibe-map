@@ -30,9 +30,20 @@ def test_galaxy_journey_globe_and_dome_share_one_listing(
     assert all(row["year"] and row["placeTitle"] for row in rows)
     game.page.get_by_role("button", name="Chart", exact=True).click()
     chart_text = game.page.locator("#galaxy-list").inner_text()
-    for place in ("UC Santa Barbara", "Hangzhou, China", "A data centre"):
+    showcases = (
+        ("UC Santa Barbara", "california"),
+        ("Hangzhou, China", "hangzhou"),
+        ("A data centre", "data_centre"),
+    )
+    for place, _ in showcases:
         assert place in chart_text
     game.screenshot("galaxy_three_places", clip_height=760)
+    for place, shot in showcases:
+        row = game.page.locator("#galaxy-list .galaxy-place").filter(has_text=place)
+        row.get_by_role("button", name="Land").click()
+        game.page.evaluate("closeVault()")
+        game.screenshot(f"galaxy_place_{shot}", clip_height=760)
+        game.page.evaluate("galaxyView('chart')")
     game.page.get_by_role("button", name="Journey", exact=True).click()
     first_place = game.page.locator("[data-galaxy-place]").first
     first_place.focus()

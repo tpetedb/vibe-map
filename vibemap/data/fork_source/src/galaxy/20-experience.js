@@ -3,7 +3,7 @@ let galaxyState=null;
 const GALAXY_POS={earth:[-3.35,0,0],datacentre:[0,.75,-.7],cloud:[3.35,0,0]};
 function galaxyDone(){return Array.isArray(S.topics)?S.topics:[]}
 function galaxyGroups(model){const groups={};model.places.forEach(place=>{(groups[place.globe]||(groups[place.globe]=[])).push(place)});return groups}
-function galaxyCamera(view){const at=view==="journey"?[0,5.5,14]:view==="globe"?[0,2.8,7]:[0,2.2,4.3];
+function galaxyCamera(view){const at=["journey","chart"].includes(view)?[0,5.5,14]:view==="globe"?[0,2.8,7]:[0,2.2,4.3];
   camera.position.set(...at);camera.lookAt(0,0,0);camera.near=.05;camera.far=100;camera.updateProjectionMatrix()}
 function galaxySelected(){if(!galaxyState)return null;return galaxyState.model.places.find(place=>place.id===galaxyState.selected)||galaxyState.model.places[0]}
 function clearGalaxyFocus(){if(galaxyState&&galaxyState.focusRing){discard(galaxyState.focusRing);galaxyState.focusRing=null}}
@@ -27,7 +27,7 @@ window.galaxyKey=function(event){if(!galaxyState)return;const buttons=[...docume
 window.galaxyTopic=function(id){if(!galaxyState)return;const topic=galaxyState.model.topics.find(item=>item.id===id);if(!topic)return;
   galaxyState.topic=id;galaxyState.selected=topic.place;galaxyShow("dome");openTopic(id)};
 window.galaxyPlace=function(id){if(!galaxyState||!galaxyState.model.places.some(place=>place.id===id))return;
-  galaxyState.selected=id;const topic=galaxySelected().topics[0];if(topic)galaxyTopic(topic.id);else galaxyShow("dome")};
+  galaxyState.selected=id;const topic=galaxySelected().topics[0];galaxyState.topic=topic?topic.id:null;galaxyShow("dome");if(topic)openTopic(topic.id)};
 function renderGalaxyList(){const ui=$("galaxy-ui");if(!ui)return;ui.hidden=false;
   const state=galaxyState,model=state?state.model:galaxyModel(PLACES,TREE,galaxyDone()),selected=state?galaxySelected():model.places[0];
   $("galaxy-title").textContent=selected?selected.name:"Galaxy";
