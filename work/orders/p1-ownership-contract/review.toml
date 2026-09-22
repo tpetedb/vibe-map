@@ -1,0 +1,25 @@
+v = 1
+order = "p1-ownership-contract"
+by = "codex-p1-ownership-reviewer"
+reviewed = "bf060715379b9bb57adec1b236bd1069d84fcabd"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "At the reviewed commit, the criterion command passed 13 focused tests. Diff inspection confirmed the guard parses every .yml and .yaml file in both committed workflow roots, walks YAML mappings, lists and expressions for pull_request_target, supported paid-model action references, model permissions and secret syntax, and checks every tracked .gitattributes file for all three LFS markers. Mutation fixtures exercise secret inheritance, toJSON(secrets), pull_request_target, model permissions, representative paid actions and nested LFS rules; boundary fixtures keep provider names in prose and unrelated action names valid. The ownership-copy test also checks all three required documents and excludes the old upstream Codespaces command. The command therefore proves the stated checked-in contract rather than merely exercising nearby code."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Ruff, format, style and sink checks passed locally at the reviewed commit. The shared final support-tree verification log at /tmp/vibe-support-full-verify-final.log records all 1,113 tests passing; cmp confirmed that support tree's ADR and tests/test_repo.py were byte-identical to this commit, and the assembled tree included this order's remaining files. A local whole non-browser attempt reached only environment denials: socket binds are forbidden by this review sandbox and Docker's socket is inaccessible. Focused reruns reproduced those PermissionError causes, while 19 unaffected neighboring artifact/news cases passed. The unrestricted shared full run is the applicable whole-battery evidence."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "The exact criterion command passed at the reviewed commit: build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus all reported their checked outputs current. Diff inspection found no generated output edited by hand."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "I read ADR 0017, LONG-GAME and QUICKSTART in the diff and rendered text. ADR 0017 is Accepted and records learner repository/account ownership, the free route, paid boundaries, static guards and the remote prebuild limitation. LONG-GAME names the free game/checks/vault, learner subscription and account, a zero Codespaces product budget, the hard-stop control and the first-cycle timing caveat. QUICKSTART separately explains the full product template and slim generated camp, creates either learner-owned repository before compute, and uses YOU/camp rather than tpetedb/vibe-map. A repository-wide Markdown search found no promise that a generated repository can itself be marked as a template; ADR 0017 explicitly says the course does not promise it. Current official GitHub documentation independently confirms the budget wording, first-cycle caveat, Codespaces billing owner and that prebuild configurations live in repository Settings and consume storage/Actions resources. The maintainer's authenticated admin inspection saw 'There are no prebuilds configured for this repository' and only the setup action; that confirmation is recorded in research.md and work/codex-progress.md."
