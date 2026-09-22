@@ -1,0 +1,40 @@
+v = 1
+order = "galaxy-model-visuals"
+by = "reviewer-galaxy-model-visuals-r2"
+reviewed = "16dedce27c448133ed4c273927e57f1f80c7cc0b"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_galaxy_model.py -k model` with an isolated uv cache: two tests passed (`-k model` also selects the visuals test because the module name contains model). Read the model and its contract test. The relevant test snapshots injected data and tree, proves both remain byte-for-byte unchanged, and proves ordered done/next topic state, stable next id, per-place done/count/state, primary source propagation and rejection of an unknown primary place. The model builds new topic records, copies place and era records, and skips only topics without origins during the additive migration. The command proves the criterion.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_galaxy_model.py -k visuals`: one test passed. Read every constructor in `src/galaxy/10-planet-kit.js`. The test checks exact equator and pole conversion, compares every Earth pin with its source latitude and longitude at radius 1.012 to 1e-9, and proves close domes move while true pins do not. It rejects missing Earth coordinates, mixed globes and an unsupported look. Across separately returned roots it checks every position is finite, rejects reused geometry or material, and disposes each resource. Its 20-site coincident cluster checks all dome pairs clear twice the computed radius and the result stays below 300 drawables. The implementation keeps true pin and displaced display vectors separate and allocates resources inside each returned root.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the exact criterion with an isolated uv cache: ruff check and format were silent, style printed `style OK: no em dashes, no emoji`, sinks exited 0, build --check printed that game/vibe-map.html matches src, and sync_fork_source --check exited 0. This command proves only that the checked-in generated files match this branch. It does not exercise the build-order contract added by this order; the first finding records that independent failure.
+'''
+
+[[findings]]
+severity = "high"
+file = "tests/test_build.py"
+text = '''
+The order changes the build contract but leaves all three new cases red. Running the full owned test module gives 3 failures and 24 passes: both variants of `test_a_second_source_folder_loads_before_boot_and_is_optional` find `90-boot.js` before the Galaxy modules, and `test_a_missing_boot_module_stops_the_build` finds that a build without boot still exits 0 and writes the game. Direct inspection of game/vibe-map.html confirms boot starts at byte 1,648,361, Galaxy model at 1,652,313 and the scene kit at 1,653,946. This is a runtime initialization hazard once boot calls Galaxy code, and it means the order's own modified neighbor is not green. Criterion c3 misses tests/test_build.py. Sync this branch with origin/main, which already carries the boot-last/missing-boot implementation, resolve and regenerate, then rerun the full owned build-test module and refresh the review.
+'''
+
+[[findings]]
+severity = "medium"
+file = "changelog.d/galaxy-model-visuals.added.md"
+text = '''
+The fragment says this visual-only prerequisite adds "distinct walkable domes", but the owned code creates static dome scene objects and contains no walking, landing or input behavior. That overstates the shipped behavior. Describe them as dome dioramas, as the later integration correction does, and obtain the required docs signoff before landing.
+'''
