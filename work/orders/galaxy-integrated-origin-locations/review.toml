@@ -1,0 +1,67 @@
+v = 1
+order = "galaxy-integrated-origin-locations"
+by = "codex-review-integrated-origin-locations-20260922"
+reviewed = "8e822f0cab19d153c625418df99513d2e56ed67f"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+`just work-review galaxy-integrated-origin-locations` passed c1: 58 focused tests across
+test_integrated_origin_locations.py, test_places.py and test_topics.py. I also ran the new
+file alone: 3 passed in 0.06s. The regression test loads package data, asserts the exact
+ordered places for all ten ids, rejects duplicate places and requires one primary. A direct
+dump of the loaded origins matched those expectations. The command cannot establish the
+historical meaning of a place by itself, so I separately opened the eight unique historical
+sources named in findings.md; that audit is recorded under c4 and supports each changed
+network or standards-body location.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+The criterion command exited 0 with no reported problem. My direct load of the ten topics
+resolved every place and printed one true primary for each topic, years from 1969 through
+2025, and an https source on every origin; a second call to places.problems() filtered to
+the ten ids returned `[]`. The changed abstract places exist in package data as the global
+network place `the-internet` and the global standards place `a-standards-body`.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+The prescribed c3 command passed ruff check and format for the new test, then reported
+`tree OK: outputs match vibemap/tech.py` and `build OK: game/vibe-map.html matches src/`.
+I read the source and generated diffs: the generated roadmap, notes and built game carry
+the same origin moves and the two newly retained source links. In particular, yaml.toml,
+tools/generated/notes.js and the built game all retain the exact 8 August 2019 GitHub
+Actions URL, and the regression test asserts that exact URL. The support full-run log at
+/tmp/vibe-content-train-full-verify-final.log also records clean style, tree and build
+checks followed by `1141 passed in 3204.74s`.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+I opened every historical source listed in findings.md (eight unique URLs for ten topics).
+GitHub's Actions article names Nat Friedman, 8 August 2019, CI/CD, repository code and the
+YAML workflow syntax; its only San Francisco text is a current 2026 GitHub Universe promo,
+not the article. GitHub's launch post names Chris Wanstrath, 10 April 2008 and "officially
+live"; again, its only San Francisco text is that current promo. The Go FAQ names Robert
+Griesemer, Rob Pike and Ken Thompson, their work at Google, and the public open source
+release on 10 November 2009, with no Mountain View text. Anthropic's evaluation article is
+dated 4 October 2023 and describes its work building robust model evaluations, with no San
+Francisco text. Anthropic's MCP announcement is dated 25 November 2024 and calls MCP a new
+standard connecting assistants to systems where data lives, with no San Francisco text.
+The exact Open Group register page names Apple Inc., macOS 26.0 Tahoe, UNIX 03 and
+29 August 2025, with no Cupertino location. Apple's Catalina announcement is dated
+7 October 2019 and says Catalina is then available as a software update, with no Cupertino
+text. The ECMA-404 PDF cover identifies Ecma International, first edition and October 2013,
+and its introduction records adoption by General Assembly postal vote that month; it has no
+Geneva text. These sources support the actor, year and event used by the retained claims,
+without deriving an event city from a current office, footer or promotion.
+'''
