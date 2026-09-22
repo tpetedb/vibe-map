@@ -1,0 +1,30 @@
+v = 1
+id = "ci-cache-version"
+title = "Resolve the browser cache version without hiding Python failures"
+team = "harness"
+branch = "codex/ci-cache-version"
+goal = ""
+issue = 176
+builder = "codex-root"
+owns = [
+  ".github/workflows/ci.yml",
+  "tests/test_ci_cache_version.py",
+  "changelog.d/ci-cache-version.fixed.md",
+]
+cross = ["docs"]
+needs = ["harness-ci-shards"]
+
+[[criteria]]
+id = "c1"
+text = "The actual workflow command writes the installed version and propagates failed lookups without writing a successful output."
+check = "uv run pytest tests/test_ci_cache_version.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint and the existing repository checks preserve job names and shard coverage."
+check = "just lint && uv run pytest tests/test_repo.py"
+
+[[criteria]]
+id = "c3"
+text = "The reviewer confirms the two regression cases failed before the workflow fix, and job names and shard selection are unchanged."
+judge = "reviewer"
