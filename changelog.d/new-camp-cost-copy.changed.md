@@ -1,0 +1,1 @@
+- Clarify in `vibe new` and generated camp agent rules that the learner owns the repository, subscription and usage costs.

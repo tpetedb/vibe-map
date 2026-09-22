@@ -1,0 +1,26 @@
+v = 1
+order = "ci-cache-version"
+by = "reviewer-ci-cache-version"
+reviewed = "784da308e33493b00299e5f2c21f4d4db7af964c"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `UV_CACHE_DIR=/tmp/vibe-ci-review-uv-cache uv run pytest tests/test_ci_cache_version.py -q` at the reviewed commit: both parameter cases passed. The test parses the `pw` step from the real workflow and executes its exact `run` text under `bash -e -o pipefail`; it replaces only `uv` with a local executable. I also executed that step independently. The success path exited 0 and wrote `version=1.63.0`; a lookup that exited 23 made the step exit 23 and left the output file empty. This proves both output and failure propagation, rather than only inspecting the command text.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the criterion through `UV_CACHE_DIR=/tmp/vibe-ci-review-uv-cache just work-review ci-cache-version`: c2 passed, with ruff check and format clean and all of `tests/test_repo.py` green. Those repository tests parse the real workflow, verify both required job names, and collect the browser-marked test files before checking that every file belongs to exactly one shard and that the default shard covers an unclaimed file. Separately parsed the parent and reviewed workflows, replaced only the `pw` step's `run` value, and compared them equal. The job names remain `lint, unit tests, generated files in sync`, `browser shard, ${{ matrix.shard }}`, `Playwright tests (Chromium and WebKit)`, and `every link answers (weekly)`; the shard sequence remains smoke, ui, phone, bridges, panels, qol, webkit. The supplied final full-verification log also ends with `1113 passed` and clean lint, generated-file, template, fork-source, and build checks.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Executed the parent commit's exact `pw` command in temporary directories with the same two fake lookup outcomes used for HEAD. On the nominal path it exited 0, wrote `version=`, and printed `SyntaxError: unexpected character after line continuation character`; when the lookup exited 23, the parent step still exited 0 and wrote `version=`. Both assertions therefore fail before the fix. At HEAD the same experiment produced the installed version on success and exit 23 with no output on failure. A parsed whole-workflow comparison, omitting only this one `run` value, was equal, directly confirming that job names, matrix entries, shard patterns, installation, cache key, and aggregator selection did not change.
+'''
