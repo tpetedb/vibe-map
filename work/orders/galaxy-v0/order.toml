@@ -29,7 +29,7 @@ check = "uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.p
 [[criteria]]
 id = "c2"
 text = "Lint, style, the sink guard and the whole non-browser battery pass."
-check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
 
 [[criteria]]
 id = "c3"
