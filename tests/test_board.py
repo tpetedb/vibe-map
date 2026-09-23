@@ -211,3 +211,39 @@ def test_a_camp_gets_no_board_hook_no_memory_rule_and_no_memory_skill() -> None:
     assert not [p for p in shipped if "shared-memory" in p]
     assert not (sync_template.TEMPLATE / ".mcp.json").exists()
     assert not (sync_template.TEMPLATE / "_mcp.json").exists()
+
+
+def test_a_linked_worktree_reads_and_writes_the_same_room(tmp_path: Path) -> None:
+    main, linked = tmp_path / "main", tmp_path / "linked"
+
+    def git(*args: str, cwd: Path = main) -> None:
+        subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True)
+
+    (main / "tools").mkdir(parents=True)
+    git("init", "-q", "-b", "main")
+    (main / "tools" / "board.py").write_bytes(BOARD.read_bytes())
+    git("add", ".")
+    git("-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "board")
+    git("worktree", "add", "-q", "-b", "other", str(linked))
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in ("VIBE_BOARD_DIR", "VIBE_MEMORY_FILE")
+    }
+
+    def run(where: Path, *args: str) -> str:
+        return subprocess.run(
+            [sys.executable, str(where / "tools" / "board.py"), *args],
+            cwd=where,
+            env=env,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+
+    run(linked, "say", "--who", "linked, team:codex", "QUESTION: do you see me?")
+    from_main, from_linked = run(main, "read"), run(linked, "read")
+    assert from_main == from_linked
+    assert f"({main.resolve()}/.git/board/ROOM.md)" in from_main
+    assert "QUESTION: do you see me?" in from_main
+    assert f"{main.resolve()}/.git/board/memory.jsonl" in from_main

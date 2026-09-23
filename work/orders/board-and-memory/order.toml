@@ -53,7 +53,11 @@ check = "uv run pytest -q tests/test_board.py tests/test_memory.py"
 [[criteria]]
 id = "c2"
 text = "The reader runs from this checkout and from a linked worktree and resolves the same room; the lint passes on the live file."
-check = "uv run python tools/board.py read > /tmp/board-read-a.txt && (cd .claude/worktrees/codex-galaxy-prereq-train 2>/dev/null || cd .) && uv run --project \"$OLDPWD\" python tools/board.py read > /tmp/board-read-b.txt && diff -q /tmp/board-read-a.txt /tmp/board-read-b.txt && uv run python tools/board.py memory-lint"
+# Builder's repair: the first form cd'd in a subshell, so $OLDPWD was empty under
+# sh and uv refused `--project ""` before the reader ran. Same intent: read here,
+# read again from another checkout of this repository, diff, lint. The reader
+# resolving one room from two checkouts is also a test in tests/test_board.py.
+check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$PWD" && other="$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep -vxF "$here" | head -n 1)" && (cd "${other:-$here}" && uv run --project "$here" python "$here/tools/board.py" read) > /tmp/board-read-b.txt && diff -q /tmp/board-read-a.txt /tmp/board-read-b.txt && uv run python tools/board.py memory-lint'''
 
 [[criteria]]
 id = "c3"
