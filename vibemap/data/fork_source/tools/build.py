@@ -18,6 +18,7 @@ copy of src/ and this file in workspace/forks/ builds on its own (`vibe fork`).
 
 from __future__ import annotations
 
+import ast
 import functools
 import importlib.util
 import json
@@ -28,7 +29,7 @@ import sys
 import urllib.parse
 from pathlib import Path
 from string import ascii_letters, digits
-from typing import Any
+from typing import Any, NoReturn
 
 
 def _root(argv: list[str] | None = None) -> Path:
@@ -122,19 +123,23 @@ def _head_html() -> str:
 
 def _campaign_js() -> str:
     """The campaign a fork carries, else the one inside the installed package."""
-    sys.path.insert(0, str(ROOT))
-    local = GENERATED / "campaign.json"
-    if local.exists():
-        data = json.loads(local.read_text(encoding="utf-8"))
-    else:
-        from vibemap.project import data_text  # noqa: PLC0415
-
-        data = json.loads(data_text("campaign.json"))
+    data = _campaign_data()
     return (
         "const CAMPAIGN=" + js_json(data["evenings"]) + ";\n"
         "const MENTORS=" + js_json(data["mentors"]) + ";\n"
         "const ARTIFACTS=" + js_json(data.get("artifacts", [])) + ";\n"
     )
+
+
+def _campaign_data() -> dict[str, Any]:
+    """The campaign data shared by injection and build-time validation."""
+    sys.path.insert(0, str(ROOT))
+    local = GENERATED / "campaign.json"
+    if local.exists():
+        return json.loads(local.read_text(encoding="utf-8"))
+    from vibemap.project import data_text  # noqa: PLC0415
+
+    return json.loads(data_text("campaign.json"))
 
 
 def _items_js() -> str:
@@ -180,9 +185,218 @@ def _places_js() -> str:
     return "const PLACES=" + js_json(places.payload()) + ";\n"
 
 
+# The note sources are read as JavaScript tokens, never as lines: a title does
+# not depend on spacing, quoting, comments or how many notes share a line.
+# Longest first, so `===` and `=>` are never read as an assignment.
+_JS_PUNCT = (
+    "=== !== ... **= &&= ||= ??= == != => <= >= += -= *= /= %= && || ?? ?. ** ++ --"
+).split()
+_JS_WORD = re.compile(r"[A-Za-z_$][\w$]*|\d[\w.]*")
+_JS_KEYWORDS_BEFORE_REGEX = {"return", "typeof", "case", "in", "of", "void", "delete"}
+_JsToken = tuple[str, "str | None"]
+
+
+class _JsLexer:
+    """Just enough JavaScript to find note keys and NOTES assignments.
+
+    Tokens are (kind, value): "str" with its decoded value, "tmpl" with its
+    text or None when it interpolates, "word", or "punct". Comments, and the
+    insides of strings, templates and regular expressions, are never code.
+    """
+
+    def __init__(self, text: str, source: str) -> None:
+        self.text, self.source, self.i = text, source, 0
+
+    def fail(self, what: str) -> NoReturn:
+        line = self.text.count("\n", 0, self.i) + 1
+        raise SystemExit(f"{self.source}:{line}: {what}; cannot read the note titles")
+
+    def tokens(self, *, until_brace: bool = False) -> list[_JsToken]:
+        """Tokens to the end, or to the brace that closes a template's ${."""
+        out: list[_JsToken] = []
+        braces, text = 0, self.text
+        while self.i < len(text):
+            c, pair = text[self.i], text[self.i : self.i + 2]
+            if c.isspace():
+                self.i += 1
+            elif pair == "//":
+                end = text.find("\n", self.i)
+                self.i = len(text) if end < 0 else end
+            elif pair == "/*":
+                end = text.find("*/", self.i + 2)
+                if end < 0:
+                    self.fail("unclosed comment")
+                self.i = end + 2
+            elif c in "\"'":
+                out.append(("str", self._string(c)))
+            elif c == "`":
+                out.append(("tmpl", self._template()))
+            elif c == "/" and _regex_may_start(out):
+                self._regex()
+                out.append(("word", None))
+            elif m := _JS_WORD.match(text, self.i):
+                out.append(("word", m.group()))
+                self.i = m.end()
+            else:
+                op = next((p for p in _JS_PUNCT if text.startswith(p, self.i)), c)
+                self.i += len(op)
+                if op == "}" and braces == 0 and until_brace:
+                    return out
+                braces += {"{": 1, "}": -1}.get(op, 0)
+                out.append(("punct", op))
+        if until_brace:
+            self.fail("unclosed ${ in a template")
+        return out
+
+    def _string(self, quote: str) -> str:
+        start = self.i
+        self.i += 1
+        while self.i < len(self.text) and self.text[self.i] not in quote + "\n":
+            self.i += 2 if self.text[self.i] == "\\" else 1
+        if self.i >= len(self.text) or self.text[self.i] != quote:
+            self.fail("unclosed string")
+        self.i += 1
+        literal = self.text[start : self.i]
+        try:
+            return str(ast.literal_eval(literal))
+        except (SyntaxError, ValueError):
+            return literal[1:-1]
+
+    def _template(self) -> str | None:
+        start, static = self.i + 1, True
+        self.i += 1
+        while self.i < len(self.text):
+            if self.text[self.i] == "\\":
+                self.i += 2
+            elif self.text[self.i] == "`":
+                self.i += 1
+                return self.text[start : self.i - 1] if static else None
+            elif self.text.startswith("${", self.i):
+                self.i += 2
+                static = False
+                self.tokens(until_brace=True)
+            else:
+                self.i += 1
+        self.fail("unclosed template")
+
+    def _regex(self) -> None:
+        self.i += 1
+        in_class = False
+        while self.i < len(self.text) and self.text[self.i] != "\n":
+            c = self.text[self.i]
+            if c == "\\":
+                self.i += 1
+            elif c in "[]":
+                in_class = c == "["
+            elif c == "/" and not in_class:
+                self.i += 1
+                return
+            self.i += 1
+        self.fail("unclosed regular expression")
+
+
+def _regex_may_start(out: list[_JsToken]) -> bool:
+    """A slash opens a regular expression where a value may start, else divides."""
+    if not out:
+        return True
+    kind, value = out[-1]
+    if kind == "punct":
+        return value not in {")", "]", "}"}
+    return kind == "word" and value in _JS_KEYWORDS_BEFORE_REGEX
+
+
+def _assigned_title(after: list[_JsToken]) -> str | None:
+    """The title `NOTES[<literal>] =` or `NOTES.<name> =` assigns, given what
+    follows NOTES; None for a read, a comparison or a computed key."""
+    t = [*after, ("", None), ("", None), ("", None), ("", None)]
+    if t[0] == ("punct", ".") and t[1][0] == "word" and t[2] == ("punct", "="):
+        return t[1][1]
+    literal = t[1][0] in {"str", "tmpl"}
+    closed = t[2] == ("punct", "]") and t[3] == ("punct", "=")
+    return t[1][1] if t[0] == ("punct", "[") and literal and closed else None
+
+
+def _note_keys(text: str, source: str, *, in_object: bool) -> list[str]:
+    """Every note title the source defines, in order.
+
+    Inside the NOTES object body a title is a top-level key; after that object
+    closes, and in plain code, it is an assignment to NOTES.
+    """
+    toks = _JsLexer(text, source).tokens()
+    titles: list[str] = []
+    depth = 0
+    for n, (kind, value) in enumerate(toks):
+        before = toks[n - 1] if n else None
+        if in_object and depth == 0 and before in {None, ("punct", ",")}:
+            is_key = toks[n + 1 : n + 2] == [("punct", ":")]
+            if kind in {"str", "word"} and value is not None and is_key:
+                titles.append(value)
+        if kind == "punct" and value in {"{", "[", "("}:
+            depth += 1
+        elif kind == "punct" and value in {"}", "]", ")"}:
+            depth -= 1
+            if depth < 0:
+                in_object, depth = False, 0
+        if (kind, value) == ("word", "NOTES") and before != ("punct", "."):
+            title = _assigned_title(toks[n + 1 : n + 5])
+            if title is not None:
+                titles.append(title)
+    return titles
+
+
+def _dynamic_note_keys(text: str) -> list[str]:
+    """Titles 51-notes-dynamic.js assigns literally or from campaign data."""
+    data = _campaign_data()
+    titles = _note_keys(text, "src/game/51-notes-dynamic.js", in_object=False)
+    for key, evening in data["evenings"].items():
+        if key == "campus":
+            continue
+        titles.append(evening["title"].split(": ")[0])
+        titles.extend(stop["n"] for stop in evening["ws"])
+    titles.extend(mentor["name"] for mentor in data["mentors"])
+    return titles
+
+
+def _validate_note_titles(generated: str, handwritten: str) -> None:
+    """Fail before JavaScript can silently keep the last duplicate note."""
+    owners: dict[str, list[str]] = {}
+    sources = (
+        (
+            "tools/generated/notes.js",
+            _note_keys(generated, "tools/generated/notes.js", in_object=True),
+        ),
+        (
+            "src/game/50-notes.js",
+            _note_keys(handwritten, "src/game/50-notes.js", in_object=True),
+        ),
+        (
+            "src/game/51-notes-dynamic.js",
+            _dynamic_note_keys(_read("game/51-notes-dynamic.js")),
+        ),
+    )
+    for source, titles in sources:
+        for title in titles:
+            owners.setdefault(title, []).append(source)
+    duplicates = {
+        title: sources for title, sources in owners.items() if len(sources) > 1
+    }
+    if duplicates:
+        detail = "\n".join(
+            f"- {title!r}: {', '.join(sources)}"
+            for title, sources in sorted(duplicates.items())
+        )
+        raise SystemExit(
+            "duplicate note titles would overwrite each other:\n"
+            + detail
+            + "\nGive every note one title and one source."
+        )
+
+
 def _notes_js() -> str:
     generated = (GENERATED / "notes.js").read_text(encoding="utf-8")
-    return "const NOTES={\n" + generated + ",\n" + _read("game/50-notes.js")
+    handwritten = _read("game/50-notes.js")
+    _validate_note_titles(generated, handwritten)
+    return "const NOTES={\n" + generated + ",\n" + handwritten
 
 
 def _tree_js() -> str:
