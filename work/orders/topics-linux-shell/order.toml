@@ -1,0 +1,36 @@
+v = 1
+id = "topics-linux-shell"
+title = "Topic pack: Linux and the shell"
+team = "content"
+branch = "claude/topics-linux-shell"
+goal = "second-wave"
+issue = 86
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/data/topics/linux/",
+  "tests/test_topics_linux.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The pack's own tests and the topic, syllabus and places tests pass."
+check = "uv run pytest -q tests/test_topics_linux.py tests/test_topics.py tests/test_syllabus.py tests/test_places.py"
+
+[[criteria]]
+id = "c2"
+text = "No place or origin problem in the new pack."
+check = "uv run python -c \"from vibemap import places; import sys; bad=[p for p in places.problems() if '/linux/' in p]; print(chr(10).join(bad)); sys.exit(1 if bad else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync, style passes, and the CLI lists the pack."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/checks.py style && uv run vibe topics | grep -qi linux"
+
+[[criteria]]
+id = "c4"
+text = "Every source was opened and says what its line says; every origin sits at a place on main or an abstract one; no em dashes."
+judge = "reviewer"
