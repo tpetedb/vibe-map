@@ -1,0 +1,69 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "harness-work-ci-followups"
+by = "reviewer-harness-work-ci-followups-r2"
+reviewed = "18a864f7a9f2d768fe83940a30464a8c7c8e4a80"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran `uv run pytest -q tests/test_work.py tests/test_ci_shards.py` at 18a864f: all pass. "Each new one seen failing first" checked by reverting fixes one at a time in a scratch copy of the branch (git archive of HEAD) and running the tests: GIT without --literal-pathspecs -> both pathspec-magic params fail (exit 2 on `:(nope)x.js`, hidden stray on `:!src/scene.js`); _remember back to `seen.get(who) == role` -> test_a_builder_who_keeps_editing_is_never_forgotten fails; plan without dropping the blocked orders -> test_an_order_waiting_on_another_goal_is_blocked_not_a_cycle fails with "aaa, ccc wait on each other"; cmd_ci body back to main's `ships_code` / `len(carried) == 1` rules -> both car tests fail ("two: ... no review yet", "one: NOTES.md is outside what it owns"); only `built = ships_code` -> the plan car test fails; returncode check in browser_test_files disabled -> the broken-import test fails; bool check disabled -> the three default params fail; collisions(live) without `involving` -> the clash test fails; online() disabled -> the validate warning test fails; `must=True` dropped from the loose diff in changed() -> the reworked W2 test fails. The command proves the sentence.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran ruff check, ruff format --check, checks.py style and checks.py sinks locally at 18a864f: all clean. The non-browser battery I did not rerun locally (the board's heavy-job cap); CI job 107391492466 on PR #188 at head 18a864f ran `pytest -m "not browser and not integration"` green, and every other step of that job except the order's own review gate was green. New code is stdlib only (shlex, fnmatch; yaml was already used by ci_shards.py).
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the six generators with --check (all in sync) and `python3 tools/work.py validate` in the worktree: exit 0, "34 orders read, 0 collisions this checkout answers for", with two collisions between other worktrees' orders printed as "collision elsewhere" and two online warnings (news-feed-liveness c1, fork-integration-contract c1; both really run pytest over files with @pytest.mark.integration and no -m, checked by hand). The command proves the sentence; note that it passes only because this branch's last commit narrowed validate to collisions its own order is party to (see the low finding).
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Read #149 and every comment. Findings on these files, each with my own evidence: (1) ci_shards browser_test_files ignores pytest's exit code: fixed, red on revert. (2) --files has no test: tests/test_ci_shards.py runs --files as a process (listing, unknown shard, untrusted split). (3) fnmatch spelled twice, quoted "false" read as true: one matches() helper is the only fnmatch left, the quoted default is refused with a sentence, red on revert. (4) pathspec magic makes check exit 2 and `:!src/` hides a stray: every git call goes through GIT with --literal-pathspecs, the two magic excludes are filtered in Python (measured(), the rulings filter in contribution()); I confirmed literal pathspecs still match owned folders (`git --literal-pathspecs ls-files -- tools/`); red on revert. (5) touched.json by first edit, TOUCHED_KEEP comment overclaims: ordered by last edit, the comment now states the exact drop rule (32 others since its last edit), red on revert. (6) the W2 test proved nothing: the real case (magic name tracked on main next to a real stray) is the new parametrized test, and the must=True test now breaks only the inner diff (red when must is dropped). (7) no test through the command line: plan, ci, validate, check, hook stop and --files are run as processes. (8) plan calls a foreign-goal wait a cycle: `python3 tools/work.py plan galaxy` on the branch prints three groups then "galaxy-v0 blocked by qol-4-feedback-companion, hunt-w-settings-news, hunt-k-lesson-copy", exit 0; main's work.py on the same work/ folder says "galaxy-v0 wait on each other", exit 2. (9) validate warning for integration tests without -m: done, warning only. (10, 11) the two ci rules: besides the builder's tests I built my own scratch origin with orders on branches, train cars pushed as refs/pull/<car>/merge (the car merged into main, as CI checks it out) and ran `work.py ci --base origin/main --head <car>` from a fresh clone of that ref. Car of built+reviewed order one and plan two (builder "", owned tests/test_two.py untouched): main's tool "two: ... no review yet", exit 1; branch tool "2 orders, 0 problems", exit 0. Car of order one and an order-less CLAUDE.md change: main's tool "one: CLAUDE.md is outside what it owns"; branch tool 0 problems, exit 0. Car of order three (whose own branch also commits src/scene.js) and the CLAUDE.md change: branch tool reports exactly "three: src/scene.js is outside what it owns", exit 1, and not CLAUDE.md. Nothing was rejected, so nothing needed rejecting on the issue. The sync_main item of #149 is Team Codex's (confirmed in the last Codex comment on #95) and `git diff origin/main...HEAD -- tools/sync_main.py` is empty.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/adr/0016-work-orders.md"
+text = "The docs still describe the old ci rules: ADR 0016 line 38 ('CI checks ownership only on a single order's pull request'), the comment above the work step in .github/workflows/ci.yml (lines 71-72, 'a single order's pull request stays inside its files') and work/README.md line 24. None is owned by this order; they want a docs follow-up on #149."
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = "Commit 18a864f narrows `validate` on a branch that builds an order to collisions that order is party to, and prints the rest as 'collision elsewhere'. It is tested and in the changelog fragment, but it is outside #149 and the order's What, and the pull request body does not mention it. A reader of the PR should be told that a builder's c3 no longer fails on a clash between two other worktrees."
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = "The car path of `ci` (own_files: merge-base of HEAD with the order branch's tip, fetched from origin when missing) is only exercised in full local clones. Its first run in GitHub's shallow checkout will be the first real car; it depends on the changelog step's deepen having brought the car's history in. It also fails the car loudly if an order's branch is gone from origin (deleted after its own pull request closed), where the old rule never looked at the branch."
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = "plan: a real cycle between two orders of the goal, one of which also needs an order of another goal, is printed as 'aaa blocked by xxx' / 'bbb blocked by aaa' with exit 0 (reproduced in a scratch repo); the cycle only surfaces after xxx lands."
+
+[[findings]]
+severity = "low"
+file = "tests/test_ci_shards.py"
+text = "test_default_is_a_boolean_or_the_matrix_is_refused covers matrices main's code already refused (two truthy defaults), so it pins the message rather than a silent misread. The case the quoted default really hid, no real default and one shard with default: \"false\" becoming the default, is not a test case."
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = "online() reads the value after --deselect (or any option taking a path) as a path to scan, and a criterion that runs pytest over a folder is scanned file by file with rglob; both only shift a warning, never a verdict."
+
+[[findings]]
+severity = "low"
+file = "work/orders/harness-work-ci-followups/order.toml"
+text = "The builder did not run `just work-post harness-work-ci-followups`, so #149 has no status comment for this order (step 5 of the builder's list)."

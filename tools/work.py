@@ -31,6 +31,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -65,8 +66,9 @@ CHECK_TIMEOUT = 1500
 # All of an order's criteria together when a stop hook runs them: under the
 # hook's own timeout in .claude/settings.json, so the tool ends it, with a reason.
 STOP_BUDGET = 1500
-# How many agents an order remembers in touched.json. Four work at once, so a
-# window this wide holds every agent that could still be running.
+# How many agents an order remembers in touched.json, newest edit last. An
+# agent drops out once this many others have edited under the order since its
+# own last edit; four work at once, so that agent stopped long ago.
 TOUCHED_KEEP = 32
 
 
@@ -86,11 +88,16 @@ def overlap(a: str, b: str) -> bool:
     return covers(a, b) or covers(b, a)
 
 
+# Every path handed to git is a file name, never pathspec magic: a file called
+# `:(nope)x.js` would stop a diff, and one called `:!src/x.js` would hide x.js.
+GIT = ("git", "--literal-pathspecs")
+
+
 def git(root: Path, *args: str, must: bool = False) -> str:
     """One git call. `must` is for an answer the verdict depends on: an empty
     string from a failed diff would read as "nothing changed"."""
     out = subprocess.run(
-        ["git", "-c", "core.quotepath=false", "-C", str(root), *args],
+        [*GIT, "-c", "core.quotepath=false", "-C", str(root), *args],
         capture_output=True,
         text=True,
         check=False,
@@ -105,7 +112,7 @@ def names(root: Path, *args: str, must: bool = False) -> list[str]:
     newlines hands back a quoted name for anything with a quote, a backslash or
     a newline in it, and a quoted name matches no file."""
     out = subprocess.run(
-        ["git", "-C", str(root), *args],
+        [*GIT, "-C", str(root), *args],
         capture_output=True,
         text=True,
         check=False,
@@ -115,27 +122,18 @@ def names(root: Path, *args: str, must: bool = False) -> list[str]:
     return [n for n in out.stdout.split("\0") if n]
 
 
-# What the tool writes next to an order is a measurement, not part of the work.
-NOT_OURS = (
-    ":(exclude)work/orders/*/result.json",
-    ":(exclude)work/orders/*/touched.json",
-)
+def measured(path: str) -> bool:
+    """What the tool writes next to an order: a measurement, not part of the work."""
+    return fnmatch.fnmatchcase(path, "work/orders/*/result.json") or (
+        fnmatch.fnmatchcase(path, "work/orders/*/touched.json")
+    )
 
 
 def dirty(root: Path) -> list[str]:
     """Paths with uncommitted changes, every untracked file by name. The first
     column of a status line is a space for an unstaged change, so the entries
     are read unstripped."""
-    fields = names(
-        root,
-        "status",
-        "--porcelain",
-        "-z",
-        "--untracked-files=all",
-        "--",
-        ".",
-        *NOT_OURS,
-    )
+    fields = names(root, "status", "--porcelain", "-z", "--untracked-files=all")
     out = []
     while fields:
         entry = fields.pop(0)
@@ -143,7 +141,7 @@ def dirty(root: Path) -> list[str]:
         # A rename is two paths, and the one that went away matters as much.
         if entry[0] in "RC" and fields:
             out.append(fields.pop(0))
-    return out
+    return [p for p in out if not measured(p)]
 
 
 def _toml(path: Path) -> dict:
@@ -398,12 +396,15 @@ def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
     return list(found.values())
 
 
-def collisions(orders: list[Order]) -> list[str]:
+def collisions(orders: list[Order], involving: set[str] | None = None) -> list[str]:
     """Two orders that cannot both be built as written: they own the same file,
-    or they share a branch, where each would count the other's files as strays."""
+    or they share a branch, where each would count the other's files as strays.
+    With `involving`, only the pairs one of those orders is part of."""
     out = []
     for i, a in enumerate(orders):
         for b in orders[i + 1 :]:
+            if involving is not None and not {a.id, b.id} & involving:
+                continue
             if a.branch == b.branch:
                 out.append(f"{a.id} and {b.id} share the branch {a.branch}")
             hit = [(x, y) for x in a.owns for y in b.owns if overlap(x, y)]
@@ -411,6 +412,54 @@ def collisions(orders: list[Order]) -> list[str]:
                 x, y = hit[0]
                 out.append(
                     f"{a.id} and {b.id} both own {x if x == y else x + ' / ' + y}"
+                )
+    return out
+
+
+# A test marked integration may fetch the internet, and a publisher's outage is
+# no reason for an order to fail: a criterion's command runs offline.
+INTEGRATION = re.compile(
+    r"^\s*(@pytest\.mark\.integration|pytestmark\b.*\bmark\.integration)\b", re.M
+)
+
+
+def online(order: Order) -> list[str]:
+    """Each criterion that runs pytest over a file with integration tests and
+    does not deselect them, as a sentence. A warning: the marker may be off."""
+    out = []
+    for c in order.criteria:
+        for part in re.split(r"&&|\|\||[;|]", c.check or ""):
+            try:
+                words = shlex.split(part)
+            except ValueError:
+                words = part.split()
+            if "pytest" not in words:
+                continue
+            args = words[words.index("pytest") + 1 :]
+            if any("not integration" in w for w in args):
+                continue
+            # A path, not the value of -m or -k; a file not written yet is none.
+            given = [
+                w.split("::")[0]
+                for w in args
+                if w[:1] != "-" and ("/" in w or w.split("::")[0].endswith(".py"))
+            ]
+            # With no path pytest runs its testpaths, which here is tests/.
+            paths = [order.root / g for g in given or ["tests"]]
+            files = sorted(
+                f
+                for g in paths
+                for f in ([g] if g.is_file() else g.rglob("*.py") if g.is_dir() else [])
+            )
+            hits = [
+                f.relative_to(order.root).as_posix()
+                for f in files
+                if INTEGRATION.search(f.read_text(encoding="utf-8", errors="replace"))
+            ]
+            if hits:
+                out.append(
+                    f"{order.id} {c.id} runs pytest on {', '.join(hits)}, which has "
+                    f"integration tests, without -m 'not integration'"
                 )
     return out
 
@@ -459,6 +508,35 @@ def diff_names(root: Path, base: str, rev: str = "HEAD") -> list[str]:
 
 def strays(order: Order, base: str) -> list[str]:
     return [p for p in changed(order.root, base) if not order.may_touch(p)]
+
+
+def tip(root: Path, branch: str) -> str:
+    """The newest commit of a branch: in this clone, else on origin. A pull
+    request's runner has only the commit it tests, so origin is asked once."""
+    refs = (f"refs/heads/{branch}", f"refs/remotes/origin/{branch}")
+    for ref in refs:
+        if sha := git(root, "rev-parse", "--verify", "-q", ref + "^{commit}"):
+            return sha
+    if git(root, "check-ref-format", "--normalize", refs[0]) == refs[0]:
+        git(root, "fetch", "-q", "--no-tags", "origin", f"+{refs[0]}:{refs[1]}")
+        if sha := git(root, "rev-parse", "--verify", "-q", refs[1] + "^{commit}"):
+            return sha
+    raise Bad(
+        f"branch {branch} is neither in this clone nor on origin, so what it "
+        f"changed cannot be told apart from the rest of this pull request"
+    )
+
+
+def own_files(order: Order, base: str, head: str) -> list[str]:
+    """What the order's own branch changed, as this checkout carries it: all of
+    it on that branch, and in a train car the part of the branch the car merged,
+    so a loose change riding in the same car is nobody's stray."""
+    if order.branch == head:
+        return changed(order.root, base)
+    merged = git(order.root, "merge-base", "HEAD", tip(order.root, order.branch))
+    if not merged:
+        raise Bad(f"branch {order.branch} and this pull request share no commit")
+    return diff_names(order.root, base, merged)
 
 
 def tree_key(root: Path) -> str:
@@ -569,17 +647,22 @@ def contribution(order: Order, base: str, rev: str) -> str:
     """What the branch adds to the files the order owns, and to the order itself,
     as a patch id: the same after a clean merge of main, different after any
     edit, whitespace included."""
-    # The rulings are about the contribution, not part of it: an order that owns
-    # work/ would otherwise end its own review by committing it.
-    paths = [
+    span = f"{base}...{rev}"
+    touched = names(
+        order.root,
+        *("diff", "--name-only", "--no-renames", "-z", span, "--"),
         *order.owns,
         order.rel + "order.toml",
-        f":(exclude){order.rel}review.toml",
-        f":(exclude){order.rel}signoff-*.toml",
-    ]
+        must=True,
+    )
+    # The rulings are about the contribution, not part of it: an order that owns
+    # work/ would otherwise end its own review by committing it.
+    rulings = (order.rel + "review.toml", order.rel + "signoff-*.toml")
+    paths = [p for p in touched if not any(fnmatch.fnmatchcase(p, r) for r in rulings)]
+    if not paths:
+        return ""
     diff = subprocess.run(
-        ["git", "-C", str(order.root), "diff", "--no-renames", f"{base}...{rev}", "--"]
-        + paths,
+        [*GIT, "-C", str(order.root), "diff", "--no-renames", span, "--", *paths],
         capture_output=True,
         check=False,
     )
@@ -620,7 +703,7 @@ def _signed(order: Order, path: Path, who: str, base: str) -> dict:
     if not SHA.match(sha):
         raise Bad(f"{path}: reviewed = {sha!r}: the full commit id, not a name for it")
     contained = subprocess.run(
-        ["git", "-C", str(order.root), "merge-base", "--is-ancestor", sha, "HEAD"],
+        [*GIT, "-C", str(order.root), "merge-base", "--is-ancestor", sha, "HEAD"],
         capture_output=True,
         check=False,
     )
@@ -700,9 +783,12 @@ def load_goal(gid: str, root: Path = ROOT) -> dict:
     return data
 
 
-def plan(gid: str, root: Path = ROOT) -> list[list[Order]]:
+def plan(gid: str, root: Path = ROOT) -> tuple[list[list[Order]], dict[str, list[str]]]:
     """Launch groups: what an order needs has landed or ran in an earlier group,
-    no two orders in a group own the same file, and a group fits the budget."""
+    no two orders in a group own the same file, and a group fits the budget.
+    Next to them, what cannot start yet and which orders it waits for: an order
+    of another goal that has not landed, or one here that waits itself. Only
+    orders that wait on each other are a mistake in the plan."""
     goal = load_goal(gid, root)
     budget = int(goal.get("budget", 4))
     by_id = {o.id: o for o in orders_in(root, load_teams(root))}
@@ -715,6 +801,18 @@ def plan(gid: str, root: Path = ROOT) -> list[list[Order]]:
         unknown = [n for n in o.needs if n not in by_id and n not in done]
         if unknown:
             raise Bad(f"order {o.id}: needs {', '.join(unknown)}, which does not exist")
+    ours = {o.id for o in todo}
+    blocked: dict[str, list[str]] = {}
+    grew = True
+    while grew:
+        grew = False
+        for o in todo:
+            waits = [
+                n for n in o.needs if n not in done and (n not in ours or n in blocked)
+            ]
+            if waits and o.id not in blocked:
+                blocked[o.id], grew = waits, True
+    todo = [o for o in todo if o.id not in blocked]
     groups: list[list[Order]] = []
     settled = set(done)
     while todo:
@@ -725,11 +823,14 @@ def plan(gid: str, root: Path = ROOT) -> list[list[Order]]:
             if ready and free and len(group) < budget:
                 group.append(o)
         if not group:
-            raise Bad(f"goal {gid}: {', '.join(o.id for o in todo)} wait on each other")
+            raise Bad(
+                f"goal {gid}: {', '.join(o.id for o in todo)} wait on each other, "
+                f"a cycle in needs"
+            )
         groups.append(group)
         settled |= {o.id for o in group}
         todo = [o for o in todo if o not in group]
-    return groups
+    return groups, blocked
 
 
 # ---------------------------------------------------------------- the issue
@@ -852,18 +953,17 @@ def _remember(order: Order, who: str, rel: str) -> None:
     what an agent did and not by how it words its report. Someone who only ever
     wrote into the order's folder is reviewing, not building.
 
-    The rule that keeps the file from growing without end: the newest
-    TOUCHED_KEEP agents are kept and the oldest are dropped, where an agent is
-    new again when its role changes. An agent is written down once, at its first
-    edit, and four work at once, so an entry that has fallen that far behind
-    belongs to an agent that stopped long ago. If one ever did go missing it
-    would cost that agent a reminder, never a check: what decides is work-check,
-    work-accept and CI."""
+    The rule that keeps the file from growing without end: agents are kept in
+    the order of their last edit and only the TOUCHED_KEEP most recent stay. An
+    agent that is already the most recent with the same role costs no write,
+    which is the common case of one builder editing file after file. If one
+    ever did go missing it would cost that agent a reminder, never a check:
+    what decides is work-check, work-accept and CI."""
     if not who:
         return
     seen = _touched(order)
     role = "builder" if not rel.startswith(order.rel) else seen.get(who, "reviewer")
-    if seen.get(who) == role:
+    if list(seen.items())[-1:] == [(who, role)]:
         return
     seen.pop(who, None)
     seen[who] = role
@@ -1015,12 +1115,25 @@ def cmd_new(a: argparse.Namespace) -> int:
 def cmd_validate(_: argparse.Namespace) -> int:
     orders = orders_in(ROOT, load_teams())
     drafts: list[str] = []
-    clash = collisions(active(ROOT, drafts))
+    live = active(ROOT, drafts)
+    # A builder's check judges its own order: a clash between two orders in
+    # other worktrees is theirs to settle. A checkout building none sees all.
+    here = git(ROOT, "branch", "--show-current")
+    mine = {o.id for o in orders if o.branch == here} or None
+    clash = collisions(live, mine)
     for line in clash:
         print("collision:", line)
+    for line in collisions(live):
+        if line not in clash:
+            print("collision elsewhere, not this branch's:", line)
     for line in drafts:
         print("draft elsewhere, not judged:", line)
-    print(f"{len(orders)} orders read, {len(clash)} collisions among the active ones")
+    for order in orders:
+        for line in online(order):
+            print("warning:", line)
+    print(
+        f"{len(orders)} orders read, {len(clash)} collisions this checkout answers for"
+    )
     return 1 if clash else 0
 
 
@@ -1050,10 +1163,15 @@ def cmd_accept(a: argparse.Namespace) -> int:
 
 
 def cmd_plan(a: argparse.Namespace) -> int:
-    for n, group in enumerate(plan(a.goal), 1):
+    groups, blocked = plan(a.goal)
+    for n, group in enumerate(groups, 1):
         print(f"group {n}")
         for o in group:
             print(f"  {o.id:<28} {o.team:<9} {', '.join(o.owns)}")
+    if blocked:
+        print("blocked, until what they need has landed")
+        for oid, waits in blocked.items():
+            print(f"  {oid} blocked by {', '.join(waits)}")
     return 0
 
 
@@ -1075,10 +1193,13 @@ def cmd_board(_: argparse.Namespace) -> int:
 def cmd_ci(a: argparse.Namespace) -> int:
     """On a pull request. The orders it carries are those whose folder it touches
     and those written for its branch, so leaving the folder alone hides nothing.
-    Each has to be readable, and one that ships code ships its accepted review
-    and every sign-off. Ownership is judged when there is exactly one order: a
-    train car carries several, each checked where it was built. A pull request
-    that carries no order is left alone."""
+    Each has to be readable. Each order is judged by itself, so a train car can
+    carry several: one that is built ships its accepted review and every
+    sign-off, and stays inside its files, measured on what its own branch
+    changed. An order is built when the pull request touches a file it owns, or
+    when it names a builder and the pull request ships code; one with no builder
+    and none of its files touched is a plan, and a plan needs no review. A pull
+    request that carries no order is left alone."""
     files = diff_names(ROOT, a.base)
     orders = {o.id: o for o in orders_in(ROOT, load_teams())}
     carried = {n.split("/")[2] for n in files if n.startswith("work/orders/")}
@@ -1095,13 +1216,21 @@ def cmd_ci(a: argparse.Namespace) -> int:
     ships_code = any(not n.startswith("work/") for n in files)
     bad = []
     for oid in sorted(carried):
-        if ships_code:
-            bad += [f"{oid}: {w}" for w in acceptance(orders[oid], a.base, run=False)]
-        if len(carried) == 1:
-            bad += [
-                f"{oid}: {s} is outside what it owns"
-                for s in strays(orders[oid], a.base)
-            ]
+        order = orders[oid]
+        touches = any(covers(o, n) for n in files for o in order.owns)
+        built = touches or (bool(order.builder) and ships_code)
+        if built:
+            bad += [f"{oid}: {w}" for w in acceptance(order, a.base, run=False)]
+        if not built and order.branch != head:
+            continue
+        try:
+            own = own_files(order, a.base, head)
+        except Bad as e:
+            bad.append(f"{oid}: {e}")
+            continue
+        bad += [
+            f"{oid}: {s} is outside what it owns" for s in own if not order.may_touch(s)
+        ]
     for line in bad:
         print("work:", line)
     print(f"work: {len(carried)} orders in this pull request, {len(bad)} problems")
