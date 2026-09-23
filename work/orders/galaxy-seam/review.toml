@@ -1,40 +1,40 @@
 v = 1
 order = "galaxy-seam"
-by = "codex-galaxy-seam-review-r2"
-reviewed = "b45ec624ecc6759d22e0c136dc51db62aaa461be"
+by = "codex-galaxy-seam-backup-review"
+reviewed = "e329620457aec7aae0ce21795265d00829419188"
 verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = '''
-Ran `uv run pytest -q tests/test_game_experience.py` on the reviewed checkpoint with Chromium permitted to launch: all 21 cases passed. This includes four live golden comparisons, each at mean 0.0000 and worst 0.000, as well as contract behavior, cross-island compound travel, replacement of an in-flight destination, finale identity, disposal, and the comparison arithmetic itself. I also opened and inspected the campus, winter, desert and prod captures; each is a complete fitted island view with its expected terrain, structures and bridges, and no overlay or text contamination.
+At e329620 I ran the replaced-trip and completed cross-island stop browser cases with Chromium outside the sandbox; both passed. I started the 21-case experience file and saw the contract/travel cases and all four live goldens pass (each mean 0.0000, worst 0.000), plus the grass mutation fail the golden as intended (mean 0.8194, worst 2.949); I stopped that incomplete run at root's request because work-accept will rerun the entire file. The previous reviewer recorded all 21 passing at b45ec6. I independently compared the two commits: only this test's assertion changed in the order's files, and I inspected all four current captures, which show complete fitted views with expected terrain, buildings and bridges. The command's tests exercise the actual browser contract and compare live captures with the records, so they prove the stated behavior when the whole file passes.
 '''
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = '''
-Ran every component of the criterion with the project venv first on PATH and a writable uv cache. Ruff check and format check were silent; the style check reported no em dashes or emoji; the sink check exited zero; and the complete `pytest -q -m 'not browser and not integration'` battery reached 100% with exit zero. The first sandboxed attempt could not bind the suite's loopback servers or reach its Docker fixture, so I reran the same battery outside that sandbox; those were environment errors, not product failures.
+At e329620 I ran venv Ruff check and format check, and the style and sink guards; all passed. The previous reviewer recorded the complete non-browser battery passing at b45ec6; I did not rerun that battery, per the root's instruction to avoid duplicating work-accept. The new order-owned diff is only a browser test assertion, so it cannot change non-browser product behavior. The criterion's command is an appropriate repository-wide guard; the root's work-accept will rerun it on this exact tree. My first `just work-review` invocation used the sandbox's unwritable default uv cache and therefore failed before running its criteria; that was an environment restriction, not a test result.
 '''
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = '''
-Ran the order's six `--check` generators in sequence. Build reported that game/vibe-map.html matches src; tree, cookbook and syllabus reported OK; sync_template and sync_fork_source exited zero. A direct diff between src/game/24-experience.js and its fork_source mirror is empty.
+At e329620 I ran all six generator `--check` commands using the project venv Python. Build reported game/vibe-map.html matches src; tree, cookbook and syllabus reported OK; template and fork-source checks exited zero. This command directly checks generated outputs against source, so it proves the criterion. The previous reviewer also recorded these checks passing at b45ec6.
 '''
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
 evidence = '''
-Ran the unchanged four-image comparison three times. All twelve comparisons passed at mean 0.0000 and worst 0.000. The full suite independently rewrites the served built game before page load: campus grass changes from #79CC72 to #79CC7D in exactly one source occurrence and produces mean 0.8194, worst 2.949; removing the campus well in exactly one occurrence produces mean 0.0276, worst 1.008. Both fail the tightened 0.002 mean / 0.1 worst guard. I opened both changed captures as well as all four unchanged captures and confirmed the mutations correspond to the rendered scene. The test's measurement note explains the fixed seed, frame clock, at-rest condition, font removal and 16x10 floating-point regional means; it records Mac and Linux software-renderer noise and explicitly lists smaller prop changes below the guard's resolution. This directly addresses the stale review's tolerance finding.
+I read the golden test and its measurement note: fixed seed, frame clock, at-rest condition and font removal control known noise; 16x10 floating-point regional means use 0.002 mean and 0.1 worst tolerances based on the documented Mac/Linux software-renderer difference. I opened the four current captures. In my interrupted experience-file run, all four unchanged captures matched exactly and the single-source grass mutation was detected at mean 0.8194, worst 2.949. The previous reviewer recorded three unchanged passes and both grass and well mutation failures at b45ec6; no golden implementation or image changed between b45ec6 and e329620. I did not independently repeat those runs three times or rerun the well mutation, and the stated tolerance cannot detect the smaller prop changes the note lists.
 '''
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
 evidence = '''
-Read the contribution and the recovery diff. The order adds src/game/24-experience.js rather than editing a pre-existing src/game module; its fork_source copy is identical, and the built output is generated and in sync. The surrounding train edits existing modules for other reviewed orders, which is why aggregate main...HEAD output contains strays, but they are not this order's contribution. Browser tests call every contract member through `window.__experience()`: name and registry shape, build, dispose, tick, goTo, where and listing. The recovery tests additionally prove compound travel lands and walks through the shared `window.walkTo()` seam, a newer destination replaces an in-flight one, the finale is not exposed as stop 9, and disposal cancels flight, aim and proximity. The four inspected golden captures match their records exactly, providing direct evidence that the island rendering stayed fixed.
+I read src/game/24-experience.js, the browser contract tests and the b45ec6..e329620 diff. This order adds the contract module; the latest change touches only `test_a_new_destination_replaces_a_compound_trip`. `where()` reads the per-frame `nearK` proximity result and may legitimately report an artifact at the desert landing point, so the former `where() is None` assertion contradicted the contract. The new assertion waits for the desert flight to finish, advances three frames and verifies the canceled winter stop never opened a sheet. My two focused travel tests passed. The browser file invokes all seven members through `window.__experience()`, and my viewed goldens match their records. Existing-module changes visible in the aggregate train diff belong to other orders, as the previous review noted; the order's own source and golden files are unchanged since b45ec6.
 '''
