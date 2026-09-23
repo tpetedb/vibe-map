@@ -1,0 +1,16 @@
+team = "content"
+by = "manager-content"
+reviewed = "353583447b2da127b4bcac60d90f39e0a6d59239"
+verdict = "accept"
+note = """
+Checked vibemap/data/topics/core/python.toml (the only content-owned file this
+order touches): it adds one [[sources]] entry, label "Kaggle Learn", url
+https://www.kaggle.com/learn, after the Exercism track entry and before uv.
+The URL is the real, official Kaggle Learn landing page, matching the source
+findings.md cites and the order's own goal (add the official Kaggle Learn
+source to the Python topic). Shape and quoting match every other [[sources]]
+entry in the file; no other content-owned field changed. tests/test_topics.py
+passes and `uv run python tools/regen_tree.py --check` reports the generated
+tree already in sync, so nothing derived from this file is stale. No dependent
+content-team work follows from this change.
+"""
