@@ -1,0 +1,28 @@
+team = "harness"
+by = "manager-harness"
+reviewed = "de88fe3617efe0844a503ded4badfe5e18a4f86d"
+verdict = "accept"
+note = """
+Checked tools/build.py: the new _JsLexer/_note_keys/_validate_note_titles code
+(tools/build.py ~L185-395) is a real JS tokenizer, not a line-scraper, and
+raises SystemExit naming every source file for a duplicate title, matching c1
+and the reviewer's c5 note. Ran the harness-owned criteria myself in the
+worktree: `uv run pytest -q tests/test_hunt_q.py` (20 collected, all pass), `uv run
+pytest -q tests/test_build.py tests/test_topics.py` (27 + 21 collected, all
+pass), ruff check/format on
+tools/build.py and tests/test_hunt_q.py clean, `tools/checks.py style` and
+`sinks` both OK, and all six `tools/*.py --check` generators (build,
+regen_tree, gen_cookbook, sync_template, sync_fork_source, gen_syllabus)
+report in sync, including the fork_source mirror of tools/build.py and
+src/game/50-notes.js. changelog.d/note-title-collisions.fixed.md is a bullet
+list under a fixed fragment as house style requires and CI's fragment reader
+expects.
+No changes wanted. Nothing else of the harness team's depends on this: no
+other open order touches tools/build.py's note pipeline. After this lands,
+harness has nothing further to do beyond the routine tools/*.py --check
+drift-watch that any future note or campaign-data change already gets.
+Read .agents/skills/work-order/SKILL.md, AGENTS.md, order.toml, findings.md,
+review.toml (3 rounds), and the last comments on issue #95 (board/handoff
+context; this order moved from Team Codex to Team Claude per the 2026-09-23
+handoff decision, unrelated to the change itself).
+"""
