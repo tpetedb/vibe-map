@@ -1,0 +1,99 @@
+v = 1
+order = "docs-followups-149"
+by = "reviewer-docs-followups-149-r2"
+reviewed = "3c1705a186e025ef7697f60b4986b1f1617a2cbd"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+I ran `uv run pytest -q tests/test_docs_followups.py tests/test_repo.py` in the worktree and everything passed. To check that the command proves the sentence, I mutated a scratch copy made with `git archive HEAD` in /tmp, ran pytest there against the scratch modules, and left the worktree untouched. Each of these mutations failed the named test.
+- `just smoke` renamed to `just smok` in SKILLS.md: failed ('smok').
+- `just style-check` renamed to `just style-chek`: failed.
+- An unindented fenced block with `just nosuchrecipe` added to CONFIG.md: failed. This was round 1's low, and it is fixed.
+- `GAME_ORDER` put back in the CONFIG.md load-order row: failed.
+- ADR 0016 set to Status: Proposed: failed.
+- Read dropped from the `adr` entry of the allowed-tools bullet: failed.
+Next I reverted each round-2 doc fix to its round-1 text and ran the tests again.
+- SKILLS.md reverted: the allowed-tools test failed.
+- CONTRACTS.md reverted: eleven tests failed, one for each of the ten #95 contracts plus the pkill rule, and so did the placement test.
+- ADR 0001 reverted: the test that every src/ part is named failed.
+- CONFIG.md reverted: nothing failed. That text (the fork paragraph) is a judged claim, and I checked it by hand under c3.
+Against the code: build.MODULE_DIRS=("game","galaxy"), BOOT_MODULE, MODULE_NAME, _modules() refusing a stray name, _game_script() moving boot last, and _config_parts() globbing src/config/*.js in sorted order without MODULE_NAME all match CONFIG.md and ADR 0001. For ADR 0016: work.TOUCHED_KEEP=32; _remember() drops the oldest on write and records builder, or reviewer when the agent only wrote in the order folder; .gitignore:21 ignores touched.json; `just release` runs `tools/work.py sweep`, which rmtrees landed order folders; work.py uses `git patch-id --verbatim`. The ADR wording matches all of it.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+I ran it myself and got `style OK: no em dashes, no emoji`, `cookbook OK` and `128 notes, 542 wikilinks, vault OK`. I also grepped every changed file (the owned docs, the test, the fragment, order.toml and findings.md) for U+2014 and U+2013 and found none. The command proves the sentence as written.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Every round-1 finding was dealt with.
+- Medium: all seven items are now in CONTRACTS.md, and the builder added #117 as well. Each item is also pinned by FROM_ISSUE_95 in the test. A "Left out on purpose" paragraph states the scope.
+- #178 wording: now "reads the module folders in the order of `MODULE_DIRS`", and the test lets src/galaxy/ be absent.
+- CONFIG.md fork: now matches _copy_fork(). It copies notes.js and tree.js, writes campaign.json from project.data_text(), and writes record_build.py, the justfile, README and fork.json.
+- CONFIG.md load order: says src/config/ is not held to MODULE_NAME.
+- ADR 0001 hoisting: now correct (a const or let is uninitialized until its line runs). It names errors.js and icon.svg, which the build reads (build(), _icon_data_uri()).
+- SKILLS.md: now says which test catches what. test_repo.py only checks for any row in the file.
+- cross = []: correct under work/teams.toml, because every owned file is docs or shared.
+I checked ten contracts in the code, with dates from gh.
+- #72, merged 2026-09-19: init3d() sets ACESFilmicToneMapping, EXPOSURE and sRGBEncoding. mat() converts to linear once and flags cs. camFitDist() is in 21-world-build.js.
+- #97, 2026-09-18: `_devcontainer` is in TEMPLATE_NAMES. test_onboarding parses both files as strict JSON against a closed key set.
+- #111, 2026-09-19: `_js_fault()` skips strings, templates, comments and regexes. _part() names the part, and the message gives the line.
+- #117, 2026-09-19: refreshBridges() is in 22-archipelago.js, bridgeOpen() reads difficulty(), and __debug().bridges carries the ends.
+- #121, 2026-09-19: STUB_MARK is in quests.py:620, STUB_LINES in cli.py uses it, and quests refuses a file that holds it.
+- #123, 2026-09-19: pet.footnote() and credit() both take env=, and cli.py calls footnote.
+- #132: closed unmerged and landed in car D #135 on 2026-09-19, which matches the stated rule. _head_html() fills {{SITE}} and {{ICON}} and exits on a leftover placeholder.
+- The pkill rule: in the #95 body, posted 2026-09-18.
+- The #95 comment of 2026-09-23 (two teams): the transparency tag, claim, LANDED or released, and four heavy jobs all match the comment verbatim.
+SKILLS.md: the allowed-tools list matches every SKILL.md frontmatter, and the test enforces it. Nothing outside owns changed apart from the fragment and the order folder. No em dashes. The branch has main in it (0 commits behind).
+What I would still change goes in the six lows below. None makes a claim wrong enough to block landing.
+"""
+
+[[findings]]
+severity = "low"
+file = "tests/test_docs_followups.py"
+text = """
+A path written from the wrong root passes. test_every_path_a_contract_names_exists falls back to `ROOT.glob("**/p")` for every path, not only bare file names, and test_every_name_a_contract_places_in_a_file_is_defined_there skips any path that is not a file at the root. I reproduced this in a scratch copy: `camFitDist()` in `game/21-world-build.js` passes all 36 tests, because src/game/ and fork_source match the glob. Use the glob only for names without a slash.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/adr/0001-single-file-game.md"
+text = """
+"`tools/build.py` concatenates them inside one function" lists head.html, style.css, body.html and errors.js among "them". build() writes those outside the wrapper, and errors.js gets a script element of its own. Only CONFIG, NEWS, src/config/*.js, the injected data and the modules sit inside `(function(){...})()`.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/CONFIG.md"
+text = """
+CONFIG.md and ADR 0001 say `game/90-boot.js` (the BOOT_MODULE value, relative to src/). At the repository root game/ holds the built file, so a reader looks in the wrong folder. CONTRACTS.md already spells it `src/game/90-boot.js`, and the test would still pass with the full path because it looks for a substring.
+"""
+
+[[findings]]
+severity = "low"
+file = "work/orders/docs-followups-149/order.toml"
+text = """
+The builder changed `cross` from ["harness"] to []. The value is right under work/teams.toml, but cross belongs to the manager, and the skill tells a builder to stop and tell the manager instead of editing the order. The manager should confirm the change on the thread.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/CONTRACTS.md"
+text = """
+The order's last step, "Issue 95 then points to it", is still open: the #95 body still carries its own contracts block. After this lands, edit the body to point at docs/CONTRACTS.md, or the two copies will drift.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/CONTRACTS.md"
+text = """
+Several shared rules landed or were agreed after the #95 CONTRACT posts, and the "Left out" paragraph covers none of them: ADR 0017 and its test_repo.py guard, where every camp and bill belongs to the learner (#182); game/news.json now reaching main through a pull request from news.yml (#181); and the 2026-09-23 board decisions on #95 (the board room in the git common dir, one review round per order). Either add a dated line for each or widen the "Left out" paragraph so it covers them.
+"""
