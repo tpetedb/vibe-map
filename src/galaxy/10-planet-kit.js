@@ -3,9 +3,9 @@
 function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
   const TAU=Math.PI*2,UP=new T.Vector3(0,1,0);
   const mix=(a,b,k)=>new T.Color(a).lerp(new T.Color(b),k).getHex();
-  const C={ocean:mix(P.blue,P.black,.77),land:mix(P.green,P.ink,.38),
-    ground:mix(P.green,P.ink,.73),glass:mix(P.blueBright,P.snow,.65),
-    steel:mix(P.ink,P.blue,.16),cream:mix(P.snow,P.deck,.16)};
+  const C={ocean:mix(P.blue,P.black,.35),land:mix(P.green,P.ink,.08),
+    ground:mix(P.green,P.ink,.3),glass:mix(P.blueBright,P.snow,.65),
+    steel:mix(P.stone,P.blue,.32),cream:mix(P.snow,P.deck,.16)};
   const stateColor=s=>s==='done'?P.greenBright:s==='next'?P.yellow:P.muted;
   function surface(lat,lon,r=1){
     const a=lat*Math.PI/180,b=lon*Math.PI/180;
@@ -40,7 +40,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       cylinder:(x,y,z,r,h,color)=>put('cylinder',color,x,y+h/2,z,r,h,r),
       flush:()=>batches.forEach(({shape,color,glow,transforms,colors})=>{
         const geo=shape==='box'?new T.BoxGeometry(1,1,1):shape==='cone'?new T.ConeGeometry(1,1,7):shape==='cylinder'?new T.CylinderGeometry(1,1,1,12):new T.IcosahedronGeometry(1,1);
-        const m=mat(glow?color:P.snow,glow?{emissive:color,emissiveIntensity:.75}:{vertexColors:true});
+        const m=mat(glow?color:P.snow,glow?{emissive:color,emissiveIntensity:.75}:{});
         const mesh=new T.InstancedMesh(geo,m,transforms.length);
         transforms.forEach((v,i)=>{mesh.setMatrixAt(i,v);
           if(!glow)mesh.setColorAt(i,new T.Color(colors[i]).convertSRGBToLinear())});
@@ -271,7 +271,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     const g=new T.Group();
     for(let i=1;i<nodes.length;i++){
       const a=new T.Vector3(...nodes[i-1].position),b=new T.Vector3(...nodes[i].position),mid=a.clone().lerp(b,.5);
-      mid.y+=i%2?.60:-.60;mid.z-=.45;
+      mid.z-=.08;
       const curve=new T.QuadraticBezierCurve3(a,mid,b),state=nodes[i].state||'ahead';
       line(g,curve.getPoints(64),stateColor(state),state==='ahead'?.48:1,state==='ahead');
       if(state==='next'){

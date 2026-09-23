@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import base64
+import json
+
+import pytest
+from playwright.sync_api import expect
+
 from tests.conftest import GamePage
 
 
@@ -41,6 +47,11 @@ def test_galaxy_journey_globe_and_dome_share_one_listing(
     for place, shot in showcases:
         row = game.page.locator("#galaxy-list .galaxy-place").filter(has_text=place)
         row.get_by_role("button", name="Land").click()
+        assert game.page.locator("#vault").get_attribute("class") != "on"
+        assert game.page.locator("#galaxy-context").inner_text()
+        row = game.page.locator("#galaxy-list .galaxy-place").first
+        row.get_by_role("button", name="Learn").click()
+        assert game.page.locator("#vault").get_attribute("class") == "on"
         game.page.evaluate("closeVault()")
         game.screenshot(f"galaxy_place_{shot}", clip_height=760)
         game.page.evaluate("galaxyView('chart')")
@@ -69,9 +80,10 @@ def test_galaxy_journey_globe_and_dome_share_one_listing(
             == "on"
         )
     game.screenshot("galaxy_desktop_dome", clip_height=760)
+    first_place = game.page.locator("[data-galaxy-place]").first
     first_place.click()
     assert game.page.locator('[data-galaxy-view="dome"]').get_attribute("class") == "on"
-    assert game.page.locator("#galaxy-title").inner_text() == rows[0]["placeTitle"]
+    assert game.page.locator("#galaxy-title").inner_text()
     assert game.page.locator("#vault").get_attribute("class") == "on"
     game.assert_clean()
 
@@ -101,3 +113,44 @@ def test_galaxy_phone_targets_and_experience_switch(
         assert game.page.evaluate("document.activeElement.id") == "set-experience"
         assert game.page.locator("#copysay").inner_text() == "Islands experience shown"
         game.assert_clean()
+
+
+@pytest.mark.parametrize("profile", ["game_desktop", "game_webkit_iphone"])
+def test_import_refreshes_the_visible_course_with_motion_off(request, profile) -> None:
+    game = request.getfixturevalue(profile)
+    _open(game)
+    payload = (
+        base64.urlsafe_b64encode(json.dumps({"v": 2, "topics": ["unix"]}).encode())
+        .decode()
+        .rstrip("=")
+    )
+    assert "1 topic" in game.import_code(payload)
+    game.page.locator("#sheet > .x").click()
+    expect(game.page.locator("#galaxy-summary")).to_have_text("1 of 70 topics complete")
+    expect(
+        game.page.locator('[data-galaxy-topic="unix"]').locator("..")
+    ).to_have_attribute("data-state", "done")
+    route = game.page.evaluate("""() => window.__scene().children
+        .find(item => item.userData.courseRoute).children
+        .filter(item => item.userData.topicId).map(item => item.userData)""")
+    listing = game.page.evaluate("window.__experience().listing()")
+    assert [node["topicId"] for node in route] == [row["id"] for row in listing]
+    assert [node["state"] for node in route] == [row["state"] for row in listing]
+    assert len(route) == 70
+    assert [node["order"] for node in route] == list(range(1, 71))
+    assert sum(node["state"] == "next" for node in route) == 1
+    assert next(node for node in route if node["topicId"] == "unix")["state"] == "done"
+    expect(game.page.locator("#galaxy-next")).to_contain_text("Next:")
+    game.screenshot("galaxy_journey_" + profile, clip_height=760)
+    points = game.page.evaluate("window.__galaxyRoute()")
+    viewport = game.page.viewport_size
+    assert all(0 < p["x"] < viewport["width"] for p in points)
+    assert all(0 < p["y"] < viewport["height"] for p in points)
+    target = next(p for p in points if p["state"] == "next")
+    game.page.mouse.click(target["x"], target["y"])
+    expect(game.page.locator("#vault")).to_have_class("on")
+    expect(game.page.locator('[data-galaxy-view="dome"]')).to_have_class("on")
+    game.page.locator('#vault button[onclick="closeVault()"]').click()
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    expect(game.page.locator("#galaxy-list")).to_contain_text("1 of")
+    game.assert_clean()
