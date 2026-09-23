@@ -54,7 +54,7 @@ WORKED: dict[str, dict[str, str] | list[str]] = {
         "ls -l secret.txt > perms.txt",
     ],
     "processes": [
-        "bash -c 'sleep 30 & pid=$!; kill -TERM \"$pid\"; wait \"$pid\";"
+        'bash -c \'sleep 30 & pid=$!; kill -TERM "$pid"; wait "$pid";'
         ' echo "exit: $?"\' > signals.txt',
     ],
     "texttools": [
@@ -136,9 +136,10 @@ def test_every_topic_is_written_under_the_content_rule() -> None:
 
 
 def test_no_file_in_the_pack_carries_an_em_dash_or_a_scaffold_marker() -> None:
+    dash = chr(0x2014)  # spelled as a code point so this file passes the style check
     for path in sorted(FOLDER.glob("*.toml")):
         text = path.read_text(encoding="utf-8")
-        assert "—" not in text and "TODO" not in text, path.name
+        assert dash not in text and "TODO" not in text, path.name
 
 
 # ---- where it happened ----------------------------------------------------------
