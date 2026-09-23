@@ -114,6 +114,18 @@ function mmLayout(){
   mmBigBtn.style.display=show?"block":"none";
   mmBigBtn.style.top=under+"px";
   mmBigBtn.style.right=mmBig?"":"10px";mmBigBtn.style.left=mmBig?left+"px":"";
+  if(show&&!mmBig){
+    const zoom=$("zoom");
+    if(zoom&&getComputedStyle(zoom).visibility!=="hidden"){
+      const zr=zoom.getBoundingClientRect();
+      const hits=el=>{const r=el.getBoundingClientRect();
+        return r.left<zr.right&&r.right>zr.left&&r.top<zr.bottom&&r.bottom>zr.top};
+      if(hits(mmCv)||hits(mmBigBtn)){
+        const right=Math.ceil(innerWidth-zr.left+8)+"px";
+        mmCv.style.right=right;mmBigBtn.style.right=right;
+      }
+    }
+  }
   mmList.style.display=show&&mmBig?"flex":"none";
   mmList.style.top=(under+MM_TAP+8)+"px";
   mmList.style.left=left+"px";
