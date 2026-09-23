@@ -4,9 +4,15 @@ v = 1
 order = "qol-2-wayfinding"
 team = "panels"
 by = "manager-panels"
-reviewed = "efc64e2e817c4ad5696faa4663e52e5311493e3e"
+reviewed = "b666d31aec8a68226a0587f40d81ba3820907675"
 verdict = "accept"
 note = '''
+Refresh at b666d31: accepted again after the guide-over-zoom regression test
+was made deterministic. The contribution delta changes only the order-owned
+test: it places the real guide over an enabled zoom button, proves the DOM hit
+test still reaches that button, then taps the same coordinates and waits for
+the real zoom target to change. No panels product file changed.
+
 Accepted: the panels-owned delta is confined to src/game/41-search.js. It gives
 stop results a separate Walk there button before the result list and the Shift
 and Enter shortcut, keeps that control absent for notes and mentors, and hands
@@ -24,6 +30,14 @@ Evidence at efc64e2:
   stop, and one proves notes and mentors do not offer the action.
 - `tools/build.py --check` passed; src/game/41-search.js is byte-identical to
   its fork-source mirror; the style check and `git diff --check` passed.
+
+Fresh evidence at b666d31:
+- `uv run pytest -q tests/test_game_qol_wayfinding.py -k
+  'arrow_never_takes_a_tap_from_the_zoom_buttons or palette'` passed all three
+  browser cases.
+- `tools/build.py --check`, `tools/sync_fork_source.py --check`, the style
+  check and `git diff --check` passed; the search source still matches its
+  fork-source mirror byte for byte.
 
 The remaining panels work stays explicit rather than holding this contribution:
 the proposed qol-2b-wayfinding-panels follow-up adds the guide setting in
