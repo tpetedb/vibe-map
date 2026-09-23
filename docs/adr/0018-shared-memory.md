@@ -1,0 +1,77 @@
+# ADR 0018: The teams share one board room and one memory, read by one command at session start
+
+Status: Accepted, 2026-09-24
+
+## Context
+
+Since 2026-09-23 two teams build this repository at once: Team Claude (Claude Code) and Team Codex (Codex CLI and app). There are up to about eight sessions at a time, spread over dozens of worktrees. Each new session re-read `AGENTS.md`, `docs/BRIEF.md`, the forum issue #95, progress logs and private memory notes. Some of those notes were Claude-only and invisible to Codex. The result was the same tokens spent again, and two teams with two different pictures of the work. Tom asked for a forum where the agents stay aligned (issue #96) and for shared memory that cuts tokens without losing quality. Nothing in it may cost him money or need his keys.
+
+The board (Codex gpt-6-astra and Claude Fable 5.1) decided the shape in its local room between 21:00Z and 21:43Z on 2026-09-23. The candidates were researched against their first-party repositories and docs that same day:
+
+| Candidate | Local, no key | Claude and Codex | Verdict |
+|---|---|---|---|
+| Official MCP memory server (`@modelcontextprotocol/server-memory`, MIT, modelcontextprotocol/servers) | yes, one JSONL file, no daemon | both, over stdio | chosen |
+| Basic Memory (basicmachines-co/basic-memory, AGPL-3.0) | yes | both | runner-up |
+| mem0 / OpenMemory, Graphiti, Letta | no: an LLM key, Docker or a server | through MCP | rejected |
+| claude-mem | a background model on every session | Claude only | rejected |
+| Serena | yes | both | code retrieval, not memory |
+| beads, mcp_agent_mail | yes | both | coordination; the board room does that |
+
+Sources:
+
+- https://github.com/modelcontextprotocol/servers/tree/main/src/memory
+- https://github.com/basicmachines-co/basic-memory
+- https://code.claude.com/docs/en/mcp
+- https://code.claude.com/docs/en/hooks
+- https://code.claude.com/docs/en/permissions
+- https://learn.chatgpt.com/docs/config-file/config-reference
+- https://learn.chatgpt.com/docs/hooks
+
+The source of the pinned version (2026.8.31) shows how the server writes. Every change reloads the whole file, edits it and renames a new file into place. There is no lock between processes, so two sessions writing at the same moment lose one of the writes.
+
+## Decision
+
+**The room.** The short-term channel is `ROOM.md` in `<git common dir>/board/`. It is shared by every worktree and never committed.
+
+- It is append-only.
+- Each entry is written in one write, under a lock.
+- Each entry's id is derived from its own text.
+- `tools/board.py` (standard library only) reads and appends it. `work/BOARD.md` is the one-page protocol.
+- Claimed and landed orders are worked out from `tools/work.py`, not typed in.
+- Heavy job slots are explicit reservations. A scan of running processes only cross-checks them.
+- DECISION and verified LANDED entries are mirrored to issue #95 by a manager, never by a hook.
+
+**The memory.** The long-term memory is the official MCP memory server, pinned to 2026.8.31, with one `memory.jsonl` next to the room.
+
+- Both clients load it from tracked files: Claude from `.mcp.json`, Codex from `.codex/config.toml`. Both go through `scripts/memory-mcp.sh`.
+- The script starts the server behind `tools/board.py memory-serve`. That process takes a lock around every change the server makes, from request to response, so writes from any number of processes are serialized. It also refuses `read_graph` and the whole-graph resource.
+- Both configs deny `read_graph` as well: `permissions.deny` in `.claude/settings.json` and `disabled_tools` in `.codex/config.toml`.
+- Entities are named `kind:slug`.
+- Each observation is dated, tagged with its team and carries a source pointer. It is at most 200 characters.
+- The caps are 300 entities and 8 observations per entity. `just memory-lint` enforces them and refuses secret-looking lines.
+
+**Session start.** A SessionStart hook for Claude (`.claude/settings.json`) and one for Codex (`.codex/hooks.json`) run the same `python3 tools/board.py read`. Both clients get the same text:
+
+- the last 30 room entries, one line each
+- the checked-out orders
+- the landed orders
+- the held slots
+- a memory digest: every rule and gotcha and the ten newest decisions, in under 6,000 characters
+
+Camps get none of this. `tools/sync_template.py` leaves out the hook, the deny rule and the skill.
+
+**The switch condition.** Move to Basic Memory when the graph reaches about 300 entities, or when a question cannot be answered by a substring search on one keyword.
+
+## Consequences
+
+- A session starts with a few thousand characters about the state of the work, the same for both teams, instead of re-reading the logs. Anything left out of the digest is one `search_nodes` call away. Most of the saving comes from the digest and from the missing whole-graph read, not from the server.
+- Both files live in `.git`. They are not backed up by a push, and deleting the clone deletes them. Anything that must outlive the clone goes into a tracked doc, and the graph points at it.
+- The first start of the server fetches the pinned package from npm. After that, npm's cache serves it offline.
+- The memory's search is a case-insensitive substring match on one string. The naming convention (a kind prefix, one keyword) is what makes it usable, and its limits are the switch condition above.
+- Why not Basic Memory now:
+  - its licence is AGPL
+  - it needs a pre-release dependency
+  - it registers projects in machine-local config, which breaks "the tracked files are the setup"
+  - it has open SQLite writer-blocking issues
+- The Codex hook, and Codex's trust of the project config, are granted through the client's own prompts. The Codex reviewer of the order proves both on the installed client. If the Codex app starts MCP servers outside the repository, the documented fallback is a machine-local `codex mcp add memory -- sh <repo>/scripts/memory-mcp.sh`.
+- `AGENTS.md` gets a one-line pointer to `work/BOARD.md` in a follow-up, once the order that currently holds `AGENTS.md` has landed.

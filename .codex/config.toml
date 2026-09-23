@@ -1,0 +1,11 @@
+# Project-scoped Codex configuration, loaded only when this project is trusted.
+# The shared memory: the same server and the same file as Claude's .mcp.json.
+# Tracked here: this file and hooks.json. Everything else in .codex/ is the
+# client's own machine state and stays local.
+
+[mcp_servers.memory]
+command = "sh"
+args = ["-c", "exec sh \"$(git rev-parse --show-toplevel)/scripts/memory-mcp.sh\""]
+startup_timeout_sec = 60
+# The whole graph in one call is the cost this setup exists to avoid.
+disabled_tools = ["read_graph"]

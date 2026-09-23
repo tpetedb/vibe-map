@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "root=\"$(git rev-parse --show-toplevel 2>/dev/null)\" || exit 0; f=\"$root/tools/board.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" read",
+            "statusMessage": "Reading the board room and the shared memory",
+            "additionalContextLimit": 5000,
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

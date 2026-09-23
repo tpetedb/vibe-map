@@ -22,12 +22,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE = ROOT / "vibemap" / "data" / "template"
 
-# The product's own loops: a camp has no engine to develop and no orders to run.
-PRODUCT_ONLY_SKILLS = {"develop-camp", "work-order"}
+# The product's own loops: a camp has no engine to develop, no orders to run
+# and no board room or shared memory of this repository's teams.
+PRODUCT_ONLY_SKILLS = {"develop-camp", "work-order", "shared-memory"}
 
-# Hooks that call this are the product's own harness (work orders); a camp has
-# no tools/ folder, so a camp's settings are this repository's minus those.
-PRODUCT_ONLY_HOOK = "tools/work.py"
+# Hooks that call these are the product's own harness (work orders, the board
+# room); a camp has no tools/ folder, so a camp's settings are this repository's
+# minus those, and minus the permission rules for this repository's memory.
+PRODUCT_ONLY_HOOKS = ("tools/work.py", "tools/board.py")
+PRODUCT_ONLY_RULE = "mcp__memory__"
 SETTINGS = ROOT / ".claude" / "settings.json"
 CAMP_SETTINGS = TEMPLATE / "_claude" / "settings.json"
 
@@ -50,13 +53,23 @@ def camp_settings() -> str:
             ours = [
                 h
                 for h in group["hooks"]
-                if PRODUCT_ONLY_HOOK not in h.get("command", "")
+                if not any(t in h.get("command", "") for t in PRODUCT_ONLY_HOOKS)
             ]
             if ours:
                 kept.append({**group, "hooks": ours})
         if kept:
             hooks[event] = kept
-    return json.dumps({**settings, "hooks": hooks}, indent=2) + "\n"
+    out = {**settings, "hooks": hooks}
+    rules = {
+        kind: [r for r in listed if not r.startswith(PRODUCT_ONLY_RULE)]
+        for kind, listed in settings.get("permissions", {}).items()
+    }
+    rules = {kind: listed for kind, listed in rules.items() if listed}
+    if rules:
+        out["permissions"] = rules
+    else:
+        out.pop("permissions", None)
+    return json.dumps(out, indent=2) + "\n"
 
 
 def pairs() -> list[tuple[Path, Path]]:

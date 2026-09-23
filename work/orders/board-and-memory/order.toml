@@ -5,7 +5,7 @@ team = "harness"
 branch = "claude/board-and-memory"
 goal = "ways-of-working"
 issue = 96
-builder = ""
+builder = "builder-board-and-memory"
 
 owns = [
   "tools/board.py",

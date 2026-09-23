@@ -1,5 +1,22 @@
 {
+  "permissions": {
+    "deny": [
+      "mcp__memory__read_graph"
+    ]
+  },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/tools/board.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" read",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
