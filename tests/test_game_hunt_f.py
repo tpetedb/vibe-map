@@ -8,8 +8,8 @@ computed. Nothing here waits on a clock.
 
 Two of them guard rather than repair. F2 does not reproduce on the font stack
 the game ships, so its test holds the style that keeps it from coming back,
-and says so. The ring comment names the places where a ring is not the whole
-answer, so a test holds that list to what the island actually has.
+and says so. The places where a ring is not the whole answer are listed here,
+so a test holds that list to what the islands actually have.
 """
 
 from __future__ import annotations
@@ -33,6 +33,8 @@ from tests.conftest import (
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "src" / "game" / "16-artifacts.js"
+VAULT = ROOT / "src" / "game" / "60-vault.js"
+CAMPAIGN = json.loads((ROOT / "vibemap" / "data" / "campaign.json").read_text("utf-8"))
 
 # The on-demand price of one t3.small hour, by region, from the same vendor
 # table the demo's "Do it for real" step sends the learner to look at:
@@ -40,9 +42,46 @@ SOURCE = ROOT / "src" / "game" / "16-artifacts.js"
 # any region in this table; it may not name one and charge another's rate.
 T3_SMALL_USD_PER_HOUR = {"us-east-1": 0.0208, "eu-west-1": 0.0228}
 
-# How close a signpost offers its own stop, from the walk-up test in
-# `src/game/31-animate.js`, which asks about stops before artifacts.
+# What the walk-up test in `src/game/31-animate.js` offers before a ring: a
+# mentor within 2.4, the finale within 6.6 of the island's centre once every
+# stop is delivered, an open signpost within 2.6. Then the nearer ring.
 STOP_RADIUS = 2.6
+MENTOR_RADIUS = 2.4
+INN_RADIUS = 6.6
+
+# What lies under each ring where a player can stand on it: the highest
+# upward-facing surface below the knee, level or sloped, that a ray straight
+# down finds. A top under a metre across is something standing on the ground
+# (a bottle, a crate), which the ring passes behind; a point inside an obstacle
+# is behind the prop at any height.
+UNDER_RINGS = """() => {
+  const T = window.THREE, obs = window.__obstacles();
+  const ray = new T.Raycaster(), down = new T.Vector3(0, -1, 0);
+  const up = new T.Vector3(), nm = new T.Matrix3(), bb = new T.Box3();
+  const ground = [];
+  window.__scene().traverse(o => {
+    if (!o.isMesh || (o.geometry && o.geometry.type === 'TorusGeometry')) return;
+    bb.setFromObject(o);
+    if (bb.max.x - bb.min.x >= 1 && bb.max.z - bb.min.z >= 1) ground.push(o);
+  });
+  return window.__rings().map(r => {
+    let level = 0, slope = 0;
+    for (let i = 0; i < 96; i++) {
+      const th = i / 96 * Math.PI * 2;
+      const x = r.x + Math.cos(th) * r.r, z = r.z + Math.sin(th) * r.r;
+      if (obs.some(o => Math.hypot(o[0] - x, o[1] - z) < o[2])) continue;
+      ray.set(new T.Vector3(x, 6, z), down);
+      for (const h of ray.intersectObjects(ground, false)) {
+        if (h.point.y > .6 || !h.face) continue;
+        up.copy(h.face.normal)
+          .applyMatrix3(nm.getNormalMatrix(h.object.matrixWorld)).normalize();
+        if (up.y > .95) level = Math.max(level, h.point.y);
+        else if (up.y > .3) slope = Math.max(slope, h.point.y);
+      }
+    }
+    return {...r, level, slope};
+  });
+}"""
 
 
 def _demo_text(artifact: str | None = None) -> str:
@@ -74,11 +113,15 @@ def _demo_lines(artifact: str) -> list[list[str]]:
 
 
 def _open_artifact(game: GamePage, aid: str) -> None:
-    """Open one artifact's sheet with the Roadmap's own Open button."""
+    """Open one artifact's sheet with the Roadmap's own Open button.
+
+    A click waits for its button to hold still, which is the Roadmap's spring
+    ending, so only the artifact screen's own arrival is waited for.
+    """
     names = game.page.evaluate(
         "Object.fromEntries(window.__artifacts().map(a => [a.id, a.name]))"
     )
-    game.open_roadmap()
+    game.hud_action("#hud button:has-text('Roadmap')")
     game.page.click(f"#s-map button[aria-label='Open {names[aid]}']")
     game.page.wait_for_selector("#s-artifact.on", state="attached")
     game.sheet_in_place()
@@ -98,22 +141,67 @@ def _rings(game: GamePage) -> list[dict[str, Any]]:
     return game.page.evaluate("window.__rings()")
 
 
+@pytest.fixture(scope="module")
+def course_rings(chromium: Browser, server: str) -> list[dict[str, Any]]:
+    """Every ring in the course, measured once on islands with every stop delivered.
+
+    A delivered stop lays its slab, so a finished island is where the ground
+    under a ring is highest. The islands are walked with the HUD's World button,
+    once for the three tests that read the result.
+    """
+    stops = {
+        w: list(range(1, len(e["ws"]) + 1)) for w, e in CAMPAIGN["evenings"].items()
+    }
+    seen: dict[str, dict[str, Any]] = {}
+    with game_page(chromium, server, viewport={"width": 420, "height": 860}) as game:
+        game.goto(state={"name": "Lotte", "done": stops["campus"], "doneW": stops})
+        game.resume()
+        for _ in stops:
+            for ring in game.page.evaluate(UNDER_RINGS):
+                seen[ring["id"]] = ring
+            game.next_world()
+        game.assert_clean()
+    assert set(seen) == {a["id"] for a in CAMPAIGN["artifacts"]}
+    return list(seen.values())
+
+
 def _walk_onto_the_fountain_ring(game: GamePage) -> None:
     """Walk at the fountain until it is the fountain that Inspect offers.
 
     The lake pushes the walker out at its bank, so a walk at the middle ends
     where a player would stand: on the ring, in the band between the bank and
-    the edge of the zone. That band is narrower than walk_to's tolerance, so
-    the walk is driven in short stretches and the prompt, not a step budget,
-    is what says it arrived.
+    the edge of the zone. The arrow keys are held towards the middle and the
+    page answers on the frame the prompt becomes the fountain's; the keys are
+    aimed again every eight frames until it does.
     """
     fountain = game.page.evaluate(
         "window.__artifacts().find(a => a.id === 'fountain').pos"
     )
-    for _ in range(12):
-        game.walk_to(fountain[0], fountain[1], tol=0.9, steps=40)
-        if game.near() == "a:fountain":
-            return
+    kb, held = game.page.keyboard, set[str]()
+    try:
+        for _ in range(60):
+            pos = game.page.evaluate("window.__debug().pos")
+            dx, dz = fountain[0] - pos[0], fountain[1] - pos[2]
+            want = {
+                *(["ArrowRight"] if dx > 0.5 else ["ArrowLeft"] if dx < -0.5 else []),
+                *(["ArrowDown"] if dz > 0.5 else ["ArrowUp"] if dz < -0.5 else []),
+            }
+            for k in want - held:
+                kb.down(k)
+            for k in held - want:
+                kb.up(k)
+            held = want
+            arrived = game.page.wait_for_function(
+                """f => { const d = window.__debug();
+                          return d.near === 'a:fountain' || d.frame >= f; }""",
+                arg=game.frame_count() + 8,
+                timeout=WAIT_MS,
+            )
+            if arrived and game.near() == "a:fountain":
+                return
+    finally:
+        for k in held:
+            kb.up(k)
     stopped = game.page.evaluate("window.__debug().pos")
     raise AssertionError(f"never reached the fountain's ring, stopped at {stopped}")
 
@@ -254,83 +342,98 @@ def test_the_fountain_ring_is_drawn_where_a_player_can_see_it(
 
 # F5 ------------------------------------------------------------------------
 def test_every_artifact_ring_on_every_island_is_the_zone_that_offers_inspect(
-    game: GamePage,
+    course_rings: list[dict[str, Any]],
 ) -> None:
-    game.goto()
-    game.start()
-    seen: dict[str, dict[str, Any]] = {}
-    # Four islands, walked with the HUD's own World button, so this covers
-    # every artifact in the course and not only the thirteen on the campus.
-    for _ in range(4):
-        for ring in _rings(game):
-            seen[ring["id"]] = ring
-        game.next_world()
-    assert set(seen) == {a["id"] for a in game.page.evaluate("window.__artifacts()")}
-    assert len(seen) >= 20
+    # Every artifact in the course, not only the thirteen on the campus.
+    assert len(course_rings) >= 20
     # "Walk up to the yellow ring and press Inspect" is the copy, so the ring
     # the player sees is the radius nearArtifact tests against, not a smaller
     # decoration inside it.
-    assert [r["id"] for r in seen.values() if abs(r["r"] - r["zone"]) > 1e-6] == []
+    assert [r["id"] for r in course_rings if abs(r["r"] - r["zone"]) > 1e-6] == []
     # And none of them is buried in the thing it belongs to, the way the
     # mountain's was inside the mountain.
-    assert [r["id"] for r in seen.values() if r["r"] <= r["block"]] == []
-    game.assert_clean()
+    assert [r["id"] for r in course_rings if r["r"] <= r["block"]] == []
 
 
-def test_the_ring_is_drawn_on_top_of_the_ground_it_crosses(game: GamePage) -> None:
-    """What RING_Y is for, which nothing held before.
+def test_the_ring_is_drawn_on_top_of_the_ground_it_crosses(
+    course_rings: list[dict[str, Any]],
+) -> None:
+    """What RING_Y is for, on every island and with every stop delivered.
 
-    `ground` is the highest level surface a ray straight down finds at the
-    points of the ring a player can stand on: the path slabs, the river, the
-    lake disc, the dock's planks. A ring drawn under one of them is invisible
-    exactly where the copy sends the player to look.
+    The level ground under a ring is the path slabs, the river, the lake disc,
+    the dock's planks and a delivered stop's slab. A ring whose tube dips into
+    one of them is cut in half exactly where the copy sends the player to look.
     """
-    game.goto()
-    game.start()
-    rings = _rings(game)
-    assert [r["id"] for r in rings if r["y"] <= r["ground"]] == []
-    # Not a test that cannot fail: these rings do cross flat things.
-    assert max(r["ground"] for r in rings) > 0.05
+    rings = course_rings
+    assert [r["id"] for r in rings if r["y"] - r["tube"] <= r["level"]] == []
+    # Not a test that cannot fail: these rings do cross flat things, and the
+    # finished slabs are the highest of them.
+    assert max(r["level"] for r in rings) >= 0.2
     # And the ring lies on the ground rather than floating above it.
-    assert [r["id"] for r in rings if r["y"] - r["ground"] > 0.3] == []
-    game.assert_clean()
+    assert [r["id"] for r in rings if r["y"] - r["level"] > 0.3] == []
+
+
+def test_no_ring_runs_under_a_slope(course_rings: list[dict[str, Any]]) -> None:
+    """A flat ring cannot follow a slope, so it has to stay off one.
+
+    The mountain is a seven-sided cone, so a ring round it at a radius between
+    its faces and its corners goes under the mountain at every corner.
+    """
+    assert [
+        (r["id"], round(r["slope"], 2)) for r in course_rings if r["slope"] >= r["y"]
+    ] == []
 
 
 def test_the_places_where_a_ring_is_not_the_whole_answer_are_the_named_ones(
     game: GamePage,
 ) -> None:
-    """The comment over placeArtifacts names them, so the island has to agree.
+    """Every place where something the walk-up test asks first reaches a ring.
 
-    Two rings can overlap, and a signpost's own zone can reach over a ring,
-    and in each case something other than "the ring you are standing in"
-    decides what Inspect offers. A new one would make that comment untrue.
+    A mentor, the finale on a finished island, an open signpost and a nearer
+    ring each answer ahead of the ring you are standing in. The list is the
+    island's truth; a new entry is a place to look at before it ships.
     """
     game.goto()
     game.start()
-    pairs, reach = game.page.evaluate(
-        """stop => {
-             const d = window.__data(), pairs = [], reach = [];
+    reach = game.page.evaluate(
+        """([stop, mentor, inn]) => {
+             const d = window.__data(), out = [];
              const far = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
              Object.entries(d.worlds).forEach(([w, cfg]) => {
                const arts = d.artifacts.filter(a => a.world === w);
                arts.forEach((a, i) => arts.slice(i + 1).forEach(b => {
                  if (far(a.pos, b.pos) < a.r + b.r)
-                   pairs.push(w + ': ' + [a.id, b.id].sort().join(' and '));
+                   out.push(w + ': ' + [a.id, b.id].sort().join(' and '));
                }));
                cfg.plots.forEach((p, k) => arts.forEach(a => {
                  if (far(p, a.pos) < a.r + stop)
-                   reach.push(w + ': signpost ' + (k + 1) + ' and ' + a.id);
+                   out.push(w + ': signpost ' + (k + 1) + ' and ' + a.id);
                }));
+               d.mentors.filter(m => m.world === w).forEach(m => arts.forEach(a => {
+                 if (far(m.pos, a.pos) < a.r + mentor)
+                   out.push(w + ': ' + m.id + ' and ' + a.id);
+               }));
+               arts.forEach(a => {
+                 if (far([0, 0], a.pos) < a.r + inn)
+                   out.push(w + ': the finale and ' + a.id);
+               });
              });
-             return [pairs, reach];
+             return out;
            }""",
-        STOP_RADIUS,
+        [STOP_RADIUS, MENTOR_RADIUS, INN_RADIUS],
     )
-    assert sorted(pairs) == ["campus: cafe and stall"]
     assert sorted(reach) == [
+        "campus: cafe and stall",
         "campus: signpost 4 and mountain",
         "campus: signpost 6 and dock",
+        "campus: the finale and cafe",
+        "campus: the finale and fountain",
+        "campus: the finale and stall",
+        "campus: the finale and well",
+        "prod: the finale and office",
+        "winter: amodei and library",
         "winter: signpost 6 and energy-grid",
+        "winter: the finale and data-centre",
     ]
     game.assert_clean()
 
@@ -407,6 +510,41 @@ def test_the_stall_answers_a_path_it_does_not_have_with_404() -> None:
             else:
                 assert code.group(1) == "404", (ask, answer)
     assert asked >= 3, "the stall never orders anything"
+
+
+def test_the_stall_names_both_codes_its_wrong_order_gets() -> None:
+    """The sentence above the terminal names every code the demo prints.
+
+    Ordering without reading the menu gets a 404 for the wrong path and a 400
+    for the wrong body, so a sentence that promises one of them is half true.
+    """
+    stall = next(a for a in CAMPAIGN["artifacts"] if a["id"] == "stall")
+    sentence = next(s for s in stall["what"].split(". ") if "without reading" in s)
+    demo = next(d for d in _demo_lines("stall") if any("404" in line for line in d))
+    printed = {m for line in demo for m in re.findall(r"^(4\d\d) ", line)}
+    assert printed == {"404", "400"}
+    assert set(re.findall(r"\b4\d\d\b", sentence)) == printed, sentence
+
+
+def test_no_number_in_a_transcript_breaks_between_its_digits() -> None:
+    """A thousands gap is a no-break space, so "312 000 tokens" stays one number.
+
+    The terminal folds a long step onto the next line on a phone, and a plain
+    space is where it may fold. Read as written, escapes and all.
+    """
+    demos = _demo_text()
+    demos = demos[demos.index("const ART_DEMOS") : demos.index("\n};\n")]
+    assert "\\u00a0" in demos
+    assert re.findall(r"\d \d{3}\b[^\"']*", demos) == []
+
+
+def test_the_tech_tree_says_set_back_for_a_shelf_it_sets_back() -> None:
+    """A shelf you did not choose is set back and still open, so the line says so."""
+    tree = next(
+        line for line in VAULT.read_text("utf-8").splitlines() if "treenav" in line
+    )
+    assert "the rest set back" in tree
+    assert "dimmed" not in tree
 
 
 # Found while reading this file for P9, and a defect of the same kind as the

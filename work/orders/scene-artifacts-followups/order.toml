@@ -6,7 +6,7 @@ branch = "claude/scene-artifacts-followups"
 goal = "second-wave"
 issue = 110
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-scene-artifacts-followups"
 
 owns = [
   "src/game/16-artifacts.js",
@@ -15,7 +15,7 @@ owns = [
   "tests/test_game_hunt_f.py",
   "vibemap/data/campaign.json",
 ]
-cross = ["content"]
+cross = ["content", "panels"]
 needs = []
 
 [[criteria]]
