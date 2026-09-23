@@ -114,12 +114,6 @@ An in-process SQL engine that reads CSV and Parquet files as tables. No server, 
 - group by for per-player numbers, window functions (\`lag\`, \`row_number\`) for streaks and rankings
 Learn SQL: [SQLBolt](https://sqlbolt.com), [Mode](https://mode.com/sql-tutorial/). Docs: [duckdb.org](https://duckdb.org/docs/)
 #concept`},
-"Python":{t:"c",md:`# Python
-Used for the parts SQL is bad at: a script, a chart, a loop over files. The [[Template repo]] has \`workspace/python/scores.py\`, standard library only, one new concept per file.
-- The official tutorial: [docs.python.org](https://docs.python.org/3/tutorial/)
-- Practice: [Exercism](https://exercism.org/tracks/python), [Kaggle Learn](https://www.kaggle.com/learn)
-- Environments and packages: [uv](https://docs.astral.sh/uv/)
-#concept`},
 "Template repo":{t:"c",md:`# Template repo
 A GitHub template you fork with "Use this template". It contains: [[AGENTS.md]], a CLAUDE.md that imports it, five skills in the [[Agent Skills standard]] (Obsidian notes, Mermaid diagrams, [[DuckDB]] SQL, [[Python]] for data, Vibe Code Camp progress), the scorekeeper [[Subagent]], one [[Hook]] that backs up data, the [[Terminal companion]], sample data with tested queries, and a starter [[Vault]].
 - \`bash scripts/setup.sh\` installs gh, uv, DuckDB, Obsidian, links the skills, initialises the vault.
@@ -190,12 +184,6 @@ The fixed shape of your data file: which columns, in which order, with which nam
 - The chart in [[Data warehouse]] depends on it.
 - Rename a column, break the chart. That is not fragility, that is a contract.
 - Versioned with [[Git]] like everything else.
-#concept`},
-"Git":{t:"c",md:`# Git
-Version control. A [[Commit]] is a named snapshot; the history is a list of them; [[Rollback]] takes you back to any one.
-- Claude Code can set it up and write the commit messages.
-- Push to GitHub and the project exists off the laptop.
-Introduced in [[Business continuity]].
 #concept`},
 "Commit":{t:"c",md:`# Commit
 A named, immutable snapshot of the whole folder. You commit after every change you would be sad to lose. See [[Git]] and [[Rollback]].

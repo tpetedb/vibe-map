@@ -1,0 +1,53 @@
+# order: hunt-q-note-collisions
+# role: reviewer
+v = 1
+order = "hunt-q-note-collisions"
+by = "codex-review-hunt-q-note-collisions"
+reviewed = "1e733f8248471f6e14ef86325cbdc372eafe7444"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "fail"
+evidence = '''
+Ran `uv run pytest -q tests/test_hunt_q.py tests/test_build.py tests/test_topics.py` with a writable uv cache: all 55 tests passed. I also exported HEAD to a scratch tree, copied in the new `tests/test_hunt_q.py`, and ran its four Q3 cases against the pre-fix implementation: all four failed. The ownership test reported Git and Python; each of the three build cases reported that the old build exited 0. In the reviewed tree, `game/vibe-map.html` contains exactly one compact `"Git":{t:` and one compact `"Python":{t:`, both from `tools/generated/notes.js`.
+
+The command does not prove that every duplicate title fails. In a scratch copy of the reviewed tree I prepended valid JavaScript with one harmless space, `"Unix and the terminal": {t:"c",md:`duplicate`},` to `src/game/50-notes.js`. The generated source already owns that title, but `python tools/build.py --root <scratch>` exited 0 and wrote the game. The parametrized tests only use the exact spelling `":{t:` that `_NOTE_KEY` requires, so they miss this accepted collision.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the criterion's build and topic files together with the Q tests: all 55 tests passed. I also ran `just smoke` outside the macOS sandbox so Chromium could launch: all 24 browser tests passed in 192.67 seconds. I inspected the fresh `smoke_title.png`, `smoke_roadmap_after_claim.png`, and `smoke_vault.png`; the title card, roadmap, island, vault graph, and Workstreams note render without a visible regression.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran ruff check and format check on `tools/build.py` and `tests/test_hunt_q.py`, then `tools/checks.py style` and `tools/checks.py sinks`; all exited 0. The style check reported no em dashes or emoji. I read the complete contribution diff and found no new unescaped value entering HTML; the added logic only reads build sources and formats a terminal diagnostic.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Ran build, regen_tree, gen_cookbook, sync_template, sync_fork_source, and gen_syllabus with `--check`; all exited 0. The build and tree checks explicitly reported that `game/vibe-map.html`, the generated tech-tree outputs, and their sources agree. I also compared the changed mirrors in the diff: the fork-source copies carry the same build validation and handwritten-note removals.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = '''
+All four Q3 regression cases failed on the pre-fix scratch tree for their intended reasons. I opened https://www.kaggle.com/learn during this review; it resolves to Kaggle's official Learn page, and the Python topic, generated note, and built game all carry that URL.
+
+The diagnostic does not name every actual source. In the scratch tree containing the valid spaced handwritten duplicate, I also added the exact dynamic assignment `NOTES["Unix and the terminal"]={t:"c",md:`duplicate`};`. The build then failed, but its complete ownership line was `tools/generated/notes.js, src/game/51-notes-dynamic.js`; it omitted the colliding `src/game/50-notes.js`. This is the same parser gap as c1, and it disproves the diagnostic clause of this criterion.
+'''
+
+[[findings]]
+severity = "medium"
+file = "tools/build.py"
+text = '''
+The duplicate-title guard at lines 187-188 recognizes only the repository's exact compact spellings: an object key must be at column zero and immediately followed by `:{t:`, and a dynamic assignment must be exactly `NOTES["..."]` apart from whitespace before `=`. Valid JavaScript such as `"Unix and the terminal": {t:...}` is invisible to `_NOTE_KEY`; with that duplicate in `50-notes.js`, the reviewed build exits 0 and silently lets the handwritten note overwrite the generated one. If an exact dynamic duplicate is present too, the error omits the handwritten source. The tests at lines 95-116 repeat the accepted spellings, so c1 and c5 stay green while the promised collision protection is bypassed. Make title discovery insensitive to harmless JavaScript whitespace (and cover the variants) or derive the namespace from a representation that does not require parsing source formatting.
+'''

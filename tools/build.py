@@ -122,19 +122,23 @@ def _head_html() -> str:
 
 def _campaign_js() -> str:
     """The campaign a fork carries, else the one inside the installed package."""
-    sys.path.insert(0, str(ROOT))
-    local = GENERATED / "campaign.json"
-    if local.exists():
-        data = json.loads(local.read_text(encoding="utf-8"))
-    else:
-        from vibemap.project import data_text  # noqa: PLC0415
-
-        data = json.loads(data_text("campaign.json"))
+    data = _campaign_data()
     return (
         "const CAMPAIGN=" + js_json(data["evenings"]) + ";\n"
         "const MENTORS=" + js_json(data["mentors"]) + ";\n"
         "const ARTIFACTS=" + js_json(data.get("artifacts", [])) + ";\n"
     )
+
+
+def _campaign_data() -> dict[str, Any]:
+    """The campaign data shared by injection and build-time validation."""
+    sys.path.insert(0, str(ROOT))
+    local = GENERATED / "campaign.json"
+    if local.exists():
+        return json.loads(local.read_text(encoding="utf-8"))
+    from vibemap.project import data_text  # noqa: PLC0415
+
+    return json.loads(data_text("campaign.json"))
 
 
 def _items_js() -> str:
@@ -180,9 +184,64 @@ def _places_js() -> str:
     return "const PLACES=" + js_json(places.payload()) + ";\n"
 
 
+_NOTE_KEY = re.compile(
+    r'^\s*("(?:\\.|[^"\\])*")\s*:\s*\{\s*t\s*:', re.MULTILINE
+)
+_NOTE_ASSIGNMENT = re.compile(r'NOTES\[("(?:\\.|[^"\\])*")\]\s*=')
+
+
+def _note_keys(text: str, pattern: re.Pattern[str]) -> list[str]:
+    """Decode note titles from the JavaScript string literals we generate."""
+    return [json.loads(match.group(1)) for match in pattern.finditer(text)]
+
+
+def _dynamic_note_keys(text: str) -> list[str]:
+    """Titles 51-notes-dynamic.js assigns literally or from campaign data."""
+    data = _campaign_data()
+    titles = _note_keys(text, _NOTE_ASSIGNMENT)
+    for key, evening in data["evenings"].items():
+        if key == "campus":
+            continue
+        titles.append(evening["title"].split(": ")[0])
+        titles.extend(stop["n"] for stop in evening["ws"])
+    titles.extend(mentor["name"] for mentor in data["mentors"])
+    return titles
+
+
+def _validate_note_titles(generated: str, handwritten: str) -> None:
+    """Fail before JavaScript can silently keep the last duplicate note."""
+    owners: dict[str, list[str]] = {}
+    sources = (
+        ("tools/generated/notes.js", _note_keys(generated, _NOTE_KEY)),
+        ("src/game/50-notes.js", _note_keys(handwritten, _NOTE_KEY)),
+        (
+            "src/game/51-notes-dynamic.js",
+            _dynamic_note_keys(_read("game/51-notes-dynamic.js")),
+        ),
+    )
+    for source, titles in sources:
+        for title in titles:
+            owners.setdefault(title, []).append(source)
+    duplicates = {
+        title: sources for title, sources in owners.items() if len(sources) > 1
+    }
+    if duplicates:
+        detail = "\n".join(
+            f"- {title!r}: {', '.join(sources)}"
+            for title, sources in sorted(duplicates.items())
+        )
+        raise SystemExit(
+            "duplicate note titles would overwrite each other:\n"
+            + detail
+            + "\nGive every note one title and one source."
+        )
+
+
 def _notes_js() -> str:
     generated = (GENERATED / "notes.js").read_text(encoding="utf-8")
-    return "const NOTES={\n" + generated + ",\n" + _read("game/50-notes.js")
+    handwritten = _read("game/50-notes.js")
+    _validate_note_titles(generated, handwritten)
+    return "const NOTES={\n" + generated + ",\n" + handwritten
 
 
 def _tree_js() -> str:

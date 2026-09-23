@@ -11,7 +11,12 @@ from __future__ import annotations
 
 import ast
 import re
+import shutil
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 from tools.gen_syllabus import spell
 from tools.regen_tree import render
@@ -24,12 +29,8 @@ ROADMAP = ROOT / "docs" / "ROADMAP.md"
 SCORES = ROOT / "workspace" / "python" / "scores.py"
 HANDWRITTEN = ROOT / "src" / "game" / "50-notes.js"
 
-# Q3 is not fixed here: the two titles below are handwritten notes in
-# src/game/50-notes.js (team panels) that shadow the generated topic note of
-# the same name, because tools/build.py concatenates the handwritten module
-# last. This order owns neither file; what it guards is that no third one
-# joins them.
-KNOWN_SHADOWED = {"Git", "Python"}
+# A title has one owner. Duplicate object keys silently keep the last note.
+KNOWN_SHADOWED: set[str] = set()
 
 # The counts in the prose are written out, so a count is recognised by the
 # word in front of the noun; "winter stops" and "which artifacts" are not
@@ -72,14 +73,104 @@ def test_q2_the_roadmap_gives_every_topic_its_own_heading() -> None:
     )
 
 
-def test_q3_no_new_tree_note_is_shadowed_by_a_handwritten_one() -> None:
+def test_q3_no_tree_note_is_shadowed_by_a_handwritten_one() -> None:
     """Two notes of one title become one in the game, and the last one wins."""
     generated, _tree_js, _md = render()
     handwritten = set(
         re.findall(r'^"([^"]+)":\{t:', HANDWRITTEN.read_text(encoding="utf-8"), re.M)
     )
+    assert {"Git", "Python"} <= set(generated)
     shadowed = set(generated) & handwritten
-    assert shadowed <= KNOWN_SHADOWED, sorted(shadowed - KNOWN_SHADOWED)
+    assert shadowed == KNOWN_SHADOWED, sorted(shadowed)
+
+
+def _fork_root(tmp_path: Path) -> Path:
+    root = tmp_path / "fork"
+    shutil.copytree(ROOT / "src", root / "src")
+    shutil.copytree(ROOT / "tools" / "generated", root / "tools" / "generated")
+    (root / "game").mkdir(parents=True)
+    return root
+
+
+@pytest.mark.parametrize(
+    ("source", "addition", "title", "owners"),
+    [
+        (
+            "50-notes.js",
+            '"Unix and the terminal": {t:"c",md:`duplicate`},\n',
+            "Unix and the terminal",
+            ("tools/generated/notes.js", "src/game/50-notes.js"),
+        ),
+        (
+            "51-notes-dynamic.js",
+            '\nNOTES["Unix and the terminal"]={t:"c",md:`duplicate`};\n',
+            "Unix and the terminal",
+            ("tools/generated/notes.js", "src/game/51-notes-dynamic.js"),
+        ),
+        (
+            "51-notes-dynamic.js",
+            '\nNOTES["Tonight"]={t:"c",md:`duplicate`};\n',
+            "Tonight",
+            ("src/game/50-notes.js", "src/game/51-notes-dynamic.js"),
+        ),
+    ],
+)
+def test_q3_build_refuses_every_kind_of_note_title_collision(
+    tmp_path: Path,
+    source: str,
+    addition: str,
+    title: str,
+    owners: tuple[str, str],
+) -> None:
+    """Generated, handwritten and dynamic notes share one title namespace."""
+    root = _fork_root(tmp_path)
+    path = root / "src" / "game" / source
+    text = path.read_text(encoding="utf-8")
+    if source == "50-notes.js":
+        path.write_text(addition + text, encoding="utf-8")
+    else:
+        path.write_text(text + addition, encoding="utf-8")
+    result = subprocess.run(
+        [sys.executable, "tools/build.py", "--root", str(root)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    message = result.stdout + result.stderr
+    assert result.returncode != 0, "the build accepted two notes with one title"
+    assert title in message
+    assert all(owner in message for owner in owners), message
+
+
+def test_q3_collision_diagnostic_includes_a_spaced_handwritten_key(
+    tmp_path: Path,
+) -> None:
+    """Every owner is named even when harmless whitespace differs."""
+    root = _fork_root(tmp_path)
+    handwritten = root / "src" / "game" / "50-notes.js"
+    handwritten.write_text(
+        '"Unix and the terminal": {t:"c",md:`handwritten`},\n'
+        + handwritten.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    dynamic = root / "src" / "game" / "51-notes-dynamic.js"
+    dynamic.write_text(
+        dynamic.read_text(encoding="utf-8")
+        + '\nNOTES["Unix and the terminal"]={t:"c",md:`dynamic`};\n',
+        encoding="utf-8",
+    )
+    result = subprocess.run(
+        [sys.executable, "tools/build.py", "--root", str(root)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    message = result.stdout + result.stderr
+    assert result.returncode != 0
+    assert "Unix and the terminal" in message
+    assert "tools/generated/notes.js" in message
+    assert "src/game/50-notes.js" in message
+    assert "src/game/51-notes-dynamic.js" in message
 
 
 def test_q4_the_scores_script_names_a_path_that_exists() -> None:
