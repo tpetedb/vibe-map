@@ -1,0 +1,80 @@
+# order: hunt-q-note-collisions
+# role: reviewer
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "hunt-q-note-collisions"
+by = "reviewer-hunt-q-note-collisions-r1"
+reviewed = "3b0a04f646e2c3f66f55b0298d9d89b0d03e2643"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+This is a delta review of 3b0a04f against the previous review commit a62fbb2. `git diff --stat a62fbb2 3b0a04f` touches only tests/test_hunt_q.py (+14) and vault/Camp/Python.md (2 lines). build.py, the sources, the generated game and the fragment are byte-identical to what round 2 accepted (at 8937d14; a62fbb2 changed only review.toml). So the round 2 evidence for the lexer still holds: the scratch reverts made the whitespace, diagnostic, collision and shadow tests fail, and the page's `__vault().total` of 146 equals the 146 titles found.
+In a fresh `git archive` export of 3b0a04f (/tmp/hq3-YmZ4), `pytest tests/test_hunt_q.py tests/test_build.py tests/test_topics.py tests/test_changelog.py` gave 100 passed.
+The new test `test_q3_every_tree_note_in_the_vault_lists_its_topic_docs` passes at HEAD. With the Kaggle link deleted from vault/Camp/Python.md, it fails with `assert not ['Python.md']` and names the command to run. So the test detects exactly the drift that round 2 found.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+The same fresh run covers tests/test_build.py and tests/test_topics.py: they pass. The delta does not touch build or topic code. On PR #191 at head 3b0a04f, the CI jobs were still in progress when I looked. main has moved to fd4c991 (#187), but that change is disjoint: docs, CONTRACTS, the docs-followups order and its test. `git merge-tree` reports a clean merge.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+I ran the exact chain in the fresh export: ruff check, ruff format --check, checks.py style ("style OK") and checks.py sinks. All exit 0. The new test only reads vault files and asserts. It writes nothing and puts no value into any sink.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+All six generators pass `--check` in the fresh export. For the part the command cannot see, I ran `VIBE_HOME=<scratch> vibe vault build` on a clean git copy of 3b0a04f. It changed only vault/Camp/Map.md's date line, which is the same churn it causes on main. vault/Camp/Python.md now lists `[Kaggle Learn](https://www.kaggle.com/learn)` between Exercism and uv, which matches python.toml's order. The medium finding from round 2 is resolved, and the new test keeps this class of drift from coming back silently.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Unchanged since round 2, when I checked it myself. Each Q3 regression test fails without its fix (scratch reverts of build.py and 50-notes.js). The diagnostic asserts the complete ordered owner list. https://www.kaggle.com/learn answered 200 as Kaggle's own course page. The delta adds the Kaggle link to the vault note too, so the source now reaches every place it is meant to.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_hunt_q.py"
+text = '''
+`test_q3_every_tree_note_in_the_vault_lists_its_topic_docs` skips a tree node whose vault note does not exist (`if not note.exists(): continue`), so a missing note passes silently. It also rebuilds the Docs line by hand, `", ".join(f"[{t}]({u})" ...)`, instead of calling the vault writer's own formatting. If the writer's format changes, the test goes red for every note even when nothing is stale. Calling the renderer in vibemap/vault.py (one helper per concept) and asserting that each note exists would make it exact.
+'''
+
+[[findings]]
+severity = "low"
+file = "work/orders/hunt-q-note-collisions/order.toml"
+text = '''
+Carried from round 2. c4's command does not run `vibe vault build`, so the command alone does not prove "every generated file is in sync". The new test now covers the Docs line, which was the one that drifted. Also still open: `cross = ["harness", "content"]` needs signoff-harness.toml and signoff-content.toml, and neither is on the branch. `just work-accept` will stop on them unless the order drops `cross`, following the board decision on #95 that a single-team order needs no sign-off.
+'''
+
+[[findings]]
+severity = "low"
+file = "tools/build.py"
+text = '''
+Carried from rounds 1 and 2. The lexer does not read some valid JavaScript: a variable or computed key, Object.assign(NOTES, ...), a `\u{..}` escape and a concatenated key all build silently. A regex after `else` makes the build refuse valid code loudly. The dynamic-title mirror in `_dynamic_note_keys` also stops seeing titles, without saying so, if 51-notes-dynamic.js changes. A comment that names the forms the lexer reads, and a test that compares the mirror with the page's `__vault().total`, would close both.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_hunt_q.py"
+text = '''
+Carried from round 1. `test_q3_no_tree_note_is_shadowed_by_a_handwritten_one` still finds handwritten titles with the compact regex `^"([^"]+)":\{t:` rather than `build._note_keys`.
+'''
+
+[[findings]]
+severity = "low"
+file = "changelog.d/note-title-collisions.fixed.md"
+text = '''
+Carried from round 2. PR #191's title still says the build refuses any duplicate "however it is spelled". The fragment no longer claims that, and the lows above show spellings the lexer does not read. Retitle the PR to match the fragment.
+'''
