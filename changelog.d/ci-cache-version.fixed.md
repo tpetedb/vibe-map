@@ -1,0 +1,1 @@
+- Key the browser CI cache on the installed Playwright version and fail the step when version lookup fails.

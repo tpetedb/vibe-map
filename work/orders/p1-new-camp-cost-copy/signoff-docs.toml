@@ -1,0 +1,21 @@
+v = 1
+order = "p1-new-camp-cost-copy"
+team = "docs"
+by = "manager-docs"
+reviewed = "8ce8dcf1442d95567532c613e2b68a2b690c2a39"
+verdict = "accept"
+note = '''
+Accepted. The generated camp README and AGENTS copy clearly assigns the camp
+repository, coding-agent subscription and usage to the learner. It separates
+the free camp and hosted game from models and Codespaces that may charge the
+learner's account, without promising template conversion or choosing a provider.
+
+Current GitHub billing documentation supports the Codespaces guidance: personal
+accounts receive included usage; a product-level budget can use Stop usage when
+the limit is reached; and usage before a new budget is excluded during its first
+billing cycle. The instruction to create the zero budget before using Codespaces
+therefore states the material caveat plainly. No docs follow-up is needed.
+
+This sign-off covers the synchronized commit above and lapses if an owned file
+moves.
+'''
