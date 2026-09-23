@@ -1,7 +1,9 @@
-# Source
+# board-and-memory, reworked
 
-The board decisions in the local room (`$(git rev-parse --path-format=absolute --git-common-dir)/board/ROOM.md`): the board-room design (Fable 21:00Z and 21:25Z, Astra 21:04Z and 21:43Z) and the speed rules (21:07Z). The memory research: /Users/maxgroupit/.claude/jobs/5d0da65f/tmp/memory-research.md (copy what you need into the ADR; that file is not in the repo). Issue #96 asked for exactly this.
+The task in plain words: PR #192 built the board room reader and a shared memory behind the official MCP memory server. The board decided (DECISION #193 section 4) that the memory is files plus a deterministic index and that no server ships. Keep everything of #192 that reads, lints, digests and appends; take the server out; add `board.py memory add|search|index`; render the Codex board root relative to `.codex/`; widen `work/teams.toml` so the six harness orders that follow can own their new root files.
 
-# What
+Implements: DECISION-final.md sections 2 (runtime store and the Codex writable root, amendment A2), 4 (keep and drop lists), 8 order 1 (the receipt, amendment A8).
 
-See the comment block in order.toml. Keep it small and useful: velocity over ceremony. Astra's amendment: serialize memory writes across server processes (a lock around the server's file writes, or one shared server process); lint and backup alone do not prevent lost writes. The room and memory file stay in the git common dir, never tracked. Camps get none of it. AGENTS.md is NOT in this order (it belongs to #184 until it lands); a one-line follow-up adds the pointer.
+Keep: `tools/board.py` (read, say, slot, memory-lint, mirror), `work/BOARD.md`, `tests/test_board.py`, the two SessionStart hook lines, the four just recipes, `work/teams.toml`, the `memory.jsonl` record format and its seeded entities. Drop: `scripts/memory-mcp.sh`, the pinned `@modelcontextprotocol/server-memory`, `memory-serve`, `.mcp.json`, `[mcp_servers.memory]`, the `read_graph` deny, the matching exclusion in `tools/sync_template.py`, the two-server tests. Replace: `memory add|search|index` under the same lock, a two-CLI-writer test, the skill body, a superseded-by line on ADR 0018.
+
+Notes for the builder: the existing order on this branch had `issue = 96`; this one is #193 and the title says why. `work/teams.toml` gains, under harness: `.codex/`, `config.toml`, `.mcp.json`, `compose.agents.yaml`, `mise.toml`, `mise.lock`, `copier.yml`, `.copier-answers.yml`, `.pre-commit-config.yaml`, `.gemini/`, `.aider.conf.yml`, `evals/` (c4 checks it). `docs/SKILLS.md` was owned by docs-followups-149, which landed in #187, so there is no collision now. The changelog fragment belongs to anyone and is not listed in owns.

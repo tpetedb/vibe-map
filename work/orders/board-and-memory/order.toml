@@ -1,12 +1,14 @@
 v = 1
 id = "board-and-memory"
-title = "The board room and the shared memory: one reader at session start for both teams"
+title = "The board room and the shared memory, reworked: files plus a deterministic index, no memory server (DECISION #193 section 4)"
 team = "harness"
 branch = "claude/board-and-memory"
 goal = "ways-of-working"
-issue = 96
-builder = "builder-board-and-memory"
+issue = 193
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
 
+# scripts/memory-mcp.sh and .mcp.json are owned so that this order may delete them.
 owns = [
   "tools/board.py",
   "work/BOARD.md",
@@ -24,54 +26,41 @@ owns = [
   "docs/SKILLS.md",
   "tests/test_board.py",
   "tests/test_memory.py",
-  "changelog.d/board-and-memory.added.md",
 ]
-# docs: the ADR and its index. The Codex files are harness files (teams.toml adds
-# `.codex/` to harness in this order); the Codex reviewer verifies them on the
-# installed client, which is the review, not a sign-off.
 cross = ["docs"]
-needs = ["harness-work-ci-followups"]
-
-# What it builds, in one paragraph: tools/board.py (stdlib) with `read` (last 30
-# ROOM.md entries, derived columns: declared owns of checked-out orders labelled
-# "checked out", landed = accepted review on main, explicit SLOT reservations with
-# observed jobs as a cross-check, then the memory digest: every rule: and gotcha:,
-# the 10 newest decision:, under 6,000 characters), `say`, `slot take|free`,
-# `memory-lint` (caps 300 entities and 8 observations, line format, secret regex,
-# dangling relations) and `mirror` (DECISION and verified LANDED to #95,
-# deduplicated by entry id, run by a manager, never by a hook). ROOM.md and
-# memory.jsonl live in the git common dir and are never tracked. The memory
-# server is @modelcontextprotocol/server-memory@2026.8.31 through
-# scripts/memory-mcp.sh; read_graph is denied in both configs. Camps do not get
-# any of this: tools/sync_template.py strips the SessionStart hook, the deny and
-# the MCP entry, and the template test proves it.
+needs = []
 
 [[criteria]]
 id = "c1"
-text = "The order's own tests pass: locked append with stable entry ids and no interleaving from two writers; the three derived columns; a digest under 6,000 characters on a 300-entity fixture; memory-lint refuses an over-cap graph, a malformed observation and a secret-looking line; the hook command prints the digest and exits 0 when the memory file is missing; two memory writers in two processes at once lose nothing (writes are serialized, per the board amendment of 21:43Z)."
+text = "The order's tests pass: locked append with stable entry ids and no interleaving from two writers; the three derived columns; a digest under 6,000 characters on a 300-entity fixture; memory-lint refuses an over-cap graph, a malformed observation and a secret-looking line; both hook commands print the digest and exit 0 when the memory file is missing; two memory writers in two CLI processes at once lose nothing; memory index rebuilds index.json (id, order, topic, owner, status, next action) from the records and work/orders and is idempotent."
 check = "uv run pytest -q tests/test_board.py tests/test_memory.py"
 
 [[criteria]]
 id = "c2"
-text = "The reader runs from this checkout and from a linked worktree and resolves the same room; the lint passes on the live file."
-# The reader finds the room from its own file through git, so running it from
-# another cwd proves nothing (review round 1). This asks another worktree's git
-# where its common dir is and checks that the reader here printed that room and
-# that the lint read that memory. Each checkout running its own copy of the
-# reader is the linked-worktree test in tests/test_board.py.
-check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$PWD" && other="$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep -vxF "$here" | head -n 1)" && common="$(git -C "${other:-$here}" rev-parse --path-format=absolute --git-common-dir)" && grep -qF "($common/board/ROOM.md)" /tmp/board-read-a.txt && uv run python tools/board.py memory-lint > /tmp/board-lint.txt && grep -qF "$common/board/memory.jsonl" /tmp/board-lint.txt'''
+text = "The memory server is gone: no script, no .mcp.json, no server-memory reference, no read_graph deny, no memory-serve subcommand; the seeded entities survive in memory.jsonl and pass the lint."
+check = "test ! -e scripts/memory-mcp.sh && test ! -e .mcp.json && ! grep -rq server-memory .codex .claude justfile tools/board.py && ! grep -q read_graph .claude/settings.json .codex/config.toml && ! grep -q memory-serve tools/board.py justfile && uv run python tools/board.py memory-lint"
 
 [[criteria]]
 id = "c3"
-text = "Lint, style, the sink guard, the non-browser battery and every generated check pass; the camp template carries no hook, deny or MCP entry from this order."
-check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration' && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && ! grep -q memory vibemap/data/template/_claude/settings.json"
+text = "The reader runs from this checkout and from a linked worktree and resolves the same room."
+check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$PWD" && other="$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep -vxF "$here" | head -n 1)" && (cd "${other:-$here}" && uv run --project "$here" python "$here/tools/board.py" read) > /tmp/board-read-b.txt && diff -q /tmp/board-read-a.txt /tmp/board-read-b.txt'''
 
 [[criteria]]
 id = "c4"
-text = "On the installed clients: `claude mcp get memory` reports connected and `codex mcp list` shows memory enabled with read_graph disabled; a probe entity created from a Claude session is found by search_nodes from a Codex session in another worktree; the first turn of a fresh Claude session and a fresh Codex session both show the digest header; Codex hook trust was granted through the client's own prompt, nothing bypassed. The Codex reviewer proves this, since Codex owns that runtime."
-judge = "reviewer"
+text = "work/teams.toml gives the harness team every path the later harness orders own, so those orders validate once this one lands; the Codex board root is rendered relative to .codex/ and nothing else is a writable root."
+check = '''python3 -c "import tomllib;t=tomllib.load(open('work/teams.toml','rb'));h=[x for x in t['teams'] if x['id']=='harness'][0]['paths'];need=['.codex/','config.toml','.mcp.json','compose.agents.yaml','mise.toml','mise.lock','copier.yml','.copier-answers.yml','.pre-commit-config.yaml','.gemini/','.aider.conf.yml','evals/'];m=[p for p in need if p not in h];print('missing',m);raise SystemExit(bool(m))" && python3 -c "import tomllib;c=tomllib.load(open('.codex/config.toml','rb'));r=c['sandbox_workspace_write']['writable_roots'];print(r);raise SystemExit(r!=['../.git/board'])"'''
 
 [[criteria]]
 id = "c5"
-text = "work/BOARD.md and the skill say what the board decides and what it never overrides (work-check, work-accept, CI, Tom), the naming and observation conventions, the never-store list, and that ROOM.md stays the short-term channel. The ADR records the choice, the runner-up (Basic Memory) and the switch condition (about 300 entities or search that substring matching cannot serve)."
+text = "Lint, style, the sink guard, the non-browser battery, every generated check and the order validator pass; the camp template carries no board hook or memory entry."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration' && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/work.py validate && ! grep -q board vibemap/data/template/_claude/settings.json"
+
+[[criteria]]
+id = "c6"
+text = "Codex evidence receipt, version-bound (DECISION A2, A8): on the installed Codex client, a fresh session, a resumed session and a session in a linked worktree each append to ROOM.md through the board root (the main checkout via the rendered relative root, the others via --add-dir with the absolute common dir), and a write to .agents/ or another .git path is denied; both clients show the digest header on the first turn; hook trust was granted through the client's own /hooks prompt, nothing bypassed; no MCP server is registered on either client. The Codex reviewer proves this, since Codex owns that runtime."
+judge = "reviewer"
+
+[[criteria]]
+id = "c7"
+text = "work/BOARD.md and the shared-memory skill say what the board decides and what it never overrides (work-check, work-accept, CI, Tom), the record schema, caps and never-store list, that writes go through board.py memory add|search|index, and that ROOM.md stays the short-term channel. ADR 0018 carries a superseded-by line naming DECISION #193 section 4 and keeps the record of the server choice and its runner-up for history."
 judge = "reviewer"
