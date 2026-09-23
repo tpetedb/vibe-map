@@ -448,7 +448,11 @@ def test_a_new_destination_replaces_a_compound_trip(game: GamePage) -> None:
         "() => window.__debug().world === 'desert' && !window.__debug().flying",
         timeout=WAIT_MS,
     )
-    assert game.page.evaluate("window.__experience().where()") is None
+    # where() may report an artifact near the landing point. A replaced stop
+    # must not open its lesson after the flight finishes.
+    game.frames(3)
+    assert game.page.evaluate("window.__debug().world") == "desert"
+    assert game.page.locator("#sheet.on").count() == 0
     game.assert_clean()
 
 
