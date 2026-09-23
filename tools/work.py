@@ -396,12 +396,15 @@ def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
     return list(found.values())
 
 
-def collisions(orders: list[Order]) -> list[str]:
+def collisions(orders: list[Order], involving: set[str] | None = None) -> list[str]:
     """Two orders that cannot both be built as written: they own the same file,
-    or they share a branch, where each would count the other's files as strays."""
+    or they share a branch, where each would count the other's files as strays.
+    With `involving`, only the pairs one of those orders is part of."""
     out = []
     for i, a in enumerate(orders):
         for b in orders[i + 1 :]:
+            if involving is not None and not {a.id, b.id} & involving:
+                continue
             if a.branch == b.branch:
                 out.append(f"{a.id} and {b.id} share the branch {a.branch}")
             hit = [(x, y) for x in a.owns for y in b.owns if overlap(x, y)]
@@ -1112,15 +1115,25 @@ def cmd_new(a: argparse.Namespace) -> int:
 def cmd_validate(_: argparse.Namespace) -> int:
     orders = orders_in(ROOT, load_teams())
     drafts: list[str] = []
-    clash = collisions(active(ROOT, drafts))
+    live = active(ROOT, drafts)
+    # A builder's check judges its own order: a clash between two orders in
+    # other worktrees is theirs to settle. A checkout building none sees all.
+    here = git(ROOT, "branch", "--show-current")
+    mine = {o.id for o in orders if o.branch == here} or None
+    clash = collisions(live, mine)
     for line in clash:
         print("collision:", line)
+    for line in collisions(live):
+        if line not in clash:
+            print("collision elsewhere, not this branch's:", line)
     for line in drafts:
         print("draft elsewhere, not judged:", line)
     for order in orders:
         for line in online(order):
             print("warning:", line)
-    print(f"{len(orders)} orders read, {len(clash)} collisions among the active ones")
+    print(
+        f"{len(orders)} orders read, {len(clash)} collisions this checkout answers for"
+    )
     return 1 if clash else 0
 
 

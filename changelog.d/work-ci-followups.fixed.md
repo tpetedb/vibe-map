@@ -16,3 +16,7 @@
 - `tools/ci_shards.py` stops every shard when pytest cannot collect the
   browser battery, instead of leaving the broken file out of all of them, and
   refuses a `default` that is not a plain true or false.
+- `work.py validate` fails a branch only for a collision its own order is part
+  of. A clash between two orders in other worktrees is still printed, as
+  "collision elsewhere", and a checkout that builds no order, such as `main`,
+  still fails on any collision.

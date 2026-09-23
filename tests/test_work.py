@@ -905,6 +905,36 @@ def test_validate_warns_when_a_check_runs_the_integration_tests(repo: Path) -> N
     assert "warning" not in tool(repo, "validate").stdout
 
 
+def test_a_clash_between_two_other_orders_does_not_fail_this_one(
+    repo: Path,
+) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["tests/a.py"]))
+    commit(repo)
+    for oid, branch in (("two", "feat/y"), ("three", "feat/z")):
+        other = repo.parent / oid
+        sh(repo, "worktree", "add", "-q", str(other), "-b", branch, "origin/main")
+        put_order(other, oid, order_text(oid, branch, ["src/panel.js"]))
+
+    def said(out: str, prefix: str, *ids: str) -> bool:
+        return any(
+            line.startswith(prefix) and all(f" {i} " in f" {line} " for i in ids)
+            for line in out.splitlines()
+        )
+
+    ran = tool(repo, "validate")
+    assert ran.returncode == 0, ran.stdout
+    assert said(ran.stdout, "collision elsewhere", "two", "three"), ran.stdout
+    # Seen from a checkout that builds no order, every clash is a failure.
+    main = repo.parent / "main"
+    sh(repo, "worktree", "add", "-q", str(main), "main")
+    ran = tool(main, "validate")
+    assert ran.returncode == 1 and said(ran.stdout, "collision:", "two", "three")
+    # And a clash this branch's own order is party to fails it.
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    ran = tool(repo, "validate")
+    assert ran.returncode == 1 and said(ran.stdout, "collision:", "one", "two")
+
+
 def branch_with(repo: Path, name: str, files: dict[str, str]) -> str:
     """A branch off main with these files written and committed."""
     sh(repo, "checkout", "-q", "-b", name, "origin/main")
