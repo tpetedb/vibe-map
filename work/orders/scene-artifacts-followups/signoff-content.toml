@@ -1,0 +1,19 @@
+# Sign-off from a team whose files this order's diff touches.
+v = 1
+order = "scene-artifacts-followups"
+team = "content"
+by = "manager-content"
+# The commit you read.
+reviewed = "804b9831fd0a6ad29330d445c6a4cdb509f0b7f8"
+verdict = "accept"
+note = """
+Checked the only content-owned file this order touches, vibemap/data/campaign.json: one \
+line, the API stall's `what` text (hunt F review low 6, the stall sentence). The added \
+clause 'a 404 for a wrong path or a 400 for a wrong body' is technically accurate, plain \
+corporate voice, no em-dash, and reads as one added clause rather than a rewrite. No test \
+under tests/test_topics.py or tests/test_syllabus.py asserts the old string, and \
+docs/SYLLABUS.md does not quote it, so nothing else of content's depends on the old wording. \
+No other content path (vibemap/data/topics/, items.json, resources.md, obsidian.json, \
+places.toml, docs/SYLLABUS.md, workspace/, data/) appears in this diff. Nothing for team \
+content to do after this lands.
+"""
