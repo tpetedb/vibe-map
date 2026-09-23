@@ -1113,7 +1113,7 @@ The tree is the second way through the course: the thirty-two stops are a night,
 
 <!-- generated:tech-tree. Do not edit inside; run `just syllabus`. -->
 
-Seventy topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. `vibe topics` lists them, `vibe topic <id>` opens one, `vibe check --topic <id>` marks it done, and [ROADMAP.md](ROADMAP.md) is the same tree in full.
+Eighty-one topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. `vibe topics` lists them, `vibe topic <id>` opens one, `vibe check --topic <id>` marks it done, and [ROADMAP.md](ROADMAP.md) is the same tree in full.
 
 | Age | Level | What it covers |
 |---|---|---|
@@ -1123,16 +1123,18 @@ Seventy topics on eleven shelves, in five ages from intern to expert. A topic ca
 | Imperial Age | Senior | The AI harness. You stop typing code and start directing agents, with guardrails you wrote. |
 | Future Age | Expert | What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. |
 
-### The packs (two)
+### The packs (three)
 
 **The core map** (fifty-four topics, first shelf shell). Everything the four evenings lean on, intern to expert: the terminal, git, the formats, the languages, data, the web, shipping, the agent harness, the docs and the vault.
 
 **The data engineering pack** (sixteen topics, first shelf data). Sixteen topics that read as one path: the file formats data arrives in, the table formats it rests in, the tools that ingest it, transform it, schedule it and test it, and the map that says which of those three any tool is doing. Everything runs on a laptop with uv, with no account and no paid service.
 
+**The Linux and shell pack** (eleven topics, first shelf shell). Eleven topics for the machine underneath everything else: what Linux and a distribution are, the filesystem and its permissions, processes and signals, the text tools, scripts that fail loudly, package managers, tmux, networking from the shell, systemd, cron and timers, and the differences between Linux, WSL and a Mac that break scripts. Every hands-on runs on a Mac or in a Codespace, with Docker as the route where a topic needs a real Linux, and no account or paid service.
+
 
 ### The shelves
 
-**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. Unix and the terminal (Basics), Bash and shell scripts (Working knowledge), zsh and your shell config (Working knowledge), Files, folders and paths (Basics), Dotfiles (Working knowledge), Justfiles and task running (Working knowledge), localhost and ports (Working knowledge), SSH and remote machines (Deep), Interfaces: GUI, TUI, CLI, API (Basics).
+**Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. Unix and the terminal (Basics), Bash and shell scripts (Working knowledge), zsh and your shell config (Working knowledge), Files, folders and paths (Basics), Dotfiles (Working knowledge), Justfiles and task running (Working knowledge), localhost and ports (Working knowledge), SSH and remote machines (Deep), Interfaces: GUI, TUI, CLI, API (Basics), Linux, the kernel and the distributions (Basics), The filesystem and permissions (Basics), Processes and signals (Working knowledge), Text tools, grep, sed and awk (Working knowledge), Shell scripts that fail loudly (Working knowledge), Package managers (Basics), tmux, sessions that survive (Working knowledge), Networking from the shell (Working knowledge), systemd, services and the journal (Working knowledge), cron and timers (Working knowledge), WSL and the macOS differences (Working knowledge).
 
 **Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. Git (Basics), GitHub, pull requests, Pages (Working knowledge), CI/CD and automation (Deep), Git hooks (Working knowledge).
 

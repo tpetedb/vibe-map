@@ -42,6 +42,42 @@ Docs: [Textual, TUIs in Python](https://textual.textualize.io/) · [click, CLIs 
 
 Unlocks: Unix and the terminal, MCP, Building and consuming APIs
 
+### Linux, the kernel and the distributions
+
+*Basics.* Linux is a kernel, and a kernel, in Debian's words, is "the most fundamental program on the computer and does all the basic housekeeping and lets you start other programs." An operating system is more than that: "the set of basic programs and utilities that make your computer run", which is what a distribution such as Debian puts around the kernel. Reach for this topic the first time a server, a container or a Codespace asks you which Linux you are on, because the answer is written in /etc/os-release. And for an agent: read /etc/os-release before choosing a package manager or a path. ID= is there "suitable for scripts", and ID_LIKE= names the distributions this one is related to.
+
+**History.** In August 1991 Linus Torvalds, then a 21-year-old computer science student at the University of Helsinki, wrote to the Usenet group comp.os.minix: "I'm doing a (free) operating system (just a hobby, won't be big and professional like gnu) for 386(486) AT clones." The kernel's own README still describes Linux as "a clone of the operating system Unix, written from scratch by Linus Torvalds with assistance from a loosely-knit team of hackers across the Net", distributed under the GNU General Public License v2. A distribution is the rest of the system around it: Debian "was begun in August 1993 by Ian Murdock, as a new distribution which would be made openly, in the spirit of Linux and GNU." New kernels arrive on a steady rhythm: a merge window of about two weeks, then an -rc release about once a week, up to somewhere between -rc6 and -rc9, then the final release. A distribution says who it is in /etc/os-release, with /usr/lib/os-release as the fallback, where ID= is a lowercase name such as debian or fedora and PRETTY_NAME= is the name to show a person.
+
+**Try in five minutes.** In a Codespace: cat /etc/os-release > os-release.txt. On a Mac with Docker: docker run --rm debian:stable-slim cat /etc/os-release > os-release.txt. Then read its ID= and PRETTY_NAME= lines.
+
+Docs: [The Linux kernel, Linux kernel release notes (What is Linux?)](https://docs.kernel.org/admin-guide/README.html) · [The Linux kernel, How the development process works](https://docs.kernel.org/process/2.Process.html) · [Debian, About Debian: operating system, kernel and distribution](https://www.debian.org/intro/about) · [os-release(5), the operating system identification file](https://man7.org/linux/man-pages/man5/os-release.5.html) · [Source: University of Helsinki, How did the 30-year-old Linux conquer the world?](https://www.helsinki.fi/en/news/mathematics-and-science/how-did-30-year-old-linux-conquer-world) · [Source: Torvalds' 1991 Linux announcements (CMU archive)](https://www.cs.cmu.edu/~awb/linux.history.html)
+
+Unlocks: The filesystem and permissions, Package managers, WSL and the macOS differences
+
+### The filesystem and permissions
+
+*Basics.* A Linux machine keeps its files in one agreed tree, and every file in it carries three sets of permissions: for its owner, for the other users in its group, and for everyone else. The tree is written down in the Filesystem Hierarchy Standard, which is why configuration sits under /etc, logs under /var/log and your own files under /home. Reach for this topic when a script says "Permission denied", when a key file has to be readable by you alone, or when you wonder where a program keeps its settings. And for an agent: set a mode with the octal number you mean (chmod 640, chmod 755) rather than guessing with +x or +w, and say which of the three categories the change is for.
+
+**History.** The Filesystem Hierarchy Standard, version 3.0, published by the LSB Workgroup of The Linux Foundation on March 19, 2015, "consists of a set of requirements and guidelines for file and directory placement under UNIX-like operating systems." It names each directory for its job: /etc for host-specific system configuration, /home for user home directories, /tmp for temporary files, /var/log for log files and directories. In the GNU coreutils manual there are three kinds of permission, read, write and execute, and three categories of users who may hold them: the file's owner, other users who are in the file's group, and everyone else. As a number each category takes one octal digit, read 4, write 2 and execute 1, so mode 664 is the same as the symbolic mode ug=rw,o=r. The umask removes permissions you did not mean to give away, and "its default value varies from system to system".
+
+**Try in five minutes.** touch secret.txt, chmod 640 secret.txt, then ls -l secret.txt > perms.txt: the owner may read and write, the group may read, everyone else gets nothing.
+
+Docs: [The Linux Foundation, Filesystem Hierarchy Standard 3.0](https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html) · [GNU coreutils manual, Structure of File Mode Bits](https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html) · [GNU coreutils manual, Numeric Modes](https://www.gnu.org/software/coreutils/manual/html_node/Numeric-Modes.html) · [GNU coreutils manual, The Umask and Protection](https://www.gnu.org/software/coreutils/manual/html_node/Umask-and-Protection.html)
+
+Unlocks: Processes and signals, Shell scripts that fail loudly
+
+### Package managers
+
+*Basics.* A package manager installs a program together with the packages it depends on, from the sources it is configured with, and upgrades them later with one command. Debian uses APT (apt at the keyboard, apt-get in scripts), RPM-based distributions use DNF, and on a Mac the comparison is Homebrew, which also runs on Linux and WSL. Reach for this topic whenever a tutorial says "install X": the command depends on which system you are on, and a list of packages in a file is how you install the same set twice. And for an agent: in a script or a Dockerfile use apt-get, not apt, because apt "may change behavior between versions"; on a Mac write the tools into a Brewfile and run brew bundle.
+
+**History.** Debian 2.1, released on March 9th, 1999, introduced apt, "a new package management interface" that, in the project's own history, "established a new paradigm for package acquisition and installation on Open Source operating systems." In apt, update "is used to download package information from all configured sources", and install, remove and upgrade act on that information. The apt manual says the command "is designed as an end-user tool and it may change behavior between versions", so scripts should prefer apt-get and apt-cache, which "keep backward compatibility as much as possible". DNF "is the next upcoming major version of YUM, a package manager for RPM-based Linux distributions", and dnf install "makes sure that the given packages and their dependencies are installed on the system." Homebrew installs command-line tools and applications "across macOS, Linux and WSL", each package into its own keg inside the Cellar, and a Brewfile gives it "a declarative interface for installing/upgrading packages".
+
+**Try in five minutes.** Write a Brewfile with the line brew "jq" and run brew bundle check. Then write install-debian.sh with apt-get update and apt-get install -y jq, the way a Dockerfile would install the same tool on Debian.
+
+Docs: [Debian, apt(8) manual page](https://manpages.debian.org/bookworm/apt/apt.8.en.html) · [DNF, command reference](https://dnf.readthedocs.io/en/latest/command_ref.html) · [Homebrew, the package manager for macOS and Linux](https://brew.sh/) · [Homebrew, Homebrew Bundle, brew bundle and Brewfile](https://docs.brew.sh/Brew-Bundle-and-Brewfile) · [Source: A Brief History of Debian, Debian Releases](https://www.debian.org/doc/manuals/project-history/releases.en.html)
+
+Unlocks: systemd, services and the journal
+
 ### Bash and shell scripts
 
 *Working knowledge.* Bash is the language the terminal speaks. A shell script is a text file of commands; pipes (|) chain small tools into big ones. This is also what hooks and setup scripts are written in.
@@ -101,6 +137,98 @@ Unlocks: AGENTS.md, CI/CD and automation, Git hooks
 Docs: [MDN: How the web works](https://developer.mozilla.org/en-US/docs/Learn_web_development/Getting_started/Web_standards/How_the_web_works) · [Source: RFC 990, Assigned Numbers (1986)](https://www.rfc-editor.org/rfc/rfc990) · [Source: RFC 801, NCP/TCP Transition Plan (1981)](https://www.rfc-editor.org/rfc/rfc801)
 
 Unlocks: HTTP and APIs, Docker and containers, MCP
+
+### Processes and signals
+
+*Working knowledge.* Every command you run is a process: the shell starts it, waits for it, and reads its exit status when it ends. A signal is how you talk to a process that is already running, and kill is the command that sends one, SIGTERM when you name no other. Reach for this topic when a server will not stop, when a job has to run in the background, or when a script has to tell "it failed" apart from "somebody stopped it". And for an agent: stop a process with SIGTERM first and give it the chance to clean up. SIGKILL cannot be caught, blocked or ignored, so nothing the program meant to do on the way out will happen.
+
+**History.** Dennis Ritchie's history of Unix sums up how a shell runs a command: it reads the line, creates a child process by fork, the child uses exec to call in the command from a file, and the parent uses wait until the child terminates by calling exit. In PDP-7 Unix processes existed very early, precisely two of them, one for each of the two terminals, and fork, wait and exec came later. The kill utility "shall send a signal to the process or processes specified by each pid operand", and sends SIGTERM if no signal is named. On Linux, SIGINT (2) is the interrupt from the keyboard, SIGTERM (15) the termination signal and SIGKILL (9) the kill signal, and "The signals SIGKILL and SIGSTOP cannot be caught, blocked, or ignored." In bash, "When a command terminates on a fatal signal N, bash uses the value of 128+N as the exit status", which is how a script can tell a failure from a stop.
+
+**Try in five minutes.** bash -c 'sleep 30 & pid=$!; kill -TERM "$pid"; wait "$pid"; echo "exit: $?"' > signals.txt, then cat signals.txt: 143 is 128 plus 15, the number of SIGTERM.
+
+Docs: [signal(7), overview of signals](https://man7.org/linux/man-pages/man7/signal.7.html) · [POSIX.1-2024, kill: terminate or signal processes](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/kill.html) · [GNU bash manual page, EXIT STATUS (Debian)](https://manpages.debian.org/bookworm/bash/bash.1.en.html) · [POSIX.1-2024, wait: await process completion](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/wait.html) · [Source: Ritchie, The Evolution of the Unix Time-sharing System](https://www.nokia.com/bell-labs/about/dennis-m-ritchie/hist.html)
+
+Unlocks: systemd, services and the journal, tmux, sessions that survive
+
+### Text tools, grep, sed and awk
+
+*Working knowledge.* grep, sed, awk, cut, sort and uniq are small programs that each do one thing to lines of text, and a pipe joins them into a report without a line of code. grep selects the lines that match a pattern, sed edits a stream, awk runs a little program over records and fields, cut takes columns out, and uniq collapses repeated adjacent lines. Reach for them when a log, a CSV or the output of another command has the answer in it and you want it in a minute, not after writing a script. And for an agent: uniq only compares adjacent lines, so sort before uniq, and count with grep -c rather than piping to wc when the question is how many lines match.
+
+**History.** The Seventh Edition of Unix, released by Bell Laboratories in January 1979, is where awk and sed arrived among "many new applications". The grep utility "shall search the input files, selecting lines matching one or more patterns", and grep -c writes "only a count of selected lines". The sed utility "is a stream editor that shall read one or more text files, make editing changes according to a script of editing commands, and write the results to standard output." An awk program "is a sequence of patterns and corresponding actions", and by default a record is a line. uniq writes "one copy of each input line" but compares only adjacent lines, and uniq -c puts the number of times each line occurred in front of it.
+
+**Try in five minutes.** printf 'ada,3\nbob,5\nada,4\ncy,1\n' > runs.csv, then cut -d, -f1 runs.csv | sort | uniq -c | sort -rn | head -1 > report.txt, then awk -F, '{ total += $2 } END { print "total", total }' runs.csv >> report.txt, then sed -n 's/^bob,/best: bob /p' runs.csv >> report.txt.
+
+Docs: [POSIX.1-2024, grep: search a file for a pattern](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/grep.html) · [POSIX.1-2024, sed: stream editor](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/sed.html) · [POSIX.1-2024, awk: pattern scanning and processing language](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/awk.html) · [POSIX.1-2024, uniq: report or filter out repeated lines](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/uniq.html) · [POSIX.1-2024, cut: cut out selected fields of each line](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/cut.html) · [Source: TUHS, Seventh Edition Unix (January 1979)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7)
+
+Unlocks: Shell scripts that fail loudly
+
+### Shell scripts that fail loudly
+
+*Working knowledge.* A shell script keeps running after a command fails unless you tell it not to. Three options change it: set -e stops at the first failing command, set -u refuses a variable that was never set, and set -o pipefail makes a pipeline fail when any command in it fails. Add quoting, so "$@" hands every argument through whole, and a trap that cleans up on EXIT, and a script says when it goes wrong. Reach for this the moment a script does more than one thing, and run ShellCheck over it. And for an agent: start every bash script with set -euo pipefail, quote every expansion, and run shellcheck on it before calling it done.
+
+**History.** POSIX.1-2024 describes -e this way: "when any command fails (for any of the reasons listed in 2.8.1 Consequences of Shell Errors or by returning an exit status greater than zero), the shell immediately shall exit", with exceptions such as the condition of an if or any command of an AND-OR list other than the last. With -u, expanding an unset parameter makes the shell "write a message to standard error and the expansion shall fail". The pipefail option was added in this edition of the standard: it derives the exit status of a pipeline "from the exit statuses of all of the commands in the pipeline, not just the last (rightmost) command". A trap on EXIT runs "when the shell terminates normally (exits)", and the value of $? after the trap is the value it had before. ShellCheck is a GPLv3 tool that gives warnings and suggestions for bash and sh scripts, and the gallery of bad code in its README opens with quoting, an unquoted variable and an unquoted $@ among the examples.
+
+**Try in five minutes.** Write safe.sh with #!/usr/bin/env bash, set -euo pipefail, trap 'echo "cleanup ran" >&2' EXIT, a function greet() { printf 'hello, %s\n' "$1"; } and a loop for name in "$@"; do greet "$name"; done. Run bash safe.sh "Ada Lovelace" > out.txt, then shellcheck safe.sh.
+
+Docs: [POSIX.1-2024, Shell Command Language (set, trap, pipelines, exit status)](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html) · [ShellCheck, a shell script static analysis tool](https://github.com/koalaman/shellcheck) · [GNU bash manual page, the set builtin and EXIT STATUS (Debian)](https://manpages.debian.org/bookworm/bash/bash.1.en.html)
+
+Unlocks: cron and timers, systemd, services and the journal
+
+### tmux, sessions that survive
+
+*Working knowledge.* tmux is a terminal multiplexer: several terminals inside one screen, split into panes, and a session that keeps running when you close the window or lose the connection. You detach, go home, and attach again to find everything where you left it. Reach for it on any remote machine where a long job must not die with your SSH connection, and on your own laptop when one window is not enough; it runs on OpenBSD, FreeBSD, NetBSD, Linux, macOS and Solaris. And for an agent: a session made with tmux new-session -d is not attached to your terminal, and tmux has-session -t NAME exits 0 when the session exists and 1 when it does not, so a script can ask before it starts a second one.
+
+**History.** The tmux manual defines it as "a terminal multiplexer: it enables a number of terminals to be created, accessed, and controlled from a single screen", and one that "may be detached from a screen and continue running in the background, then later reattached." A session is a collection of pseudo terminals; each session has one or more windows, and a window may be split into rectangular panes. Each session "is persistent and will survive accidental disconnection (such as ssh(1) connection timeout) or intentional detaching (with the 'C-b d' key strokes)", and tmux attach brings it back. The configuration file, ~/.tmux.conf by default, is "a set of tmux commands which are executed in sequence when the server is first started", and the manual's own example binds R to source-file ~/.tmux.conf to reload it. OpenBSD 4.6, released on October 18, 2009, imported the tmux(1) terminal multiplexer, replacing window(1).
+
+**Try in five minutes.** tmux new-session -d -s camp, then tmux list-sessions > sessions.txt, then tmux kill-session -t camp. Write a tmux.conf with bind-key R source-file ~/.tmux.conf.
+
+Docs: [tmux(1), the OpenBSD manual page](https://man.openbsd.org/tmux.1) · [tmux on GitHub, the README: what it is and where it runs](https://github.com/tmux/tmux) · [Source: OpenBSD 4.6 release notes](https://www.openbsd.org/46.html)
+
+Unlocks: Networking from the shell
+
+### Networking from the shell
+
+*Working knowledge.* Most network questions have a one-line answer in the terminal: is something listening on this port, and what does it say when I ask. curl asks, and curl -I asks for the headers only; ss on Linux and lsof on a Mac or on Linux show which process holds which socket. Reach for this topic when a local server "does not work", before you open a browser: start it, ask it with curl, and look at the port it is really on. And for an agent: prove a server is up with curl -sI against the exact address and port, and find what holds a port with lsof -nP -iTCP:PORT -sTCP:LISTEN (or ss -ltnp on Linux) instead of guessing.
+
+**History.** curl began as HttpGet, which Daniel Stenberg extended in 1996, became urlget in 1997, and was renamed once more when curl 4 was released on March 20, 1998. Its manual describes it as "a tool for transferring data from or to a server using URLs", and -I, --head fetches the headers only, using the HTTP HEAD command. ss "is used to dump socket statistics"; -l shows only listening sockets, -t TCP sockets, -n exact numbers instead of service names and -p the processes using them. lsof lists information about files opened by processes, a network socket among them, and -iTCP -sTCP:LISTEN lists only network files in the TCP LISTEN state. Python's http.server listens on port 8000 by default, --bind 127.0.0.1 keeps it to localhost, and its own documentation warns that it "is not recommended for production".
+
+**Try in five minutes.** python3 -m http.server 8765 --bind 127.0.0.1 in one terminal. In another: curl -sI http://127.0.0.1:8765/ > head.txt, then lsof -nP -iTCP:8765 -sTCP:LISTEN > port.txt (or ss -ltnp > port.txt on Linux). Stop the server with Ctrl-C.
+
+Docs: [curl, the curl man page](https://curl.se/docs/manpage.html) · [ss(8), another utility to investigate sockets](https://man7.org/linux/man-pages/man8/ss.8.html) · [lsof(8), list open files](https://man7.org/linux/man-pages/man8/lsof.8.html) · [lsof-org, lsof on GitHub: the dialects it maintains, Linux and Darwin among them](https://github.com/lsof-org/lsof) · [Python, http.server and its command-line interface](https://docs.python.org/3/library/http.server.html) · [Source: curl, History of curl](https://curl.se/docs/history.html)
+
+Unlocks: systemd, services and the journal
+
+### systemd, services and the journal
+
+*Working knowledge.* On a Linux machine that runs systemd, a long-running program is a service, and systemd is what starts it and supervises it. You describe the service once in a small unit file, an ini-style text file with a [Unit], a [Service] and an [Install] section, and journalctl reads what it printed. Reach for this topic when a web app, a bot or a worker on a server has to keep running after you log out. And for an agent: write the unit file, check it with systemd-analyze verify before anyone enables it, and read failures with journalctl -u NAME rather than guessing.
+
+**History.** In April 2010 Lennart Poettering announced systemd in the blog post Rethinking PID 1, as "a (still experimental) init system" that "starts up and supervises the entire system" and "is based around the notion of units." A unit file is "a plain text ini-style file" that describes a service, a socket, a timer, a mount point and more, and a file whose name ends in .service "encodes information about a process controlled and supervised by systemd." ExecStart= gives the commands run when the service starts, and with no Type= set, Type=simple is assumed. In the [Install] section, WantedBy=multi-user.target is what systemctl enable reads: it creates a symlink in /etc/systemd/system/multi-user.target.wants/ that tells systemd to pull the unit in when starting multi-user.target. journalctl prints "the log entries stored in the journal", and journalctl -u shows the messages of one unit.
+
+**Try in five minutes.** Write hello.service with [Unit] Description=Hello, [Service] ExecStart=/usr/bin/env echo hello, and [Install] WantedBy=multi-user.target. On a Linux machine with systemd, systemd-analyze verify ./hello.service loads the file and prints warnings if it finds errors.
+
+Docs: [systemd.unit(5), unit configuration](https://man7.org/linux/man-pages/man5/systemd.unit.5.html) · [systemd.service(5), service unit configuration](https://man7.org/linux/man-pages/man5/systemd.service.5.html) · [journalctl(1), print log entries from the systemd journal](https://man7.org/linux/man-pages/man1/journalctl.1.html) · [systemd-analyze(1), analyze and debug the system manager](https://man7.org/linux/man-pages/man1/systemd-analyze.1.html) · [Source: Lennart Poettering, Rethinking PID 1 (April 2010)](https://0pointer.de/blog/projects/systemd.html)
+
+Unlocks: cron and timers
+
+### cron and timers
+
+*Working knowledge.* cron runs a command on a schedule: one line per job, five time fields and the command, installed with crontab. A systemd timer does the same job as a unit, next to the service it starts, and can catch up on a run it missed while the timer was inactive. Reach for either when something must happen every night, every Monday or every fifteen minutes without you, and remember that the job gets a default environment of its own, not the shell you tested it in. And for an agent: in a crontab line, give the command with full paths and write its output somewhere, because the job does not see the variables of the shell you tested it in, and a % in the command field means a newline unless you escape it.
+
+**History.** POSIX.1-2024 defines a crontab entry as lines of six fields: minute (0 to 59), hour (0 to 23), day of the month (1 to 31), month of the year (1 to 12), day of the week (0 to 6, with 0 as Sunday), and the command. Each time field is an asterisk for all values, a number, a range such as 1-5 or a list separated by commas, and its own example, 15 3 * * 1-5, runs every weekday morning at 3:15 am. The sixth field "shall be executed by sh", and a % in it "shall be translated to a <newline>". The HOME, LOGNAME, PATH and SHELL a job gets are defaults, "not affected by the settings of those variables when crontab is run". A systemd timer is a unit whose name ends in .timer, OnCalendar= gives it a wallclock schedule, and Persistent=true triggers the service immediately if a run was missed while the timer was inactive.
+
+**Try in five minutes.** Write crontab.txt with one line that runs /usr/bin/env date at 7:30 on weekdays: 30 7 * * 1-5 /usr/bin/env date >> /tmp/cron-camp.log 2>&1. crontab -l shows what is installed now; install your file only if you mean it, with crontab crontab.txt, because that replaces your whole crontab entry.
+
+Docs: [POSIX.1-2024, crontab: schedule periodic background work](https://pubs.opengroup.org/onlinepubs/9799919799/utilities/crontab.html) · [systemd.timer(5), timer unit configuration](https://man7.org/linux/man-pages/man5/systemd.timer.5.html) · [systemd.unit(5), unit configuration](https://man7.org/linux/man-pages/man5/systemd.unit.5.html)
+
+### WSL and the macOS differences
+
+*Working knowledge.* The same command can behave differently on Linux, on a Mac and on Windows, and the differences bite in scripts that pass on one laptop and fail on the next. On Windows, WSL runs a Linux environment without a separate virtual machine or dual booting, and it is fastest when your project lives in the Linux file system rather than under /mnt/c. On a Mac the classic trap is sed -i: GNU sed takes an optional backup suffix, while the sed in Apple's own sources takes -i extension, an option its manual calls a non-standard FreeBSD extension. Reach for this topic the first time a teammate says "works on my machine" about a shell script. And for an agent: never write sed -i without a suffix in a script meant for more than one system; sed -i.bak 's/a/b/' file, then rm file.bak, behaves the same with GNU sed and on a Mac.
+
+**History.** The Windows Subsystem for Linux was first announced at BUILD in 2016 and first shipped with the Windows 10 Anniversary Update; WSL 2, first announced in 2019, relies on the Linux kernel itself, and in May 2025 Microsoft open-sourced the code that powers WSL. Today WSL 2 is the default and "uses virtualization technology to run a Linux kernel inside of a lightweight utility virtual machine". For the fastest performance Microsoft says to store your files "in the WSL file system if you are working in a Linux command line"; a path under /mnt/c is the Windows C: drive mounted into Linux, and Windows is case-insensitive where Linux is case-sensitive. GNU sed documents -i[SUFFIX] as "edit files in place (makes backup if SUFFIX supplied)", so -i alone works there. The sed manual in Apple's text_cmds sources, written by Diomidis Spinellis of FreeBSD, gives -i extension instead, calls -i a non-standard FreeBSD extension, and warns that "It is not recommended to give a zero-length extension when in-place editing files", so a real suffix such as -i.bak is the one form both read the same way.
+
+**Try in five minutes.** printf 'colour\n' > word.txt, then sed -i.bak 's/colour/color/' word.txt && rm word.txt.bak, then cat word.txt. Put the same sed line in portable.sh. It prints color on a Mac, in a Codespace and in WSL alike.
+
+Docs: [Microsoft Learn, What is the Windows Subsystem for Linux?](https://learn.microsoft.com/en-us/windows/wsl/about) · [Microsoft Learn, Working across Windows and Linux file systems](https://learn.microsoft.com/en-us/windows/wsl/filesystems) · [GNU sed manual page (Debian)](https://manpages.debian.org/bookworm/sed/sed.1.en.html) · [Apple open source, text_cmds: the sed manual and its -i and -I options](https://github.com/apple-oss-distributions/text_cmds/blob/main/sed/sed.1) · [Source: Windows Developer Blog, The Windows Subsystem for Linux is now open source (May 2025)](https://blogs.windows.com/windowsdeveloper/2025/05/19/the-windows-subsystem-for-linux-is-now-open-source/)
 
 ### SSH and remote machines
 

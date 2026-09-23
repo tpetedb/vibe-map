@@ -1,0 +1,58 @@
+# WSL and the macOS differences. Written from the official docs, nothing from memory.
+id = "wslmac"
+title = "WSL and the macOS differences"
+age = "dark"
+shelf = "shell"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-23
+minutes = 15
+
+summary = '''The same command can behave differently on Linux, on a Mac and on Windows, and the differences bite in scripts that pass on one laptop and fail on the next. On Windows, WSL runs a Linux environment without a separate virtual machine or dual booting, and it is fastest when your project lives in the Linux file system rather than under /mnt/c. On a Mac the classic trap is sed -i: GNU sed takes an optional backup suffix, while the sed in Apple's own sources takes -i extension, an option its manual calls a non-standard FreeBSD extension. Reach for this topic the first time a teammate says "works on my machine" about a shell script.'''
+for_agents = '''And for an agent: never write sed -i without a suffix in a script meant for more than one system; sed -i.bak 's/a/b/' file, then rm file.bak, behaves the same with GNU sed and on a Mac.'''
+
+history = '''The Windows Subsystem for Linux was first announced at BUILD in 2016 and first shipped with the Windows 10 Anniversary Update; WSL 2, first announced in 2019, relies on the Linux kernel itself, and in May 2025 Microsoft open-sourced the code that powers WSL. Today WSL 2 is the default and "uses virtualization technology to run a Linux kernel inside of a lightweight utility virtual machine". For the fastest performance Microsoft says to store your files "in the WSL file system if you are working in a Linux command line"; a path under /mnt/c is the Windows C: drive mounted into Linux, and Windows is case-insensitive where Linux is case-sensitive. GNU sed documents -i[SUFFIX] as "edit files in place (makes backup if SUFFIX supplied)", so -i alone works there. The sed manual in Apple's text_cmds sources, written by Diomidis Spinellis of FreeBSD, gives -i extension instead, calls -i a non-standard FreeBSD extension, and warns that "It is not recommended to give a zero-length extension when in-place editing files", so a real suffix such as -i.bak is the one form both read the same way.'''
+
+try_it = '''printf 'colour\n' > word.txt, then sed -i.bak 's/colour/color/' word.txt && rm word.txt.bak, then cat word.txt. Put the same sed line in portable.sh. It prints color on a Mac, in a Codespace and in WSL alike.'''
+
+unlocks = []
+prerequisites = ["kernel", "texttools"]
+
+[[origins]]
+place = "microsoft-redmond"
+year = 2016
+what = "Microsoft first announces the Windows Subsystem for Linux at BUILD in 2016 and first ships it with the Windows 10 Anniversary Update."
+source = "https://blogs.windows.com/windowsdeveloper/2025/05/19/the-windows-subsystem-for-linux-is-now-open-source/"
+primary = true
+
+[[sources]]
+label = "Microsoft Learn, What is the Windows Subsystem for Linux?"
+url = "https://learn.microsoft.com/en-us/windows/wsl/about"
+checked = 2026-09-23
+
+[[sources]]
+label = "Microsoft Learn, Working across Windows and Linux file systems"
+url = "https://learn.microsoft.com/en-us/windows/wsl/filesystems"
+checked = 2026-09-23
+
+[[sources]]
+label = "GNU sed manual page (Debian)"
+url = "https://manpages.debian.org/bookworm/sed/sed.1.en.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "Apple open source, text_cmds: the sed manual and its -i and -I options"
+url = "https://github.com/apple-oss-distributions/text_cmds/blob/main/sed/sed.1"
+checked = 2026-09-23
+
+[[sources]]
+label = "Source: Windows Developer Blog, The Windows Subsystem for Linux is now open source (May 2025)"
+url = "https://blogs.windows.com/windowsdeveloper/2025/05/19/the-windows-subsystem-for-linux-is-now-open-source/"
+checked = 2026-09-23
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "One in-place edit that works on every laptop"
+minutes = 15
+done = "portable.sh edits with sed -i.bak, and word.txt says color, not colour"
+check = { kind = "files", files = { "portable.sh" = ["sed -i.bak"], "word.txt" = ["color"] }, absent = { "word.txt" = ["colour"], "portable.sh" = ["sed -i ''"] } }

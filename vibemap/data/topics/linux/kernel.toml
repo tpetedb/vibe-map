@@ -1,0 +1,63 @@
+# Linux, the kernel and the distributions. Written from the official docs, nothing from memory.
+id = "kernel"
+title = "Linux, the kernel and the distributions"
+age = "dark"
+shelf = "shell"
+depth = 1
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-23
+minutes = 15
+
+summary = '''Linux is a kernel, and a kernel, in Debian's words, is "the most fundamental program on the computer and does all the basic housekeeping and lets you start other programs." An operating system is more than that: "the set of basic programs and utilities that make your computer run", which is what a distribution such as Debian puts around the kernel. Reach for this topic the first time a server, a container or a Codespace asks you which Linux you are on, because the answer is written in /etc/os-release.'''
+for_agents = '''And for an agent: read /etc/os-release before choosing a package manager or a path. ID= is there "suitable for scripts", and ID_LIKE= names the distributions this one is related to.'''
+
+history = '''In August 1991 Linus Torvalds, then a 21-year-old computer science student at the University of Helsinki, wrote to the Usenet group comp.os.minix: "I'm doing a (free) operating system (just a hobby, won't be big and professional like gnu) for 386(486) AT clones." The kernel's own README still describes Linux as "a clone of the operating system Unix, written from scratch by Linus Torvalds with assistance from a loosely-knit team of hackers across the Net", distributed under the GNU General Public License v2. A distribution is the rest of the system around it: Debian "was begun in August 1993 by Ian Murdock, as a new distribution which would be made openly, in the spirit of Linux and GNU." New kernels arrive on a steady rhythm: a merge window of about two weeks, then an -rc release about once a week, up to somewhere between -rc6 and -rc9, then the final release. A distribution says who it is in /etc/os-release, with /usr/lib/os-release as the fallback, where ID= is a lowercase name such as debian or fedora and PRETTY_NAME= is the name to show a person.'''
+
+try_it = '''In a Codespace: cat /etc/os-release > os-release.txt. On a Mac with Docker: docker run --rm debian:stable-slim cat /etc/os-release > os-release.txt. Then read its ID= and PRETTY_NAME= lines.'''
+
+unlocks = ["permissions", "packages", "wslmac"]
+prerequisites = ["unix"]
+
+[[origins]]
+place = "university-of-helsinki"
+year = 1991
+what = "Linus Torvalds, a 21-year-old computer science student at the University of Helsinki, sends a message about his new operating system to the Usenet group comp.os.minix."
+source = "https://www.helsinki.fi/en/news/mathematics-and-science/how-did-30-year-old-linux-conquer-world"
+primary = true
+
+[[sources]]
+label = "The Linux kernel, Linux kernel release notes (What is Linux?)"
+url = "https://docs.kernel.org/admin-guide/README.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "The Linux kernel, How the development process works"
+url = "https://docs.kernel.org/process/2.Process.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "Debian, About Debian: operating system, kernel and distribution"
+url = "https://www.debian.org/intro/about"
+checked = 2026-09-23
+
+[[sources]]
+label = "os-release(5), the operating system identification file"
+url = "https://man7.org/linux/man-pages/man5/os-release.5.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "Source: University of Helsinki, How did the 30-year-old Linux conquer the world?"
+url = "https://www.helsinki.fi/en/news/mathematics-and-science/how-did-30-year-old-linux-conquer-world"
+checked = 2026-09-23
+
+[[sources]]
+label = "Source: Torvalds' 1991 Linux announcements (CMU archive)"
+url = "https://www.cs.cmu.edu/~awb/linux.history.html"
+checked = 2026-09-23
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Ask a Linux who it is"
+minutes = 15
+done = "os-release.txt holds a real /etc/os-release, with its ID= and PRETTY_NAME= lines"
+check = { kind = "files", files = { "os-release.txt" = ["ID=", "PRETTY_NAME="] } }

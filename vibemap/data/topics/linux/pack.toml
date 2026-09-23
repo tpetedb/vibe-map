@@ -1,0 +1,22 @@
+# The Linux and shell pack
+id = "linux"
+title = "The Linux and shell pack"
+blurb = """Eleven topics for the machine underneath everything else: what Linux and a distribution are, the filesystem and its permissions, processes and signals, the text tools, scripts that fail loudly, package managers, tmux, networking from the shell, systemd, cron and timers, and the differences between Linux, WSL and a Mac that break scripts. Every hands-on runs on a Mac or in a Codespace, with Docker as the route where a topic needs a real Linux, and no account or paid service."""
+shelf = "shell"
+order = 20
+maintainer = """Every topic is written from the project's own documentation, a standard or a manual page, opened on the day the topic records under checked, and every quotation is copied from that page. Every hands-on was run on a Mac before it landed, and its check was confirmed red on an empty folder and green on the result. SSH stays in the core pack, and so do Unix, bash, zsh and dotfiles: this pack links to them and never copies them. An origin sits at a place that already exists; a place this pack wishes for is a wish on the issue, never a new place file."""
+
+# Reading order, which is also the order of the roadmap and the notes.
+topics = [
+  "kernel",
+  "permissions",
+  "processes",
+  "texttools",
+  "scripting",
+  "packages",
+  "tmux",
+  "netshell",
+  "systemd",
+  "cron",
+  "wslmac",
+]

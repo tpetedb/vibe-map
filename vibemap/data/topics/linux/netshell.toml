@@ -1,0 +1,63 @@
+# Networking from the shell. Written from the official docs, nothing from memory.
+id = "netshell"
+title = "Networking from the shell"
+age = "castle"
+shelf = "shell"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-23
+minutes = 15
+
+summary = '''Most network questions have a one-line answer in the terminal: is something listening on this port, and what does it say when I ask. curl asks, and curl -I asks for the headers only; ss on Linux and lsof on a Mac or on Linux show which process holds which socket. Reach for this topic when a local server "does not work", before you open a browser: start it, ask it with curl, and look at the port it is really on.'''
+for_agents = '''And for an agent: prove a server is up with curl -sI against the exact address and port, and find what holds a port with lsof -nP -iTCP:PORT -sTCP:LISTEN (or ss -ltnp on Linux) instead of guessing.'''
+
+history = '''curl began as HttpGet, which Daniel Stenberg extended in 1996, became urlget in 1997, and was renamed once more when curl 4 was released on March 20, 1998. Its manual describes it as "a tool for transferring data from or to a server using URLs", and -I, --head fetches the headers only, using the HTTP HEAD command. ss "is used to dump socket statistics"; -l shows only listening sockets, -t TCP sockets, -n exact numbers instead of service names and -p the processes using them. lsof lists information about files opened by processes, a network socket among them, and -iTCP -sTCP:LISTEN lists only network files in the TCP LISTEN state. Python's http.server listens on port 8000 by default, --bind 127.0.0.1 keeps it to localhost, and its own documentation warns that it "is not recommended for production".'''
+
+try_it = '''python3 -m http.server 8765 --bind 127.0.0.1 in one terminal. In another: curl -sI http://127.0.0.1:8765/ > head.txt, then lsof -nP -iTCP:8765 -sTCP:LISTEN > port.txt (or ss -ltnp > port.txt on Linux). Stop the server with Ctrl-C.'''
+
+unlocks = ["systemd"]
+prerequisites = ["localhost", "http", "processes"]
+
+[[origins]]
+place = "the-internet"
+year = 1998
+what = "After HttpGet and urlget, curl 4 is released on March 20, 1998, the first release under the name curl."
+source = "https://curl.se/docs/history.html"
+primary = true
+
+[[sources]]
+label = "curl, the curl man page"
+url = "https://curl.se/docs/manpage.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "ss(8), another utility to investigate sockets"
+url = "https://man7.org/linux/man-pages/man8/ss.8.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "lsof(8), list open files"
+url = "https://man7.org/linux/man-pages/man8/lsof.8.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "lsof-org, lsof on GitHub: the dialects it maintains, Linux and Darwin among them"
+url = "https://github.com/lsof-org/lsof"
+checked = 2026-09-23
+
+[[sources]]
+label = "Python, http.server and its command-line interface"
+url = "https://docs.python.org/3/library/http.server.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "Source: curl, History of curl"
+url = "https://curl.se/docs/history.html"
+checked = 2026-09-23
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Start a server, ask it, find its port"
+minutes = 15
+done = "head.txt holds a 200 OK from Python's server, and port.txt shows what listens on 8765"
+check = { kind = "files", files = { "head.txt" = ["200 OK", "SimpleHTTP"], "port.txt" = ["8765"] } }

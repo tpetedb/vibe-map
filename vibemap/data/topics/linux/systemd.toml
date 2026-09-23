@@ -1,0 +1,58 @@
+# systemd, services and the journal. Written from the official docs, nothing from memory.
+id = "systemd"
+title = "systemd, services and the journal"
+age = "castle"
+shelf = "shell"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-23
+minutes = 20
+
+summary = '''On a Linux machine that runs systemd, a long-running program is a service, and systemd is what starts it and supervises it. You describe the service once in a small unit file, an ini-style text file with a [Unit], a [Service] and an [Install] section, and journalctl reads what it printed. Reach for this topic when a web app, a bot or a worker on a server has to keep running after you log out.'''
+for_agents = '''And for an agent: write the unit file, check it with systemd-analyze verify before anyone enables it, and read failures with journalctl -u NAME rather than guessing.'''
+
+history = '''In April 2010 Lennart Poettering announced systemd in the blog post Rethinking PID 1, as "a (still experimental) init system" that "starts up and supervises the entire system" and "is based around the notion of units." A unit file is "a plain text ini-style file" that describes a service, a socket, a timer, a mount point and more, and a file whose name ends in .service "encodes information about a process controlled and supervised by systemd." ExecStart= gives the commands run when the service starts, and with no Type= set, Type=simple is assumed. In the [Install] section, WantedBy=multi-user.target is what systemctl enable reads: it creates a symlink in /etc/systemd/system/multi-user.target.wants/ that tells systemd to pull the unit in when starting multi-user.target. journalctl prints "the log entries stored in the journal", and journalctl -u shows the messages of one unit.'''
+
+try_it = '''Write hello.service with [Unit] Description=Hello, [Service] ExecStart=/usr/bin/env echo hello, and [Install] WantedBy=multi-user.target. On a Linux machine with systemd, systemd-analyze verify ./hello.service loads the file and prints warnings if it finds errors.'''
+
+unlocks = ["cron"]
+prerequisites = ["processes", "scripting"]
+
+[[origins]]
+place = "the-internet"
+year = 2010
+what = "Lennart Poettering announces systemd, a still experimental init system, in his blog post Rethinking PID 1."
+source = "https://0pointer.de/blog/projects/systemd.html"
+primary = true
+
+[[sources]]
+label = "systemd.unit(5), unit configuration"
+url = "https://man7.org/linux/man-pages/man5/systemd.unit.5.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "systemd.service(5), service unit configuration"
+url = "https://man7.org/linux/man-pages/man5/systemd.service.5.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "journalctl(1), print log entries from the systemd journal"
+url = "https://man7.org/linux/man-pages/man1/journalctl.1.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "systemd-analyze(1), analyze and debug the system manager"
+url = "https://man7.org/linux/man-pages/man1/systemd-analyze.1.html"
+checked = 2026-09-23
+
+[[sources]]
+label = "Source: Lennart Poettering, Rethinking PID 1 (April 2010)"
+url = "https://0pointer.de/blog/projects/systemd.html"
+checked = 2026-09-23
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A service described in one small file"
+minutes = 20
+done = "hello.service has a [Unit] with a Description, a [Service] with an ExecStart and an [Install] wanted by multi-user.target"
+check = { kind = "files", files = { "hello.service" = ["[Unit]", "Description=", "[Service]", "ExecStart=", "[Install]", "WantedBy=multi-user.target"] } }
