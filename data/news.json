@@ -1,538 +1,537 @@
 {
  "version": 2,
- "fetched_at": "2026-09-18T13:54:29Z",
+ "fetched_at": "2026-09-23T10:59:53Z",
  "items": [
   {
-   "id": "b701a7e31470",
-   "source": "lwn-headlines",
-   "name": "LWN.net",
-   "kind": "post",
-   "title": "Systemtap 5.6 released",
-   "link": "https://lwn.net/Articles/1095220/",
-   "date": "2026-09-18T12:58:42Z",
-   "summary": "Version 5.6 of the Systemtap tracing tool has been released. BPF LSM hooks and XDP packet-processing probes for the --bpf runtime, BTF-based kernel.tracepoint probes, statement execution tracing, a new @enumname()...",
-   "tags": [
-    "shell",
-    "ship"
-   ]
-  },
-  {
-   "id": "ea29658a0050",
-   "source": "lwn-headlines",
-   "name": "LWN.net",
-   "kind": "post",
-   "title": "Security updates for Friday",
-   "link": "https://lwn.net/Articles/1095219/",
-   "date": "2026-09-18T12:52:10Z",
-   "summary": "Security updates have been issued by AlmaLinux (.NET 10.0, coreutils, kernel, libevent, libsoup3, microcode_ctl, perl-Net-DNS, postgresql18, postgresql:16, postgresql:18, tomcat, and unbound), Debian (bind9, chromium...",
-   "tags": [
-    "shell",
-    "ship"
-   ]
-  },
-  {
-   "id": "5b59161f0e8e",
+   "id": "f70d224c635d",
    "source": "codex-releases",
    "name": "Codex releases",
    "kind": "release",
-   "title": "0.156.0-alpha.2",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.156.0-alpha.2",
-   "date": "2026-09-18T05:04:39Z",
-   "summary": "Release 0.156.0-alpha.2",
+   "title": "rust-v0.158.0-alpha.1",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.158.0-alpha.1",
+   "date": "2026-09-23T10:48:51Z",
+   "summary": "Release 0.158.0-alpha.1",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "b92c247dcc1a",
+   "id": "32e25ad98b59",
+   "source": "codex-releases",
+   "name": "Codex releases",
+   "kind": "release",
+   "title": "0.157.0-alpha.11",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.157.0-alpha.11",
+   "date": "2026-09-23T04:59:12Z",
+   "summary": "Release 0.157.0-alpha.11",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "53b8ae510925",
    "source": "arxiv-cs-ai",
    "name": "arXiv cs.AI",
    "kind": "post",
-   "title": "Regularized Emphatic Temporal-Difference Learning: Stability under Constant Stepsizes",
-   "link": "https://arxiv.org/abs/2609.19170",
-   "date": "2026-09-18T04:00:00Z",
-   "summary": "arXiv:2609.19170v1 Announce Type: new Abstract: Emphatic temporal-difference learning (ETD) stabilizes the expected off-policy TD update and changes its projection geometry, but neither property determines...",
+   "title": "Do Synthetic Personas Predict Real Audience Response? A Sim-to-Real Study Where a No-Persona Baseline Beats Persona-Based Copy Simulation",
+   "link": "https://arxiv.org/abs/2609.25010",
+   "date": "2026-09-23T04:00:00Z",
+   "summary": "arXiv:2609.25010v1 Announce Type: new Abstract: Marketers increasingly use large language models (LLMs) as \"synthetic personas\" to predict how an audience will react to a piece of copy before it ships, encouraged by...",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "7b3bd791b71a",
+   "id": "9ade661cec5e",
    "source": "arxiv-cs-ai",
    "name": "arXiv cs.AI",
    "kind": "post",
-   "title": "BioPhys-Bridge: A Benchmark for Interdisciplinary Scientific Reasoning in Physics-Grounded Biological Research",
-   "link": "https://arxiv.org/abs/2609.19180",
-   "date": "2026-09-18T04:00:00Z",
-   "summary": "arXiv:2609.19180v1 Announce Type: new Abstract: Language models face unique challenges in analyzing interdisciplinary scientific research literature. In biophysics research, faithful answers require grounding observed...",
+   "title": "Do Existing Preconditioners Improve Biomedical Tabular Foundation Learning? An Empirical Study on TabPFN Optimization",
+   "link": "https://arxiv.org/abs/2609.25013",
+   "date": "2026-09-23T04:00:00Z",
+   "summary": "arXiv:2609.25013v1 Announce Type: new Abstract: Tabular foundation models have recently shown strong potential for structured biomedical data analysis. Among them, TabPFN has emerged as an effective approach for...",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "8c88d48a4f44",
+   "id": "b9bacbebab7c",
    "source": "arxiv-cs-ai",
    "name": "arXiv cs.AI",
    "kind": "post",
-   "title": "What Do We Expect from LLMs? Mapping the Design of LLM Benchmarks",
-   "link": "https://arxiv.org/abs/2609.19182",
-   "date": "2026-09-18T04:00:00Z",
-   "summary": "arXiv:2609.19182v1 Announce Type: new Abstract: Benchmarks are central to how progress in large language models (LLMs) is assessed and communicated. Yet model rankings alone reveal little about how evaluation...",
+   "title": "4DGS-JEPA: Temporally Compositional Joint-Embedding Prediction for Dynamic Gaussian Splatting",
+   "link": "https://arxiv.org/abs/2609.25036",
+   "date": "2026-09-23T04:00:00Z",
+   "summary": "arXiv:2609.25036v1 Announce Type: new Abstract: Dynamic Gaussian Splatting provides an explicit representation of evolving 3D scenes, but existing approaches are primarily optimized for reconstruction, future-state...",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "9985050c9044",
+   "id": "74d69991e641",
    "source": "codex-releases",
    "name": "Codex releases",
    "kind": "release",
-   "title": "0.155.0-alpha.9.2",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.9.2",
-   "date": "2026-09-18T03:13:47Z",
-   "summary": "Release 0.155.0-alpha.9.2",
+   "title": "0.155.0-alpha.16.3",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.16.3",
+   "date": "2026-09-23T03:45:11Z",
+   "summary": "Release 0.155.0-alpha.16.3",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "c18e91983c94",
+   "id": "75e3d066fe17",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "SF October 14th: A Birds of a Feather Session on Agentic Engineering",
+   "link": "https://simonwillison.net/2026/Sep/23/bof-agentic-engineering/",
+   "date": "2026-09-23T02:53:19Z",
+   "summary": "SF October 14th: A Birds of a Feather Session on Agentic Engineering I'm hosting an evening event with Jesse Vincent in San Francisco on Wednesday 14th October for people who are building weird and interesting things...",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "1c9cdfdf26c5",
+   "source": "codex-releases",
+   "name": "Codex releases",
+   "kind": "release",
+   "title": "0.156.1",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.156.1",
+   "date": "2026-09-23T02:43:57Z",
+   "summary": "New Features Choose GPT-6 Sol or GPT-6 Luna from the model picker. The rate-limit switch prompt now recommends GPT-6 Luna. ( #47405 ) Changelog Full Changelog: rust-v0.156.0...rust-v0.156.1 #47405 [hotfix 0.156.0] Add...",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "0ad4c8ab9866",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "OpenTelemetry in the GitHub Copilot app",
+   "link": "https://github.blog/changelog/2026-09-22-opentelemetry-in-the-github-copilot-app",
+   "date": "2026-09-23T02:14:54Z",
+   "summary": "Understand how Copilot agents perform and interact with models and tools. The GitHub Copilot app now supports OpenTelemetry (OTel) configuration through enterprise-managed settings. OTel is an open source observability...",
+   "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "907491f6b86b",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "New features and improvements in Copilot for JetBrains",
+   "link": "https://github.blog/changelog/2026-09-22-new-features-and-improvements-in-copilot-for-jetbrains",
+   "date": "2026-09-23T00:34:18Z",
+   "summary": "GitHub Copilot for JetBrains 1.18.0 brings AI-assisted tool approvals, more control over agent conversations, and shared skills and instructions for your organization. You can also review plans with the Codex… The post...",
+   "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "f526d7679022",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "Claude Opus 5.5, GPT-6 Sol, GPT-6 Luna, and a new price war",
+   "link": "https://simonwillison.net/2026/Sep/22/opus-and-sol-and-luna/",
+   "date": "2026-09-22T23:46:41Z",
+   "summary": "Yesterday was Grok 4.7 ( pelicans ) and MiMo v2.6 Flash/Pro ( more pelicans ). Today Anthropic released Claude Opus 5.5 , and around an hour later OpenAI released GPT-6 Sol and GPT-6 Luna . It's going to take a while to...",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "f4e57e9fb2a7",
    "source": "uv-releases",
    "name": "uv releases",
    "kind": "release",
-   "title": "0.12.15",
-   "link": "https://github.com/astral-sh/uv/releases/tag/0.12.15",
-   "date": "2026-09-18T02:36:52Z",
-   "summary": "Release Notes Released on 2026-09-15. Performance Speed up cold-cache resolution and HTTP cache revalidation by batching cache writes ( #21675 ) Bug fixes Fix regressions in 0.12.14 when installing to symlinked...",
+   "title": "0.12.18",
+   "link": "https://github.com/astral-sh/uv/releases/tag/0.12.18",
+   "date": "2026-09-22T23:00:51Z",
+   "summary": "Release Notes Released on 2026-09-22. Enhancements Add --output-format json to uv pip install and uv pip sync , including for --dry-run and --check ( #21893 ) Add --check to uv pip install and uv pip sync to report...",
    "tags": [
     "code"
    ]
   },
   {
-   "id": "4399ac2176df",
-   "source": "uv-releases",
-   "name": "uv releases",
-   "kind": "release",
-   "title": "0.12.14",
-   "link": "https://github.com/astral-sh/uv/releases/tag/0.12.14",
-   "date": "2026-09-18T02:36:49Z",
-   "summary": "Release Notes Released on 2026-09-15. Enhancements Resume interrupted downloads with HTTP Range requests when supported ( #21570 ) Use a consistent format for error rendering ( #17110 ) Render error and warning causes...",
+   "id": "39381ffc41aa",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "Faster C++ code intelligence with whole codebase indexing",
+   "link": "https://github.blog/changelog/2026-09-22-faster-c-code-intelligence-with-whole-codebase-indexing",
+   "date": "2026-09-22T22:24:48Z",
+   "summary": "C++ code intelligence in GitHub Copilot CLI is now faster with support for whole codebase indexing. C++ repositories can contain millions of lines of code across deeply connected source files… The post Faster C++ code...",
    "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "cc2abbd74590",
+   "source": "codex-releases",
+   "name": "Codex releases",
+   "kind": "release",
+   "title": "0.157.0-alpha.10",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.157.0-alpha.10",
+   "date": "2026-09-22T22:16:12Z",
+   "summary": "Release 0.157.0-alpha.10",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "b6b1e4118cdb",
+   "source": "openai-news",
+   "name": "OpenAI news",
+   "kind": "post",
+   "title": "Better prompt caching for GPT-6",
+   "link": "https://openai.com/index/better-prompt-caching-for-gpt-6",
+   "date": "2026-09-22T21:00:00Z",
+   "summary": "Learn how GPT-6 improves prompt caching with higher cache hit rates, new diagnostics, explicit breakpoints, and controls that reduce latency and costs.",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "0ec1b9d73021",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "llm 0.36",
+   "link": "https://simonwillison.net/2026/Sep/22/llm/",
+   "date": "2026-09-22T18:48:37Z",
+   "summary": "Release: llm 0.36 New OpenAI models: gpt-6-sol for GPT-6 Sol and gpt-6-luna for GPT-6 Luna . #1702 Model plugins can now declare supports_conversation = False for models that only accept single-turn prompts. LLM raises...",
+   "tags": [
+    "agents",
     "code"
    ]
   },
   {
-   "id": "3575631df8c6",
+   "id": "87e5872999fc",
+   "source": "codex-releases",
+   "name": "Codex releases",
+   "kind": "release",
+   "title": "0.157.0-alpha.9",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.157.0-alpha.9",
+   "date": "2026-09-22T18:13:13Z",
+   "summary": "Release 0.157.0-alpha.9",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "df9ee5d27afc",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "Quoting @therealcornpop",
+   "link": "https://simonwillison.net/2026/Sep/22/therealcornpop/",
+   "date": "2026-09-22T18:03:21Z",
+   "summary": "Hey, you know it's like super obvious if you're using AI to write your scripts for TikTok and YouTube, right? [...] It's not just the general AI-isms of \"it's not X, it's Y\", or the rule of three, or the really weird...",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "3d48e529ad7a",
+   "source": "openai-news",
+   "name": "OpenAI news",
+   "kind": "post",
+   "title": "Introducing GPT-6 Sol and Luna",
+   "link": "https://openai.com/index/introducing-gpt-6-sol-and-luna",
+   "date": "2026-09-22T18:00:00Z",
+   "summary": "Meet GPT-6 Sol and Luna, two models that bring frontier intelligence to everyday work with different balances of capability and cost.",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "263fa952490e",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "llm-anthropic 0.29",
+   "link": "https://simonwillison.net/2026/Sep/22/llm-anthropic/",
+   "date": "2026-09-22T17:14:55Z",
+   "summary": "Release: llm-anthropic 0.29 Adds support for Claude Opus 5.5 : llm -m claude-opus-5.5 \"prompt goes here\" Tags: llm , anthropic",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "da8711b734f6",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "Claude Opus 5.5 is now available in GitHub Copilot",
+   "link": "https://github.blog/changelog/2026-09-22-claude-opus-5-5-is-now-available-in-github-copilot",
+   "date": "2026-09-22T17:10:23Z",
+   "summary": "Claude Opus 5.5, Anthropic’s newest Opus model, is now available in GitHub Copilot. You can use it for agentic coding, long-running agentic tasks, and knowledge work. In early testing, Opus… The post Claude Opus 5.5 is...",
+   "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "9b1fa73218f4",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "OpenAI’s GPT-6 Sol and GPT-6 Luna now available",
+   "link": "https://github.blog/changelog/2026-09-22-openais-gpt-6-sol-and-gpt-6-luna-now-available",
+   "date": "2026-09-22T17:00:14Z",
+   "summary": "OpenAI’s GPT-6 family is expanding in GitHub Copilot with two additional models: GPT-6 Sol, and GPT-6 Luna. Joining the previously released GPT-6 Astra, these new options let you select the… The post OpenAI’s GPT-6 Sol...",
+   "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "11e6cde07112",
    "source": "claude-code-releases",
    "name": "Claude Code releases",
    "kind": "release",
-   "title": "v2.1.276",
-   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.276",
-   "date": "2026-09-18T02:12:26Z",
-   "summary": "What's changed Fixed every request failing with 400 … Input tag 'advisor_20260301' when ANTHROPIC_BASE_URL points at a proxy or gateway (2.1.275 regression)",
+   "title": "v2.1.280",
+   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.280",
+   "date": "2026-09-22T16:38:14Z",
+   "summary": "What's changed Added Claude Opus 5.5 ( claude-opus-5-5 ), now the default Opus model — 1M context, $4/$20 per Mtok with $0.20/Mtok cache reads Added mouse support to more lists in fullscreen mode: the wheel scrolls the...",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "1e1d16021cc5",
-   "source": "uv-releases",
-   "name": "uv releases",
-   "kind": "release",
-   "title": "0.12.16",
-   "link": "https://github.com/astral-sh/uv/releases/tag/0.12.16",
-   "date": "2026-09-18T01:01:42Z",
-   "summary": "Release Notes Released on 2026-09-17. Python Add Pyodide 314.0.7, 0.29.5, and 0.27.8 ( #21741 ) Enhancements Verify downloaded wheels and source distributions against hashes supplied by package indexes ( #21562 ) Allow...",
-   "tags": [
-    "code"
-   ]
-  },
-  {
-   "id": "02a18c36914d",
-   "source": "codex-releases",
-   "name": "Codex releases",
-   "kind": "release",
-   "title": "0.156.0-alpha.1",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.156.0-alpha.1",
-   "date": "2026-09-18T00:31:15Z",
-   "summary": "Release 0.156.0-alpha.1",
-   "tags": [
-    "agents"
-   ]
-  },
-  {
-   "id": "acc67ef32e42",
+   "id": "7528f5f11fc6",
    "source": "simon-willison",
    "name": "Simon Willison",
    "kind": "post",
-   "title": "Be alert: targeted attacks on prominent Rustaceans",
-   "link": "https://simonwillison.net/2026/Sep/17/targeted-attacks-on-rustaceans/",
-   "date": "2026-09-17T23:59:19Z",
-   "summary": "Be alert: targeted attacks on prominent Rustaceans Important warning from Adam Harvey and the crates security team: We believe that there is an ongoing campaign targeting rust-lang members and owners of popular crates...",
+   "title": "llm-typesafe 0.1a0",
+   "link": "https://simonwillison.net/2026/Sep/22/llm-typesafe/",
+   "date": "2026-09-22T15:54:16Z",
+   "summary": "Release: llm-typesafe 0.1a0 I built this new plugin for LLM to add support for TypeSafe AI's new Jev model . Install it like this: llm install llm-typesafe Then set an API key ( get one here , the waitlist seems to move...",
    "tags": [
     "agents",
     "code"
    ]
   },
   {
-   "id": "e4addcf48f06",
-   "source": "simon-willison",
-   "name": "Simon Willison",
-   "kind": "post",
-   "title": "How To Write With An LLM",
-   "link": "https://simonwillison.net/2026/Sep/17/how-to-write-with-an-llm/",
-   "date": "2026-09-17T23:37:27Z",
-   "summary": "How To Write With An LLM Thomas Ptacek on using LLMs as copyeditors, not as writing assistants: Rule Number One: You may not use a single word an LLM suggests to you. [...] I think that as a form of intellectual...",
-   "tags": [
-    "agents",
-    "code"
-   ]
-  },
-  {
-   "id": "271950b5c74d",
-   "source": "codex-releases",
-   "name": "Codex releases",
-   "kind": "release",
-   "title": "0.155.0",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0",
-   "date": "2026-09-17T23:16:01Z",
-   "summary": "New Features Added experimental /voice conversations with live transcripts and microphone controls on supported builds, enabled through /experimental . ( #43581 , #43651 , #44331 ) The TUI now shows live reasoning...",
-   "tags": [
-    "agents"
-   ]
-  },
-  {
-   "id": "0440cb315cc4",
-   "source": "codex-releases",
-   "name": "Codex releases",
-   "kind": "release",
-   "title": "0.155.0-alpha.18",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.18",
-   "date": "2026-09-17T22:49:12Z",
-   "summary": "Release 0.155.0-alpha.18",
-   "tags": [
-    "agents"
-   ]
-  },
-  {
-   "id": "965bd319e890",
-   "source": "claude-code-releases",
-   "name": "Claude Code releases",
-   "kind": "release",
-   "title": "v2.1.275",
-   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.275",
-   "date": "2026-09-17T22:33:17Z",
-   "summary": "What's changed Added the signed-in account to Claude apps gateway sign-in: when the gateway names it, you confirm it before the credential is saved, and /status shows it Added a send-now key (ctrl+enter, or ctrl+x...",
-   "tags": [
-    "agents"
-   ]
-  },
-  {
-   "id": "cfbfb7473f2f",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Copilot impact dashboard now shows feature engagement",
-   "link": "https://github.blog/changelog/2026-09-17-copilot-impact-dashboard-now-shows-feature-engagement",
-   "date": "2026-09-17T21:47:27Z",
-   "summary": "The Copilot impact dashboard now shows how many active users regularly use key Copilot features. Enterprise administrators can quickly see which experiences are widely adopted and which may need more&#8230; The post...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "579b9dbabecc",
-   "source": "codex-releases",
-   "name": "Codex releases",
-   "kind": "release",
-   "title": "0.155.0-alpha.17",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.17",
-   "date": "2026-09-17T21:19:20Z",
-   "summary": "Release 0.155.0-alpha.17",
-   "tags": [
-    "agents"
-   ]
-  },
-  {
-   "id": "7fbb1d664de3",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Agentic CLI customizations now in the usage metrics API",
-   "link": "https://github.blog/changelog/2026-09-17-agentic-cli-customizations-now-in-the-usage-metrics-api",
-   "date": "2026-09-17T21:08:50Z",
-   "summary": "GitHub Copilot expands existing CLI report coverage with agentic activity metrics for skills, custom agents, Model Context Protocol (MCP) servers, slash commands, and plugins. What&#8217;s new The fields appear...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "2f269a03d10a",
-   "source": "simon-willison",
-   "name": "Simon Willison",
-   "kind": "post",
-   "title": "Self-generated prompt injections in compaction summaries",
-   "link": "https://simonwillison.net/2026/Sep/17/compaction-summaries/",
-   "date": "2026-09-17T20:57:55Z",
-   "summary": "Self-generated prompt injections in compaction summaries In Our framework for reporting model misalignment OpenAI provide \"six reports on unexpected or concerning model behavior we’ve observed in the last six months\"...",
-   "tags": [
-    "agents",
-    "code"
-   ]
-  },
-  {
-   "id": "a4ef61465bc2",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Ubuntu 26 generally available and latest migration",
-   "link": "https://github.blog/changelog/2026-09-17-ubuntu-26-generally-available-and-latest-migration",
-   "date": "2026-09-17T16:27:16Z",
-   "summary": "The Ubuntu 26.04 runner image for GitHub Actions is now out of public preview and fully supported for production workflows on both x64 and arm64. As part of this release,&#8230; The post Ubuntu 26 generally available...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "ba788d57500e",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Workflow execution protections in GitHub Actions generally available",
-   "link": "https://github.blog/changelog/2026-09-17-workflow-execution-protections-in-github-actions-generally-available",
-   "date": "2026-09-17T15:45:26Z",
-   "summary": "Workflow execution protections for GitHub Actions, previously in public preview, are now generally available for GitHub Enterprise, organizations, and repositories. Execution protections let you define an allowlist that...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "19b83421b880",
+   "id": "ad6c3b171abd",
    "source": "lwn-headlines",
    "name": "LWN.net",
    "kind": "post",
-   "title": "[$] Thread-identity switcheroo for io_uring",
-   "link": "https://lwn.net/Articles/1094303/",
-   "date": "2026-09-17T13:49:59Z",
-   "summary": "The io_uring subsystem is all about asynchronous execution; applications count on it to not block — unless explicitly requested to. Within io_uring, maintaining the \"never blocks\" guarantee has sometimes been a...",
+   "title": "[$] Compiling the kernel with gccrs",
+   "link": "https://lwn.net/Articles/1095553/",
+   "date": "2026-09-22T15:27:35Z",
+   "summary": "Pierre-Emmanuel Patry and Arthur Cohen gave a talk at RustConf 2026 on the status of the Rust frontend for GCC (gccrs), with a particular eye toward the goal of compiling the Linux kernel . Patry gave a follow-up talk...",
    "tags": [
     "shell",
     "ship"
    ]
   },
   {
-   "id": "e4318642f76e",
+   "id": "833ee919c320",
    "source": "lwn-headlines",
    "name": "LWN.net",
    "kind": "post",
-   "title": "GNOME 51 released",
-   "link": "https://lwn.net/Articles/1094963/",
-   "date": "2026-09-17T13:08:12Z",
-   "summary": "Version 51 of the GNOME desktop environment has been released. The list of changes includes a number of performance improvements, offline data and better transit information in the Maps application, a new interface for...",
+   "title": "Security updates for Tuesday",
+   "link": "https://lwn.net/Articles/1096022/",
+   "date": "2026-09-22T15:10:11Z",
+   "summary": "Security updates have been issued by AlmaLinux (apr-util, corosync, curl, freerdp, gstreamer1-plugins-base, libarchive, libtiff, libxml2, openexr, openssh, rsyslog, sudo, tomcat, unbound, webkit2gtk3, yggdrasil, and...",
    "tags": [
     "shell",
     "ship"
    ]
   },
   {
-   "id": "964ae1dd0fac",
-   "source": "openai-news",
-   "name": "OpenAI news",
+   "id": "36a788f3372d",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
    "kind": "post",
-   "title": "How Cooley is accelerating IPO work with ChatGPT",
-   "link": "https://openai.com/index/cooley-gopublic",
-   "date": "2026-09-17T12:00:00Z",
-   "summary": "Cooley built GO Public with ChatGPT Work to bring intelligence to the IPO process, helping lawyers surface issues earlier and focus judgment where it matters most.",
+   "title": "Security improvements for SSH",
+   "link": "https://github.blog/changelog/2026-09-22-security-improvements-for-ssh",
+   "date": "2026-09-22T14:11:47Z",
+   "summary": "We’re removing several SSH algorithms, adding a new algorithm, and requiring larger RSA SSH keys to improve security. The changes are as follows: We’re removing the ability to use RSA… The post Security improvements for...",
    "tags": [
-    "agents"
+    "git"
    ]
   },
   {
-   "id": "b5d61e5223e4",
+   "id": "e6da94979e4f",
    "source": "codex-releases",
    "name": "Codex releases",
    "kind": "release",
-   "title": "0.155.0-alpha.16",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.16",
-   "date": "2026-09-17T04:37:58Z",
-   "summary": "Release 0.155.0-alpha.16",
+   "title": "0.157.0-alpha.8",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.157.0-alpha.8",
+   "date": "2026-09-22T12:45:10Z",
+   "summary": "Release 0.157.0-alpha.8",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "e20a0649a986",
+   "id": "ce45d8dc0f6c",
+   "source": "openai-news",
+   "name": "OpenAI news",
+   "kind": "post",
+   "title": "Parallel cut research time and cost in half with GPT‑6 Astra",
+   "link": "https://openai.com/index/parallel-cuts-time-and-cost-with-astra",
+   "date": "2026-09-22T12:00:00Z",
+   "summary": "GPT‑6 Astra allowed Parallel’s agents to research and synthesize labor-market data in half the time and at half the cost vs. prior models.",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "578c4003252d",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "Deprecation notice: All-platform CodeQL bundle",
+   "link": "https://github.blog/changelog/2026-09-22-deprecation-notice-all-platform-codeql-bundle",
+   "date": "2026-09-22T09:21:03Z",
+   "summary": "Starting with CodeQL CLI 2.27.0, the all-platform CodeQL bundle (i.e., codeql-bundle.tar.gz and codeql-bundle.tar.zst), which includes the binaries for all supported platforms up to this release, is marked as...",
+   "tags": [
+    "git"
+   ]
+  },
+  {
+   "id": "e9633e1052b9",
    "source": "codex-releases",
    "name": "Codex releases",
    "kind": "release",
-   "title": "0.155.0-alpha.15",
-   "link": "https://github.com/openai/codex/releases/tag/rust-v0.155.0-alpha.15",
-   "date": "2026-09-17T01:24:19Z",
-   "summary": "Release 0.155.0-alpha.15",
+   "title": "0.157.0-alpha.7",
+   "link": "https://github.com/openai/codex/releases/tag/rust-v0.157.0-alpha.7",
+   "date": "2026-09-22T07:08:59Z",
+   "summary": "Release 0.157.0-alpha.7",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "16ab809693ef",
-   "source": "claude-code-releases",
-   "name": "Claude Code releases",
-   "kind": "release",
-   "title": "v2.1.274",
-   "link": "https://github.com/anthropics/claude-code/releases/tag/v2.1.274",
-   "date": "2026-09-17T00:12:02Z",
-   "summary": "What's changed Added a visible warning when memory usage is critical, with steps to free memory or restart safely Added CLAUDE_CODE_MCP_STARTUP_WAIT_MS to bound how long the first non-interactive turn waits for...",
+   "id": "f34404644702",
+   "source": "github-changelog",
+   "name": "GitHub Changelog",
+   "kind": "post",
+   "title": "Refreshed repository pull requests page generally available",
+   "link": "https://github.blog/changelog/2026-09-21-refreshed-repository-pull-requests-page-generally-available",
+   "date": "2026-09-22T01:25:53Z",
+   "summary": "The new repository pull requests page is now generally available to all GitHub users. Highlights The new page makes it easier to find and act on pull requests in a… The post Refreshed repository pull requests page...",
    "tags": [
-    "agents"
+    "git"
    ]
   },
   {
-   "id": "363bbead77de",
+   "id": "b4fb82cc1313",
    "source": "openai-news",
    "name": "OpenAI news",
    "kind": "post",
-   "title": "Introducing Astra for Law",
-   "link": "https://openai.com/index/astra-for-law",
-   "date": "2026-09-17T00:00:00Z",
-   "summary": "OpenAI for Law brings frontier intelligence for law, custom firm workflows, connected legal data sources, and legal-grade controls for confidential client work.",
+   "title": "Priorities and principles for effective third party assessments",
+   "link": "https://openai.com/index/priorities-principles-third-party-assessments",
+   "date": "2026-09-22T00:00:00Z",
+   "summary": "OpenAI outlines priorities and principles for rigorous, secure, and independent third-party AI safety assessments of frontier models and safeguards.",
    "tags": [
     "agents"
    ]
   },
   {
-   "id": "738877fde756",
-   "source": "simon-willison",
-   "name": "Simon Willison",
+   "id": "2960c64a019e",
+   "source": "huggingface-blog",
+   "name": "Hugging Face blog",
    "kind": "post",
-   "title": "datasette 1.0a40",
-   "link": "https://simonwillison.net/2026/Sep/16/datasette/",
-   "date": "2026-09-16T23:51:43Z",
-   "summary": "Release: datasette 1.0a40 Same security fix as 0.65.5 , plus some neat new features and bug fixes: Plugins can now launch and manage background tasks using the new datasette.add_background_task() method. Thanks, Alex...",
-   "tags": [
-    "agents",
-    "code"
-   ]
-  },
-  {
-   "id": "2105625f58a4",
-   "source": "simon-willison",
-   "name": "Simon Willison",
-   "kind": "post",
-   "title": "datasette 0.65.5",
-   "link": "https://simonwillison.net/2026/Sep/16/datasette-2/",
-   "date": "2026-09-16T23:51:08Z",
-   "summary": "Release: datasette 0.65.5 Security fix for an issue where a trailing newline in a requested table name could bypass table permissions and expose private rows, reported by dpfkdlemtp in GHSA-h547-rmjf-5m2m . Tags...",
-   "tags": [
-    "agents",
-    "code"
-   ]
-  },
-  {
-   "id": "70ff7b63d5f5",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Automate SSO authorization for classic PATs and SSH keys",
-   "link": "https://github.blog/changelog/2026-09-16-automate-sso-authorization-for-classic-pats-and-ssh-keys",
-   "date": "2026-09-16T20:20:16Z",
-   "summary": "Enterprise admins can now automate SSO authorization for existing classic personal access tokens (PATs) and SSH keys for organizations in GitHub Enterprise Cloud, replacing manual per-organization authorization by your...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "4df4917d3964",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "SCIM user responses now include a profileUrl attribute",
-   "link": "https://github.blog/changelog/2026-09-16-scim-user-responses-now-include-a-profileurl-attribute",
-   "date": "2026-09-16T20:19:58Z",
-   "summary": "SCIM user responses from GitHub now include the standard profileUrl attribute defined by RFC 7643, containing the absolute URL of the GitHub account linked to the external identity. Previously, matching&#8230; The post...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "aaa1a76c6763",
-   "source": "github-changelog",
-   "name": "GitHub Changelog",
-   "kind": "post",
-   "title": "Copilot budget increase requests are generally available",
-   "link": "https://github.blog/changelog/2026-09-16-copilot-budget-increase-requests-are-generally-available",
-   "date": "2026-09-16T20:17:18Z",
-   "summary": "Previously, when a member used all the Copilot AI credits available to them, they were blocked from Copilot features that consume credits. This release adds a flow for them to&#8230; The post Copilot budget increase...",
-   "tags": [
-    "git"
-   ]
-  },
-  {
-   "id": "d86c6da463d5",
-   "source": "simon-willison",
-   "name": "Simon Willison",
-   "kind": "post",
-   "title": "Claude Cowork and chat are now one Claude",
-   "link": "https://simonwillison.net/2026/Sep/16/one-claude/",
-   "date": "2026-09-16T18:09:49Z",
-   "summary": "Claude Cowork and chat are now one Claude In hopefully good news for anyone who, like me, was increasingly confused at Cowork v.s. Claude v.s. Claude Code: Starting today, Claude Cowork and chat are merging into one...",
-   "tags": [
-    "agents",
-    "code"
-   ]
-  },
-  {
-   "id": "957b5cc7801b",
-   "source": "apple-developer-news",
-   "name": "Apple Developer News",
-   "kind": "post",
-   "title": "Get ready with the latest beta releases",
-   "link": "https://developer.apple.com/news/?id=rfb1rooi",
-   "date": "2026-09-16T17:03:39Z",
-   "summary": "The beta versions of iOS 27.2, iPadOS 27.2, macOS 27.2, tvOS 27.2, visionOS 27.2, and watchOS 27.2 are now available. Get your apps ready by confirming they work as expected on these releases. And make sure to build and...",
-   "tags": [
-    "code",
-    "ship"
-   ]
-  },
-  {
-   "id": "3977462cb7b4",
-   "source": "apple-developer-news",
-   "name": "Apple Developer News",
-   "kind": "post",
-   "title": "Get your subscriptions ready for iOS 27",
-   "link": "https://developer.apple.com/news/?id=likeohx4",
-   "date": "2026-09-16T17:02:58Z",
-   "summary": "Discover how you can expand the reach of your subscriptions with new features in iOS 27. You can start preparing today by making sure your apps use StoreKit 2 to handle your Apple In-App Purchases. Request access to...",
-   "tags": [
-    "code",
-    "ship"
-   ]
-  },
-  {
-   "id": "7a901b6b02ff",
-   "source": "apple-developer-news",
-   "name": "Apple Developer News",
-   "kind": "post",
-   "title": "Updates to App Tracking Transparency in the European Union",
-   "link": "https://developer.apple.com/news/?id=idsft9ai",
-   "date": "2026-09-16T17:00:11Z",
-   "summary": "As part of agreements with select European competition authorities, Apple is introducing changes to its App Tracking Transparency framework in the European Union. Beginning with iOS 27.2 and iPadOS 27.2, developers will...",
-   "tags": [
-    "code",
-    "ship"
-   ]
-  },
-  {
-   "id": "bbe6c30a33c9",
-   "source": "openai-news",
-   "name": "OpenAI news",
-   "kind": "post",
-   "title": "Our framework for reporting model misalignment",
-   "link": "https://openai.com/index/model-misalignment-reporting-framework",
-   "date": "2026-09-16T17:00:00Z",
-   "summary": "OpenAI shares a framework for tracking, investigating, and disclosing model misalignment, alongside six reports of unexpected or concerning model behavior.",
+   "title": "How UK AISI and EvalEval Are Making Benchmark Results Reproducible",
+   "link": "https://huggingface.co/blog/evaleval-aisi",
+   "date": "2026-09-22T00:00:00Z",
+   "summary": "",
    "tags": [
     "agents"
+   ]
+  },
+  {
+   "id": "98acfe91fd30",
+   "source": "huggingface-blog",
+   "name": "Hugging Face blog",
+   "kind": "post",
+   "title": "Transformers now runs llama.cpp quants",
+   "link": "https://huggingface.co/blog/transformers-llama-cpp-quants",
+   "date": "2026-09-22T00:00:00Z",
+   "summary": "",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "fb8ad85c459c",
+   "source": "huggingface-blog",
+   "name": "Hugging Face blog",
+   "kind": "post",
+   "title": "Jun Kim, oMLX creator and maintainer, joins Hugging Face to support the MLX community",
+   "link": "https://huggingface.co/blog/omlx",
+   "date": "2026-09-22T00:00:00Z",
+   "summary": "",
+   "tags": [
+    "agents"
+   ]
+  },
+  {
+   "id": "c079d2e63304",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "Jev introduces a new shape of LLM - System One, aka Decision Models",
+   "link": "https://simonwillison.net/2026/Sep/21/jev/",
+   "date": "2026-09-21T23:09:20Z",
+   "summary": "Last week TypeSafe AI unveiled Jev , their first example of a new category of model that they are calling \"System One models\" (I'm with Maggie Appleton, I think \"decision models\" is a better name for these). Jev is an...",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "ff3a1364a89f",
+   "source": "simon-willison",
+   "name": "Simon Willison",
+   "kind": "post",
+   "title": "Cloudflare Python Workers are now generally available",
+   "link": "https://simonwillison.net/2026/Sep/21/cloudflare-python-worker/",
+   "date": "2026-09-21T22:25:44Z",
+   "summary": "Cloudflare Python Workers are now generally available After a two year preview, Cloudflare's support for running Python code in their server-side Workers platform is now stable: \"Python is now a first-class, fully...",
+   "tags": [
+    "agents",
+    "code"
+   ]
+  },
+  {
+   "id": "6a5aaa0582a1",
+   "source": "lwn-headlines",
+   "name": "LWN.net",
+   "kind": "post",
+   "title": "Igalia celebrates \"Twenty-Five Years Upstream\"",
+   "link": "https://lwn.net/Articles/1095723/",
+   "date": "2026-09-21T16:35:32Z",
+   "summary": "The open-source consulting firm Igalia has put out an announcement celebrating 25 years of working on upstream FOSS projects for its clients. The list of projects the company has worked on is rather eye-opening: WebKit...",
+   "tags": [
+    "shell",
+    "ship"
+   ]
+  },
+  {
+   "id": "bf33b8fb0576",
+   "source": "lwn-headlines",
+   "name": "LWN.net",
+   "kind": "post",
+   "title": "Three new stable kernels",
+   "link": "https://lwn.net/Articles/1095703/",
+   "date": "2026-09-21T14:43:18Z",
+   "summary": "Greg Kroah-Hartman has released the 7.2.7 , 6.18.53 , and 6.12.111 stable kernels. As is usual these days, they are quite large; also no surprise is that they provide many important fixes throughout the kernel tree...",
+   "tags": [
+    "shell",
+    "ship"
    ]
   }
  ]
