@@ -11,7 +11,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
   ```
 
 - At startup Claude sees only `name` and `description`. The description decides whether a skill loads for a prompt, so it says what the skill does and when to use it, with the words a person would type. The spec caps it at 1,024 characters; Claude Code truncates description plus `when_to_use` at 1,536. The body loads only when the skill fires. `/name` loads a skill by hand. Docs: https://code.claude.com/docs/en/skills
-- Some skills pre-approve their own commands with `allowed-tools` (`camp-progress`: `uv run vibe`, `just`; `duckdb-sql`: `duckdb`; the four documentation skills `semver`, `changelog`, `adr` and `readme-quickstart`: read-only commands such as `uv run vibe --version`, `git tag -l`, `git log`, `git diff`, `ls`), so the learner is not asked for permission on every call.
+- Eight skills pre-approve their own commands with `allowed-tools`, for the turn that invokes the skill (Claude Code clears the grant at the next message, and it restricts nothing): `camp-progress` (`uv run vibe`, `just`), `council` (`uv run vibe`, Read), `duckdb-sql` (`duckdb`), `justfile` (Read, Edit, and `just --list`, `--summary`, `--fmt --check`, `--dump`), and the four documentation skills with read-only commands: `semver` (`uv run vibe --version`, `git tag -l`), `changelog` (`git log`, `git diff`), `adr` (`ls docs/adr`) and `readme-quickstart` (`ls`, `cat README.md`). The learner is not asked for permission on every call.
 
 ## The skills
 
@@ -20,7 +20,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
 | `adr` | Writes an architecture decision record in Nygard's form (Title, Status, Context, Decision, Consequences) into `docs/adr/` and updates the index | "write an ADR", "record this decision", "why did we choose", "document the trade-off", "supersede ADR 3" | house |
 | `changelog` | Keeps `CHANGELOG.md` in Keep a Changelog 1.1.0 form: a fragment per change in `changelog.d/`, six kinds, ISO dates, compare links, assembled by a release | "update the changelog", "add a changelog entry", "release notes", "cut a release", "what changed since" | house |
 | `council` | Convenes the mentors on one question, llm-council style: each answers in character from their sources, they review each other anonymised, a chairman writes the minutes to the vault | "what would the mentors say", "ask the council", "get several opinions on" | house |
-| `develop-camp` | Develops, reviews and improves this product: game from `src/`, CLI, tech tree, syllabus, skills | "fix the game", "add a world", "add a workstream", "review it and make it better", any change touching more than one file | house |
+| `develop-camp` | Develops, reviews and improves this product: game from `src/`, CLI, tech tree, syllabus, skills. Product-only, a camp does not get it | "fix the game", "add a world", "add a workstream", "review it and make it better", any change touching more than one file | house |
 | `duckdb-sql` | Answers questions about `workspace/data/scores.csv` with DuckDB SQL, teaches one construct per query | "top runs", "best score", "average per player", "who is winning", "write SQL", anything about `sql/` | house |
 | `camp-progress` | Tracks the eight workstreams through `uv run vibe` (status, check, done, map, vault, export, import) | "mark 3 done", "where am I", "what is next", "check my progress", "export my progress code" | house |
 | `install-camp` | Installs and runs the course on a Mac, every dependency chosen by the user | "set up vibe", "install the course", "is my machine ready", "start the evening" | house |
@@ -34,11 +34,11 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
 | `webapp-testing` | Drives a local web app with Playwright: screenshots, console logs, element discovery, a server helper | "test the game in a browser", "take a screenshot of the page", "check the console for errors", "Playwright" | vendored, https://github.com/anthropics/skills/tree/main/skills/webapp-testing, Apache-2.0 |
 | `verification-before-completion` | Refuses to claim done, fixed or passing without running the proving command first | fires on its own before "done", "fixed", "tests pass", a commit or a PR | vendored, https://github.com/obra/superpowers/tree/main/skills/verification-before-completion, MIT |
 
-Not a skill but in the same family: the `scorekeeper` subagent (`.claude/agents/scorekeeper.md`) summarises `workspace/data/scores.csv` into `vault/Camp/Scores.md`; say "summarise the scores into the vault" or `@scorekeeper`. The PostToolUse hook in `.claude/settings.json` copies `data/` into `backups/` after every Edit or Write; `/hooks` lists it.
+Not skills but in the same family, in `.claude/agents/`: the `scorekeeper` subagent summarises `workspace/data/scores.csv` into `vault/Camp/Scores.md` (say "summarise the scores into the vault" or `@scorekeeper`), and the three roles of the `work-order` skill, `builder`, `reviewer` and `team-manager`, which stay in the product. Hooks in `.claude/settings.json`: after every Edit, Write or MultiEdit a PostToolUse hook copies `workspace/data/` into a dated folder under `backups/`; before an edit a PreToolUse hook runs `tools/work.py` to refuse a file outside the work orders of the current branch; Stop and SubagentStop hooks run it to send an agent back once when its order's checks fail. `/hooks` lists them. A camp gets the scorekeeper and the backup hook only (`tools/sync_template.py` leaves out the rest).
 
 ## Test that each one triggers
 
-Every folder in `.agents/skills/` has a row in both tables above; `tests/test_repo.py` fails when one is missing. Start `claude` in this folder. Type `/` and confirm every folder appears by name. Then type each phrase in a fresh session and check the transcript for the `Skill(<name>)` call before the answer. One negative per skill: a phrase that must not load it.
+Every folder in `.agents/skills/` has a row in both tables here; `tests/test_repo.py` and `tests/test_docs_followups.py` fail when one is missing. Start `claude` in this folder. Type `/` and confirm every folder appears by name. Then type each phrase in a fresh session and check the transcript for the `Skill(<name>)` call before the answer. One negative per skill: a phrase that must not load it.
 
 | Skill | Phrases that must load it | Must not load it |
 |---|---|---|
@@ -75,6 +75,8 @@ Every folder in `.agents/skills/` has a row in both tables above; `tests/test_re
 | `webapp-testing` | "open the game in a headless browser and screenshot the title" | "run the smoke tests" (that is `just smoke`, develop-camp) |
 | | "check the browser console for errors on game/vibe-map.html" | |
 | `verification-before-completion` | ask for any change, then "is it done?" or "commit it" | a plain question |
+| `work-order` | "build the order docs-followups-149" | "fix this typo in the README" (one-line fixes need no order) |
+| | "split this goal into work orders" | |
 
 Overlaps to know:
 

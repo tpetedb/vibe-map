@@ -6,7 +6,7 @@ branch = "claude/docs-followups-149"
 goal = "ways-of-working"
 issue = 149
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-docs-followups-149"
 
 owns = [
   "docs/SKILLS.md",
