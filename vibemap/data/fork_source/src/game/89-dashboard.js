@@ -291,14 +291,16 @@ function breakButton(label,primary,fn){const b=document.createElement("button");
 function breakWhere(){const n=S.done.length,total=stopCount(),next=CH.findIndex((c,i)=>!S.done.includes(i+1));
   return "You are on "+dashIsland(S.world||"campus")+", "+n+" of "+total+" stops delivered"+
     (next<0?", which is all of them.":", and "+CH[next].h+" "+CH[next].n+" is next.")}
+// Just under the HUD, whose height is the width's business (one row on a
+// laptop, three on a phone), so it is measured again when the screen turns.
+function breakPlace(card){card.style.top=Math.round($("hud").getBoundingClientRect().bottom-$("stage").getBoundingClientRect().top+12)+"px"}
+addEventListener("resize",()=>{const c=$("breakcard");if(c)breakPlace(c)});
 function showBreak(secs){S.breakAt=Date.now();save();
   const card=document.createElement("div");card.id="breakcard";card.className="card";
   card.setAttribute("role","region");card.setAttribute("aria-label","A good place to stop");
-  // Just under the HUD, whose height is the width's business (one row on a
-  // laptop, three on a phone): measured once, as the card appears.
-  const hudEl=$("hud"),top=Math.round(hudEl.getBoundingClientRect().bottom-$("stage").getBoundingClientRect().top+12);
   card.style.cssText="position:absolute;z-index:41;left:16px;right:16px;margin:0 auto;max-width:420px;"+
-    "top:"+top+"px;box-shadow:var(--lift);pointer-events:auto";
+    "box-shadow:var(--lift);pointer-events:auto";breakPlace(card);
+  const hudEl=$("hud");
   const who=document.createElement("p");who.className="small muted";who.style.margin="0 0 4px";who.textContent=roleName("rolinda");
   const h=document.createElement("h3");h.style.margin="0 0 6px";h.textContent=Math.floor(secs/60)+" minutes. A good place to stop.";
   // The words are a status line, so a screen reader hears them once as they

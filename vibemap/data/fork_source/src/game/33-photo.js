@@ -21,10 +21,25 @@ function photoPanel(id,label){const el=document.createElement("div");el.id=id;el
   el.style.cssText="position:fixed;z-index:45;left:16px;right:16px;margin:0 auto;max-width:440px;"+
     "bottom:calc(16px + env(safe-area-inset-bottom,0px));box-shadow:var(--lift)";
   return el}
-// Only between things: never over a panel, the title or a flight.
-function photoCanOpen(){return typeof started!=="undefined"&&started&&!flight&&
-  !document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")}
-window.openPhoto=function(){if(photo||!photoCanOpen())return;
+// What stands over the island. Photo mode opens only between things: never
+// over a panel, the title or a flight.
+const PHOTO_OVER="#sheet.on,#vault.on,#pal.on,#title:not(.off)";
+function photoCanOpen(){return typeof started!=="undefined"&&started&&!flight&&!document.querySelector(PHOTO_OVER)}
+// Whatever opens over the island while photo mode is on (Ask on C, the
+// palette on Cmd K, a stop on Enter, a sheet from anywhere) ends photo mode
+// as it opens, so the HUD is back behind it and one Escape closes one thing. A card
+// that arrives after the mode opened, like the first toast, which toast()
+// only then creates, is hidden with the rest.
+function photoWatch(){const mo=new MutationObserver(()=>{if(!photo)return;
+    if(document.querySelector(PHOTO_OVER)){photoEnd(true);return}
+    PHOTO_HIDE.forEach(s=>{const el=document.querySelector(s);
+      if(el&&!photo.hidden.some(([h])=>h===el)){photo.hidden.push([el,el.style.visibility]);el.style.visibility="hidden"}})});
+  ["sheet","vault","pal","title"].forEach(id=>{const el=$(id);if(el)mo.observe(el,{attributes:true,attributeFilter:["class"]})});
+  mo.observe(document.body,{childList:true});return mo}
+// Focus goes back to what had it: the Photo button when the mode was opened
+// from it, else the element focused before, when it can still be seen.
+window.openPhoto=function(opener){if(photo||!photoCanOpen())return;
+  const had=document.activeElement,back=opener instanceof Element?opener:(had&&had!==document.body?had:null);
   if(typeof closeHudMenu==="function")closeHudMenu();
   if(typeof breakClose==="function")breakClose();
   const hidden=PHOTO_HIDE.map(s=>document.querySelector(s)).filter(Boolean).map(el=>[el,el.style.visibility]);
@@ -38,11 +53,18 @@ window.openPhoto=function(){if(photo||!photoCanOpen())return;
   const row=document.createElement("div");row.className="row";row.style.marginTop="0";
   row.append(photoBtn("Take photo",true,photoTake),photoBtn("Done",false,closePhoto));
   bar.append(hint,row);document.body.appendChild(bar);fx(bar);
-  photo={hidden:hidden,bar:bar,view:null,url:""};
+  photo={hidden:hidden,bar:bar,view:null,url:"",back:back,watch:photoWatch()};
   bar.querySelector("button").focus()};
-window.closePhoto=function(){if(!photo)return;photoDrop();photo.bar.remove();
+// A panel that ended the mode (over=true) keeps the focus it took.
+function photoEnd(over){if(!photo)return;photo.watch.disconnect();
+  const f=document.activeElement,ours=!over&&(!f||f===document.body||photo.bar.contains(f)||!!(photo.view&&photo.view.contains(f)));
+  photoDrop();photo.bar.remove();
   photo.hidden.forEach(([el,v])=>{el.style.visibility=v});
-  photo=null;syncZoom();if(document.activeElement)document.activeElement.blur()};
+  const back=photo.back;photo=null;syncZoom();
+  if(!ours)return;
+  if(back&&back.isConnected&&back.getClientRects().length&&getComputedStyle(back).visibility!=="hidden")back.focus({preventScroll:true});
+  else if(document.activeElement)document.activeElement.blur()}
+window.closePhoto=function(){photoEnd(false)};
 function photoDrop(){if(photo.view){photo.view.remove();photo.view=null}
   if(photo.url){URL.revokeObjectURL(photo.url);photo.url=""}}
 // The caption: who, where, how far, in the text colour of the palette on a
@@ -99,7 +121,7 @@ addEventListener("keydown",e=>{if(e.metaKey||e.ctrlKey||e.altKey||inField(e.targ
 // The HUD entry lives with the other secondary buttons, so on a phone it is
 // in the More menu and on a laptop in the pill.
 (()=>{const sec=$("hud-sec");if(!sec)return;const b=document.createElement("button");b.id="hud-photo";b.type="button";
-  b.textContent="Photo";b.title="Photo mode: the island without the HUD (P)";b.addEventListener("click",openPhoto);sec.appendChild(b)})();
+  b.textContent="Photo";b.title="Photo mode: the island without the HUD (P)";b.addEventListener("click",()=>openPhoto(b));sec.appendChild(b)})();
 // Test seam: whether photo mode is on, how many frames it took, and that the
 // canvas still runs without a preserved buffer.
 window.__photo=()=>({on:!!photo,shots:photoShots,

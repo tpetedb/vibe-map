@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from tests.conftest import STORAGE_KEY, GamePage
+from tests.conftest import STORAGE_KEY, GamePage, encode_progress
 
 # A returning player with two stops on the campus and no export behind them.
 RETURNING: dict[str, Any] = {"name": "Tom", "look": "own", "doneW": {"campus": [1, 2]}}
@@ -34,7 +34,11 @@ SEED_SITTING = """([key, rec, n, ago, gapAt, gapMs]) => {
 }"""
 
 # The captured picture, decoded and read back: a frame taken outside the
-# frame it was drawn in is one flat colour, a real one is many.
+# frame it was drawn in is one flat colour, a real one is many. Only the part
+# above the caption band counts: the band's gradient and its text are drawn
+# on the copy, so they alone would pass for a picture. The band is at most a
+# fifth of the height (5 x 3.4 percent of the short side), so the top seven
+# tenths are island on every screen.
 COLOURS = """async () => {
   const img = document.querySelector('#photoview img');
   await img.decode();
@@ -42,7 +46,7 @@ COLOURS = """async () => {
   c.width = 96; c.height = 96;
   const g = c.getContext('2d');
   g.drawImage(img, 0, 0, 96, 96);
-  const d = g.getImageData(0, 0, 96, 96).data, seen = new Set();
+  const d = g.getImageData(0, 0, 96, 67).data, seen = new Set();
   for (let i = 0; i < d.length; i += 4)
     seen.add((d[i] >> 3) << 10 | (d[i + 1] >> 3) << 5 | d[i + 2] >> 3);
   return {colours: seen.size, w: img.naturalWidth, h: img.naturalHeight};
@@ -95,24 +99,21 @@ def visible(game: GamePage, selector: str) -> bool:
 # ---- 24: the saved mark and the export reminder ---------------------------
 
 
-def test_a_save_lights_the_mark_once_and_never_moves_the_hud(game: GamePage) -> None:
-    """24: nothing said the game had saved, so a player could not tell it had."""
-    game.goto()
-    game.start()
-    bar = "document.getElementById('hud-bar').getBoundingClientRect().width"
-    game.until("window.__saved && window.__saved().on", what="the saved mark")
-    width = game.page.evaluate(bar)
-    raised = game.page.evaluate("window.__saved().raised")
-    # A burst of saves is one mark, not fifty: the mark is throttled.
-    game.page.evaluate(
-        "() => { for (let i = 0; i < 50; i++) window.track('chat', 'burst') }"
+def test_a_write_raises_no_second_saved_mark(game: GamePage) -> None:
+    """24: the saved mark is the save() tick batch 4 owns, so this order adds none.
+
+    A second mark beside the stop dots, with a __saved seam of another shape,
+    broke batch 4's own tests the moment the two branches met.
+    """
+    game.goto(state=RETURNING)
+    game.resume()
+    game.claim(3)
+    game.frames(2)
+    assert game.page.evaluate("document.getElementById('savedmark')") is None
+    # Absent on main; batch 4's {n, on} once it lands; never another shape.
+    assert game.page.evaluate(
+        "typeof window.__saved !== 'function' || 'n' in window.__saved()"
     )
-    assert game.page.evaluate("window.__saved().raised") - raised <= 1
-    assert game.page.evaluate(bar) == width
-    game.until("!window.__saved().on", what="the saved mark to fade")
-    assert game.page.evaluate(bar) == width
-    # A mark that is only decoration is not read out every minute.
-    assert game.page.get_attribute("#savedmark", "aria-hidden") == "true"
     game.assert_clean()
 
 
@@ -146,6 +147,50 @@ def test_a_stop_after_the_export_brings_the_line_back(game: GamePage) -> None:
     game.open_roadmap()
     said = game.page.text_content("#exportnudge") or ""
     assert "1 stop since your last export" in said
+    game.assert_clean()
+
+
+def test_a_stop_stays_counted_when_the_event_log_lets_its_claim_go(
+    game: GamePage,
+) -> None:
+    """24: the line counted claim events, and the log keeps the last 600: play
+    ticks fold into one a day, but questions, screens and finds do not, so a
+    long run of them pushes a claim out while the stop is still in no code."""
+    game.goto(state=RETURNING)
+    game.resume()
+    game.open_roadmap()
+    game.page.click("#s-map button:has-text('Export progress')")
+    game.until("typeof window.__S().exportedAt === 'number'", what="the export")
+    game.page.keyboard.press("Escape")
+    game.claim(3)
+    game.page.keyboard.press("Escape")
+    game.page.evaluate(
+        "() => { for (let i = 0; i < 700; i++) window.track('chat', 'ask') }"
+    )
+    assert not game.page.evaluate(
+        "window.__S().events.some(e => e.kind === 'claim')"
+    ), "the claim should have left the capped log"
+    game.open_roadmap()
+    said = game.page.text_content("#exportnudge") or ""
+    assert "1 stop since your last export" in said
+    game.assert_clean()
+
+
+def test_stops_imported_from_a_code_are_not_only_in_this_browser(
+    game: GamePage,
+) -> None:
+    """24: a code imported into a fresh browser was reported as stops that
+    lived only there, though the code itself carries them."""
+    game.goto()
+    game.start("Tom")
+    said = game.import_code(encode_progress(name="Tom", done_w={"campus": [1, 2]}))
+    assert "2 stops" in said
+    assert not visible(game, "#exportnudge")
+    game.page.keyboard.press("Escape")
+    game.claim(3)
+    game.open_roadmap()
+    line = game.page.text_content("#exportnudge") or ""
+    assert "1 stop since your last export" in line
     game.assert_clean()
 
 
@@ -251,9 +296,13 @@ def test_a_short_or_broken_sitting_earns_no_break(
 
 def test_a_sitting_nobody_is_at_earns_no_card(game: GamePage) -> None:
     """25: a laptop left open with the game on is not a player who needs a break."""
-    seed(game, RETURNING, 51)
+    # Off until the player has walked away: the Resume click is itself a
+    # player being there, and a check between it and __breakAway() would
+    # show the card and spend the sitting's one reminder.
+    seed(game, {**RETURNING, "settings": {"breaks": "off"}}, 51)
     game.resume()
     game.page.evaluate("window.__breakAway()")
+    game.page.evaluate("setSetting('breaks', 'on')")
     checks_pass(game)
     assert game.page.evaluate("window.__breaks().due")
     assert not visible(game, "#breakcard")
@@ -330,6 +379,93 @@ def test_photo_mode_waits_while_a_panel_is_open(game: GamePage) -> None:
     game.page.keyboard.press("p")
     game.frames(2)
     assert not game.page.evaluate("window.__photo().on")
+    game.assert_clean()
+
+
+@pytest.mark.parametrize(
+    ("key", "panel"),
+    [("c", "#sheet.on #s-chat.on"), ("Control+k", "#pal.on")],
+)
+def test_a_panel_opened_in_photo_mode_ends_it(
+    game: GamePage, key: str, panel: str
+) -> None:
+    """27: Ask and the palette opened under a floating photo bar with no HUD,
+    and one Escape then closed both."""
+    game.goto(state=RETURNING)
+    game.resume()
+    game.page.keyboard.press("p")
+    game.until("window.__photo().on", what="photo mode")
+    game.page.keyboard.press(key)
+    game.until(f"!!document.querySelector('{panel}')", what="the panel")
+    game.until("!window.__photo().on", what="photo mode to end")
+    assert visible(game, "#hud")
+    assert game.page.evaluate("document.getElementById('photobar')") is None
+    # The panel keeps the focus it took, and Escape now closes only the panel.
+    game.page.keyboard.press("Escape")
+    game.until(f"!document.querySelector('{panel}')", what="the panel to close")
+    assert not game.page.evaluate("window.__photo().on")
+    assert visible(game, "#hud")
+    game.assert_clean()
+
+
+def test_a_toast_raised_in_photo_mode_stays_out_of_the_view(game: GamePage) -> None:
+    """27: the first toast of a sitting is created after photo mode opened,
+    so the list of things to hide never had it."""
+    # First light already earned, so resuming raises no toast and the stack
+    # does not exist yet when photo mode opens.
+    game.goto(state={**RETURNING, "ach": ["first-light"]})
+    game.resume()
+    assert game.page.evaluate("document.getElementById('toast')") is None
+    game.page.keyboard.press("p")
+    game.until("window.__photo().on", what="photo mode")
+    before = int(game.page.evaluate("window.__toasts()"))
+    # Take it back, and the achievement check in the loop raises it again.
+    game.page.evaluate("window.__S().ach = []")
+    game.until(f"window.__toasts() > {before}", what="the achievement toast")
+    assert not visible(game, "#toast")
+    game.page.keyboard.press("p")
+    game.until("!window.__photo().on", what="photo mode to close")
+    assert game.page.evaluate("document.getElementById('toast').style.visibility") in (
+        "",
+        "visible",
+    )
+    game.assert_clean()
+
+
+def test_done_gives_the_focus_back_to_the_photo_button(game: GamePage) -> None:
+    """27: Done dropped the focus on the page, so a keyboard player started
+    again from the top."""
+    game.page.set_viewport_size({"width": 1440, "height": 900})
+    game.goto(state=RETURNING)
+    game.resume()
+    game.hud_action("#hud-photo")
+    game.until("window.__photo().on", what="photo mode")
+    game.page.click("#photobar button:has-text('Done')")
+    game.until("!window.__photo().on", what="photo mode to close")
+    assert game.page.evaluate(
+        "document.activeElement && document.activeElement.id"
+    ) == ("hud-photo")
+    game.assert_clean()
+
+
+def test_the_break_card_follows_the_hud_when_the_screen_turns(
+    game: GamePage,
+) -> None:
+    """25: the card's place was measured once, so a phone turned under it left
+    it where the old HUD ended."""
+    game.page.set_viewport_size({"width": 1440, "height": 900})
+    seed(game, RETURNING, 51)
+    game.resume()
+    game.page.keyboard.press("Shift")
+    game.until("!!document.querySelector('#breakcard')", what="the break card")
+    below = (
+        "Math.abs(document.getElementById('breakcard').getBoundingClientRect().top"
+        " - document.getElementById('hud').getBoundingClientRect().bottom - 12) <= 1"
+    )
+    settled(game)
+    game.until(below, what="the card under the HUD")
+    game.page.set_viewport_size({"width": 390, "height": 844})
+    game.until(below, what="the card under the HUD again")
     game.assert_clean()
 
 
