@@ -11,8 +11,9 @@ builder = "builder-topics-linux-shell"
 owns = [
   "vibemap/data/topics/linux/",
   "tests/test_topics_linux.py",
+  "docs/SYLLABUS.md",
 ]
-cross = []
+cross = ["docs"]
 needs = []
 
 [[criteria]]
