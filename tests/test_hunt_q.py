@@ -22,6 +22,7 @@ from tools.gen_syllabus import spell
 from tools.regen_tree import render
 from vibemap import campaign
 from vibemap.tech import T
+from vibemap.vault import safe_title
 
 ROOT = Path(__file__).resolve().parents[1]
 BRIEF = ROOT / "docs" / "BRIEF.md"
@@ -250,6 +251,19 @@ def test_q3_collision_diagnostic_includes_a_spaced_handwritten_key(
     assert "tools/generated/notes.js" in message
     assert "src/game/50-notes.js" in message
     assert "src/game/51-notes-dynamic.js" in message
+
+
+def test_q3_every_tree_note_in_the_vault_lists_its_topic_docs() -> None:
+    """A source added to a topic reaches the vault note, not only the game."""
+    stale = []
+    for n in campaign.tech_nodes():
+        note = ROOT / "vault" / "Camp" / f"{safe_title(n.name)}.md"
+        if not n.docs or not note.exists():
+            continue
+        docs = ", ".join(f"[{t}]({u})" for t, u in n.docs)
+        if f"- Docs: {docs}\n" not in note.read_text(encoding="utf-8"):
+            stale.append(note.name)
+    assert not stale, f"run `uv run vibe vault build`: {stale}"
 
 
 def test_q4_the_scores_script_names_a_path_that_exists() -> None:
