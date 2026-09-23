@@ -25,13 +25,24 @@ import subprocess
 import sys
 from collections.abc import Collection
 from dataclasses import dataclass
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 CI = ROOT / ".github" / "workflows" / "ci.yml"
+
+
+class Unreadable(Exception):
+    """The split cannot be known: a matrix that does not say what it has to, or
+    a battery pytest cannot collect. Always a sentence a human can act on."""
+
+
+def matches(file: str, pattern: str) -> bool:
+    """Whether a shard's pattern claims a file. Case counts, as it does on the
+    Linux runners the shards run on."""
+    return fnmatchcase(file, pattern)
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,21 +55,30 @@ class Shard:
     default: bool = False
 
     def claims(self, file: str) -> bool:
-        return any(fnmatch(file, p) for p in self.patterns)
+        return any(matches(file, p) for p in self.patterns)
 
 
 def shards(workflow: Path = CI) -> tuple[Shard, ...]:
     flow = yaml.safe_load(workflow.read_text(encoding="utf-8"))
     include = flow["jobs"]["browser-shard"]["strategy"]["matrix"]["include"]
+    for e in include:
+        # A quoted "false" is a string, and every non-empty string is true.
+        if not isinstance(e.get("default", False), bool):
+            raise Unreadable(
+                f"{workflow.name}: shard {e['shard']}: default is true or false, "
+                f"not {e['default']!r}"
+            )
     return tuple(
-        Shard(e["shard"], tuple(str(e["files"]).split()), bool(e.get("default")))
+        Shard(e["shard"], tuple(str(e["files"]).split()), e.get("default", False))
         for e in include
     )
 
 
 def browser_test_files(root: Path = ROOT) -> set[str]:
-    """The files pytest itself puts in the browser battery, asked of pytest."""
-    out = subprocess.run(
+    """The files pytest itself puts in the browser battery, asked of pytest. A
+    file that cannot be collected would drop out of every shard in silence, so
+    a collection that fails is refused (5 is pytest's "nothing collected")."""
+    ran = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -71,7 +91,14 @@ def browser_test_files(root: Path = ROOT) -> set[str]:
         cwd=root,
         capture_output=True,
         text=True,
-    ).stdout
+    )
+    out = ran.stdout
+    if ran.returncode not in (0, 5):
+        tail = "\n".join((out + ran.stderr).strip().splitlines()[-15:])
+        raise Unreadable(
+            f"pytest could not collect the browser battery (exit {ran.returncode}), "
+            f"so no shard can say which files it runs:\n{tail}"
+        )
     # The quiet collect prints one "tests/test_x.py: 4" line per file.
     return set(re.findall(r"^(tests/\S+\.py)(?=[:\s])", out, re.MULTILINE))
 
@@ -108,7 +135,7 @@ def problems(files: Collection[str], workflow: Path = CI) -> list[str]:
             found.append(f"in more than one shard ({', '.join(homes)}): {file}")
     for shard in legs:
         for pattern in shard.patterns:
-            if not any(fnmatch(file, pattern) for file in files):
+            if not any(matches(file, pattern) for file in files):
                 found.append(f"{shard.name}: {pattern} claims no browser test file")
     return found
 
@@ -168,6 +195,14 @@ def main() -> int:
     )
     parser.add_argument("--receipts", default="receipts", type=Path)
     args = parser.parse_args()
+    try:
+        return _main(args)
+    except Unreadable as e:
+        print(e, file=sys.stderr)
+        return 1
+
+
+def _main(args: argparse.Namespace) -> int:
     if args.files:
         code, line = _files_of(args.files)
         print(line, file=sys.stderr if code else sys.stdout)

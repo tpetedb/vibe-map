@@ -1,0 +1,38 @@
+v = 1
+id = "harness-work-ci-followups"
+title = "Work orders: the review follow-ups in work.py and ci_shards.py, and two ci rules that cost CI cycles"
+team = "harness"
+branch = "claude/work-ci-followups"
+goal = "ways-of-working"
+issue = 149
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-harness-work-ci-followups"
+
+owns = [
+  "tools/work.py",
+  "tools/ci_shards.py",
+  "tests/test_work.py",
+  "tests/test_ci_shards.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The work and shard tests pass, each new one seen failing first."
+check = "uv run pytest -q tests/test_work.py tests/test_ci_shards.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync and every order on this branch still reads."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/work.py validate"
+
+[[criteria]]
+id = "c4"
+text = "Every #149 finding for these files is fixed red-then-green or rejected with evidence on the issue; tools/sync_main.py (Team Codex) is untouched."
+judge = "reviewer"
