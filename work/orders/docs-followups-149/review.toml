@@ -1,0 +1,72 @@
+v = 1
+order = "docs-followups-149"
+by = "reviewer-docs-followups-149-r1"
+reviewed = "101e52347d58de0d45b2275fe4e3343f04809d04"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran `uv run pytest -q tests/test_docs_followups.py tests/test_repo.py` myself: all pass. The command does prove the sentence, checked by mutation on scratch copies of the docs (patched module paths, worktree untouched): `just smoke` renamed to `just smok` in SKILLS.md fails ('smok'); an inline `just nosuch-x tests/x.py` fails; dropping the work-order trigger row fails; ADR 0016 saying 33 agents or Status Proposed fails; GAME_ORDER added back to CONFIG.md fails; a renamed helper (petIdent), element id (#zoom-fitx), path (vibemap/placez.py) and a line without its PR in CONTRACTS.md each fail.
+Gap found: `just nosuchrecipe` at the start of a line inside an unindented fenced block passes (JUST_CALL needs a backtick or four spaces). No current doc has such a line, so the sentence holds today; filed as low.
+Against the code: build.MODULE_DIRS=("game","galaxy"), BOOT_MODULE="game/90-boot.js", MODULE_NAME regex and _game_script() moving boot last match CONFIG.md and ADR 0001; GAME_ORDER is gone from build.py. work.TOUCHED_KEEP=32, _remember() keeps the newest 32 and records builder or reviewer by where the agent wrote; touched.json is gitignored (.gitignore:21); `just release` runs `python3 tools/work.py sweep`, which removes landed order folders. ADR 0016 wording matches.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran it myself: `style OK: no em dashes, no emoji`, `cookbook OK`, `128 notes, 542 wikilinks, vault OK`. Also grepped every changed file for U+2014 and U+2013: none. The command proves the sentence as written.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "fail"
+evidence = """
+Claims checked against the code, all hold: SKILLS.md allowed-tools list matches every SKILL.md frontmatter (8 skills), and the turn-scoped, non-restricting grant matches code.claude.com/docs/en/skills verbatim; PRODUCT_ONLY_SKILLS={develop-camp, work-order} and the hook filter in tools/sync_template.py match "a camp gets the scorekeeper and the backup hook only"; the four hooks in .claude/settings.json match the paragraph (backup is workspace/data into backups/data-<date>-<pid>). ADR 0001 vendor list matches src/vendor/, built file is 1,652,529 bytes (over 1.5 MB).
+CONTRACTS.md: every cited PR resolved with gh; each date equals the day the PR (or its train car, #134 via car D #135 on 2026-09-19) reached main. Twelve contracts verified in code: #99 (gh api: strict, both contexts, enforce_admins true; the aggregator job needs browser-shard, added on chore/ci-linux-runners), #131 (plainId in 00-state.js, path deep|skip in 80-sync.js), #138 (ran: `vibe news --limit 0` exit 2, `vibe explain --commits 0` exit 2, `vibe check --mentor x --topic y` exit 1, `vibe start` without a tty exit 1), #119 (`vibe name Bob` in an empty dir exit 1, no camp at), #81 (`vibe interests set nosuchshelf` refused), #140 (CAM.zoom min -1 max 1 start, keep() and discard() in 10-scene.js), #134 (fs-only in body.html and style.css, PHONES and phone_options in conftest), #158 (set_clock, toast_said, out_file), #115 (#obfold wraps #onboard), #152 (smoke is default: true in ci.yml), #105 (merge=binary, GENERATED in sync_main.py), #138 (stop_marks, stop_count, MARKS in campaign.py).
+Fails on the second half: the file does not list each current contract. Read all 43 CONTRACT comments on #95 and the issue body; several contracts that are still live in the code are missing (medium finding below), and the body's "never pkill by pattern" rule, which exists nowhere else in the repository, was dropped although the file says it replaces that block.
+"""
+
+[[findings]]
+severity = "medium"
+file = "docs/CONTRACTS.md"
+text = """
+The file says it replaces the contracts block of #95 and c3 asks for each current contract, but contracts posted on #95 that are still true in the code are missing: #132 `{{SITE}}` and `{{ICON}}` placeholders in src/head.html filled by `_head_html()` in tools/build.py; #97 the devcontainers (strict JSON in both, `_devcontainer` in TEMPLATE_NAMES in vibemap/cli.py); #72 the renderer is ACES tone mapped with sRGB output and `mat()` converts colours to linear once (do not convert twice), camera distance from `camFitDist()`; #111 tools/build.py refuses to write the game when a part is not JavaScript the browser can read; #121 STUB_MARK in vibemap/quests.py is the scaffold sentence the checks recognise; #123 `pet.footnote()` beside `pet.credit()`. From the issue body itself, "never pkill by pattern" is dropped and appears nowhere else in the repo, which matters more now that two teams share one machine. Add a dated line with its PR for each, or say in the header which kinds were deliberately left out.
+"""
+
+[[findings]]
+severity = "low"
+file = "tests/test_docs_followups.py"
+text = """
+JUST_CALL only sees `just x` in inline code or on a line indented four spaces; `just nosuchrecipe` at the start of a line in an unindented ``` block passes (reproduced). Separately, the #178 line in CONTRACTS.md writes src/galaxy/ without backticks, which keeps it out of the path test (the folder is not on main) but also reads as a fragment with no subject ("`src/game/`, then src/galaxy/ ..."); say "the build reads" and let the test allow a path marked as not on main yet.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/CONFIG.md"
+text = """
+The fork paragraph says `vibe fork` copies campaign.json under tools/generated/, but tools/generated/ holds only notes.js and tree.js; _copy_fork() writes campaign.json from the package data. And "A file in a module folder with any other name stops the build" follows a sentence that lists src/config/, which is read by glob and never held to MODULE_NAME; name the module folders as src/game/ and src/galaxy/.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/adr/0001-single-file-game.md"
+text = """
+"inside the one wrapping function only function declarations are hoisted" is not how JavaScript works: let and const are hoisted too, into the temporal dead zone, and var is hoisted as undefined. The constraint the build.py comment states is the accurate one: consts are not initialized until their line runs. The source list also leaves out src/errors.js and src/icon.svg, which the build reads.
+"""
+
+[[findings]]
+severity = "low"
+file = "docs/SKILLS.md"
+text = """
+"`tests/test_repo.py` and `tests/test_docs_followups.py` fail when one is missing" from both tables: test_repo.py only fails when a skill has no row anywhere in the file, so a skill missing from one table is caught by the new test alone. The four documentation skills also pre-approve Read, which the list gives for council and justfile but not for them.
+"""
+
+[[findings]]
+severity = "low"
+file = "work/orders/docs-followups-149/order.toml"
+text = """
+cross = ["harness"] but every owned file belongs to docs or shared (checked with work.load_teams), so work-accept will ask for a harness sign-off on a change that touches no harness file. The manager should drop it, or say which harness contract the sign-off covers (ADR 0016 describes tools/work.py).
+"""
