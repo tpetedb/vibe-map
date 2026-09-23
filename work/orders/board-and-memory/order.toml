@@ -6,7 +6,7 @@ branch = "claude/board-and-memory"
 goal = "ways-of-working"
 issue = 193
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-board-and-memory"
 
 # scripts/memory-mcp.sh and .mcp.json are owned so that this order may delete them.
 owns = [
