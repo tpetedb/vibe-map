@@ -4060,9 +4060,10 @@ addEventListener("keydown",e=>{if(e.metaKey||e.ctrlKey||e.altKey||inField(e.targ
 // in the More menu and on a laptop in the pill.
 (()=>{const sec=$("hud-sec");if(!sec)return;const b=document.createElement("button");b.id="hud-photo";b.type="button";
   b.textContent="Photo";b.title="Photo mode: the island without the HUD (P)";b.addEventListener("click",()=>openPhoto(b));sec.appendChild(b)})();
-// Test seam: whether photo mode is on, how many frames it took, and that the
-// canvas still runs without a preserved buffer.
+// Test seam: whether photo mode is on, what it hid, how many frames it took,
+// and that the canvas still runs without a preserved buffer.
 window.__photo=()=>({on:!!photo,shots:photoShots,
+  hidden:photo?photo.hidden.filter(([el])=>el.style.visibility==="hidden").map(([el])=>"#"+el.id):[],
   preserve:!!(renderer&&renderer.getContext().getContextAttributes().preserveDrawingBuffer)});
 window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line

@@ -122,7 +122,8 @@ addEventListener("keydown",e=>{if(e.metaKey||e.ctrlKey||e.altKey||inField(e.targ
 // in the More menu and on a laptop in the pill.
 (()=>{const sec=$("hud-sec");if(!sec)return;const b=document.createElement("button");b.id="hud-photo";b.type="button";
   b.textContent="Photo";b.title="Photo mode: the island without the HUD (P)";b.addEventListener("click",()=>openPhoto(b));sec.appendChild(b)})();
-// Test seam: whether photo mode is on, how many frames it took, and that the
-// canvas still runs without a preserved buffer.
+// Test seam: whether photo mode is on, what it hid, how many frames it took,
+// and that the canvas still runs without a preserved buffer.
 window.__photo=()=>({on:!!photo,shots:photoShots,
+  hidden:photo?photo.hidden.filter(([el])=>el.style.visibility==="hidden").map(([el])=>"#"+el.id):[],
   preserve:!!(renderer&&renderer.getContext().getContextAttributes().preserveDrawingBuffer)});

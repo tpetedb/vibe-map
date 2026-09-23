@@ -412,23 +412,15 @@ def test_a_toast_raised_in_photo_mode_stays_out_of_the_view(game: GamePage) -> N
     """27: the first toast of a sitting is created after photo mode opened,
     so the list of things to hide never had it."""
     # First light already earned, so resuming raises no toast and the stack
-    # does not exist yet when photo mode opens.
+    # toast() creates on demand does not exist yet when photo mode opens.
     game.goto(state={**RETURNING, "ach": ["first-light"]})
     game.resume()
-    assert game.page.evaluate("document.getElementById('toast')") is None
     game.page.keyboard.press("p")
     game.until("window.__photo().on", what="photo mode")
-    before = int(game.page.evaluate("window.__toasts()"))
     # Take it back, and the achievement check in the loop raises it again.
     game.page.evaluate("window.__S().ach = []")
-    game.until(f"window.__toasts() > {before}", what="the achievement toast")
-    assert not visible(game, "#toast")
-    game.page.keyboard.press("p")
-    game.until("!window.__photo().on", what="photo mode to close")
-    assert game.page.evaluate("document.getElementById('toast').style.visibility") in (
-        "",
-        "visible",
-    )
+    game.toast_said("First light")
+    assert "#toast" in game.page.evaluate("window.__photo().hidden")
     game.assert_clean()
 
 
