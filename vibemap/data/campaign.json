@@ -1917,7 +1917,7 @@
     -9,
     -14
    ],
-   "r": 3.8,
+   "r": 3.5,
    "concept": "the stack, layer by layer",
    "what": "Hardware at the foot, then the operating system, the runtime, the libraries, your app, and the agent at the summit reading and writing all of it. Every layer stands on the one below; a bug can live on any of them.",
    "rolinda": "The app said it crashed. Which of the six layers actually did?",
