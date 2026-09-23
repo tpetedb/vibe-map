@@ -1,0 +1,4 @@
+- The game says when it has saved: a small check lights beside the stop dots for a moment after each write, throttled to one per burst, with its room always kept so the HUD never moves.
+- The Roadmap's sync card says how many stops live only in this browser, or were delivered since the last export, and the line goes once a code is exported. Reset to greenfield says the same before it clears anything.
+- After about fifty minutes on screen in one sitting, Rolinda says once, between stops, that this is a good place to stop and where you are. Keep going, Escape or Stop reminding me closes it; a hidden tab, a gap of ten minutes or nobody at the keys earns nothing.
+- Photo mode (the Photo button, or P): the HUD steps aside, the camera pulls back one step, and Take photo hands over the drawn frame as a PNG with a caption, to save, or to share where the browser can share files.
