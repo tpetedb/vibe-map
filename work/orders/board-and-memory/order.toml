@@ -21,6 +21,7 @@ owns = [
   ".agents/skills/shared-memory/SKILL.md",
   "docs/adr/0018-shared-memory.md",
   "docs/adr/README.md",
+  "docs/SKILLS.md",
   "tests/test_board.py",
   "tests/test_memory.py",
   "changelog.d/board-and-memory.added.md",
