@@ -16,7 +16,7 @@ owns = [
   "docs/CONTRACTS.md",
   "tests/test_docs_followups.py",
 ]
-cross = ["harness"]
+cross = []
 needs = []
 
 [[criteria]]

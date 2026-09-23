@@ -28,6 +28,8 @@ SKILL_DIRS = ROOT / ".agents" / "skills"
 RECIPE = re.compile(r"^@?([A-Za-z_][\w-]*)(?:[ \t][^:\n]*)?:(?!=)", re.MULTILINE)
 # `just name` in inline code, or at the start of an indented code line.
 JUST_CALL = re.compile(r"(?:`|^[ \t]{4,})just ([a-z][a-z0-9-]*)", re.MULTILINE)
+# A command line inside a fenced block, after an optional shell prompt.
+FENCED_CALL = re.compile(r"^\s*(?:\$ )?just ([a-z][a-z0-9-]*)")
 SKILL_ROW = re.compile(r"^\| `([a-z0-9-]+)` \|", re.MULTILINE)
 
 
@@ -45,6 +47,18 @@ def _all_recipes() -> set[str]:
     ]
     found = {r for f in files for r in _recipes(f.read_text(encoding="utf-8"))}
     return found | _recipes(cli.FORK_JUSTFILE)
+
+
+def _just_calls(text: str) -> set[str]:
+    """Every recipe a reader is told to run: inline, indented or fenced."""
+    named = set(JUST_CALL.findall(text))
+    fenced = False
+    for line in text.splitlines():
+        if line.lstrip().startswith(("```", "~~~")):
+            fenced = not fenced
+        elif fenced:
+            named.update(FENCED_CALL.findall(line))
+    return named
 
 
 def _section(text: str, heading: str) -> str:
@@ -73,14 +87,21 @@ def test_the_recipe_parser_reads_a_justfile_the_way_just_does() -> None:
 
 @pytest.mark.parametrize("doc", [SKILLS_DOC, CONFIG_DOC, CONTRACTS_DOC])
 def test_every_just_recipe_a_document_names_exists(doc: Path) -> None:
-    named = set(JUST_CALL.findall(doc.read_text(encoding="utf-8")))
+    named = _just_calls(doc.read_text(encoding="utf-8"))
     missing = sorted(named - _all_recipes())
     assert not missing, f"{doc.name} names recipes no justfile has: {missing}"
 
 
+def test_a_recipe_in_a_fenced_block_is_read_too() -> None:
+    """A fence at the margin is where a reader copies a command from."""
+    sample = "Run it:\n\n```sh\njust nosuchrecipe\n$ just other --flag\n```\n"
+    assert _just_calls(sample) == {"nosuchrecipe", "other"}
+    assert _just_calls("```\n# just a comment\n```\n") == set()
+
+
 def test_the_config_doc_names_recipes_at_all() -> None:
     """The guard above proves nothing if the pattern stops matching."""
-    named = set(JUST_CALL.findall(CONFIG_DOC.read_text(encoding="utf-8")))
+    named = _just_calls(CONFIG_DOC.read_text(encoding="utf-8"))
     assert {"build", "tree", "verify", "record"} <= named
 
 
@@ -206,13 +227,16 @@ def test_every_path_a_contract_names_exists() -> None:
         re.findall(r"`([\w.-]+(?:/[\w.-]+)+/?)`", text)
         + re.findall(r"`([\w-]+\.(?:md|toml|json|py|js|yml|html))`", text)
     )
-    # A bare file name is resolved where the contracts file says it lives.
+    # A bare file name is resolved where the contracts file says it lives. A
+    # module folder the build reads when it is there need not exist yet.
+    optional = {f"src/{d}/" for d in build.MODULE_DIRS}
     missing = sorted(
         p
         for p in paths
         if not (ROOT / p).exists()
         and not any(ROOT.glob(f"**/{p}"))
         and not p.startswith("work/orders/")
+        and p not in optional
     )
     assert not missing, f"docs/CONTRACTS.md names paths that do not exist: {missing}"
 
@@ -223,3 +247,113 @@ def test_every_element_a_contract_names_is_on_the_page() -> None:
     assert ids, "the HUD contract names no element"
     missing = sorted(i for i in ids if f'id="{i}"' not in body)
     assert not missing, f"no element with these ids in src/body.html: {missing}"
+
+
+# `name`, `name()` or `a.name()`, alone or in a list, then " in `path`": the
+# file the contracts file says defines it.
+NAMED_IN = re.compile(r"((?:`[^`]+`(?:, | and | or |,? and )?)+) in `([\w./-]+\.\w+)`")
+NAME = re.compile(r"`(?:[\w]+\.)*([A-Za-z_]\w*)(?:\(\))?`")
+DEFINES = (
+    r"(?:\b(?:function|const|let|var|def|class)\s+{0}\b"
+    r"|^[ \t]*{0}[ \t]*(?::[^=\n]*)?=(?!=))"
+)
+
+
+def _named_in() -> list[tuple[str, str]]:
+    """Every such pair above the last section, which keeps retired names."""
+    text = CONTRACTS_DOC.read_text(encoding="utf-8").split("\n## Changed since")[0]
+    pairs = []
+    for names, path in NAMED_IN.findall(text):
+        pairs += [(n, path) for n in NAME.findall(names)]
+    return pairs
+
+
+def test_every_name_a_contract_places_in_a_file_is_defined_there() -> None:
+    """`STUB_MARK` in `vibemap/quests.py` is a promise about that file."""
+    pairs = _named_in()
+    assert len(pairs) >= 25, "the pattern stopped reading the contracts file"
+    wrong = sorted(
+        f"{name} in {path}"
+        for name, path in pairs
+        if (ROOT / path).is_file()
+        and not re.search(
+            DEFINES.format(re.escape(name)),
+            (ROOT / path).read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
+    )
+    assert not wrong, (
+        f"docs/CONTRACTS.md places names where nothing defines them: {wrong}"
+    )
+
+
+def test_every_build_placeholder_a_contract_names_is_in_the_head() -> None:
+    head = (ROOT / "src" / "head.html").read_text(encoding="utf-8")
+    named = set(re.findall(r"\{\{[A-Z]+\}\}", CONTRACTS_DOC.read_text()))
+    assert named, "the head's placeholders are a contract and the file lost them"
+    assert named <= set(re.findall(r"\{\{[A-Z]+\}\}", head))
+
+
+# What the thread on #95 posted as contracts and still holds on main: one
+# word or name per contract, each of which the contracts file has to carry.
+FROM_ISSUE_95 = {
+    "the rule in the issue body": "pkill",
+    "#72, the renderer": "ACESFilmicToneMapping",
+    "#72, mat() converts once": "`mat()`",
+    "#72, the camera": "`camFitDist()`",
+    "#97, the devcontainers": "`TEMPLATE_NAMES`",
+    "#111, the build refuses broken JavaScript": "`_js_fault()`",
+    "#117, the bridges": "`refreshBridges()`",
+    "#121, the scaffold sentence": "`STUB_MARK`",
+    "#123, the pet's footnote": "`pet.footnote()`",
+    "#132, the head's placeholders": "`{{SITE}}`",
+}
+
+
+@pytest.mark.parametrize("what", sorted(FROM_ISSUE_95))
+def test_each_contract_posted_on_95_that_still_holds_is_listed(what: str) -> None:
+    assert FROM_ISSUE_95[what] in CONTRACTS_DOC.read_text(encoding="utf-8"), what
+
+
+def test_the_adr_names_every_part_the_build_reads_from_src() -> None:
+    """The build reads each file at the top of src/; the decision lists them."""
+    decision = _section(ADR_BUILD.read_text(encoding="utf-8"), "Decision")
+    parts = sorted(f.name for f in (ROOT / "src").iterdir() if f.is_file())
+    missing = [name for name in parts if f"`{name}`" not in decision]
+    assert not missing, f"ADR 0001 does not name {missing}"
+
+
+NUMBER = {"six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+
+
+def _allowed_tools() -> dict[str, list[str]]:
+    """Each skill's pre-approved tools, from its own frontmatter."""
+    found = {}
+    for skill in sorted(SKILL_DIRS.iterdir()):
+        head = (skill / "SKILL.md").read_text(encoding="utf-8").split("\n---", 1)[0]
+        line = re.search(r"^allowed-tools:\s*(.+)$", head, re.MULTILINE)
+        if line:
+            found[skill.name] = re.findall(r"Bash\([^)]*\)|\w+", line.group(1))
+    return found
+
+
+def test_the_skills_doc_says_what_each_skill_pre_approves() -> None:
+    """The bullet names every skill with allowed-tools and every tool it
+    grants: a bare tool by name, a command without its trailing wildcard."""
+    doc = SKILLS_DOC.read_text(encoding="utf-8")
+    bullet = next(line for line in doc.splitlines() if "`allowed-tools`" in line)
+    granted = _allowed_tools()
+    count = NUMBER[bullet.split()[1].lower()]
+    assert count == len(granted), (
+        f"the doc says {count}, the skills have {len(granted)}"
+    )
+    for name, tools in granted.items():
+        said = re.search(rf"`{name}` \(([^)]*)\)", bullet)
+        assert said, f"no entry for {name}"
+        for tool in tools:
+            want = (
+                tool[5:-1].rstrip(" *").rstrip("*")
+                if tool.startswith("Bash(")
+                else tool
+            )
+            assert want in said.group(1), f"{name}: the doc leaves out {want!r}"

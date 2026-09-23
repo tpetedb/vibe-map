@@ -11,7 +11,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
   ```
 
 - At startup Claude sees only `name` and `description`. The description decides whether a skill loads for a prompt, so it says what the skill does and when to use it, with the words a person would type. The spec caps it at 1,024 characters; Claude Code truncates description plus `when_to_use` at 1,536. The body loads only when the skill fires. `/name` loads a skill by hand. Docs: https://code.claude.com/docs/en/skills
-- Eight skills pre-approve their own commands with `allowed-tools`, for the turn that invokes the skill (Claude Code clears the grant at the next message, and it restricts nothing): `camp-progress` (`uv run vibe`, `just`), `council` (`uv run vibe`, Read), `duckdb-sql` (`duckdb`), `justfile` (Read, Edit, and `just --list`, `--summary`, `--fmt --check`, `--dump`), and the four documentation skills with read-only commands: `semver` (`uv run vibe --version`, `git tag -l`), `changelog` (`git log`, `git diff`), `adr` (`ls docs/adr`) and `readme-quickstart` (`ls`, `cat README.md`). The learner is not asked for permission on every call.
+- Eight skills pre-approve their own commands with `allowed-tools`, for the turn that invokes the skill (Claude Code clears the grant at the next message, and it restricts nothing): `camp-progress` (`uv run vibe`, `just`), `council` (`uv run vibe`, Read), `duckdb-sql` (`duckdb`), `justfile` (Read, Edit, `just --list`, `just --summary`, `just --fmt --check`, `just --dump --dump-format json`), and the four documentation skills, each with Read and read-only commands: `semver` (Read, `uv run vibe --version`, `git tag -l`), `changelog` (Read, `git log`, `git diff`), `adr` (Read, `ls docs/adr`) and `readme-quickstart` (Read, `ls`, `cat README.md`). The learner is not asked for permission on every call.
 
 ## The skills
 
@@ -38,7 +38,7 @@ Not skills but in the same family, in `.claude/agents/`: the `scorekeeper` subag
 
 ## Test that each one triggers
 
-Every folder in `.agents/skills/` has a row in both tables here; `tests/test_repo.py` and `tests/test_docs_followups.py` fail when one is missing. Start `claude` in this folder. Type `/` and confirm every folder appears by name. Then type each phrase in a fresh session and check the transcript for the `Skill(<name>)` call before the answer. One negative per skill: a phrase that must not load it.
+Every folder in `.agents/skills/` has a row in both tables here. `tests/test_repo.py` fails when a skill has no row anywhere in this file, and `tests/test_docs_followups.py` when it is missing from either table. Start `claude` in this folder. Type `/` and confirm every folder appears by name. Then type each phrase in a fresh session and check the transcript for the `Skill(<name>)` call before the answer. One negative per skill: a phrase that must not load it.
 
 | Skill | Phrases that must load it | Must not load it |
 |---|---|---|

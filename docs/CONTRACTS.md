@@ -2,7 +2,9 @@
 
 What other agents and branches depend on: a HUD element, a key of the game state `S`, a key of the progress code, a configuration key, a CLI exit code, a test helper, a generated file, a data shape. Change one and you change it for everyone, so a change to a line here goes in the same pull request as the code, and the line says which pull request.
 
-This file replaces the "current contracts" block that lived at the top of issue #95. Each line is dated with the day its pull request reached `main`, and was checked against the code on `main` on 2026-09-23. A contract made in a train car names the pull request that built it; the car is only how it landed. `tests/test_docs_followups.py` holds this file to the code: every helper, path, element id and recipe named here has to exist.
+This file replaces the "current contracts" block that lived at the top of issue #95, and the CONTRACT comments posted under it. Each line is dated with the day its pull request reached `main` (a rule agreed on #95 itself carries the day it was posted there), and was checked against the code on `main` on 2026-09-23. A contract made in a train car names the pull request that built it; the car is only how it landed. `tests/test_docs_followups.py` holds this file to the code: every helper, constant, placeholder, path, element id and recipe named here has to exist.
+
+Left out on purpose, because nothing depends on them once a pull request has landed: which files a pass edits and which lines it leaves alone, a heads-up about a flaky test, how one merge was resolved, a wording change in the CLI or the game, and a check that grew stricter. A contract that no longer holds is not deleted; it moves to the last section with what replaced it.
 
 ## HUD and screens
 
@@ -45,6 +47,8 @@ This file replaces the "current contracts" block that lived at the top of issue 
 - 2026-09-18, #81: `vibe interests set` with an unknown shelf exits 1 with "unknown shelf".
 - 2026-09-19, #119: a command that writes configuration (`vibe name`, `persona`, `difficulty`, `provider`, `mode`, `interests`) exits 1 with "no camp at" outside a camp instead of inventing one.
 - 2026-09-19, #121: a refused manifest raises `quests.Refused`, a `ValueError`, and prints its message alone.
+- 2026-09-19, #121: `STUB_MARK` in `vibemap/quests.py` is the sentence every scaffold writes (`STUB_LINES` in `vibemap/cli.py` spells it through the constant), and a file that still holds it never passes a check. A test that writes a scaffold uses the constant, not the words.
+- 2026-09-19, #123: the line under the terminal pet is `pet.footnote()`: the credit `pet.credit()` returns, plus, on a terminal that paints no truecolor, one sentence naming `vibe pet --style ascii`. Both take an optional `env` for tests.
 - 2026-09-20, #138: `vibe check` refuses two of `--mentor`, `--artifact`, `--topic` and `--fork` at once (exit 1); `vibe news --limit` and `vibe explain --commits` below 1 exit 2 with click's message; `vibe scores` with no scores yet exits 0; `vibe start` without a terminal exits 1.
 - 2026-09-20, #138: the progress grid has one language, `stop_marks()` in `vibemap/campaign.py` (`x` checked, `i` claimed, `>` next, `.` to do), and `stop_count()` replaces the literal 8.
 
@@ -81,6 +85,9 @@ This file replaces the "current contracts" block that lived at the top of issue 
 
 - 2026-09-18, #61: every dashboard event goes through `track()`, exposed as `window.track`.
 - 2026-09-19, #72: `mergeStatic()`, `win()`, `blobAdd()`, `blobFlush()` and `tintGeo()` in `src/game/10-scene.js` are the scene's shared builders; `CAM`, `EXPOSURE` and `SKY_RIG` in `src/config/00-config.js` hold the numbers. `window.__gfx()`, `window.__scene()` and `window.__minimap()` are the seams.
+- 2026-09-19, #72: the renderer tone maps with `ACESFilmicToneMapping` at `EXPOSURE` into sRGB, set once in `init3d()`, so every colour in the scene is tone mapped: a raw `MeshBasicMaterial` at full white reads light grey. `mat()` in `src/game/10-scene.js` converts a colour to linear once; never convert it a second time.
+- 2026-09-19, #72: the camera has no fixed position. `camFitDist()` in `src/game/21-world-build.js` derives its distance from the island's radius and the stage's aspect ratio, with the numbers in `CAM`; the follow is eased in time, so a test that reads the camera waits for frames to settle first.
+- 2026-09-19, #117: the bridges are derived state: `refreshBridges()` in `src/game/22-archipelago.js` recomputes them and rebuilds the decks when one opens or shuts, and `bridgeOpen()` reads `difficulty()`. A test reads a bridge's ends from `window.__debug()` (`bridges`), never from a hard-coded coordinate.
 - 2026-09-19, #120: text that did not come from our own package data goes into HTML through `esc()` and into a link through `safeUrl()`, both in `src/game/00-state.js`.
 - 2026-09-20, #131: every injected constant goes through `js_json()` in `tools/build.py`, and `just sinks-check` fails on a new raw value in an HTML template.
 - 2026-09-19, #113: `bubble()` is the only way into the speech bubble; `stopCount()` and `finaleStop()` replace the literal 8 and 9; `window.__data()` carries `campaign`.
@@ -91,11 +98,15 @@ This file replaces the "current contracts" block that lived at the top of issue 
 
 ## The build
 
+- 2026-09-19, #111: `tools/build.py` refuses to write the game when a part is not JavaScript the browser can read. `_js_fault()` weighs the brackets of each part on its own, skipping strings, template literals, comments and regular expressions, and the message names the part and the line; when `just build` stops on your branch, read the line it names.
+- 2026-09-19, #132: `src/head.html` carries two build placeholders, `{{SITE}}` and `{{ICON}}`, filled by `_head_html()` in `tools/build.py` from `[game] site_url` and `src/icon.svg`; an unfilled one stops the build. Leave both tokens in place when you edit the head.
 - 2026-09-21, #162: the build finds modules by file name, not by a list: two digits, an optional letter, a dash, lowercase words (`MODULE_NAME` in `tools/build.py`). A new module is a new file; a misnamed file stops the build.
-- 2026-09-22, #178: `src/game/`, then src/galaxy/ when that folder exists (Galaxy, not on main yet), and boot (`src/game/90-boot.js`) after every folder, because its calls at load read constants the modules declare.
+- 2026-09-22, #178: the build reads the module folders in the order of `MODULE_DIRS` in `tools/build.py`, `src/game/` and then `src/galaxy/` when that folder exists (the Galaxy is not on `main` yet), and puts boot (`src/game/90-boot.js`) after every folder, because its calls at load read constants the modules declare.
 
 ## Working together
 
+- 2026-09-18, #95: never `pkill` or `killall` by pattern. Several agents share one machine, and a pattern also stops their servers and browsers; stop a process by the pid you started it with.
+- 2026-09-18, #97: the product's `.devcontainer/devcontainer.json` and the camp's `vibemap/data/template/_devcontainer/devcontainer.json` are strict JSON, not JSONC, and `tests/test_onboarding.py` holds their keys to the devcontainer reference; `_devcontainer` is in `TEMPLATE_NAMES` in `vibemap/cli.py`, so `vibe new` writes it as `.devcontainer/`.
 - 2026-09-18, #99: `main` is protected with strict required checks, `lint, unit tests, generated files in sync` and `Playwright tests (Chromium and WebKit)`, and the rule binds administrators too. The aggregator job owns the second name, never a shard.
 - 2026-09-21, #144: a task for an agent is a work order under `work/orders/`, checked by `tools/work.py`: `just work-check` is what done means, and a review by someone else lands with the code.
 - 2026-09-21, #144: a session's report under an order starts with the line `order: <id>`, which is how the stop hook finds the order; a subagent is found by the edits the other hook saw.

@@ -54,7 +54,7 @@ and the warning goes away.
 | How far apart the four islands sit, and how wide a bridge is | `ISLAND_GAP`, `BRIDGE_W`, `BRIDGE_REST_R` in `src/config/00-config.js` | `just build` |
 | Which islands a bridge joins, and where it meets each shore | `BRIDGE_CHAIN` in `src/game/20-worlds.js` | `just build` |
 | A game module (scene, worlds, sheet, boot) | `src/game/*.js`; a new module is a new file, nothing to register | `just build`, then `uv run python tools/sync_fork_source.py` |
-| The load order itself | the file names: two digits, an optional letter, a dash, lowercase words (`MODULE_NAME` in `tools/build.py`). The build reads `src/config/`, then `src/game/`, then `src/galaxy/` when it exists, each sorted by name, and moves `game/90-boot.js` to the very end, because its calls at load read constants every other module declares. A file in a module folder with any other name stops the build | `just build` |
+| The load order itself | the file names: two digits, an optional letter, a dash, lowercase words (`MODULE_NAME` in `tools/build.py`). The build reads the `*.js` files of `src/config/` in name order, then the modules of `src/game/`, then those of `src/galaxy/` when it exists, each folder sorted by that name, and moves `game/90-boot.js` to the very end, because its calls at load read constants every other module declares. A file in `src/game/` or `src/galaxy/` with any other name stops the build; `src/config/` is not held to the rule | `just build` |
 | Three.js, Motion, d3-force | `src/vendor/` (never edited by hand) | `just build` |
 | The campaign: evenings, stops, mentors, artifacts | `vibemap/data/campaign.json` | `just build` |
 | An artifact's Do it for real walkthrough and its check | `vibemap/data/campaign.json` `real` block, kinds in `vibemap/artifact_checks.py` | `just build` |
@@ -71,9 +71,10 @@ where they expect them.
 
 ## The fork
 
-`vibe fork` copies `src/`, `tools/build.py` and the generated inputs
-(`notes.js`, `tree.js` and `campaign.json` under `tools/generated/`) into
-`workspace/forks/vibe-map/`, and writes `tools/record_build.py`, a `justfile`
+`vibe fork` copies `src/`, `tools/build.py` and the generated `notes.js` and
+`tree.js` from `tools/generated/` into `workspace/forks/vibe-map/`, and writes
+`tools/generated/campaign.json` from the package data (so the fork builds
+without the package), `tools/record_build.py`, a `justfile`
 (`build`, `game`, `record`), a `README.md` with the four challenges and a
 versioned `fork.json`. The copy of `src/` includes `src/config/`, which is
 the fork's own from then on. Your fork is yours to break and repair; the course keeps living

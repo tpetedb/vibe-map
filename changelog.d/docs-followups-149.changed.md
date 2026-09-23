@@ -12,4 +12,7 @@
   product-only skills, lists every skill that pre-approves commands, and
   names the backup hook's real folder and the work-order hooks and roles.
 - `tests/test_docs_followups.py` holds these documents to the code: every
-  recipe, skill, helper, path and element they name has to exist.
+  recipe (inline, indented or in a fenced block), skill, helper, constant
+  placed in a file, head placeholder, path and element they name has to
+  exist, and each skill's pre-approved tools are the ones its frontmatter
+  grants.
