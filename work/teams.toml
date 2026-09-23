@@ -41,7 +41,7 @@ tests = ["tests/test_cli.py", "tests/test_cli_rest.py"]
 [[teams]]
 id = "harness"
 title = "How the work is done: tools, checks, hooks, skills, CI, these orders"
-paths = ["tools/", "work/", ".claude/", ".codex/", ".mcp.json", ".agents/", ".github/", "justfile", "agents.just", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".gitignore", ".gitattributes", ".python-version", "env.example", "scripts/", ".devcontainer/", "src/vendor/", "CHANGELOG.md"]
+paths = ["tools/", "work/", ".claude/", ".codex/", ".mcp.json", ".agents/", ".github/", "justfile", "agents.just", "AGENTS.md", "CLAUDE.md", "pyproject.toml", "uv.lock", ".gitignore", ".gitattributes", ".python-version", "env.example", "scripts/", ".devcontainer/", "src/vendor/", "CHANGELOG.md", "config.toml", "compose.agents.yaml", "mise.toml", "mise.lock", "copier.yml", ".copier-answers.yml", ".pre-commit-config.yaml", ".gemini/", ".aider.conf.yml", "evals/"]
 tests = ["tests/test_work.py", "tests/test_repo.py", "tests/test_build.py"]
 
 [[teams]]

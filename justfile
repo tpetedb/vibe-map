@@ -86,6 +86,20 @@ board-slot verb job who:
 memory-lint:
     python3 tools/board.py memory-lint
 
+# example: just memory-search gotcha:
+# the shared memory's entities and the indexed orders that hold every word
+memory-search term:
+    python3 tools/board.py memory search {{quote(term)}}
+
+# example: just memory-add gotcha:gh-merge "gh pr merge is denied in auto mode" claude "PR #192"
+# one observation into the shared memory, the index rebuilt, both under its lock
+memory-add name fact team src:
+    uv run python tools/board.py memory add {{quote(name)}} {{quote(fact)}} --team {{quote(team)}} --src {{quote(src)}}
+
+# rebuild the shared memory's index.json from the memory and work/orders
+memory-index:
+    uv run python tools/board.py memory index
+
 # the Unreleased view assembled from the fragments in changelog.d/
 changelog:
     @uv run python tools/changelog.py draft

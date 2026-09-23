@@ -1,9 +1,10 @@
 """The shared memory: a digest that stays small, a lint that refuses what must
-not be stored, and writes from several server processes that never lose one.
+not be stored, writes from several CLI processes that never lose one, and an
+index that is derived, so rebuilding it twice changes nothing.
 
-The server stand-in below keeps the real server's write pattern (load the
-whole file, change it, rename a new file into place), which is exactly what
-loses a write when two processes do it at once without a lock.
+Every write loads the whole file, changes it and renames a new file into place,
+which is exactly what loses a write when two processes do it at once without
+the lock; the writer test runs real processes for that reason.
 """
 
 from __future__ import annotations
@@ -12,7 +13,6 @@ import json
 import os
 import subprocess
 import sys
-import textwrap
 from pathlib import Path
 
 import pytest
@@ -55,7 +55,7 @@ def test_the_digest_stays_under_budget_on_a_full_graph(tmp_path: Path) -> None:
     assert len(text) < 6000
     assert text.startswith("-- shared memory: 300 entities, 0 relations")
     assert text.splitlines()[-1].startswith("... ")
-    assert "search_nodes('rule:')" in text.splitlines()[-1]
+    assert "memory search rule:" in text.splitlines()[-1]
 
 
 def test_a_small_graph_shows_every_rule_and_gotcha_and_ten_newest_decisions(
@@ -151,155 +151,177 @@ def test_the_lint_command_fails_on_a_malformed_line(tmp_path: Path) -> None:
 
 # ---------------------------------------------------------------- writers
 
-SERVER = textwrap.dedent(
-    """
-    import json, os, sys
-    path, log = os.environ["MEMORY_FILE_PATH"], os.environ["FAKE_LOG"]
 
-    def note(text):
-        fd = os.open(log, os.O_WRONLY | os.O_APPEND | os.O_CREAT)
-        os.write(fd, (text + "\\n").encode())
-        os.close(fd)
+@pytest.fixture
+def memory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    path = tmp_path / "board" / "memory.jsonl"
+    monkeypatch.setenv("VIBE_MEMORY_FILE", str(path))
+    return path
 
-    for line in sys.stdin:
-        msg = json.loads(line)
-        if msg.get("method") != "tools/call":
-            continue
-        note(f"start {os.getpid()}")
-        try:
-            lines = open(path).read().splitlines()
-        except FileNotFoundError:
-            lines = []
-        for e in msg["params"]["arguments"].get("entities", []):
-            lines.append(json.dumps({"type": "entity", **e}))
-        tmp = f"{path}.{os.getpid()}.tmp"
-        with open(tmp, "w") as fh:
-            fh.write("\\n".join(lines))
-        os.replace(tmp, path)
-        note(f"end {os.getpid()}")
-        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
-    """
+
+def _orders_root(tmp_path: Path) -> Path:
+    """A checkout with four orders, one in each state a folder can say."""
+    root = tmp_path / "checkout"
+    (root / "work").mkdir(parents=True)
+    (root / "work" / "teams.toml").write_bytes((ROOT / "work/teams.toml").read_bytes())
+    for oid, builder, verdict in (
+        ("alpha-open", "", ""),
+        ("bravo-building", "builder-b", ""),
+        ("charlie-improve", "builder-c", "improve"),
+        ("delta-accepted", "builder-d", "accept"),
+    ):
+        folder = root / "work" / "orders" / oid
+        folder.mkdir(parents=True)
+        (folder / "order.toml").write_text(
+            f'v = 1\nid = "{oid}"\ntitle = "About {oid}"\nteam = "harness"\n'
+            f'branch = "b/{oid}"\ngoal = ""\nbuilder = "{builder}"\n'
+            f'owns = ["tools/{oid}.py"]\ncross = []\nneeds = []\n\n'
+            '[[criteria]]\nid = "c1"\ntext = "t"\ncheck = "true"\n',
+            encoding="utf-8",
+        )
+        if verdict:
+            (folder / "review.toml").write_text(f'verdict = "{verdict}"\n')
+    return root
+
+
+def test_add_makes_an_entity_then_appends_and_replaces(memory: Path) -> None:
+    day = board.datetime(2026, 9, 24, tzinfo=board.UTC_ZONE)
+    board.remember("gotcha:gh-merge", "gh pr merge is denied", "claude", "PR #192",
+                   now=day)  # fmt: skip
+    board.remember("gotcha:gh-merge", "hand Tom the command", "codex", "ROOM 1a2b",
+                   now=day, relate=("documented_in=gotcha:gh-merge",))  # fmt: skip
+    [e], [r], _ = board.load_graph(memory)
+    assert e["entityType"] == "gotcha"
+    assert e["observations"] == [
+        "2026-09-24 [team:claude] gh pr merge is denied, src: PR #192",
+        "2026-09-24 [team:codex] hand Tom the command, src: ROOM 1a2b",
+    ]
+    assert r == {"type": "relation", "from": "gotcha:gh-merge",
+                 "to": "gotcha:gh-merge", "relationType": "documented_in"}  # fmt: skip
+    board.remember("gotcha:gh-merge", "merge by hand", "board", "ADR 18",
+                   replace="is denied", now=day)  # fmt: skip
+    [e], _, _ = board.load_graph(memory)
+    assert [o.split("] ")[1] for o in e["observations"]] == [
+        "hand Tom the command, src: ROOM 1a2b",
+        "merge by hand, src: ADR 18",
+    ]
+    assert board.lint(memory) == []
+
+
+@pytest.mark.parametrize(
+    ("name", "fact", "relate", "says"),
+    [
+        ("Rule:A", "x", (), "kind:slug"),
+        ("rule:a", "api_key = abcdefgh1234", (), "looks like a secret"),
+        ("rule:a", "y" * 200, (), "under 200"),
+        ("rule:full", "the ninth", (), "9 observations"),
+        ("rule:a", "x", ("likes=rule:full",), "type is one of"),
+        ("rule:a", "x", ("supersedes=rule:gone",), "does not exist"),
+        ("rule:a", "x", ("supersedes",), "type=kind:slug"),
+    ],
 )
-
-CLIENT = textwrap.dedent(
-    """
-    import json, subprocess, sys
-    board, server, who, n = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
-    p = subprocess.Popen(
-        [sys.executable, board, "memory-serve", "--", sys.executable, server],
-        stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
-    )
-    for k in range(n):
-        name = f"gotcha:{who}-{k}"
-        call = {"name": "create_entities", "arguments": {"entities": [
-            {"name": name, "entityType": "gotcha", "observations": []}]}}
-        p.stdin.write(json.dumps({"jsonrpc": "2.0", "id": k, "method": "tools/call",
-                                  "params": call}) + "\\n")
-        p.stdin.flush()
-        assert json.loads(p.stdout.readline())["id"] == k
-    p.stdin.close()
-    sys.exit(p.wait())
-    """
-)
+def test_add_refuses_a_write_that_would_break_the_lint_and_writes_nothing(
+    memory: Path, name: str, fact: str, relate: tuple[str, ...], says: str
+) -> None:
+    _write(memory.parent.mkdir(parents=True) or memory,
+           [_entity("rule:full", *(_obs(1, f"f{n}") for n in range(8)))])  # fmt: skip
+    before = memory.read_bytes()
+    with pytest.raises(ValueError, match=says):
+        board.remember(name, fact, "claude", "work/BOARD.md", relate=relate)
+    assert memory.read_bytes() == before
+    assert not board.index_file().exists()
 
 
-def test_two_server_processes_writing_at_once_lose_nothing(tmp_path: Path) -> None:
-    server = tmp_path / "server.py"
-    server.write_text(SERVER, encoding="utf-8")
-    memory, log = tmp_path / "board" / "memory.jsonl", tmp_path / "server.log"
-    env = {**os.environ, "VIBE_MEMORY_FILE": str(memory), "FAKE_LOG": str(log)}
-    n = 60
-    clients = [
+def test_the_index_is_derived_from_the_memory_and_the_orders_and_idempotent(
+    memory: Path, tmp_path: Path
+) -> None:
+    root = _orders_root(tmp_path)
+    board.remember("decision:old", "first", "claude", "ROOM 1", root=root)
+    board.remember("decision:new", "about bravo-building", "codex", "ROOM 2",
+                   relate=("supersedes=decision:old",), root=root)  # fmt: skip
+    for n in range(8):
+        board.remember("gotcha:big", f"fact {n}", "board", "ROOM 3", root=root)
+    first = board.index_file().read_bytes()
+    assert board.reindex(root) == 7
+    assert board.index_file().read_bytes() == first, "rebuilding changes nothing"
+
+    rows = {r["id"]: r for r in json.loads(first)["rows"]}
+    assert list(rows) == sorted(rows)
+    assert all(set(r) == {"id", "order", "topic", "owner", "status", "next"}
+               for r in rows.values())  # fmt: skip
+    assert rows["order:alpha-open"]["status"] == "open"
+    assert rows["order:bravo-building"]["owner"] == "team:harness, builder-b"
+    assert rows["order:bravo-building"]["status"] == "building"
+    assert rows["order:charlie-improve"]["status"] == "improve"
+    assert rows["order:delta-accepted"]["next"] == "work-accept, then land"
+    assert rows["decision:new"] == {
+        "id": "decision:new", "order": "bravo-building", "topic": "decision",
+        "owner": "team:codex", "status": "current", "next": "",
+    }  # fmt: skip
+    assert rows["decision:old"]["status"] == "superseded"
+    assert rows["gotcha:big"]["next"] == "fold into a doc"
+
+
+def test_search_finds_entities_and_orders_by_every_word(
+    memory: Path, tmp_path: Path
+) -> None:
+    root = _orders_root(tmp_path)
+    board.remember("gotcha:sync-main", "take either side of a generated file",
+                   "claude", "tools/sync_main.py", root=root)  # fmt: skip
+    board.remember("rule:no-em-dashes", "no em-dashes", "claude", "AGENTS.md",
+                   root=root)  # fmt: skip
+    [hit] = board.search("GENERATED")
+    assert hit.startswith("- gotcha:sync-main: 2026-") and "either side" in hit
+    assert board.search("gotcha: generated side")[0].startswith("- gotcha:sync-main")
+    assert board.search("nothing like this") == []
+    assert board.search("bravo building") == [
+        "- order:bravo-building [building] About bravo-building; "
+        "next: work-check OK, then a review"
+    ]
+    full = board.search("sync-main", full=True)
+    assert full[0] == "- gotcha:sync-main" and full[1].startswith("    2026-")
+
+
+def test_the_writers_refuse_under_an_older_python(
+    memory: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(board.sys, "version_info", (3, 9, 6))
+    with pytest.raises(ValueError, match="needs Python 3.11"):
+        board.remember("rule:a", "x", "claude", "s")
+    assert not memory.exists()
+
+
+WRITER = """
+import sys
+from pathlib import Path
+# tools/ first, as for python3 tools/board.py: work/ is a folder here too
+sys.path[:0] = [sys.argv[1] + "/tools", sys.argv[1]]
+from tools import board
+who, n, board.ROOT = sys.argv[2], int(sys.argv[3]), Path(sys.argv[4])
+for k in range(n):
+    argv = ["memory", "add", f"gotcha:{who}-{k}", f"write {k} of {who}",
+            "--team", who, "--src", "tests/test_memory.py"]
+    assert board.main(argv) == 0
+"""
+
+
+def test_two_cli_writers_at_once_lose_nothing(memory: Path, tmp_path: Path) -> None:
+    """Each process runs the command line's main in a loop over a small checkout,
+    so the two write as fast as they can and their writes overlap: without the
+    lock this loses writes on every run."""
+    n, root = 100, _orders_root(tmp_path)
+    writers = [
         subprocess.Popen(
-            [sys.executable, "-c", CLIENT, str(BOARD), str(server), who, str(n)],
-            env=env,
+            [sys.executable, "-c", WRITER, str(ROOT), who, str(n), str(root)],
+            stdout=subprocess.DEVNULL,
         )
         for who in ("claude", "codex")
     ]
-    assert [c.wait(timeout=120) for c in clients] == [0, 0]
+    assert [w.wait(timeout=120) for w in writers] == [0, 0]
 
     names = {e["name"] for e in board.load_graph(memory)[0]}
     assert len(names) == 2 * n, f"{2 * n - len(names)} writes lost"
-    # One writer at a time: every start is followed by its own end.
-    events = log.read_text().split("\n")[:-1]
-    assert len(events) == 4 * n
-    for start, end in zip(events[::2], events[1::2], strict=True):
-        assert start.startswith("start ") and end == "end " + start[6:]
-
-
-def test_the_whole_graph_is_never_served(tmp_path: Path) -> None:
-    server = tmp_path / "server.py"
-    server.write_text(SERVER, encoding="utf-8")
-    env = {
-        **os.environ,
-        "VIBE_MEMORY_FILE": str(tmp_path / "memory.jsonl"),
-        "FAKE_LOG": str(tmp_path / "server.log"),
-    }
-    asks = [
-        {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
-         "params": {"name": "read_graph", "arguments": {}}},
-        {"jsonrpc": "2.0", "id": 2, "method": "resources/read",
-         "params": {"uri": "memory://knowledge-graph"}},
-    ]  # fmt: skip
-    run = subprocess.run(
-        [sys.executable, str(BOARD), "memory-serve", "--", sys.executable, str(server)],
-        input="".join(json.dumps(a) + "\n" for a in asks),
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    answers = {m["id"]: m for m in map(json.loads, run.stdout.splitlines())}
-    assert answers[1]["result"]["isError"] is True
-    assert "search_nodes" in answers[1]["result"]["content"][0]["text"]
-    assert "search_nodes" in answers[2]["error"]["message"]
-    assert not (tmp_path / "server.log").exists(), "neither reached the server"
-
-
-SILENT = "import sys\nfor line in sys.stdin:\n    pass\n"
-
-
-def test_a_server_that_never_answers_a_write_does_not_hold_the_lock(
-    tmp_path: Path,
-) -> None:
-    """A hung server gets the write's time limit, not every session's writes:
-    its client is told the write may not have happened, and the lock is free."""
-    silent, server = tmp_path / "silent.py", tmp_path / "server.py"
-    silent.write_text(SILENT, encoding="utf-8")
-    server.write_text(SERVER, encoding="utf-8")
-    env = {
-        **os.environ,
-        "VIBE_MEMORY_FILE": str(tmp_path / "board" / "memory.jsonl"),
-        "FAKE_LOG": str(tmp_path / "server.log"),
-        "VIBE_MEMORY_WRITE_TIMEOUT": "1",
-    }
-    call = {"name": "create_entities", "arguments": {"entities": [
-        {"name": "gotcha:after-the-hang", "entityType": "gotcha", "observations": []}
-    ]}}  # fmt: skip
-    ask = json.dumps(
-        {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": call}
-    )
-    hung = subprocess.Popen(
-        [sys.executable, str(BOARD), "memory-serve", "--", sys.executable, str(silent)],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        env=env,
-        text=True,
-    )
-    assert hung.stdin and hung.stdout
-    hung.stdin.write(ask + "\n")
-    hung.stdin.flush()
-    try:
-        # A second process writes while the first still waits on its server.
-        run = subprocess.run(
-            [sys.executable, "-c", CLIENT, str(BOARD), str(server), "late", "1"],
-            env=env,
-            timeout=20,
-        )
-        assert run.returncode == 0
-        answer = json.loads(hung.stdout.readline())
-        assert answer["id"] == 7 and "did not answer" in answer["error"]["message"]
-    finally:
-        hung.stdin.close()
-        hung.wait(timeout=20)
-    assert board.MUTATION_TIMEOUT <= 10
+    assert board.lint(memory) == []
+    rows = json.loads(board.index_file().read_text())["rows"]
+    assert {r["id"] for r in rows if not r["id"].startswith("order:")} == names
+    assert not list(memory.parent.glob("*.tmp")), "no half-written file is left"

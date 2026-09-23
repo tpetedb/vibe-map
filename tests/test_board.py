@@ -305,21 +305,21 @@ def test_the_session_start_hook_reads_under_an_older_python3(
     assert "tools/work.py needs Python 3.11" in run.stdout
 
 
-def test_both_clients_start_the_same_memory_and_neither_can_dump_it() -> None:
-    mcp = json.loads((ROOT / ".mcp.json").read_text())["mcpServers"]["memory"]
+def test_no_memory_server_is_registered_and_codex_writes_only_the_board() -> None:
+    """The memory is files and board.py (DECISION #193 section 4): neither client
+    starts a server, and Codex's one extra writable root is the main checkout's
+    board, relative to .codex/ (amendment A2)."""
+    assert not (ROOT / ".mcp.json").exists()
+    assert not (ROOT / "scripts" / "memory-mcp.sh").exists()
     codex = tomllib.loads((ROOT / ".codex" / "config.toml").read_text())
-    server = codex["mcp_servers"]["memory"]
-    assert "scripts/memory-mcp.sh" in " ".join(mcp["args"])
-    assert "scripts/memory-mcp.sh" in " ".join(server["args"])
-    assert server["disabled_tools"] == ["read_graph"]
+    assert "mcp_servers" not in codex
+    assert codex["sandbox_workspace_write"] == {"writable_roots": ["../.git/board"]}
     settings = json.loads((ROOT / ".claude" / "settings.json").read_text())
-    assert "mcp__memory__read_graph" in settings["permissions"]["deny"]
-    script = (ROOT / "scripts" / "memory-mcp.sh").read_text()
-    assert "@modelcontextprotocol/server-memory@2026.8.31" in script
-    assert "memory-serve" in script and "--git-common-dir" in script
+    assert "mcp__memory" not in json.dumps(settings)
+    assert "memory-serve" not in BOARD.read_text()
 
 
-def test_a_camp_gets_no_board_hook_no_memory_rule_and_no_memory_skill() -> None:
+def test_a_camp_gets_no_board_hook_and_no_memory_skill() -> None:
     camp = sync_template.camp_settings()
     assert "board.py" not in camp and "memory" not in camp
     assert "SessionStart" not in json.loads(camp)["hooks"]

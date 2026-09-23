@@ -1,6 +1,6 @@
 # The board
 
-Two teams build this repository at once, Team Claude and Team Codex. The board coordinates them. This page covers who sits on the board, what it decides, what it never overrides, and how every session reads and writes the two shared files. The tool is `tools/board.py`, the memory how-to is the skill `shared-memory`, and the reasons are in ADR 0018.
+Two teams build this repository at once, Team Claude and Team Codex. The board coordinates them. This page covers who sits on the board, what it decides, what it never overrides, and how every session reads and writes the two shared files. The tool is `tools/board.py`, the memory how-to is the skill `shared-memory`, the history is ADR 0018 and the current memory design is DECISION #193 section 4.
 
 ## Who sits on it
 
@@ -49,21 +49,31 @@ The room is `ROOM.md` in `$(git rev-parse --path-format=absolute --git-common-di
 
 ## The memory: long-term, searched
 
-The memory is `memory.jsonl` in the same folder. It is the official MCP memory server (`@modelcontextprotocol/server-memory@2026.8.31`), started by `scripts/memory-mcp.sh` for both clients. `tools/board.py` sits in front of the server. It holds a lock around every write, so two sessions writing at once lose nothing, and it refuses the whole-graph read. It holds that lock for at most 10 seconds per write: a server silent that long is hung, its client gets an error saying the write may not have happened, and every other session can write again.
+The memory is `memory.jsonl` in the same folder, with `index.json` derived from it. There is no server (DECISION #193 section 4): every read and write goes through `tools/board.py`, which costs a session less context than an MCP server and needs nothing installed.
+
+| Command | What it does |
+|---|---|
+| `just memory-search <word>` | Entities and indexed orders that hold every word, one line each; `--full` on `board.py memory search` prints every observation and relation. Any `python3`. |
+| `just memory-add <kind:slug> "<fact>" <team> "<src>"` | Appends one observation, creating the entity if new, then rebuilds the index. `--replace` and `--relate` on `board.py memory add`. |
+| `just memory-index` | Rebuilds `index.json` from the memory and `work/orders/`. |
+| `just memory-lint` | Checks the caps, the name and observation format, secret-looking lines and relations that point nowhere. |
+
+- **One lock.** `memory add` takes the memory's lock, reads the file, writes a new one and renames it into place, rebuilds the index and only then lets go. Two writers in two processes at once lose nothing, and a reader never sees half a file.
+- **The index.** One row per entity and per work order: `id`, `order`, `topic`, `owner`, `status`, `next`. An order is open, building, improve, accepted or landed, read from its folder and `origin/main`; an entity is current or superseded. It holds no clock, so rebuilding an unchanged state changes nothing. The orders come from the checkout that ran the command.
+- **Python.** `memory add` and `memory index` need 3.11, because they read orders through `tools/work.py`; run them with `uv run`. Under an older `python3` they refuse and write nothing.
 
 The room is where work happens now: claims, slots, handoffs, questions. The memory holds what a later session would otherwise have to work out again. When a DECISION or LANDED entry changes how people work, it also becomes a `decision:` or `rule:` entity that cites the room entry or issue #95.
 
 - **Reading.**
   - The session-start digest has every `rule:` and `gotcha:` entity and the ten newest `decision:` entities.
-  - Before opening docs about an unfamiliar area, run one `search_nodes` with a single keyword or a prefix such as `gotcha:`. Subagents do the same, because they get no session-start hook.
-  - Never call `read_graph`. Both configs switch it off and the proxy refuses it.
-- **Writing.** Write only at a checkpoint or a landing, and only a fact another session would otherwise have to rediscover.
-  - Run `search_nodes` first. If the entity already exists, use `add_observations`.
-  - To change a fact, delete the old observation, then add the new one.
+  - Before opening docs about an unfamiliar area, run one search with a single keyword or a prefix such as `gotcha:`. Subagents do the same, because they get no session-start hook.
+  - Never read the whole file into a context window. Search it.
+- **Writing.** Write only at a checkpoint or a landing, and only a fact another session would otherwise have to rediscover. Search first. To change a fact, add the new one with `--replace` naming the old one.
 - **Names.** Every name has the form `kind:slug`. The kind is one of `rule`, `gotcha`, `decision`, `contract`, `component` or `team`, and `entityType` is the kind. For example, `gotcha:gh-pr-merge-auto-mode` or `component:tools/board.py`.
 - **Observations.** Each observation has the form `YYYY-MM-DD [team:<claude|codex|board>] <one fact>, src: <path|PR #n|ADR n|room entry id>`. It is at most 200 characters, and each entity has at most 8.
 - **Relations.** The relation types are `owns`, `depends_on`, `supersedes` and `documented_in`. A relation may only point at an entity that exists.
-- **Caps.** The memory holds at most 300 entities. Over that, fold the details into a doc and leave a pointer. At about 300 entities, or when substring search stops finding things, it is time to switch to Basic Memory (ADR 0018).
+- **Caps.** The memory holds at most 300 entities. Over that, fold the details into a doc and leave a pointer. Semantic search comes only after a measured need.
+- **Refusals.** A write that would add a lint problem is refused whole.
 - **Never store:**
   - secrets, tokens, `.env` contents, or anything from a path the deny lists block
   - personal data or scores
@@ -71,11 +81,9 @@ The room is where work happens now: claims, slots, handoffs, questions. The memo
   - transient status (that goes in the room)
   - anything `AGENTS.md` already says
 
-`just memory-lint` checks the caps, the name and observation format, secret-looking lines and relations that point nowhere.
-
 ## Setup on a machine
 
-- **Claude Code.** Approve the `memory` server from `.mcp.json` once when prompted, then run `claude mcp get memory`.
-- **Codex.** Trust the project, then run `codex mcp list`. It should show `memory` enabled and `read_graph` disabled. Codex asks you to trust the SessionStart hook in its own prompt; grant it there and bypass nothing.
+- **Claude Code.** Nothing to approve: the SessionStart hook reads the board, and Bash writes it through `tools/board.py`.
+- **Codex.** Trust the project. The main checkout's `.codex/config.toml` makes `../.git/board` (relative to `.codex/`) the one extra writable root; nothing under `.agents/` or elsewhere in `.git` is. A session in a linked worktree, whose `.git` is a file, gets the board with `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"` on every fresh and resumed launch. Codex asks you to trust the SessionStart hook in its own `/hooks` prompt; grant it there and bypass nothing. No MCP server is registered on either client.
 - **Once, in a checkout with an untracked `.codex/hooks.json`.** The main checkout had one, holding Codex's copies of the work-order hooks. Git refuses the pull that brings the tracked file ("untracked working tree files would be overwritten by merge"), so move it aside first: `mv .codex/hooks.json .codex/hooks.json.local`, pull, compare, then delete the local copy. The tracked file carries the same four work-order hooks as `.claude/settings.json` (a test keeps them equal) plus the SessionStart reader. `.codex/agents/`, Codex's role definitions, stays untracked and is not touched.
-- **Camps.** Camps get none of this: `tools/sync_template.py` leaves out the hook, the deny rule and the skill.
+- **Camps.** Camps get none of this: `tools/sync_template.py` leaves out the hook and the skill.

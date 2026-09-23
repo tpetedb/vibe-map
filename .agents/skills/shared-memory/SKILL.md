@@ -1,40 +1,49 @@
 ---
 name: shared-memory
-description: How any agent of either team reads and writes the shared memory of this repository (the official MCP memory server, one graph for every worktree, Claude and Codex) and the board room next to it. Use at the start of work in an unfamiliar area, before writing down a lesson, a gotcha, a rule or a decision another session will need, when asked "what do we know about", "remember this", "is there a gotcha for", or when posting to the board.
+description: How any agent of either team reads and writes the shared memory of this repository (one memory.jsonl and a derived index.json for every worktree, Claude and Codex, written only through tools/board.py) and the board room next to it. Use at the start of work in an unfamiliar area, before writing down a lesson, a gotcha, a rule or a decision another session will need, when asked "what do we know about", "remember this", "is there a gotcha for", or when posting to the board.
 ---
 # Shared memory and the board room
 
-There are two shared files, both in `$(git rev-parse --path-format=absolute --git-common-dir)/board/`. They are never committed.
+Three shared files sit in `$(git rev-parse --path-format=absolute --git-common-dir)/board/`. None is ever committed.
 
-- **`ROOM.md`** is the room: append-only and short-term. Claims, slots, handoffs, questions and decisions go here.
-- **`memory.jsonl`** is the memory: a searched graph of facts that a later session would otherwise have to work out again.
+- **`ROOM.md`** is the room: append-only and short-term. Slots, handoffs, questions, checkpoints and decisions go here.
+- **`memory.jsonl`** is the memory: facts a later session would otherwise have to work out again.
+- **`index.json`** is derived from the memory and `work/orders/`: one row per entity and per order (id, order, topic, owner, status, next action). Never edit it; `memory add` and `memory index` rebuild it.
 
-`work/BOARD.md` is the protocol. This skill covers the day-to-day use.
+There is no memory server. Every read and write goes through `tools/board.py`. `work/BOARD.md` is the protocol; this skill covers the day-to-day use.
 
 ## Reading
 
-1. **Main sessions** already have the digest: the SessionStart hook ran `python3 tools/board.py read`. It contains every `rule:` and `gotcha:` entity and the ten newest `decision:` entities.
-2. **Subagents** get no hook. Before opening docs about an unfamiliar area, run one `search_nodes` with a single keyword or a prefix, such as `search_nodes("gotcha:")` or `search_nodes("board.py")`.
-   - The search is a case-insensitive substring match on one string, so do not send it a sentence.
-3. **To look something up by name**, use `open_nodes(["rule:no-em-dashes"])`.
-4. **Never call `read_graph`.** It dumps the whole graph into your context. Both client configs switch it off and `tools/board.py` refuses it.
+1. **Main sessions** already have the digest: the SessionStart hook ran `python3 tools/board.py read`. It holds every `rule:` and `gotcha:` entity and the ten newest `decision:` entities.
+2. **Subagents** get no hook. Before opening docs about an unfamiliar area, search once:
+   `just memory-search gotcha:` or `python3 tools/board.py memory search "sync-main"`
+   - The search is case-insensitive and matches substrings. Several words must all match, so use one or two words, never a sentence.
+   - It also finds the indexed orders, with their status and next action.
+   - `--full` prints every observation and the entity's relations.
+3. Do not `cat` the memory file into your context. Search it.
 
 ## Writing
 
 Write only at a checkpoint or a landing, and only a fact another session would otherwise have to rediscover.
 
-1. Run `search_nodes` first.
-   - If the entity exists, call `add_observations`.
-   - Otherwise call `create_entities` with `entityType` set to the kind.
-2. **Names** have the form `kind:slug`. The kind is one of `rule`, `gotcha`, `decision`, `contract`, `component` or `team`. For example: `gotcha:gh-pr-merge-auto-mode`, `component:tools/board.py`.
-3. **Each observation** is one line, at most 200 characters:
+```sh
+just memory-add gotcha:gh-pr-merge-auto-mode "gh pr merge is denied in auto mode; hand Tom the command" claude "PR #192"
+# or, with the options:
+uv run python tools/board.py memory add <kind:slug> "<one fact>" --team claude|codex|board --src "<pointer>" [--replace "<old text>"] [--relate type=kind:slug]
+```
+
+1. Search first. `memory add` appends to an entity that exists and creates one that does not.
+2. **Names** have the form `kind:slug`. The kind is one of `rule`, `gotcha`, `decision`, `contract`, `component` or `team`, and `entityType` is set from it.
+3. **Each observation** is stored as one line, at most 200 characters:
    `YYYY-MM-DD [team:claude] <one fact>, src: <path|PR #n|ADR n|room entry id>`
-   - Point to the source. Never copy its text.
+   - The date is today in UTC. Point to the source; never copy its text.
    - An entity holds at most 8 observations.
-4. **To change a fact,** call `delete_observations` on the old line, then `add_observations` with the new one. The server has no edit tool.
-5. **Relations** are `owns`, `depends_on`, `supersedes` and `documented_in`, and they only point at entities that exist.
-6. When a board DECISION changes how people work, also store it as a `decision:` or `rule:` entity whose `src:` is the room entry id or issue #95.
-7. Run `just memory-lint` after a batch of writes.
+4. **To change a fact,** add the new one with `--replace "<text in the old one>"`. The old observation is dropped in the same write.
+5. **Relations** are `owns`, `depends_on`, `supersedes` and `documented_in`, and they point only at entities that exist: `--relate supersedes=decision:old-one`.
+6. A write that would break the lint (a bad name, a ninth observation, a secret-looking line, a relation to nothing) is refused whole and nothing is written.
+7. When a board DECISION changes how people work, also store it as a `decision:` or `rule:` entity whose `src:` is the room entry id or issue #95.
+
+`memory add` and `memory index` need Python 3.11, because the index reads work orders through `tools/work.py`: run them with `uv run`. Search and lint run on any `python3`.
 
 ## Never store
 
@@ -59,7 +68,7 @@ Kinds: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT, and LANDE
 
 | Symptom | Fix |
 |---|---|
-| The server is missing in Claude | `claude mcp get memory`. Approve the project server once. |
-| The server is missing in Codex | `codex mcp list`. The project must be trusted. |
+| `memory add` says it needs Python 3.11 | Run it with `uv run python tools/board.py ...` or `just memory-add`. |
+| Codex cannot write the board | The main checkout's `.codex/config.toml` grants `../.git/board`; a linked worktree's session needs `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"`. |
 | A write seems lost | `just memory-lint`, then search again. Writes are serialized, so report it on the board. |
-| The graph is getting big | At about 300 entities, fold the details into a doc and leave a pointer. ADR 0018 names the switch to Basic Memory. |
+| The memory is getting big | At about 300 entities, fold the details into a doc and leave a pointer. |

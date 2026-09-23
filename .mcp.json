@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "memory": {
-      "type": "stdio",
-      "command": "sh",
-      "args": ["-c", "exec sh \"$CLAUDE_PROJECT_DIR/scripts/memory-mcp.sh\""]
-    }
-  }
-}

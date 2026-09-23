@@ -1,6 +1,8 @@
 # ADR 0018: The teams share one board room and one memory, read by one command at session start
 
-Status: Accepted, 2026-09-24
+Status: Accepted, 2026-09-24. The memory half is superseded by DECISION #193 section 4 (the board, 2026-09-24): the memory is `memory.jsonl` plus a derived `index.json`, written through `tools/board.py memory add|search|index` under one lock, and no memory server ships. The room, the reader, the digest, the lint and the session-start hooks below still stand. What follows is kept as the record of the server choice and its runner-up.
+
+Superseded by: DECISION #193 section 4 (issue #193; the decision file is `.git/board/harness/DECISION-final.md` in the shared board folder)
 
 ## Context
 
@@ -66,7 +68,21 @@ Camps get none of this. `tools/sync_template.py` leaves out the hook, the deny r
 
 **The switch condition.** Move to Basic Memory when the graph reaches about 300 entities, or when a question cannot be answered by a substring search on one keyword.
 
+## What changed with DECISION #193 section 4
+
+The board reviewed the memory as part of the cross-provider harness (issue #193) and kept the record format, not the server:
+
+- No MCP memory server publishes a measured coding gain (the board's facts F117), the reference servers are described by their maintainers as educational, not production-ready (F102, https://github.com/modelcontextprotocol/servers), and command-line tools are more context-efficient than MCP (F114, https://code.claude.com/docs/en/costs).
+- `scripts/memory-mcp.sh`, the pinned server, `board.py memory-serve`, `.mcp.json`, `[mcp_servers.memory]` and the `read_graph` deny rule were removed. The entities seeded through the server stay in `memory.jsonl` and pass the lint.
+- `board.py memory add` takes the same lock the proxy took, reads the file, renames a new one into place and rebuilds `index.json` (id, order, topic, owner, status, next action, from the records and `work/orders/`) before it lets go. A test runs two CLI writers at once and loses nothing.
+- Codex writes the board through one writable root, `../.git/board` relative to the main checkout's `.codex/`, and `--add-dir` with the absolute common dir in a linked worktree (amendment A2).
+- Search is agentic first: `board.py memory search`, a substring match on every word (F111, https://claude.com/blog/building-agents-with-the-claude-agent-sdk). Semantic search waits for a measured need; its measured gain is on repositories of 1,000 files and more (F112, https://cursor.com/blog/semsearch), and this one is far below that.
+- The switch condition below (Basic Memory) is replaced by that rule.
+
 ## Consequences
+
+The consequences as recorded when the server was chosen:
+
 
 - A session starts with at most 9,000 characters about the state of the work, the same for both teams, instead of re-reading the logs. Anything left out of the digest is one `search_nodes` call away. Most of the saving comes from the digest and from the missing whole-graph read, not from the server.
 - Both files live in `.git`. They are not backed up by a push, and deleting the clone deletes them. Anything that must outlive the clone goes into a tracked doc, and the graph points at it.

@@ -1,21 +1,24 @@
 """The board room and the shared memory: one reader for every session.
 
-The room is an append-only Markdown file and the memory a JSONL knowledge graph,
-both in the git common dir: never committed, the same two files for every
-worktree and for both teams. `work/BOARD.md` is the protocol, the skill
-`shared-memory` the how-to and `docs/adr/0018-shared-memory.md` the reasons.
+The room is an append-only Markdown file and the memory a JSONL file of
+entities with a derived index next to it, all in the git common dir: never
+committed, the same files for every worktree and for both teams. `work/BOARD.md`
+is the protocol, the skill `shared-memory` the how-to and ADR 0018 the history.
 
     python3 tools/board.py read [--full] [--observe]   room, orders, memory digest
     python3 tools/board.py say --who "<model>, effort <e>, <role>, team:<t>" "..."
     python3 tools/board.py slot take|free <job> --who "..." [--note "..."]
+    python3 tools/board.py memory search <word> [--full]
+    uv run python tools/board.py memory add <kind:slug> "<fact>" --team t --src s
+    uv run python tools/board.py memory index
     python3 tools/board.py memory-lint
     python3 tools/board.py mirror [--issue 95] [--dry-run]    a manager, never a hook
-    python3 tools/board.py memory-serve -- <server command>   scripts/memory-mcp.sh
 
-Standard library only and importable from Python 3.9, because a hook runs a bare
-python3 and macOS ships 3.9 in /usr/bin. The checked-out and landed columns come
-from tools/work.py, which needs 3.11; under an older python3 they read unknown
-and the rest of the text is still printed.
+Standard library only. read, say, slot, memory search and memory-lint import
+from Python 3.9, because a hook runs a bare python3 and macOS ships 3.9 in
+/usr/bin. What reads work orders (the checked-out and landed columns, and the
+index that memory add and memory index rebuild) comes from tools/work.py, which
+needs 3.11: under an older python3 the reader says unknown and the writers refuse.
 """
 
 from __future__ import annotations
@@ -28,13 +31,11 @@ import os
 import re
 import subprocess
 import sys
-import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import BinaryIO
 
 ROOT = Path(__file__).resolve().parents[1]
 UTC_ZONE = timezone.utc  # noqa: UP017  datetime.UTC is 3.11, a hook may run 3.9
@@ -71,22 +72,6 @@ SECRET = re.compile(
     r"|AKIA[0-9A-Z]{16}|xox[abprs]-[\w-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY"
     r"|(?i:\b(?:password|passwd|secret|token|api[_-]?key)\s*[:=]\s*\S{6,})"
 )
-# What the memory server changes on disk; read_graph dumps the whole graph into
-# a context window, which is the cost this setup exists to avoid.
-MUTATIONS = {
-    "create_entities",
-    "create_relations",
-    "add_observations",
-    "delete_entities",
-    "delete_observations",
-    "delete_relations",
-}
-REFUSED_TOOLS = {"read_graph"}
-REFUSED_RESOURCE = "memory://knowledge-graph"
-# The real server's write takes milliseconds; a server silent this long is hung
-# and must not hold every other session's writes.
-MUTATION_TIMEOUT = 10
-
 
 # ---------------------------------------------------------------- where
 
@@ -269,7 +254,11 @@ def load_graph(path: Path) -> tuple[list[dict], list[dict], list[str]]:
 
 
 def lint(path: Path) -> list[str]:
-    ents, rels, out = load_graph(path)
+    return lint_graph(*load_graph(path))
+
+
+def lint_graph(ents: list[dict], rels: list[dict], bad: list[str]) -> list[str]:
+    out = list(bad)
     if len(ents) > MAX_ENTITIES:
         out.append(
             f"{len(ents)} entities, the cap is {MAX_ENTITIES}: fold some into a doc"
@@ -336,7 +325,7 @@ def digest(path: Path, budget: int = DIGEST_BUDGET) -> str:
     ents, rels, _ = load_graph(path)
     head = (
         f"-- shared memory: {len(ents)} entities, {len(rels)} relations "
-        "(search_nodes for more; read_graph is off)"
+        "(more: python3 tools/board.py memory search <word>)"
     )
     if not ents:
         return f"{head}\nno memory yet at {path}"
@@ -380,8 +369,7 @@ def digest(path: Path, budget: int = DIGEST_BUDGET) -> str:
             used += len(line) + 1
     if left:
         lines.append(
-            f"... {left} more not shown: "
-            "search_nodes('rule:'), ('gotcha:') or ('decision:')"
+            f"... {left} more not shown: memory search rule:, gotcha: or decision:"
         )
     return "\n".join(lines)
 
@@ -404,7 +392,7 @@ def orders_view() -> tuple[list[str], list[str]]:
         return [f"unknown ({why})"], [f"unknown ({why})"]
     try:
         _tools_on_path()
-        import work  # noqa: PLC0415  only the reader needs it, not the memory proxy
+        import work  # noqa: PLC0415  3.11 only; a hook's python3 may be 3.9
 
         orders = sorted(work.active(), key=lambda o: o.id)
         done = sorted(work.landed())
@@ -436,7 +424,7 @@ def read(full: bool = False, observe: bool = False) -> str:
     top = [
         HEADER,
         "Protocol: work/BOARD.md. Write: just board-say. "
-        "Memory: search_nodes with one keyword; never read_graph.",
+        "Memory: board.py memory search <word>; write with memory add.",
         "-- slots (explicit reservations, 4 heavy jobs across both teams): "
         f"{len(held)} held",
     ]
@@ -519,128 +507,203 @@ def _gh(*args: str) -> str:
     ).stdout
 
 
-# ---------------------------------------------------------------- memory proxy
+# ---------------------------------------------------------------- memory cli
+
+INDEX_VERSION = 1
+SEARCH_LIMIT = 20
+RELATE = re.compile(r"^([a-z_]+)=(\S+)$")
 
 
-def _request(line: bytes) -> dict | None:
+def index_file() -> Path:
+    return memory_file().with_name("index.json")
+
+
+def _needs_work() -> None:
+    if sys.version_info < (3, 11):  # noqa: UP036  a hook's python3 may be 3.9
+        raise ValueError(
+            "memory add and memory index read work orders through tools/work.py, "
+            "which needs Python 3.11: run them with uv run python tools/board.py"
+        )
+
+
+def _order_row(order, verdict: str, landed: set[str]) -> dict:  # noqa: ANN001
+    """Where an order stands, read from its folder and origin/main only."""
+    if order.id in landed:
+        status, nxt = "landed", "none"
+    elif verdict == "accept":
+        status, nxt = "accepted", "work-accept, then land"
+    elif verdict == "improve":
+        status, nxt = "improve", "the builder fixes the review findings"
+    elif order.builder:
+        status, nxt = "building", "work-check OK, then a review"
+    else:
+        status, nxt = "open", "a builder takes it"
+    return {
+        "id": f"order:{order.id}",
+        "order": order.id,
+        "topic": _short(order.title, 120),
+        "owner": f"team:{order.team}, {order.builder or 'no builder'}",
+        "status": status,
+        "next": nxt,
+    }
+
+
+def _verdict(folder: Path) -> str:
+    import tomllib  # noqa: PLC0415  3.11 only, guarded by _needs_work
+
     try:
-        msg = json.loads(line)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return None
-    return msg if isinstance(msg, dict) and "method" in msg and "id" in msg else None
+        return str(tomllib.loads((folder / "review.toml").read_text()).get("verdict"))
+    except (FileNotFoundError, tomllib.TOMLDecodeError):
+        return ""
 
 
-def serve(
-    cmd: list[str],
-    memory: Path,
-    stdin: BinaryIO | None = None,
-    stdout: BinaryIO | None = None,
-) -> int:
-    """Stand between a client and the memory server on stdio. Each mutation
-    holds the memory's lock from request to response: the server reloads the
-    file, changes it and renames a new one into place, so with every writer in
-    every process behind one lock no write is lost. The whole-graph reads are
-    answered here and never reach the server."""
-    stdin = stdin or sys.stdin.buffer
-    stdout = stdout or sys.stdout.buffer
-    env = {**os.environ, "MEMORY_FILE_PATH": str(memory)}
-    memory.parent.mkdir(parents=True, exist_ok=True)
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=env)
-    assert proc.stdin and proc.stdout
-    write = threading.Lock()
-    waiting: dict[str, threading.Event] = {}
-    abandoned: set[str] = set()
-    limit = float(os.environ.get("VIBE_MEMORY_WRITE_TIMEOUT", MUTATION_TIMEOUT))
+def build_index(path: Path, root: Path | None = None) -> list[dict]:
+    """One row per entity and per work order, sorted by id. Derived from files
+    only, with no clock in it, so rebuilding an unchanged state is a no-op."""
+    _needs_work()
+    _tools_on_path()
+    import work  # noqa: PLC0415
 
-    def to_client(data: bytes) -> None:
-        with write:
-            stdout.write(data if data.endswith(b"\n") else data + b"\n")
-            stdout.flush()
-
-    def pump() -> None:
-        for line in proc.stdout:
-            try:
-                msg = json.loads(line)
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                msg = None
-            key = (
-                json.dumps(msg["id"])
-                if isinstance(msg, dict) and "method" not in msg and "id" in msg
-                else None
-            )
-            if key in abandoned:
-                abandoned.discard(key)  # the client was already told; one answer
-                continue
-            to_client(line)
-            if key and (ev := waiting.pop(key, None)):
-                ev.set()
-        for ev in list(waiting.values()):
-            ev.set()
-
-    threading.Thread(target=pump, daemon=True).start()
-    for line in stdin:
-        msg = _request(line)
-        method = msg and msg["method"]
-        params = (msg or {}).get("params") or {}
-        if msg and method == "tools/call" and params.get("name") in REFUSED_TOOLS:
-            text = (
-                "read_graph is off in this repository: search_nodes with one "
-                "keyword or a prefix like 'gotcha:', or open_nodes by name."
-            )
-            to_client(
-                json.dumps(
-                    {
-                        "jsonrpc": "2.0",
-                        "id": msg["id"],
-                        "result": {
-                            "content": [{"type": "text", "text": text}],
-                            "isError": True,
-                        },
-                    }
-                ).encode()
-            )
-            continue
-        if msg and method == "resources/read" and params.get("uri") == REFUSED_RESOURCE:
-            err = {
-                "code": -32600,
-                "message": "the whole graph is not served here: "
-                "search_nodes or open_nodes",
+    root = root or ROOT
+    orders, _ = work.readable(root, work.load_teams(root))
+    try:
+        landed = work.landed(root)
+    except work.Bad:
+        landed = set()
+    ids = sorted((o.id for o in orders), key=len, reverse=True)
+    ents, rels, _ = load_graph(path)
+    superseded = {r.get("to") for r in rels if r.get("relationType") == "supersedes"}
+    rows = [_order_row(o, _verdict(o.dir), landed) for o in orders]
+    for e in ents:
+        obs = [str(o) for o in e["observations"]]
+        text = " ".join([e["name"], *obs])
+        teams = [m[2] for o in obs if (m := OBSERVATION.match(o))]
+        rows.append(
+            {
+                "id": e["name"],
+                "order": next((i for i in ids if re.search(rf"\b{i}\b", text)), ""),
+                "topic": e["name"].split(":", 1)[0],
+                "owner": f"team:{teams[-1]}" if teams else "",
+                "status": "superseded" if e["name"] in superseded else "current",
+                "next": "fold into a doc" if len(obs) >= MAX_OBSERVATIONS else "",
             }
-            to_client(
-                json.dumps({"jsonrpc": "2.0", "id": msg["id"], "error": err}).encode()
-            )
+        )
+    return sorted(rows, key=lambda r: r["id"])
+
+
+def _replace(path: Path, text: str) -> None:
+    """A reader never sees half a file: a new file is renamed into place."""
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def _write_index(path: Path, root: Path | None) -> int:
+    rows = build_index(path, root)
+    body = {"v": INDEX_VERSION, "rows": rows}
+    _replace(index_file(), json.dumps(body, indent=1, sort_keys=True) + "\n")
+    return len(rows)
+
+
+def reindex(root: Path | None = None) -> int:
+    path = memory_file()
+    with locked(path):
+        return _write_index(path, root)
+
+
+def _graph_text(ents: list[dict], rels: list[dict]) -> str:
+    lines = [json.dumps({"type": "entity", **e}, ensure_ascii=False) for e in ents]
+    lines += [json.dumps({"type": "relation", **r}, ensure_ascii=False) for r in rels]
+    return "\n".join(lines) + "\n"
+
+
+def remember(
+    name: str,
+    fact: str,
+    team: str,
+    src: str,
+    replace: str = "",
+    relate: tuple[str, ...] = (),
+    now: datetime | None = None,
+    root: Path | None = None,
+) -> tuple[dict, int]:
+    """Add one observation to an entity, creating it if it is new, and rebuild
+    the index: both under the memory's lock, so no writer in any process loses
+    another's write. A write that would add a lint problem is refused whole."""
+    _needs_work()
+    fact = " ".join(fact.split()).rstrip(",")
+    day = (now or datetime.now(UTC_ZONE)).strftime("%Y-%m-%d")
+    line = f"{day} [team:{team}] {fact}, src: {' '.join(src.split())}"
+    links = []
+    for spec in relate:
+        m = RELATE.match(spec)
+        if not m:
+            raise ValueError(f"--relate is type=kind:slug, got {spec!r}")
+        links.append({"from": name, "to": m[2], "relationType": m[1]})
+    path = memory_file()
+    with locked(path):
+        ents, rels, bad = load_graph(path)
+        if bad:
+            raise ValueError(f"{path} has unreadable lines; just memory-lint first")
+        before = set(lint_graph(ents, rels, []))
+        entity = next((e for e in ents if e["name"] == name), None)
+        if entity is None:
+            entity = {
+                "name": name,
+                "entityType": name.split(":")[0],
+                "observations": [],
+            }
+            ents.append(entity)
+        else:
+            entity = {**entity, "observations": list(entity["observations"])}
+            ents = [entity if e["name"] == name else e for e in ents]
+        if replace:
+            kept = [o for o in entity["observations"] if replace not in str(o)]
+            if len(kept) == len(entity["observations"]):
+                raise ValueError(f"{name}: no observation contains {replace!r}")
+            entity["observations"] = kept
+        entity["observations"].append(line)
+        rels = rels + [r for r in links if r not in rels]
+        new = [p for p in lint_graph(ents, rels, []) if p not in before]
+        if new:
+            raise ValueError("refused, nothing written: " + "; ".join(new))
+        _replace(path, _graph_text(ents, rels))
+        return entity, _write_index(path, root)
+
+
+def search(term: str, full: bool = False) -> list[str]:
+    """Case-insensitive substring over every entity and the index's order rows;
+    several words must all match. Reads only, never takes the lock."""
+    words = term.lower().split()
+    ents, rels, _ = load_graph(memory_file())
+    out = []
+    for e in ents:
+        obs = [str(o) for o in e["observations"]]
+        if not all(w in " ".join([e["name"], *obs]).lower() for w in words):
             continue
-        try:
-            if msg and method == "tools/call" and params.get("name") in MUTATIONS:
-                key = json.dumps(msg["id"])
-                done = threading.Event()
-                waiting[key] = done
-                with locked(memory):
-                    proc.stdin.write(line)
-                    proc.stdin.flush()
-                    answered = done.wait(limit)
-                if not answered and waiting.pop(key, None):
-                    abandoned.add(key)
-                    err = {
-                        "code": -32001,
-                        "message": f"the memory server did not answer this write in "
-                        f"{limit:g} s; it may or may not have happened: search_nodes",
-                    }
-                    to_client(
-                        json.dumps(
-                            {"jsonrpc": "2.0", "id": msg["id"], "error": err}
-                        ).encode()
-                    )
-                continue
-            proc.stdin.write(line)
-            proc.stdin.flush()
-        except BrokenPipeError:
-            break  # the server is gone; its exit code says why
+        if full:
+            out.append(f"- {e['name']}")
+            out += [f"    {o}" for o in obs]
+            out += [
+                f"    -> {r['relationType']} {r['to']}"
+                for r in rels
+                if r.get("from") == e["name"]
+            ]
+        else:
+            more = f" (+{len(obs) - 1} older)" if len(obs) > 1 else ""
+            out.append(_short(f"- {e['name']}: {obs[-1] if obs else ''}{more}", 240))
     try:
-        proc.stdin.close()
-    except BrokenPipeError:
-        pass
-    return proc.wait()
+        rows = json.loads(index_file().read_text(encoding="utf-8")).get("rows", [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        rows = []
+    for r in rows:
+        if r.get("id", "").startswith("order:") and all(
+            w in " ".join(map(str, r.values())).lower() for w in words
+        ):
+            out.append(
+                _short(f"- {r['id']} [{r['status']}] {r['topic']}; next: {r['next']}")
+            )
+    return out
 
 
 # ---------------------------------------------------------------- commands
@@ -666,8 +729,18 @@ def main(argv: list[str] | None = None) -> int:
     m = sub.add_parser("mirror")
     m.add_argument("--issue", type=int, default=95)
     m.add_argument("--dry-run", action="store_true")
-    sv = sub.add_parser("memory-serve")
-    sv.add_argument("server", nargs=argparse.REMAINDER)
+    mem = sub.add_parser("memory").add_subparsers(dest="verb", required=True)
+    ma = mem.add_parser("add", help="one observation, the entity made if new")
+    ma.add_argument("name", help="kind:slug, e.g. gotcha:gh-pr-merge-auto-mode")
+    ma.add_argument("fact", help="one fact, one line")
+    ma.add_argument("--team", required=True, choices=("claude", "codex", "board"))
+    ma.add_argument("--src", required=True, help="path, PR #n, ADR n or room entry")
+    ma.add_argument("--replace", default="", help="drop the observation holding this")
+    ma.add_argument("--relate", action="append", default=[], help="type=kind:slug")
+    ms = mem.add_parser("search", help="entities and orders holding every word")
+    ms.add_argument("term")
+    ms.add_argument("--full", action="store_true", help="every observation")
+    mem.add_parser("index", help="rebuild index.json from the memory and the orders")
     a = p.parse_args(argv)
 
     if a.cmd == "read":
@@ -735,11 +808,24 @@ def main(argv: list[str] | None = None) -> int:
             f"{'would be ' if a.dry_run else ''}mirrored to #{a.issue}"
         )
         return 0
-    cmd = a.server[1:] if a.server[:1] == ["--"] else a.server
-    if not cmd:
-        print("board: memory-serve -- <the server command>", file=sys.stderr)
+    try:
+        if a.verb == "search":
+            hits = search(a.term, a.full)
+            print("\n".join(hits[: SEARCH_LIMIT * (8 if a.full else 1)]) or "no match")
+            if not a.full and len(hits) > SEARCH_LIMIT:
+                print(f"... {len(hits) - SEARCH_LIMIT} more: a longer word narrows it")
+        elif a.verb == "index":
+            print(f"memory: index {index_file()} holds {reindex()} rows")
+        else:
+            e, n = remember(a.name, a.fact, a.team, a.src, a.replace, tuple(a.relate))
+            print(
+                f"memory: {e['name']} holds {len(e['observations'])} observations; "
+                f"index {n} rows"
+            )
+    except ValueError as err:
+        print(f"memory: {err}", file=sys.stderr)
         return 2
-    return serve(cmd, memory_file())
+    return 0
 
 
 if __name__ == "__main__":

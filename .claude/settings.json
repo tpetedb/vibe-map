@@ -1,9 +1,4 @@
 {
-  "permissions": {
-    "deny": [
-      "mcp__memory__read_graph"
-    ]
-  },
   "hooks": {
     "SessionStart": [
       {
