@@ -1,0 +1,37 @@
+v = 1
+id = "hunt-y-empty-scores"
+title = "Hunt batch Y: zero-byte scores are an empty scoreboard"
+team = "cli"
+branch = "claude/hunt-y-empty-scores"
+goal = ""
+issue = 118
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "codex-hunt-y-empty-scores"
+
+# Files, or folders ending in /. No globs: two orders may never own the same file.
+owns = [
+  "vibemap/scores.py",
+  "tests/test_scores_empty.py",
+]
+# Other teams whose files this order has to touch; each one signs off.
+cross = []
+# Orders that have to land before this one starts.
+needs = []
+
+# At least one criterion is a command. Exit 0 is pass; anything else is not.
+[[criteria]]
+id = "c1"
+text = "The real vibe scores command treats an existing zero-byte scores.csv as no runs, without a traceback, while a nonempty malformed header still fails loudly; both regressions were seen failing first."
+check = "uv run pytest -q tests/test_scores_empty.py"
+
+[[criteria]]
+id = "c2"
+text = "The changed Python files pass Ruff lint and format checks, and the repository style and sink guards pass."
+check = "uv run ruff check -q vibemap/scores.py tests/test_scores_empty.py && uv run ruff format --check -q vibemap/scores.py tests/test_scores_empty.py && python3 tools/checks.py style && python3 tools/checks.py sinks"
+
+# What a command cannot decide goes to a person in a role, who rules on it
+# in review.toml with evidence.
+# [[criteria]]
+# id = "c2"
+# text = ""
+# judge = "reviewer"

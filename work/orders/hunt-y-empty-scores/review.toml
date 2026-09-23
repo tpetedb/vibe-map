@@ -1,0 +1,21 @@
+# order: hunt-y-empty-scores
+# role: reviewer
+v = 1
+order = "hunt-y-empty-scores"
+by = "codex-review-empty-scores-final"
+reviewed = "1e733f8248471f6e14ef86325cbdc372eafe7444"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `UV_CACHE_DIR=/tmp/vibe-empty-uv-cache uv run pytest -q tests/test_scores_empty.py`; both entry-point regression tests passed. Independently invoked `.venv/bin/python -m vibemap.cli scores` with `VIBE_HOME` pointing at a scratch camp: an existing zero-byte `workspace/data/scores.csv` exited 0, printed an empty Scores table with `0 runs`, and wrote no stderr; replacing it with `player,points\nTom,10\n` exited 1 and raised `ValueError: scores.csv is missing columns: played_at, score, duration_s`. Exported reviewed HEAD to a separate scratch tree, copied only the new regression test into it, and ran it with that pre-change package on `PYTHONPATH`: the zero-byte case failed with Polars `NoDataError: empty CSV`, while the malformed-header case passed. This proves the new test fails before the fix and preserves loud failure for malformed nonempty input. Directly read a scratch zero-byte file through `read_scores`: its schema was `played_at: Date`, `player: String`, `score: Int64`, `duration_s: Int64`, and `summary` returned the established zero-run shape.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the criterion's Ruff lint and format commands through `uv run` with a writable temporary cache; both exited 0. Ran `tools/checks.py style` and `tools/checks.py sinks` with the worktree virtual environment first on PATH; style reported no em dashes or emoji and the sink guard exited 0. Also ran the new tests together with the neighbouring dashboard zero-byte test; all three passed. I read the complete contribution diff and surrounding CLI, summary, and dashboard paths. The implementation branches only on an existing file's zero length, returns a typed empty frame matching the documented four-column contract, and leaves every nonempty file on the prior CSV parsing and missing-column validation path. It adds no timed wait, raw output sink, or write to the scores system of record.
+'''
