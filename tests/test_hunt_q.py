@@ -92,54 +92,138 @@ def _fork_root(tmp_path: Path) -> Path:
     return root
 
 
+def _build(root: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "tools/build.py", "--root", str(root)],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
+def _add(root: Path, source: str, addition: str) -> None:
+    """Prepend to the handwritten object body, append to anything else."""
+    path = root / "src" / "game" / source
+    text = path.read_text(encoding="utf-8")
+    if source == "50-notes.js" and not addition.startswith("\n"):
+        path.write_text(addition + text, encoding="utf-8")
+    else:
+        path.write_text(text + addition, encoding="utf-8")
+
+
+GEN, HAND, DYN = (
+    "tools/generated/notes.js",
+    "src/game/50-notes.js",
+    "src/game/51-notes-dynamic.js",
+)
+UNIX = "Unix and the terminal"
+
+# Each is valid JavaScript for one note title; owners lists every occurrence
+# in build order, so a title written twice in one file names that file twice.
+COLLISIONS = {
+    "spaced key": ("50-notes.js", f'"{UNIX}": {{t:"c",md:`d`}},\n', UNIX, (GEN, HAND)),
+    "two on a line": (
+        "50-notes.js",
+        f'"Hunt Q fresh":{{t:"c",md:`x`}},"{UNIX}":{{t:"c",md:`d`}},\n',
+        UNIX,
+        (GEN, HAND),
+    ),
+    "single quotes": (
+        "50-notes.js",
+        f"'{UNIX}':{{t:\"c\",md:`d`}},\n",
+        UNIX,
+        (GEN, HAND),
+    ),
+    "md before t": ("50-notes.js", f'"{UNIX}":{{md:`d`,t:"c"}},\n', UNIX, (GEN, HAND)),
+    "inline comment": (
+        "50-notes.js",
+        f'"{UNIX}" /* by hand */ :{{t:"c",md:`d`}},\n',
+        UNIX,
+        (GEN, HAND),
+    ),
+    "identifier key": (
+        "50-notes.js",
+        'Tonight:{t:"c",md:`d`},\n',
+        "Tonight",
+        (HAND, HAND),
+    ),
+    "assignment after the object": (
+        "50-notes.js",
+        '\nNOTES["Tonight"]={t:"c",md:`d`};\n',
+        "Tonight",
+        (HAND, HAND),
+    ),
+    "dynamic assignment": (
+        "51-notes-dynamic.js",
+        f'\nNOTES["{UNIX}"]={{t:"c",md:`d`}};\n',
+        UNIX,
+        (GEN, DYN),
+    ),
+    "dynamic single quotes": (
+        "51-notes-dynamic.js",
+        f"\nNOTES['{UNIX}'] = {{t:\"c\",md:`d`}};\n",
+        UNIX,
+        (GEN, DYN),
+    ),
+    "dynamic spaced brackets": (
+        "51-notes-dynamic.js",
+        '\nNOTES[ "Tonight" ]={t:"c",md:`d`};\n',
+        "Tonight",
+        (HAND, DYN),
+    ),
+    "dynamic property": (
+        "51-notes-dynamic.js",
+        '\nNOTES.Tonight={t:"c",md:`d`};\n',
+        "Tonight",
+        (HAND, DYN),
+    ),
+}
+
+
 @pytest.mark.parametrize(
     ("source", "addition", "title", "owners"),
-    [
-        (
-            "50-notes.js",
-            '"Unix and the terminal": {t:"c",md:`duplicate`},\n',
-            "Unix and the terminal",
-            ("tools/generated/notes.js", "src/game/50-notes.js"),
-        ),
-        (
-            "51-notes-dynamic.js",
-            '\nNOTES["Unix and the terminal"]={t:"c",md:`duplicate`};\n',
-            "Unix and the terminal",
-            ("tools/generated/notes.js", "src/game/51-notes-dynamic.js"),
-        ),
-        (
-            "51-notes-dynamic.js",
-            '\nNOTES["Tonight"]={t:"c",md:`duplicate`};\n',
-            "Tonight",
-            ("src/game/50-notes.js", "src/game/51-notes-dynamic.js"),
-        ),
-    ],
+    list(COLLISIONS.values()),
+    ids=list(COLLISIONS),
 )
 def test_q3_build_refuses_every_kind_of_note_title_collision(
     tmp_path: Path,
     source: str,
     addition: str,
     title: str,
-    owners: tuple[str, str],
+    owners: tuple[str, ...],
 ) -> None:
     """Generated, handwritten and dynamic notes share one title namespace."""
     root = _fork_root(tmp_path)
-    path = root / "src" / "game" / source
-    text = path.read_text(encoding="utf-8")
-    if source == "50-notes.js":
-        path.write_text(addition + text, encoding="utf-8")
-    else:
-        path.write_text(text + addition, encoding="utf-8")
-    result = subprocess.run(
-        [sys.executable, "tools/build.py", "--root", str(root)],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    )
+    _add(root, source, addition)
+    result = _build(root)
     message = result.stdout + result.stderr
     assert result.returncode != 0, "the build accepted two notes with one title"
-    assert title in message
-    assert all(owner in message for owner in owners), message
+    line = next((ln for ln in message.splitlines() if repr(title) in ln), "")
+    assert line, message
+    assert line.endswith(": " + ", ".join(owners)), line
+
+
+# Code that reads a note, or text that only mentions one, creates nothing.
+NOT_COLLISIONS = {
+    "comparison": f'\nif(NOTES["{UNIX}"]===undefined)console.warn("gone");\n',
+    "inside a template": (
+        '\nNOTES["Hunt Q example"]={t:"c",md:`Write NOTES["Tonight"]={} here.`};\n'
+    ),
+    "inside a comment": '\n// NOTES["Tonight"]={} would shadow the note.\n',
+}
+
+
+@pytest.mark.parametrize(
+    "addition", list(NOT_COLLISIONS.values()), ids=list(NOT_COLLISIONS)
+)
+def test_q3_build_does_not_count_a_read_as_a_note(
+    tmp_path: Path, addition: str
+) -> None:
+    """Only a key or an assignment in code makes a note."""
+    root = _fork_root(tmp_path)
+    _add(root, "51-notes-dynamic.js", addition)
+    result = _build(root)
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_q3_collision_diagnostic_includes_a_spaced_handwritten_key(
@@ -159,12 +243,7 @@ def test_q3_collision_diagnostic_includes_a_spaced_handwritten_key(
         + '\nNOTES["Unix and the terminal"]={t:"c",md:`dynamic`};\n',
         encoding="utf-8",
     )
-    result = subprocess.run(
-        [sys.executable, "tools/build.py", "--root", str(root)],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-    )
+    result = _build(root)
     message = result.stdout + result.stderr
     assert result.returncode != 0
     assert "Unix and the terminal" in message
