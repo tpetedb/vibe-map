@@ -121,3 +121,7 @@ build after a push, so it has to be a network-first worker keyed on the build ve
 
 ---
 
+
+# Board trim (2026-09-23)
+
+Proposals 24 to 27 only: autosave mark and export reminder, break card, forgiving streak, photo mode and share. Proposal 28 (offline install) becomes a follow-up. tools/build.py is out (held by hunt-q). The reset-confirm line in src/game/85-settings.js waits for #183: do not touch 85-settings.js, src/body.html, src/style.css or src/galaxy/.

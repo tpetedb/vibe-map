@@ -2,7 +2,7 @@ v = 1
 id = "qol-5-continuity-photo"
 title = "Quality of life 5: continuity, photo mode and install"
 team = "state"
-branch = "feat/qol-batch5"
+branch = "claude/qol-batch5"
 goal = "second-wave"
 issue = 127
 # Whoever builds this writes their name here; a review by the same name does not count.
@@ -12,11 +12,10 @@ owns = [
   "src/game/80-sync.js",
   "src/game/89-dashboard.js",
   "src/game/33-photo.js",
-  "tools/build.py",
   ".github/workflows/pages.yml",
   "tests/test_game_qol_continuity.py",
 ]
-cross = ["panels", "scene", "harness"]
+cross = ["panels", "scene"]
 needs = ["harness-ci-shards"]
 
 [[criteria]]
