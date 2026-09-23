@@ -33,20 +33,23 @@ The room is `ROOM.md` in `$(git rev-parse --path-format=absolute --git-common-di
 
 | Command | What it does |
 |---|---|
-| `just board` | The last 30 entries, the checked-out orders, the landed orders, the held slots, a process cross-check and the memory digest. |
+| `just board` | The held slots, a process cross-check, the memory digest, then the room's newest entries and the checked-out orders as far as the session-start budget goes, and the landed orders. `just board --full` prints the last 30 entries whole and every checked-out order. |
 | `just board-say "<who>" "<KIND>: <text>"` | Appends one entry as a single write, under the room's lock. |
 | `just board-slot take\|free <job> "<who>"` | Reserves or frees a heavy job slot. |
 | `python3 tools/board.py mirror` | Posts DECISION and verified LANDED entries to issue #95, once each. A manager runs this, never a hook. |
 
-- **Kinds.** Each entry opens with one kind: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT or SLOT. CLAIM and LANDED are derived from facts rather than typed:
+- **Kinds.** Each entry opens with one kind: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT or LANDED. Nobody types a claim, and the reader never takes a typed LANDED on trust; both columns are derived from facts:
   - An order is **checked out** when its branch is checked out in some worktree. That is not proof that an agent is working on it.
   - An order has **landed** when its accepting review is on `origin/main`.
+  - The manager who lands an order types one `LANDED <order-id>` entry, the note that goes to issue #95. `mirror` posts it only when the derived landed column agrees.
 - **Slots.** A slot is taken only by an explicit `SLOT take job=<id>` entry and freed only by `SLOT free job=<id>`. A process scan can show that an unknown job is running, but it never takes or frees a slot. Unknown stays unknown. Any browser battery is a heavy job, and so is any other job expected to run longer than ten minutes.
-- **Session start.** At the start of every session, the SessionStart hooks (`.claude/settings.json` and `.codex/hooks.json`) run `python3 tools/board.py read`. Claude and Codex see the same text. A hook only reads local files: it never contacts GitHub and never fails a session.
+- **Session start.** At the start of every session (every start source each client names: startup, resume, clear, compact, and fork in Claude Code), the SessionStart hooks (`.claude/settings.json` and `.codex/hooks.json`) run `python3 tools/board.py read`. Claude and Codex see the same text. A hook only reads local files: it never contacts GitHub and never fails a session.
+  - The whole text stays under 9,000 characters, because Claude Code gives a model at most 10,000 characters of hook output and only a 2,000-character preview beyond that. The slots and the memory digest come first; the room's newest entries and the checked-out orders fill what is left.
+  - A bare `python3` may be the 3.9 that macOS ships. The reader still prints the room, the slots and the digest there; the checked-out and landed columns read unknown, because `tools/work.py` needs 3.11.
 
 ## The memory: long-term, searched
 
-The memory is `memory.jsonl` in the same folder. It is the official MCP memory server (`@modelcontextprotocol/server-memory@2026.8.31`), started by `scripts/memory-mcp.sh` for both clients. `tools/board.py` sits in front of the server. It holds a lock around every write, so two sessions writing at once lose nothing, and it refuses the whole-graph read.
+The memory is `memory.jsonl` in the same folder. It is the official MCP memory server (`@modelcontextprotocol/server-memory@2026.8.31`), started by `scripts/memory-mcp.sh` for both clients. `tools/board.py` sits in front of the server. It holds a lock around every write, so two sessions writing at once lose nothing, and it refuses the whole-graph read. It holds that lock for at most 10 seconds per write: a server silent that long is hung, its client gets an error saying the write may not have happened, and every other session can write again.
 
 The room is where work happens now: claims, slots, handoffs, questions. The memory holds what a later session would otherwise have to work out again. When a DECISION or LANDED entry changes how people work, it also becomes a `decision:` or `rule:` entity that cites the room entry or issue #95.
 
@@ -74,4 +77,5 @@ The room is where work happens now: claims, slots, handoffs, questions. The memo
 
 - **Claude Code.** Approve the `memory` server from `.mcp.json` once when prompted, then run `claude mcp get memory`.
 - **Codex.** Trust the project, then run `codex mcp list`. It should show `memory` enabled and `read_graph` disabled. Codex asks you to trust the SessionStart hook in its own prompt; grant it there and bypass nothing.
+- **Once, in a checkout with an untracked `.codex/hooks.json`.** The main checkout had one, holding Codex's copies of the work-order hooks. Git refuses the pull that brings the tracked file ("untracked working tree files would be overwritten by merge"), so move it aside first: `mv .codex/hooks.json .codex/hooks.json.local`, pull, compare, then delete the local copy. The tracked file carries the same four work-order hooks as `.claude/settings.json` (a test keeps them equal) plus the SessionStart reader. `.codex/agents/`, Codex's role definitions, stays untracked and is not touched.
 - **Camps.** Camps get none of this: `tools/sync_template.py` leaves out the hook, the deny rule and the skill.

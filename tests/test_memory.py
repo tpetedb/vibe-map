@@ -254,3 +254,52 @@ def test_the_whole_graph_is_never_served(tmp_path: Path) -> None:
     assert "search_nodes" in answers[1]["result"]["content"][0]["text"]
     assert "search_nodes" in answers[2]["error"]["message"]
     assert not (tmp_path / "server.log").exists(), "neither reached the server"
+
+
+SILENT = "import sys\nfor line in sys.stdin:\n    pass\n"
+
+
+def test_a_server_that_never_answers_a_write_does_not_hold_the_lock(
+    tmp_path: Path,
+) -> None:
+    """A hung server gets the write's time limit, not every session's writes:
+    its client is told the write may not have happened, and the lock is free."""
+    silent, server = tmp_path / "silent.py", tmp_path / "server.py"
+    silent.write_text(SILENT, encoding="utf-8")
+    server.write_text(SERVER, encoding="utf-8")
+    env = {
+        **os.environ,
+        "VIBE_MEMORY_FILE": str(tmp_path / "board" / "memory.jsonl"),
+        "FAKE_LOG": str(tmp_path / "server.log"),
+        "VIBE_MEMORY_WRITE_TIMEOUT": "1",
+    }
+    call = {"name": "create_entities", "arguments": {"entities": [
+        {"name": "gotcha:after-the-hang", "entityType": "gotcha", "observations": []}
+    ]}}  # fmt: skip
+    ask = json.dumps(
+        {"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": call}
+    )
+    hung = subprocess.Popen(
+        [sys.executable, str(BOARD), "memory-serve", "--", sys.executable, str(silent)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        env=env,
+        text=True,
+    )
+    assert hung.stdin and hung.stdout
+    hung.stdin.write(ask + "\n")
+    hung.stdin.flush()
+    try:
+        # A second process writes while the first still waits on its server.
+        run = subprocess.run(
+            [sys.executable, "-c", CLIENT, str(BOARD), str(server), "late", "1"],
+            env=env,
+            timeout=20,
+        )
+        assert run.returncode == 0
+        answer = json.loads(hung.stdout.readline())
+        assert answer["id"] == 7 and "did not answer" in answer["error"]["message"]
+    finally:
+        hung.stdin.close()
+        hung.wait(timeout=20)
+    assert board.MUTATION_TIMEOUT <= 10

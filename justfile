@@ -67,9 +67,10 @@ vault:
 sync-main *args:
     uv run python tools/sync_main.py {{args}}
 
+# example: just board --full   (whole entries, every checked-out order)
 # the board room, the checked-out orders, the slots and the shared memory digest (work/BOARD.md)
-board:
-    python3 tools/board.py read --observe
+board *args:
+    python3 tools/board.py read --observe {{args}}
 
 # example: just board-say "Opus 5.5, effort high, builder, team:claude" "CHECKPOINT: ..."
 # append one entry to the board room, under its lock

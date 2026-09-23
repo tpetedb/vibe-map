@@ -54,11 +54,12 @@ check = "uv run pytest -q tests/test_board.py tests/test_memory.py"
 [[criteria]]
 id = "c2"
 text = "The reader runs from this checkout and from a linked worktree and resolves the same room; the lint passes on the live file."
-# Builder's repair: the first form cd'd in a subshell, so $OLDPWD was empty under
-# sh and uv refused `--project ""` before the reader ran. Same intent: read here,
-# read again from another checkout of this repository, diff, lint. The reader
-# resolving one room from two checkouts is also a test in tests/test_board.py.
-check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$PWD" && other="$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep -vxF "$here" | head -n 1)" && (cd "${other:-$here}" && uv run --project "$here" python "$here/tools/board.py" read) > /tmp/board-read-b.txt && diff -q /tmp/board-read-a.txt /tmp/board-read-b.txt && uv run python tools/board.py memory-lint'''
+# The reader finds the room from its own file through git, so running it from
+# another cwd proves nothing (review round 1). This asks another worktree's git
+# where its common dir is and checks that the reader here printed that room and
+# that the lint read that memory. Each checkout running its own copy of the
+# reader is the linked-worktree test in tests/test_board.py.
+check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$PWD" && other="$(git worktree list --porcelain | sed -n 's/^worktree //p' | grep -vxF "$here" | head -n 1)" && common="$(git -C "${other:-$here}" rev-parse --path-format=absolute --git-common-dir)" && grep -qF "($common/board/ROOM.md)" /tmp/board-read-a.txt && uv run python tools/board.py memory-lint > /tmp/board-lint.txt && grep -qF "$common/board/memory.jsonl" /tmp/board-lint.txt'''
 
 [[criteria]]
 id = "c3"

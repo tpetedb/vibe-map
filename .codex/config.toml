@@ -1,7 +1,8 @@
 # Project-scoped Codex configuration, loaded only when this project is trusted.
 # The shared memory: the same server and the same file as Claude's .mcp.json.
-# Tracked here: this file and hooks.json. Everything else in .codex/ is the
-# client's own machine state and stays local.
+# Tracked here: this file and hooks.json (the SessionStart reader and the same
+# work-order hooks as .claude/settings.json). .codex/agents/ holds Team Codex's
+# role definitions and is theirs; this setup neither tracks nor touches it.
 
 [mcp_servers.memory]
 command = "sh"

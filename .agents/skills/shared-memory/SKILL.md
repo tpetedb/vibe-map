@@ -53,7 +53,7 @@ Write only at a checkpoint or a landing, and only a fact another session would o
 | Take a heavy job slot (a browser battery, or anything over ten minutes) | `just board-slot take <job> "<who>"` |
 | Free the slot when the job ends | `just board-slot free <job> "<who>"` |
 
-Kinds: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT. The reader works out which orders are checked out and which have landed from `tools/work.py`, so never post those by hand.
+Kinds: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT, and LANDED from the manager who landed an order. The reader works out which orders are checked out and which have landed from `tools/work.py`, so never post a claim. A typed `LANDED <order-id>` is the note for issue #95, and `mirror` posts it only when the reader's landed column agrees.
 
 ## When it misbehaves
 

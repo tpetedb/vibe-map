@@ -12,7 +12,10 @@ worktree and for both teams. `work/BOARD.md` is the protocol, the skill
     python3 tools/board.py mirror [--issue 95] [--dry-run]    a manager, never a hook
     python3 tools/board.py memory-serve -- <server command>   scripts/memory-mcp.sh
 
-Standard library only, so a hook can run it with a bare python3.
+Standard library only and importable from Python 3.9, because a hook runs a bare
+python3 and macOS ships 3.9 in /usr/bin. The checked-out and landed columns come
+from tools/work.py, which needs 3.11; under an older python3 they read unknown
+and the rest of the text is still printed.
 """
 
 from __future__ import annotations
@@ -29,11 +32,12 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import BinaryIO
 
 ROOT = Path(__file__).resolve().parents[1]
+UTC_ZONE = timezone.utc  # noqa: UP017  datetime.UTC is 3.11, a hook may run 3.9
 HEADER = "== vibe-map board room and shared memory (tools/board.py read) =="
 ROOM_HEAD = re.compile(
     r"^## (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z) \[([^\]\n]+)\]\s*$", re.M
@@ -45,6 +49,9 @@ LANDED_ORDER = re.compile(r"\bLANDED:?\s+`?([a-z0-9][a-z0-9-]{2,48})")
 MARKER = re.compile(r"<!-- board-entry: ([0-9a-f]{8}) -->")
 RECENT = 30
 LINE = 150
+# Claude Code hands a model at most 10,000 characters of a hook's stdout and only
+# a 2,000-character preview beyond that, so the whole session-start text is capped.
+READ_BUDGET = 9000
 
 # The memory's conventions; the skill `shared-memory` says them in prose.
 MAX_ENTITIES = 300
@@ -76,7 +83,9 @@ MUTATIONS = {
 }
 REFUSED_TOOLS = {"read_graph"}
 REFUSED_RESOURCE = "memory://knowledge-graph"
-MUTATION_TIMEOUT = 60
+# The real server's write takes milliseconds; a server silent this long is hung
+# and must not hold every other session's writes.
+MUTATION_TIMEOUT = 10
 
 
 # ---------------------------------------------------------------- where
@@ -128,7 +137,7 @@ def locked(path: Path) -> Iterator[None]:
 # ---------------------------------------------------------------- the room
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class Entry:
     at: str
     who: str
@@ -172,7 +181,7 @@ def append(who: str, text: str, now: datetime | None = None) -> Entry:
         )
     if not text or ROOM_HEAD.search(text):
         raise ValueError("the text is empty or carries an entry header of its own")
-    at = (now or datetime.now(UTC)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    at = (now or datetime.now(UTC_ZONE)).strftime("%Y-%m-%dT%H:%M:%SZ")
     path = room_file()
     with locked(path):
         new = not path.exists()
@@ -388,6 +397,11 @@ def _tools_on_path() -> None:
 
 def orders_view() -> tuple[list[str], list[str]]:
     """Declared owns of checked-out orders, and landed ones, from tools/work.py."""
+    if sys.version_info < (3, 11):  # noqa: UP036  a hook's python3 may be 3.9
+        why = (
+            f"tools/work.py needs Python 3.11, this python3 is {sys.version.split()[0]}"
+        )
+        return [f"unknown ({why})"], [f"unknown ({why})"]
     try:
         _tools_on_path()
         import work  # noqa: PLC0415  only the reader needs it, not the memory proxy
@@ -397,52 +411,81 @@ def orders_view() -> tuple[list[str], list[str]]:
     except Exception as e:  # noqa: BLE001  the reader must print, not fall over
         why = _short(f"{type(e).__name__}: {e}", 100)
         return [f"unknown ({why})"], [f"unknown ({why})"]
-    rows = [
-        _short(f"- {o.id} [{o.team}, {o.branch}] owns {', '.join(o.owns)}", 200)
-        for o in orders
-    ]
+    rows = [f"- {o.id} [{o.team}, {o.branch}] owns {', '.join(o.owns)}" for o in orders]
     return rows or ["none"], done
 
 
+def _fit(rows: list[str], room: int) -> list[str]:
+    """The last rows that fit in room characters, in their order."""
+    kept: list[str] = []
+    used = 0
+    for row in reversed(rows):
+        if used + len(row) + 1 > room:
+            break
+        kept.insert(0, row)
+        used += len(row) + 1
+    return kept
+
+
 def read(full: bool = False, observe: bool = False) -> str:
+    """The session-start text. Small current sections and the memory come
+    first; the room and the checked-out orders fill what is left of
+    READ_BUDGET, newest first, unless full asks for everything."""
     room = entries()
-    out = [
+    held = open_slots(room)
+    top = [
         HEADER,
         "Protocol: work/BOARD.md. Write: just board-say. "
         "Memory: search_nodes with one keyword; never read_graph.",
-        f"-- room: last {min(RECENT, len(room))} of {len(room)} entries "
-        f"({room_file()})",
+        "-- slots (explicit reservations, 4 heavy jobs across both teams): "
+        f"{len(held)} held",
     ]
+    top += [
+        _short(f"- {job} since {e.at[5:16]} by {e.who.split(',')[0]} {rest}")
+        for job, (e, rest) in held.items()
+    ]
+    if observe:
+        top.append("-- observed processes (a cross-check, never a reservation):")
+        top += [f"- {line}" for line in observed()]
+    top.append(digest(memory_file()))
+
+    lines = []
     for e in room[-RECENT:]:
         # The kinds up front unless the text already opens with them.
         kinds = "/".join(e.kinds)
         tag = f"{kinds}: " if kinds and not e.body.startswith(e.kinds[0]) else ""
         if full:
-            out.append(f"[{e.id}] {e.at} [{e.who}]\n{tag}{e.body}\n")
+            lines.append(f"[{e.id}] {e.at} [{e.who}]\n{tag}{e.body}\n")
         else:
-            out.append(
+            lines.append(
                 _short(f"[{e.id}] {e.at[5:16]} {e.who.split(',')[0]}: {tag}{e.body}")
             )
     owns, done = orders_view()
-    out.append("-- checked out (a branch is checked out; not proof an agent is live):")
-    out += owns
-    out.append(
-        f"-- landed (accepting review on origin/main): {', '.join(done) or 'none'}"
+    owns_title = "-- checked out (a branch is checked out; not proof an agent is live):"
+    landed = "-- landed (accepting review on origin/main): " + (
+        f"{len(done)}: {', '.join(done)}"
+        if done and not done[0].startswith("unknown")
+        else ", ".join(done) or "none"
     )
-    held = open_slots(room)
-    out.append(
-        "-- slots (explicit reservations, 4 heavy jobs across both teams): "
-        f"{len(held)} held"
-    )
-    out += [
-        _short(f"- {job} since {e.at[5:16]} by {e.who.split(',')[0]} {rest}")
-        for job, (e, rest) in held.items()
-    ]
-    if observe:
-        out.append("-- observed processes (a cross-check, never a reservation):")
-        out += [f"- {line}" for line in observed()]
-    out.append(digest(memory_file()))
-    return "\n".join(out)
+    where = f"({room_file()})"
+    if full:
+        room_title = f"-- room: last {len(lines)} of {len(room)} entries {where}"
+        return "\n".join([*top, room_title, *lines, owns_title, *owns, landed])
+
+    landed = _short(landed, 300)
+    owns = [_short(row, 120) for row in owns]
+    # Two lines of titles, one for orders left out, 200 characters for the paths.
+    left = READ_BUDGET - len("\n".join(top)) - len(landed) - 400
+    # The room takes two thirds of what is left, newest first; the orders get the
+    # rest and whatever the room did not use.
+    kept = _fit(lines, left * 2 // 3)
+    left -= sum(len(line) + 1 for line in kept)
+    more = " (just board --full for all)" if len(kept) < len(room) else ""
+    room_title = f"-- room: last {len(kept)} of {len(room)} entries {where}{more}"
+    shown = _fit(owns, left)
+    if len(shown) < len(owns):
+        shown.append(f"... {len(owns) - len(shown)} more: just board --full")
+    return "\n".join([*top, room_title, *kept, owns_title, *shown, landed])
 
 
 # ---------------------------------------------------------------- mirror
@@ -506,6 +549,8 @@ def serve(
     assert proc.stdin and proc.stdout
     write = threading.Lock()
     waiting: dict[str, threading.Event] = {}
+    abandoned: set[str] = set()
+    limit = float(os.environ.get("VIBE_MEMORY_WRITE_TIMEOUT", MUTATION_TIMEOUT))
 
     def to_client(data: bytes) -> None:
         with write:
@@ -514,14 +559,21 @@ def serve(
 
     def pump() -> None:
         for line in proc.stdout:
-            to_client(line)
             try:
                 msg = json.loads(line)
             except (json.JSONDecodeError, UnicodeDecodeError):
+                msg = None
+            key = (
+                json.dumps(msg["id"])
+                if isinstance(msg, dict) and "method" not in msg and "id" in msg
+                else None
+            )
+            if key in abandoned:
+                abandoned.discard(key)  # the client was already told; one answer
                 continue
-            if isinstance(msg, dict) and "method" not in msg and "id" in msg:
-                if ev := waiting.pop(json.dumps(msg["id"]), None):
-                    ev.set()
+            to_client(line)
+            if key and (ev := waiting.pop(key, None)):
+                ev.set()
         for ev in list(waiting.values()):
             ev.set()
 
@@ -560,12 +612,25 @@ def serve(
             continue
         try:
             if msg and method == "tools/call" and params.get("name") in MUTATIONS:
+                key = json.dumps(msg["id"])
                 done = threading.Event()
-                waiting[json.dumps(msg["id"])] = done
+                waiting[key] = done
                 with locked(memory):
                     proc.stdin.write(line)
                     proc.stdin.flush()
-                    done.wait(MUTATION_TIMEOUT)
+                    answered = done.wait(limit)
+                if not answered and waiting.pop(key, None):
+                    abandoned.add(key)
+                    err = {
+                        "code": -32001,
+                        "message": f"the memory server did not answer this write in "
+                        f"{limit:g} s; it may or may not have happened: search_nodes",
+                    }
+                    to_client(
+                        json.dumps(
+                            {"jsonrpc": "2.0", "id": msg["id"], "error": err}
+                        ).encode()
+                    )
                 continue
             proc.stdin.write(line)
             proc.stdin.flush()

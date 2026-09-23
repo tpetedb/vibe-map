@@ -93,12 +93,15 @@ def test_the_reader_keeps_the_three_columns_apart(
         lambda: (["- board-and-memory [harness, claude/b] owns tools/board.py"], []),
     )
     out = board.read()
-    head, rest = out.split("-- checked out", 1)
-    owns, rest = rest.split("-- landed", 1)
-    landed, rest = rest.split("-- slots", 1)
-    slots, memory = rest.split("-- shared memory", 1)
+    # The small, current sections first and the memory before the long lists,
+    # so nothing that cuts the text short ever cuts the memory.
+    head, rest = out.split("-- slots", 1)
+    slots, rest = rest.split("-- shared memory", 1)
+    memory, rest = rest.split("-- room", 1)
+    room_part, rest = rest.split("-- checked out", 1)
+    owns, landed = rest.split("-- landed", 1)
     assert out.startswith(board.HEADER)
-    assert "DECISION: one reader for both teams" in head
+    assert "DECISION: one reader for both teams" in room_part
     assert "not proof an agent is live" in owns and "owns tools/board.py" in owns
     assert "accepting review on origin/main" in landed and ": none" in landed
     assert "1 held" in slots and "galaxy-verify" in slots
@@ -108,6 +111,46 @@ def test_the_reader_keeps_the_three_columns_apart(
 
     monkeypatch.setattr(board, "observed", lambda: ["123 python -m pytest"])
     assert "- 123 python -m pytest" in board.read(observe=True)
+
+
+def test_the_whole_session_start_text_fits_the_budget_and_keeps_the_memory(
+    room: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Claude Code hands a model at most 10,000 characters of hook stdout and a
+    2,000-character preview beyond that, so the reader caps the whole text."""
+    for k in range(40):
+        board.append(f"Opus 5.5, team:claude {k}", f"CHECKPOINT {k} " + "y" * 400)
+    rows = [
+        f"- order-{k:02d} [harness, b/{k:02d}] owns " + "z" * 300 for k in range(40)
+    ]
+    landed = [f"landed-{k:03d}" for k in range(120)]
+    monkeypatch.setattr(board, "orders_view", lambda: (rows, landed))
+    obs = "2026-09-{:02d} [team:claude] " + "x" * 150 + ", src: work/BOARD.md"
+    lines = [
+        json.dumps(
+            {
+                "type": "entity",
+                "name": f"{kind}:item-{n:03d}",
+                "entityType": kind,
+                "observations": [obs.format(1 + k) for k in range(8)],
+            }
+        )
+        for kind in ("rule", "gotcha", "decision")
+        for n in range(100)
+    ]
+    board.memory_file().write_text("\n".join(lines), encoding="utf-8")
+
+    out = board.read()
+    assert len(out) + 1 < 10_000
+    assert len(out) + 1 <= board.READ_BUDGET
+    assert board.digest(board.memory_file()) in out, "the memory is never cut"
+    assert "CHECKPOINT 39 " in out, "the newest room entry is shown"
+    assert "CHECKPOINT 0 " not in out
+    assert "board --full" in out, "what was left out says where it is"
+    assert "landed-000" in out and "120" in out.split("-- landed", 1)[1]
+
+    full = board.read(full=True)
+    assert "CHECKPOINT 10 " in full and "order-39" in full and "landed-119" in full
 
 
 def test_the_reader_reports_what_it_could_not_derive(
@@ -156,15 +199,51 @@ def test_only_decisions_and_verified_landings_are_mirrored_once() -> None:
     assert board.MARKER.findall(body) == [todo[0].id]
 
 
+# Every start source each client documents: Claude Code's hooks reference lists
+# fork as well, Codex's does not.
+SOURCES = {
+    "claude": {"startup", "resume", "clear", "compact", "fork"},
+    "codex": {"startup", "resume", "clear", "compact"},
+}
+
+
+def _hooks(vendor: str) -> dict:
+    path = {"claude": ".claude/settings.json", "codex": ".codex/hooks.json"}[vendor]
+    return json.loads((ROOT / path).read_text())["hooks"]
+
+
 def _hook_commands() -> list[tuple[str, str]]:
-    claude = json.loads((ROOT / ".claude" / "settings.json").read_text())
-    codex = json.loads((ROOT / ".codex" / "hooks.json").read_text())
     out = []
-    for name, cfg in (("claude", claude), ("codex", codex)):
-        for group in cfg["hooks"]["SessionStart"]:
-            assert set(group["matcher"].split("|")) >= {"startup", "resume", "compact"}
+    for name in ("claude", "codex"):
+        for group in _hooks(name)["SessionStart"]:
+            assert set(group["matcher"].split("|")) == SOURCES[name]
             out += [(name, h["command"]) for h in group["hooks"]]
     return out
+
+
+def test_codex_keeps_the_work_order_hooks_it_already_runs() -> None:
+    """Tracking .codex/hooks.json replaces the untracked copy a checkout had,
+    which carried Codex's work-order hooks; the tracked file must carry them."""
+    claude, codex = _hooks("claude"), _hooks("codex")
+    for event in ("PreToolUse", "PostToolUse", "SubagentStop", "Stop"):
+        assert codex.get(event) == claude[event], event
+    assert set(codex) == {"SessionStart", "PreToolUse", "PostToolUse"} | {
+        "SubagentStop",
+        "Stop",
+    }
+
+
+def _hook_env(vendor: str, tmp_path: Path) -> dict[str, str]:
+    env = {
+        **os.environ,
+        "VIBE_BOARD_DIR": str(tmp_path / "nowhere"),
+        "VIBE_MEMORY_FILE": str(tmp_path / "nowhere" / "memory.jsonl"),
+    }
+    # Codex sets no CLAUDE_PROJECT_DIR; its hooks run in the session's cwd.
+    env.pop("CLAUDE_PROJECT_DIR", None)
+    if vendor == "claude":
+        env["CLAUDE_PROJECT_DIR"] = str(ROOT)
+    return env
 
 
 @pytest.mark.parametrize("vendor", ["claude", "codex"])
@@ -173,12 +252,7 @@ def test_the_session_start_hook_prints_the_digest_with_no_memory_file(
 ) -> None:
     [cmd] = [c for v, c in _hook_commands() if v == vendor]
     assert "tools/board.py" in cmd and " read" in cmd
-    env = {
-        **os.environ,
-        "CLAUDE_PROJECT_DIR": str(ROOT),
-        "VIBE_BOARD_DIR": str(tmp_path / "nowhere"),
-        "VIBE_MEMORY_FILE": str(tmp_path / "nowhere" / "memory.jsonl"),
-    }
+    env = _hook_env(vendor, tmp_path)
     run = subprocess.run(
         ["sh", "-c", cmd], cwd=ROOT, env=env, capture_output=True, text=True
     )
@@ -186,6 +260,49 @@ def test_the_session_start_hook_prints_the_digest_with_no_memory_file(
     assert run.stdout.startswith(board.HEADER)
     assert "-- shared memory: 0 entities" in run.stdout
     assert not (tmp_path / "nowhere").exists(), "a reader never creates the room"
+
+
+def _python_older_than_311() -> str | None:
+    """An interpreter a hook's bare python3 may be: macOS ships 3.9 in /usr/bin."""
+    found = subprocess.run(
+        ["uv", "python", "find", "--no-project", ">=3.9,<3.11"],
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    for exe in (found, "/usr/bin/python3"):
+        if not exe or not Path(exe).exists():
+            continue
+        ver = subprocess.run(
+            [exe, "-c", "import sys; print(sys.version_info >= (3, 11))"],
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if ver == "False":
+            return exe
+    return None
+
+
+@pytest.mark.parametrize("vendor", ["claude", "codex"])
+def test_the_session_start_hook_reads_under_an_older_python3(
+    vendor: str, tmp_path: Path
+) -> None:
+    old = _python_older_than_311()
+    if old is None:
+        pytest.skip("no Python older than 3.11 on this machine")
+    shim = tmp_path / "bin"
+    shim.mkdir()
+    (shim / "python3").symlink_to(old)
+    git = subprocess.run(["which", "git"], capture_output=True, text=True).stdout
+    path = os.pathsep.join([str(shim), str(Path(git.strip()).parent), "/bin"])
+    [cmd] = [c for v, c in _hook_commands() if v == vendor]
+    env = {**_hook_env(vendor, tmp_path), "PATH": path}
+    run = subprocess.run(
+        ["sh", "-c", cmd], cwd=ROOT, env=env, capture_output=True, text=True
+    )
+    assert run.returncode == 0, run.stderr
+    assert run.stdout.startswith(board.HEADER), run.stdout + run.stderr
+    assert "-- shared memory: 0 entities" in run.stdout
+    assert "tools/work.py needs Python 3.11" in run.stdout
 
 
 def test_both_clients_start_the_same_memory_and_neither_can_dump_it() -> None:

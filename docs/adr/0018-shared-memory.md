@@ -36,27 +36,31 @@ The source of the pinned version (2026.8.31) shows how the server writes. Every 
 - It is append-only.
 - Each entry is written in one write, under a lock.
 - Each entry's id is derived from its own text.
-- `tools/board.py` (standard library only) reads and appends it. `work/BOARD.md` is the one-page protocol.
-- Claimed and landed orders are worked out from `tools/work.py`, not typed in.
+- `tools/board.py` (standard library only, importable from Python 3.9) reads and appends it. `work/BOARD.md` is the one-page protocol.
+- Checked-out and landed orders are worked out from `tools/work.py`. The manager who lands an order also types one LANDED entry, the note for issue #95, and it is mirrored only when `tools/work.py` confirms it.
 - Heavy job slots are explicit reservations. A scan of running processes only cross-checks them.
 - DECISION and verified LANDED entries are mirrored to issue #95 by a manager, never by a hook.
 
 **The memory.** The long-term memory is the official MCP memory server, pinned to 2026.8.31, with one `memory.jsonl` next to the room.
 
 - Both clients load it from tracked files: Claude from `.mcp.json`, Codex from `.codex/config.toml`. Both go through `scripts/memory-mcp.sh`.
-- The script starts the server behind `tools/board.py memory-serve`. That process takes a lock around every change the server makes, from request to response, so writes from any number of processes are serialized. It also refuses `read_graph` and the whole-graph resource.
+- The script starts the server behind `tools/board.py memory-serve`. That process takes a lock around every change the server makes, from request to response, so writes from any number of processes are serialized. The lock is held for at most 10 seconds per write (the real write takes milliseconds); after that the client gets an error saying the write may not have happened, and the lock is free for every other session. It also refuses `read_graph` and the whole-graph resource.
 - Both configs deny `read_graph` as well: `permissions.deny` in `.claude/settings.json` and `disabled_tools` in `.codex/config.toml`.
 - Entities are named `kind:slug`.
 - Each observation is dated, tagged with its team and carries a source pointer. It is at most 200 characters.
 - The caps are 300 entities and 8 observations per entity. `just memory-lint` enforces them and refuses secret-looking lines.
 
-**Session start.** A SessionStart hook for Claude (`.claude/settings.json`) and one for Codex (`.codex/hooks.json`) run the same `python3 tools/board.py read`. Both clients get the same text:
+**Session start.** A SessionStart hook for Claude (`.claude/settings.json`) and one for Codex (`.codex/hooks.json`) run the same `python3 tools/board.py read`. Both clients get the same text, in this order:
 
-- the last 30 room entries, one line each
-- the checked-out orders
-- the landed orders
 - the held slots
 - a memory digest: every rule and gotcha and the ten newest decisions, in under 6,000 characters
+- the newest room entries, one line each, at most 30
+- the checked-out orders
+- the landed orders
+
+The whole text stays under 9,000 characters: Claude Code gives a model at most 10,000 characters of hook output and only a 2,000-character preview beyond it. The digest comes before the long lists, so what the budget cuts is older room lines and checked-out orders, never the memory.
+
+`.codex/hooks.json` also carries the four work-order hooks Codex already ran from an untracked copy (the edit guard, the data backup, SubagentStop and Stop), the same as `.claude/settings.json`; a test keeps them equal, so tracking the file takes nothing away from Codex.
 
 Camps get none of this. `tools/sync_template.py` leaves out the hook, the deny rule and the skill.
 
@@ -64,7 +68,7 @@ Camps get none of this. `tools/sync_template.py` leaves out the hook, the deny r
 
 ## Consequences
 
-- A session starts with a few thousand characters about the state of the work, the same for both teams, instead of re-reading the logs. Anything left out of the digest is one `search_nodes` call away. Most of the saving comes from the digest and from the missing whole-graph read, not from the server.
+- A session starts with at most 9,000 characters about the state of the work, the same for both teams, instead of re-reading the logs. Anything left out of the digest is one `search_nodes` call away. Most of the saving comes from the digest and from the missing whole-graph read, not from the server.
 - Both files live in `.git`. They are not backed up by a push, and deleting the clone deletes them. Anything that must outlive the clone goes into a tracked doc, and the graph points at it.
 - The first start of the server fetches the pinned package from npm. After that, npm's cache serves it offline.
 - The memory's search is a case-insensitive substring match on one string. The naming convention (a kind prefix, one keyword) is what makes it usable, and its limits are the switch condition above.
