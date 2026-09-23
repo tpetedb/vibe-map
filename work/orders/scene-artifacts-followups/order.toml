@@ -10,7 +10,6 @@ builder = "builder-scene-artifacts-followups"
 
 owns = [
   "src/game/16-artifacts.js",
-  "src/game/40-sheet.js",
   "src/game/60-vault.js",
   "tests/test_game_hunt_f.py",
   "vibemap/data/campaign.json",
