@@ -6,7 +6,7 @@ branch = "claude/hunt-y-empty-scores"
 goal = ""
 issue = 118
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = "codex-hunt-y-empty-scores"
+builder = "builder-hunt-y-empty-scores"
 
 # Files, or folders ending in /. No globs: two orders may never own the same file.
 owns = [
