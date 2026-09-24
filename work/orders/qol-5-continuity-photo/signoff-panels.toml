@@ -1,0 +1,41 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "qol-5-continuity-photo"
+team = "panels"
+by = "manager-panels"
+reviewed = "729f5f9750ab623463dd7fc549b5bee9fe23d1a2"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Accepted as the owner of src/game/89-dashboard.js (the only panels file this \
+order touches; 33-photo.js is scene's src/game/3*.js, 80-sync.js is state's own \
+file). No panels-owned file outside owns was touched: git diff origin/main...HEAD \
+names nothing under src/body.html, src/head.html, src/style.css, src/errors.js or \
+src/icon.svg at 729f5f9.
+
+What I checked, all at 729f5f9:
+- 89-dashboard.js:261-321 adds the break card (proposal 25) as a self-contained \
+block after the existing play-tick interval: state (breakInputAt, breakChecks), \
+the sitting/due/clear predicates, the card's DOM built with createElement and \
+textContent (no raw HTML), and the two test seams __breaks()/__breakAway(). It \
+only calls helpers that already exist in this file or its neighbours ($, \
+settings(), setSetting(), roleName(), fx(), CH, stopCount(), dashIsland(), \
+exportDue()), so it adds no new cross-file surface for panels to carry.
+- Style: uses button.primary and .card, both already defined in src/style.css \
+(unchanged by this diff), so the frozen file for #183 stays untouched. z-index \
+41 sits just above #hud's 40, which is correct given breakClear() keeps the card \
+from opening while a sheet/vault/palette/title is up. Copy is plain, no em-dash, \
+no emoji: `python3 tools/checks.py style` OK in the worktree.
+- Coverage: tests/test_game_qol_continuity.py (lines ~211-484) covers the between- \
+stops wait, the off switch, Escape, a short or broken sitting, a player away from \
+the keyboard, the HUD-follow on screen turn, and takes screenshots on both phone \
+profiles; review.toml round 2 confirms each fix is red on revert.
+- Findings.md and the reviewer's round-2 findings: nothing outstanding lands on \
+89-dashboard.js. The one open low on 80-sync.js (save() pass-through vs #164) and \
+the photo-mode lows are outside my file.
+- Nothing else of panels' depends on this: the break card is new UI, not called \
+from body.html/style.css, and does not change any function panels' other files \
+already use. No follow-up action needed from this team.
+"""
