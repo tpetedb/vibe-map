@@ -1,1 +1,0 @@
-- The Cycle 3 guide now documents the dashboard, avatar and archipelago, and maintainers have one tested command to regenerate the complete played camp. The gameplay recording follows the learner across a bridge before the next stop is claimed.

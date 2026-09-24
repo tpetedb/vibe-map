@@ -1,1 +1,0 @@
-- Keep Galaxy's journey and lessons usable without WebGL, fit landed miniatures beside the HUD on tablets and phones, and give its planets distinct context and guidance. Landed miniatures reuse the island terrain and building helpers, expose real topic lesson sites, and preserve island campaign progress.

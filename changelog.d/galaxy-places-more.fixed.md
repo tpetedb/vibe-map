@@ -1,1 +1,0 @@
-- Add sourced places needed by topic histories, replace unsupported landmark shapes with explicit generic markers, reject ambiguous origin years and duplicate places, and include place sources in the weekly link check.

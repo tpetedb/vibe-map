@@ -1,1 +1,0 @@
-- Treat an existing zero-byte scores file as an empty scoreboard in `vibe scores`.
