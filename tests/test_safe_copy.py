@@ -20,12 +20,17 @@ BODY = ROOT / "src" / "body.html"
 SYLLABUS = ROOT / "docs" / "SYLLABUS.md"
 SYLLABUS_PAGE = ROOT / "docs" / "site" / "syllabus.html"
 
-# The one sentence both copies of workstream 1's Definition of done carry.
-SAFE = (
+# The advice both copies of workstream 1's Definition of done carry.
+ADVICE = (
     "If Claude asks permission for something you do not understand, pause: read "
-    "what it wants to run or change, and ask Tom before you say yes; understanding "
-    "permissions in depth is workstream 4."
+    "what it wants to run or change, and ask Tom before you say yes;"
 )
+# The lessons that teach permissions: Evening 3 stop 4 and Evening 4 stop 5.
+POINTER = (
+    " understanding permissions in depth comes later, at Hooks as gates "
+    "(Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5)."
+)
+SAFE = ADVICE + POINTER
 
 # An instruction to approve: "answer yes", "click allow", "approve it".
 _APPROVE = re.compile(
@@ -113,5 +118,5 @@ def test_the_syllabus_says_the_same_in_workstream_1() -> None:
     text = SYLLABUS.read_text()
     m = re.search(r"^## 18:00: .*?(?=^## )", text, re.S | re.M)
     assert m, "the syllabus has no 18:00 section"
-    assert SAFE in re.sub(r"\s+", " ", m.group(0))
-    assert SAFE in re.sub(r"\s+", " ", _plain(SYLLABUS_PAGE.read_text()))
+    assert ADVICE in re.sub(r"\s+", " ", m.group(0))
+    assert ADVICE in re.sub(r"\s+", " ", _plain(SYLLABUS_PAGE.read_text()))

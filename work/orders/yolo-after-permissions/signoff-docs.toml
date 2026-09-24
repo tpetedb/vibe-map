@@ -1,0 +1,28 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "yolo-after-permissions"
+team = "docs"
+by = "manager-docs"
+reviewed = "70869295fc43c53db01198f8ccdba2bb5294ab02"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Checked git diff origin/main...HEAD restricted to docs paths: the only file
+of ours is changelog.d/yolo-after-permissions.fixed.md (matches the docs
+team's *.md glob, no more specific team claims changelog.d/). Named
+<slug>.fixed.md per changelog.d/README.md, added in the same commit as the
+src/vibemap change it describes. Content is two true, plain bullets for the
+person using the repo: the YOLO launcher stays greyed out with a stated
+reason until both permission lessons are recorded, and the first lesson's
+pointer now names the two lessons that actually teach permissions (Hooks as
+gates, Evening 3 stop 4; Claude Code, the power settings, Evening 4 stop 5).
+Verified those two titles against vibemap/data/campaign.json myself; they
+match. No em dash, matches house voice, never edits CHANGELOG.md itself.
+docs/SYLLABUS.md and docs/site/syllabus.html still carry the old "workstream
+4" sentence; the order and its findings.md correctly say this is left to the
+open #190/#203 orders and this branch does not touch them, so nothing here
+conflicts with docs work in flight. Nothing further for docs to do once this
+lands.
+"""
