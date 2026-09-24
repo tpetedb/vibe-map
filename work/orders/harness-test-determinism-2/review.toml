@@ -1,0 +1,63 @@
+v = 1
+order = "harness-test-determinism-2"
+by = "reviewer-harness-test-determinism-2-r1"
+reviewed = "ce146ba0c79d5f773850656db9f19e1888c7f260"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran the check myself after slot-wait at ce146ba: tests/test_harness_determinism.py and tests/test_repo.py, 110 passed, and the module prints STILL_READ_THE_SCREEN = set() and HAND_BUILT_PAGES = set(). The command proves the text only together with what follows, so I broke things in a scratch copy (git archive of HEAD under /tmp, run with the worktree's venv):
+- Put the old race back into test_game_bottles.py (wait_for_selector "#toast .tst" then text_content "#toast"): test_no_browser_test_reads_a_toast_off_the_screen fails and names lines 69 and 70.
+- Put a hand-built context back into test_game_phone.py _window (browser.new_context, context.new_page, GamePage(...)): test_a_game_page_comes_from_the_fixture fails and names all three calls.
+- Restored origin/main's test_game_news.py: the page guard names chromium.new_context and context.new_page.
+- Four more shapes in a new test file (locator("#toast").inner_text(), an f-string "#toast .{kind}", expect(locator(".tst").first).to_contain_text, evaluate(querySelector('#toast').innerText)): all four reported.
+- A hand-built page reached through `from tests import conftest as C` and `C.GAME_PATH`: reported.
+Red first, by reverting the fixes one at a time in the scratch copy: origin/main's conftest.py makes test_frames_does_not_count_from_a_frame_count_it_could_not_read fail (DID NOT RAISE) and test_a_wait_on_a_page_that_stopped_answering_says_so fail ("the page drew -500 frames"). Putting TOAST_SELECTOR back to a substring match, dropping the expect() step in _operation, cutting OPENS_A_PAGE back to new_context and ignoring aliases makes the whole-word test, the three expect-on-the-stack cases and three of the four any-name page cases fail. Every new guard test I reverted went red.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the four files in the worktree after slot-wait on one slot: 86 passed, exit 0. Then ran `git status --porcelain` on the whole tree, not only the four folders the check's git diff covers: it printed nothing. Also ran the four files' tests I changed against a broken game in the scratch copy (below, c4), so they are not just green. CI on the PR at this head: the ui and phone shards (which carry these files) are green, as are bridges, panels and webkit; smoke and qol were still queued when I looked, and the lint job's only red step is the review step this file turns green.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran it myself in the worktree: ruff check and ruff format --check clean, `tools/checks.py style` prints "style OK", and the non-browser battery passes with no failures. The conftest.py change is also exercised by other files that use its fixtures: after slot-wait, one run each, tests/test_game_qol_feedback.py (23 passed; it uses toasts() and calls frame_count() directly, the method whose error handling changed) and tests/test_game_state.py (20 passed, toast record). `git status --porcelain` empty after each run.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Read #148 and its comments and set each item for these files against the diff.
+- bottles line 69 race and ui line 416 screen read: both now call toast_said(). To see they still catch a real regression I changed the built game in the scratch copy ("A message in a bottle: " to "A note in a bottle: ", and " opens once " to " is shut until ") and ran the two tests after slot-wait: both fail with the named wait "a toast saying ... did not happen inside 20 s" and the page's own record, which shows the changed text. With the game restored they pass.
+- phone and news hand-built pages: both go through game_page(); game_page gained a keyword `url=` for the file-URL game, and the news test now asserts page.url starts with file://, so the address really reaches the page. The phone init script is added to the context before the first goto, and the fullscreen test's second half proves it takes effect.
+- toast guard blind spots (.tstats, a default argument, a dict, a class or self attribute, an imported constant, is_hidden and expect on the stack), page guard blind spots (GamePage as GP, conftest.GamePage, raw new_page, launch_persistent_context), frame_count() swallowing everything: each has a test, and each test I reverted went red (see c1).
+- SHOT_MS comment: now says only what was measured and that the cause is unknown.
+- sleeps: a new guard with a shrink-only STILL_SLEEP list; the three files named really sleep and are outside this order, and the builder listed them on #148 (comment of 2026-09-24T01:35).
+- retained traces in CI (item 4): out of this order by its own findings.md and left open on #148 in the same comment. Rejected for scope with a record, which the criterion allows.
+No diff line adds a sleep or a wait_for_timeout; grep on the four files and conftest.py finds none.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = "Both guards scan only tests/test_*.py. A toast read, or a hand-built game page, inside a helper module under tests/ that a test imports passes both guards: I added tests/pagehelp.py with `def said(game): return game.page.text_content(\"#toast .tst\")` and a second with `open_game()` building new_context plus GamePage, imported them from a test file, and the harness file stayed green. The toast guard follows a selector constant into a helper but not a read. No such helper exists today (only conftest.py and __init__.py), so this is for a follow-up: scan every tests/*.py outside GUARDS."
+[[findings]]
+severity = "low"
+file = "work/orders/harness-test-determinism-2/order.toml"
+text = "c2 says running the files leaves no tracked file changed, but its command runs `git diff --quiet -- docs/ vibemap/data/ src/ game/`, four folders. I checked the whole tree by hand and it was clean; a later order should use `git status --porcelain` with no path so the command proves the sentence."
+[[findings]]
+severity = "low"
+file = "tests/test_harness_determinism.py"
+text = "The sleep guard matches by the called name, so `from time import sleep as nap; nap(1)` returns no hit (checked with sleeps() directly). Follow the import alias the way _wrappers() does for GamePage."
+[[findings]]
+severity = "low"
+file = "work/orders/harness-test-determinism-2/order.toml"
+text = "The order's title promises \"retained traces in CI\" and findings.md says they are not in this order. The trace item stays open on #148; the title should not claim it."

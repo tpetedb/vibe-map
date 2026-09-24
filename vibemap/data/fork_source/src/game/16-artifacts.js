@@ -17,7 +17,7 @@ const ART_DEMOS={
     {l:"Change the recipe (invalidate)",o:["recipe changed:  cache cleared for /water","The hard part is not keeping a copy. It is knowing when the copy is wrong."]}
   ],
   well:[
-    {l:"Pull a bucket",o:["SELECT * FROM scores WHERE player = 'Lotte';","scanning 120 000 rows ...  840 ms   3 rows"]},
+    {l:"Pull a bucket",o:["SELECT * FROM scores WHERE player = 'Lotte';","scanning 120\u00a0000 rows ...  840 ms   3 rows"]},
     {l:"Add an index",o:["CREATE INDEX scores_player ON scores(player);","SELECT * FROM scores WHERE player = 'Lotte';","index seek ...  4 ms   3 rows","An index is a rope with marks: you go straight to the bucket instead of down the whole well."]},
     {l:"Two buckets at once",o:["BEGIN;","UPDATE scores SET score = score + 10 WHERE player = 'Lotte';","UPDATE scores SET score = score - 10 WHERE player = 'Tom';","COMMIT;","Both changes, or neither. Never one of them. That is a transaction."]}
   ],
@@ -37,31 +37,22 @@ const ART_DEMOS={
     {l:"Turn when the wind blows (an event)",o:["on: push        (GitHub Actions)","on: PostToolUse (Claude Code hook)","A schedule is time-driven. A hook is event-driven. Neither needs you in the room."]}
   ],
   balloon:[
-    // One region, one rate: t3.small is dearer in Ireland than in Virginia,
-    // and a demo about regions that charges another region's price teaches
-    // the opposite of its own lesson. 0.0228 USD is the eu-west-1 on-demand
-    // rate; the month below is that rate times 24 hours times 30 days. The
-    // walkthrough has the learner look today's rate up for themselves.
+    // One region, one rate: 0.0228 USD is t3.small on demand in eu-west-1,
+    // and the month is that rate times 720 hours.
     {l:"Rent a balloon",o:["aws ec2 run-instances --instance-type t3.small --region eu-west-1","running.  meter: 0.0228 USD per hour","The cloud is a computer you rent by the hour and never see."]},
     {l:"Forget to land it",o:["30 days later ...  16.42 USD  (and 2.10 USD for the storage it was tied to)","The meter runs whether you use it or not. Set a budget alarm before the first launch."]},
     {l:"Land it",o:["aws ec2 terminate-instances ...  meter stopped","Region, instance, storage, traffic out: four meters, not one."]}
   ],
   mountain:[
-    // A transcript is read down its columns as much as along its lines: the
-    // layer numbers here are a table, so what stands in the second column
-    // starts at the same place on every line of the same demo. The longest
-    // first column sets it, and a rename moves the whole block, not one line.
+    // A table: the second column starts at the same place on every line of a
+    // demo, so a longer first column moves the whole block.
     {l:"Climb",o:["1  hardware           Apple M4, 10 cores, 16 GB","2  operating system   macOS: files, processes, ports","3  runtime            Python 3.12, managed by uv","4  libraries          click, rich, polars, duckdb, textual","5  your app           vibe","6  the agent          Claude Code, reading and writing all of it","Every layer stands on the one below. A bug can live on any of them."]},
     {l:"Look down from the summit",o:["the agent edits vibemap/cli.py  (layer 5)","which imports polars            (layer 4)","which calls into Python         (layer 3)","which asks macOS for a file     (layer 2)","which reads the disk            (layer 1)","One keystroke at the top touches every layer on the way down."]}
   ],
   stall:[
     {l:"Read the menu (the docs)",o:["GET /openapi.json","endpoints:  GET /coffee   GET /scores   POST /scores   GET /status","auth:       Authorization: Bearer <token>","An API is a menu: what you may ask for, in which words, and what comes back."]},
-    // Two mistakes, two answers. A path the stall does not have is a 404, the
-    // code the cafe teaches two artifacts away and the one this stall's own
-    // source (FastAPI, First Steps) gives a route it never declared; a body it
-    // cannot read is the client's grammar, so 400. One 400 for both would
-    // teach that a thing that is not there and a sentence that is malformed
-    // are the same mistake, and the reader would look for the wrong fix.
+    // Two mistakes, two codes: a path the stall does not have is a 404, as the
+    // cafe and FastAPI answer it, and a body it cannot read is a 400.
     {l:"Order without reading it",o:["POST /scoresss  {\"player\": 1}","404 Not Found:  no route by that name","POST /scores  {\"player\": 1}","400 Bad Request:  player must be a string","A wrong path is a 404, a wrong body is a 400. Read the menu first, then order exactly."]},
     {l:"Show your key",o:["GET /scores   Authorization: Bearer ****","200 OK   3 rows","Keys live in .env, never in the code, never in the vault."]}
   ],
@@ -73,7 +64,7 @@ const ART_DEMOS={
     {l:"Run the pipeline",o:["run 40   raw     ->  bronze   12 files landed as they came (CSV, 3 with odd rows)","run 40   bronze  ->  silver   3 rows quarantined, 2 columns typed, dates parsed","run 40   silver  ->  gold     one table: score per player per evening","Raw is what arrived. Bronze keeps it. Silver cleans it. Gold answers a question."]},
     {l:"A run fails halfway",o:["run 41   raw     ->  bronze   ok","run 41   bronze  ->  silver   ERROR: scores_2026-09-25.csv, column score is 'four hundred'","run 41   failed after silver. gold untouched: it still shows last night's numbers.","A failed step must not leave half a table behind. Write to a temp table, then swap."]},
     {l:"Rerun it",o:["fix: cast score to integer, park the odd row in quarantine","run 42   raw     ->  bronze   skipped, nothing new","run 42   bronze  ->  silver   ok      silver  ->  gold   ok","Same input, same output, no duplicates. That is idempotent: rerun without fear."]},
-    {l:"Batch or stream?",o:["batch:   every night at 02:00   120 000 rows   4 minutes","stream:  one row each time a game ends   30 ms each","Batch is cheap and late. Stream is fresh and fiddly. Choose by how old the answer may be."]}
+    {l:"Batch or stream?",o:["batch:   every night at 02:00   120\u00a0000 rows   4 minutes","stream:  one row each time a game ends   30 ms each","Batch is cheap and late. Stream is fresh and fiddly. Choose by how old the answer may be."]}
   ],
   "post-office":[
     {l:"Drop a letter",o:["you    ->  PUBLISH scores.finished {player: 'Lotte', score: 412}","queue  <-  accepted, id 8813, 2 subscribers","You are done the moment the letter is in the box. Who reads it, and when, is not your problem."]},
@@ -101,19 +92,19 @@ const ART_DEMOS={
     {l:"Rotate",o:["console: create key   ->  sk-ant-****...****Lm2","edit .env: 7Qf  ->  Lm2      (or the keychain)","old key: revoked.  new key: in the safe.  vault notes: no key in any of them, ever.","Rotate on a schedule, not only after a scare."]}
   ],
   "data-centre":[
-    {l:"Send one request",o:["you (Amsterdam)  ->  POST /v1/messages   1 200 tokens in","edge eu-west     ->  auth ok, rate ok           2 ms","queue            ->  GPU node 14, 8 x H100     waited 40 ms","prefill  1 200 tokens                         90 ms","decode   350 tokens, one at a time         2 100 ms","you  <-  200 OK   total 2.3 s","The answer is typed out one token at a time. Most of the wait is the typing."]},
+    {l:"Send one request",o:["you (Amsterdam)  ->  POST /v1/messages   1\u00a0200 tokens in","edge eu-west     ->  auth ok, rate ok           2 ms","queue            ->  GPU node 14, 8 x H100     waited 40 ms","prefill  1\u00a0200 tokens                         90 ms","decode   350 tokens, one at a time         2\u00a0100 ms","you  <-  200 OK   total 2.3 s","The answer is typed out one token at a time. Most of the wait is the typing."]},
     {l:"Same request from far away",o:["you (Sydney)  ->  edge us-east   180 ms each way","total 2.7 s. The GPUs were just as fast; the cable is longer.","Latency by region is geography, not load."]},
     {l:"Cold start",o:["node 22: model not loaded. loading 140 GB of weights ...  38 s","first request:  40.3 s      second request:  2.3 s","A cold start is the model being carried into the room. Keep it warm, or accept the first hit."]},
-    {l:"Batch instead",o:["batch job: 10 000 requests, deadline 24 h","GPU utilisation 92 %  (interactive: 35 %)      price: half","Interactive pays for the empty seats. Batch fills the room and waits."]}
+    {l:"Batch instead",o:["batch job: 10\u00a0000 requests, deadline 24 h","GPU utilisation 92 %  (interactive: 35 %)      price: half","Interactive pays for the empty seats. Batch fills the room and waits."]}
   ],
   "energy-grid":[
-    {l:"Read the meter",o:["evening 1:  84 requests   312 000 tokens in   41 000 tokens out","price:  3 USD per million in, 15 USD per million out   (an example; check the model's page)","bill:   0.94 + 0.62 = 1.56 USD","Tokens are the watts of this grid. Output tokens cost more: they are generated, not read."]},
+    {l:"Read the meter",o:["evening 1:  84 requests   312\u00a0000 tokens in   41\u00a0000 tokens out","price:  3 USD per million in, 15 USD per million out   (an example; check the model's page)","bill:   0.94 + 0.62 = 1.56 USD","Tokens are the watts of this grid. Output tokens cost more: they are generated, not read."]},
     {l:"Blow the fuse",o:["request 61 ...  429 Too Many Requests   Retry-After: 12","limit on this key: 50 requests per minute","A fuse trips before the wiring melts. Back off, wait, retry."]},
     {l:"Add turbines (autoscale)",o:["08:00   40 req/s    2 replicas","09:00  340 req/s    scale up  ->  9 replicas   (90 s to warm)","22:00   12 req/s    scale down  ->  2","Autoscaling adds turbines when the whole town switches the kettle on."]},
     {l:"Budget alarm",o:["budget: 20 USD per month   alert at 80 %","day 19:  16.02 USD   ALERT sent","action: the nightly job moves to a smaller model   0.40  ->  0.06 per run","Set the alarm before the first run, not after the first invoice."]}
   ],
   library:[
-    {l:"Ask a question",o:["q: 'why did the Monday run fail?'","embed(q)  ->  [0.021, -0.113, 0.087, ...]   1 536 numbers","A sentence becomes a point in space. Nearby points say similar things."]},
+    {l:"Ask a question",o:["q: 'why did the Monday run fail?'","embed(q)  ->  [0.021, -0.113, 0.087, ...]   1\u00a0536 numbers","A sentence becomes a point in space. Nearby points say similar things."]},
     {l:"Fetch the nearest shelves",o:["nearest 3 of 100 notes (cosine):","  0.91   Headless agents and scheduling","  0.88   CI-CD and automation","  0.79   Git hooks","prompt = the question + those three notes. The model reads them, then answers."]},
     {l:"Answer with a citation",o:["'The Monday 09:00 job runs vibe vault build; it failed because uv was missing on the runner.'","  source: Headless agents and scheduling, section 'Try in five minutes'","An answer with a shelf number can be checked. One without is a guess with good grammar."]},
     {l:"A stale index",o:["note edited 20:40.   index built 18:00.","q: 'what changed tonight?'   ->   nearest: yesterday's note","Retrieval is only as fresh as the last rebuild. Re-index after every session, or on a hook."]}
@@ -130,47 +121,27 @@ const ART_DEMOS={
     {l:"A request under the GDPR",o:["21:10   l.***@***.nl asks: what do you hold on me? delete it.","export:  1 row in players, 14 rows in scores   ->  sent (the law says within 30 days)","DELETE FROM scores WHERE id = 7;  DELETE FROM players WHERE id = 7;   backups expire in 30 days","Consent can be withdrawn. Design the delete before you design the insert."]}
   ],
   school:[
-    {l:"Split the data",o:["120 000 rows  ->  train 96 000    test 24 000    (at random, once)","The test set is the exam. The model never sees it while it learns."]},
+    {l:"Split the data",o:["120\u00a0000 rows  ->  train 96\u00a0000    test 24\u00a0000    (at random, once)","The test set is the exam. The model never sees it while it learns."]},
     {l:"Train",o:["epoch 1    loss 2.31   train 41 %   test 40 %","epoch 5    loss 0.92   train 78 %   test 76 %","epoch 20   loss 0.11   train 99 %   test 71 %","weights.bin written   (410 MB of numbers)","Data in, weights out. The weights are the model: a very long list of numbers."]},
     {l:"Catch the overfit",o:["train 99 %, test 71 %: it memorised the homework and failed the exam.","keep the epoch 5 weights (test 76 %). More training made it worse.","The test set is the only honest witness. Never train on it."]},
-    {l:"Score on a benchmark",o:["benchmark scores-qa-v2:  1 000 questions nobody trained on","this model  76.4 %     last month  71.2 %     a person on a good day  92 %","One number, the same questions for everyone. That is what a benchmark is, and all it is."]}
+    {l:"Score on a benchmark",o:["benchmark scores-qa-v2:  1\u00a0000 questions nobody trained on","this model  76.4 %     last month  71.2 %     a person on a good day  92 %","One number, the same questions for everyone. That is what a benchmark is, and all it is."]}
   ]
 };
-// High enough to lie on top of the flat ground a ring crosses: the path
-// slabs, the river where the fountain's and the bridge's rings run over it,
-// and the dock's planks, which are the highest of them. ringGround() measures
-// what is under each ring and a test holds this above it.
-const RING_Y=.2;
-// The ring is the zone, not a decoration around the model: it is drawn at the
-// radius nearArtifact() tests, so crossing the yellow ring is what offers
-// Inspect. A smaller ring sits inside whatever the walker is pushed out of
-// (the lake around the fountain, the mountain itself) and is never seen at
-// all. Two things the ring alone does not say. Two rings can overlap, which
-// on the campus the cafe's and the stall's do, either side of the Hub, and in
-// the overlap nearArtifact() offers the nearer of the two. And a signpost
-// keeps its own prompt within its radius, which the animate loop asks about
-// first, so where a stop's zone reaches over a ring the stop answers: at
-// signpost 4 and the mountain, signpost 6 and the dock, and signpost 6 and
-// the energy grid on the winter island.
+// Above the level ground a ring crosses (path slabs, water, the dock's planks,
+// a finished stop's slab), and low enough to read as lying on it.
+const RING_Y=.27;
+// The ring is the zone nearArtifact() tests. Where a mentor, the finale, an
+// open signpost or a nearer ring overlaps it, the animate loop offers that
+// first; tests/test_game_hunt_f.py lists every place it happens.
 function placeArtifacts(){props.artifacts=[];(typeof ARTIFACTS==="undefined"?[]:ARTIFACTS).filter(a=>a.world===S.world).forEach(a=>{
   const found=S.artifacts.includes(a.id);
   const ring=new T.Mesh(new T.TorusGeometry(a.r,.06,6,24),new T.MeshBasicMaterial({color:found?PALETTE.greenBright:PALETTE.yellow,transparent:true,opacity:.55}));ring.rotation.x=Math.PI/2;ring.position.set(a.pos[0],RING_Y,a.pos[1]);scene.add(ring);
   props.artifacts.push({a,ring})})}
 function nearArtifact(pos){let best=null,bd=99;(props.artifacts||[]).forEach(x=>{const d=Math.hypot(x.a.pos[0]-pos.x,x.a.pos[1]-pos.z);if(d<x.a.r&&d<bd){bd=d;best=x.a}});return best}
-// The task behind the demo: a walkthrough written from the official
-// documentation of the thing, the commands that documentation gives, and the
-// one check that looks at what was built. Rendered inside .lesson so the
-// commands get the same Commands disclosure every lesson uses.
-// Every word of it is meant to be reproduced: a step says to print a line
-// exactly and the check reads that line back, and the commands are typed as
-// they stand. Ligatures are off here as a guard, not as a repair: the stack
-// the game ships (system-ui and ui-monospace) joins nothing, measured at 40 px
-// in Chromium and in WebKit, where normal and none draw the same pixels. A
-// fork that sets a typeface which joins "->" into one arrow or "--" into one
-// dash would break a line that has to be copied off the screen, and this is
-// what keeps that from happening quietly.
+// The task behind the demo: a walkthrough from the thing's official docs and
+// the one check that reads back what was built. Inside .lesson for its Commands.
 function artifactReal(a){const r=a.real;const built=S.artifactsBuilt.includes(a.id);
-  return `<div class="lesson" style="font-variant-ligatures:none"><h3>${icon("milestone")}Do it for real: ${r.title}</h3>
+  return `<div class="lesson"><h3>${icon("milestone")}Do it for real: ${r.title}</h3>
    <p class="small muted">About ${r.minutes} minutes, in <code>${r.dir}/</code> in your camp. Written from <a href="${r.doc.url}" target="_blank" rel="noopener">${esc(r.doc.title)}</a>.</p>
    <ol class="small">${r.steps.map(s=>`<li>${esc(s)}</li>`).join("")}</ol>
    <pre><code>${r.commands.map(esc).join("\n")}</code></pre>
@@ -180,75 +151,41 @@ window.openArtifact=function(id){const a=ARTIFACTS.find(x=>x.id===id);if(!a)retu
   if(!S.artifacts.includes(id)){S.artifacts.push(id);save();track("artifact",id);hud();(props.artifacts||[]).forEach(x=>{if(x.a.id===id)x.ring.material.color.set(PALETTE.greenBright)})}
   const demos=ART_DEMOS[id]||[];
   demoStop($("art-term"));
-  $("s-artifact").innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
+  const sc=$("s-artifact");
+  // Every line on this screen is typed or read back exactly, so a typeface
+  // that joins "->" or "--" into one glyph must not do it here.
+  sc.style.fontVariantLigatures="none";
+  sc.innerHTML=`<div class="hour">${icon("compass")}${S.artifacts.length} of ${ARTIFACTS.length} artifacts found</div><h2>${a.name}</h2><p class="small muted">${a.prop} · ${a.concept}</p><p>${a.what}</p>`+
     `<div class="row">${demos.map((d,i)=>`<button data-demo="${i}" onclick="runDemo('${id}',${i})">${icon("play")}${d.l}</button>`).join("")}</div>`+
-    // The terminal answers a button press, so it is a live region: a reader
-    // that is not looking at it hears what came back, one line at a time,
-    // because runDemo appends each line as its own node. It prints command
-    // lines, so it carries the walkthrough's ligature guard as well: a
-    // terminal shows two hyphens in front of a flag, never one long dash.
-    `<pre class="term" id="art-term" aria-live="polite" style="font-variant-ligatures:none">Press a button. Watch what comes back.</pre>`+
+    // A live region, so a reader hears each line runDemo appends.
+    `<pre class="term" id="art-term" aria-live="polite">Press a button. Watch what comes back.</pre>`+
     `<div class="rolinda"><b>Rolinda asks</b>${a.rolinda}</div>`+
     artifactReal(a)+
     `<p class="small muted" id="art-links">In the vault: </p>`;
-  // A vault link is a link: an anchor carries the page's link colour, its
-  // underline, the focus ring and Enter, where a span with a click handler
-  // has none of them. The href is a placeholder the handler swallows, because
-  // the note opens in the vault overlay and not at a URL. Built as nodes, so
-  // the title is text and never markup.
+  // Buttons, because a note opens in the vault overlay and not at a URL; the
+  // link class gives them the link's look and the house focus ring.
   const links=$("art-links");a.links.forEach((n,k)=>{if(k)links.append(" · ");
-    const el=document.createElement("a");el.className="wl";el.href="#";el.textContent=n;
-    el.onclick=ev=>{ev.preventDefault();openNote(n)};links.append(el)});
+    const el=document.createElement("button");el.type="button";el.className="link wl";el.textContent=n;
+    el.onclick=()=>openNote(n);links.append(el)});
   // The sheet is built after boot, so its command block is wrapped and folded here.
-  wrapCommands();$("s-artifact").querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
+  wrapCommands();sc.querySelectorAll("details.cmds").forEach(d=>{d.open=cmdsOpen()});
   $("bub-face").innerHTML=FACE.rolinda;$("bub-who").textContent=roleName("rolinda");typeOut($("bub-text"),a.rolinda);
   openSheet("s-artifact")};
-// One transcript at a time: the lines a demo still owes are cancelled before
-// the next one starts, or two demos print into the same terminal at once.
+// One transcript at a time: a new demo cancels the lines the last one owes.
 function demoStop(el){if(!el)return;(el._demo||[]).forEach(clearTimeout);el._demo=[]}
 window.runDemo=function(id,i){const d=(ART_DEMOS[id]||[])[i];if(!d)return;const el=$("art-term");if(!el)return;
   demoStop(el);el.textContent="";
-  // Typing is the animation; reduced motion gets the whole transcript at once,
-  // which is also the one announcement a screen reader hears.
+  // Reduced motion gets the whole transcript at once, as one announcement.
   if(reducedMotion()){el.textContent=d.o.join("\n");el.scrollTop=el.scrollHeight;return}
-  // Each line is appended as a node of its own. Writing textContent instead
-  // replaces the single text node holding the whole transcript, and a live
-  // region that speaks what was added would then read every line printed so
-  // far again on each new one.
+  // A node per line: the live region then reads only the line just added.
   el._demo=d.o.map((line,k)=>setTimeout(()=>{el.append((k?"\n":"")+line);el.scrollTop=el.scrollHeight},k*320))};
-// The flat ground under the ring itself: the highest upward-facing surface a
-// ray straight down finds at the points of the circle a player can stand on.
-// That is what RING_Y has to clear. A face that is not level in world space
-// is a slope or a tuft of grass, which stands on the ground rather than being
-// it, so the face normal is taken through the object's own rotation before it
-// is asked which way is up. A point inside an obstacle is left out, because
-// there the prop is in front of the ring at any height, and so is anything
-// above the knee. The rings are skipped, or every sample would hit the one it
-// is measuring.
-function ringGround(x,z,r){const ray=new T.Raycaster(),down=new T.Vector3(0,-1,0),bb=new T.Box3();
-  const nm=new T.Matrix3(),up=new T.Vector3();
-  // Ground is wide. A level top under a metre across is something standing on
-  // it, a bottle or a crate or a collectible, which the ring passes behind.
-  const floor=[];scene.traverse(o=>{if(!o.isMesh||(o.geometry&&o.geometry.type==="TorusGeometry"))return;
-    bb.setFromObject(o);if(bb.max.x-bb.min.x>=1&&bb.max.z-bb.min.z>=1)floor.push(o)});
-  let top=0;
-  for(let i=0;i<48;i++){const th=i/48*Math.PI*2,px=x+Math.cos(th)*r,pz=z+Math.sin(th)*r;
-    if((obstacles||[]).some(o=>Math.hypot(o[0]-px,o[1]-pz)<o[2]))continue;
-    ray.set(new T.Vector3(px,6,pz),down);
-    ray.intersectObjects(floor,false).forEach(h=>{
-      if(h.point.y>.4||h.point.y<=top||!h.face)return;
-      up.copy(h.face.normal).applyMatrix3(nm.getNormalMatrix(h.object.matrixWorld)).normalize();
-      if(up.y>.95)top=h.point.y})}
-  return +top.toFixed(4)}
-// Test seam: the ring each artifact of this island is drawn with, the radius
-// the walk-up test uses, the radius the walker is pushed out of at the same
-// centre, and the ground the ring is drawn over, so a test can assert the
-// ring is the zone, can be stood on, and lies on top of what it crosses.
-window.__rings=()=>(props.artifacts||[]).map(x=>({id:x.a.id,zone:x.a.r,
+// Test seams: each ring as drawn next to the zone it stands for, and the
+// circles the walker is pushed out of, so a test can measure what is under a ring.
+window.__rings=()=>(props.artifacts||[]).map(x=>({id:x.a.id,zone:x.a.r,x:x.ring.position.x,z:x.ring.position.z,
   r:x.ring.geometry.parameters.radius,tube:x.ring.geometry.parameters.tube,y:x.ring.position.y,
-  ground:ringGround(x.a.pos[0],x.a.pos[1],x.ring.geometry.parameters.radius),
   block:(obstacles||[]).filter(o=>Math.hypot(o[0]-x.a.pos[0],o[1]-x.a.pos[1])<.01)
     .reduce((m,o)=>Math.max(m,o[2]),0)}));
+window.__obstacles=()=>(obstacles||[]).map(o=>o.slice());
 function artifactsMd(){return "# Artifacts\nThings on the island that explain one idea each. Walk up to the yellow ring and press Inspect; a found one turns green. Each one also sets a task from the official documentation of the thing, checked in your camp.\n"+
   ARTIFACTS.map(a=>`- ${S.artifactsBuilt.includes(a.id)?"built for real":S.artifacts.includes(a.id)?"found":"not yet"}: **${a.name}** (${a.prop}): ${a.concept}. Do it for real: ${a.real.title} (\`vibe check --artifact ${a.id}\`). See ${a.links.map(l=>"[["+l+"]]").join(", ")}.`).join("\n")+"\n- Back: [[Tonight]]\n#concept"}
 window.__artifacts=()=>ARTIFACTS;

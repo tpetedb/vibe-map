@@ -17,12 +17,14 @@ from __future__ import annotations
 import ast
 import re
 import tempfile
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from typing import Any, cast
 
 import pytest
 from playwright.sync_api import Browser, Page
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import TimeoutError as PageTimeout
 
 from tests.conftest import (
@@ -43,28 +45,39 @@ TESTS = sorted(p for p in (ROOT / "tests").glob("test_*.py"))
 # The two files the rule is written in: conftest.py is the one helper that
 # owns it, this file is where the helper is put to the test.
 GUARDS = {"conftest.py", "test_harness_determinism.py"}
-# Two files still read a toast off the screen, and two build their own game
-# page instead of taking a fixture. Neither pair is among the files this order
-# may touch, so both are named here, both are on issue 148, and both lists may
-# only shrink: a test below holds each name to still being the exception it
-# claims to be.
-STILL_READ_THE_SCREEN = {"test_game_bottles.py", "test_game_ui.py"}
-HAND_BUILT_PAGES = {"test_game_phone.py", "test_game_news.py"}
+# The files that still read a toast off the screen, and those that build their
+# own game page instead of taking one from game_page(). Both are empty and may
+# only stay that way or shrink back to it: a test below holds each name to
+# still being the exception it claims to be.
+STILL_READ_THE_SCREEN: set[str] = set()
+HAND_BUILT_PAGES: set[str] = set()
+# Three files wait on the wall clock. None is among the files this order may
+# touch, so they are named here and on issue 148, and the list may only shrink.
+STILL_SLEEP = {"test_game_mentors.py", "test_game_webkit.py", "test_syllabus.py"}
+SLEEPS = {"sleep", "wait_for_timeout"}
 # Whether the stack is on the screen is a fair question to ask the screen, and
 # `#toast` on its own is the stack. A selector that reaches past it into a
 # notice reads text that expires on a five second timer, whatever the call
 # that holds it is called.
-NOT_A_READ = {"is_visible"}
+NOT_A_READ = {
+    "is_visible",
+    "is_hidden",
+    "to_be_visible",
+    "to_be_hidden",
+    "not_to_be_visible",
+    "not_to_be_hidden",
+}
 THE_STACK = "#toast"
 # What names the stack or a notice inside it: the two selectors, and the
 # element id as a page script quotes it, which is this suite's other idiom for
 # reading text. A test that asks for a toast by its words instead
 # (`get_by_text`) names no selector and no guard on selectors can see it; the
 # record is what makes writing one unnecessary.
-TOAST_SELECTORS = ("#toast", ".tst", "'toast'", '"toast"')
+# Each is a whole word: `.tstats` is the title screen's numbers, not a notice.
+TOAST_SELECTOR = re.compile(r"(?:#toast|\.tst)(?![\w-])|'toast'|\"toast\"")
 SCRIPT_READS_TOAST_TEXT = re.compile(
     r"(?:getElementById\(\s*['\"]toast['\"]\s*\)|"
-    r"querySelector(?:All)?\(\s*['\"][^'\"]*(?:#toast|\.tst)[^'\"]*['\"]\s*\))"
+    r"querySelector(?:All)?\(\s*['\"][^'\"]*(?:#toast|\.tst)(?![\w-])[^'\"]*['\"]\s*\))"
     r"\s*\.\s*(?:textContent|innerText|innerHTML)\b"
 )
 # What tells a context opened for the game from one opened for another page
@@ -87,38 +100,115 @@ def _calls(path: Path, name: str) -> list[ast.Call]:
     ]
 
 
-def _literal_names(tree: ast.Module) -> dict[str, str]:
-    """Every name in the file bound to a string literal.
+Names = dict[str, list[str]]
+# The literals a name can hold: a string, or the strings inside a container.
+KEEPS = (ast.Constant, ast.Dict, ast.List, ast.Tuple, ast.Set)
 
-    A selector is as often held in a variable as written at the call, so the
-    guard has to see through one, annotated or not. Deliberately flat: the
-    last binding wins, which over-reports rather than letting a read past.
+
+def _kept(value: ast.AST | None) -> list[str]:
+    if not isinstance(value, KEEPS):
+        return []
+    return [
+        sub.value
+        for sub in ast.walk(value)
+        if isinstance(sub, ast.Constant) and isinstance(sub.value, str)
+    ]
+
+
+def _bind(names: Names, name: str, value: ast.AST | None) -> None:
+    if said := _kept(value):
+        names.setdefault(name, []).extend(said)
+
+
+def _defaults(node: ast.AST) -> list[tuple[ast.arg, ast.expr | None]]:
+    """Each parameter of a function with the default it falls back to."""
+    if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.Lambda):
+        return []
+    a = node.args
+    positional = [*a.posonlyargs, *a.args]
+    padded: list[ast.expr | None] = [None] * (len(positional) - len(a.defaults))
+    return [
+        *zip(positional, [*padded, *a.defaults], strict=True),
+        *zip(a.kwonlyargs, a.kw_defaults, strict=True),
+    ]
+
+
+def _literal_names(tree: ast.Module) -> Names:
+    """Every name in the file that can hold a string literal.
+
+    A selector is as often held in a variable as written at the call: a plain
+    or annotated name, a parameter's default, an attribute of a class or of
+    `self`, a dict or a tuple of them. Deliberately flat, and every binding of
+    a name counts, which over-reports rather than letting a read past.
     """
-    names: dict[str, str] = {}
+    names: Names = {}
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             targets: list[ast.expr] = list(node.targets)
-            value = node.value
+            value: ast.expr | None = node.value
         elif isinstance(node, ast.AnnAssign):
             targets, value = [node.target], node.value
         else:
-            continue
-        if not isinstance(value, ast.Constant) or not isinstance(value.value, str):
+            for arg, default in _defaults(node):
+                _bind(names, arg.arg, default)
             continue
         for target in targets:
             if isinstance(target, ast.Name):
-                names[target.id] = value.value
+                _bind(names, target.id, value)
+            elif isinstance(target, ast.Attribute):
+                _bind(names, target.attr, value)
     return names
 
 
-def _strings(node: ast.AST, names: dict[str, str]) -> list[str]:
+def _load_module(module: str) -> str | None:
+    """The source of one of our own test modules, by its dotted name."""
+    path = ROOT.joinpath(*module.split(".")).with_suffix(".py")
+    return path.read_text(encoding="utf-8") if path.is_file() else None
+
+
+def _imported_names(tree: ast.Module, load: Callable[[str], str | None]) -> Names:
+    """The literals a file takes from a module of ours, under the names it uses.
+
+    Only modules under tests/ are followed, one step deep: a selector kept in
+    a helper is the same selector, and the library's own names are not ours.
+    """
+    names: Names = {}
+
+    def module_names(module: str) -> Names:
+        source = load(module) if module.split(".")[0] == "tests" else None
+        return _literal_names(ast.parse(source)) if source else {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                for key, said in module_names(alias.name).items():
+                    names.setdefault(key, []).extend(said)
+        elif isinstance(node, ast.ImportFrom):
+            base = node.module or ""
+            if node.level:
+                base = ".".join(p for p in ("tests", base) if p)
+            kept = module_names(base)
+            for alias in node.names:
+                if alias.name in kept:
+                    names.setdefault(alias.asname or alias.name, []).extend(
+                        kept[alias.name]
+                    )
+                # `from tests import helpers` names a module, not a value.
+                for key, said in module_names(f"{base}.{alias.name}").items():
+                    names.setdefault(key, []).extend(said)
+    return names
+
+
+def _strings(node: ast.AST, names: Names) -> list[str]:
     """Every string this expression can be: written out, or held in a name."""
     out: list[str] = []
     for sub in ast.walk(node):
         if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
             out.append(sub.value)
         elif isinstance(sub, ast.Name) and sub.id in names:
-            out.append(names[sub.id])
+            out.extend(names[sub.id])
+        elif isinstance(sub, ast.Attribute) and sub.attr in names:
+            out.extend(names[sub.attr])
     return out
 
 
@@ -133,12 +223,21 @@ def _operation(call: ast.Call, parents: dict[ast.AST, ast.AST]) -> str:
 
     `page.locator(sel).first.inner_text()` names the selector two steps before
     it reads it, and that chain is how Playwright asks to be used, so the
-    guard follows the attributes up to the last call in the chain.
+    guard follows the attributes up to the last call in the chain. A locator
+    handed to `expect()` is asked whatever the expect is asked.
     """
     node: ast.AST = call
     name = call.func.attr if isinstance(call.func, ast.Attribute) else "call"
     while True:
         up = parents.get(node)
+        if (
+            isinstance(up, ast.Call)
+            and node in up.args
+            and isinstance(up.func, ast.Name)
+            and up.func.id == "expect"
+        ):
+            node, name = up, "expect"
+            continue
         if isinstance(up, ast.Attribute) and up.value is node:
             node = up
             continue
@@ -153,7 +252,11 @@ def _operation(call: ast.Call, parents: dict[ast.AST, ast.AST]) -> str:
         return name
 
 
-def toast_reads(source: str, name: str = "<sample>") -> list[str]:
+def toast_reads(
+    source: str,
+    name: str = "<sample>",
+    load: Callable[[str], str | None] = _load_module,
+) -> list[str]:
     """Every place in this source that asks the screen about a toast.
 
     A call that names the stack or a notice inside it, in an argument of its
@@ -162,7 +265,9 @@ def toast_reads(source: str, name: str = "<sample>") -> list[str]:
     every shape but the one that was there when the rule was written.
     """
     tree = ast.parse(source, filename=name)
-    names = _literal_names(tree)
+    names = _imported_names(tree, load)
+    for key, said in _literal_names(tree).items():
+        names.setdefault(key, []).extend(said)
     parents = _parents(tree)
     found: list[str] = []
     for node in ast.walk(tree):
@@ -173,7 +278,7 @@ def toast_reads(source: str, name: str = "<sample>") -> list[str]:
             s for a in args if not isinstance(a, ast.Call) for s in _strings(a, names)
         ]
         operation = _operation(node, parents)
-        hits = [s for s in said if any(sel in s for sel in TOAST_SELECTORS)]
+        hits = [s for s in said if TOAST_SELECTOR.search(s)]
         if operation in {"evaluate", "still", "wait_for_function"}:
             hits = [s for s in hits if SCRIPT_READS_TOAST_TEXT.search(s)]
         if not hits:
@@ -185,19 +290,41 @@ def toast_reads(source: str, name: str = "<sample>") -> list[str]:
     return found
 
 
-def _builds_a_page(node: ast.AST) -> bool:
-    """A call that opens a browser context, or wraps a page in a GamePage.
+# The calls that hand back a page or a context with no init script on it.
+OPENS_A_PAGE = {"new_context", "new_page", "launch_persistent_context"}
+
+
+def _wrappers(tree: ast.Module) -> set[str]:
+    """GamePage, and every name this file imports it under."""
+    return {"GamePage"} | {
+        alias.asname
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ImportFrom)
+        for alias in node.names
+        if alias.name == "GamePage" and alias.asname
+    }
+
+
+def _called(node: ast.AST, names: set[str]) -> bool:
+    """A call to one of these names, bare or through a module."""
+    if not isinstance(node, ast.Call):
+        return False
+    func = node.func
+    if isinstance(func, ast.Attribute):
+        return func.attr in names
+    return isinstance(func, ast.Name) and func.id in names
+
+
+def _builds_a_page(node: ast.AST, wrappers: set[str]) -> bool:
+    """A call that opens a page or a context, or wraps a page in a GamePage.
 
     Both halves are needed, because a page arrives by more names than one:
     `new_page` on the browser and `launch_persistent_context` each hand back
     a page with no init script on it, and what they all end in is a GamePage
-    built outside the fixture, so that wrapper is the half that catches them.
+    built outside the fixture, so that wrapper is the half that catches them,
+    by whatever name it was imported under.
     """
-    if not isinstance(node, ast.Call):
-        return False
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr == "new_context"
-    return isinstance(node.func, ast.Name) and node.func.id == "GamePage"
+    return _called(node, OPENS_A_PAGE | wrappers)
 
 
 def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
@@ -210,13 +337,11 @@ def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
     """
     tree = ast.parse(source, filename=name)
     said = _strings(tree, {})
+    wrappers = _wrappers(tree)
     game = any(GAME_FILE in s for s in said) or any(
         (isinstance(node, ast.Name) and node.id == "GAME_PATH")
-        or (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "GamePage"
-        )
+        or (isinstance(node, ast.Attribute) and node.attr == "GAME_PATH")
+        or _called(node, wrappers)
         for node in ast.walk(tree)
     )
     if not game:
@@ -224,7 +349,7 @@ def opens_its_own_game_page(source: str, name: str = "<sample>") -> list[str]:
     return [
         f"{name}:{node.lineno} {ast.unparse(node.func)}"
         for node in ast.walk(tree)
-        if _builds_a_page(node)
+        if isinstance(node, ast.Call) and _builds_a_page(node, wrappers)
     ]
 
 
@@ -677,3 +802,195 @@ def test_a_picture_from_a_phone_is_one_image_pixel_per_css_pixel(
     shot = game_android.screenshot("harness_phone_picture", clip_height=300)
     with Image.open(shot) as picture:
         assert picture.size == (412, 300), picture.size
+
+
+# ---- the second pass: what the first guards could not see --------------------
+
+
+def test_the_toast_guard_reads_a_class_as_a_whole_word() -> None:
+    """`.tstats` is the title screen's numbers, not a toast."""
+    assert toast_reads('game.page.text_content("#title .tstats")') == []
+    assert toast_reads('game.page.text_content("#toasts-elsewhere")') == []
+    assert toast_reads('game.page.text_content("#title .tst")')
+
+
+# A selector reaches the call by more roads than a plain name.
+HIDDEN_READS = [
+    'def said(game, sel="#toast .tst"):\n    return game.page.text_content(sel)',
+    'def said(game, *, sel="#toast .tst"):\n    return game.page.text_content(sel)',
+    'SEL = {"toast": "#toast .tst"}\nsaid = game.page.text_content(SEL["toast"])',
+    'class Sel:\n    TOAST = "#toast .tst"\n\nsaid = game.page.text_content(Sel.TOAST)',
+    'self.says = "#toast .tst"\nsaid = self.game.page.text_content(self.says)',
+]
+
+
+@pytest.mark.parametrize("source", HIDDEN_READS)
+def test_the_toast_guard_follows_a_selector_wherever_it_is_kept(source: str) -> None:
+    assert toast_reads(source), source
+
+
+def test_the_toast_guard_follows_a_selector_into_the_module_it_came_from() -> None:
+    """A constant imported from a helper of ours is read from that helper."""
+    helpers = {"tests.helpers": 'SAYS = "#toast .tst"\nOTHER = "#hud"'}
+    imported = "from tests.helpers import SAYS\nsaid = game.page.text_content(SAYS)"
+    renamed = "from tests.helpers import SAYS as S\ngame.page.text_content(S)"
+    module = "import tests.helpers as h\nsaid = game.page.text_content(h.SAYS)"
+    for source in (imported, renamed, module):
+        assert toast_reads(source, load=helpers.get), source
+    harmless = "from tests.helpers import OTHER\ngame.page.text_content(OTHER)"
+    assert toast_reads(harmless, load=helpers.get) == []
+
+
+STACK_QUESTIONS = [
+    'assert game.page.is_hidden("#toast")',
+    'expect(game.page.locator("#toast")).to_be_visible()',
+    'expect(game.page.locator("#toast")).to_be_hidden()',
+    'expect(game.page.locator("#toast")).not_to_be_visible()',
+]
+
+
+@pytest.mark.parametrize("source", STACK_QUESTIONS)
+def test_the_toast_guard_asks_every_question_about_the_stack_alike(
+    source: str,
+) -> None:
+    """Visible or hidden, asked directly or through expect(): the same question."""
+    assert toast_reads(source) == [], source
+
+
+def test_the_toast_guard_still_sees_a_notice_asked_through_expect() -> None:
+    """Whether a notice is up is the race itself, however it is asked."""
+    assert toast_reads('expect(game.page.locator("#toast .tst")).to_be_visible()')
+    assert toast_reads('expect(game.page.locator("#toast")).to_have_text("Hi")')
+
+
+# The same hand-built page by the other names it answers to.
+ALIASED = (
+    "from tests.conftest import GamePage as GP\n"
+    "game = GP(page=context.new_page(), url=url)"
+)
+QUALIFIED = (
+    "from tests import conftest\n"
+    "game = conftest.GamePage(page=page, url=server + conftest.GAME_PATH)"
+)
+RAW_PAGE = "page = chromium.new_page()\npage.goto(server + GAME_PATH)"
+PERSISTENT = (
+    "context = playwright.chromium.launch_persistent_context(profile)\n"
+    "context.pages[0].goto(server + GAME_PATH)"
+)
+
+
+@pytest.mark.parametrize("source", [ALIASED, QUALIFIED, RAW_PAGE, PERSISTENT])
+def test_the_page_guard_sees_a_game_page_by_any_name(source: str) -> None:
+    assert opens_its_own_game_page(source), source
+
+
+def test_the_page_guard_leaves_a_page_that_is_not_the_game_alone() -> None:
+    other = "page = chromium.new_page()\npage.goto(report.as_uri())"
+    assert opens_its_own_game_page(other) == []
+
+
+def test_frames_does_not_count_from_a_frame_count_it_could_not_read() -> None:
+    """A page that cannot say how far it got has not drawn zero frames.
+
+    frames() waits for the counter to pass where it started. Read as zero, a
+    counter already at five hundred passes at once, so a wait for three more
+    frames waited for none and the read straight after it is a frame stale.
+    """
+
+    class Mute:
+        """A page whose frame counter throws, and a wait that would pass."""
+
+        def __init__(self) -> None:
+            self.waited: list[Any] = []
+
+        def evaluate(self, *_: Any, **__: Any) -> int:
+            raise PlaywrightError("window.__debug is not a function")
+
+        def wait_for_function(self, *args: Any, **options: Any) -> None:
+            self.waited.append((args, options))
+
+    mute = Mute()
+    game = GamePage(page=cast(Page, mute), url="")
+    with pytest.raises(PlaywrightError, match="__debug"):
+        game.frames(3)
+    assert mute.waited == [], "frames() waited from a count it never read"
+
+
+def test_a_wait_on_a_page_that_stopped_answering_says_so() -> None:
+    """Not a negative number of frames, which is what zero minus the start is."""
+
+    class Stops:
+        """Answers once, then the page is gone, and the wait runs out."""
+
+        def __init__(self) -> None:
+            self.asked = 0
+
+        def evaluate(self, *_: Any, **__: Any) -> int:
+            self.asked += 1
+            if self.asked > 1:
+                raise PlaywrightError("Target page, context or browser has been closed")
+            return 500
+
+        def wait_for_function(self, *_: Any, **__: Any) -> None:
+            raise PageTimeout("Timeout 20000ms exceeded")
+
+    game = GamePage(page=cast(Page, Stops()), url="")
+    with pytest.raises(AssertionError) as expired:
+        game.until("false", what="the thing that never happens", budget=1000)
+    said = str(expired.value)
+    assert "the thing that never happens" in said, said
+    assert "-500" not in said, said
+    assert "could not be asked how many frames" in said, said
+
+
+def sleeps(source: str, name: str = "<sample>") -> list[str]:
+    """Every place in this source that waits on the wall clock."""
+    found: list[str] = []
+    for node in ast.walk(ast.parse(source, filename=name)):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if (isinstance(func, ast.Attribute) and func.attr in SLEEPS) or (
+            isinstance(func, ast.Name) and func.id in SLEEPS
+        ):
+            found.append(f"{name}:{node.lineno} {ast.unparse(node)}")
+    return found
+
+
+SLEEP_SHAPES = [
+    "time.sleep(1)",
+    "game.page.wait_for_timeout(300)",
+    "from time import sleep\nsleep(0.5)",
+    "await asyncio.sleep(1)",
+]
+
+
+@pytest.mark.parametrize("source", SLEEP_SHAPES)
+def test_the_sleep_guard_sees_a_sleep_whatever_it_is_called_on(source: str) -> None:
+    wrapped = "async def f():\n    " + source.replace("\n", "\n    ")
+    assert sleeps(wrapped), source
+
+
+def test_no_test_sleeps() -> None:
+    """A fixed wait passes on a fast machine and hides what it was covering.
+
+    AGENTS.md says it in one line; this is the line as a check. The files that
+    still sleep are named, and the list may only shrink.
+    """
+    found: list[str] = []
+    for path in TESTS:
+        if path.name in GUARDS or path.name in STILL_SLEEP:
+            continue
+        found += sleeps(path.read_text(encoding="utf-8"), path.name)
+    assert not found, (
+        "wait for something the page produced (GamePage.until, frames, "
+        f"toast_said), never for time. {found}"
+    )
+
+
+def test_the_files_that_still_sleep_still_do() -> None:
+    for name in sorted(STILL_SLEEP):
+        source = (ROOT / "tests" / name).read_text(encoding="utf-8")
+        assert sleeps(source, name), (
+            f"{name} no longer sleeps: take it out of STILL_SLEEP"
+        )

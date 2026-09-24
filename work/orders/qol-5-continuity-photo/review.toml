@@ -1,0 +1,68 @@
+# [Claude Opus 5.5, effort high, reviewer]
+# Review of qol-5-continuity-photo, round 2. Everything below was produced by
+# the reviewer on commit d16435c: a scratch copy of the tree (git archive), a
+# scratch clone of the branch merged with origin/feat/qol-batch4 and rebuilt,
+# and Playwright on a 1440x900 Chromium (once more with reduced motion), a
+# Pixel 7 Chromium profile with touch and an iPhone 15 WebKit profile with
+# touch, driven by mouse, keyboard and touch taps; screenshots and the saved
+# PNGs looked at on all four.
+v = 1
+order = "qol-5-continuity-photo"
+by = "reviewer-qol-5-continuity-photo-r2"
+reviewed = "d16435c0246c9b64c04ff41131901bf0e364a1f8"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """All 24 tests of tests/test_game_qol_continuity.py pass in my scratch copy (build cmp-equal to the branch). The break tests that were flaky in round 1 (nobody-is-at, between-stops, switched-off, Escape) ran 8 times in a row, 32 runs, 0 failures. Each fix was reverted in the scratch copy, rebuilt, and its test ran red: renderer.render() out of photoTake fails the photo test ({'colours': 1} above the caption band, was blind in round 1); the PHOTO_OVER check out of photoWatch fails both panel-in-photo-mode cases; the late-toast hiding out fails the toast test; the S.exportedN branch out of exportDue fails the capped-log test; the import's exportedN line out fails the imported-code test; the resize listener out fails the turned-screen test; focus return replaced by blur fails the Done test; the away check out of breakCheck fails the nobody-is-at test. One fix is not held on main by any test: the wrapper passing save()'s arguments through (see the low finding), because batch 4 is not on main yet. No test sleeps or waits on a timer: every wait is on a check counter, a frame count, a DOM fact or a seam."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Ran it myself in the scratch copy: ruff check, ruff format --check, checks.py style ('no em dashes, no emoji') and checks.py sinks exit 0, and pytest -m 'not browser and not integration' passes (one skip there only because the scratch copy has no GitHub origin). On PR #195 at d16435c every step of the lint job is green up to 'work orders are readable, reviewed and inside their files', which waits on this review. The new DOM is built with createElement and textContent throughout."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Ran the six generators with --check in the scratch copy: build OK, tree OK, cookbook OK, sync_template and sync_fork_source exit 0, syllabus OK. The fork_source mirrors of 33-photo.js, 80-sync.js and 89-dashboard.js match src/. No frozen file is touched: git diff origin/main...HEAD names nothing under 85-settings.js, body.html, style.css, src/galaxy/, tools/build.py, pages.yml or vibemap/dashboard.py."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """findings.md after the board trim is proposals 24 to 27. Nothing is silently skipped: the Builder's note names each part not built, why, and where it goes, and the PR text now matches it. 24: the export line is built and tested (Roadmap line, gone after an export, back after a new stop, correct across a capped event log and an imported code, reset() on the s-9 screen warns; I saw all of it by touch on both phones and by mouse and keyboard on the laptop, and the break card's Export progress button opens the Roadmap and exports in one tap). The saved mark is batch 4's by agreement: in a scratch clone merging feat/qol-batch4 into d16435c there is one mark and one __saved of batch 4's shape, and this file's tests plus batch 4's saved-mark and export tests (28) pass together; round 1's high finding is dealt with. The two Reset progress buttons wait for #183 (85-settings.js frozen), recorded. 25: built and complete; shown only between stops, only with input in the last two minutes, once a sitting, closable by Keep going, Escape and Stop reminding me, reachable by Tab right after the HUD, 46 px buttons, follows the HUD when the screen turns. 26: not built, recorded with a sound reason (vibemap/dashboard.py is the cli team's and outside owns; changing only the game brings R10 back), and posted on #127; it needs its own order. 27: built and complete on all three profiles: Photo in the pill on a laptop, in More on a phone, P on a keyboard; the HUD, joystick, jump, toasts and break card step aside; walking works by keys and by tapping the ground on both phones; the PNG is the drawn island with a two-line caption; Share first where files can be shared (WebKit), Save image first otherwise; a panel opened in photo mode ends it and one Escape closes one thing; Done returns focus to Photo on a laptop."""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "I took my own screenshots of the break card, the export line, photo mode, the preview and the state after Done on the desktop, desktop with reduced motion, Pixel 7 and iPhone 15, plus the saved PNG on each, and looked at them. The card sits under the HUD inside a 16 px gutter; the preview fits each phone; the caption is readable on a 1440 and a 393 wide picture. Under reduced motion fx() skips the entrances and no flash is drawn. Rolinda's card is plain ('You have been at it for a while...'), the export and photo copy is plain system copy; no em-dash and no emoji in the diff."
+
+[[findings]]
+severity = "low"
+file = "src/game/80-sync.js"
+text = "Nothing holds the save() wrapper's pass-through: replacing `saveRecord.apply(this,arguments)` with `saveRecord()` passes this file's tests on main and, in the scratch clone merged with feat/qol-batch4, batch 4's saved-mark tests too, although save(false) would then raise the mark. Whichever of #164 and #195 lands second should add a test that a save(false) leaves window.__saved().n unchanged with this wrapper in place."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "A zoom made in photo mode is written to Settings on top of the extra step photo mode added: from zoom 0, one Zoom out in photo mode leaves Settings at 0.5 after Done, two steps out, while the comment says leaving goes back to the level the player chose."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "Focus sits on Take photo, so Space, the jump key, takes a photo for a player walking with WASD in photo mode (seen: one shot and the preview after a single Space). Harmless, but surprising; Take photo could stay unfocused until Tab."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "The photo bar's hint says 'P or Escape leaves' on a phone as well, where there are no keys; on touch the Done button is the way out."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "Carried from round 1 and recorded in the Builder's note: the Photo button has no icon, and #bottom hidden by visibility leaves a black band under the island in photo mode (not in the PNG). Both wait for a file outside this order."
+
+[[findings]]
+severity = "low"
+file = "work/orders/qol-5-continuity-photo/findings.md"
+text = "PR #195's title still reads 'the game says it saved', which this order no longer builds; the body is right."

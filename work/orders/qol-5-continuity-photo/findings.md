@@ -121,3 +121,36 @@ build after a push, so it has to be a network-first worker keyed on the build ve
 
 ---
 
+
+# Board trim (2026-09-23)
+
+Proposals 24 to 27 only: autosave mark and export reminder, break card, forgiving streak, photo mode and share. Proposal 28 (offline install) becomes a follow-up. tools/build.py is out (held by hunt-q). The reset-confirm line in src/game/85-settings.js waits for #183: do not touch 85-settings.js, src/body.html, src/style.css or src/galaxy/.
+
+## Builder's note: what this order did not build, and where it goes
+
+Every part of proposals 24 to 27 that is not in this branch, named rather than left silent, with the
+file it belongs to. Nothing here is a judgement that it should not be built.
+
+- **Proposal 24, the saved mark.** Not built here, on purpose. qol-4-feedback-companion (#164) owns
+  it: `savedTick()` in `18-avatar.js`, raised from `save(mark)` in `00-state.js`, with the seam
+  `window.__saved = {n, on}`. A second mark in this order collided with it (the review, round 1).
+  This order only hangs the export line onto `save()`, passing its arguments and its result
+  through, so `save(false)` stays quiet under batch 4.
+- **Proposal 24, the warning on the two Reset progress buttons.** Not built. `resetProgress()` is in
+  `src/game/85-settings.js`, which the board trim froze for #183; only `reset()` in `80-sync.js`,
+  on the s-9 screen, carries the warning. Once #183 lands, a panels order adds `exportLine()` (in
+  `80-sync.js`, already global) to the confirm step of `resetProgress()`. For the panels team.
+- **Proposal 26, the forgiving streak.** Not built. The streak is one rule in two places: the game's
+  panel in `89-dashboard.js` and the report in `vibemap/dashboard.py`, whose comment names the
+  game's rule as the same one (filed bug R10 was the two disagreeing). `vibemap/dashboard.py` is
+  the cli team's file and outside this order's `owns`, and changing only the game would bring R10
+  back. It goes to a follow-up order that owns both files, with the cli team's sign-off, and a
+  test on each side that the two agree on a week with one rest day.
+- **Proposal 27, an icon on the Photo button.** Not built. `05-icons.js` holds the Lucide icons the
+  game uses and a camera is not among them; adding one (Lucide's `camera`) is an edit to a file
+  outside this order. Until then the button is a text button in the pill.
+- **Proposal 27, the band under the island in photo mode.** Not built. `#bottom` is hidden with
+  `visibility`, which keeps its room; taking it out of the layout resizes the canvas and the
+  renderer on every open and close, and the layout rule belongs in `src/style.css`, frozen for
+  #183. The saved picture does not include the band.
+- **Proposal 28, install and offline.** Out of this order by the board trim above.
