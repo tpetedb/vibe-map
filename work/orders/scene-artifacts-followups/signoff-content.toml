@@ -4,16 +4,20 @@ order = "scene-artifacts-followups"
 team = "content"
 by = "manager-content"
 # The commit you read.
-reviewed = "804b9831fd0a6ad29330d445c6a4cdb509f0b7f8"
+reviewed = "8a26a272105d09dd1765216b331da3ba7ba39b71"
 verdict = "accept"
 note = """
-Checked the only content-owned file this order touches, vibemap/data/campaign.json: one \
-line, the API stall's `what` text (hunt F review low 6, the stall sentence). The added \
-clause 'a 404 for a wrong path or a 400 for a wrong body' is technically accurate, plain \
-corporate voice, no em-dash, and reads as one added clause rather than a rewrite. No test \
-under tests/test_topics.py or tests/test_syllabus.py asserts the old string, and \
-docs/SYLLABUS.md does not quote it, so nothing else of content's depends on the old wording. \
-No other content path (vibemap/data/topics/, items.json, resources.md, obsidian.json, \
-places.toml, docs/SYLLABUS.md, workspace/, data/) appears in this diff. Nothing for team \
-content to do after this lands.
+Re-stamp after the round 1 review noted this sign-off had lapsed (order.toml and the \
+goldens moved past the commit it named). git diff 804b9831..8a26a272 -- \
+vibemap/data/campaign.json is empty: the file is byte for byte what was read before, so \
+this is the same content, not a new look. Restating that check: the only content-owned \
+file this order touches, vibemap/data/campaign.json, carries one line, the API stall's \
+`what` text (hunt F review low 6, the stall sentence). The added clause 'a 404 for a wrong \
+path or a 400 for a wrong body' is technically accurate, plain corporate voice, no \
+em-dash, and reads as one added clause rather than a rewrite. No test under \
+tests/test_topics.py or tests/test_syllabus.py asserts the old string, and \
+docs/SYLLABUS.md does not quote it, so nothing else of content's depends on the old \
+wording. No other content path (vibemap/data/topics/, items.json, resources.md, \
+obsidian.json, places.toml, docs/SYLLABUS.md, workspace/, data/) appears in this diff. \
+Nothing for team content to do after this lands.
 """
