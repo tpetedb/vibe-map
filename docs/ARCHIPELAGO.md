@@ -7,10 +7,10 @@ the fast route for a learner who does not want to walk.
 
 ## Opening and crossing a bridge
 
-On normal and harder difficulties, completing the first stop on an island
-opens its bridge to the next island. A closed bridge has a barrier and a sign
-that says what is missing. Beginner difficulty opens the bridges from the
-start.
+On normal and harder difficulties, completing any stop on either adjoining
+island opens their bridge. This also lets an imported camp walk back to an
+earlier island. A closed bridge has a barrier and a sign that says what is
+missing. Beginner difficulty opens the bridges from the start.
 
 Use the keyboard, tap-to-walk or the touch stick exactly as on land. The deck,
 shore joins and middle rest platform are walkable ground. Crossing the middle

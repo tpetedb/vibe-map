@@ -12,6 +12,9 @@ already chose. Nothing reaches a remote unless ``--push`` is present.
 from __future__ import annotations
 
 import argparse
+import filecmp
+import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -29,6 +32,25 @@ COPY_EXCLUDES = {".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
 REQUIRED_PRODUCT_FILE = "game/vibe-map.html"
 REQUIRED_PRODUCT_DIR = "docs/media"
 REQUIRED_MEDIA_FILES = ("README.md", "gameplay.gif", "hero.png")
+SOURCE_MARKER = Path(".vibe/played-source.json")
+PRODUCT_INPUTS = (
+    "config",
+    "docs/media",
+    "game/vibe-map.html",
+    "game/news.json",
+    "pyproject.toml",
+    "src",
+    "tools/build.py",
+    "tools/generated",
+    "tools/script_camp.py",
+    "tools/regen_played.py",
+    "vibemap",
+)
+PLAYED_GITHUB_ORIGINS = {
+    "git@github.com:tpetedb/vibe-map-played",
+    "ssh://git@github.com/tpetedb/vibe-map-played",
+    "https://github.com/tpetedb/vibe-map-played",
+}
 
 
 class RegenerationError(RuntimeError):
@@ -58,8 +80,16 @@ def _git(repo: Path, *args: str) -> str:
     return _run(["git", *args], cwd=repo)
 
 
-def check_target(camp: Path) -> tuple[str, str]:
-    """Return branch and origin after proving the named checkout is safe."""
+def _played_origin(url: str) -> bool:
+    """Recognize the public played repo or a local bare clone used for checks."""
+    plain = url.rstrip("/").removesuffix(".git")
+    if plain in PLAYED_GITHUB_ORIGINS:
+        return True
+    return Path(url).is_absolute() and Path(url).name == "vibe-map-played.git"
+
+
+def check_target(camp: Path) -> tuple[str, str, str]:
+    """Return branch and remote URLs after proving the checkout is played."""
     camp = camp.resolve()
     if not (camp / ".git").exists() or not (camp / CAMP_MARKER).is_file():
         raise RegenerationError(
@@ -72,9 +102,13 @@ def check_target(camp: Path) -> tuple[str, str]:
     if not branch:
         raise RegenerationError(f"{camp} has a detached HEAD; choose a branch first")
     origin = _git(camp, "remote", "get-url", "origin")
-    if not origin:
-        raise RegenerationError(f"{camp} has no origin remote")
-    return branch, origin
+    push_url = _git(camp, "remote", "get-url", "--push", "origin")
+    if not _played_origin(origin) or not _played_origin(push_url):
+        raise RegenerationError(
+            f"{camp} is not the tpetedb/vibe-map-played checkout: "
+            f"origin fetch={origin!r}, push={push_url!r}"
+        )
+    return branch, origin, push_url
 
 
 def played_state(product: Path = ROOT, *, name: str = "Tom") -> State:
@@ -150,6 +184,35 @@ def check_product(product: Path) -> None:
         )
 
 
+def product_fingerprint(product: Path) -> str:
+    """Hash the inputs that can change the published camp's generated files."""
+    digest = hashlib.sha256()
+    for relative in PRODUCT_INPUTS:
+        source = product / relative
+        paths = sorted(source.rglob("*")) if source.is_dir() else [source]
+        for path in paths:
+            if not path.is_file() or COPY_EXCLUDES & set(path.parts):
+                continue
+            digest.update(str(path.relative_to(product)).encode())
+            digest.update(b"\0")
+            digest.update(path.read_bytes())
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _same_source(camp: Path, fingerprint: str) -> bool:
+    marker = camp / SOURCE_MARKER
+    if not marker.is_file() or _git(camp, "log", "-1", "--format=%s") != COMMIT_MESSAGE:
+        return False
+    try:
+        return json.loads(marker.read_text()) == {
+            "version": 1,
+            "product": fingerprint,
+        }
+    except (OSError, ValueError):
+        return False
+
+
 def _copy_current_product(stage: Path, product: Path) -> None:
     """Add the built game and reviewed pictures a played camp publishes."""
     check_product(product)
@@ -163,7 +226,9 @@ def _copy_current_product(stage: Path, product: Path) -> None:
     shutil.copytree(source_media, stage / REQUIRED_PRODUCT_DIR, dirs_exist_ok=True)
 
 
-def prepare_stage(stage: Path, product: Path = ROOT) -> None:
+def prepare_stage(
+    stage: Path, product: Path = ROOT, *, published_camp: Path | None = None
+) -> None:
     """Build the complete camp away from the checkout that will receive it."""
     check_product(product)
     env = dict(os.environ, VIBE_HOME=str(stage))
@@ -173,6 +238,11 @@ def prepare_stage(stage: Path, product: Path = ROOT) -> None:
         env=env,
     )
     script_everything(stage, product)
+    if published_camp is not None:
+        mcp = stage / "workspace/artifacts/bridge/mcp.json"
+        config = json.loads(mcp.read_text())
+        config["mcpServers"]["camp-scores"]["args"][1] = str(published_camp)
+        mcp.write_text(json.dumps(config, indent=2) + "\n")
     played_state(product).save(stage / ".vibe" / "state.json")
     _copy_current_product(stage, product)
 
@@ -181,10 +251,25 @@ def _ignore(_directory: str, names: list[str]) -> set[str]:
     return set(names) & COPY_EXCLUDES
 
 
+def _same_file(source: Path, target: Path) -> bool:
+    """An ignored target may remain only when staging would leave it unchanged."""
+    if source.is_symlink() or target.is_symlink():
+        return (
+            source.is_symlink()
+            and target.is_symlink()
+            and os.readlink(source) == os.readlink(target)
+        )
+    return (
+        source.is_file()
+        and target.is_file()
+        and filecmp.cmp(source, target, shallow=False)
+    )
+
+
 def install(stage: Path, camp: Path) -> bool:
     """Replace tracked camp content from a complete stage and commit it locally."""
     camp = camp.resolve()
-    branch, origin = check_target(camp)
+    branch, origin, push_url = check_target(camp)
     original = _git(camp, "rev-parse", "HEAD")
     tracked = set(_git(camp, "ls-files", "-z").split("\0")) - {""}
     ignored = set(
@@ -202,7 +287,12 @@ def install(stage: Path, camp: Path) -> bool:
         for path in stage.rglob("*")
         if path.is_file() or path.is_symlink()
     )
-    overlaps = sorted(ignored & set(stage_files))
+    preserved = ignored & set(stage_files)
+    overlaps = sorted(
+        relative
+        for relative in preserved
+        if not _same_file(stage / relative, camp / relative)
+    )
     if overlaps:
         names = ", ".join(overlaps[:3])
         raise RegenerationError(
@@ -217,17 +307,26 @@ def install(stage: Path, camp: Path) -> bool:
         key=lambda path: len(path.parts),
         reverse=True,
     )
+
+    def keep_ignored(directory: str, names: list[str]) -> set[str]:
+        parent = Path(directory).relative_to(stage)
+        return _ignore(directory, names) | {
+            name for name in names if str(parent / name) in preserved
+        }
+
     try:
         for relative in tracked:
             path = camp / relative
             if path.is_file() or path.is_symlink():
                 path.unlink()
-        shutil.copytree(stage, camp, dirs_exist_ok=True, ignore=_ignore)
+        shutil.copytree(stage, camp, dirs_exist_ok=True, ignore=keep_ignored)
 
         if _git(camp, "branch", "--show-current") != branch:
             raise RegenerationError("the regeneration changed the target branch")
         if _git(camp, "remote", "get-url", "origin") != origin:
             raise RegenerationError("the regeneration changed the target origin")
+        if _git(camp, "remote", "get-url", "--push", "origin") != push_url:
+            raise RegenerationError("the regeneration changed the target push URL")
         still_ignored = set(
             _git(
                 camp,
@@ -249,6 +348,8 @@ def install(stage: Path, camp: Path) -> bool:
         state_path = camp / ".vibe" / "state.json"
         if state_path.is_file():
             _git(camp, "add", "-f", ".vibe/state.json")
+        if (camp / SOURCE_MARKER).is_file():
+            _git(camp, "add", "-f", str(SOURCE_MARKER))
         if not _git(camp, "status", "--porcelain"):
             return False
         _git(
@@ -269,7 +370,11 @@ def install(stage: Path, camp: Path) -> bool:
         _git(camp, "reset", "--hard", original)
         for relative in stage_files:
             path = camp / relative
-            if relative not in tracked and (path.is_file() or path.is_symlink()):
+            if (
+                relative not in tracked
+                and relative not in ignored
+                and (path.is_file() or path.is_symlink())
+            ):
                 path.unlink()
         _git(camp, "clean", "-fd")
         for relative in new_directories:
@@ -283,7 +388,7 @@ def install(stage: Path, camp: Path) -> bool:
 def push_reviewed(camp: Path) -> str:
     """Push the clean commit already selected by the maintainer."""
     camp = camp.resolve()
-    branch, _ = check_target(camp)
+    branch, _, _ = check_target(camp)
     reviewed = _git(camp, "rev-parse", "HEAD")
     _git(camp, "push", "origin", f"{reviewed}:refs/heads/{branch}")
     if _git(camp, "rev-parse", "HEAD") != reviewed:
@@ -301,17 +406,23 @@ def regenerate(
     """Regenerate one named checkout after all safety checks pass."""
     camp = camp.resolve()
     product = product.resolve()
-    branch, _ = check_target(camp)
+    branch, _, _ = check_target(camp)
     check_product(product)
+    fingerprint = product_fingerprint(product)
     if dry_run:
         action = "push its reviewed commit" if push else "regenerate without pushing"
         return f"would {action}: {camp} on {branch}"
     if push:
         branch = push_reviewed(camp)
         return f"pushed reviewed commit: {camp} on {branch}"
+    if _same_source(camp, fingerprint):
+        return f"already current: {camp} on {branch} without pushing"
     with tempfile.TemporaryDirectory(prefix="vibe-played-") as temporary:
         stage = Path(temporary) / "camp"
-        prepare_stage(stage, product)
+        prepare_stage(stage, product, published_camp=camp)
+        (stage / SOURCE_MARKER).write_text(
+            json.dumps({"version": 1, "product": fingerprint}, indent=2) + "\n"
+        )
         changed = install(stage, camp)
     action = "regenerated" if changed else "already current"
     return f"{action}: {camp} on {branch} without pushing"

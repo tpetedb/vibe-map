@@ -84,7 +84,8 @@ copying or committing fails, the tool restores the original clean commit.
 Prerequisites are this product checkout with `uv sync` complete, its built
 `game/vibe-map.html`, reviewed `docs/media/README.md`, `gameplay.gif` and
 `hero.png`, git, and a clean local checkout of `tpetedb/vibe-map-played` on the
-branch to update.
+branch to update. The tool checks the target's fetch and push URLs before it
+can replace any file or push; a different camp or product checkout is refused.
 
 ```bash
 uv run python tools/regen_played.py --camp ../vibe-map-played --dry-run
@@ -95,16 +96,18 @@ uv run python tools/regen_played.py --camp ../vibe-map-played --push
 ```
 
 The first command checks the target and required product inputs and changes
-nothing. The second creates a
-fresh camp from the current package, uses `tools/script_camp.py` for every
-learner deliverable, writes all thirty-two stops plus the items, achievements
-and wearables to the committed demo state, and copies the current built game
-and reviewed media. A missing built game or empty media directory stops before
-the played checkout changes. It preserves the target branch and origin and makes one
-local commit. Review that commit, especially the state, journey configuration,
-workspace, vault, pictures and built game. The final command only pushes that
-clean reviewed commit; it does not regenerate it. `--push` is the sole path in
-this tool that contacts the remote.
+nothing. The second creates a fresh camp from the current package, uses
+`tools/script_camp.py` for every learner deliverable, writes all thirty-two
+stops plus the items, achievements and wearables to the committed demo state,
+and copies the current built game and reviewed media. A missing built game or
+required media file stops before
+the played checkout changes. It preserves the target branch and origin and
+makes one local commit. Review that commit, especially the state, journey
+configuration, workspace, vault, pictures and built game. A source fingerprint
+in `.vibe/played-source.json` keeps a repeat run on the same product from
+creating another commit. The final command only pushes that clean reviewed
+commit; it does not regenerate it. `--push` is the sole path in this tool that
+contacts the remote.
 
 An agent that hits one of these rules reports it; it never works around it.
 

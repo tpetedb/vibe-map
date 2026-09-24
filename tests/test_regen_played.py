@@ -22,8 +22,10 @@ def _git(repo: Path, *args: str) -> str:
     return out.stdout.strip()
 
 
-def _repo(tmp_path: Path) -> tuple[Path, Path]:
-    remote = tmp_path / "remote.git"
+def _repo(
+    tmp_path: Path, *, remote_name: str = "vibe-map-played.git"
+) -> tuple[Path, Path]:
+    remote = tmp_path / remote_name
     subprocess.run(["git", "init", "--bare", "-q", remote], check=True)
     camp = tmp_path / "played"
     camp.mkdir()
@@ -225,6 +227,36 @@ def test_install_refuses_to_replace_ignored_learner_data(tmp_path: Path) -> None
     assert existing.read_text() == '{"learner": "keep me"}\n'
 
 
+def test_install_keeps_matching_ignored_data(tmp_path: Path) -> None:
+    camp, _ = _repo(tmp_path)
+    (camp / ".gitignore").write_text("private/\n")
+    _git(camp, "add", ".gitignore")
+    _git(
+        camp,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "ignore private data",
+    )
+    private = camp / "private" / "same.txt"
+    private.parent.mkdir()
+    private.write_text("preserve me\n")
+    inode = private.stat().st_ino
+    stage = tmp_path / "stage"
+    (stage / "private").mkdir(parents=True)
+    (stage / "private" / "same.txt").write_text("preserve me\n")
+    (stage / ".gitignore").write_text("private/\n")
+    (stage / "README.md").write_text("# New played camp\n")
+
+    assert regen_played.install(stage, camp) is True
+    assert private.read_text() == "preserve me\n"
+    assert private.stat().st_ino == inode
+    assert _git(camp, "status", "--porcelain") == ""
+
+
 def test_install_refuses_to_expose_ignored_learner_data(tmp_path: Path) -> None:
     camp, _ = _repo(tmp_path)
     (camp / ".gitignore").write_text("private/\n")
@@ -268,6 +300,54 @@ def test_a_dirty_target_is_refused_before_any_file_changes(tmp_path: Path) -> No
         regen_played.check_target(camp)
 
     assert marker.read_text() == "unfinished\n"
+
+
+def test_a_clean_product_checkout_is_refused_before_replacement(tmp_path: Path) -> None:
+    camp, remote = _repo(tmp_path, remote_name="vibe-map.git")
+    before = _git(camp, "rev-parse", "HEAD")
+    remote_before = _git(remote, "rev-parse", "refs/heads/played")
+
+    with pytest.raises(
+        regen_played.RegenerationError, match="not the tpetedb/vibe-map-played"
+    ):
+        regen_played.regenerate(camp, ROOT, dry_run=False, push=False)
+
+    assert _git(camp, "rev-parse", "HEAD") == before
+    assert _git(camp, "status", "--porcelain") == ""
+    assert (camp / "stale.txt").read_text() == "old\n"
+    assert _git(remote, "rev-parse", "refs/heads/played") == remote_before
+
+
+def test_a_misdirected_push_url_is_refused(tmp_path: Path) -> None:
+    camp, _ = _repo(tmp_path)
+    other = tmp_path / "vibe-map.git"
+    subprocess.run(["git", "init", "--bare", "-q", other], check=True)
+    _git(camp, "remote", "set-url", "--push", "origin", str(other))
+
+    with pytest.raises(
+        regen_played.RegenerationError, match="not the tpetedb/vibe-map-played"
+    ):
+        regen_played.check_target(camp)
+
+
+def test_repeating_the_same_product_keeps_the_reviewed_commit(tmp_path: Path) -> None:
+    camp, remote = _repo(tmp_path)
+    remote_before = _git(remote, "rev-parse", "refs/heads/played")
+
+    first = regen_played.regenerate(camp, ROOT, dry_run=False, push=False)
+    reviewed = _git(camp, "rev-parse", "HEAD")
+    second = regen_played.regenerate(camp, ROOT, dry_run=False, push=False)
+
+    assert first.startswith("regenerated:")
+    assert second.startswith("already current:")
+    assert _git(camp, "rev-parse", "HEAD") == reviewed
+    assert _git(camp, "status", "--porcelain") == ""
+    assert _git(remote, "rev-parse", "refs/heads/played") == remote_before
+    assert _git(camp, "ls-files", str(regen_played.SOURCE_MARKER)) == str(
+        regen_played.SOURCE_MARKER
+    )
+    mcp = json.loads((camp / "workspace/artifacts/bridge/mcp.json").read_text())
+    assert mcp["mcpServers"]["camp-scores"]["args"][1] == str(camp)
 
 
 def test_dry_run_only_reports_the_named_checkout(tmp_path: Path) -> None:

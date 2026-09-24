@@ -29,7 +29,7 @@ Regenerate with `just media` (the game, through Playwright, from the built file)
 | `island-campus-start.png` | The campus as a first visit finds it | `tools/campus_shots.py` | `CHANGELOG.md` |
 | `pets-game/*` | The six pixel species as the browser game draws them, beside the walker | `just media` | this page |
 | `tui-pet.png`, `tui-pet.gif` | The pet strolling under the launch screen | `just tui-media` | `README.md` |
-| `pets.png`, `pets/*` | The six pixel species in the terminal, still and animated | `just tui-media --pets` | `README.md`, `docs/ABOUT.md` |
+| `pets.png`, `pets/*` | The six pixel species in the terminal, still and animated | `uv run python tools/tui_media.py --pets` | `README.md`, `docs/ABOUT.md` |
 | `tui-welcome.png` | `just start`, the Welcome screen on a first run | `just tui-media` | `README.md` |
 | `tui-map.png` | `just start`, the campaign map part way through evening 1, with the four marks and their legend | `just tui-media` | `README.md` |
 
