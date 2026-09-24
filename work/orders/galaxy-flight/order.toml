@@ -6,7 +6,7 @@ branch = "codex/galaxy-phase4"
 goal = "galaxy"
 issue = 168
 builder = "codex-astra-galaxy-flight"
-owns = ["src/galaxy/20-experience.js", "src/galaxy/60-flight.js", "src/body.html", "src/style.css", "tests/test_game_galaxy_flight.py"]
+owns = ["src/galaxy/20-experience.js", "src/galaxy/60-flight.js", "src/galaxy/50-walk.js", "src/body.html", "src/style.css", "tests/test_game_galaxy_flight.py"]
 cross = ["panels"]
 needs = []
 

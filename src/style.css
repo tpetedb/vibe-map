@@ -745,3 +745,5 @@ body[data-experience="galaxy"]:has(#sheet.on,#vault.on,#pal.on) #joy{visibility:
 #galaxy-flight{position:fixed;top:18px;bottom:auto;margin:0 auto;max-width:min(420px,calc(100% - 32px));border:1px solid var(--yellow);border-radius:var(--radius-m);padding:16px;background:var(--bg);color:var(--text)}
 #galaxy-flight::backdrop{background:transparent}
 #galaxy-flight h2{margin:0;font-size:1.1em}#galaxy-flight button{min-height:44px;min-width:120px}
+
+body[data-experience="galaxy"] #c:focus-visible{outline:2px solid var(--yellow-bright);outline-offset:-3px}

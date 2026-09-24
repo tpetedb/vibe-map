@@ -69,8 +69,8 @@ function galaxyWalkTick(dt,t){const w=galaxyWalk;if(!w)return;w.frame++;
   }
   animChar(w.actor,w.moving,dt,t);galaxyWalkNear();
 }
-addEventListener('keydown',event=>{if(experienceId()!=='galaxy'||!galaxyWalk||document.activeElement!==document.body||surfaceInput().blocked)return;
-  if(event.key==='Enter'){galaxyOpenNearby();event.preventDefault()}
+addEventListener('keydown',event=>{if(experienceId()!=='galaxy'||!galaxyWalk||![document.body,$("c")].includes(document.activeElement)||surfaceInput().blocked)return;
+  if(event.key==='Enter'&&!event.repeat){galaxyOpenNearby();event.preventDefault()}
   if(event.key==='Escape'){galaxyView('chart');document.querySelector('[data-galaxy-view="chart"]').focus();event.preventDefault()}
 });
 window.__galaxyWalk=()=>{const w=galaxyWalk;if(!w)return null;const p=w.anchor.position,rc=$("c").getBoundingClientRect();

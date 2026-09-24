@@ -1,7 +1,7 @@
-// Flight is transient presentation. Progress and the last visited topic stay in S.
+// Flight is transient presentation and never changes shared progress.
 let galaxyFlight=null,galaxyCanvasFocus=null;
 function galaxyShip(){
-  const ship=new T.Group(),hull=new T.Mesh(new T.ConeGeometry(.18,.8,6),mat(PALETTE.snow));
+  const ship=new T.Group();ship.userData.galaxyShip=true;const hull=new T.Mesh(new T.ConeGeometry(.18,.8,6),mat(PALETTE.snow));
   hull.rotation.z=-Math.PI/2;ship.add(hull);
   const canopy=new T.Mesh(new T.SphereGeometry(.12,12,8),mat(PALETTE.blueBright,{emissive:PALETTE.blue,emissiveIntensity:.5}));
   canopy.position.set(.06,.12,0);canopy.scale.set(1.5,.6,1);ship.add(canopy);
@@ -28,7 +28,7 @@ function galaxyArrive(id){
 window.galaxySkipFlight=function(){if(galaxyFlight)galaxyArrive(galaxyFlight.destination)};
 function galaxyFly(id){
   const state=galaxyState,destination=state.model.places.find(place=>place.id===id);if(!destination)return;
-  if(reducedMotion()||!state.visuals){galaxyArrive(id);return}
+  if(reducedMotion()||!state.visuals||$("galaxy-ui").dataset.rendering==="list"){galaxyArrive(id);return}
   const origin=state.model.places.find(place=>place.id===state.landedPlace)||(state.model.places.find(place=>place.id===(state.model.next||{}).place))||galaxySelected();galaxyFlightClear();galaxyShow("chart");
   const end=new T.Vector3(...(GALAXY_POS[destination.globe]||[0,0,0]));end.y+=2.15;
   const start=new T.Vector3(...(GALAXY_POS[origin.globe]||[0,0,0]));start.y+=2.15;
@@ -47,13 +47,19 @@ function galaxyFlightTick(){
   const {start,control,end,ship}=flight;
   ship.position.copy(start).multiplyScalar((1-u)**2).addScaledVector(control,2*(1-u)*u).addScaledVector(end,u*u);
   const tangent=control.clone().sub(start).multiplyScalar(1-u).addScaledVector(end.clone().sub(control),u);
-  ship.rotation.z=Math.atan2(tangent.y,tangent.x);
+  ship.rotation.set(0,Math.atan2(-tangent.z,tangent.x),Math.atan2(tangent.y,Math.hypot(tangent.x,tangent.z)));
   if(t===1)galaxySkipFlight();
 }
 $("galaxy-flight").addEventListener("cancel",event=>{event.preventDefault();galaxySkipFlight()});
-// Keep focus on Skip for the whole Enter key cycle, including key repeat.
+// A Land keyup belongs to Land, even though its keydown opened this dialog.
 $("galaxy-flight").addEventListener("keydown",event=>{
-  if(["Enter","Escape"].includes(event.key)){event.preventDefault();event.stopImmediatePropagation();if(event.key==="Escape")galaxySkipFlight()}
+  if(!galaxyFlight)return;
+  if(event.key==="Enter"){event.preventDefault();event.stopPropagation();if(!event.repeat)galaxyFlight.skipEnterDown=true}
+  if(event.key==="Escape"){event.preventDefault();event.stopPropagation();galaxySkipFlight()}
 });
-
-$("galaxy-flight").addEventListener("keyup",event=>{if(event.key==="Enter"){event.preventDefault();event.stopImmediatePropagation();galaxySkipFlight()}});
+$("galaxy-flight").addEventListener("keyup",event=>{
+  if(event.key!=="Enter")return;
+  event.preventDefault();
+  // Let the shared input listener clear its held-key state on every release.
+  if(galaxyFlight&&galaxyFlight.skipEnterDown)galaxySkipFlight();
+});

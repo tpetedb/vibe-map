@@ -20,7 +20,7 @@ window.galaxyFocus=function(id,on,topicId){
   else{const planet=state.planets[selected.globe],site=planet&&planet.sites.find(item=>item.id===id);if(site){site.dome.getWorldPosition(ring.position);ring.userData.anchor=site.dome}ring.lookAt(camera.position)}
   scene.add(ring);state.focusRing=ring;galaxyLabel();galaxyRenderCheck();
 };
-function galaxyShow(view){if(!galaxyState)return;galaxyFlightClear();const state=galaxyState,selected=galaxySelected();const carry=galaxyWalk&&galaxyWalk.place===selected.id?[galaxyWalk.anchor.position.x,galaxyWalk.anchor.position.z]:null;state.view=view;state.tappedTopic=null;galaxyWalkStop();
+function galaxyShow(view){if(!galaxyState)return;galaxyFlightDispose();const state=galaxyState,selected=galaxySelected();const carry=galaxyWalk&&galaxyWalk.place===selected.id?[galaxyWalk.anchor.position.x,galaxyWalk.anchor.position.z]:null;state.view=view;state.tappedTopic=null;galaxyWalkStop();
   if(!state.visuals){state.model=galaxyModel(PLACES,TREE,galaxyDone());renderGalaxyList();return}
   clearGalaxyFocus();
   state.journey.visible=view==="journey";
