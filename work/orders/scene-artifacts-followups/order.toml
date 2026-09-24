@@ -1,0 +1,38 @@
+v = 1
+id = "scene-artifacts-followups"
+title = "Artifacts and sheet polish: the hunt F review lows, two hunt B hand-ons, and faster photograph tests"
+team = "scene"
+branch = "claude/scene-artifacts-followups"
+goal = "second-wave"
+issue = 110
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-scene-artifacts-followups"
+
+owns = [
+  "src/game/16-artifacts.js",
+  "src/game/60-vault.js",
+  "tests/test_game_hunt_f.py",
+  "vibemap/data/campaign.json",
+]
+cross = ["content", "panels"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The order's tests pass, each new one seen failing first, and the three photograph tests run in well under their old 354, 316 and 92 seconds."
+check = "uv run pytest -q tests/test_game_hunt_f.py --durations=5"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "Every low from the hunt F review and the two hunt B hand-ons is fixed with a test or rejected with evidence; screenshots of the ring and the sheet on desktop and a phone were looked at."
+judge = "reviewer"

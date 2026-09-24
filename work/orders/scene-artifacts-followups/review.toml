@@ -1,0 +1,104 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "scene-artifacts-followups"
+by = "reviewer-scene-artifacts-followups-r2"
+# The commit that was read.
+reviewed = "19b4d064c09bf8240fb4219f5c2b0afb34ee1e98"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+work-review at 19b4d06: c1 pass in 172.7 s. In a scratch clone at the same commit I ran the \
+whole file plus the two smoke signpost tests: all pass, test_no_artifact_swallows_a_signpost \
+included (round 1's high finding is gone: the mountain is back at 3.5). New tests seen \
+failing by me, each for its own reason: the mountain at 3.0 fails the slope test with \
+{'mountain': 1.4} (round 1's medium finding: that burial now fails); main's anchor for the \
+vault link fails the focus test with outline auto 1px rgb(0, 95, 204) against the house \
+solid 2px rgb(255, 213, 0); '1 200 tokens in' with a plain space fails the no-break test; \
+'the rest dimmed' fails the tech tree test. Photographs, same build, same loaded machine \
+(load 17 to 18), branch file then main's file: desktop 41.9 s vs 88.1 s, android 45.7 s vs \
+75.7 s, iphone 10.8 s vs 14.0 s. On CI, this PR's smoke shard reports 154.8, 165.9 and 46.1 s \
+against the old 316, 354 and 92: each a little under half, which I call well under. They \
+still prove what they proved: I put the fountain's zone at 1.5, inside the lake's bank, and \
+the desktop photograph fails with 'never reached the fountain's ring, stopped at [-2.86, \
+0.01, 6.13]'. The assertions on transcripts, links and the prompt are main's, unchanged; \
+only the walk (keys held, the page's own near and frame counter waited on, no sleep) and \
+the Roadmap's settle wait moved."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+work-review at 19b4d06: c2 pass in 157.8 s. CI on PR 194 agrees: lint job steps 5 to 13 \
+(ruff, format, style, the generators, the changelog fragment, the non-browser battery) are \
+green; step 14, the work order step, waits for this file. The sink guard proves its sentence \
+for this diff: the vault link is a button node with textContent, and nothing new is \
+interpolated into HTML in 16-artifacts.js or 60-vault.js. No em-dash in the diff or the \
+commit messages (grep count 0)."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+work-review at 19b4d06: all six generators --check pass. In the scratch clone, after every \
+revert experiment, git checkout and build.py --check said 'build OK: game/vibe-map.html \
+matches src/'. The fork_source copies and vault/Camp/Artifacts.md carry the new source and \
+the two-code stall sentence. No frozen file is touched: the diff against origin/main names \
+none of src/body.html, src/style.css, src/game/85-settings.js or src/galaxy/, and \
+40-sheet.js, which the manager released, is not in it either."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Against the eight hunt F lows (issue 110, 2026-09-21 14:37Z) and the two hunt B hand-ons \
+into owned files (09:07Z: the no-break space in ART_DEMOS, 'set back' in 60-vault.js; the \
+40-sheet.js focus trap left with the file, which the order released). Low 1 (finished \
+slabs): fixed, RING_Y .27, ground test walks four finished islands. Low 2 (mountain): \
+rejected with evidence, and I checked the evidence: 21-world-build.js draws cone(6,7), so a \
+flat ring clears the corners only from 6 / 1.6 = 3.75, and signpost 4 at (-7,-11) is 3.61 \
+from (-9,-14); the dip at 3.5 is 7 * (1 - 5.6/6) = 0.47, the test bounds it at 0.5 and fails \
+at 3.0. Low 3 (photographs): see c1. Low 4 (walk-up list): the test now models mentor, \
+finale, signpost and ring. Low 5 (comments): every comment in 16-artifacts.js is one to \
+three lines and states a constraint. Low 6 (stall sentence): fixed with a test. Low 7 \
+(sinks register) and the rest of low 8 (props.artR, one .wl rule, the style.css ligature \
+rule) are outside owns and named in the PR; ringGround left the game for the test behind \
+window.__obstacles(); the link is button.link with the house ring, now held by a test. Hunt \
+B: thirteen numbers carry a no-break space and the tree says 'set back', both seen failing \
+when reverted. Round 1's three findings on this order are dealt with (3.5, the slope foot \
+rule, the focus test); the fourth, the sign-offs, is still open and is a low below. \
+Screenshots looked at: the builder's hunt_f set from 01:11 (fountain desktop: walker inside \
+the whole ring with 'Inspect the fountain' up; sheet android: the cafe transcript whole, no \
+sideways scroll; links iphone: two blue underlined links wrapping cleanly) and my own of the \
+mountain at 3.5 on desktop and android: the ring round the foot, dipping out of sight only \
+at the corners, signpost 4 outside it."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+The slope rule counts a face only when its lowest corner reaches the ring's height, which \
+is 'however deep' for the mountain because the cone is one face per side. Under a hillside \
+built of several rows of faces, the face over a deeply buried ring starts above .27 and is \
+left out like a roof. True for every slope in the course today; a subdivided hill would \
+need the rule to follow the surface down."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+The photographs are half what they were, and the smoke shard is still 20m48s on CI (6 min \
+of it these three), against about 10 before hunt F. Whoever owns the shards may still want \
+to move the file."""
+
+[[findings]]
+severity = "low"
+file = "work/orders/scene-artifacts-followups/order.toml"
+text = """
+cross is content and panels and neither signoff file exists, so work-accept stops on them \
+after this review. Handed on in the PR and fine to land later: the mountain's footprint \
+(21-world-build.js or 20-worlds.js) so its entry in UNDER_A_SLOPE can go, the sinks \
+register (tools/), props.artR written and never read, 'just dimmed' in 86-interests.js, and \
+the .wl and ligature rules for src/style.css once it thaws."""
