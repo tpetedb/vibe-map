@@ -162,7 +162,7 @@ Claude Code is not a chat box. You give it a goal in plain language, it reads an
 
 Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.
 
-**Definition of done.** index.html exists in ~/vibe, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.
+**Definition of done.** index.html exists in ~/vibe, it opens in a browser, and you can play it. If Claude asks permission for something you do not understand, pause: read what it wants to run or change, and ask Tom before you say yes; understanding permissions in depth is workstream 4.
 
 **Why it matters.** You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.
 

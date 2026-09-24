@@ -1,0 +1,51 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "safe-permission-copy"
+by = "reviewer-safe-permission-copy-r1"
+reviewed = "edf908c98a8f74d036b82d184c4b37d99189426a"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_safe_copy.py` on a `git archive` copy of edf908c in /tmp: all green. Then, in that scratch copy, put main's sentence back into each copy one file at a time and ran the guard again. Every time it failed, and on the right tests. src/body.html failed the approve test and the first lesson test. docs/SYLLABUS.md failed the approve test and the syllabus test. game/vibe-map.html failed the approve test and the first lesson [game] test. docs/site/syllabus.html failed the approve test and the syllabus test. vibemap/data/fork_source/src/body.html failed the approve test. So the "seen failing on main's sentence" half is true for all five copies.
+The command covers most of the sentence. It scans every .html/.js/.md/.json/.toml/.txt file under src/ and vibemap/data/ (template included, vendor and pets left out), plus SYLLABUS.md, the syllabus page and the built game. It checks the new guidance inside the s-1 section's Definition of done in body.html and the game, and inside the 18:00 section of SYLLABUS.md. The detector's vocabulary is narrow (see the low finding), so I checked the "no copy says approve" claim myself too. `git grep -i` for "answer yes", "say yes", "click allow" and "permission question" finds nothing outside this order's own files and changelog fragment. Every "permission" hit in src/, vibemap/data/campaign.json and the template is either a licence text, the hooks and allow-rules lessons, or Rolinda's "before I say yes" line. None tells a learner to approve something they do not understand.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the c2 chain myself in the worktree at edf908c. ruff check and ruff format --check were clean. `checks.py style` printed OK (no em dashes, no emoji), and sinks passed. `pytest -m 'not browser and not integration'` ran again on its own with its exit code captured: EXIT 0. Each generator's --check passed: build ("game/vibe-map.html matches src/"), regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus ("syllabus OK"). `git status` stayed clean afterwards. The diff agrees: the three generated copies (game, syllabus page, fork_source body.html) each change only the one line the sources change. The branch has no commits behind origin/main, so nothing is stale against main.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+The sentence is safe. It no longer says to approve. It says to pause, read what Claude wants to run or change, and ask Tom before saying yes, so the learner is never told to approve anything they have not understood. It is plain and reads like the other callouts: short clauses, no jargon, no em dash. SYLLABUS.md, docs/site/syllabus.html, src/body.html and the built game carry it word for word. The game keeps its own "workspace/game/index.html exists in your camp" lead-in, which was already there.
+`git diff origin/main...HEAD -- src/body.html` is 1 insertion and 1 deletion, the Definition of done line only, so the Galaxy walking button and everything else in body.html are untouched.
+Built game: I ran my own Playwright script against the scratch copy (after slot-wait). It typed a name, clicked Start, opened s-1 and scrolled the Definition of done into view. I screenshotted it at 1280x800 and at 390x844 with is_mobile, then opened both screenshots and looked at them (/tmp/spc-desktop.png, /tmp/spc-phone.png). On desktop the green callout wraps over four lines. On the phone it wraps over seven lines and sits fully above the sticky action bar. There was no overlap, no clipping and no page errors. The inner_text of the callout matches the sentence exactly. I also looked at the builder's tests/out/safe-copy-desktop.png and safe-copy-android.png, and they show the same thing.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/body.html"
+text = '''
+"understanding permissions in depth is workstream 4" points to a lesson that does not teach permissions. Workstream 4 (s-4, "21:00: Git, rollback, and one hook" in SYLLABUS.md) never says "permission". Its concepts are commits, the two undo buttons and hooks. campaign.json teaches permissions in two other places: Evening 3, Stop 4 "Hooks as gates" ("PreToolUse and PostToolUse, permissions, ...") and Evening 4, Stop 5 "Claude Code, the power settings". The pointer was already there on main and the order's own findings.md suggested keeping it, but "in depth" now promises more. Follow-up: point at the lesson that really teaches permissions, or add a line about permission prompts to workstream 4's hooks concept. Change both copies together.
+'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_safe_copy.py"
+text = '''
+The detector's vocabulary is narrow. unsafe_sentences() returns nothing for "When a permission prompt appears, choose Yes.", "...pick Yes, and don't ask again.", "Accept every permission prompt.", "Approve the permission and move on.", "Allow all permissions." and "Grant the permission Claude asks for." I checked each one against the function at edf908c. It also only looks at sentences that contain the word "permission", so "If Claude wants to run a command you don't recognise, press yes" is never considered. Today's copy is clean, which I confirmed by grep, but as a regression guard it only catches the old sentence and close variants of it. Also, the syllabus page assertion checks the whole page rather than the 18:00 section.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/tui.py"
+text = '''
+Outside this order and outside the guard's scope: the `just start` onboarding menu offers "Claude, YOLO mode" (`claude --dangerously-skip-permissions`) next to "Claude Code here". A beginner who picks it never sees a permission prompt, so the new Definition of done can never apply. This is the same concern as #186, in the terminal instead of the lesson. Worth a follow-up: a one-line warning in the menu, or hiding it until the permissions lessons.
+'''
