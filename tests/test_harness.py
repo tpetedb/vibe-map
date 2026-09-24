@@ -513,6 +513,48 @@ def test_the_doctor_reports_project_trust_and_hook_trust_apart(tree: Path) -> No
     ]
 
 
+def test_a_linked_worktree_is_trusted_and_hooked_the_way_codex_resolves_it(
+    tree: Path,
+) -> None:
+    """Codex 0.156.1 decides a checkout's trust by its own entry first, then the
+    main checkout's, and takes a linked worktree's project hooks from the main
+    checkout's .codex/, keyed by that path (openai/codex PR 21969)."""
+    home = Path(os.environ["CODEX_HOME"])
+    home.mkdir()
+    wt = tree.parent / "wt"
+    sh(tree, "worktree", "add", "-q", "-b", "wt", str(wt))
+    wt = wt.resolve()
+    main = harness.main_checkout(wt)
+    assert main == tree.resolve()
+    config = home / "config.toml"
+    config.write_text(f'[projects."{main}"]\ntrust_level = "trusted"\n')
+    state, why = harness.project_trust(wt)
+    assert state == "verified" and str(main) in why
+    config.write_text(
+        f'[projects."{main}"]\ntrust_level = "trusted"\n'
+        f'[projects."{wt}"]\ntrust_level = "untrusted"\n'
+    )
+    assert harness.project_trust(wt)[0] == "missing"
+    config.write_text(f'[projects."{wt}"]\ntrust_level = "trusted"\n')
+    state, why = harness.project_trust(wt)
+    assert state == "verified" and str(wt) in why
+
+    events = json.loads((wt / ".codex" / "hooks.json").read_text())["hooks"]
+    snake = {e: re.sub(r"(?<!^)(?=[A-Z])", "_", e).lower() for e in events}
+
+    def approved(checkout: Path) -> str:
+        path = checkout / ".codex" / "hooks.json"
+        return "".join(
+            f'[hooks.state."{path}:{snake[e]}:0:0"]\ntrusted_hash = "sha256:0"\n'
+            for e in events
+        )
+
+    config.write_text(f'[projects."{main}"]\ntrust_level = "trusted"\n{approved(wt)}')
+    assert harness.hook_trust(wt, "0.156.1")[0] == "missing"
+    config.write_text(f'[projects."{main}"]\ntrust_level = "trusted"\n{approved(main)}')
+    assert harness.hook_trust(wt, "0.156.1")[0] == "unknown"
+
+
 def test_explain_names_the_source_and_the_boundary_of_every_value() -> None:
     rows = harness.explain(ROOT)
     boundaries = set(harness.APPLIES.values())
@@ -560,6 +602,50 @@ def test_work_py_takes_lock_listed_outputs_as_regenerable(tree: Path) -> None:
     edit(lock, "[outputs]\n", '[outputs]\n"docs/SKILLS.md" = "sha256:0"\n')
     with pytest.raises(work.Bad, match="docs/SKILLS.md.*does not render"):
         order.may_touch("docs/SKILLS.md")
+
+
+@pytest.mark.skipif(not shutil.which("uv"), reason="sync renders through uv")
+def test_a_hand_edit_to_a_lock_listed_output_is_refused(tree: Path) -> None:
+    """Lock-listed outputs leave owns only while harness.py check reproduces
+    them: a regeneration passes, a hand edit to the rendered deny floor by an
+    order that does not own it fails the edit hook, work-check and CI."""
+    for rel in ("tools/work.py", "tools/sync_main.py", "work/teams.toml"):
+        copy(rel, tree)
+    folder = tree / "work" / "orders" / "one"
+    folder.mkdir(parents=True)
+    (folder / "order.toml").write_text(
+        'v = 1\nid = "one"\ntitle = "t"\nteam = "harness"\nbranch = "feat/x"\n'
+        'builder = "b"\nowns = ["config.toml", ".agents/generated.lock"]\n'
+        "cross = []\nneeds = []\n"
+        '[[criteria]]\nid = "c1"\ntext = "t"\ncheck = "true"\n'
+    )
+    with (tree / ".gitignore").open("a") as f:
+        f.write("__pycache__/\n")
+    commit(tree)
+    sh(tree, "checkout", "-qb", "feat/x")
+    order = work.find("one", tree)
+    edit(tree / "config.toml", 'profile = "balanced"', 'profile = "strict"')
+    subprocess.run(
+        [sys.executable, ".agents/utils/harness.py", "sync"],
+        cwd=tree,
+        capture_output=True,
+        check=True,
+    )
+    moved = set(work.changed(tree, "main"))
+    assert moved & work.regenerable(tree) - {".agents/generated.lock"}
+    assert work.strays(order, "main") == []
+    commit(tree)
+    assert work.strays(order, "main", work.diff_names(tree, "main"), "HEAD") == []
+
+    settings = tree / ".claude" / "settings.json"
+    code, why = work.hook_pre_tool({"tool_input": {"file_path": str(settings)}})
+    assert code == 2 and "harness.py sync" in why
+    settings.write_text(settings.read_text().replace("{", "{ ", 1))
+    out = work.strays(order, "main")
+    assert [s for s in out if s.startswith(".claude/settings.json")], out
+    commit(tree)
+    out = work.strays(order, "main", work.diff_names(tree, "main"), "HEAD")
+    assert [s for s in out if s.startswith(".claude/settings.json")], out
 
 
 # ------------------------------------------------------------ the docs

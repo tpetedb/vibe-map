@@ -64,7 +64,11 @@ loop = { iterations = 10, wall_minutes = 30 }
 - A broken link under `.claude/skills/`: `doctor` or `sync` repairs it.
 - Codex hook trust missing: start `codex` here and approve the hooks in `/hooks`.
 - Project trust missing: answer the trust prompt the next time `codex` starts in
-  the main checkout; its worktrees inherit it.
+  the main checkout. Codex 0.156.1 decides a checkout's trust by its own
+  `[projects]` entry, else the main checkout's, so a linked worktree inherits it
+  unless it carries an entry of its own, and doctor reports which entry decided.
+  A worktree also runs the main checkout's `.codex/hooks.json`, approved once in
+  `/hooks` for every checkout (openai/codex PR 21969).
 
 ## The rest of the folder
 

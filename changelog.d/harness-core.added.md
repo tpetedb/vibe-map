@@ -22,5 +22,12 @@
   the model table says; the Codex agents get Sol and Astra.
 - `tools/work.py` accepts a path `.agents/generated.lock` lists as
   regenerable, but only when `harness.py` renders it: a hand-maintained file
-  listed there is refused. `just harness-sync`, `harness-check`,
-  `harness-doctor`, `harness-explain` and `harness-pick` run the tool.
+  listed there is refused. Such a file changed by an order that does not own
+  it passes `work.py check` and `work.py ci` only while `harness.py check`
+  reproduces it, and the edit hook refuses a hand edit to it outright.
+  `just harness-sync`, `harness-check`, `harness-doctor`, `harness-explain`
+  and `harness-pick` run the tool.
+- `doctor` reads Codex trust the way Codex 0.156.1 resolves it: a checkout's
+  own `[projects]` entry first, else the main checkout's, and in a linked
+  worktree the hooks of the main checkout's `.codex/hooks.json`, keyed by that
+  path.

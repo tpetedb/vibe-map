@@ -1043,15 +1043,23 @@ def _codex_user_config() -> dict | None:
 
 
 def project_trust(root: Path) -> tuple[str, str]:
-    """Whether Codex loads this project's .codex/ at all (F055): the main
-    checkout's trust, which covers its worktrees."""
-    main = main_checkout(root)
+    """Whether Codex loads this project's .codex/ at all (F055). Codex 0.156.1
+    decides by the checkout's own [projects] entry, else the main checkout's
+    (config loader decision_for_dir), so a linked worktree inherits the main
+    checkout's trust unless it carries an entry of its own."""
+    own, main = root.resolve(), main_checkout(root)
     cfg = _codex_user_config()
     if cfg is None:
         return "unknown", "the Codex user config does not parse"
-    level = cfg.get("projects", {}).get(str(main), {}).get("trust_level")
-    if level == "trusted":
-        return "verified", f'projects."{main}".trust_level = "trusted"'
+    projects = cfg.get("projects", {})
+    for key in dict.fromkeys((str(own), str(main))):
+        level = projects.get(key, {}).get("trust_level")
+        if level is None:
+            continue
+        via = "" if key == str(own) else f", which {own} inherits"
+        if level == "trusted":
+            return "verified", f'projects."{key}".trust_level = "trusted"{via}'
+        return "missing", f'projects."{key}".trust_level = "{level}"{via}'
     return "missing", f"{main} is not trusted: answer the prompt when codex starts here"
 
 
@@ -1073,18 +1081,20 @@ def hook_trust(root: Path, version: str | None = None) -> tuple[str, str]:
     """Whether Codex runs this checkout's hooks, a separate question from project
     trust (A4). Offline this sees whether each handler has a trusted hash in the
     user config (F070); whether that hash matches the command now is the
-    client's to say in /hooks, so it never reads as verified from here."""
+    client's to say in /hooks, so it never reads as verified from here. A linked
+    worktree runs the main checkout's .codex/hooks.json, keyed by that path
+    (openai/codex PR 21969), so that is the file read and the key looked up."""
     version = version or codex_version()
     if version is None:
         return "unknown", "codex is not installed here"
     if version not in CODEX_TESTED:
         tested = ", ".join(CODEX_TESTED)
         return "unknown", f"codex {version}: this reader was tested on {tested}"
-    path = root / ".codex" / "hooks.json"
+    path = main_checkout(root) / ".codex" / "hooks.json"
     try:
         events = json.loads(path.read_text())["hooks"]
     except (OSError, ValueError, KeyError):
-        return "unknown", ".codex/hooks.json does not parse"
+        return "unknown", f"{path} does not parse"
     keys = [
         f"{path}:{re.sub(r'(?<!^)(?=[A-Z])', '_', ev).lower()}:{g}:{h}"
         for ev, groups in events.items()
