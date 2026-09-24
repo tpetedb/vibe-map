@@ -1,0 +1,40 @@
+v = 1
+order = "qol-2-wayfinding"
+by = "reviewer-qol-2-wayfinding-r2"
+reviewed = "b666d31aec8a68226a0587f40d81ba3820907675"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_game_qol_wayfinding.py` before the final test-only delta: all 36 tests passed. At b666d31 I inspected the only contribution change and reran its exact test with `-k arrow_never_takes_a_tap_from_the_zoom_buttons`: one passed. The deterministic regression chooses a real enabled zoom button, forces the real guide over that control, proves the DOM hit target is still that button, performs a touchscreen tap and waits for the real zoom target to change; it would fail if the guide took pointer events. The rest of the file drives the real palette, map, route, marker, arrow, run controls and frame loop. Its recovery tests directly cover every former blocker: a cross-island route goes around the hub and arrives; an unreachable target stops with feedback; ordinary flight and the reduced-motion cut clear marker and path; path buffers are allocated once; rendered dashes meet the contrast assertion on desktop and Android; Shift plus Tab does not latch running; and window blur releases held movement. The tests wait on page-produced state rather than fixed sleeps.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the complete criterion in the project environment at b45ec62. Ruff check and format exited 0, style printed `style OK: no em dashes, no emoji`, sinks exited 0, and the full `pytest -m 'not browser and not integration'` selection reached 100 percent with exit 0. I also inspected the new value flows: stop names entering toast HTML pass through `esc()`, while map and palette labels use `textContent` or `setAttribute`. The command proves the lint, copy, sink and neighboring non-browser claims.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran all six checks at b45ec62. Build, tree, cookbook and syllabus reported OK; sync_template and sync_fork_source exited 0 without differences. `git diff --check` is clean on every owned source, test and changelog path. The built game and fork mirror therefore match the source reviewed here.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Read findings.md, the current builder notes, the recovery diff and the regression for each implemented proposal. Proposals 2, 3, 6, 7, 14 and 16 are implemented within the order's owned files and have direct entry-point tests. The Roadmap/flight chain and Settings-row halves of proposals 2 and 3 are explicitly disclosed in builder notes and the changelog and assigned to the panels follow-up; proposals 12, 13 and 15 are explicitly listed as not built. The previous review's high and medium defects each have a focused regression as described under c1. The remaining low polish observations are named in builder notes rather than silently skipped.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Inspected all nine screenshots freshly written by the focused run: desktop walking, path, arrow and large map; Android path, map and arrow; iPhone map and arrow. The outlined light-on-dark route reads clearly over grass on desktop and Android, the marker is distinct, and the edge arrow remains inside the usable HUD on both phones. The expanded map exposes numbered stops and labeled buttons. The phone screenshots also show the already-recorded low polish limits: the toast can cover the map and only part of the scrollable stop list is initially visible. Copy is plain interface language, and the style scan found no em dash or emoji. The panels signoff at efc64e2 remains applicable because `src/game/41-search.js` has not changed since it was accepted; it confirms the control semantics, safe text APIs and 44 px target.
+'''

@@ -46,6 +46,9 @@ function applyTheme(){const th=CONFIG.theme;document.body.dataset.theme=th.id;do
   $("roles").textContent=`Tom is your ${th.hostRole}. Rolinda is ${th.guideRole}, and the only one who is allowed to ask the simple question. ${th.signOff}`}
 function stamp(){$("stamp-ver").textContent=`vibe-map v${CONFIG.version} · ${CONFIG.theme.id}`;$("t-done").textContent=String(S.done.length)}
 applyTheme();stamp();wrapCommands();renderOnboarding();iconize();say("title");hud();renderWorldPicker();applySettings();
+// Switching tab or locking the phone hides the page: the island pauses there
+// and comes back on the frame it left (onVisibility in 00-state.js).
+document.addEventListener("visibilitychange",onVisibility);
 // The island is the backdrop of the title, so the scene builds at once;
 // start() only flips the flag. A failure here is reported again by start().
 try{if(typeof THREE!=="undefined")init3d();applySettings()}catch(e){}
