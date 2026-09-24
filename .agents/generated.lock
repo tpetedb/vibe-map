@@ -8,7 +8,7 @@ version = 1
 ".agents/conf/hooks.toml" = "sha256:0c6cf193df2eb854ecb26a9da497b8ac542fda85576c9c080a72681905c3c48c"
 ".agents/conf/mcp.toml" = "sha256:13b52dc6be14108d1b67519dddbb405f63d5fe1903d6b5d733493f16fe1ee414"
 ".agents/conf/models/tom.toml" = "sha256:35487966e610da6714d8d954e2618b58d4e2623eee556aad6cd391728a69d146"
-".agents/conf/policy.toml" = "sha256:0e34e08e13951d9d5c67ff5dab26369fcb03a55ea47de7f17e00d66626b53d78"
+".agents/conf/policy.toml" = "sha256:f4fad1978dc9b2b6a5529a04c44a69559de1358da627f07fa2643d605a420bee"
 ".agents/conf/profiles/balanced.toml" = "sha256:7f5a0fb595fcc78cb26387983f57965d7417964b4d578ce73e439d41cc800395"
 ".agents/conf/profiles/fast.toml" = "sha256:26f5030943255c79a8606c1cbde6381fcfba6b6b9b13b21cb5988f68607fd5c2"
 ".agents/conf/profiles/strict.toml" = "sha256:38e3873248db923a2d295f13e373e60b5d547f4de1b9c9ed9fab9396019049eb"
@@ -20,7 +20,7 @@ version = 1
 ".agents/context/claude.md" = "sha256:3e4843f17195a3a7365718818779a12f296832ea235aa5bcd6b4c82e767e3ade"
 ".agents/templates/CLAUDE.md.j2" = "sha256:78c502040b4c45436b91c88952a2e4941b4c334f4a09de68c1d10055b9261c9c"
 ".agents/templates/claude-agent.md.j2" = "sha256:0ab46aa4cab5fa3445e5418527b2021a4c57cc628bf17e31b28279a79a2e5773"
-".agents/utils/harness.py" = "sha256:1770d801ce3a6263d5cf1ab612d2acb62f6d96f3f3c766dd54b9b622981dc13d"
+".agents/utils/harness.py" = "sha256:8459b9608689a30d24f3733d00aa0d7e61701cce615a38529acb918a9fd1dbc4"
 "config.toml" = "sha256:f045fb8da8b688f99e85c01ea960364a84b1d77f1b0c0efc805b2d93b5fd84c9"
 
 [outputs]
@@ -33,6 +33,6 @@ version = 1
 ".codex/agents/reviewer.toml" = "sha256:c69da1a3e7cb8dbf041f9a91e7fb2f616c19d03c56235d6ffa1a1585b2d01595"
 ".codex/agents/scorekeeper.toml" = "sha256:6d2ceb434571c996da8d1ed285c467d2b3f30b7f22248355b00817813efe43dc"
 ".codex/agents/team-manager.toml" = "sha256:98a69b5f35963f2c908bc4e93af2fe08b26bf02f7b089b45185ce374621b7fa7"
-".codex/config.toml" = "sha256:f0b83656ae1213e14674223ff8d34757a7c9f7715c913412ea61baaf541a535a"
+".codex/config.toml" = "sha256:fbbc05f9c5be610909d2b787d739566703d35fb3e2ec39eed61f7c3ed0e6e28d"
 ".codex/hooks.json" = "sha256:74277557c865b6019a87a946067263dc86793a137505e3da8bf11f01a2dd19ee"
 "CLAUDE.md" = "sha256:7fb2ef17e018072ff013992f655087329e5147b3d6264365f736e8ac442e4b84"

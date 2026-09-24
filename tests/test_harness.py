@@ -334,7 +334,9 @@ def test_the_codex_project_file_carries_only_what_a_project_may_set() -> None:
     assert not set(ignored) & set(config)
     assert config["sandbox_mode"] == "workspace-write"
     assert "permissions" not in config and "default_permissions" not in config
-    assert config["sandbox_workspace_write"] == {"writable_roots": ["../.git/board"]}
+    # A tracked writable root breaks every shell tool in a linked worktree; the
+    # board is added at launch with --add-dir (A2 as amended on the #192 review).
+    assert "writable_roots" not in json.dumps(config)
 
 
 def test_every_agent_renders_for_both_clients_with_its_role_model() -> None:

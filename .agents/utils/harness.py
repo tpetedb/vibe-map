@@ -404,7 +404,6 @@ def load_policy(root: Path) -> dict:
     shape = {
         "version": int,
         "claude": {"deny": list, "ask": list, "sandbox": {"enabled": bool}},
-        "codex": {"writable_roots": list},
     }
     _shape(data, shape, _rel(path, root))
     return data
@@ -530,9 +529,8 @@ def pick(
 
 
 def _header(src: str) -> str:
-    text = (
-        f"Rendered by .agents/utils/harness.py sync from {src}; edit the source, then sync."
-    )
+    text = f"Rendered by .agents/utils/harness.py sync from {src}; edit the source, "
+    text += "then sync."
     return "".join(f"# {line}\n" for line in textwrap.wrap(text, 78))
 
 
@@ -639,18 +637,19 @@ def codex_config(src: Source) -> str:
     notify or otel, which a project file may not set (F053, F054); one sandbox
     style, sandbox_mode, since permission profiles cannot combine with it (F081)."""
     v = src.values
+    # No writable root: the board is added with --add-dir at launch (A2 as
+    # amended), and command networking stays off, its default in
+    # workspace-write (F079), until a tested proxy exists (A3).
     doc = {
         "sandbox_mode": v["codex.sandbox_mode"].value,
         "approval_policy": v["codex.approval_policy"].value,
-        # Command networking is off by default in workspace-write (F079), and
-        # network = "allowlist" keeps it off until a tested proxy exists (A3).
-        "sandbox_workspace_write": {
-            "writable_roots": src.policy["codex"]["writable_roots"],
-        },
     }
     header = _header(
-        f"config.toml, .agents/conf/profiles/{src.config['profile']}.toml and "
-        f".agents/conf/policy.toml"
+        f"config.toml and .agents/conf/profiles/{src.config['profile']}.toml"
+    ) + (
+        "# No writable root is tracked: from a linked worktree a relative one is not\n"
+        "# a directory and stops every shell tool. `just codex` adds the board with\n"
+        "# --add-dir and the absolute git common dir (work/BOARD.md).\n"
     )
     return dump_toml(doc, header)
 

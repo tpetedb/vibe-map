@@ -24,6 +24,7 @@ needs 3.11: under an older python3 the reader says unknown and the writers refus
 from __future__ import annotations
 
 import argparse
+import errno
 import fcntl
 import hashlib
 import json
@@ -72,6 +73,13 @@ SECRET = re.compile(
     r"|AKIA[0-9A-Z]{16}|xox[abprs]-[\w-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY"
     r"|(?i:\b(?:password|passwd|secret|token|api[_-]?key)\s*[:=]\s*\S{6,})"
 )
+# Codex's workspace sandbox grants nothing in the git common dir, and a tracked
+# relative root breaks it in a linked worktree, so every launch adds the board.
+CODEX_FLAG = (
+    '--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"'
+)
+# Seatbelt answers EPERM, Landlock and file modes EACCES, a read-only mount EROFS.
+WRITE_REFUSED = {errno.EPERM, errno.EACCES, errno.EROFS}
 
 # ---------------------------------------------------------------- where
 
@@ -104,6 +112,19 @@ def memory_file() -> Path:
     if env := os.environ.get("VIBE_MEMORY_FILE"):
         return Path(env)
     return board_dir() / "memory.jsonl"
+
+
+def refused(err: OSError) -> str:
+    """One line for a board write that failed, naming the launch flag when the
+    sandbox or the file system refused it."""
+    where = err.filename or "the board"
+    why = err.strerror or str(err)
+    if err.errno in WRITE_REFUSED:
+        return (
+            f"board: writing {where} was refused ({why}): the board is outside this "
+            f"session's writable area; launch Codex with {CODEX_FLAG} (just codex)"
+        )
+    return f"board: writing {where} failed ({why})"
 
 
 @contextmanager
@@ -425,6 +446,7 @@ def read(full: bool = False, observe: bool = False) -> str:
         HEADER,
         "Protocol: work/BOARD.md. Write: just board-say. "
         "Memory: board.py memory search <word>; write with memory add.",
+        f"Codex writes the board only when started with just codex ({CODEX_FLAG}).",
         "-- slots (explicit reservations, 4 heavy jobs across both teams): "
         f"{len(held)} held",
     ]
@@ -766,6 +788,9 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as err:
             print(f"board: {err}", file=sys.stderr)
             return 2
+        except OSError as err:
+            print(refused(err), file=sys.stderr)
+            return 2
         print(f"board: entry {e.id} at {e.at}")
         return 0
     if a.cmd == "memory-lint":
@@ -824,6 +849,9 @@ def main(argv: list[str] | None = None) -> int:
             )
     except ValueError as err:
         print(f"memory: {err}", file=sys.stderr)
+        return 2
+    except OSError as err:
+        print(refused(err), file=sys.stderr)
         return 2
     return 0
 

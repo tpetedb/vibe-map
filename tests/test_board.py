@@ -7,6 +7,7 @@ processes, never a mock of either.
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 import subprocess
@@ -305,15 +306,17 @@ def test_the_session_start_hook_reads_under_an_older_python3(
     assert "tools/work.py needs Python 3.11" in run.stdout
 
 
-def test_no_memory_server_is_registered_and_codex_writes_only_the_board() -> None:
+def test_no_memory_server_is_registered_and_no_writable_root_is_tracked() -> None:
     """The memory is files and board.py (DECISION #193 section 4): neither client
-    starts a server, and Codex's one extra writable root is the main checkout's
-    board, relative to .codex/ (amendment A2)."""
+    starts a server. The tracked Codex config names no writable root: a relative
+    one is not a directory in a linked worktree, whose .git is a file, and Codex
+    then refuses every shell tool (amended A2). just codex adds the board."""
     assert not (ROOT / ".mcp.json").exists()
     assert not (ROOT / "scripts" / "memory-mcp.sh").exists()
     codex = tomllib.loads((ROOT / ".codex" / "config.toml").read_text())
     assert "mcp_servers" not in codex
-    assert codex["sandbox_workspace_write"] == {"writable_roots": ["../.git/board"]}
+    assert "writable_roots" not in codex.get("sandbox_workspace_write", {})
+    assert "writable_roots" not in json.dumps(codex)
     settings = json.loads((ROOT / ".claude" / "settings.json").read_text())
     assert "mcp__memory" not in json.dumps(settings)
     assert "memory-serve" not in BOARD.read_text()
@@ -364,3 +367,62 @@ def test_a_linked_worktree_reads_and_writes_the_same_room(tmp_path: Path) -> Non
     assert f"({main.resolve()}/.git/board/ROOM.md)" in from_main
     assert "QUESTION: do you see me?" in from_main
     assert f"{main.resolve()}/.git/board/memory.jsonl" in from_main
+
+
+def test_just_codex_adds_the_absolute_board_to_the_sandbox() -> None:
+    recipe = (ROOT / "justfile").read_text().split("\ncodex *args:", 1)[1]
+    recipe = recipe.split("\n\n", 1)[0]
+    assert f'codex "$@" {board.CODEX_FLAG}' in recipe
+    assert board.CODEX_FLAG in (ROOT / "work" / "BOARD.md").read_text()
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["say", "--who", "Sol, team:codex", "QUESTION: may I write?"],
+        ["slot", "take", "a-job", "--who", "Sol, team:codex"],
+        ["memory", "add", "gotcha:x", "a fact", "--team", "codex", "--src", "PR #1"],
+    ],
+)
+@pytest.mark.skipif(os.geteuid() == 0, reason="root writes through a read-only mode")
+def test_a_refused_write_names_the_launch_flag_in_one_line(
+    tmp_path: Path, args: list[str]
+) -> None:
+    """A sandbox that does not grant the board refuses the write; the writer
+    says how to launch, in one line, and never prints a traceback."""
+    folder = tmp_path / "board"
+    folder.mkdir()
+    folder.chmod(0o500)
+    env = {
+        **os.environ,
+        "VIBE_BOARD_DIR": str(folder),
+        "VIBE_MEMORY_FILE": str(folder / "memory.jsonl"),
+    }
+    try:
+        run = subprocess.run(
+            [sys.executable, str(BOARD), *args],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+    finally:
+        folder.chmod(0o700)
+    assert run.returncode == 2, run.stdout + run.stderr
+    assert "Traceback" not in run.stderr
+    assert run.stderr.count("\n") == 1, run.stderr
+    assert board.CODEX_FLAG in run.stderr
+    assert not list(folder.iterdir())
+
+
+def test_a_sandbox_refusal_is_told_the_flag_and_other_failures_are_not() -> None:
+    for code in (errno.EPERM, errno.EACCES, errno.EROFS):
+        err = PermissionError(code, os.strerror(code), "/r/.git/board/ROOM.md")
+        line = board.refused(err)
+        assert "\n" not in line and board.CODEX_FLAG in line, line
+    other = board.refused(OSError(errno.ENOSPC, os.strerror(errno.ENOSPC), "/r"))
+    assert "--add-dir" not in other and "\n" not in other
+
+
+def test_the_session_start_text_tells_codex_the_launch() -> None:
+    assert "just codex" in board.read() and board.CODEX_FLAG in board.read()

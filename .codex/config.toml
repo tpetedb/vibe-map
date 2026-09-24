@@ -1,8 +1,7 @@
-# Rendered by .agents/utils/harness.py sync from config.toml,
-# .agents/conf/profiles/balanced.toml and .agents/conf/policy.toml; edit the
-# source, then sync.
+# Rendered by .agents/utils/harness.py sync from config.toml and
+# .agents/conf/profiles/balanced.toml; edit the source, then sync.
+# No writable root is tracked: from a linked worktree a relative one is not
+# a directory and stops every shell tool. `just codex` adds the board with
+# --add-dir and the absolute git common dir (work/BOARD.md).
 sandbox_mode = "workspace-write"
 approval_policy = "on-request"
-
-[sandbox_workspace_write]
-writable_roots = ["../.git/board"]

@@ -26,6 +26,8 @@ owns = [
   "docs/SKILLS.md",
   "tests/test_board.py",
   "tests/test_memory.py",
+  "tools/work.py",
+  "tests/test_work.py",
 ]
 cross = ["docs"]
 needs = []
@@ -47,8 +49,8 @@ check = '''uv run python tools/board.py read > /tmp/board-read-a.txt && here="$P
 
 [[criteria]]
 id = "c4"
-text = "work/teams.toml gives the harness team every path the later harness orders own, so those orders validate once this one lands; the Codex board root is rendered relative to .codex/ and nothing else is a writable root."
-check = '''python3 -c "import tomllib;t=tomllib.load(open('work/teams.toml','rb'));h=[x for x in t['teams'] if x['id']=='harness'][0]['paths'];need=['.codex/','config.toml','.mcp.json','compose.agents.yaml','mise.toml','mise.lock','copier.yml','.copier-answers.yml','.pre-commit-config.yaml','.gemini/','.aider.conf.yml','evals/'];m=[p for p in need if p not in h];print('missing',m);raise SystemExit(bool(m))" && python3 -c "import tomllib;c=tomllib.load(open('.codex/config.toml','rb'));r=c['sandbox_workspace_write']['writable_roots'];print(r);raise SystemExit(r!=['../.git/board'])"'''
+text = "work/teams.toml gives the harness team every path the later harness orders own, so those orders validate once this one lands; the tracked .codex/config.toml carries no writable_roots at all (a relative root is not a directory in a linked worktree and stops every shell tool); the room is written from Codex only through a launch that passes --add-dir with the absolute git common dir, and board.py names that flag when a write is refused."
+check = '''python3 -c "import tomllib;t=tomllib.load(open('work/teams.toml','rb'));h=[x for x in t['teams'] if x['id']=='harness'][0]['paths'];need=['.codex/','config.toml','.mcp.json','compose.agents.yaml','mise.toml','mise.lock','copier.yml','.copier-answers.yml','.pre-commit-config.yaml','.gemini/','.aider.conf.yml','evals/'];m=[p for p in need if p not in h];print('missing',m);raise SystemExit(bool(m))" && python3 -c "import tomllib;c=tomllib.load(open('.codex/config.toml','rb'));raise SystemExit('writable_roots' in c.get('sandbox_workspace_write',{}))" && grep -q -- '--add-dir' justfile && grep -q -- '--add-dir' work/BOARD.md'''
 
 [[criteria]]
 id = "c5"
@@ -57,7 +59,7 @@ check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run pyt
 
 [[criteria]]
 id = "c6"
-text = "Codex evidence receipt, version-bound (DECISION A2, A8): on the installed Codex client, a fresh session, a resumed session and a session in a linked worktree each append to ROOM.md through the board root (the main checkout via the rendered relative root, the others via --add-dir with the absolute common dir), and a write to .agents/ or another .git path is denied; both clients show the digest header on the first turn; hook trust was granted through the client's own /hooks prompt, nothing bypassed; no MCP server is registered on either client. The Codex reviewer proves this, since Codex owns that runtime."
+text = "Codex evidence receipt, version-bound (DECISION A2, A8): on the installed Codex client, a fresh session, a resumed session and a session in a linked worktree each append to ROOM.md when launched through the recipe that passes --add-dir with the absolute common dir, and a plain session in a linked worktree still runs shell tools, reads the digest and is told the flag when it tries to write, and a write to .agents/ or another .git path is denied; both clients show the digest header on the first turn; hook trust was granted through the client's own /hooks prompt, nothing bypassed; no MCP server is registered on either client. The Codex reviewer proves this, since Codex owns that runtime."
 judge = "reviewer"
 
 [[criteria]]

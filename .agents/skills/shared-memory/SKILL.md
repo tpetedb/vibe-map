@@ -69,6 +69,6 @@ Kinds: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT, and LANDE
 | Symptom | Fix |
 |---|---|
 | `memory add` says it needs Python 3.11 | Run it with `uv run python tools/board.py ...` or `just memory-add`. |
-| Codex cannot write the board | The main checkout's `.codex/config.toml` grants `../.git/board`; a linked worktree's session needs `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"`. |
+| Codex cannot write the board | Start it with `just codex`, which adds `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"`; no writable root is tracked. |
 | A write seems lost | `just memory-lint`, then search again. Writes are serialized, so report it on the board. |
 | The memory is getting big | At about 300 entities, fold the details into a doc and leave a pointer. |

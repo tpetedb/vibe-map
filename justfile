@@ -82,6 +82,13 @@ board-say who text:
 board-slot verb job who:
     python3 tools/board.py slot {{quote(verb)}} {{quote(job)}} --who {{quote(who)}}
 
+# example: just codex   or   just codex resume --last
+# start Codex with the board room and the shared memory writable, from any worktree (work/BOARD.md)
+[positional-arguments]
+codex *args:
+    mkdir -p "$(git rev-parse --path-format=absolute --git-common-dir)/board"
+    codex "$@" --add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"
+
 # the shared memory against its caps and conventions: names, observations, secrets, relations
 memory-lint:
     python3 tools/board.py memory-lint

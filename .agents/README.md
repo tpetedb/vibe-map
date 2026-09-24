@@ -21,7 +21,7 @@ the next session after a sync, or after Codex re-trusts its hooks.
 | Which model and effort a role gets | `conf/models/tom.toml` |
 | A subagent (name, description, instructions, model role) | `conf/roles/<name>.toml` |
 | A hook either client runs | `conf/hooks.toml` |
-| The permission floor: deny and ask rules, the Codex board root | `conf/policy.toml` |
+| The permission floor: deny and ask rules | `conf/policy.toml` |
 | MCP servers (none today) | `conf/mcp.toml` |
 | What Claude reads beyond AGENTS.md | `context/claude.md`, rendered into `CLAUDE.md` |
 | A new rendered text file | a template in `templates/`, whose first line names its output |
