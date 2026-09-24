@@ -109,12 +109,20 @@ function cleanName(n){const s=String(n==null?"":n).trim().slice(0,80);return s==
 // topics: the tech tree ids the terminal has verified. The game shows the tree
 // but never marks it, so this is the terminal's record travelling with the
 // progress code: it must survive a round trip through here untouched.
-let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:""};
+// hints: the ids of the first-time lines already shown. notes: what the toasts
+// said, kept because a message that mattered outlives its five seconds.
+let S={name:"",done:[],doneW:{campus:[],winter:[],desert:[],prod:[]},path:{},met:{},mentors:[],pitch:"",versions:[],bridges:{},date:null,wine:null,artifacts:[],artifactsBuilt:[],events:[],interests:null,topics:[],pet:"",hints:[],notes:[]};
 // Progress lives under "vibemap1"; the pre-rename key "grimoire3" is read once so nobody loses an evening.
 const KEY="vibemap1",OLD_KEY="grimoire3";
 // S.done is a view: the array doneW[world] under another name. Only the map is
 // written, so a reload can never copy one island's stops onto another.
-function save(){try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+// The mark that says it happened is the view of this write, so it is raised
+// only once the record is really in the browser, and never when it is not.
+// mark is false for a write the player did not ask for (the log of a message
+// that was just shown), so "Saved" stays a word about progress.
+function save(mark){let written=false;
+  try{const d=Object.assign({},S);delete d.done;localStorage.setItem(KEY,JSON.stringify(d));written=true}catch(e){}
+  if(written&&mark!==false&&typeof savedTick==="function")savedTick()}
 // The record is JSON in the player's own browser, and a browser is not a
 // vault: a half-written save, another tab or an extension can leave anything
 // under the key. Every field is checked before it becomes state, so a record
@@ -141,8 +149,17 @@ function load(){
   if(S.world&&!CAMPAIGN[S.world]){S.world="campus";bad("world")}
   if(!isMap(S.path)){S.path={};if(d.path!==undefined)bad("path")}
   if(!isMap(S.met)){S.met={};if(d.met!==undefined)bad("met")}
-  ["mentors","artifacts","artifactsBuilt","events"].forEach(k=>{
+  ["mentors","artifacts","artifactsBuilt","events","hints","notes"].forEach(k=>{
     if(!Array.isArray(S[k])){S[k]=[];if(d[k]!==undefined)bad(k)}});
+  // Two lists of our own shapes. A hint id is a short word of ours, and one
+  // that is anything else would show an old line again or swallow a new one;
+  // a note is what a toast said, a time and two strings, and all three are
+  // written back into the panel. Either way the record loses the entries it
+  // broke and keeps the rest.
+  const only=(k,ok)=>{const v=S[k].filter(ok);if(v.length!==S[k].length)bad(k);S[k]=v};
+  only("hints",plainId);
+  only("notes",n=>isMap(n)&&typeof n.ts==="number"&&isFinite(n.ts)&&typeof n.t==="string"&&typeof n.b==="string");
+  S.notes=S.notes.slice(-NOTE_CAP);
   if(!Array.isArray(S.interests))S.interests=null;
   S.done=S.doneW[S.world||"campus"];reportLoad();return true}
 // A record that could not be read whole is not silence: the player is told
@@ -172,6 +189,31 @@ function compactEvents(){
   S.events=kept.slice(-EVENT_CAP)}
 // Other modules (chat, the avatar) record through this one helper.
 window.track=track;
+/* ---------------- the page, awake and asleep ---------------- */
+// Time in another app is not time on the island. The browser already stops the
+// frame loop while the page is hidden (MDN, requestAnimationFrame), but the
+// clock those frames read keeps running on the wall clock, and the ambient
+// animations read it as an absolute phase: the boats, the birds and the beam
+// would jump by the whole gap on the way back. So the clock stops where the
+// last drawn frame left it and starts again from there, which is also what
+// keeps the first frame after a return from being an hour of movement.
+// Battery saver off is the player asking for the opposite, so nothing pauses.
+let hiddenAt=0,hiddenT=0;
+const hasClock=()=>typeof clock!=="undefined"&&!!clock;
+function saverOn(){return typeof settings!=="function"||settings().saver!=="off"}
+function pageHidden(){if(hiddenAt||!saverOn())return;hiddenAt=Date.now();
+  if(!hasClock()||!clock.running)return;
+  // start() zeroes the elapsed time, so the clock is restarted by hand rather
+  // than left to autoStart, which would call it on the next frame.
+  hiddenT=clock.elapsedTime;clock.autoStart=false;clock.stop()}
+function pageVisible(){if(!hiddenAt)return;hiddenAt=0;
+  if(!hasClock()||clock.running)return;
+  clock.start();clock.elapsedTime=hiddenT;clock.autoStart=true}
+// One listener, wired in 90-boot.js: the page is what is hidden, so the page's
+// own event is what answers for it.
+function onVisibility(){if(document.hidden)pageHidden();else pageVisible()}
+// Test seam: whether the island is paused, and the clock it is paused at.
+window.__awake=()=>({hidden:!!hiddenAt,saver:saverOn(),t:hasClock()&&clock.running?clock.elapsedTime:hiddenT});
 const $=id=>document.getElementById(id);
 // Progressive enhancement: with Motion embedded (src/vendor/motion.min.js) panels
 // spring in and KPIs count up; without it, or under reduced motion, they just

@@ -1,0 +1,32 @@
+v = 1
+id = "safe-permission-copy"
+title = "The first lesson stops telling beginners to approve a permission prompt they do not understand"
+team = "panels"
+branch = "claude/safe-permission-copy"
+goal = "second-wave"
+issue = 186
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-safe-permission-copy"
+
+owns = [
+  "src/body.html",
+  "docs/SYLLABUS.md",
+  "tests/test_safe_copy.py",
+]
+cross = ["content"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The guard passes and was seen failing on main's sentence: no learner-facing copy (src/, docs/SYLLABUS.md, vibemap/data/, the built game) tells the learner to answer yes to a permission prompt they do not understand, and the first lesson's Definition of done says to pause and ask or read what the agent wants first."
+check = "uv run pytest -q tests/test_safe_copy.py"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, sinks, the non-browser battery and every generated file in sync."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration' && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c3"
+text = "The new sentence is safe, plain and in the campaign's voice; the lesson reads well in the built game on desktop and a phone (screenshot looked at); Galaxy's walking button and anything else in body.html is untouched."
+judge = "reviewer"

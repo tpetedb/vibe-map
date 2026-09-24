@@ -17,6 +17,10 @@
     <div class="kpi"><b id="k3">0</b><span id="k3l">Connections</span></div>
     <div class="kpi"><b id="k4">0</b><span id="k4l">Found</span></div>
   </div>
+  <!-- The toast stack belongs to the HUD, so it hangs under the bar however
+       many rows the bar wraps to instead of covering it. 18-avatar.js fills
+       this one when it is here and makes its own when it is not. -->
+  <div id="toast" aria-live="polite"></div>
 </div>
 
 <div class="ui" id="bottom">
@@ -77,7 +81,13 @@
     <p class="pal-hint small muted">Up and down to move, Enter to open, Escape to close.</p>
   </div>
 </div>
-<div id="sheet" role="dialog">
+<!-- A named dialog, and deliberately not a modal one: the HUD floats over an
+     open panel and its buttons stay in the tab order, which is the point of
+     the bar, so aria-modal would promise a page nothing else can reach and
+     hide the rest of the island from a reader that believes it. Confining
+     the focus and naming the screen that is open both belong to openSheet().
+     The name is the panel itself, so a reader says more than "dialog". -->
+<div id="sheet" role="dialog" aria-label="Camp panel">
   <div class="grab"></div><button class="x" data-icon="x" onclick="closeSheet()">Close</button>
   <div class="inner">
     <section class="screen" id="s-map">
@@ -166,7 +176,7 @@ brew install jq</code></pre>
 </ol>
 <h4>One more thing, then stop</h4>
 <p>Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.</p>
-<div class="callout ok"><b>Definition of done</b>workspace/game/index.html exists in your camp, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</div>
+<div class="callout ok"><b>Definition of done</b>workspace/game/index.html exists in your camp, it opens in a browser, and you can play it. If Claude asks permission for something you do not understand, pause: read what it wants to run or change, and ask Tom before you say yes; understanding permissions in depth is workstream 4.</div>
 <div class="callout why"><b>Why it matters</b>You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.</div>
 <div class="callout try"><b>Try this</b>If the first result is broken, do not fix it yourself. Paste the error, or describe what you see, and let it iterate. Say what is wrong, not how to fix it.</div>
 <p class="small muted">Source: <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Quickstart</a>, <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">How Claude Code works</a></p>

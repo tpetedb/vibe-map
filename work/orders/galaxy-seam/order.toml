@@ -5,7 +5,7 @@ team = "scene"
 branch = "feat/galaxy-seam"
 goal = "galaxy"
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "codex-galaxy-seam-recovery"
 
 owns = [
   "src/game/24-experience.js",

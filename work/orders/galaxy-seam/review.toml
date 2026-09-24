@@ -1,0 +1,40 @@
+v = 1
+order = "galaxy-seam"
+by = "codex-galaxy-seam-backup-review"
+reviewed = "e329620457aec7aae0ce21795265d00829419188"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+At e329620 I ran the replaced-trip and completed cross-island stop browser cases with Chromium outside the sandbox; both passed. I started the 21-case experience file and saw the contract/travel cases and all four live goldens pass (each mean 0.0000, worst 0.000), plus the grass mutation fail the golden as intended (mean 0.8194, worst 2.949); I stopped that incomplete run at root's request because work-accept will rerun the entire file. The previous reviewer recorded all 21 passing at b45ec6. I independently compared the two commits: only this test's assertion changed in the order's files, and I inspected all four current captures, which show complete fitted views with expected terrain, buildings and bridges. The command's tests exercise the actual browser contract and compare live captures with the records, so they prove the stated behavior when the whole file passes.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+At e329620 I ran venv Ruff check and format check, and the style and sink guards; all passed. The previous reviewer recorded the complete non-browser battery passing at b45ec6; I did not rerun that battery, per the root's instruction to avoid duplicating work-accept. The new order-owned diff is only a browser test assertion, so it cannot change non-browser product behavior. The criterion's command is an appropriate repository-wide guard; the root's work-accept will rerun it on this exact tree. My first `just work-review` invocation used the sandbox's unwritable default uv cache and therefore failed before running its criteria; that was an environment restriction, not a test result.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+At e329620 I ran all six generator `--check` commands using the project venv Python. Build reported game/vibe-map.html matches src; tree, cookbook and syllabus reported OK; template and fork-source checks exited zero. This command directly checks generated outputs against source, so it proves the criterion. The previous reviewer also recorded these checks passing at b45ec6.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+I read the golden test and its measurement note: fixed seed, frame clock, at-rest condition and font removal control known noise; 16x10 floating-point regional means use 0.002 mean and 0.1 worst tolerances based on the documented Mac/Linux software-renderer difference. I opened the four current captures. In my interrupted experience-file run, all four unchanged captures matched exactly and the single-source grass mutation was detected at mean 0.8194, worst 2.949. The previous reviewer recorded three unchanged passes and both grass and well mutation failures at b45ec6; no golden implementation or image changed between b45ec6 and e329620. I did not independently repeat those runs three times or rerun the well mutation, and the stated tolerance cannot detect the smaller prop changes the note lists.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+I read src/game/24-experience.js, the browser contract tests and the b45ec6..e329620 diff. This order adds the contract module; the latest change touches only `test_a_new_destination_replaces_a_compound_trip`. `where()` reads the per-frame `nearK` proximity result and may legitimately report an artifact at the desert landing point, so the former `where() is None` assertion contradicted the contract. The new assertion waits for the desert flight to finish, advances three frames and verifies the canceled winter stop never opened a sheet. My two focused travel tests passed. The browser file invokes all seven members through `window.__experience()`, and my viewed goldens match their records. Existing-module changes visible in the aggregate train diff belong to other orders, as the previous review noted; the order's own source and golden files are unchanged since b45ec6.
+'''
