@@ -786,6 +786,45 @@ def test_what_arrives_from_main_in_a_merge_is_not_the_orders_doing(repo: Path) -
     assert work.strays(order, "origin/main") == ["src/scene.js"]
 
 
+def test_what_a_needed_order_built_is_not_the_later_orders_stray(repo: Path) -> None:
+    """A later order builds on the branch of the order it needs, before that one
+    lands: what it carries from there unchanged is the earlier order's work."""
+    one = order_text("one", "feat/one", ["src/scene.js"], team="scene")
+    branch_with(
+        repo, "feat/one", {"work/orders/one/order.toml": one, "src/scene.js": "// 1\n"}
+    )
+    two = order_text("two", "feat/two", ["src/panel.js"], needs=["one"])
+    branch_with(
+        repo, "feat/two", {"work/orders/two/order.toml": two, "src/panel.js": "// 2\n"}
+    )
+    sh(repo, "merge", "-q", "--no-edit", "feat/one")
+    order = work.find("two", repo)
+    assert work.strays(order, "origin/main") == []
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    # A train car carrying both reads the later branch at the commit it merged.
+    car(repo, "feat/one", "feat/two")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    sh(repo, "checkout", "-q", "feat/two")
+    # Changing the needed order's file on top of what it built is still a stray,
+    # in the working tree and once committed.
+    (repo / "src" / "scene.js").write_text("// 1, and two touched it\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+    commit(repo, "a stray on top")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "two: src/scene.js is outside what it owns" in ran.stdout, ran.stdout
+    # Without the need, the same merge is somebody else's files.
+    sh(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / "work/orders/two/order.toml").write_text(two.replace('["one"]', "[]"))
+    assert "src/scene.js" in work.strays(work.find("two", repo), "origin/main")
+    # And a needed order whose branch cannot be found vouches for nothing.
+    sh(repo, "checkout", "-q", "--", "work/orders/two/order.toml")
+    sh(repo, "branch", "-D", "feat/one")
+    assert "src/scene.js" in work.strays(work.find("two", repo), "origin/main")
+
+
 # ------------------------------------------------------------ the follow-ups
 
 

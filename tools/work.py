@@ -558,8 +558,52 @@ def diff_names(root: Path, base: str, rev: str = "HEAD") -> list[str]:
         return names(root, *args, must=True)
 
 
-def strays(order: Order, base: str) -> list[str]:
-    return [p for p in changed(order.root, base) if not order.may_touch(p)]
+def strays(
+    order: Order, base: str, files: list[str] | None = None, rev: str | None = None
+) -> list[str]:
+    """What the order changed and may not touch: `files` as its branch changed
+    them (the checkout's changes by default), read at rev (the working tree when
+    None)."""
+    files = changed(order.root, base) if files is None else files
+    out = [p for p in files if not order.may_touch(p)]
+    carried = inherited(order, base, out, rev) if out else set()
+    return [p for p in out if p not in carried]
+
+
+def inherited(order: Order, base: str, paths: list[str], rev: str | None) -> set[str]:
+    """Of these paths, those an order this one needs changed on its branch and
+    this one carries exactly as that branch left them. The later order builds
+    on the earlier one's branch before it lands (see collisions), so that work
+    is the earlier order's, answered for there. A needed order whose branch
+    cannot be found vouches for nothing."""
+    by_id = {o.id: o for o in orders_in(order.root, load_teams(order.root))}
+    at = (rev,) if rev else ()
+    new = set()
+    if not rev:
+        args = ("ls-files", "--others", "--exclude-standard", "-z")
+        new = set(names(order.root, *args, must=True))
+    out: set[str] = set()
+    for nid in order.needs:
+        need = by_id.get(nid)
+        if need is None:
+            continue
+        try:
+            theirs = tip(order.root, need.branch)
+        except Bad:
+            continue
+        point = git(order.root, "merge-base", rev or "HEAD", theirs)
+        if not point:
+            continue
+        built = set(diff_names(order.root, base, point)) & set(paths)
+        if not built:
+            continue
+        # Differs from what the needed branch built: in the tree, or staged.
+        moved: set[str] = set()
+        for where in ((), ("--cached",)) if not rev else ((),):
+            args = ("diff", *where, "--name-only", "--no-renames", "-z", point, *at)
+            moved |= set(names(order.root, *args, "--", *built, must=True))
+        out |= built - moved - new
+    return out
 
 
 def tip(root: Path, branch: str) -> str:
@@ -579,16 +623,17 @@ def tip(root: Path, branch: str) -> str:
     )
 
 
-def own_files(order: Order, base: str, head: str) -> list[str]:
-    """What the order's own branch changed, as this checkout carries it: all of
-    it on that branch, and in a train car the part of the branch the car merged,
-    so a loose change riding in the same car is nobody's stray."""
+def own_files(order: Order, base: str, head: str) -> tuple[list[str], str | None]:
+    """What the order's own branch changed, as this checkout carries it, and the
+    commit to read it at: all of it on that branch (the working tree), and in a
+    train car the part of the branch the car merged, so a loose change riding
+    in the same car is nobody's stray."""
     if order.branch == head:
-        return changed(order.root, base)
+        return changed(order.root, base), None
     merged = git(order.root, "merge-base", "HEAD", tip(order.root, order.branch))
     if not merged:
         raise Bad(f"branch {order.branch} and this pull request share no commit")
-    return diff_names(order.root, base, merged)
+    return diff_names(order.root, base, merged), merged
 
 
 def tree_key(root: Path) -> str:
@@ -1280,13 +1325,13 @@ def cmd_ci(a: argparse.Namespace) -> int:
         if not built and order.branch != head:
             continue
         try:
-            own = own_files(order, a.base, head)
+            own, at = own_files(order, a.base, head)
+            bad += [
+                f"{oid}: {s} is outside what it owns"
+                for s in strays(order, a.base, own, at)
+            ]
         except Bad as e:
             bad.append(f"{oid}: {e}")
-            continue
-        bad += [
-            f"{oid}: {s} is outside what it owns" for s in own if not order.may_touch(s)
-        ]
     for line in bad:
         print("work:", line)
     print(f"work: {len(carried)} orders in this pull request, {len(bad)} problems")
