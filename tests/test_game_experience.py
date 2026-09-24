@@ -285,7 +285,8 @@ def _island(game: GamePage, **over: Any) -> GamePage:
 
 
 def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
-    """Both experiences answer the seven questions core may ask."""
+    """Both experiences answer the seven questions core may ask; Galaxy also
+    carries its optional hooks, readable() among them for Grow's vault."""
     _island(game)
     shape = game.page.evaluate(
         "() => { const x = window.__experiences();"
@@ -306,6 +307,7 @@ def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
         "presentation:object",
         "guidance:function",
         *expected[1:],
+        "readable:function",
     ]
     game.assert_clean()
 

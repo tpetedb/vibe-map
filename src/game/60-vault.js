@@ -16,7 +16,14 @@ function linksOf(md){const out=[];const re=/\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]/g;
 // they map by position to the notes written by hand in 50-notes.js.
 function stopNote(w,n,byLower){if(w==="campus")return NOTES[CAMPUS_STOP_NOTES[n-1]]?CAMPUS_STOP_NOTES[n-1]:null;
   const ws=(CAMPAIGN[w]&&CAMPAIGN[w].ws[n-1])||null;return(ws&&byLower[ws.n.toLowerCase()])||null}
+// Topics the view in force says are always readable, as note ids. Grow earns
+// notes through island play, so a view whose path runs elsewhere names the
+// lessons it has already led the learner to (the optional readable() hook);
+// the islands name none.
+function experienceReadable(){const view=typeof activeExperience==="function"?activeExperience():null;
+  return(view&&view.readable?view.readable():[]).map(noteId).filter(k=>NOTES[k])}
 function computeUnlocked(){const keys=Object.keys(NOTES);if(vaultMode()!=="grow")return new Set(keys);const set=new Set(ALWAYS_NOTES.filter(k=>NOTES[k]));
+  experienceReadable().forEach(k=>set.add(k));
   const byLower={};keys.forEach(k=>byLower[k.toLowerCase()]=k);
   Object.keys(S.doneW||{}).forEach(w=>{(S.doneW[w]||[]).forEach(n=>{const title=stopNote(w,n,byLower);if(title){set.add(title);linksOf(NOTES[title].md).forEach(t=>{if(NOTES[t])set.add(t)})}})});
   MENTORS.forEach(m=>{if(S.path[m.id]==="deep"&&NOTES[m.name])set.add(m.name)});
