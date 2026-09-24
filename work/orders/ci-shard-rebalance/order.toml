@@ -1,0 +1,31 @@
+v = 1
+id = "ci-shard-rebalance"
+title = "CI: rebalance the browser shards so no shard takes much longer than the others"
+team = "harness"
+branch = "claude/ci-shard-rebalance"
+goal = "ways-of-working"
+issue = 205
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  ".github/workflows/ci.yml",
+  "changelog.d/ci-shard-rebalance.changed.md",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Every browser test file is in exactly one shard and every pattern claims something (the existing guard), and the new layout is what ci_shards.py reads back."
+check = "uv run pytest -q tests/test_repo.py -k shard && for s in $(uv run python tools/ci_shards.py --list 2>/dev/null || true); do uv run python tools/ci_shards.py --files $s >/dev/null || exit 1; done"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style and the non-browser battery pass; every generated file is in sync; every order still reads."
+check = "uv run ruff check -q . && uv run python tools/checks.py style && uv run pytest -q -m 'not browser and not integration' && uv run python tools/work.py validate"
+
+[[criteria]]
+id = "c3"
+text = "The split is sized from measured durations (the --durations of recent runs, or a local collection with timings), written in findings.md as a table of shard to estimated minutes, and the slowest estimated shard is at most about 35 minutes on the runner. The PR's own CI run confirms it: no shard over 45 minutes."
+judge = "reviewer"

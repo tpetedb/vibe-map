@@ -1,0 +1,7 @@
+# ci-shard-rebalance
+
+Task (issue #205): every PR waits about 77 minutes on two browser shards, smoke and qol; ui, phone, bridges, panels and webkit take 10 to 30. `smoke` is the default shard (`default: true` in `.github/workflows/ci.yml`), so every browser file no other shard claims lands there: the hunt files dominate. From car K2's run (#202, job 107470214388): `test_game_hunt_f.py::test_the_artifact_surfaces_are_photographed` 213s and 187s, `test_game_hunt_b.py` cases at 60 to 105s each; the shard ran 133 tests in 66 minutes. `qol` carries `tests/test_game_qol*.py` and `tests/test_game_state.py`.
+
+Do: measure (use `gh run view --job <id> --log` of recent runs on main for the `--durations` lines, and `uv run python tools/ci_shards.py --files smoke` for what the default collects; `gh api --allow-escape-sequences repos/tpetedb/vibe-map/actions/jobs/<id>/logs` works for a job log). Then add shards, for example `hunt` (tests/test_game_hunt*.py, split in two if it alone is over 35 minutes), `qol` split into two patterns, and a `galaxy` shard for tests/test_game_galaxy.py and tests/test_game_experience.py if they are in the default. Keep `smoke` as the default with headroom. Runners are free on this public repo; more shards is fine. Change only ci.yml's matrix (tools/ci_shards.py reads it back; do not change its code unless a guard forces it, and then say why). Record the table of shard to measured or estimated minutes here.
+
+builder:
