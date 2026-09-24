@@ -1,0 +1,30 @@
+v = 1
+id = "wayfinding-buffers-flake"
+title = "The walk-buffers test counts from the first dust puff, so a late random puff no longer fails it"
+team = "scene"
+branch = "claude/wayfinding-flake"
+goal = "ways-of-working"
+issue = 205
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-wayfinding-buffers-flake"
+
+owns = [
+  "tests/test_game_qol_wayfinding.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The test fails on main with the dust puff forced late (Math.random stubbed high for the first frames) and passes with the fix, five runs in a row, and the unforced test passes five runs in a row."
+check = "/Users/maxgroupit/.claude/jobs/5d0da65f/tmp/slot-wait.sh 4 && uv run python tools/build.py && for i in 1 2 3 4 5; do uv run pytest -q 'tests/test_game_qol_wayfinding.py::test_a_walk_makes_its_buffers_once_and_not_every_frame' || exit 1; done"
+
+[[criteria]]
+id = "c2"
+text = "Lint, the repo guards and every order still read."
+check = "uv run ruff check -q tests/ && uv run ruff format --check -q tests/test_game_qol_wayfinding.py && uv run pytest -q tests/test_repo.py tests/test_work.py && uv run python tools/work.py validate"
+
+[[criteria]]
+id = "c3"
+text = "The fix never loosens the bound (after - made <= 2 stays) and waits on something the page produced, never a sleep; the game source is untouched."
+judge = "reviewer"

@@ -1,0 +1,4 @@
+- An artifact ring now shows whole on a finished island, where a delivered stop's slab used to cut it in half.
+- A vault link on an artifact's sheet takes the same yellow focus ring as every other control, and a number such as "1 200 tokens" no longer breaks across two lines in a demo on a phone.
+- The market stall says what ordering without the menu gets: a 404 for a wrong path or a 400 for a wrong body, as its demo shows.
+- The tech tree says a shelf you did not choose is set back, not dimmed.
