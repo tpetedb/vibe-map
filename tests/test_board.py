@@ -369,11 +369,165 @@ def test_a_linked_worktree_reads_and_writes_the_same_room(tmp_path: Path) -> Non
     assert f"{main.resolve()}/.git/board/memory.jsonl" in from_main
 
 
-def test_just_codex_adds_the_absolute_board_to_the_sandbox() -> None:
-    recipe = (ROOT / "justfile").read_text().split("\ncodex *args:", 1)[1]
-    recipe = recipe.split("\n\n", 1)[0]
-    assert f'codex "$@" {board.CODEX_FLAG}' in recipe
-    assert board.CODEX_FLAG in (ROOT / "work" / "BOARD.md").read_text()
+def _recipe(name: str) -> str:
+    text = (ROOT / "justfile").read_text()
+    return text.split(f"\n{name}", 1)[1].split("\n\n", 1)[0]
+
+
+@pytest.fixture
+def codex_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A temporary HOME, so no test reads or writes the real ~/.codex."""
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.delenv("CODEX_HOME", raising=False)
+    return tmp_path / "home" / ".codex" / "config.toml"
+
+
+def _trust(*args: str) -> subprocess.CompletedProcess[str]:
+    env = {k: v for k, v in os.environ.items() if k != "CODEX_HOME"}
+    return subprocess.run(
+        [sys.executable, str(BOARD), "codex-trust", *args],
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_just_codex_goes_through_the_launcher_and_names_the_flag() -> None:
+    assert "python3 tools/board.py codex" in _recipe("codex *args:")
+    assert "board.py" in _recipe('codex-trust path=".":')
+    board_md = (ROOT / "work" / "BOARD.md").read_text()
+    assert board.CODEX_FLAG in board_md and "just codex-trust" in board_md
+
+
+def test_codex_trust_enrols_this_checkout_once_and_keeps_the_rest(
+    codex_home: Path,
+) -> None:
+    codex_home.parent.mkdir(parents=True)
+    before = '# mine\nmodel = "m"\n\n[projects."/elsewhere"]\ntrust_level = "trusted"\n'
+    codex_home.write_text(before)
+    codex_home.chmod(0o600)
+    top = str(ROOT.resolve())
+
+    first = _trust()
+    assert first.returncode == 0, first.stderr
+    after = codex_home.read_text()
+    assert after.startswith(before)
+    conf = tomllib.loads(after)
+    assert conf["projects"][top] == {"trust_level": "trusted"}
+    assert conf["projects"]["/elsewhere"] == {"trust_level": "trusted"}
+    assert "hooks" not in conf and "hash" not in after
+    assert codex_home.stat().st_mode & 0o777 == 0o600
+
+    again = _trust(str(ROOT / "tools"))
+    assert again.returncode == 0 and "already trusted" in again.stdout
+    assert codex_home.read_text() == after
+
+
+def test_codex_trust_refuses_a_foreign_checkout_and_a_plain_folder(
+    tmp_path: Path, codex_home: Path
+) -> None:
+    foreign = tmp_path / "foreign"
+    subprocess.run(["git", "init", "-q", str(foreign)], check=True)
+    plain = tmp_path / "plain"
+    plain.mkdir()
+    for where, why in (
+        (foreign, "not a checkout of this repository"),
+        (plain, "not a git checkout"),
+    ):
+        run = _trust(str(where))
+        assert run.returncode == 2 and why in run.stderr, run.stderr
+        assert "Traceback" not in run.stderr
+    assert not codex_home.exists()
+
+
+def test_codex_trust_leaves_an_existing_entry_as_it_is(codex_home: Path) -> None:
+    codex_home.parent.mkdir(parents=True)
+    text = f'[projects.{json.dumps(str(ROOT.resolve()))}]\ntrust_level = "untrusted"\n'
+    codex_home.write_text(text)
+    run = _trust()
+    assert run.returncode == 1 and "left as it is" in run.stdout
+    assert codex_home.read_text() == text
+
+
+def test_codex_trust_writes_through_a_linked_config(
+    tmp_path: Path, codex_home: Path
+) -> None:
+    real = tmp_path / "synced" / "config.toml"
+    real.parent.mkdir()
+    real.write_text('model = "m"\n')
+    codex_home.parent.mkdir(parents=True)
+    codex_home.symlink_to(real)
+    assert _trust().returncode == 0
+    assert codex_home.is_symlink()
+    assert str(ROOT.resolve()) in tomllib.loads(real.read_text())["projects"]
+
+
+def test_the_hooks_count_as_on_only_when_trusted_and_approved(
+    tmp_path: Path,
+) -> None:
+    top, cfg = Path("/r/wt"), tmp_path / "config.toml"
+    assert not board.codex_hooks_on(top, cfg)
+    project = '[projects."/r/wt"]\ntrust_level = "trusted"\n'
+    cfg.write_text(project)
+    assert not board.codex_hooks_on(top, cfg)
+    cfg.write_text(
+        project
+        + '[hooks.state."/r/wt/.codex/hooks.json:pre_tool_use:0:0"]\n'
+        + 'trusted_hash = "sha256:1"\n'
+    )
+    assert not board.codex_hooks_on(top, cfg)
+    cfg.write_text(
+        project
+        + '[hooks.state."/r/wt/.codex/hooks.json:session_start:0:0"]\n'
+        + 'trusted_hash = "sha256:1"\n'
+    )
+    assert board.codex_hooks_on(top, cfg)
+    assert not board.codex_hooks_on(Path("/r/other"), cfg)
+
+
+@pytest.mark.parametrize(
+    ("args", "rest", "prompt"),
+    [
+        ([], [], None),
+        (["fix it"], [], "fix it"),
+        (["-m", "gpt", "fix it"], ["-m", "gpt"], "fix it"),
+        (["-c", "a=1", "--search"], ["-c", "a=1", "--search"], None),
+        (["-i", "a.png", "b.png"], ["-i", "a.png", "b.png"], None),
+        (["--no-alt-screen", "--", "-x"], ["--no-alt-screen"], "-x"),
+    ],
+)
+def test_the_digest_leads_the_first_prompt_of_a_new_session(
+    args: list[str], rest: list[str], prompt: str | None
+) -> None:
+    b = Path("/r/.git/board")
+    argv = board.codex_argv(args, b, "DIGEST")
+    assert argv[: len(rest) + 1] == ["codex", *rest]
+    assert argv[len(rest) + 1 : -1] == ["--add-dir", str(b)]
+    fed = argv[-1]
+    assert fed.startswith(board.CODEX_FED) and "\n\nDIGEST" in fed
+    assert fed.endswith(f"\n\n{prompt}" if prompt else "DIGEST")
+
+
+@pytest.mark.parametrize(
+    "args", [["resume", "--last"], ["-m", "gpt", "fork", "abc"], ["exec", "hi"]]
+)
+def test_a_subcommand_and_hooks_that_run_get_no_fed_digest(args: list[str]) -> None:
+    b = Path("/r/.git/board")
+    assert board.codex_argv(args, b, "DIGEST") == ["codex", *args, "--add-dir", str(b)]
+    assert board.codex_argv(["hi"], b, None) == ["codex", "hi", "--add-dir", str(b)]
+
+
+def test_the_launcher_feeds_the_digest_where_the_hooks_are_off(
+    room: Path, codex_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[list[str]] = []
+    monkeypatch.setattr(board.os, "execvp", lambda _f, argv: seen.append(argv))
+    board.launch_codex(["hello"])
+    (argv,) = seen
+    assert argv[1:3] == ["--add-dir", str(room.parent.resolve())]
+    assert room.parent.is_dir()
+    assert board.HEADER in argv[-1] and argv[-1].endswith("\n\nhello")
 
 
 @pytest.mark.parametrize(

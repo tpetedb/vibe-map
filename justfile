@@ -83,11 +83,16 @@ board-slot verb job who:
     python3 tools/board.py slot {{quote(verb)}} {{quote(job)}} --who {{quote(who)}}
 
 # example: just codex   or   just codex resume --last
-# start Codex with the board room and the shared memory writable, from any worktree (work/BOARD.md)
+# start Codex with --add-dir <absolute git common dir>/board, so the board room and the shared memory are writable from any worktree, and the digest in the first prompt where the project hooks are off (work/BOARD.md)
 [positional-arguments]
 codex *args:
-    mkdir -p "$(git rev-parse --path-format=absolute --git-common-dir)/board"
-    codex "$@" --add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"
+    python3 tools/board.py codex "$@"
+
+# example: just codex-trust   or   just codex-trust .claude/worktrees/<name>
+# enrol a checkout of this repository as a trusted project in ~/.codex/config.toml, once per worktree; hook trust stays with /hooks (work/BOARD.md)
+[no-cd]
+codex-trust path=".":
+    uv run --project {{quote(justfile_directory())}} python {{quote(justfile_directory() / "tools" / "board.py")}} codex-trust {{quote(path)}}
 
 # the shared memory against its caps and conventions: names, observations, secrets, relations
 memory-lint:

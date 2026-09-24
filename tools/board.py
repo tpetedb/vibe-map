@@ -13,6 +13,8 @@ is the protocol, the skill `shared-memory` the how-to and ADR 0018 the history.
     uv run python tools/board.py memory index
     python3 tools/board.py memory-lint
     python3 tools/board.py mirror [--issue 95] [--dry-run]    a manager, never a hook
+    python3 tools/board.py codex [codex args...]    what just codex runs
+    uv run python tools/board.py codex-trust [path]    what just codex-trust runs
 
 Standard library only. read, say, slot, memory search and memory-lint import
 from Python 3.9, because a hook runs a bare python3 and macOS ships 3.9 in
@@ -728,10 +730,206 @@ def search(term: str, full: bool = False) -> list[str]:
     return out
 
 
+# ---------------------------------------------------------------- codex
+
+# Codex's top-level options that take a value, and the one that takes several
+# (codex --help, codex-cli 0.156.1); the first other word is the prompt or a
+# subcommand.
+CODEX_VALUE = {
+    "-c",
+    "--config",
+    "--enable",
+    "--disable",
+    "--remote",
+    "--remote-auth-token-env",
+    "-m",
+    "--model",
+    "--local-provider",
+    "-p",
+    "--profile",
+    "-s",
+    "--sandbox",
+    "-C",
+    "--cd",
+    "--add-dir",
+    "-a",
+    "--ask-for-approval",
+}
+CODEX_MANY = {"-i", "--image"}
+CODEX_SUBCOMMANDS = {
+    *"agents exec e review login logout mcp plugin app-server remote-control".split(),
+    *"app completion update doctor sandbox debug apply a resume queue archive".split(),
+    *"delete migrate-rollouts unarchive fork cloud exec-server features help".split(),
+}
+CODEX_FED = (
+    "Session-start board digest, fed by just codex because the project hooks of "
+    "this checkout are off (not enrolled with just codex-trust, or not approved "
+    "in /hooks yet). Read it, then answer what follows."
+)
+
+
+def _git_dir(path: Path, *args: str) -> Path:
+    out = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "--path-format=absolute", *args],
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode:
+        raise ValueError(f"{path} is not a git checkout")
+    return Path(out.stdout.strip()).resolve()
+
+
+def codex_config() -> Path:
+    """The user config Codex reads its project trust from; CODEX_HOME moves it."""
+    home = os.environ.get("CODEX_HOME") or str(Path.home() / ".codex")
+    return Path(home) / "config.toml"
+
+
+def codex_trust(path: Path) -> tuple[bool, str]:
+    """Enrol a checkout of this repository as a trusted Codex project: one
+    [projects."<abs>"] table appended when absent, nothing else in the file
+    touched. Hook trust stays with /hooks; no hash is ever written."""
+    if sys.version_info < (3, 11):  # noqa: UP036  tomllib is 3.11
+        raise ValueError("codex-trust reads TOML, which needs Python 3.11: uv run")
+    import tomllib  # noqa: PLC0415
+
+    top = _git_dir(path.expanduser().resolve(), "--show-toplevel")
+    theirs, ours = _git_dir(top, "--git-common-dir"), _git_dir(ROOT, "--git-common-dir")
+    if theirs != ours:
+        raise ValueError(
+            f"{top} is not a checkout of this repository (its git common dir is "
+            f"{theirs}, this one's is {ours}); nothing written"
+        )
+    # Written through a symlink to its target, so a synced config stays linked.
+    cfg = codex_config().resolve()
+    text = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
+    try:
+        projects = tomllib.loads(text).get("projects", {})
+    except tomllib.TOMLDecodeError as e:
+        raise ValueError(f"{cfg} is not valid TOML ({e}); nothing written") from e
+    if isinstance(projects, dict) and str(top) in projects:
+        level = (projects[str(top)] or {}).get("trust_level")
+        if level == "trusted":
+            return True, f"codex-trust: {top} is already trusted in {cfg}"
+        return False, (
+            f"codex-trust: {top} is in {cfg} with trust_level = {level!r}; left as "
+            "it is, change it there or in Codex's own trust prompt"
+        )
+    table = f'[projects.{json.dumps(str(top))}]\ntrust_level = "trusted"\n'
+    new = text + ("\n" if text and not text.endswith("\n") else "")
+    new += ("\n" if new.strip() else "") + table
+    try:
+        ok = tomllib.loads(new)["projects"][str(top)]["trust_level"] == "trusted"
+    except (tomllib.TOMLDecodeError, KeyError, TypeError):
+        ok = False
+    if not ok:
+        raise ValueError(f"{cfg} would not read back with the table; nothing written")
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    mode = cfg.stat().st_mode & 0o777 if cfg.exists() else 0o600
+    tmp = cfg.with_name(f"{cfg.name}.{os.getpid()}.tmp")
+    tmp.write_text(new, encoding="utf-8")
+    tmp.chmod(mode)
+    os.replace(tmp, cfg)
+    return True, (
+        f"codex-trust: {top} enrolled as trusted in {cfg}; its project hooks load "
+        "once approved in /hooks there"
+    )
+
+
+def codex_hooks_on(top: Path, cfg: Path) -> bool:
+    """Whether Codex runs this checkout's SessionStart hook: the project is
+    trusted and /hooks recorded a trust for its session_start entry. Unknown
+    counts as off, so the digest is fed rather than lost."""
+    try:
+        import tomllib  # noqa: PLC0415  3.11; under 3.9 the answer is off
+
+        data = tomllib.loads(cfg.read_text(encoding="utf-8"))
+    except (ImportError, OSError, ValueError):
+        return False
+    projects = data.get("projects")
+    project = projects.get(str(top)) if isinstance(projects, dict) else None
+    if not isinstance(project, dict) or project.get("trust_level") != "trusted":
+        return False
+    state = data.get("hooks", {}).get("state", {})
+    prefix = f"{top}/.codex/hooks.json:session_start:"
+    return isinstance(state, dict) and any(
+        k.startswith(prefix) and isinstance(v, dict) and v.get("trusted_hash")
+        for k, v in state.items()
+    )
+
+
+def codex_argv(args: list[str], board: Path, digest: str | None) -> list[str]:
+    """The codex command line: the board added as a writable root, and the
+    digest put in front of the prompt of a new interactive session when given.
+    A subcommand (resume, fork, exec, ...) passes through: a resumed session
+    still holds the digest its first prompt carried."""
+    rest, prompt, k = [], None, 0
+    while k < len(args):
+        arg = args[k]
+        if arg == "--":
+            if k + 1 < len(args):
+                prompt = args[k + 1]
+                rest += args[k + 2 :]
+            break
+        if arg in CODEX_VALUE:
+            rest += args[k : k + 2]
+            k += 2
+            continue
+        if arg in CODEX_MANY:
+            rest.append(arg)
+            k += 1
+            while k < len(args) and not args[k].startswith("-"):
+                rest.append(args[k])
+                k += 1
+            continue
+        if arg.startswith("-"):
+            rest.append(arg)
+            k += 1
+            continue
+        if arg in CODEX_SUBCOMMANDS:
+            digest = None
+            rest += args[k:]
+        else:
+            prompt = arg
+            rest += args[k + 1 :]
+        break
+    add = ["--add-dir", str(board)]
+    if digest is None:
+        return ["codex", *args, *add]
+    fed = f"{CODEX_FED}\n\n{digest}" + (f"\n\n{prompt}" if prompt else "")
+    return ["codex", *rest, *add, fed]
+
+
+def launch_codex(args: list[str]) -> int:
+    """just codex: the board made and added, the digest fed when hooks are off."""
+    folder = board_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    top = _git_dir(ROOT, "--show-toplevel")
+    digest = None
+    if not codex_hooks_on(top, codex_config()):
+        try:
+            digest = read()
+        except Exception as e:  # noqa: BLE001  a launch must not fail on the board
+            digest = f"{HEADER}\nboard unreadable: {type(e).__name__}: {e}"
+    argv = codex_argv(args, folder.resolve(), digest)
+    if digest is not None and argv[-1].startswith(CODEX_FED):
+        print(
+            "board: the project hooks are off here, the digest goes in the first "
+            "prompt (just codex-trust, then /hooks, turns them on)",
+            file=sys.stderr,
+        )
+    os.execvp(argv[0], argv)
+    return 0  # pragma: no cover  execvp does not return
+
+
 # ---------------------------------------------------------------- commands
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["codex"]:
+        # Codex's own flags are not ours to parse: everything after goes through.
+        return launch_codex(argv[1:])
     p = argparse.ArgumentParser(prog="board", description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("read")
@@ -763,7 +961,18 @@ def main(argv: list[str] | None = None) -> int:
     ms.add_argument("term")
     ms.add_argument("--full", action="store_true", help="every observation")
     mem.add_parser("index", help="rebuild index.json from the memory and the orders")
+    ct = sub.add_parser("codex-trust", help="enrol a checkout in Codex's user config")
+    ct.add_argument("path", nargs="?", default=".", help="a checkout of this repo")
     a = p.parse_args(argv)
+
+    if a.cmd == "codex-trust":
+        try:
+            ok, line = codex_trust(Path(a.path))
+        except (ValueError, OSError) as err:
+            print(f"codex-trust: {err}", file=sys.stderr)
+            return 2
+        print(line)
+        return 0 if ok else 1
 
     if a.cmd == "read":
         try:
