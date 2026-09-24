@@ -1,0 +1,40 @@
+v = 1
+id = "harness-test-determinism-2"
+title = "Browser tests, second pass: the #148 leftovers, the toast and page guards, and retained traces in CI"
+team = "harness"
+branch = "claude/test-determinism-2"
+goal = "ways-of-working"
+issue = 148
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "tests/conftest.py",
+  "tests/test_harness_determinism.py",
+  "tests/test_game_bottles.py",
+  "tests/test_game_ui.py",
+  "tests/test_game_phone.py",
+  "tests/test_game_news.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The guard tests pass, each new one seen failing first, and STILL_READ_THE_SCREEN and HAND_BUILT_PAGES are empty."
+check = "uv run pytest -q tests/test_harness_determinism.py tests/test_repo.py && uv run python -c \"import sys; sys.path.insert(0,'tests'); import test_harness_determinism as t; raise SystemExit(bool(t.STILL_READ_THE_SCREEN or t.HAND_BUILT_PAGES))\""
+
+[[criteria]]
+id = "c2"
+text = "The four converted browser files pass on one slot, and running them leaves no tracked file changed."
+check = "/Users/maxgroupit/.claude/jobs/5d0da65f/tmp/slot-wait.sh 4 && uv run pytest -q tests/test_game_bottles.py tests/test_game_ui.py tests/test_game_phone.py tests/test_game_news.py -m 'not integration' && git diff --quiet -- docs/ vibemap/data/ src/ game/"
+
+[[criteria]]
+id = "c3"
+text = "Lint, style and the non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every #148 item for these files is fixed red-then-green or rejected with evidence on the issue."
+judge = "reviewer"
