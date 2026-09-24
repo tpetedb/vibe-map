@@ -1,0 +1,81 @@
+v = 1
+order = "yolo-after-permissions"
+by = "reviewer-yolo-after-permissions-r1"
+reviewed = "6a21b1f46fb4a1311c85ff16ffb18e30643fa849"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the command myself after slot-wait: tests/test_tui.py, test_onboarding.py and test_safe_copy.py all pass.
+The command proves the sentence. With main's vibemap/tui.py dropped into a scratch copy of HEAD, the new
+test_yolo_mode_waits_for_the_permissions_lessons fails (on the old signature) and, more to the point,
+test_onboarding_screens_walk_through fails on the behaviour: the fresh learner's #act-yolo is not disabled.
+Three mutations of HEAD's tui.py, each caught by the new test: gate forced open (locked = False) fails with
+"a beginner was offered claude --dangerously-skip-permissions"; all() turned into any() fails with "one of the
+two permissions lessons is not enough"; PERMISSION_STOPS cut to desert 4 alone fails on the hint naming both
+lessons. Reverting src/body.html and the built game to main's text fails test_the_first_lesson_says_pause_read_and_ask
+for both. Ran the real app too: a scratch VIBE_HOME with config/camp.toml and no state, driven through VibeApp with a
+Textual pilot on the Launch screen. Fresh: #act-yolo disabled, hint "skips every permission prompt; opens once you have
+done Hooks as gates (Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5)", clicking it leaves
+the app on Launch with no return value. After `vibe done 4 --world desert --force` (the CLI's own state helper): still
+disabled. After `vibe done 5 --world prod --force`: enabled, hint back to "claude --dangerously-skip-permissions", the
+click exits the app with "yolo", which run() turns into execvp claude --dangerously-skip-permissions. Screenshot
+of the locked screen looked at: greyed like the engine-only "Run the tests" row, hint wraps cleanly at 120 columns.
+The toolbelt's "YOLO: install everything" (#yolo on Checks) is untouched, as the order says.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the whole chain myself in the worktree: ruff check, ruff format --check, checks.py style and sinks, the
+non-browser battery, the six generator --check tools and work.py validate; exit 0, validate reports 0 collisions
+this checkout answers for. game/vibe-map.html and vibemap/data/fork_source/src/body.html change by the same one
+line as src/body.html, i.e. regenerated, not hand-edited. The only red on PR #213 is CI's work-order step, which
+locally (work.py ci) names this missing review and the panels and docs sign-offs the order's cross requires;
+those are the managers' to give, not a defect of the build.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Gate: knows_permissions(state) in vibemap/tui.py is the one helper, reading State.is_done over PERMISSION_STOPS;
+launchers(state) is its only caller and Launch passes self.state, the state.json that `vibe status` reads (confirmed:
+status shows the two stops on Evening 3 and 4 after the done calls). No check is spelled at a call site.
+Warning: plain, one line, says it "skips every permission prompt" and what opens it. Checked it against
+code.claude.com/docs/en/permissions: bypassPermissions "Skips permission prompts, except for the actions no mode
+auto-approves", including protected paths like .git and .claude; the exceptions are an org connector set to ask and
+cross-session safeguards, nothing a beginner meets, so the sentence is true for this reader.
+Pointer: opened vibemap/data/campaign.json. desert stop 4 "Hooks as gates" teaches PreToolUse gates combined with the
+permissions system, ends with "Read the permissions page and add Bash(pytest*) to the allow list", and cites the
+Permissions page; prod stop 5 "Claude Code, the power settings" lists permissions in its description, says "Set your
+permissions once so the routine commands never ask, and keep the dangerous ones asking" and "read the permission
+prompt every time". They are the only two of the 32 stops whose text mentions permission. The TUI hint builds the
+titles from campaign.evenings(), and body.html names the same two titles with "Evening 3, stop 4" and "Evening 4,
+stop 5", matching each evening's short name. No em dashes: none in the added lines of the diff or in the commit
+messages.
+"""
+
+[[findings]]
+severity = "low"
+file = "tests/test_safe_copy.py"
+text = """
+docs/SYLLABUS.md and docs/site/syllabus.html still say "understanding permissions in depth is workstream 4", the
+false pointer this order fixed in the game, and test_the_syllabus_says_the_same_in_workstream_1 now pins only the
+ADVICE half, so nothing will notice if the syllabus is never fixed. Disclosed in the PR body (the file belongs to the
+open #190 and #203 orders). Follow-up: whichever of those lands second fixes the syllabus sentence and puts the
+syllabus assertion back to the full SAFE text.
+"""
+
+[[findings]]
+severity = "low"
+file = "src/body.html"
+text = """
+The first lesson's pointer spells the two lesson titles by hand, while the TUI hint derives them from
+campaign.json. test_safe_copy pins the literal text but nothing checks it against the campaign, so renaming either
+stop leaves the first lesson pointing at a title that no longer exists. A follow-up test could build the expected
+POINTER from campaign.evenings() the way yolo_locked_hint does.
+"""
