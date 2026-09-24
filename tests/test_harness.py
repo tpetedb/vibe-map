@@ -539,6 +539,20 @@ def test_work_py_takes_lock_listed_outputs_as_regenerable(tree: Path) -> None:
         '[[criteria]]\nid = "c1"\ntext = "t"\ncheck = "true"\n'
     )
     order = work.find("one", tree)
+    # As a hook or a recipe runs it: a fresh interpreter that never saw harness.py.
+    cold = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.path.insert(0, 'tools'); import work;"
+            " print(work.find('one', work.Path('.')).may_touch('CLAUDE.md'))",
+        ],
+        cwd=tree,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert cold.stdout.strip() == "True", cold.stderr
     assert order.may_touch(".claude/settings.json")
     assert order.may_touch(".codex/agents/builder.toml")
     assert not order.may_touch("docs/SKILLS.md")

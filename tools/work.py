@@ -277,10 +277,13 @@ def regenerable(root: Path) -> frozenset[str]:
         listed = set(_toml(lock).get("outputs", {}))
         if not (root / HARNESS).is_file():
             raise Bad(f"{lock}: lists outputs, and there is no {HARNESS}")
-        spec = importlib.util.spec_from_file_location("harness", root / HARNESS)
+        name = f"work_harness_{hashlib.sha256(str(root).encode()).hexdigest()[:8]}"
+        spec = importlib.util.spec_from_file_location(name, root / HARNESS)
         if not spec or not spec.loader:
             raise Bad(f"{root / HARNESS}: cannot be loaded")
         harness = importlib.util.module_from_spec(spec)
+        # A dataclass looks its module up by name while the class is built.
+        sys.modules[name] = harness
         try:
             spec.loader.exec_module(harness)
             rendered = set(harness.rendered_paths(root))
