@@ -1,0 +1,37 @@
+# The floor no profile or overlay lowers (DECISION #193 section 3). harness.py
+# sync renders the Claude part into .claude/settings.json and the Codex part
+# into .codex/config.toml. Hooks remind; these rules and the sandboxes decide.
+# The deny rules for .agents/conf, .agents/hooks, .agents/utils, the lock and
+# the rendered outputs come with the hook dispatcher, which proves them.
+version = 1
+
+[claude]
+# Secrets are never read, a push is never forced. Deny beats every allow and
+# every hook (F027).
+deny = [
+  "Read(./.env)",
+  "Read(./.env.*)",
+  "Read(~/.ssh/**)",
+  "Read(~/.aws/**)",
+  "Read(~/.codex/auth*)",
+  "Bash(git push --force:*)",
+  "Bash(git push -f:*)",
+]
+# The knob file asks even in auto mode (F122).
+ask = [
+  "Edit(./config.toml)",
+  "Write(./config.toml)",
+]
+
+[claude.sandbox]
+# Off until the dispatcher order turns it on with the board root writable from
+# a linked worktree; failIfUnavailable and allowUnsandboxedCommands come from
+# the profile, so the floor is already in place the day it is enabled.
+enabled = false
+
+[codex]
+# The one writable root beyond the workspace: the git common dir's board,
+# relative to .codex/ in the main checkout (A2; F054, F080). A linked worktree
+# gets the absolute path through --add-dir at launch instead. Nothing under
+# .agents/ or elsewhere in .git is writable (F079).
+writable_roots = ["../.git/board"]

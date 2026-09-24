@@ -120,3 +120,26 @@ work-thread id:
 # say something on the order's issue in a role: just work-say hunt-s manager:panels "..."
 work-say id role text:
     python3 tools/work.py say "{{id}}" --role "{{role}}" "{{text}}"
+
+# ---- the harness: .agents/ and config.toml are the source (.agents/README.md)
+
+# render .claude, .codex and CLAUDE.md from .agents, link the skills, write the lock
+harness-sync:
+    uv run python .agents/utils/harness.py sync
+
+# exit 1 when an output was edited by hand or an input was not synced
+harness-check:
+    python3 .agents/utils/harness.py check
+
+# offline health: schemas, lock, skill links, instruction chains, models, Codex trust
+harness-doctor:
+    python3 .agents/utils/harness.py doctor
+
+# every effective value, the file it comes from and when a change applies
+harness-explain:
+    python3 .agents/utils/harness.py explain
+
+# example: just harness-pick builder codex
+# the model and effort a role is spawned with on one provider
+harness-pick role provider:
+    python3 .agents/utils/harness.py pick "{{role}}" --provider "{{provider}}"

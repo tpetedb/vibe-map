@@ -1,12 +1,9 @@
-# Project-scoped Codex configuration, loaded only when this project is trusted.
-# Tracked here: this file and hooks.json (the SessionStart reader and the same
-# work-order hooks as .claude/settings.json). .codex/agents/ holds Team Codex's
-# role definitions and is theirs; this setup neither tracks nor touches it.
+# Rendered by .agents/utils/harness.py sync from config.toml,
+# .agents/conf/profiles/balanced.toml and .agents/conf/policy.toml; edit the
+# source, then sync.
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
 
-# The board room and the shared memory live in the git common dir, which the
-# workspace sandbox does not grant. This is the one extra root, relative to this
-# folder, so it is the main checkout's .git/board; a linked worktree's session
-# gets the absolute common dir's board through --add-dir instead (work/BOARD.md).
-# Nothing under .agents/ or elsewhere in .git is writable.
 [sandbox_workspace_write]
 writable_roots = ["../.git/board"]
+network_access = false

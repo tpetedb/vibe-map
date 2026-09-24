@@ -1,0 +1,44 @@
+# The hooks both clients run, today's set (DECISION #193 section 3). harness.py
+# sync renders them into .claude/settings.json and .codex/hooks.json; a
+# [hooks.codex] or [hooks.claude] table overrides a key for that client only.
+# Codex trusts a hook by the hash of its event, matcher and command (F070):
+# a changed command string needs /hooks again, a changed script does not.
+version = 1
+
+# The board room, the orders and the shared memory digest (tools/board.py read).
+[[hooks]]
+event = "SessionStart"
+matcher = "startup|resume|clear|compact|fork"
+command = 'f="${CLAUDE_PROJECT_DIR:-.}/tools/board.py"; [ -f "$f" ] || exit 0; python3 "$f" read'
+timeout = 60
+[hooks.codex]
+matcher = "startup|resume|clear|compact"
+command = 'root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0; f="$root/tools/board.py"; [ -f "$f" ] || exit 0; python3 "$f" read'
+statusMessage = "Reading the board room and the shared memory"
+additionalContextLimit = 5000
+
+# The work-order guard: an edit outside the orders on this branch is refused.
+[[hooks]]
+event = "PreToolUse"
+matcher = "Edit|Write|MultiEdit|NotebookEdit"
+command = 'f="${CLAUDE_PROJECT_DIR:-.}/tools/work.py"; [ -f "$f" ] || exit 0; python3 "$f" hook pre-tool'
+timeout = 20
+
+# A copy of workspace/data after every edit, since scores are a system of record.
+[[hooks]]
+event = "PostToolUse"
+matcher = "Edit|Write|MultiEdit"
+command = 'cd "${CLAUDE_PROJECT_DIR:-.}" && mkdir -p backups && cp -R workspace/data "backups/data-$(date +%Y%m%d-%H%M%S)-$$" 2>/dev/null || true'
+timeout = 30
+
+# A subagent that edited under an order is sent back once if the order fails.
+[[hooks]]
+event = "SubagentStop"
+command = 'f="${CLAUDE_PROJECT_DIR:-.}/tools/work.py"; [ -f "$f" ] || exit 0; python3 "$f" hook stop'
+timeout = 1800
+
+# The same for a session whose report starts with order: <id>.
+[[hooks]]
+event = "Stop"
+command = 'f="${CLAUDE_PROJECT_DIR:-.}/tools/work.py"; [ -f "$f" ] || exit 0; python3 "$f" hook stop'
+timeout = 1800

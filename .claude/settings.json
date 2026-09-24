@@ -1,4 +1,25 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.codex/auth*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ],
+    "ask": [
+      "Edit(./config.toml)",
+      "Write(./config.toml)"
+    ],
+    "defaultMode": "default"
+  },
+  "sandbox": {
+    "enabled": false,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -12,18 +33,6 @@
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && mkdir -p backups && cp -R workspace/data \"backups/data-$(date +%Y%m%d-%H%M%S)-$$\" 2>/dev/null || true",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit|NotebookEdit",
@@ -32,6 +41,18 @@
             "type": "command",
             "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/tools/work.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" hook pre-tool",
             "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && mkdir -p backups && cp -R workspace/data \"backups/data-$(date +%Y%m%d-%H%M%S)-$$\" 2>/dev/null || true",
+            "timeout": 30
           }
         ]
       }
