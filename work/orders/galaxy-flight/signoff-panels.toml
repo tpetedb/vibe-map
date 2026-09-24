@@ -2,23 +2,26 @@ v = 1
 order = "galaxy-flight"
 team = "panels"
 by = "codex-panels-cross-reviewer"
-reviewed = "565f237db69daaeb5d0906e6b63fdea053c8ab50"
+reviewed = "5669134513b8bbdcb5e3778aa278f1d2722bec95"
 verdict = "accept"
 note = """
-The panels-owned diff adds a named native flight dialog and a focusable Galaxy
-heading in src/body.html, plus four compact dialog style rules in src/style.css.
-The dialog keeps Skip in the modal focus path; Escape, Enter, touch and timed
-arrival share one exit. Arrival focuses the labelled walking canvas in scene
-mode or the destination heading in list mode. Disposal closes the dialog and
-restores the canvas attributes when returning to Islands. The 44 px Skip target,
-existing focus-visible rule and responsive width fit the compact layout.
+Renewed at 5669134. src/body.html is unchanged from the prior signoff: the
+named native dialog, focusable destination heading and Skip button remain.
+src/style.css now outlines the walking canvas on keyboard focus only while
+Galaxy is active. The compact dialog width and 44 px Skip target remain. The
+new list-only short-screen path lands directly and focuses the destination
+heading instead of displaying a flight over a hidden scene.
 
-At this exact commit, the focused flight browser suite passed 9/9 cases,
-including keyboard repeats, reduced motion, touch and experience switching.
-Three additional Galaxy/Island browser cases passed: phone targets and switch,
-short-screen complete list, and the zoomed-out Island round trip. The build
-check and fork-source sync check passed. I inspected the captured flight image:
-the ship is distinct against the chart and the bordered dialog is legible.
+The flight key handlers now keep the launching Land keyup from activating Skip,
+let the shared input listener clear held keys, and still allow Enter or Escape
+to exit the dialog. After landing, Enter opens a nearby lesson and Escape
+returns to Chart. Disposal closes the dialog and restores the canvas tabindex
+and label before Islands takes control. At this commit the focused flight
+Playwright suite passed 14/14, including touch, short-screen list, keyboard
+launch/arrival, and the Island switch. The build and fork-source checks passed;
+src/body.html and its mirror did not change. I inspected the new return-flight
+screenshot: the ship stays upright and the dialog remains legible.
+
 The complete c2 suite was not rerun for this cross-owner signoff. No panels
-blocker found. This is Codex's panels cross-owner review, not Claude signoff.
+blocker found. This is Codex's thematic panels review, not Team Claude signoff.
 """

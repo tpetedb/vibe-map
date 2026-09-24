@@ -1,36 +1,37 @@
-# Independent review of the first Galaxy flight slice.
+# Independent re-review after the keyboard, surface and return-flight fixes.
 v = 1
 order = "galaxy-flight"
 by = "codex-reviewer-galaxy-flight"
-reviewed = "565f237db69daaeb5d0906e6b63fdea053c8ab50"
+reviewed = "5669134513b8bbdcb5e3778aa278f1d2722bec95"
 verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = """
-Ran `uv run pytest -q tests/test_game_galaxy_flight.py` at 565f237: all 9 cases
-passed. I read the cases and implementation rather than relying on the exit code.
-They drive the real Land controls and prove elapsed-time arrival without input,
-Enter and Escape skipping, the visible Skip button, touch tap, the stored motion
-setting, a system reduced-motion change during flight, exact landing focus, active
-flight disposal on experience change, restoration of the canvas attributes, and
-unchanged topic/done progress across the round trip and reload. The implementation
-has one arrival path for timer, Skip, Escape and motion changes, and clears and
-disposes the transient ship before rebuilding a destination or experience.
+Ran `uv run pytest -q tests/test_game_galaxy_flight.py` at 5669134: all 14
+cases passed. I read the new cases and the final event path. A Land button Enter
+opens the modal but does not arm Skip, while the keyup still reaches the shared
+listener; an Enter begun on Skip arms exactly that flight and arrives on release.
+The dedicated cases also prove timer arrival, Escape, touch, stored and system
+reduced motion, experience-switch disposal, unchanged progress, list-only cut,
+landed-canvas Escape and Enter, and upright return travel. `galaxyShow()` now
+disposes the complete flight presentation, restoring temporary canvas attributes
+whenever navigation leaves the landing surface.
 """
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = """
-Ran `uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.py` at
-565f237: all 43 collected tests passed. That battery exercises Journey, Chart,
-Globe, Dome, walking, lesson/check/import flows, phone targets, focus, experience
-switching and contract behavior. Its four Island golden comparisons passed; the
-two deliberate source perturbations still exceeded their golden thresholds, so
-the golden check remains capable of detecting a visual change rather than merely
-passing unchanged output.
+Ran `uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.py`
+at 5669134: all 43 collected cases passed. The battery exercises the complete
+Journey, Chart, Globe, Dome, walking, lesson and experience-switch paths. All
+four Island golden comparisons passed (campus, winter and prod exact; desert
+mean 0.001/worst 0.063), and both deliberate visual mutations still failed
+their golden thresholds. The only shared input change is guarded by the active
+Galaxy experience, an active walker and body/canvas focus, so Island behavior
+remains outside the new branch as the passing experience suite confirms.
 """
 
 [[criteria]]
@@ -38,25 +39,26 @@ id = "c3"
 verdict = "pass"
 evidence = """
 Ran `uv run python tools/build.py --check` and `uv run python
-tools/sync_fork_source.py --check` at 565f237. The built game matched `src/` and
-the fork-source check exited 0. I also byte-compared the four changed source files
-with their fork-source copies (`body.html`, `20-experience.js`, `60-flight.js`,
-and `style.css`); all four pairs matched.
+tools/sync_fork_source.py --check` at 5669134. The built game matched `src/`
+and the fork-source check exited 0. I separately byte-compared the five owned
+source/mirror pairs (`body.html`, `20-experience.js`, `50-walk.js`,
+`60-flight.js`, and `style.css`); every pair was identical.
 """
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
 evidence = """
-Inspected the flight screenshot produced by my Chromium run at 1440 by 900. The
-white and orange procedural craft has a pointed hull, blue canopy, wings and a
-lit engine and reads immediately as a small ship against the chart. Its fixed
-camera, smooth three-second arc, transparent backdrop and plain status dialog are
-calm and keep the destination visible. The native modal makes Skip the sole tab
-stop, gives it a 44 px minimum target, supports normal button Space/click behavior,
-and routes Enter, Escape and touch to the same arrival. Arrival focuses the canvas
-in the scene or the named Galaxy heading in list mode, then leaves every real
-lesson reachable through the existing list. Reduced motion and renderer fallback
-cut directly to that destination. The diff adds no age-range gate or echo-jump
-behavior; the plan explicitly assigns both to later orders.
+Inspected both fresh Chromium captures, including the new leftward return flight.
+The white/orange craft remains recognisable, its blue canopy stays above the
+hull, and yaw plus pitch point it along the route without the former upside-down
+roll. The fixed camera, three-second eased arc, transparent backdrop and compact
+status dialog remain calm. The modal keeps a visible 44 px Skip control and the
+final event flow supports Enter, Escape, native Space/click and touch without a
+launch keyup becoming a skip. Arrival gives the scene canvas a visible focus
+outline and useful label; Escape clears that presentation and returns visibly to
+Chart, while Enter opens the nearby lesson once. A 720 by 450 list rendering
+cuts directly to the named destination heading instead of running a hidden
+flight. Reduced motion and renderer fallback cut through the same arrival path.
+Age range and echo jumps remain absent and explicitly assigned to later orders.
 """
