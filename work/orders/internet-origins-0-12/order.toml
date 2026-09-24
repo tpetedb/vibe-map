@@ -1,0 +1,54 @@
+v = 1
+id = "internet-origins-0-12"
+title = "Galaxy origins leave the-internet where a first-party page places them: twenty moves, two new places (release blocker for 0.12.0)"
+team = "content"
+branch = "claude/internet-origins"
+goal = "galaxy"
+issue = 168
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+owns = [
+  "vibemap/data/topics/core/agenthooks.toml",
+  "vibemap/data/topics/core/cost.toml",
+  "vibemap/data/topics/core/future.toml",
+  "vibemap/data/topics/core/headless.toml",
+  "vibemap/data/topics/core/hooks.toml",
+  "vibemap/data/topics/core/skills.toml",
+  "vibemap/data/topics/core/apis.toml",
+  "vibemap/data/topics/core/data.toml",
+  "vibemap/data/topics/core/languages.toml",
+  "vibemap/data/topics/core/ci.toml",
+  "vibemap/data/topics/core/github.toml",
+  "vibemap/data/topics/core/cloud.toml",
+  "vibemap/data/topics/core/docker.toml",
+  "vibemap/data/topics/core/zsh.toml",
+  "vibemap/data/topics/core/kubernetes.toml",
+  "vibemap/data/topics/core/pylibs.toml",
+  "vibemap/data/topics/core/dotfiles.toml",
+  "vibemap/data/topics/data-engineering/airflow.toml",
+  "vibemap/data/topics/data-engineering/datamap.toml",
+  "vibemap/data/topics/data-engineering/dagster.toml",
+  "vibemap/data/topics/data-engineering/medallion.toml",
+  "vibemap/data/places/san-francisco.toml",
+  "vibemap/data/places/byu-provo.toml",
+  "docs/TOPICS.md",
+  "tests/test_internet_origins.py",
+]
+cross = ["docs", "cli"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The new test and the topic, places and syllabus tests pass: each of the twenty moved origins sits at its planned place with its dated first-party source listed under [[sources]], the two new places load, and the-internet holds no more primary origins than the plan leaves there."
+check = "uv run pytest -q tests/test_internet_origins.py tests/test_topics.py tests/test_places.py tests/test_syllabus.py"
+
+[[criteria]]
+id = "c2"
+text = "No place or origin problem anywhere, every generated file in sync, style passes."
+check = "uv run python -c \"from vibemap import places; import sys; b=places.problems(); print(chr(10).join(b)); sys.exit(1 if b else 0)\" && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/checks.py style"
+
+[[criteria]]
+id = "c3"
+text = "Each moved origin's page places the actor or event in that town at that date (a current office address is not proof); the eight refuted moves stayed; docs/TOPICS.md says in one sentence that the page placing an origin is listed under [[sources]]; no em dashes."
+judge = "reviewer"
