@@ -1,7 +1,7 @@
 v = 1
 order = "issue59-docs-played"
 by = "reviewer-issue59-docs-codex"
-reviewed = "208a90371ff58eeeaee9d0c4a738de3223d41408"
+reviewed = "31c09f291d5d1e68ddfcf4e2a068dcab63bf4f91"
 verdict = "accept"
 
 [[criteria]]
@@ -17,22 +17,22 @@ evidence = "I opened all three guides and their README links and compared contro
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "I ran the full tests/test_regen_played.py file (15 passed) and inspected tools/regen_played.py. It stages via vibe new plus script_everything, writes all 32 stops and rewards, copies the built game and media, rejects dirty or wrong-remote targets before deleting tracked files, preserves branch and both remote URLs, rolls back failed installs, leaves the remote unchanged without --push, and skips a repeat with the same input fingerprint. Tests use local temporary bare repos and cover wrong product remote, diverted push URL, ignored data, rollback, no-op and explicit push."
+evidence = "I ran the full tests/test_regen_played.py file (20 passed) and inspected the source diff. A failed commit preserves the target .git and its refs; extra hostile fetch or push URLs are rejected and all remote URLs rechecked after copying. I compared tracked filenames in the real played checkout against disposable prepare_stage output: all 59 omitted paths are under workspace/, vault/ or docs/media/. install() now retains those tracked paths, including scores.csv, and refuses a differing staged scores file before mutation. Tests cover the clean target, learner-file preservation, score conflict, rollback, no-op and explicit push using temporary bare repos."
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
-evidence = "I read docs/MAINTAINERS.md. It gives exact dry-run, regenerate, inspect and explicit push commands; names uv sync, built game, reviewed media, git and a clean played checkout; and directs review of the commit, state, config, workspace, vault, media and game before push. The push path reuses the clean local commit."
+evidence = "I read docs/MAINTAINERS.md at 31c09f2. It gives exact dry-run, regenerate, all-path name-status diff, focused content diff and explicit push commands. It names uv sync, built game, reviewed media, git and a clean played checkout; explains preservation of omitted workspace/vault/media paths, refusal of a differing staged scores.csv, and that overlapping files may change. It requires review of every added, changed or deleted path before the explicit push."
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
-evidence = "I independently ran tests/test_media.py (8 passed), read _bridge_journey and the test, and opened committed GIF frames 0, 8, 15, 20 and 26. They show campus approach, the walker on the bridge deck, the winter workstream with Mark as done, and the winter HUD after claim. The test observes onBridge frames and doneW.winter[1] in the running game and rejects the old unmarked signpost GIF. No elapsed-time wait drives the bridge or claim assertion."
+evidence = "I independently ran tests/test_media.py (8 passed) on the previously reviewed source, read _bridge_journey and its test, and opened committed GIF frames 0, 8, 15, 20 and 26. They show campus approach, the walker on the bridge deck, the winter workstream with Mark as done, and the winter HUD after claim. The test observes onBridge frames and doneW.winter[1] and rejects the old unmarked signpost GIF. Media source, test and GIF are byte-unchanged at this reviewed commit, so I did not repeat the two-minute browser run."
 
 [[criteria]]
 id = "c6"
 verdict = "pass"
-evidence = "I ran Ruff check and format on changed Python/tests, tools/checks.py style and the full tests/test_repo.py file (45 passed); all exited 0. git diff --check origin/main...HEAD is clean. I checked new README and guide relative links resolve. The named command checks style, not link reachability, so the link conclusion is based on this separate path inspection."
+evidence = "At this source head I ran Ruff check and format on changed Python/tests, tools/checks.py style, the full tests/test_repo.py file (45 passed), and git diff --check origin/main...HEAD; all exited 0. I checked new README and guide relative links resolve. The named command checks style, not link reachability, so the link conclusion is based on separate path inspection."
 
 [[criteria]]
 id = "c7"
