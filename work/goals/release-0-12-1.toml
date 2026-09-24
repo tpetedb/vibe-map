@@ -1,0 +1,11 @@
+v = 1
+id = "release-0-12-1"
+statement = "0.12.1 goes out: the two fixes car M carried (Galaxy's next lesson opens in Grow mode, #209; just start waits for the permissions lessons before offering YOLO mode, #201) are in one short dated section, and the version is 0.12.1 everywhere a tool reads it."
+not = [
+  "The tag and the GitHub release: the orchestrator's, after this lands.",
+  "Anything behind an open pull request (#190, #192, #197, #203): 0.13.0.",
+]
+budget = 1
+orders = [
+  "release-0-12-1",
+]

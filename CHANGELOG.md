@@ -12,6 +12,13 @@ A branch never edits this file: it adds a fragment under `changelog.d/`, and
 Nothing here between releases: an entry lives in its own file under
 [`changelog.d/`](changelog.d/) until a release assembles them.
 
+## [0.12.1] - 2026-09-24
+
+### Fixed
+
+- With Settings, Vault set to Grow, Galaxy's Learn button opens the next lesson on the journey, and every lesson already done, instead of a lock that asked for island play a Galaxy learner never does. Topics further along stay earned, and the islands unlock exactly as before.
+- `just start` keeps "Claude, YOLO mode" (`claude --dangerously-skip-permissions`) greyed out, with a hint that it skips every permission prompt, until both lessons that teach permissions are done: Hooks as gates (Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5). The toolbelt's "YOLO: install everything" button is unchanged. In the game, the first lesson points at those two lessons for permissions in depth.
+
 ## [0.12.0] - 2026-09-24
 
 ### Added
@@ -710,7 +717,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/tpetedb/vibe-map/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/tpetedb/vibe-map/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/tpetedb/vibe-map/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/tpetedb/vibe-map/compare/v0.9.0...v0.10.0

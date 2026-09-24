@@ -1,0 +1,44 @@
+v = 1
+id = "release-0-12-1"
+title = "Release 0.12.1: the two fixes of car M in one short section, and the version bumped"
+team = "harness"
+branch = "release/0.12.1"
+goal = "release-0-12-1"
+issue = 214
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-release-0-12-1"
+
+owns = [
+  "CHANGELOG.md",
+  "pyproject.toml",
+  "uv.lock",
+  "tests/test_changelog.py",
+  "work/goals/release-0-12-1.toml",
+]
+cross = ["docs"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The changelog, build and repository guards pass."
+check = "uv run pytest -q tests/test_changelog.py tests/test_build.py tests/test_repo.py"
+
+[[criteria]]
+id = "c2"
+text = "The version is 0.12.1 in pyproject.toml, CHANGELOG.md has its dated section and its compare link, and no fragment is left in changelog.d."
+check = "python3 -c \"import tomllib,pathlib,sys; v=tomllib.load(open('pyproject.toml','rb'))['project']['version']; t=pathlib.Path('CHANGELOG.md').read_text(); left=[f.name for f in pathlib.Path('changelog.d').glob('*.md') if f.name!='README.md']; ok=v=='0.12.1' and '## [0.12.1] - ' in t and '[0.12.1]:' in t and not left; print(v, left); sys.exit(0 if ok else 1)\""
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c5"
+text = "The 0.12.1 section is short and true: Fixed only, the two car M fixes in plain words, released sections untouched, no em dashes."
+judge = "reviewer"
