@@ -1,0 +1,1 @@
+- Galaxy destinations now have a short autopilot ship flight with Skip and Escape controls. Reduced motion travels instantly, and landing restores focus to the destination.

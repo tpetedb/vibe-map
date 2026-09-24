@@ -3,7 +3,7 @@
 <canvas id="c"></canvas>
 <div id="galaxy-ui" class="ui" hidden role="region" aria-labelledby="galaxy-title">
   <div class="galaxy-head">
-    <div><p class="kicker">Your programming journey</p><h2 id="galaxy-title">Galaxy</h2><p id="galaxy-summary" class="small muted"></p></div>
+    <div><p class="kicker">Your programming journey</p><h2 id="galaxy-title" tabindex="-1">Galaxy</h2><p id="galaxy-summary" class="small muted"></p></div>
     <div class="galaxy-scale" role="group" aria-label="Galaxy view">
       <button onclick="galaxyView('journey')" data-galaxy-view="journey">Journey</button>
       <button onclick="galaxyView('chart')" data-galaxy-view="chart">Chart</button>
@@ -17,6 +17,7 @@
   <div id="galaxy-walk" hidden><p id="galaxy-walk-status" class="small" role="status"></p><button id="galaxy-near" onclick="galaxyOpenNearby()" disabled>Open nearby lesson</button></div>
   <div id="galaxy-list" role="list"></div>
 </div>
+<dialog id="galaxy-flight" aria-labelledby="galaxy-flight-title" aria-describedby="galaxy-flight-status"><h2 id="galaxy-flight-title">In flight</h2><p id="galaxy-flight-status"></p><button id="galaxy-skip-flight" onclick="galaxySkipFlight()">Skip flight</button></dialog>
 <div id="galaxy-label" hidden aria-hidden="true"><b></b><span></span></div>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 

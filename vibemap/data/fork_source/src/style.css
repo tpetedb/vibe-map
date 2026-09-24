@@ -741,3 +741,9 @@ body[data-experience="galaxy"]:has(#sheet.on,#vault.on,#pal.on) #joy{visibility:
 #galaxy-walk button{min-height:44px}#galaxy-walk-status{min-height:2.5em}
 
 @media (max-width:1100px){body[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:14px;right:auto}body.hand-left[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:auto;right:14px}}
+
+#galaxy-flight{position:fixed;top:18px;bottom:auto;margin:0 auto;max-width:min(420px,calc(100% - 32px));border:1px solid var(--yellow);border-radius:var(--radius-m);padding:16px;background:var(--bg);color:var(--text)}
+#galaxy-flight::backdrop{background:transparent}
+#galaxy-flight h2{margin:0;font-size:1.1em}#galaxy-flight button{min-height:44px;min-width:120px}
+
+body[data-experience="galaxy"] #c:focus-visible{outline:2px solid var(--yellow-bright);outline-offset:-3px}

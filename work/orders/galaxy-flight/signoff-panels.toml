@@ -1,0 +1,27 @@
+v = 1
+order = "galaxy-flight"
+team = "panels"
+by = "codex-panels-cross-reviewer"
+reviewed = "5669134513b8bbdcb5e3778aa278f1d2722bec95"
+verdict = "accept"
+note = """
+Renewed at 5669134. src/body.html is unchanged from the prior signoff: the
+named native dialog, focusable destination heading and Skip button remain.
+src/style.css now outlines the walking canvas on keyboard focus only while
+Galaxy is active. The compact dialog width and 44 px Skip target remain. The
+new list-only short-screen path lands directly and focuses the destination
+heading instead of displaying a flight over a hidden scene.
+
+The flight key handlers now keep the launching Land keyup from activating Skip,
+let the shared input listener clear held keys, and still allow Enter or Escape
+to exit the dialog. After landing, Enter opens a nearby lesson and Escape
+returns to Chart. Disposal closes the dialog and restores the canvas tabindex
+and label before Islands takes control. At this commit the focused flight
+Playwright suite passed 14/14, including touch, short-screen list, keyboard
+launch/arrival, and the Island switch. The build and fork-source checks passed;
+src/body.html and its mirror did not change. I inspected the new return-flight
+screenshot: the ship stays upright and the dialog remains legible.
+
+The complete c2 suite was not rerun for this cross-owner signoff. No panels
+blocker found. This is Codex's thematic panels review, not Team Claude signoff.
+"""
