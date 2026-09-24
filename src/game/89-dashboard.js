@@ -258,6 +258,68 @@ window.openDashboard=function(){renderDashboard();openSheet("s-dash")};
 // Time played is the one metric with no click behind it, so the panel counts
 // it: one event a minute while the island is on screen and the tab is visible.
 setInterval(()=>{if(typeof started!=="undefined"&&started&&!document.hidden)track("play","tick",60)},60000);
+/* ---------------- the break card ---------------- */
+// After about fifty minutes on screen in one sitting Rolinda says, once, that
+// this is a good place to stop, and where the player is. It never blocks: it
+// waits until no stop or panel is open, it goes with one click or Escape, and
+// it can be switched off. The sitting is read from the play ticks above, which
+// only count while the tab is visible, so a locked phone earns nothing; a gap
+// of ten minutes between ticks ends a sitting. A card nobody is there to read
+// is not shown: some key or touch in the last two minutes is the proof.
+const BREAK_AFTER_S=50*60,BREAK_GAP_MS=10*60000,BREAK_AWAY_MS=2*60000,BREAK_EVERY_MS=3000;
+let breakInputAt=0,breakChecks=0;
+const breakHere=()=>{breakInputAt=Date.now()};
+addEventListener("keydown",breakHere,{capture:true,passive:true});
+addEventListener("pointerdown",breakHere,{capture:true,passive:true});
+// The current sitting: its seconds on screen and the time of its first tick.
+function breakSitting(){const now=Date.now(),ticks=dashEvents().filter(e=>e.kind==="play"&&e.id==="tick");
+  let s=0,from=0,next=now;
+  for(let i=ticks.length-1;i>=0;i--){const e=ticks[i];if(next-e.ts>BREAK_GAP_MS)break;s+=e.v||60;from=e.ts;next=e.ts}
+  return {s:s,from:from}}
+function breakDue(){if(settings().breaks==="off")return false;const st=breakSitting();
+  return st.s>=BREAK_AFTER_S&&!(typeof S.breakAt==="number"&&S.breakAt>=st.from)}
+// Between stops: the island is on screen and nothing stands in front of it.
+function breakClear(){return typeof started!=="undefined"&&started&&!flight&&
+  !document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")&&!(typeof photoOn==="function"&&photoOn())}
+function breakCheck(){breakChecks++;
+  if($("breakcard")||!breakDue()||!breakClear()||Date.now()-breakInputAt>BREAK_AWAY_MS)return;
+  showBreak(breakSitting().s)}
+function breakClose(){const el=$("breakcard");if(el)el.remove()}
+function breakButton(label,primary,fn){const b=document.createElement("button");b.type="button";b.textContent=label;
+  if(primary)b.className="primary";b.style.minHeight="44px";b.addEventListener("click",fn);return b}
+// Where the player is, in Rolinda's words: the island, the stops, the next one.
+function breakWhere(){const n=S.done.length,total=stopCount(),next=CH.findIndex((c,i)=>!S.done.includes(i+1));
+  return "You are on "+dashIsland(S.world||"campus")+", "+n+" of "+total+" stops delivered"+
+    (next<0?", which is all of them.":", and "+CH[next].h+" "+CH[next].n+" is next.")}
+// Just under the HUD, whose height is the width's business (one row on a
+// laptop, three on a phone), so it is measured again when the screen turns.
+function breakPlace(card){card.style.top=Math.round($("hud").getBoundingClientRect().bottom-$("stage").getBoundingClientRect().top+12)+"px"}
+addEventListener("resize",()=>{const c=$("breakcard");if(c)breakPlace(c)});
+function showBreak(secs){S.breakAt=Date.now();save();
+  const card=document.createElement("div");card.id="breakcard";card.className="card";
+  card.setAttribute("role","region");card.setAttribute("aria-label","A good place to stop");
+  card.style.cssText="position:absolute;z-index:41;left:16px;right:16px;margin:0 auto;max-width:420px;"+
+    "box-shadow:var(--lift);pointer-events:auto";breakPlace(card);
+  const hudEl=$("hud");
+  const who=document.createElement("p");who.className="small muted";who.style.margin="0 0 4px";who.textContent=roleName("rolinda");
+  const h=document.createElement("h3");h.style.margin="0 0 6px";h.textContent=Math.floor(secs/60)+" minutes. A good place to stop.";
+  // The words are a status line, so a screen reader hears them once as they
+  // arrive; the buttons follow in the tab order right after the HUD.
+  const p=document.createElement("p");p.className="small";p.setAttribute("role","status");
+  const due=exportDue().n>0;
+  p.textContent="You have been at it for a while. "+breakWhere()+" Everything is saved in this browser, so it will be right here when you come back."+
+    (due?" If you might carry on somewhere else, export a code first.":"");
+  const row=document.createElement("div");row.className="row";
+  row.appendChild(breakButton("Keep going",true,breakClose));
+  if(due)row.appendChild(breakButton("Export progress",false,()=>{breakClose();openSheet("s-map");exportProgress()}));
+  row.appendChild(breakButton("Stop reminding me",false,()=>{breakClose();setSetting("breaks","off")}));
+  card.append(who,h,p,row);
+  hudEl.parentNode.insertBefore(card,hudEl.nextSibling);fx(card)}
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!e.defaultPrevented&&$("breakcard")&&!document.querySelector("#sheet.on,#vault.on,#pal.on")){breakClose();e.preventDefault()}});
+setInterval(breakCheck,BREAK_EVERY_MS);
+// Test seams: the break check as it stands, and a player who walked away.
+window.__breaks=()=>({checks:breakChecks,due:breakDue(),sitting:breakSitting().s});
+window.__breakAway=()=>{breakInputAt=0};
 // Test seam: the derived numbers, so a test can assert on them without
 // re-deriving the shapes by hand.
 window.__dash=()=>{const st=dashStats();return {events:st.ev.length,stops:st.stops,xp:st.xp,stopXp:dashStopXp(),streak:st.streak,played:st.played,dwell:st.dwell,met:st.met,claims:st.claims.length}};

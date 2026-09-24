@@ -1,0 +1,36 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "wayfinding-buffers-flake"
+by = "reviewer-wayfinding-buffers-flake-r1"
+reviewed = "70b0786c03c8df0a59a5b50d32cdca68c1fc3ed2"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "The check command only runs the fixed test five times, so it proves the second half of the sentence and not the first. I tested the first half myself. I made a scratch copy of the test with the fix removed (the until() on a dust puff and the frames(1) after it) and kept the late variant (Math.random held at 0.999 for the first three frames). I ran it against a fresh build of this branch, whose src/ is byte-identical to main d2025a0 because the diff has no src/ path. The result: [late] FAILED with AssertionError (3, 7), the CI failure from #202, and [any-time] passed. The hold is complete: animate() clamps dt at .05, so dt*14 <= 0.7 < 0.999 and no puff can land while the hold is on. With the fix, I ran the check's loop myself: five runs in a row, both variants each run, 10 of 10 passed. The unforced case is the any-time variant, so it is covered by the same loop."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "I ran it myself: ruff check and format are clean, tests/test_repo.py and tests/test_work.py pass, and work.py validate read 40 orders with 0 collisions. The command proves the sentence. On PR #207 the one failing CI step is 'work orders are readable, reviewed and inside their files', which is waiting for this review. The browser shards are pending behind it."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "I read the diff. `assert after - made <= 2, (made, after)` is unchanged, and the 12-frame window after `made` is unchanged. The new wait is game_desktop.until(\"window.__scene().children.some(m => m.userData.dust)\"), which is page.wait_for_function on a flag that src/game/31-animate.js sets on every puff (m.userData.dust=1, scene.add(m)). After it comes frames(1), which waits on window.__debug().frame. Neither is a time wait: the file has no time.sleep and no wait_for_timeout. `git diff --name-only origin/main...HEAD` lists only the test and the order's own two files, so src/ and game/ are untouched. The guard still bites: a buffer made every frame would still show up in the 12-frame window. Only the one-time upload of the shared dust shape is now counted before `made`."
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_qol_wayfinding.py"
+text = "The comment over HOLD_DUST gives 'a slow first frame' as a cause of a late puff. That is backwards. A slow frame has a larger dt (clamped at .05), so the per-frame chance dt*14 goes up, not down. What delays a puff is an unlucky random draw, or the walker still being under the walking speed (sp <= .35) in the first frames. A comment should state the constraint that is true."
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_qol_wayfinding.py"
+text = "HOLD_DUST replaces Math.random for the whole page for three frames, not just the dust draw, and leaves window.__random behind. It is harmless today because nothing else in the walk reads random in a way the assertions see. A named hook in the page would be narrower, but the order forbids src/ changes, so this is for a follow-up at most."
+
+[[findings]]
+severity = "low"
+file = "work/orders/wayfinding-buffers-flake/order.toml"
+text = "c1's check proves only 'passes five times with the fix'. The 'fails on main with the puff forced late' half lives only in the reviewer's scratch run and the builder's /tmp probe, and neither is kept. The late variant in the committed test is the lasting guard, but no command shows it would fail without the fix. That is fine for a one-off order and worth knowing for the next one like it."
