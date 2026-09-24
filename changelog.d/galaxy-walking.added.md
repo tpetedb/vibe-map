@@ -1,0 +1,1 @@
+- Land in Galaxy's shared miniatures and walk with the keyboard, touch stick or a ground tap. Buildings, water and the shore constrain movement; nearby pavilions open the existing topic lesson, with the complete list available alongside the scene.

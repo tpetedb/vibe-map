@@ -95,7 +95,7 @@ def test_galaxy_phone_targets_and_experience_switch(
 ) -> None:
     for game in (game_webkit_iphone, game_android):
         _open(game)
-        sizes = game.page.locator("#galaxy-ui button").evaluate_all(
+        sizes = game.page.locator("#galaxy-ui button:visible").evaluate_all(
             "buttons => buttons.map(b => { const r=b.getBoundingClientRect(); "
             "return [r.width,r.height] })"
         )
@@ -175,7 +175,7 @@ def test_galaxy_list_land_and_learn_without_webgl(request, profile) -> None:
     game.page.locator("#btn-continue").click()
     expect(game.page.locator("#sheet")).not_to_have_class("on")
     expect(game.page.locator("#bub-text")).to_have_attribute(
-        "aria-label", re.compile("Follow the numbered journey")
+        "aria-label", re.compile("Follow the course journey")
     )
     game.page.get_by_role("button", name="Chart", exact=True).click()
     row = game.page.locator("#galaxy-list .galaxy-place").filter(has_text="Hangzhou")
@@ -379,4 +379,86 @@ def test_mixed_progress_import_does_not_build_island_graphics_in_galaxy(game_des
     expect(game.page.locator("#galaxy-summary")).to_have_text("1 of 70 topics complete")
     assert game.page.evaluate("window.__scene().background.getHex()") == 0
     assert game.state()["doneW"]["campus"] == [1]
+    game.assert_clean()
+
+
+@pytest.mark.parametrize("profile", ["game_desktop", "game_webkit_iphone"])
+def test_galaxy_landing_walks_to_a_lesson_with_shared_input(request, profile):
+    game = request.getfixturevalue(profile)
+    _open(game)
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    game.page.locator("#galaxy-list .galaxy-place").filter(
+        has_text="UC Santa Barbara"
+    ).get_by_role("button", name="Land").click()
+    game.page.wait_for_function("window.__galaxyWalk?.()?.active")
+    start = game.page.evaluate("window.__galaxyWalk()")
+    assert start["valid"]
+    game.page.locator("#c").focus()
+    game.page.keyboard.down("ArrowLeft")
+    game.page.wait_for_function(
+        "x => window.__galaxyWalk().position[0] < x - .08", arg=start["position"][0]
+    )
+    game.page.keyboard.up("ArrowLeft")
+    site = game.page.evaluate("window.__galaxyWalk().sites[0]")
+    if profile == "game_webkit_iphone":
+        game.page.touchscreen.tap(site["screen"][0] + 18, site["screen"][1])
+    else:
+        game.page.mouse.click(site["screen"][0] + 18, site["screen"][1])
+    game.page.wait_for_function(
+        "id => window.__galaxyWalk().near === id", arg=site["id"]
+    )
+    game.screenshot("galaxy_walk_arrived_" + profile)
+    game.page.get_by_role("button", name="Open nearby lesson").click()
+    expect(game.page.locator("#vault")).to_have_class("on")
+    paused = game.page.evaluate("window.__galaxyWalk()")
+    game.page.keyboard.down("d")
+    game.page.wait_for_function(
+        "frame => window.__galaxyWalk().frame > frame + 4", arg=paused["frame"]
+    )
+    game.page.keyboard.up("d")
+    assert game.page.evaluate("window.__galaxyWalk().position") == paused["position"]
+    game.screenshot("galaxy_walk_lesson_" + profile)
+    game.assert_clean()
+
+
+@pytest.mark.parametrize("profile", ["game_desktop", "game_webkit_iphone"])
+def test_galaxy_walk_stick_collision_and_water(request, profile):
+    game = request.getfixturevalue(profile)
+    _open(game)
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    game.page.locator("#galaxy-list .galaxy-place").filter(
+        has_text="Hangzhou"
+    ).get_by_role("button", name="Land").click()
+    game.page.wait_for_function("window.__galaxyWalk?.()?.active")
+    joy = game.page.locator("#joy")
+    expect(joy).to_be_visible()
+    box = joy.bounding_box()
+    start = game.page.evaluate("window.__galaxyWalk()")
+    game.page.mouse.move(box["x"] + box["width"] * 0.9, box["y"] + box["height"] / 2)
+    game.page.mouse.down()
+    game.page.wait_for_function(
+        "start => window.__galaxyWalk().frame > start + 24", arg=start["frame"]
+    )
+    game.page.mouse.up()
+    walked = game.page.evaluate("window.__galaxyWalk()")
+    assert walked["position"][0] > start["position"][0] + 0.08
+    assert walked["valid"], "The shared stick must respect the shoreline"
+    assert sum(v * v for v in walked["position"]) < 0.94**2
+    game.page.locator("#c").focus()
+    game.page.keyboard.down("ArrowUp")
+    game.page.wait_for_function(
+        "start => window.__galaxyWalk().frame > start + 32", arg=walked["frame"]
+    )
+    game.page.keyboard.up("ArrowUp")
+    blocked = game.page.evaluate("window.__galaxyWalk()")
+    assert blocked["valid"]
+    assert 0.12 < blocked["position"][1] < walked["position"][1] - 0.08
+    water = game.page.evaluate("window.__galaxyGroundAt(-.33, .1)")
+    game.page.mouse.click(*water)
+    assert game.page.evaluate("window.__galaxyWalk().route") == 0
+    assert game.page.evaluate("window.__galaxyWalk().valid")
+    game.screenshot("galaxy_walk_surface_" + profile)
+    game.page.get_by_role("button", name="Journey", exact=True).click()
+    expect(joy).not_to_be_visible()
+    assert game.page.evaluate("window.__galaxyWalk()") is None
     game.assert_clean()

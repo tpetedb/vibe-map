@@ -20,7 +20,7 @@ window.galaxyFocus=function(id,on,topicId){
   else{const planet=state.planets[selected.globe],site=planet&&planet.sites.find(item=>item.id===id);if(site){site.dome.getWorldPosition(ring.position);ring.userData.anchor=site.dome}ring.lookAt(camera.position)}
   scene.add(ring);state.focusRing=ring;galaxyLabel();galaxyRenderCheck();
 };
-function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();state.view=view;state.tappedTopic=null;
+function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();const carry=galaxyWalk&&galaxyWalk.place===selected.id?[galaxyWalk.anchor.position.x,galaxyWalk.anchor.position.z]:null;state.view=view;state.tappedTopic=null;galaxyWalkStop();
   if(!state.visuals){state.model=galaxyModel(PLACES,TREE,galaxyDone());renderGalaxyList();return}
   clearGalaxyFocus();
   state.journey.visible=view==="journey";
@@ -33,7 +33,7 @@ function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selecte
     const world=state.visuals.makePlanet([selected],{states:{[selected.id]:selected.state},domeScale:.01});
     world.root.userData.placeId=selected.id;world.sites.forEach(site=>site.dome.visible=false);world.root.scale.setScalar(.94);world.root.position.y=-.98;
     world.root.quaternion.setFromUnitVectors(world.sites[0].normal,new T.Vector3(0,1,0));state.detail.add(world.root);
-    state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail)}
+    state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail);galaxyWalkStart(state.detail,carry)}
   renderGalaxyList();galaxyFrame();if(["chart","globe"].includes(view))galaxyFocus(selected.id,true);requestAnimationFrame(()=>{galaxyFrame();galaxyLabel()})}
 window.galaxyView=function(view){if(!["journey","chart","globe","dome"].includes(view))return;
   const state=galaxyState;if(state&&view==="journey"&&state.model.next){state.topic=state.model.next.id;state.selected=state.model.next.place;state.focusTopic=null;
@@ -81,6 +81,7 @@ $("c").addEventListener("pointerup",event=>{if(experienceId()!=="galaxy"||!galax
   const moved=Math.hypot(event.clientX-galaxyDown[0],event.clientY-galaxyDown[1]);galaxyDown=null;if(moved>10)return;
   if(galaxyState.view==="journey"){const point=galaxyPickTopic(event.clientX,event.clientY);if(point){if(galaxyState.tappedTopic===point.topicId)galaxyTopic(point.topicId);else{galaxyState.tappedTopic=point.topicId;galaxyFocus(point.placeId,true,point.topicId)}}return}
   const box=$("c").getBoundingClientRect(),pointer=new T.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1),pick=new T.Raycaster();pick.setFromCamera(pointer,camera);
+  if(galaxyState.view==="dome"){document.activeElement.blur();galaxyWalkPick(pick,event.clientX,event.clientY);return}
   // Decorative route lines and hidden globes must never steal a destination tap.
   let node=null;
   for(const hit of pick.intersectObjects(scene.children.filter(item=>item.visible),true)){
@@ -98,7 +99,7 @@ EXPERIENCES.galaxy={
   world(){galaxyShow("chart")},
   backLabel:"Back to Galaxy",
   presentation:{tagline:"Programming history, one place and one topic at a time.",intro:"Welcome to Galaxy. Follow the course journey through the places behind programming. Land on a tiny planet, open its lessons, and build your shared learning record.","btn-go":"Begin the journey","btn-continue":"Resume Galaxy"},
-  guidance(){bubble("rolinda","Follow the numbered journey. Choose Learn to open a topic, or Chart to land at a place.")},
+  guidance(){bubble("rolinda","Follow the course journey. Choose Learn to open a topic, or Chart to land at a place.")},
   build(){galaxyCameraState={fov:camera.fov,near:camera.near,far:camera.far,aspect:camera.aspect,view:camera.view?{...camera.view}:null};const model=galaxyModel(PLACES,TREE,galaxyDone()),groups=galaxyGroups(model),visuals=createGalaxyVisuals({three:T,palette:PALETTE,material:mat,finish:fixColors});
     scene=new T.Scene();scene.background=new T.Color(PALETTE.black);scene.add(galaxyStars());scene.add(new T.AmbientLight(PALETTE.snow,.5));
     scene.add(new T.HemisphereLight(PALETTE.blueBright,PALETTE.orange,.35));
@@ -107,8 +108,8 @@ EXPERIENCES.galaxy={
     const planets={};Object.entries(groups).forEach(([kind,places])=>{const planet=visuals.makePlanet(places,{states:Object.fromEntries(places.map(p=>[p.id,p.state])),domeScale:.22});planet.root.position.set(...(GALAXY_POS[kind]||[0,0,0]));planet.root.scale.setScalar(1.7);scene.add(planet.root);planets[kind]=planet});
     const journey=galaxyRoute(visuals,model);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,progress:JSON.stringify(galaxyDone()),detail:null,focusRing:null,topic:(model.next||{}).id||null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
     document.body.dataset.experience="galaxy";galaxyShow("journey");renderGalaxyList()},
-  dispose(){if(camera&&galaxyCameraState){Object.assign(camera,galaxyCameraState);camera.updateProjectionMatrix();galaxyCameraState=null}const ui=$("galaxy-ui");if(ui)ui.hidden=true;$("galaxy-label").hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
-  tick(dt,t){if(!galaxyState)return;galaxyRefresh();if(!reducedMotion()&&galaxyState.view==="chart")Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)});
+  dispose(){galaxyWalkStop();if(camera&&galaxyCameraState){Object.assign(camera,galaxyCameraState);camera.updateProjectionMatrix();galaxyCameraState=null}const ui=$("galaxy-ui");if(ui)ui.hidden=true;$("galaxy-label").hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
+  tick(dt,t){if(!galaxyState)return;galaxyRefresh();galaxyWalkTick(dt,t);if(!reducedMotion()&&galaxyState.view==="chart")Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)});
     const ring=galaxyState.focusRing;if(ring&&ring.userData.anchor){ring.userData.anchor.getWorldPosition(ring.position);ring.lookAt(camera.position)}if(!reducedMotion()&&galaxyState.view==="chart")galaxyLabel()},
   goTo(to){if(!to)return false;if(to.topic&&galaxyState.model.topics.some(t=>t.id===to.topic)){galaxyTopic(to.topic);return true}if(to.place&&galaxyState.model.places.some(p=>p.id===to.place)){galaxyPlace(to.place);return true}return false},
   where(){const place=galaxySelected();return place?{kind:"place",id:place.id}:null},

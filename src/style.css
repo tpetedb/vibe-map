@@ -735,3 +735,9 @@ body.quiet #toast{display:none}
 h3+.setting{border-top:0}
 
 body[data-experience="galaxy"] #toast .saved{align-self:flex-start!important}
+
+body[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{display:block;left:auto;right:20px;top:90px;bottom:auto;background:var(--surface-1)}
+body[data-experience="galaxy"]:has(#sheet.on,#vault.on,#pal.on) #joy{visibility:hidden}
+#galaxy-walk button{min-height:44px}#galaxy-walk-status{min-height:2.5em}
+
+@media (max-width:1100px){body[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:14px;right:auto}body.hand-left[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:auto;right:14px}}

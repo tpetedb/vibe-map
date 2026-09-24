@@ -765,6 +765,12 @@ body.quiet #toast{display:none}
 h3+.setting{border-top:0}
 
 body[data-experience="galaxy"] #toast .saved{align-self:flex-start!important}
+
+body[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{display:block;left:auto;right:20px;top:90px;bottom:auto;background:var(--surface-1)}
+body[data-experience="galaxy"]:has(#sheet.on,#vault.on,#pal.on) #joy{visibility:hidden}
+#galaxy-walk button{min-height:44px}#galaxy-walk-status{min-height:2.5em}
+
+@media (max-width:1100px){body[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:14px;right:auto}body.hand-left[data-experience="galaxy"][data-galaxy-walk="on"]:has(#galaxy-ui[data-rendering="scene"]) #joy{left:auto;right:14px}}
 </style>
 </head>
 <body>
@@ -783,6 +789,7 @@ body[data-experience="galaxy"] #toast .saved{align-self:flex-start!important}
   <p id="galaxy-next" class="small"></p><p id="galaxy-context" class="small muted"></p>
   <div id="galaxy-overview"></div>
   <div id="galaxy-check"></div>
+  <div id="galaxy-walk" hidden><p id="galaxy-walk-status" class="small" role="status"></p><button id="galaxy-near" onclick="galaxyOpenNearby()" disabled>Open nearby lesson</button></div>
   <div id="galaxy-list" role="list"></div>
 </div>
 <div id="galaxy-label" hidden aria-hidden="true"><b></b><span></span></div>
@@ -4222,7 +4229,7 @@ function stopShort(){const name=aimFor;clearAim();
 window.walkTo=function(n){const p=PLOT_POS[n-1];
   // The flight to another island owns the frame while it lasts and lands on
   // an island this one's coordinates say nothing about.
-  if(!started||flight||!marker||!p||!onLandW(p.x,p.z))return false;
+  if(experienceId()!=="islands"||!started||flight||!marker||!p||!onLandW(p.x,p.z))return false;
   const c=CH[n-1],name=c?c.h+", "+c.n:"stop "+n;aim(p.x,p.z,name);
   // Said as well as drawn: the toast is the announcement for anyone who
   // cannot see the marker land, and the quiet setting still silences it.
@@ -4246,7 +4253,7 @@ function setupInput(){
     // Enter is the keyboard twin of the proximity button, so it only fires
     // while the page itself has focus and nothing is standing in front of it:
     // a form field and an open panel keep their own Enter.
-    if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
+    if(k==="enter"&&experienceId()==="islands"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{const k=e.key.toLowerCase();keys[k]=false;
     if(k!=="shift"||!shiftAlone)return;shiftAlone=false;
     if(settings().run!=="toggle")return;runOn=!runOn;
@@ -4280,6 +4287,15 @@ window.__walk=()=>({target:[target.x,target.z],has:hasTarget,
 // click, and a click needs somewhere to land.
 window.__groundAt=(x,z)=>{const v=new T.Vector3(x,0,z).project(camera),rc=$("c").getBoundingClientRect();
   return [rc.left+(v.x+1)/2*rc.width,rc.top+(1-v.y)/2*rc.height]};
+
+// Alternative surfaces share the same keys and touch stick, but own their space.
+function surfaceInput(){const blocked=!!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")||inField(document.activeElement);
+  if(blocked)return {x:0,z:0,blocked:true};
+  const focused=document.activeElement,ui=focused&&focused!==document.body&&focused!==$("c");
+  return {x:joy.on?joy.x:ui?0:(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),
+    z:joy.on?joy.y:ui?0:(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0),blocked:false};
+}
+function surfaceInputReset(){for(const k of STEER)keys[k]=false;joy={x:0,y:0,on:false};$("knob").style.transform="";wantJump=false}
 // Scratch vectors for the frame loop. It runs sixty times a second for as
 // long as the tab is open, so nothing in it allocates.
 const _mv=new T.Vector3(),_prev=new T.Vector3(),_dv=new T.Vector3(),ZERO=new T.Vector3();
@@ -7412,7 +7428,7 @@ window.galaxyFocus=function(id,on,topicId){
   else{const planet=state.planets[selected.globe],site=planet&&planet.sites.find(item=>item.id===id);if(site){site.dome.getWorldPosition(ring.position);ring.userData.anchor=site.dome}ring.lookAt(camera.position)}
   scene.add(ring);state.focusRing=ring;galaxyLabel();galaxyRenderCheck();
 };
-function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();state.view=view;state.tappedTopic=null;
+function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selected=galaxySelected();const carry=galaxyWalk&&galaxyWalk.place===selected.id?[galaxyWalk.anchor.position.x,galaxyWalk.anchor.position.z]:null;state.view=view;state.tappedTopic=null;galaxyWalkStop();
   if(!state.visuals){state.model=galaxyModel(PLACES,TREE,galaxyDone());renderGalaxyList();return}
   clearGalaxyFocus();
   state.journey.visible=view==="journey";
@@ -7425,7 +7441,7 @@ function galaxyShow(view){if(!galaxyState)return;const state=galaxyState,selecte
     const world=state.visuals.makePlanet([selected],{states:{[selected.id]:selected.state},domeScale:.01});
     world.root.userData.placeId=selected.id;world.sites.forEach(site=>site.dome.visible=false);world.root.scale.setScalar(.94);world.root.position.y=-.98;
     world.root.quaternion.setFromUnitVectors(world.sites[0].normal,new T.Vector3(0,1,0));state.detail.add(world.root);
-    state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail)}
+    state.detail.scale.setScalar(1.45);state.detail.rotation.x=-.12;scene.add(state.detail);galaxyWalkStart(state.detail,carry)}
   renderGalaxyList();galaxyFrame();if(["chart","globe"].includes(view))galaxyFocus(selected.id,true);requestAnimationFrame(()=>{galaxyFrame();galaxyLabel()})}
 window.galaxyView=function(view){if(!["journey","chart","globe","dome"].includes(view))return;
   const state=galaxyState;if(state&&view==="journey"&&state.model.next){state.topic=state.model.next.id;state.selected=state.model.next.place;state.focusTopic=null;
@@ -7473,6 +7489,7 @@ $("c").addEventListener("pointerup",event=>{if(experienceId()!=="galaxy"||!galax
   const moved=Math.hypot(event.clientX-galaxyDown[0],event.clientY-galaxyDown[1]);galaxyDown=null;if(moved>10)return;
   if(galaxyState.view==="journey"){const point=galaxyPickTopic(event.clientX,event.clientY);if(point){if(galaxyState.tappedTopic===point.topicId)galaxyTopic(point.topicId);else{galaxyState.tappedTopic=point.topicId;galaxyFocus(point.placeId,true,point.topicId)}}return}
   const box=$("c").getBoundingClientRect(),pointer=new T.Vector2((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1),pick=new T.Raycaster();pick.setFromCamera(pointer,camera);
+  if(galaxyState.view==="dome"){document.activeElement.blur();galaxyWalkPick(pick,event.clientX,event.clientY);return}
   // Decorative route lines and hidden globes must never steal a destination tap.
   let node=null;
   for(const hit of pick.intersectObjects(scene.children.filter(item=>item.visible),true)){
@@ -7490,7 +7507,7 @@ EXPERIENCES.galaxy={
   world(){galaxyShow("chart")},
   backLabel:"Back to Galaxy",
   presentation:{tagline:"Programming history, one place and one topic at a time.",intro:"Welcome to Galaxy. Follow the course journey through the places behind programming. Land on a tiny planet, open its lessons, and build your shared learning record.","btn-go":"Begin the journey","btn-continue":"Resume Galaxy"},
-  guidance(){bubble("rolinda","Follow the numbered journey. Choose Learn to open a topic, or Chart to land at a place.")},
+  guidance(){bubble("rolinda","Follow the course journey. Choose Learn to open a topic, or Chart to land at a place.")},
   build(){galaxyCameraState={fov:camera.fov,near:camera.near,far:camera.far,aspect:camera.aspect,view:camera.view?{...camera.view}:null};const model=galaxyModel(PLACES,TREE,galaxyDone()),groups=galaxyGroups(model),visuals=createGalaxyVisuals({three:T,palette:PALETTE,material:mat,finish:fixColors});
     scene=new T.Scene();scene.background=new T.Color(PALETTE.black);scene.add(galaxyStars());scene.add(new T.AmbientLight(PALETTE.snow,.5));
     scene.add(new T.HemisphereLight(PALETTE.blueBright,PALETTE.orange,.35));
@@ -7499,8 +7516,8 @@ EXPERIENCES.galaxy={
     const planets={};Object.entries(groups).forEach(([kind,places])=>{const planet=visuals.makePlanet(places,{states:Object.fromEntries(places.map(p=>[p.id,p.state])),domeScale:.22});planet.root.position.set(...(GALAXY_POS[kind]||[0,0,0]));planet.root.scale.setScalar(1.7);scene.add(planet.root);planets[kind]=planet});
     const journey=galaxyRoute(visuals,model);scene.add(journey);galaxyState={model,groups,visuals,planets,journey,progress:JSON.stringify(galaxyDone()),detail:null,focusRing:null,topic:(model.next||{}).id||null,selected:(model.next||model.places[0]||{}).place||(model.places[0]||{}).id,view:"journey"};
     document.body.dataset.experience="galaxy";galaxyShow("journey");renderGalaxyList()},
-  dispose(){if(camera&&galaxyCameraState){Object.assign(camera,galaxyCameraState);camera.updateProjectionMatrix();galaxyCameraState=null}const ui=$("galaxy-ui");if(ui)ui.hidden=true;$("galaxy-label").hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
-  tick(dt,t){if(!galaxyState)return;galaxyRefresh();if(!reducedMotion()&&galaxyState.view==="chart")Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)});
+  dispose(){galaxyWalkStop();if(camera&&galaxyCameraState){Object.assign(camera,galaxyCameraState);camera.updateProjectionMatrix();galaxyCameraState=null}const ui=$("galaxy-ui");if(ui)ui.hidden=true;$("galaxy-label").hidden=true;if(scene){release(scene);scene=null}galaxyState=null;document.body.dataset.experience="islands"},
+  tick(dt,t){if(!galaxyState)return;galaxyRefresh();galaxyWalkTick(dt,t);if(!reducedMotion()&&galaxyState.view==="chart")Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)});
     const ring=galaxyState.focusRing;if(ring&&ring.userData.anchor){ring.userData.anchor.getWorldPosition(ring.position);ring.lookAt(camera.position)}if(!reducedMotion()&&galaxyState.view==="chart")galaxyLabel()},
   goTo(to){if(!to)return false;if(to.topic&&galaxyState.model.topics.some(t=>t.id===to.topic)){galaxyTopic(to.topic);return true}if(to.place&&galaxyState.model.places.some(p=>p.id===to.place)){galaxyPlace(to.place);return true}return false},
   where(){const place=galaxySelected();return place?{kind:"place",id:place.id}:null},
@@ -7648,6 +7665,88 @@ function galaxyLabel(){const label=$('galaxy-label'),state=galaxyState;if(!label
   label.querySelector('b').textContent=text;label.querySelector('span').textContent=detail;
   label.style.left=Math.max(12,Math.min(stage.width-label.offsetWidth-12,p.x-stage.left-label.offsetWidth/2))+'px';label.style.top=Math.max(12,p.y-stage.top-64)+'px';
 }
+// A miniature owns local coordinates. Nothing here writes campaign positions.
+const GALAXY_WALK_R=.035,GALAXY_STEP=.07;
+let galaxyWalk=null;
+function galaxyWalkFree(x,z,data){
+  if(Math.hypot(x,z)>data.walkSurface.radius-GALAXY_WALK_R)return false;
+  for(const w of data.walkSurface.water||[]){
+    if(w.kind==='disc'&&Math.hypot(x-w.x,z-w.z)<w.radius+GALAXY_WALK_R)return false;
+    if(w.kind==='box'&&Math.abs(x-w.x)<w.width/2+GALAXY_WALK_R&&Math.abs(z-w.z)<w.depth/2+GALAXY_WALK_R)return false;
+  }
+  return !data.obstacles.some(([ox,oz,r])=>Math.hypot(x-ox,z-oz)<r+GALAXY_WALK_R)&&
+    !data.lessonSites.some(s=>Math.hypot(x-s.position[0],z-s.position[1])<.095);
+}
+function galaxyWalkStop(){galaxyWalk=null;document.body.dataset.galaxyWalk='off';$("galaxy-walk").hidden=true;surfaceInputReset()}
+function galaxyWalkStart(detail,carry){
+  galaxyWalkStop();let root=null;detail.traverse(node=>{if(node.userData.miniature)root=node});if(!root)return;
+  const data=root.userData,actor=character(playerSpec()),anchor=new T.Group();actor.g.scale.setScalar(.075);actor.plate.visible=false;anchor.add(actor.g);root.add(anchor);
+  const ring=new T.Mesh(new T.TorusGeometry(.055,.009,6,24),mat(PALETTE.yellow,{emissive:PALETTE.yellow,emissiveIntensity:.6}));ring.rotation.x=-Math.PI/2;ring.position.y=.013;anchor.add(ring);
+  const cells=[],byKey=new Map();
+  for(let ix=-13;ix<=13;ix++)for(let iz=-13;iz<=13;iz++){
+    const x=ix*GALAXY_STEP,z=iz*GALAXY_STEP;if(!galaxyWalkFree(x,z,data))continue;
+    const cell={x,z,ix,iz};cells.push(cell);byKey.set(ix+','+iz,cell);
+  }
+  const start=cells.reduce((best,p)=>Math.hypot(p.x-.35,p.z-.72)<Math.hypot(best.x-.35,best.z-.72)?p:best,cells[0]);
+  anchor.position.set(start.x,.012,start.z);if(carry&&galaxyWalkFree(...carry,data))anchor.position.set(carry[0],.012,carry[1]);fixColors(anchor);
+  galaxyWalk={root,data,actor,anchor,place:galaxySelected().id,cells,byKey,path:[],near:null,frame:0,moving:false};
+  document.body.dataset.galaxyWalk='on';$("galaxy-walk").hidden=false;galaxyWalkNear();
+}
+// Search only this small surface. A blocked tap never walks through a building.
+function galaxyWalkAim(x,z,lesson=false){const w=galaxyWalk;if(!w)return false;
+  if(!lesson&&!galaxyWalkFree(x,z,w.data)){copySay('Choose open ground inside the dome.');return false}
+  const p=w.anchor.position,start=w.cells.reduce((a,b)=>Math.hypot(b.x-p.x,b.z-p.z)<Math.hypot(a.x-p.x,a.z-p.z)?b:a,w.cells[0]);
+  const queue=[start],from=new Map([[start,null]]);let best=start;
+  for(let i=0;i<queue.length;i++){const cell=queue[i];if(Math.hypot(cell.x-x,cell.z-z)<Math.hypot(best.x-x,best.z-z))best=cell;
+    for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const next=w.byKey.get((cell.ix+dx)+','+(cell.iz+dz));if(!next||from.has(next))continue;
+      if(!galaxyWalkFree((next.x+cell.x)/2,(next.z+cell.z)/2,w.data))continue;from.set(next,cell);queue.push(next)}
+  }
+  if(Math.hypot(best.x-x,best.z-z)>(lesson?.23:.11)){copySay('That spot is blocked. Choose nearby open ground.');return false}
+  const path=[];for(let cell=best;cell;cell=from.get(cell))path.unshift(cell);w.path=path;surfaceInputReset();return true;
+}
+function galaxyWalkPick(pick,clientX,clientY){const w=galaxyWalk;if(!w)return;
+  const rc=$("c").getBoundingClientRect();let lesson=null,best=22;
+  for(const site of w.data.lessonSites){const v=w.root.localToWorld(new T.Vector3(site.position[0],.025,site.position[1])).project(camera);
+    const distance=Math.hypot(rc.left+(v.x+1)*rc.width/2-clientX,rc.top+(1-v.y)*rc.height/2-clientY);if(distance<best){best=distance;lesson=site}}
+  if(lesson){galaxyWalkAim(...lesson.position,true);return}
+  for(const hit of pick.intersectObjects(w.root.children,true)){let node=hit.object;while(node&&node!==w.root&&!node.userData.lessonId)node=node.parent;if(node&&node.userData.lessonId){lesson=w.data.lessonSites.find(s=>s.id===node.userData.lessonId);break}}
+  if(lesson){galaxyWalkAim(...lesson.position,true);return}
+  // Transform the camera ray into miniature space before intersecting its ground.
+  const local=pick.ray.clone().applyMatrix4(w.root.matrixWorld.clone().invert()),point=new T.Vector3();
+  if(local.intersectPlane(new T.Plane(new T.Vector3(0,1,0),0),point))galaxyWalkAim(point.x,point.z);
+}
+function galaxyWalkNear(){const w=galaxyWalk;if(!w)return;const p=w.anchor.position;
+  const site=w.data.lessonSites.find(s=>Math.hypot(p.x-s.position[0],p.z-s.position[1])<.24),id=site?site.id:null;
+  if(w.near===id&&w.labelled)return;w.near=id;w.labelled=true;
+  const topic=galaxyState.model.topics.find(t=>t.id===id),button=$("galaxy-near");button.disabled=!topic;
+  $("galaxy-walk-status").textContent=topic?'Nearby: '+topic.name:'Walk with arrows, WASD or the stick. Tap open ground or a lesson pavilion.';
+  if(topic)copySay('Nearby lesson: '+topic.name);
+}
+window.galaxyOpenNearby=function(){if(galaxyWalk&&galaxyWalk.near)galaxyTopic(galaxyWalk.near)};
+function galaxyWalkTick(dt,t){const w=galaxyWalk;if(!w)return;w.frame++;
+  const input=surfaceInput(),p=w.anchor.position;let x=input.x,z=input.z;
+  if(input.blocked){w.moving=false;return}
+  if(x||z)w.path=[];
+  else if(w.path.length){const next=w.path[0],dx=next.x-p.x,dz=next.z-p.z,d=Math.hypot(dx,dz);if(d<.015)w.path.shift();else{x=dx/d;z=dz/d}}
+  const length=Math.hypot(x,z),step=Math.min(.025,.62*dt*speedMult()*runMult());w.moving=false;
+  if(length){x=x/Math.max(1,length)*step;z=z/Math.max(1,length)*step;
+    if(w.path.length){const next=w.path[0],d=Math.hypot(next.x-p.x,next.z-p.z);if(d<step){x=next.x-p.x;z=next.z-p.z}}
+    const oldX=p.x,oldZ=p.z;if(galaxyWalkFree(p.x+x,p.z,w.data))p.x+=x;if(galaxyWalkFree(p.x,p.z+z,w.data))p.z+=z;
+    w.moving=Math.hypot(p.x-oldX,p.z-oldZ)>.0001;if(w.moving)w.actor.g.rotation.y=Math.atan2(x,z);else w.path=[];
+  }
+  animChar(w.actor,w.moving,dt,t);galaxyWalkNear();
+}
+addEventListener('keydown',event=>{if(experienceId()!=='galaxy'||!galaxyWalk||document.activeElement!==document.body||surfaceInput().blocked)return;
+  if(event.key==='Enter'){galaxyOpenNearby();event.preventDefault()}
+  if(event.key==='Escape'){galaxyView('chart');document.querySelector('[data-galaxy-view="chart"]').focus();event.preventDefault()}
+});
+window.__galaxyWalk=()=>{const w=galaxyWalk;if(!w)return null;const p=w.anchor.position,rc=$("c").getBoundingClientRect();
+  const project=(x,z)=>{const v=w.root.localToWorld(new T.Vector3(x,.025,z)).project(camera);return [rc.left+(v.x+1)*rc.width/2,rc.top+(1-v.y)*rc.height/2]};
+  return {active:true,position:[p.x,p.z],valid:galaxyWalkFree(p.x,p.z,w.data),near:w.near,frame:w.frame,moving:w.moving,route:w.path.length,
+    sites:w.data.lessonSites.map(s=>({id:s.id,position:s.position,screen:project(...s.position)})),
+    water:w.data.walkSurface.water,obstacles:w.data.obstacles};
+};
+window.__galaxyGroundAt=(x,z)=>{if(!galaxyWalk)return null;const rc=$("c").getBoundingClientRect(),v=galaxyWalk.root.localToWorld(new T.Vector3(x,0,z)).project(camera);return [rc.left+(v.x+1)*rc.width/2,rc.top+(1-v.y)*rc.height/2]};
 // Resume is offered to anyone who has been here before, but only when there is
 // something to resume with: start() refuses an empty name, so a saved look on
 // its own would be a button that turns you down. Once a stop is done the five

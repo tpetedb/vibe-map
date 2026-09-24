@@ -2,7 +2,7 @@ v = 1
 id = "galaxy-v0"
 title = "Galaxy, version zero: the journey and its list twin, tiny globes, domes you can look into, travel as a cut"
 team = "scene"
-branch = "feat/galaxy-v0"
+branch = "codex/galaxy-gameplay"
 goal = "galaxy"
 issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
@@ -13,6 +13,7 @@ owns = [
   "src/game/12-buildings.js",
   "src/game/21-world-build.js",
   "src/game/24-experience.js",
+  "src/game/30-input.js",
   "src/game/90-boot.js",
   # Optional fallback/refresh/guidance/back-label hooks keep Start usable without WebGL;
   # Islands retain the seven required methods and their original defaults.
@@ -51,3 +52,8 @@ judge = "reviewer"
 id = "c5"
 text = "A stranger recognises three places that are as different as possible (a California campus, a Chinese city, a data centre globe) from their domes and finds them on their globes. The reviewer looks at the screenshots side by side with `concept.html` in this folder, which Tom has seen and approved as the direction."
 judge = "reviewer"
+
+[[criteria]]
+id = "c6"
+text = "Land starts a miniature walker; shared keyboard and touch stick respect shore, water and buildings; a pavilion tap walks to its unchanged lesson, and leaving stops movement. Desktop and WebKit phone entry-point regressions pass."
+check = "uv run pytest -q tests/test_game_galaxy.py -k 'landing_walks or walk_stick'"
