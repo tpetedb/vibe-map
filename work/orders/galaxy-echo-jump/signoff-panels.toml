@@ -1,0 +1,7 @@
+v = 1
+order = "galaxy-echo-jump"
+team = "panels"
+by = "manager:panels"
+reviewed = "86272b4850d87a77bd446441ef293916734f5502"
+verdict = "accept"
+note = "The two CSS rules affect Galaxy echo rows only. The enlarged-text phone screenshot keeps Learn and Jump legible and separate, and the phone test checks both controls are at least 44px. The Hangzhou desktop screenshot shows the actions within the panel without overlap. Native buttons retain descriptive accessible names; Tab reaches both actions and Enter activates them in the focused test."
