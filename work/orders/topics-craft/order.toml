@@ -12,6 +12,8 @@ owns = [
   "vibemap/data/topics/craft/",
   "tests/test_topics_craft.py",
   "docs/SYLLABUS.md",
+  "tests/test_origins_code_git.py",
+  "tests/test_origins_ship_docs.py",
 ]
 cross = []
 needs = []
