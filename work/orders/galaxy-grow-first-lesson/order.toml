@@ -12,6 +12,9 @@ owns = [
   "src/game/60-vault.js",
   "src/galaxy/20-experience.js",
   "tests/test_game_galaxy.py",
+  # The contract test lists each experience's hooks; a new optional hook is one line there.
+  "tests/test_game_experience.py",
+  "src/game/24-experience.js",
   "changelog.d/galaxy-grow-first-lesson.fixed.md",
 ]
 cross = ["scene", "docs"]
