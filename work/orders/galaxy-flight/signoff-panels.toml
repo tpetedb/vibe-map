@@ -1,0 +1,24 @@
+v = 1
+order = "galaxy-flight"
+team = "panels"
+by = "codex-panels-cross-reviewer"
+reviewed = "565f237db69daaeb5d0906e6b63fdea053c8ab50"
+verdict = "accept"
+note = """
+The panels-owned diff adds a named native flight dialog and a focusable Galaxy
+heading in src/body.html, plus four compact dialog style rules in src/style.css.
+The dialog keeps Skip in the modal focus path; Escape, Enter, touch and timed
+arrival share one exit. Arrival focuses the labelled walking canvas in scene
+mode or the destination heading in list mode. Disposal closes the dialog and
+restores the canvas attributes when returning to Islands. The 44 px Skip target,
+existing focus-visible rule and responsive width fit the compact layout.
+
+At this exact commit, the focused flight browser suite passed 9/9 cases,
+including keyboard repeats, reduced motion, touch and experience switching.
+Three additional Galaxy/Island browser cases passed: phone targets and switch,
+short-screen complete list, and the zoomed-out Island round trip. The build
+check and fork-source sync check passed. I inspected the captured flight image:
+the ship is distinct against the chart and the bordered dialog is legible.
+The complete c2 suite was not rerun for this cross-owner signoff. No panels
+blocker found. This is Codex's panels cross-owner review, not Claude signoff.
+"""
