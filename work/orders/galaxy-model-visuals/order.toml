@@ -1,0 +1,33 @@
+v = 1
+id = "galaxy-model-visuals"
+title = "Galaxy model and procedural planet kit"
+team = "scene"
+branch = "feat/galaxy-v0"
+goal = "galaxy"
+issue = 168
+builder = "codex-galaxy-astra"
+
+owns = [
+  "src/galaxy/00-model.js",
+  "src/galaxy/10-planet-kit.js",
+  "tests/test_galaxy_model.py",
+  "tests/test_build.py",
+  "changelog.d/galaxy-model-visuals.added.md",
+]
+cross = ["docs", "harness"]
+needs = ["galaxy-places-schema"]
+
+[[criteria]]
+id = "c1"
+text = "The pure Galaxy model derives one sourced primary destination per available topic, stable progress states and place counts without changing injected data."
+check = "uv run pytest -q tests/test_galaxy_model.py -k model"
+
+[[criteria]]
+id = "c2"
+text = "The procedural kit keeps exact Earth pins, separates nearby domes, rejects unsupported looks and mixed globes, and returns independently disposable finite geometry."
+check = "uv run pytest -q tests/test_galaxy_model.py -k visuals"
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, sinks and generated outputs are green."
+check = "uv run ruff check -q tests/test_galaxy_model.py && uv run ruff format --check -q tests/test_galaxy_model.py && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run python tools/build.py --check && uv run python tools/sync_fork_source.py --check"

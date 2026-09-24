@@ -2,7 +2,7 @@
 title: "Apache Airflow"
 date: 2026-09-18
 tags: [tech, data]
-generated: 1d0db053ab5f
+generated: 6474d4c7a966
 ---
 # Apache Airflow
 
@@ -12,7 +12,7 @@ Airflow is the scheduler: it holds the graph of what runs, in what order, on wha
 
 **Try in five minutes.** uv run --with "apache-airflow==3.3.2" python -c "from airflow.sdk import DAG; print(DAG)" and note how long the import alone takes.
 
-- Docs: [Airflow, core concepts: DAGs](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html), [Airflow, quick start and airflow standalone](https://airflow.apache.org/docs/apache-airflow/stable/start.html), [Airflow, the TaskFlow API](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html), [Airflow, installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html)
+- Docs: [Source: Airbnb Engineering, Airflow announcement](https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON), [Airflow, core concepts: DAGs](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html), [Airflow, quick start and airflow standalone](https://airflow.apache.org/docs/apache-airflow/stable/start.html), [Airflow, the TaskFlow API](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html), [Airflow, installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html)
 - Unlocks: [[Dagster and Prefect]], [[Ingestion, transformation, orchestration]]
 - Shelf: Data · Depth: Working knowledge
 

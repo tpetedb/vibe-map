@@ -7,7 +7,9 @@ let PAL=[],PALHITS=[],palSel=0;
 function palIndex(){
   const out=[];
   const stopLabel=CONFIG.theme.stopLabel||"Stop";
-  CH.forEach((c,i)=>out.push({k:stopLabel,t:c.h+", "+c.n,s:c.d,go:()=>openCh(i+1)}));
+  // n is the stop's number on this island: the row that has one can be walked
+  // to as well as opened.
+  CH.forEach((c,i)=>out.push({k:stopLabel,t:c.h+", "+c.n,s:c.d,go:()=>openCh(i+1),n:i+1}));
   const unlocked=typeof computeUnlocked==="function"?computeUnlocked():null;
   const topics={};
   if(typeof TREE!=="undefined")Object.keys(TREE).forEach(c=>TREE[c].forEach(t=>topics[t.n]=c));
@@ -31,10 +33,40 @@ function palScore(row,q){
   return s.indexOf(q)>=0?3:-1}
 function palRender(){
   const list=$("pal-list");
-  if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';return}
+  if(!PALHITS.length){list.innerHTML='<p class="pal-empty muted small">Nothing matches. Try a stop, a mentor, a note or an artifact.</p>';palWalkSync();return}
   list.innerHTML=PALHITS.map((r,i)=>`<button class="pal-row${i===palSel?" sel":""}" role="option" aria-selected="${i===palSel}" data-i="${i}"><span class="pal-what">${palShelf(r)===0?interestDot(r.c):""}${esc(r.t)}<span class="pal-sub">${esc(r.s||"")}</span></span><span class="pal-kind">${esc(r.k)}</span></button>`).join("");
   list.querySelectorAll(".pal-row").forEach(b=>b.onclick=()=>palGo(+b.dataset.i));
-  const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"})}
+  const sel=list.querySelector(".pal-row.sel");if(sel)sel.scrollIntoView({block:"nearest"});
+  palWalkSync()}
+/* ---------------- walk me there ---------------- */
+// The palette opens a stop; this walks to it, for when the question is where
+// on the island it is rather than what the lesson says. It is a button of its
+// own rather than a second control inside a row: the list is a listbox, and
+// an option with a button inside it is an option a screen reader cannot read
+// out as one thing. Built here, the way the map builds its own chrome,
+// because the palette's markup belongs to body.html and this does not.
+let palWalk=null;
+function palWalkBuild(){
+  if(palWalk)return;
+  palWalk=document.createElement("button");palWalk.type="button";palWalk.id="pal-walk";
+  palWalk.title="Shift and Enter";
+  palWalk.style.cssText="display:none;margin:var(--space-3) var(--space-4) 0;min-height:44px;align-self:flex-start";
+  palWalk.addEventListener("click",()=>palWalkGo());
+  // Before the list, not after it: every result is a button, so a control
+  // behind forty of them is a control no keyboard reaches.
+  const box=$("pal").querySelector(".pal-box");box.insertBefore(palWalk,$("pal-list"))}
+// Shown only when the selected row is a stop of the island being walked on,
+// so the control is never there with nothing to do.
+function palWalkSync(){
+  palWalkBuild();
+  const r=PALHITS[palSel],n=r&&r.n;
+  const can=!!n&&started&&!!PLOT_POS[n-1];
+  palWalk.style.display=can?"block":"none";
+  if(!can){palWalk.removeAttribute("aria-label");return}
+  palWalk.textContent="Walk there";
+  palWalk.setAttribute("aria-label","Walk to "+r.t)}
+function palWalkGo(){const r=PALHITS[palSel];if(!r||!r.n)return;
+  closePalette();walkTo(r.n)}
 window.palTyped=function(){const q=$("pal-q").value.trim().toLowerCase();
   PALHITS=(q?PAL.map(r=>[palScore(r,q),r]).filter(([s])=>s>=0).sort((a,b)=>a[0]-b[0]||palShelf(a[1])-palShelf(b[1])).map(([,r])=>r):PAL.slice()).slice(0,40);
   palSel=0;palRender()};
@@ -43,6 +75,9 @@ window.palKey=function(e){
   if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();
     if(!PALHITS.length)return;
     palSel=(palSel+(e.key==="ArrowDown"?1:PALHITS.length-1))%PALHITS.length;palRender();return}
+  // Shift and Enter walks there instead of opening it, for the hand that is
+  // already on the keyboard; the button under the box is the other way.
+  if(e.key==="Enter"&&e.shiftKey){e.preventDefault();palWalkGo();return}
   if(e.key==="Enter"){e.preventDefault();palGo(palSel)}};
 window.openPalette=function(){closeHudMenu();PAL=palIndex();$("pal-q").value="";palTyped();
   $("pal").classList.add("on");fx($("pal").querySelector(".pal-box"));$("pal-q").focus()};

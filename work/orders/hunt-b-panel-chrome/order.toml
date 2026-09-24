@@ -6,7 +6,7 @@ branch = "fix/hunt-b-panel-chrome"
 goal = "second-wave"
 issue = 110
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "codex-hunt-b-recovery"
 
 owns = [
   "src/style.css",

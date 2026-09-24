@@ -1,0 +1,40 @@
+v = 1
+id = "p1-ownership-contract"
+title = "Record and guard the rule that every camp and every bill belongs to the learner"
+team = "docs"
+branch = "codex/issue91-contracts"
+goal = ""
+issue = 91
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "codex-p1-ownership-builder"
+
+owns = [
+  "docs/adr/0017-own-camp-own-bill.md",
+  "docs/adr/README.md",
+  "docs/LONG-GAME.md",
+  "docs/QUICKSTART.md",
+  "tests/test_repo.py",
+  "changelog.d/p1-ownership-contract.changed.md",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Focused repository tests prove the ownership copy and fail if checked-in product or template automation introduces Git LFS, pull_request_target, a paid model action or any supported workflow-secret syntax."
+check = "uv run pytest -q tests/test_repo.py -k 'ownership_cost_contract or owner_cost_workflow_guard or owner_cost_lfs_guard'"
+
+[[criteria]]
+id = "c2"
+text = "Lint, style, the sink guard and the whole non-browser battery pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration'"
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+[[criteria]]
+id = "c4"
+text = "ADR 0017 records the accepted ownership and cost decision; LONG-GAME names the free and paid parts and a zero budget with its timing caveat; QUICKSTART distinguishes the full-product template from a slim generated camp and starts Codespaces from the learner's own repository; no page promises that a generated repository can itself be marked as a template. A maintainer with repository admin access confirms Settings, Codespaces, Prebuild configuration lists no configuration, because that remote setting cannot be proved from the tree."
+judge = "reviewer"

@@ -244,7 +244,7 @@ Python first, then the web, the other languages and how to know the code works.
 
 **Try in five minutes.** python3 workspace/python/scores.py, then add one line that prints the worst run.
 
-Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism track](https://exercism.org/tracks/python) · [uv](https://docs.astral.sh/uv/) · [Source: Guido van Rossum, A Brief Timeline of Python](https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html) · [Source: python.org, Sunsetting Python 2](https://www.python.org/doc/sunset-python-2/)
+Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism track](https://exercism.org/tracks/python) · [Kaggle Learn](https://www.kaggle.com/learn) · [uv](https://docs.astral.sh/uv/) · [Source: Guido van Rossum, A Brief Timeline of Python](https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html) · [Source: python.org, Sunsetting Python 2](https://www.python.org/doc/sunset-python-2/)
 
 Unlocks: TOML in practice: pyproject.toml, Python libraries: what they are for, SQL and DuckDB, Building and consuming APIs
 

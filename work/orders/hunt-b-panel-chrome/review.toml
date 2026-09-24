@@ -1,0 +1,41 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "hunt-b-panel-chrome"
+by = "codex-review-hunt-b-panel-chrome-train"
+reviewed = "b45ec624ecc6759d22e0c136dc51db62aaa461be"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran `uv run pytest -q tests/test_game_hunt_b.py` at b45ec624 with the local browsers allowed to launch: 53 of 53 cases passed. The file has direct assertions for every B1-B8 finding and exercises the built page through desktop Chromium, touch Chromium and iPhone WebKit profiles. I read the assertions rather than treating the exit code as the whole proof: they measure HUD/text intersections, control/toast intersections, stack bounds and newest-card visibility, dialog semantics and focus escape, KPI visibility, heading line height, transcript client rects/overflow, and composited contrast. The integrated change after the stale review routes every context through `game_page()` and adds the deterministic FAST rendering profile to both touch-tablet cases; the current tests no longer contain the first-text-node assumption that broke after `runDemo()` changed. The command proves the repaired behavior. The diff pairs at least one focused regression with each finding; the earlier review's rollback evidence records that those regressions went red without the corresponding rules, while the current run independently establishes they are green at this checkpoint.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the criterion exactly at b45ec624 after activating this worktree's `.venv` and allowing its local socket and Docker fixtures: ruff check, ruff format check, style, sinks and the complete `not browser and not integration` pytest selection all exited 0. The first sandboxed attempt failed only where macOS denied loopback binds and Docker access; the same tests passed with those local permissions. I also ran `git diff --check` over the contribution and scanned its owned sources, tests and changelog for em dashes, en dashes and emoji; no matches. The added HTML is static trusted copy, the toast remains populated by the existing helper, and the sink guard passed.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran all six requested `--check` generators at b45ec624. Build reported that `game/vibe-map.html` matches `src/`; tree, cookbook and syllabus reported OK; template and fork-source checks exited 0. I compared the contribution's generated fork-source copies with the owned source changes through this check rather than accepting their presence as proof.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Read the eight findings in `recovery-notes.md`, the current source diff and all 53 focused cases. B1 is covered at the three named surfaces, two text/hand settings and two coarse-pointer tablet widths. B2 and B3 cover a real claim, title repair, full import stack, open panel, vault, compact map, bounds, control intersections, newest-message completeness and unchanged neighbouring layout. B4 checks the dialog name and deliberately non-modal focus behavior. B5 checks three desktop widths. B6 measures a genuinely wrapped heading. B7 walks every transcript text node, verifies step/fold rects and the full closing sentence. B8 measures every visible part's composited contrast. No finding is omitted or replaced by a nearby proxy. I also read the implementation around each assertion and found the checks target the player-visible failure described in the finding.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+The focused run produced 51 current `tests/out/hunt_b*.png` images. I inspected the changed surfaces across desktop, Android and iPhone evidence, including the tablet panel band, phone and desktop toast positions, bounded stack over an open panel, desktop More menu, wrapped heading, terminal columns/sentence and set-back tech shelves. Text and controls remain readable; the newest toast is whole and opaque while older cards fade within the bound; the stack and panel band clear the HUD and bottom controls. The element screenshots now put the wrapped B6 heading itself in frame on both phones. Player copy is limited to the plain `Camp panel` label and changelog wording; the style check and my source scan found no em dash or emoji, and no character voice changed.
+"""

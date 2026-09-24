@@ -2,7 +2,7 @@
 title: "DuckDB beyond the basics"
 date: 2026-09-18
 tags: [tech, data]
-generated: 167c8c306b9d
+generated: 120ad7734d16
 ---
 # DuckDB beyond the basics
 
@@ -12,7 +12,7 @@ The core topic on SQL and DuckDB gets you selecting from a CSV; this one is the 
 
 **Try in five minutes.** duckdb camp.duckdb -c "create table runs as from read_csv('workspace/data/scores.csv'); from runs limit 3" and note that the file persists.
 
-- Docs: [DuckDB, Friendly SQL](https://duckdb.org/docs/stable/sql/dialect/friendly_sql), [DuckDB, the QUALIFY clause](https://duckdb.org/docs/stable/sql/query_syntax/qualify), [DuckDB, window functions](https://duckdb.org/docs/stable/sql/functions/window_functions), [DuckDB performance guide, file formats and when to load](https://duckdb.org/docs/stable/guides/performance/file_formats)
+- Docs: [Source: DuckDB Foundation, the co-creators](https://duckdb.foundation/), [DuckDB, Friendly SQL](https://duckdb.org/docs/stable/sql/dialect/friendly_sql), [DuckDB, the QUALIFY clause](https://duckdb.org/docs/stable/sql/query_syntax/qualify), [DuckDB, window functions](https://duckdb.org/docs/stable/sql/functions/window_functions), [DuckDB performance guide, file formats and when to load](https://duckdb.org/docs/stable/guides/performance/file_formats)
 - Unlocks: [[dbt]], [[The medallion layering]]
 - Shelf: Data · Depth: Working knowledge
 

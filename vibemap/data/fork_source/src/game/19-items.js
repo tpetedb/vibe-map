@@ -102,6 +102,8 @@ function collect(it){const data=ITEMS.items.find(x=>x.id===it.id);
   sl("items").push(data.id);save();
   for(let i=0;i<12;i++){const m=new T.Mesh(new T.BoxGeometry(.1,.1,.1),new T.MeshBasicMaterial({color:PALETTE[ITEMS.kinds[data.kind].colour]||PALETTE.text}));
     m.position.set(it.x,.8,it.z);m.userData.v=new T.Vector3((Math.random()-.5)*3,2+Math.random()*2,(Math.random()-.5)*3);m.userData.life=.8;scene.add(m);parts.push(m)}
+  // A find is a thing the thumb did: the phone says so where it can.
+  buzz(BUZZ.find);
   toast(icon("compass")+"Picked up: "+data.name,
     data.concept+` <a href="#" onclick="openTopic('${data.topic}');return false">Read the topic</a>`);
   if(typeof track==="function")track("item",data.id);

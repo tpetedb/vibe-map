@@ -1,0 +1,61 @@
+v = 1
+order = "qol-4-feedback-companion"
+by = "codex-qol4-final-review"
+reviewed = "82e796bf5aa0da588072e4047b68856000c0331f"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_game_qol_feedback.py` on the current product tree with Chromium and WebKit permitted to launch: all 23 collected tests passed. The suite drives pause/resume, saver off, claim/achievement/find vibration, untouched and reduced-motion suppression, Quiet and retained notifications, the three-card cap, malformed saved records, one-time hints, the Saved mark, all three screen profiles, and the recovered sparse-frame achievement cadence. I read the tests rather than treating green as proof. The prior independent review removed seven fixes one at a time and recorded the matching failures; recovery then added controlled-clock tests for motion on and off, both recorded failing against the capped-delta implementation before the elapsed-clock fix.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+On this checkpoint, ruff check and format check were silent, the style check reported no em dashes or emoji, and the sink check exited zero. I had already run the full `pytest -q -m 'not browser and not integration'` battery to 100% with exit zero at b45ec624 during this train review. A direct diff from b45ec624 to this checkpoint contains only review and sign-off metadata, so the tested product and test tree are byte-identical. Protected CI will repeat the broad gate.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran all six `--check` generators at the reviewed checkpoint. Build reported game/vibe-map.html matches src; tree, cookbook and syllabus reported OK; sync_template and sync_fork_source exited zero. Direct source-to-fork-source diffs for 00-state.js, 18-avatar.js, 19-items.js and 90-boot.js are empty, and `git diff --check` passes.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Read findings.md, the builder note, both prior formal reviews, the recovery review, and the recovery diff. Every proposal is accounted for. Proposal 7's visibility pause is built and tested; its idle half-rate belongs to the wayfinding order. Proposal 10 has tested claim, achievement and find call sites; the bridge call belongs to wayfinding. Proposal 20 builds Quiet, the retained log and three-card cap; Stats is assigned to batch 5. Proposal 21 is rejected because the companion cheer already exists on main with its own browser coverage. Proposal 22 builds the helper and Backpack call, with remaining panel/input call sites named for their owners. Proposal 24 builds the throttled post-write Saved mark. The recovery replaces capped movement delta with the visibility-aware elapsed clock, and its two deterministic sparse-frame tests cover motion on and off. No proposal or prior blocking finding is silently skipped.
+'''
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = '''
+Opened and inspected current captures of the Notifications tab on desktop Chromium, Pixel 7 Chromium and iPhone WebKit, plus the desktop Quiet log. The desktop capture was rerun alone after a concurrent output race and then showed the complete Close control, heading, four tabs, explanatory copy and both seeded records. Android wraps tabs three-plus-one; iPhone wraps two-plus-two; both keep the copy, literal markup text and timestamp pills readable without clipping. The quiet log shows its Tip and achievement record with no transient card. The focused suite reports no page errors. The copy is plain product language, while unchanged Rolinda and corporate voices remain untouched; the style check confirms no em dashes or emoji.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/18-avatar.js"
+text = '''
+The existing touch gate is wider than browser user activation: Escape, Shift or a drag can set the game's `touched` flag while Chrome still refuses `navigator.vibrate`. The prior review reproduced the narrow timing case through raw CDP. Where `navigator.userActivation` exists, requiring it as well would prevent that console error path.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/18-avatar.js"
+text = '''
+The retained log still prints only hours and minutes, so yesterday's entry can look like today's, and `plainText()` retains link instructions without a usable link while leaving escaped entities encoded. These are record-copy follow-ups; current package data remains readable and safely enters the panel through `esc()`.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/18-avatar.js"
+text = '''
+The Notifications tab does not expose selected-tab semantics and activating it leaves focus on the document body. It remains keyboard reachable, but the follow-up should add the appropriate tab state and move focus consistently. The accepted panels sign-off separately assigns toast/Saved placement and remaining hint call sites to panel-owned follow-up orders.
+'''

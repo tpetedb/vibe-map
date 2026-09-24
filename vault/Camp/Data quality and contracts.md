@@ -2,7 +2,7 @@
 title: "Data quality and contracts"
 date: 2026-09-18
 tags: [tech, data]
-generated: 0a14889bead4
+generated: d051c59ed2b7
 ---
 # Data quality and contracts
 
@@ -12,7 +12,7 @@ A data contract is the small set of promises a table makes: these columns exist,
 
 **Try in five minutes.** Add a not_null test to a column you know has a null in it, run dbt test, and read the failing row count.
 
-- Docs: [dbt, data tests: generic and singular](https://docs.getdbt.com/docs/build/data-tests), [dbt, model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts), [Great Expectations, the overview of GX Core](https://docs.greatexpectations.io/docs/core/introduction/gx_overview), [Soda, the documentation](https://docs.soda.io/)
+- Docs: [Source: dbt team, Core 1.0 test terminology](https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180), [dbt, data tests: generic and singular](https://docs.getdbt.com/docs/build/data-tests), [dbt, model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts), [Great Expectations, the overview of GX Core](https://docs.greatexpectations.io/docs/core/introduction/gx_overview), [Soda, the documentation](https://docs.soda.io/)
 - Unlocks: [[The medallion layering]], [[Ingestion, transformation, orchestration]]
 - Shelf: Data · Depth: Working knowledge
 

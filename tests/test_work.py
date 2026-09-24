@@ -242,8 +242,9 @@ def test_a_plan_runs_needs_first_and_keeps_a_group_disjoint(repo: Path) -> None:
         'v = 1\nid = "g"\nstatement = "s"\nbudget = 2\n'
         'orders = ["aaa", "bbb", "ccc", "ddd"]\n'
     )
-    groups = [[o.id for o in g] for g in work.plan("g", repo)]
-    assert groups == [["aaa", "ddd"], ["bbb"], ["ccc"]]
+    groups, blocked = work.plan("g", repo)
+    assert [[o.id for o in g] for g in groups] == [["aaa", "ddd"], ["bbb"], ["ccc"]]
+    assert blocked == {}
 
 
 def test_orders_that_wait_on_each_other_are_named(repo: Path) -> None:
@@ -253,7 +254,7 @@ def test_orders_that_wait_on_each_other_are_named(repo: Path) -> None:
     (repo / "work" / "goals" / "g.toml").write_text(
         'v = 1\nid = "g"\nstatement = "s"\norders = ["aaa", "bbb"]\n'
     )
-    with pytest.raises(work.Bad, match="wait on each other"):
+    with pytest.raises(work.Bad, match="aaa, bbb wait on each other"):
         work.plan("g", repo)
 
 
@@ -770,11 +771,20 @@ def test_a_stray_that_is_only_staged_is_still_a_stray(repo: Path) -> None:
 
 def test_a_diff_that_cannot_run_is_an_error_not_nothing_changed(repo: Path) -> None:
     put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
-    # A name git reads as pathspec magic: the diff over what is uncommitted
-    # cannot run, and an empty answer would read as "this branch changed nothing".
-    (repo / ":(nope)x.js").write_text("// odd, and legal\n")
-    with pytest.raises(work.Bad, match="git diff"):
-        work.changed(repo, "origin/main")
+    commit(repo)
+    # Main moves on, and the tree of its new commit goes missing: the branch's
+    # own diff still runs (it starts at the merge base), and only the diff over
+    # what is uncommitted, which reads base itself, cannot.
+    sh(repo, "checkout", "-q", "main")
+    (repo / "src" / "scene.js").write_text("// scene, changed on main\n")
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "main moves"))
+    sh(repo, "checkout", "-q", "feat/x")
+    tree = sh(repo, "rev-parse", "origin/main^{tree}")
+    (repo / ".git" / "objects" / tree[:2] / tree[2:]).unlink()
+    (repo / "src" / "scene.js").write_text("// not mine\n")
+    ran = tool(repo, "check", "one")
+    # An empty answer would read as "this branch changed nothing".
+    assert ran.returncode == 2 and "git diff" in ran.stderr, ran.stdout
 
 
 def test_a_name_git_would_quote_is_read_whole(repo: Path) -> None:
@@ -802,6 +812,199 @@ def test_touched_json_keeps_the_newest_entries_and_no_more(repo: Path) -> None:
     assert len(seen) == work.TOUCHED_KEEP
     assert f"agent-{work.TOUCHED_KEEP + 4}" in seen
     assert "agent-0" not in seen
+
+
+# ------------------------------------------------------------ the ci follow-ups
+
+
+@pytest.mark.parametrize("odd", [":(nope)x.js", ":!src/scene.js"])
+def test_a_name_that_looks_like_pathspec_magic_is_a_file_like_any_other(
+    repo: Path, odd: str
+) -> None:
+    """Git reads `:(nope)` as magic it does not know and `:!src/scene.js` as an
+    exclusion. Both are legal names, tracked on main next to a real stray."""
+    sh(repo, "checkout", "-q", "main")
+    (repo / odd).parent.mkdir(parents=True, exist_ok=True)
+    (repo / odd).write_text("// odd, and legal\n")
+    sh(repo, "update-ref", "refs/remotes/origin/main", commit(repo, "odd name"))
+    sh(repo, "checkout", "-q", "feat/x")
+    sh(repo, "merge", "-q", "--ff-only", "origin/main")
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    (repo / odd).write_text("// odd, and changed\n")
+    (repo / "src" / "scene.js").write_text("// not mine\n")
+    ran = tool(repo, "check", "one")
+    assert ran.returncode == 1, ran.stdout + ran.stderr
+    for name in (odd, "src/scene.js"):
+        assert f"STRAY  {name}  " in ran.stdout, ran.stdout
+    commit(repo)
+    ran = tool(repo, "check", "one")
+    assert ran.returncode == 1 and f"STRAY  {odd}  " in ran.stdout
+
+
+def test_a_builder_who_keeps_editing_is_never_forgotten(repo: Path) -> None:
+    order = put_order(
+        repo,
+        "one",
+        order_text("one", "feat/x", ["src/panel.js"], checks={"c1": "false"}),
+    )
+    builder = {**edit(repo / "src" / "panel.js"), "agent_id": "the-builder"}
+    assert work.hook_pre_tool(builder) == (0, "")
+    # As many newcomers as touched.json keeps, with the builder editing between
+    # each two of them: its last edit is recent, only its first one is old.
+    for n in range(work.TOUCHED_KEEP):
+        if n:
+            assert work.hook_pre_tool(builder) == (0, "")
+        other = {**edit(repo / "src" / "panel.js"), "agent_id": f"agent-{n}"}
+        assert work.hook_pre_tool(other) == (0, "")
+    seen = json.loads((order.dir / "touched.json").read_text())
+    assert len(seen) == work.TOUCHED_KEEP and "the-builder" in seen
+    stop = tool(repo, "hook", "stop", stdin=json.dumps({"agent_id": "the-builder"}))
+    assert stop.returncode == 2 and "FAIL" in stop.stderr
+
+
+def test_an_order_waiting_on_another_goal_is_blocked_not_a_cycle(repo: Path) -> None:
+    put_order(repo, "aaa", order_text("aaa", "b/a", ["tests/a.py"], needs=["xxx"]))
+    put_order(repo, "bbb", order_text("bbb", "b/b", ["tests/b.py"]))
+    put_order(repo, "ccc", order_text("ccc", "b/c", ["tests/c.py"], needs=["aaa"]))
+    # An order of another goal that has not landed yet.
+    put_order(repo, "xxx", order_text("xxx", "b/x", ["tests/x.py"]))
+    (repo / "work" / "goals").mkdir()
+    (repo / "work" / "goals" / "g.toml").write_text(
+        'v = 1\nid = "g"\nstatement = "s"\norders = ["aaa", "bbb", "ccc"]\n'
+    )
+    ran = tool(repo, "plan", "g")
+    assert ran.returncode == 0, ran.stderr
+    assert "each other" not in ran.stdout + ran.stderr
+    lines = [line.split() for line in ran.stdout.splitlines()]
+    first = lines.index(["group", "1"])
+    assert lines[first + 1][0] == "bbb" and lines[first + 2][0] != "group"
+    assert ["aaa", "blocked", "by", "xxx"] in lines
+    assert ["ccc", "blocked", "by", "aaa"] in lines
+
+
+def test_validate_warns_when_a_check_runs_the_integration_tests(repo: Path) -> None:
+    (repo / "tests").mkdir()
+    (repo / "tests" / "test_live.py").write_text(
+        "import pytest\n\n@pytest.mark.integration\ndef test_x():\n    pass\n"
+    )
+    (repo / "tests" / "test_quiet.py").write_text("def test_y():\n    pass\n")
+    online = "uv run pytest -q tests/test_quiet.py tests/test_live.py"
+    put_order(
+        repo, "one", order_text("one", "feat/x", ["tests/a.py"], checks={"c1": online})
+    )
+    ran = tool(repo, "validate")
+    assert ran.returncode == 0, ran.stderr
+    warned = [line for line in ran.stdout.splitlines() if line.startswith("warning")]
+    assert len(warned) == 1, ran.stdout
+    assert "one c1" in warned[0] and "tests/test_live.py" in warned[0]
+    assert "tests/test_quiet.py" not in warned[0]
+    offline = online.replace("-q", "-q -m 'not integration'")
+    put_order(
+        repo, "one", order_text("one", "feat/x", ["tests/a.py"], checks={"c1": offline})
+    )
+    assert "warning" not in tool(repo, "validate").stdout
+
+
+def test_a_clash_between_two_other_orders_does_not_fail_this_one(
+    repo: Path,
+) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["tests/a.py"]))
+    commit(repo)
+    for oid, branch in (("two", "feat/y"), ("three", "feat/z")):
+        other = repo.parent / oid
+        sh(repo, "worktree", "add", "-q", str(other), "-b", branch, "origin/main")
+        put_order(other, oid, order_text(oid, branch, ["src/panel.js"]))
+
+    def said(out: str, prefix: str, *ids: str) -> bool:
+        return any(
+            line.startswith(prefix) and all(f" {i} " in f" {line} " for i in ids)
+            for line in out.splitlines()
+        )
+
+    ran = tool(repo, "validate")
+    assert ran.returncode == 0, ran.stdout
+    assert said(ran.stdout, "collision elsewhere", "two", "three"), ran.stdout
+    # Seen from a checkout that builds no order, every clash is a failure.
+    main = repo.parent / "main"
+    sh(repo, "worktree", "add", "-q", str(main), "main")
+    ran = tool(main, "validate")
+    assert ran.returncode == 1 and said(ran.stdout, "collision:", "two", "three")
+    # And a clash this branch's own order is party to fails it.
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    ran = tool(repo, "validate")
+    assert ran.returncode == 1 and said(ran.stdout, "collision:", "one", "two")
+
+
+def branch_with(repo: Path, name: str, files: dict[str, str]) -> str:
+    """A branch off main with these files written and committed."""
+    sh(repo, "checkout", "-q", "-b", name, "origin/main")
+    for rel, text in files.items():
+        (repo / rel).parent.mkdir(parents=True, exist_ok=True)
+        (repo / rel).write_text(text)
+    return commit(repo, name)
+
+
+def built_and_reviewed(repo: Path) -> None:
+    """Order one on feat/one: built, and accepted by someone else."""
+    sha = branch_with(
+        repo,
+        "feat/one",
+        {
+            "work/orders/one/order.toml": order_text(
+                "one", "feat/one", ["src/panel.js"]
+            ),
+            "src/panel.js": "// built\n",
+        },
+    )
+    (repo / "work/orders/one/review.toml").write_text(
+        review_text("one", "reviewer-b", sha)
+    )
+    commit(repo, "the review")
+
+
+def car(repo: Path, *branches: str) -> None:
+    """A train car: one branch off main that merges several pull requests."""
+    sh(repo, "checkout", "-q", "-B", "car", "origin/main")
+    for b in branches:
+        sh(repo, "merge", "-q", "--no-ff", "--no-edit", b)
+
+
+def test_a_plan_rides_in_a_car_with_built_code(repo: Path) -> None:
+    built_and_reviewed(repo)
+    plan = order_text("two", "feat/two", ["tests/t.py"], builder="")
+    branch_with(repo, "plan/two", {"work/orders/two/order.toml": plan})
+    car(repo, "feat/one", "plan/two")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert ran.returncode == 0 and "2 orders" in ran.stdout, ran.stdout
+    # The plan's files are its own business once something builds them.
+    sh(repo, "checkout", "-q", "plan/two")
+    (repo / "tests").mkdir()
+    (repo / "tests" / "t.py").write_text("a = 1\n")
+    commit(repo, "built without a builder")
+    car(repo, "feat/one", "plan/two")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert ran.returncode == 1 and "two: " in ran.stdout, ran.stdout
+
+
+def test_a_loose_change_in_a_car_is_no_orders_stray(repo: Path) -> None:
+    built_and_reviewed(repo)
+    branch_with(repo, "chore/notes", {"NOTES.md": "three lines\n"})
+    car(repo, "feat/one", "chore/notes")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert ran.returncode == 0 and "1 orders" in ran.stdout, ran.stdout
+    # What the order's own branch strays into is still found inside the car.
+    sh(repo, "checkout", "-q", "feat/one")
+    (repo / "src" / "scene.js").write_text("// not this order's\n")
+    commit(repo, "a stray after the review")
+    car(repo, "feat/one", "chore/notes")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert ran.returncode == 1, ran.stdout
+    assert "one: src/scene.js is outside what it owns" in ran.stdout
+    assert "NOTES.md" not in ran.stdout
+    # A branch nobody can find is said, not guessed around.
+    sh(repo, "branch", "-D", "feat/one")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert ran.returncode == 1 and "feat/one" in ran.stdout, ran.stdout
 
 
 # ------------------------------------------------------------ the issue

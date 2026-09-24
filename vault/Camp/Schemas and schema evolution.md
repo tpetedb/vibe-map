@@ -2,7 +2,7 @@
 title: "Schemas and schema evolution"
 date: 2026-09-18
 tags: [tech, data]
-generated: f72843ddf16f
+generated: de16e6624737
 ---
 # Schemas and schema evolution
 
@@ -12,7 +12,7 @@ A schema is the contract a table keeps: the column names, their types, and wheth
 
 **Try in five minutes.** duckdb -c "select * from read_parquet(['a.parquet','b.parquet'], union_by_name = true)" on two files with different columns and count the NULLs.
 
-- Docs: [Apache Avro specification, schema resolution](https://avro.apache.org/docs/1.12.0/specification/), [Apache Iceberg, evolution: schema, partition and sort order](https://iceberg.apache.org/docs/latest/evolution/), [DuckDB, combining schemas across files with union_by_name](https://duckdb.org/docs/stable/data/multiple_files/combining_schemas), [Source: Apache Iceberg, docs/docs/evolution.md in the project repository](https://github.com/apache/iceberg/blob/main/docs/docs/evolution.md)
+- Docs: [Source: Apache Incubator, Iceberg specification publication](https://incubator.apache.org/projects/iceberg.html), [Apache Avro specification, schema resolution](https://avro.apache.org/docs/1.12.0/specification/), [Apache Iceberg, evolution: schema, partition and sort order](https://iceberg.apache.org/docs/latest/evolution/), [DuckDB, combining schemas across files with union_by_name](https://duckdb.org/docs/stable/data/multiple_files/combining_schemas), [Source: Apache Iceberg, docs/docs/evolution.md in the project repository](https://github.com/apache/iceberg/blob/main/docs/docs/evolution.md)
 - Unlocks: [[Apache Iceberg]], [[Data quality and contracts]], [[dlt, ingestion as code]]
 - Shelf: Data · Depth: Working knowledge
 

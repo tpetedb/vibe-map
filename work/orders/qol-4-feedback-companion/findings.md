@@ -133,3 +133,32 @@ in the Roadmap's sync card offering the export, and show the same line in the co
 **Effort**: S to M. **Risk**: low; `save()` is called very often, so the mark must be throttled and
 must not force a layout each time. **State**: `S.exportedAt` timestamp.
 
+
+## Builder's note: what this order did not build, and where it goes
+
+Every part of a proposal above that is not in this branch, named rather than left silent, with the
+file it belongs to. Nothing here is a judgement that it should not be built.
+
+- **Proposal 7, half rate after sixty idle seconds.** Not built. It lives in `31-animate.js`, which
+  is batch 2's file: issue #127 puts "the idle half-rate half of proposal 7" in that batch, so the
+  pause on `visibilitychange` is the half this order owns. For the wayfinding team.
+- **Proposal 10, the buzz when a bridge opens.** Not built. The bridge-open path is in
+  `22-archipelago.js`, batch 2's file. An achievement buzz stands in its place here, which is a
+  swap and not the same thing: an achievement often unlocks in the same moment, but a bridge that
+  opens without one is silent. For the wayfinding team, `buzz(BUZZ.unlock)` is the call.
+- **Proposal 20, the cap on the cards on screen.** Built, after the review asked where it was. The
+  queue is `toast()` in `18-avatar.js`, which this order owns, so there was nobody to hand it to:
+  at most three cards are up at once and the oldest goes, with the tab keeping every line.
+- **Proposal 20, the list in `89-dashboard.js`.** The proposal puts the log in the Stats dashboard;
+  it is in the Backpack's Notifications tab instead, because `89-dashboard.js` is batch 5's file
+  and the Backpack is this order's. `window.__log()` and `S.notes` are the seam, so a second view
+  in Stats is a reader and costs this order nothing.
+- **Proposal 22, the other three hints.** `hint(id, text)` is here with one call site, the
+  Notifications tab. The proximity checks the proposal names are in `30-input.js` (batch 2) and
+  `openVault()` and `openTree()` are the panels team's. The bench is in reach (`toggleSit()` here)
+  and is a low finding from the first review, for the next round of this order.
+- **Proposal 21, the pet cheer.** Already on main since `5eae261`, covered by
+  `tests/test_game_camera.py -k companion_cheers`. `19b-pet.js` is untouched.
+- **For the settings team, from the first review**: "Battery saver: Keep running" cannot keep
+  anything running. A really hidden tab draws no frames either way, because the browser stops the
+  loop; the option only buys the jump on the way back. Say what it does, or drop the row.
