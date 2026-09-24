@@ -1,0 +1,67 @@
+v = 1
+id = "harness-core"
+title = "The harness core: root config.toml, complete profiles, the model table, .agents/conf, the generator and doctor, rendered .claude and .codex (DECISION #193 sections 1, 2)"
+team = "harness"
+branch = "claude/harness-core"
+goal = "ways-of-working"
+issue = 193
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = ""
+
+# tools/work.py: paths listed in .agents/generated.lock join ANYONE, so later orders
+# regenerate outputs without owning them; the drift check guards those files instead.
+owns = [
+  "config.toml",
+  ".agents/README.md",
+  ".agents/conf/profiles/",
+  ".agents/conf/models/",
+  ".agents/conf/roles/",
+  ".agents/conf/hooks.toml",
+  ".agents/conf/policy.toml",
+  ".agents/conf/mcp.toml",
+  ".agents/conf/repo.toml",
+  ".agents/context/",
+  ".agents/templates/",
+  ".agents/utils/harness.py",
+  ".agents/tasks/",
+  ".agents/memory/",
+  ".agents/generated.lock",
+  ".claude/agents/",
+  ".codex/agents/",
+  ".claude/settings.json",
+  ".codex/config.toml",
+  ".codex/hooks.json",
+  "CLAUDE.md",
+  ".gitignore",
+  "agents.just",
+  "tools/work.py",
+  "tests/test_harness.py",
+  "tests/test_work.py",
+]
+cross = []
+needs = ["board-and-memory"]
+
+[[criteria]]
+id = "c1"
+text = "The generator reproduces the tree: sync renders every output from tracked input only, check re-renders to memory and finds no drift, and the rendered files are byte-identical to what is committed."
+check = "uv run python .agents/utils/harness.py sync && python3 .agents/utils/harness.py check && git diff --exit-code -- .claude .codex CLAUDE.md config.toml .agents/generated.lock"
+
+[[criteria]]
+id = "c2"
+text = "The harness tests pass, each new one seen failing first: config.toml parses with version, profile, safeguards, autonomy, providers, agents, models and [usage]; the three profiles declare the same key set and no inheritance; an unknown key or profile fails loudly; the model table validates effort per model (no effort for haiku, max only on claude, ultra only on codex) and reports an id absent from a client's list; every root-to-leaf AGENTS.md chain is measured and a fixture chain over 24 KiB fails; explain names the source file and the restart boundary of every value; the skill links are relative, repaired idempotently and copied when links cannot be made; .codex/config.toml never carries profile, profiles, model_provider(s), openai_base_url, chatgpt_base_url, notify or otel and carries exactly one sandbox style with writable_roots equal to ['../.git/board']; pick requires --provider and never returns another provider's model; a private overlay weaker than the tracked floor is refused before spawn; paths listed in generated.lock are accepted by work.py as regenerable, and only those harness.py renders and check re-verifies: a hand-maintained file such as docs/SKILLS.md listed in the lock is refused; every fenced toml block in .agents/README.md, in docs/ and in the decision copy the README points at parses with tomllib."
+check = "uv run pytest -q tests/test_harness.py tests/test_work.py"
+
+[[criteria]]
+id = "c3"
+text = "Doctor runs offline and green on this tree: links, schemas, chain budget, lock, and it reports Codex project trust and hook trust as two separate values, each verified, missing or unknown."
+check = "python3 .agents/utils/harness.py doctor"
+
+[[criteria]]
+id = "c4"
+text = "Lint, style, the sink guard, the non-browser battery, every generated check and the order validator pass."
+check = "uv run ruff check -q . && uv run ruff format --check -q . && uv run python tools/checks.py style && uv run python tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration' && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/work.py validate"
+
+[[criteria]]
+id = "c5"
+text = "Codex evidence receipt, version-bound (DECISION A3, A8): the installed Codex client starts in this checkout with no ignored-key warning for the rendered .codex/config.toml; harness explain matches the client's effective configuration; the agent TOMLs load with their model and effort; the board root works from the main checkout. Claude: the rendered subagents appear with the expected model and effort and the skill links resolve. The Codex reviewer proves the Codex half on the client."
+judge = "reviewer"
