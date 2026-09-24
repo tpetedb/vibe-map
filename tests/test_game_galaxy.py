@@ -345,12 +345,40 @@ def test_galaxy_short_screen_uses_the_complete_list(game_desktop):
     game = game_desktop
     game.page.set_viewport_size({"width": 720, "height": 450})
     _open(game)
+    label = game.page.locator("#galaxy-list .galaxy-place b").first
+    state = game.page.locator("#galaxy-list .galaxy-state").first
+    learn = game.page.locator("#galaxy-list .galaxy-place button").first
+    normal_label = float(
+        label.evaluate("el => parseFloat(getComputedStyle(el).fontSize)")
+    )
+    normal_state = float(
+        state.evaluate("el => parseFloat(getComputedStyle(el).fontSize)")
+    )
+    normal_learn = float(
+        learn.evaluate("el => parseFloat(getComputedStyle(el).fontSize)")
+    )
     game.hud_action('#hud button[aria-label="Settings"]')
     game.page.locator("#set-text").select_option("larger")
     game.page.locator("#sheet > .x").click()
+    assert (
+        float(label.evaluate("el => parseFloat(getComputedStyle(el).fontSize)"))
+        > normal_label
+    )
+    assert (
+        float(state.evaluate("el => parseFloat(getComputedStyle(el).fontSize)"))
+        > normal_state
+    )
+    assert (
+        float(learn.evaluate("el => parseFloat(getComputedStyle(el).fontSize)"))
+        > normal_learn
+    )
     expect(game.page.locator("#galaxy-ui")).to_have_attribute("data-rendering", "list")
     expect(game.page.locator("#c")).not_to_be_visible()
     assert game.page.locator("#galaxy-list [data-galaxy-topic]").count() == 70
+    game.page.set_viewport_size({"width": 360, "height": 450})
+    assert game.page.locator("#galaxy-ui").evaluate(
+        "el => el.scrollWidth <= el.clientWidth + 1"
+    )
     game.page.locator('[data-galaxy-topic="unix"]').click()
     expect(game.page.locator("#vault")).to_have_class("on")
     game.screenshot("galaxy_short_screen_lesson")
