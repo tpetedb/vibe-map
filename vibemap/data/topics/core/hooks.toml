@@ -12,3 +12,10 @@ unlocks = []
 [[sources]]
 label = "Source: Claude Code hooks"
 url = "https://code.claude.com/docs/en/hooks"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic publishes the Claude Code 1.0.38 changelog online, announcing hooks."
+source = "https://github.com/anthropics/claude-code/commit/390f11039c4986f2172aae21c6380d2b5a8b251e"
+primary = true

@@ -2,7 +2,7 @@
 title: "dbt"
 date: 2026-09-18
 tags: [tech, data]
-generated: a29672c021b8
+generated: 22eb5bca6ce1
 ---
 # dbt
 
@@ -12,7 +12,7 @@ dbt turns a folder of SELECT statements into a build system: each file is a mode
 
 **Try in five minutes.** uv run --with dbt-duckdb dbt --version and read which adapter you got, then dbt init to see the folder it wants.
 
-- Docs: [dbt, building models](https://docs.getdbt.com/docs/build/models), [dbt, the DuckDB connection profile](https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup), [dbt, installation overview](https://docs.getdbt.com/docs/core/installation-overview), [dbt, the ref function](https://docs.getdbt.com/reference/dbt-jinja-functions/ref)
+- Docs: [Source: dbt team, Core 1.0 release announcement](https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180), [dbt, building models](https://docs.getdbt.com/docs/build/models), [dbt, the DuckDB connection profile](https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup), [dbt, installation overview](https://docs.getdbt.com/docs/core/installation-overview), [dbt, the ref function](https://docs.getdbt.com/reference/dbt-jinja-functions/ref)
 - Unlocks: [[Data quality and contracts]], [[The medallion layering]], [[Apache Airflow]]
 - Shelf: Data · Depth: Working knowledge
 

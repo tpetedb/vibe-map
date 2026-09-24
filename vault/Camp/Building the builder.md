@@ -2,7 +2,7 @@
 title: "Building the builder"
 date: 2026-09-17
 tags: [tech, agents]
-generated: 27e6da23292d
+generated: fd207b5f381d
 ---
 # Building the builder
 
@@ -12,7 +12,7 @@ Some of the most valuable work is not the feature: it is the template, the tool,
 
 **Try in five minutes.** Add one line to an agent-config file in your camp (AGENTS.md or a skill) that captures something you had to explain to the agent twice this session. Next session, note what was cheaper. Then read docs/MAINTAINERS.md in the product repository and find the three places where a change in one zone reaches another; that table is the meta layer of this whole course.
 
-- Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](https://dougengelbart.org/pubs/augment-3906.html), [Brooks, No Silver Bullet, 1986](https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf), [Grove, High Output Management (leverage), 1983](https://en.wikipedia.org/wiki/High_Output_Management), [AGENTS.md, the open format](https://agents.md/), [Claude Code, memory files](https://code.claude.com/docs/en/memory), [Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident](https://dougengelbart.org/pubs/augment-3906.html)
+- Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](https://dougengelbart.org/pubs/augment-3906.html), [Brooks, No Silver Bullet, 1986](https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf), [Grove, High Output Management (leverage), 1983](https://en.wikipedia.org/wiki/High_Output_Management), [AGENTS.md, the open format](https://agents.md/), [Claude Code, memory files](https://code.claude.com/docs/en/memory), [Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident](https://dougengelbart.org/pubs/augment-3906.html), [Source: Engelbart and English 1968, reference 6c locates the October 1962 report at SRI, Menlo Park](https://dougengelbart.org/content/view/140/)
 - Unlocks: [[Separation of concerns]], [[Skills (Agent Skills standard)]], [[AGENTS.md]], [[Semantic Versioning]]
 - Shelf: Agents and the harness · Depth: Working knowledge
 

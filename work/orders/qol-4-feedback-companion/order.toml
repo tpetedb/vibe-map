@@ -6,7 +6,7 @@ branch = "feat/qol-batch4"
 goal = "second-wave"
 issue = 127
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "codex-root-recovery"
 
 owns = [
   "src/game/18-avatar.js",
@@ -15,6 +15,8 @@ owns = [
   "src/game/00-state.js",
   "src/game/90-boot.js",
   "tests/test_game_qol_feedback.py",
+  "tests/test_harness_determinism.py",
+  "tests/conftest.py",
 ]
 cross = ["state", "panels"]
 needs = ["harness-ci-shards"]

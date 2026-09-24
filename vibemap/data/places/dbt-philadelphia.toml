@@ -1,0 +1,13 @@
+# The company release is datelined Philadelphia, 30 June 2021.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "dbt-philadelphia"
+name = "dbt Labs, Philadelphia"
+kind = "company"
+region = "us-east"
+era = "data"
+globe = "earth"
+lat = 39.95
+lon = -75.16
+look = "tower"
+landmark = "generic-marker"
+source = "https://www.getdbt.com/blog/fishtown-analytics-rebrands-as-dbt-labs-closes-150m-to-develop-open-source-analytics-engineering-software"

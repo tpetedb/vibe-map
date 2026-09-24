@@ -6,11 +6,12 @@ branch = "feat/galaxy-places-more"
 goal = "galaxy"
 issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "codex-places-more"
 
 owns = [
   "vibemap/data/places/",
   "vibemap/places.py",
+  "vibemap/topics.py",
   "docs/TOPICS.md",
   "tools/checks.py",
   "AGENTS.md",

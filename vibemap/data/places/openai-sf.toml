@@ -1,6 +1,5 @@
-# OpenAI, San Francisco. OpenAI, Inc.'s IRS Form 990 filings (EIN 81-0861541) give
-# 3180 18th Street, San Francisco, California. openai.com answers an automated
-# fetch with 403, so the filings are what could be opened and read.
+# OpenAI, San Francisco. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "openai-sf"
 name = "OpenAI, San Francisco"
 kind = "company"
@@ -10,5 +9,5 @@ globe = "earth"
 lat = 37.762
 lon = -122.415
 look = "hall"
-landmark = "eighteenth-street-office"
-source = "https://projects.propublica.org/nonprofits/organizations/810861541"
+landmark = "generic-marker"
+source = "https://openai.com/policies/communications-privacy-policy/"

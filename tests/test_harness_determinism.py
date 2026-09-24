@@ -15,6 +15,7 @@ selector that reads `#toast` is a test asking the screen instead of the page.
 from __future__ import annotations
 
 import ast
+import re
 import tempfile
 from datetime import date
 from pathlib import Path
@@ -61,6 +62,11 @@ THE_STACK = "#toast"
 # (`get_by_text`) names no selector and no guard on selectors can see it; the
 # record is what makes writing one unnecessary.
 TOAST_SELECTORS = ("#toast", ".tst", "'toast'", '"toast"')
+SCRIPT_READS_TOAST_TEXT = re.compile(
+    r"(?:getElementById\(\s*['\"]toast['\"]\s*\)|"
+    r"querySelector(?:All)?\(\s*['\"][^'\"]*(?:#toast|\.tst)[^'\"]*['\"]\s*\))"
+    r"\s*\.\s*(?:textContent|innerText|innerHTML)\b"
+)
 # What tells a context opened for the game from one opened for another page
 # the battery visits: the dashboard report and the syllabus are not this.
 GAME_FILE = "vibe-map.html"
@@ -163,12 +169,17 @@ def toast_reads(source: str, name: str = "<sample>") -> list[str]:
         if not isinstance(node, ast.Call):
             continue
         args: list[ast.AST] = [*node.args, *(kw.value for kw in node.keywords)]
-        said = [s for a in args for s in _strings(a, names)]
+        said = [
+            s for a in args if not isinstance(a, ast.Call) for s in _strings(a, names)
+        ]
+        operation = _operation(node, parents)
         hits = [s for s in said if any(sel in s for sel in TOAST_SELECTORS)]
+        if operation in {"evaluate", "still", "wait_for_function"}:
+            hits = [s for s in hits if SCRIPT_READS_TOAST_TEXT.search(s)]
         if not hits:
             continue
         stack_only = all(s == THE_STACK for s in hits)
-        if stack_only and _operation(node, parents) in NOT_A_READ:
+        if stack_only and operation in NOT_A_READ:
             continue
         found.append(f"{name}:{node.lineno} {ast.unparse(node)}")
     return found
@@ -339,7 +350,7 @@ def test_the_toast_record_outlives_the_toast(game: GamePage) -> None:
     game.page.evaluate(
         "() => document.querySelectorAll('#toast .tst').forEach(n => n.remove())"
     )
-    assert game.page.text_content("#toast") == ""
+    assert game.page.locator("#toast .tst").count() == 0
     assert any("could not be read" in said for said in game.toasts())
     game.toast_said("could not be read")
 
@@ -354,8 +365,8 @@ def test_the_toast_record_holds_each_notice_once(game: GamePage) -> None:
     that disagrees with it is wrong from the first toast.
     """
     # An island the game does not build is repaired away and the player is
-    # told, which is one toast on load; the campus stop is what First light
-    # reads, which is the second toast, on resume.
+    # told once; the campus stop earns First light, which may be noticed
+    # behind the title screen or after resume, depending on rendering speed.
     game.goto(
         state={
             "name": "Marsman",
@@ -366,13 +377,15 @@ def test_the_toast_record_holds_each_notice_once(game: GamePage) -> None:
     game.toast_said("could not be read")
     both = "() => [window.__toasts(), (window.__toastLog || []).length]"
     raised, kept = game.page.evaluate(both)
-    assert raised == 1, f"the page raised {raised} toasts, so this proves less"
+    assert raised >= 1
     assert kept == raised, f"the record holds {kept} of {raised} toasts"
+    assert sum("could not be read" in said for said in game.toasts()) == 1
     game.resume()
     game.toast_said("Achievement: First light")
     raised, kept = game.page.evaluate(both)
     assert raised >= 2, raised
     assert kept == raised, f"the record holds {kept} of {raised} toasts"
+    assert sum("Achievement: First light" in said for said in game.toasts()) == 1
 
 
 def test_a_toast_that_never_comes_says_what_the_page_did_say(
@@ -444,6 +457,9 @@ def test_the_toast_guard_leaves_a_question_about_the_stack_alone() -> None:
     toasts off, and nothing it reads expires while it is being read.
     """
     assert toast_reads('assert not game.page.is_visible("#toast")') == []
+    geometry = "game.page.evaluate(\"document.getElementById('toast')"
+    geometry += '.getBoundingClientRect().height")'
+    assert toast_reads(geometry) == []
 
 
 def test_the_files_that_still_read_the_screen_are_still_exactly_that() -> None:

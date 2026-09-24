@@ -228,7 +228,7 @@ Unlocks: Python libraries: what they are for
 
 **Try in five minutes.** Read .github/workflows/ci.yml and change the Python version in one place.
 
-Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions) · [Docker Compose file reference](https://docs.docker.com/reference/compose-file/) · [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/) · [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/) · [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
+Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions) · [Docker Compose file reference](https://docs.docker.com/reference/compose-file/) · [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/) · [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/) · [Source: GitHub Actions adds YAML workflows (August 2019)](https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/) · [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
 
 Unlocks: CI/CD and automation, Docker and containers
 
@@ -244,7 +244,7 @@ Python first, then the web, the other languages and how to know the code works.
 
 **Try in five minutes.** python3 workspace/python/scores.py, then add one line that prints the worst run.
 
-Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism track](https://exercism.org/tracks/python) · [uv](https://docs.astral.sh/uv/) · [Source: Guido van Rossum, A Brief Timeline of Python](https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html) · [Source: python.org, Sunsetting Python 2](https://www.python.org/doc/sunset-python-2/)
+Docs: [Official tutorial](https://docs.python.org/3/tutorial/) · [Exercism track](https://exercism.org/tracks/python) · [Kaggle Learn](https://www.kaggle.com/learn) · [uv](https://docs.astral.sh/uv/) · [Source: Guido van Rossum, A Brief Timeline of Python](https://python-history.blogspot.com/2009/01/brief-timeline-of-python.html) · [Source: python.org, Sunsetting Python 2](https://www.python.org/doc/sunset-python-2/)
 
 Unlocks: TOML in practice: pyproject.toml, Python libraries: what they are for, SQL and DuckDB, Building and consuming APIs
 
@@ -304,7 +304,7 @@ Unlocks: Docker and containers
 
 **Try in five minutes.** Ask Claude: 'write pytest tests for workspace/python/scores.py and run them'. Then break scores.py and watch them fail.
 
-Docs: [pytest](https://docs.pytest.org) · [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/)
+Docs: [pytest](https://docs.pytest.org) · [Anthropic: evals guide](https://docs.claude.com/en/docs/test-and-evaluate/develop-tests) · [Source: Martin Fowler, xUnit (Kent Beck's account of JUnit's origin)](https://martinfowler.com/bliki/Xunit.html) · [Source: pytest history](https://docs.pytest.org/en/stable/history.html) · [Source: QuickCheck (Claessen and Hughes, ICFP 2000)](https://www.cse.chalmers.se/~rjmh/QuickCheck/) · [Source: Anthropic, Challenges in evaluating AI systems (October 2023)](https://www.anthropic.com/news/evaluating-ai-systems)
 
 Unlocks: CI/CD and automation
 
@@ -320,7 +320,7 @@ Files, schemas, warehouses and SQL over all of it.
 
 **Try in five minutes.** duckdb -c "copy 'workspace/data/scores.csv' to 'workspace/data/scores.parquet'" then query the parquet file. Same SQL, smaller file.
 
-Docs: [Parquet](https://parquet.apache.org/docs/) · [SQLite](https://www.sqlite.org/docs.html) · [Postgres tutorial](https://www.postgresql.org/docs/current/tutorial.html) · [Source: IBM, The relational database (Codd, 1970)](https://www.ibm.com/history/relational-database) · [Source: PostgreSQL docs, A Brief History of PostgreSQL](https://www.postgresql.org/docs/current/history.html) · [Source: SQLite release history (2000-05-29)](https://www.sqlite.org/changes.html) · [Source: SQLite, Most Widely Deployed Database](https://www.sqlite.org/mostdeployed.html) · [Source: Google Cloud blog, Google BigQuery Service (November 2011)](https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-data.html) · [Source: AWS, Announcing Amazon Redshift (November 2012)](https://aws.amazon.com/about-aws/whats-new/2012/11/28/announcing-amazon-redshift/) · [Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)](https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf) · [Source: Twitter Engineering, Announcing Parquet 1.0 (2013)](https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop)
+Docs: [Parquet](https://parquet.apache.org/docs/) · [SQLite](https://www.sqlite.org/docs.html) · [Postgres tutorial](https://www.postgresql.org/docs/current/tutorial.html) · [Source: IBM, The relational database (Codd, 1970)](https://www.ibm.com/history/relational-database) · [Source: PostgreSQL docs, A Brief History of PostgreSQL](https://www.postgresql.org/docs/current/history.html) · [Source: SQLite release history (2000-05-29)](https://www.sqlite.org/changes.html) · [Source: SQLite, Most Widely Deployed Database](https://www.sqlite.org/mostdeployed.html) · [Source: Google Cloud blog, Google BigQuery Service (November 2011)](https://cloudplatform.googleblog.com/2011/11/google-bigquery-service-big-data.html) · [Source: AWS, Announcing Amazon Redshift (November 2012)](https://press.aboutamazon.com/2012/11/amazon-web-services-announces-amazon-redshift) · [Source: Dageville et al., The Snowflake Elastic Data Warehouse (SIGMOD 2016)](https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf) · [Source: Twitter Engineering, Announcing Parquet 1.0 (2013)](https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop)
 
 Unlocks: Building and consuming APIs, Tests and evals
 
@@ -332,7 +332,7 @@ Unlocks: Building and consuming APIs, Tests and evals
 
 **Try in five minutes.** python3 -c "import csv,io;print(list(csv.reader(io.StringIO('a,\"b,c\",d'))))" and watch three fields come back, not four.
 
-Docs: [RFC 4180, Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180) · [Python, the csv module: dialects, Sniffer and the newline rule](https://docs.python.org/3/library/csv.html) · [DuckDB, reading CSV files and the CSV sniffer](https://duckdb.org/docs/stable/data/csv/overview)
+Docs: [Source: RFC Editor, RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.txt) · [RFC 4180, Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180) · [Python, the csv module: dialects, Sniffer and the newline rule](https://docs.python.org/3/library/csv.html) · [DuckDB, reading CSV files and the CSV sniffer](https://duckdb.org/docs/stable/data/csv/overview)
 
 Unlocks: JSON Lines, Parquet, Schemas and schema evolution
 
@@ -344,7 +344,7 @@ Unlocks: JSON Lines, Parquet, Schemas and schema evolution
 
 **Try in five minutes.** printf '{"a":1}\n{"a":2}\n' > two.jsonl then duckdb -c "select sum(a) from read_json('two.jsonl')" and read 3.
 
-Docs: [JSON Lines, the specification](https://jsonlines.org/) · [Python, the json module](https://docs.python.org/3/library/json.html) · [DuckDB, reading JSON and newline-delimited JSON](https://duckdb.org/docs/stable/data/json/overview)
+Docs: [Source: Ian Ward, JSON Lines specification commit](https://github.com/wardi/jsonlines/commit/92c32d4496d1f0b789cc4840e6cd65e11ef51e94) · [JSON Lines, the specification](https://jsonlines.org/) · [Python, the json module](https://docs.python.org/3/library/json.html) · [DuckDB, reading JSON and newline-delimited JSON](https://duckdb.org/docs/stable/data/json/overview)
 
 Unlocks: Schemas and schema evolution, dlt, ingestion as code
 
@@ -356,7 +356,7 @@ Unlocks: Schemas and schema evolution, dlt, ingestion as code
 
 **Try in five minutes.** Write the three words on a page and put every data tool your employer pays for under one of them. The ones you cannot place are the ones to ask about.
 
-Docs: [dlt, the introduction: what ingestion is for](https://dlthub.com/docs/intro) · [dbt, building models: transformation where the data is](https://docs.getdbt.com/docs/build/models) · [Airflow, core concepts: DAGs, tasks and schedules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html) · [Dagster, the documentation home](https://docs.dagster.io/)
+Docs: [Source: Airbnb Engineering, workflow-management announcement](https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON) · [dlt, the introduction: what ingestion is for](https://dlthub.com/docs/intro) · [dbt, building models: transformation where the data is](https://docs.getdbt.com/docs/build/models) · [Airflow, core concepts: DAGs, tasks and schedules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html) · [Dagster, the documentation home](https://docs.dagster.io/)
 
 ### SQL and DuckDB
 
@@ -378,7 +378,7 @@ Unlocks: Data: files, schemas, warehouses, Building and consuming APIs
 
 **Try in five minutes.** duckdb -c "copy (from 'workspace/data/scores.csv') to 'scores.parquet' (format parquet)" then duckdb -c "select * from parquet_metadata('scores.parquet')" and read the footer.
 
-Docs: [Apache Parquet, the file format](https://parquet.apache.org/docs/file-format/) · [DuckDB, reading and writing Parquet files](https://duckdb.org/docs/stable/data/parquet/overview) · [DuckDB performance guide, file formats and row group sizes](https://duckdb.org/docs/stable/guides/performance/file_formats) · [PyArrow, reading and writing the Parquet format](https://arrow.apache.org/docs/python/parquet.html)
+Docs: [Source: Apache Software Foundation, Parquet graduation](https://news.apache.org/foundation/entry/the_apache_software_foundation_announces75) · [Apache Parquet, the file format](https://parquet.apache.org/docs/file-format/) · [DuckDB, reading and writing Parquet files](https://duckdb.org/docs/stable/data/parquet/overview) · [DuckDB performance guide, file formats and row group sizes](https://duckdb.org/docs/stable/guides/performance/file_formats) · [PyArrow, reading and writing the Parquet format](https://arrow.apache.org/docs/python/parquet.html)
 
 Unlocks: Apache Arrow, DuckDB beyond the basics, Apache Iceberg
 
@@ -390,7 +390,7 @@ Unlocks: Apache Arrow, DuckDB beyond the basics, Apache Iceberg
 
 **Try in five minutes.** duckdb -c "select * from read_parquet(['a.parquet','b.parquet'], union_by_name = true)" on two files with different columns and count the NULLs.
 
-Docs: [Apache Avro specification, schema resolution](https://avro.apache.org/docs/1.12.0/specification/) · [Apache Iceberg, evolution: schema, partition and sort order](https://iceberg.apache.org/docs/latest/evolution/) · [DuckDB, combining schemas across files with union_by_name](https://duckdb.org/docs/stable/data/multiple_files/combining_schemas) · [Source: Apache Iceberg, docs/docs/evolution.md in the project repository](https://github.com/apache/iceberg/blob/main/docs/docs/evolution.md)
+Docs: [Source: Apache Incubator, Iceberg specification publication](https://incubator.apache.org/projects/iceberg.html) · [Apache Avro specification, schema resolution](https://avro.apache.org/docs/1.12.0/specification/) · [Apache Iceberg, evolution: schema, partition and sort order](https://iceberg.apache.org/docs/latest/evolution/) · [DuckDB, combining schemas across files with union_by_name](https://duckdb.org/docs/stable/data/multiple_files/combining_schemas) · [Source: Apache Iceberg, docs/docs/evolution.md in the project repository](https://github.com/apache/iceberg/blob/main/docs/docs/evolution.md)
 
 Unlocks: Apache Iceberg, Data quality and contracts, dlt, ingestion as code
 
@@ -402,7 +402,7 @@ Unlocks: Apache Iceberg, Data quality and contracts, dlt, ingestion as code
 
 **Try in five minutes.** duckdb camp.duckdb -c "create table runs as from read_csv('workspace/data/scores.csv'); from runs limit 3" and note that the file persists.
 
-Docs: [DuckDB, Friendly SQL](https://duckdb.org/docs/stable/sql/dialect/friendly_sql) · [DuckDB, the QUALIFY clause](https://duckdb.org/docs/stable/sql/query_syntax/qualify) · [DuckDB, window functions](https://duckdb.org/docs/stable/sql/functions/window_functions) · [DuckDB performance guide, file formats and when to load](https://duckdb.org/docs/stable/guides/performance/file_formats)
+Docs: [Source: DuckDB Foundation, the co-creators](https://duckdb.foundation/) · [DuckDB, Friendly SQL](https://duckdb.org/docs/stable/sql/dialect/friendly_sql) · [DuckDB, the QUALIFY clause](https://duckdb.org/docs/stable/sql/query_syntax/qualify) · [DuckDB, window functions](https://duckdb.org/docs/stable/sql/functions/window_functions) · [DuckDB performance guide, file formats and when to load](https://duckdb.org/docs/stable/guides/performance/file_formats)
 
 Unlocks: dbt, The medallion layering
 
@@ -414,7 +414,7 @@ Unlocks: dbt, The medallion layering
 
 **Try in five minutes.** uv run --with "dlt[duckdb]" python -c "import dlt; p = dlt.pipeline(destination='duckdb'); print(p.pipeline_name)" and you have a pipeline.
 
-Docs: [dlt, the introduction](https://dlthub.com/docs/intro) · [dlt, creating a pipeline](https://dlthub.com/docs/walkthroughs/create-a-pipeline) · [dlt, incremental loading and write dispositions](https://dlthub.com/docs/general-usage/incremental-loading) · [DuckDB, the destination this hands-on uses](https://duckdb.org/docs/stable/)
+Docs: [Source: dltHub, version 1.0.0 announcement](https://dlthub.com/blog/dlt-v1) · [dlt, the introduction](https://dlthub.com/docs/intro) · [dlt, creating a pipeline](https://dlthub.com/docs/walkthroughs/create-a-pipeline) · [dlt, incremental loading and write dispositions](https://dlthub.com/docs/general-usage/incremental-loading) · [DuckDB, the destination this hands-on uses](https://duckdb.org/docs/stable/)
 
 Unlocks: dbt, The medallion layering, Data quality and contracts
 
@@ -426,7 +426,7 @@ Unlocks: dbt, The medallion layering, Data quality and contracts
 
 **Try in five minutes.** Count the partitions of a topic you use at work, then count its consumers. If the consumers outnumber the partitions, some of them are idle.
 
-Docs: [Apache Kafka, introduction and main concepts](https://kafka.apache.org/intro) · [Apache Kafka, the KafkaConsumer javadoc on groups and offsets](https://kafka.apache.org/43/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html) · [Source: Redpanda quickstart, which is Docker Compose and 4 GB of free memory](https://docs.redpanda.com/current/get-started/quick-start/)
+Docs: [Source: LinkedIn, invitation to the Mountain View Kafka talk](https://www.linkedin.com/blog/engineering/archive/come-linkedin-hear-talk-about-kafka-our-open-source-distributed-pub-sub-messaging-system) · [Apache Kafka, introduction and main concepts](https://kafka.apache.org/intro) · [Apache Kafka, the KafkaConsumer javadoc on groups and offsets](https://kafka.apache.org/43/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html) · [Source: Redpanda quickstart, which is Docker Compose and 4 GB of free memory](https://docs.redpanda.com/current/get-started/quick-start/)
 
 Unlocks: Ingestion, transformation, orchestration
 
@@ -438,7 +438,7 @@ Unlocks: Ingestion, transformation, orchestration
 
 **Try in five minutes.** uv run python -c "import polars as pl; print(pl.scan_csv('workspace/data/scores.csv').filter(pl.col('score') > 100).explain())" and read the plan.
 
-Docs: [Polars user guide, the lazy API](https://docs.pola.rs/user-guide/concepts/lazy-api/) · [Polars user guide, query plan and optimisations](https://docs.pola.rs/user-guide/lazy/optimizations/) · [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/) · [Polars, the Python API reference](https://docs.pola.rs/api/python/stable/reference/index.html)
+Docs: [Source: Ritchie Vink, Python Polars 1.0 announcement](https://pola.rs/posts/announcing-polars-1/) · [Polars user guide, the lazy API](https://docs.pola.rs/user-guide/concepts/lazy-api/) · [Polars user guide, query plan and optimisations](https://docs.pola.rs/user-guide/lazy/optimizations/) · [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/) · [Polars, the Python API reference](https://docs.pola.rs/api/python/stable/reference/index.html)
 
 Unlocks: dbt, The medallion layering
 
@@ -450,7 +450,7 @@ Unlocks: dbt, The medallion layering
 
 **Try in five minutes.** uv run --with dbt-duckdb dbt --version and read which adapter you got, then dbt init to see the folder it wants.
 
-Docs: [dbt, building models](https://docs.getdbt.com/docs/build/models) · [dbt, the DuckDB connection profile](https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup) · [dbt, installation overview](https://docs.getdbt.com/docs/core/installation-overview) · [dbt, the ref function](https://docs.getdbt.com/reference/dbt-jinja-functions/ref)
+Docs: [Source: dbt team, Core 1.0 release announcement](https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180) · [dbt, building models](https://docs.getdbt.com/docs/build/models) · [dbt, the DuckDB connection profile](https://docs.getdbt.com/docs/core/connect-data-platform/duckdb-setup) · [dbt, installation overview](https://docs.getdbt.com/docs/core/installation-overview) · [dbt, the ref function](https://docs.getdbt.com/reference/dbt-jinja-functions/ref)
 
 Unlocks: Data quality and contracts, The medallion layering, Apache Airflow
 
@@ -462,7 +462,7 @@ Unlocks: Data quality and contracts, The medallion layering, Apache Airflow
 
 **Try in five minutes.** uv run --with "apache-airflow==3.3.2" python -c "from airflow.sdk import DAG; print(DAG)" and note how long the import alone takes.
 
-Docs: [Airflow, core concepts: DAGs](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html) · [Airflow, quick start and airflow standalone](https://airflow.apache.org/docs/apache-airflow/stable/start.html) · [Airflow, the TaskFlow API](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html) · [Airflow, installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html)
+Docs: [Source: Airbnb Engineering, Airflow announcement](https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON) · [Airflow, core concepts: DAGs](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html) · [Airflow, quick start and airflow standalone](https://airflow.apache.org/docs/apache-airflow/stable/start.html) · [Airflow, the TaskFlow API](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/taskflow.html) · [Airflow, installation](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html)
 
 Unlocks: Dagster and Prefect, Ingestion, transformation, orchestration
 
@@ -474,19 +474,19 @@ Unlocks: Dagster and Prefect, Ingestion, transformation, orchestration
 
 **Try in five minutes.** Add a not_null test to a column you know has a null in it, run dbt test, and read the failing row count.
 
-Docs: [dbt, data tests: generic and singular](https://docs.getdbt.com/docs/build/data-tests) · [dbt, model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts) · [Great Expectations, the overview of GX Core](https://docs.greatexpectations.io/docs/core/introduction/gx_overview) · [Soda, the documentation](https://docs.soda.io/)
+Docs: [Source: dbt team, Core 1.0 test terminology](https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180) · [dbt, data tests: generic and singular](https://docs.getdbt.com/docs/build/data-tests) · [dbt, model contracts](https://docs.getdbt.com/docs/collaborate/govern/model-contracts) · [Great Expectations, the overview of GX Core](https://docs.greatexpectations.io/docs/core/introduction/gx_overview) · [Soda, the documentation](https://docs.soda.io/)
 
 Unlocks: The medallion layering, Ingestion, transformation, orchestration
 
 ### The medallion layering
 
-*Working knowledge.* Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. Bronze is append-only and never edited, which is what lets you rebuild everything below it when a cleaning rule turns out to be wrong. It is a convention rather than a rule, and Databricks, who named it, say so in as many words. And for an agent: never clean in bronze. The copy of the source you did not touch is the only thing that makes a mistake recoverable.
+*Working knowledge.* Medallion is a naming convention for the stages data passes through: bronze holds it as it arrived, silver holds it cleaned, gold holds the answer somebody asked for. Reach for it when more than one person builds tables in the same place, because the value is that a table's name tells you how much you may trust it. In this camp, keep bronze append-only so you can rebuild the later layers when a cleaning rule turns out to be wrong. That is an exercise choice: Databricks also documents updates in Bronze to apply change-data capture (CDC). It is a convention rather than a rule, and Databricks, who named it, say so in as many words. And for an agent: in this exercise, keep bronze unchanged and clean in silver. The copy of the source you did not touch is the only thing that makes a mistake recoverable.
 
 **History.** Databricks defines it in one sentence: "The medallion architecture describes a series of data layers that denote the quality of data stored in the lakehouse." Bronze is "Raw data ingestion", holding "Raw, unvalidated data", and it "Contains and maintains the raw state of the data source in its original formats". Silver is "Data cleaning and validation", where you "perform data cleansing, deduplication, and normalization". Gold is "Dimensional modeling and aggregation" and "Consists of aggregated data tailored for analytics and reporting". The caveat is theirs too: "Following the medallion architecture is a recommended best practice but not a requirement." The layers are a good fit for the rest of this pack, because dlt lands bronze, dbt builds silver and gold, tests guard the boundary between them, and a table format such as Iceberg is what lets bronze be rebuilt without anyone reading a half-written table.
 
 **Try in five minutes.** Name the three tables you touched at work this week bronze, silver or gold. The one you cannot name is the one to look at.
 
-Docs: [Databricks, what is a medallion architecture](https://docs.databricks.com/aws/en/lakehouse/medallion) · [Databricks, the lakehouse architecture](https://docs.databricks.com/aws/en/lakehouse/) · [dbt, how we structure our projects](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview)
+Docs: [Source: Databricks, data layers and modeling (2022)](https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html) · [Databricks, what is a medallion architecture](https://docs.databricks.com/aws/en/lakehouse/medallion) · [Databricks, the lakehouse architecture](https://docs.databricks.com/aws/en/lakehouse/) · [dbt, how we structure our projects](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview)
 
 Unlocks: Ingestion, transformation, orchestration
 
@@ -498,7 +498,7 @@ Unlocks: Ingestion, transformation, orchestration
 
 **Try in five minutes.** python3 -c "import polars as pl; pl.DataFrame({'a':[1,2]}).write_ipc('t.arrow')" then head -c 6 t.arrow and read ARROW1.
 
-Docs: [Apache Arrow, the columnar format specification](https://arrow.apache.org/docs/format/Columnar.html) · [Apache Arrow, introduction to the columnar format](https://arrow.apache.org/docs/format/Intro.html) · [PyArrow, data types and the in-memory data model](https://arrow.apache.org/docs/python/data.html) · [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/)
+Docs: [Source: Apache Software Foundation, Arrow announcement](https://news.apache.org/foundation/entry/the_apache_software_foundation_announces87) · [Apache Arrow, the columnar format specification](https://arrow.apache.org/docs/format/Columnar.html) · [Apache Arrow, introduction to the columnar format](https://arrow.apache.org/docs/format/Intro.html) · [PyArrow, data types and the in-memory data model](https://arrow.apache.org/docs/python/data.html) · [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/)
 
 Unlocks: Polars, DuckDB beyond the basics
 
@@ -510,7 +510,7 @@ Unlocks: Polars, DuckDB beyond the basics
 
 **Try in five minutes.** uv run --with "pyiceberg[sql-sqlite,pyarrow]" python -c "from pyiceberg.catalog.sql import SqlCatalog; print(SqlCatalog)" and you have a catalog with no server.
 
-Docs: [Apache Iceberg, the table specification](https://iceberg.apache.org/spec/) · [Apache Iceberg, evolution](https://iceberg.apache.org/docs/latest/evolution/) · [PyIceberg, the Python implementation and its SQL catalog](https://py.iceberg.apache.org/) · [Delta Lake, what it is](https://docs.delta.io/latest/delta-intro.html) · [Source: Apache Iceberg, format/spec.md in the project repository](https://github.com/apache/iceberg/blob/main/format/spec.md)
+Docs: [Source: Apache Incubator, Iceberg project status](https://incubator.apache.org/projects/iceberg.html) · [Apache Iceberg, the table specification](https://iceberg.apache.org/spec/) · [Apache Iceberg, evolution](https://iceberg.apache.org/docs/latest/evolution/) · [PyIceberg, the Python implementation and its SQL catalog](https://py.iceberg.apache.org/) · [Delta Lake, what it is](https://docs.delta.io/latest/delta-intro.html) · [Source: Apache Iceberg, format/spec.md in the project repository](https://github.com/apache/iceberg/blob/main/format/spec.md)
 
 Unlocks: The medallion layering, Data quality and contracts
 
@@ -522,7 +522,7 @@ Unlocks: The medallion layering, Data quality and contracts
 
 **Try in five minutes.** uv run --with dagster python -c "import dagster as dg; print(dg.__version__)" then compare it with uv run --with prefect prefect version.
 
-Docs: [Dagster, getting started concepts: assets](https://docs.dagster.io/getting-started/concepts) · [Dagster, the documentation home](https://docs.dagster.io/) · [Prefect, the quickstart with flows and tasks](https://docs.prefect.io/v3/get-started/quickstart) · [Prefect, what Prefect is](https://docs.prefect.io/v3/get-started/index)
+Docs: [Source: Dagster, version 1.0 announcement](https://dagster.io/blog/dagster-1-0-hello) · [Dagster, getting started concepts: assets](https://docs.dagster.io/getting-started/concepts) · [Dagster, the documentation home](https://docs.dagster.io/) · [Prefect, the quickstart with flows and tasks](https://docs.prefect.io/v3/get-started/quickstart) · [Prefect, what Prefect is](https://docs.prefect.io/v3/get-started/index)
 
 Unlocks: Ingestion, transformation, orchestration
 
@@ -702,7 +702,7 @@ Unlocks: Markdown and Obsidian, AGENTS.md
 
 **Try in five minutes.** Add one line to an agent-config file in your camp (AGENTS.md or a skill) that captures something you had to explain to the agent twice this session. Next session, note what was cheaper. Then read docs/MAINTAINERS.md in the product repository and find the three places where a change in one zone reaches another; that table is the meta layer of this whole course.
 
-Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](https://dougengelbart.org/pubs/augment-3906.html) · [Brooks, No Silver Bullet, 1986](https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf) · [Grove, High Output Management (leverage), 1983](https://en.wikipedia.org/wiki/High_Output_Management) · [AGENTS.md, the open format](https://agents.md/) · [Claude Code, memory files](https://code.claude.com/docs/en/memory) · [Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident](https://dougengelbart.org/pubs/augment-3906.html)
+Docs: [Engelbart, Augmenting Human Intellect: A Conceptual Framework, 1962](https://dougengelbart.org/pubs/augment-3906.html) · [Brooks, No Silver Bullet, 1986](https://worrydream.com/refs/Brooks_1986_-_No_Silver_Bullet.pdf) · [Grove, High Output Management (leverage), 1983](https://en.wikipedia.org/wiki/High_Output_Management) · [AGENTS.md, the open format](https://agents.md/) · [Claude Code, memory files](https://code.claude.com/docs/en/memory) · [Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident](https://dougengelbart.org/pubs/augment-3906.html) · [Source: Engelbart and English 1968, reference 6c locates the October 1962 report at SRI, Menlo Park](https://dougengelbart.org/content/view/140/)
 
 Unlocks: Separation of concerns, Agent Skills standard, AGENTS.md, Semantic Versioning
 

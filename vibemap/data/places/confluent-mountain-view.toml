@@ -1,4 +1,5 @@
-# Confluent, Mountain View. 899 West Evelyn Avenue, Mountain View.
+# Confluent, Mountain View. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "confluent-mountain-view"
 name = "Confluent, Mountain View"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.388
 lon = -122.083
 look = "tower"
-landmark = "evelyn-avenue-office"
+landmark = "generic-marker"
 source = "https://www.confluent.io/about/"

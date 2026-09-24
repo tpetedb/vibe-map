@@ -17,11 +17,19 @@ from vibemap import project
 ROOT = project.root()
 SCORES = ROOT / "workspace" / "data" / "scores.csv"
 SQL_DIR = ROOT / "workspace" / "sql"
-COLUMNS = ("played_at", "player", "score", "duration_s")
+SCHEMA = {
+    "played_at": pl.Date,
+    "player": pl.String,
+    "score": pl.Int64,
+    "duration_s": pl.Int64,
+}
+COLUMNS = tuple(SCHEMA)
 
 
 def read_scores(path: Path = SCORES) -> pl.DataFrame:
     """Load the scores file, validating the column contract."""
+    if path.stat().st_size == 0:
+        return pl.DataFrame(schema=SCHEMA)
     df = pl.read_csv(path, try_parse_dates=True)
     missing = [c for c in COLUMNS if c not in df.columns]
     if missing:

@@ -1,4 +1,5 @@
-# Anthropic, San Francisco. 548 Market Street, San Francisco.
+# Anthropic, San Francisco. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "anthropic-sf"
 name = "Anthropic, San Francisco"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.79
 lon = -122.401
 look = "tower"
-landmark = "market-street-office"
+landmark = "generic-marker"
 source = "https://www.anthropic.com/legal/privacy"

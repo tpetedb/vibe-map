@@ -1,0 +1,31 @@
+# The cli team's manager agreeing to the place loader, topic origin model and
+# build payload changes. This agreement covers the reviewed train tip below.
+v = 1
+order = "galaxy-places-more"
+team = "cli"
+by = "manager-cli"
+reviewed = "73c2107ac39110cf17102dd06f74c8bfcb0954ed"
+verdict = "accept"
+note = '''
+Accepted. Nothing in the CLI-owned implementation needs to move before landing.
+
+Evidence at the reviewed checkpoint:
+- The implementation is 4c71061 plus correction 3c85fa5. `git diff` confirms
+  that vibemap/places.py, vibemap/topics.py, vibemap/data/places/, vibemap/cli.py,
+  tools/build.py and their focused tests did not change through 73c2107.
+- `Origin.year` is a strict integer, duplicate origins at one place fail with
+  the topic filename, invalid place TOML names its places/ path, and an explicit
+  empty shelf or pack selection checks no topics. The regressions cover each
+  behavior.
+- `places.payload()` retains its eras, places and origins shape. A direct probe
+  loaded 54 places and 95 origin records for 70 topics, found no place or origin
+  defects, and confirmed every payload year is an integer rather than a boolean.
+- `uv run pytest -q tests/test_places.py tests/test_topics.py tests/test_cli.py
+  tests/test_cli_rest.py tests/test_build.py` passed all 182 focused tests.
+- The independent source and coordinate audit is recorded in the accepted
+  review.toml; this CLI agreement relies on that content review for factual
+  place claims and covers loader and payload behavior.
+
+This sign-off lapses if a CLI-owned implementation file covered by this order
+changes after the reviewed commit.
+'''

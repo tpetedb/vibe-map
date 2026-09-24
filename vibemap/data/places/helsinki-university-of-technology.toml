@@ -1,4 +1,5 @@
-# Helsinki University of Technology, Otaniemi. Otakaari 1, Espoo. It merged into Aalto University on 1 January 2010.
+# Helsinki University of Technology, Otaniemi. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "helsinki-university-of-technology"
 name = "Helsinki University of Technology, Otaniemi"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 60.187
 lon = 24.827
 look = "campus"
-landmark = "otaniemi-main-building"
+landmark = "generic-marker"
 source = "https://www.aalto.fi/en/aalto-university"

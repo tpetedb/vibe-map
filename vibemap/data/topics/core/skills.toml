@@ -12,3 +12,10 @@ unlocks = []
 [[sources]]
 label = "Source: Claude Code skills"
 url = "https://code.claude.com/docs/en/skills"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic introduces Agent Skills in an online article, describing folders of instructions, scripts and resources with a SKILL.md file."
+source = "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills"
+primary = true

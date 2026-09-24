@@ -1,0 +1,13 @@
+# Snowflake issued this product launch release from San Mateo in June 2015.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "snowflake-san-mateo"
+name = "Snowflake, San Mateo"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.56
+lon = -122.32
+look = "tower"
+landmark = "generic-marker"
+source = "https://www.globenewswire.com/news-release/2015/06/23/1186853/0/en/Snowflake-Redefines-the-Data-Warehouse-for-the-Cloud-Era.html"

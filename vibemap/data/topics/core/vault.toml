@@ -9,6 +9,16 @@ covered_elsewhere = true
 
 unlocks = []
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "obsidian"
+year = 2020
+what = "Obsidian's first desktop release, 0.0.1 on 30 March 2020, lets you choose a vault and lists all the compatible files in it."
+source = "https://obsidian.md/changelog/2020-03-30-desktop-v0.0.1/"
+primary = true
+
 [[sources]]
 label = "Source: Obsidian help"
 url = "https://help.obsidian.md"

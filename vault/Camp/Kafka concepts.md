@@ -2,7 +2,7 @@
 title: "Kafka concepts"
 date: 2026-09-18
 tags: [tech, data]
-generated: 67729109fe40
+generated: a241a8745ceb
 ---
 # Kafka concepts
 
@@ -12,7 +12,7 @@ Kafka is a durable log that many programs write to and many programs read from, 
 
 **Try in five minutes.** Count the partitions of a topic you use at work, then count its consumers. If the consumers outnumber the partitions, some of them are idle.
 
-- Docs: [Apache Kafka, introduction and main concepts](https://kafka.apache.org/intro), [Apache Kafka, the KafkaConsumer javadoc on groups and offsets](https://kafka.apache.org/43/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html), [Source: Redpanda quickstart, which is Docker Compose and 4 GB of free memory](https://docs.redpanda.com/current/get-started/quick-start/)
+- Docs: [Source: LinkedIn, invitation to the Mountain View Kafka talk](https://www.linkedin.com/blog/engineering/archive/come-linkedin-hear-talk-about-kafka-our-open-source-distributed-pub-sub-messaging-system), [Apache Kafka, introduction and main concepts](https://kafka.apache.org/intro), [Apache Kafka, the KafkaConsumer javadoc on groups and offsets](https://kafka.apache.org/43/javadoc/org/apache/kafka/clients/consumer/KafkaConsumer.html), [Source: Redpanda quickstart, which is Docker Compose and 4 GB of free memory](https://docs.redpanda.com/current/get-started/quick-start/)
 - Unlocks: [[Ingestion, transformation, orchestration]]
 - Shelf: Data · Depth: Working knowledge
 

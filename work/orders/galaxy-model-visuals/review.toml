@@ -1,0 +1,29 @@
+# Independent review of the Galaxy model and procedural visual kit at the
+# current integration-train checkpoint. The unrelated train changes reported
+# as strays by work-review were excluded from the owned-path diff inspection.
+v = 1
+order = "galaxy-model-visuals"
+by = "reviewer-galaxy-model-visuals-r1"
+reviewed = "5777caecf5aa81245445d6a7d27b26e0e41c743d"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_galaxy_model.py -k model` with a writable uv cache: two tests passed. (`-k model` also selects the visuals test because the module name contains model; the first test is the relevant proof.) I read the implementation and drove the data contract independently: this checkout has 70 topics, 24 currently available topics with origins, 24 entries in the injected origins payload, exactly one primary for every available topic, and 13 primary places. The contract test snapshots both input objects before calling `galaxyModel`, then proves they are byte-for-byte unchanged; it proves ordered topic states `[done,next]`, `next.id`, per-place done/count/state values, propagation of the primary source URL, and failure on an unknown primary place. The implementation takes the first marked primary, copies the selected origin fields and place/era objects into derived output, and mutates only its new topic records. Topics without origins remain unavailable during the staged data migration, matching the additive schema in docs/GALAXY.md. The command therefore proves the criterion rather than merely adjacent behavior.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran `uv run pytest -q tests/test_galaxy_model.py -k visuals`: one test passed. I read every constructor in `src/galaxy/10-planet-kit.js`. The test checks `surface()` at the equator and pole, compares each returned Earth pin against the source latitude/longitude at radius 1.012 to 1e-9, and proves nearby domes move away from those unchanged pins. It rejects a missing Earth coordinate, a mixed-globe planet and an unsupported `logo` look. It instantiates the supported campus, lab, hall, lanes and racks paths, traverses three independently returned roots, checks every position value is finite, rejects any geometry or material reused across roots, and calls `dispose()` on every collected resource. A 20-place coincident cluster additionally proves every displayed dome pair clears twice the computed dome radius and stays below 300 drawable objects. Inspection agrees with the test: every geometry and material is allocated inside its returned root; temporary datacentre shell geometry is disposed immediately after its edge geometry is made; true beacon positions and displaced display normals are separate values. No screenshot is an output of this prerequisite order: it exposes pure scene objects and does not yet attach them to the running game. The approved Galaxy concept was supplied as local HTML, but browser policy blocks local-file navigation, so there was no product screenshot to substitute for these geometry assertions.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran the exact criterion at checkpoint 5777cae with `UV_CACHE_DIR=/private/tmp/uv-cache-galaxy-review`: ruff check and format were silent, the style guard printed `style OK: no em dashes, no emoji`, the sink guard exited 0, `tools/build.py --check` printed that game/vibe-map.html matches src, and `tools/sync_fork_source.py --check` exited 0. I also ran all of `tests/test_build.py`: 27 passed. The owned build-test change removes the now-present galaxy folder from its temporary fork before proving that this second source folder remains optional, then recreates it to prove it loads before boot; it preserves that test's contract. `git diff --check` is clean across the order's five owned paths. The generated game and fork-source mirrors contain both Galaxy modules. The final changelog says "distinct dome dioramas", which accurately describes the visual-only kit and no longer claims the domes are walkable. Harness and docs managers supplied accepting sign-offs tied to the model integration and the corrected changelog checkpoint respectively.
+'''

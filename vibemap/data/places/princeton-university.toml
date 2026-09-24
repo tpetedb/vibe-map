@@ -1,4 +1,5 @@
-# Princeton University. Princeton, New Jersey. Paul Falstad wrote zsh here as a student.
+# Princeton University. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "princeton-university"
 name = "Princeton University"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 40.343
 lon = -74.655
 look = "campus"
-landmark = "nassau-hall"
+landmark = "generic-marker"
 source = "https://www.princeton.edu/meet-princeton"

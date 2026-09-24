@@ -1,4 +1,4 @@
-# The cloud. Somebody else's computers, defined once by NIST in September 2011.
+# The cloud. An abstract place, with no claim about an earthly location.
 id = "the-cloud"
 name = "The cloud"
 kind = "cloud"

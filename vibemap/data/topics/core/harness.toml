@@ -35,3 +35,10 @@ url = "https://github.com/openai/agents.md"
 [[sources]]
 label = "Source: Linux Foundation, formation of the Agentic AI Foundation (December 2025)"
 url = "https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation"
+
+[[origins]]
+place = "the-internet"
+year = 2025
+what = "Anthropic announces the limited research preview of Claude Code online, describing tools to read and edit files, run tests and use command line tools."
+source = "https://www.anthropic.com/news/claude-3-7-sonnet"
+primary = true

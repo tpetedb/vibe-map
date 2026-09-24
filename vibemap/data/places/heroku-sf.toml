@@ -1,0 +1,13 @@
+# The contact page places Heroku in San Francisco; this is not evidence for an early office.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "heroku-sf"
+name = "Heroku, San Francisco"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 37.78
+lon = -122.42
+look = "tower"
+landmark = "generic-marker"
+source = "https://www.heroku.com/contact/"
