@@ -6,7 +6,7 @@ branch = "claude/test-determinism-2"
 goal = "ways-of-working"
 issue = 148
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-harness-test-determinism-2"
 
 owns = [
   "tests/conftest.py",
