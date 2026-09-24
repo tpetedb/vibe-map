@@ -1,0 +1,48 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "ci-shard-rebalance"
+by = "reviewer-ci-shard-rebalance-r1"
+reviewed = "f143af42848a4285a31595b98091dce34bc0e2e9"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran `uv run pytest -q tests/test_repo.py -k shard` in the worktree: 3 passed. `uv run python tools/ci_shards.py` reads the new matrix back as eleven shards: smoke (default) holds build, bottles, smoke, grow_game, harness_determinism, media and stops; hunt holds hunt_b; pictures holds experience and hunt_f; the three qol shards hold qol and qol_settings, qol_feedback and state, and qol_wayfinding; ui, phone, bridges, panels and webkit are unchanged. The command only proves the sentence if the guard can fail on this layout, so I broke scratch copies of the new ci.yml and ran problems() against each one. I added test_game_state.py to qol-wayfinding as well: `in more than one shard (qol-feedback, qol-wayfinding): tests/test_game_state.py`. I changed hunt's name to test_game_hunt_bb.py: `hunt: tests/test_game_hunt_bb.py claims no browser test file`. I deleted `default: true`: refused, and the three unclaimed files are named as never running. The real matrix gives []. main's old matrix also passes the guard, so c1 says nothing about sizing; c3 covers that. Everything downstream of the matrix reads it and does not count it. The shard step calls `ci_shards.py --files "$SHARD"`, verify() takes its receipts from shards(), and artifact names take the shard name, so hyphenated names work. The PR run's `qol-feedback runs:` and `hunt runs:` lines show the right files. Branch protection requires only `lint, unit tests, generated files in sync` and `Playwright tests (Chromium and WebKit)` (gh api), so a new leg name needs no protection change. `git grep` finds no other place that names or counts shards.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the whole command in the worktree at f143af4: ruff clean, `style OK: no em dashes, no emoji`, the non-browser battery all green, and `40 orders read, 0 collisions`, exit 0, `git status` clean afterwards. The command proves its sentence. The diff against origin/main touches only .github/workflows/ci.yml (the matrix and its comment) and the order folder (order.toml, findings.md), which is what the order owns. No changelog fragment is needed because nothing under src/, vibemap/ or tools/ changed, and CI's fragment step is green. The three commit messages and the PR body have no em-dash; the PR body opens with the builder's tag line and ends with the Generated line. In the PR's own run (35956334489), every step of the required lint job is green except `work orders are readable, reviewed and inside their files`, which fails only on `review.toml: no review yet`, i.e. this file.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Measured, not guessed, and I checked the numbers against the job logs myself. Main run 35947748862, smoke job 107469374727: `132 passed, 71 deselected in 2107.69s (0:35:07)`. The table says 132 tests and 35 min. Its 54% checkpoint is at 02:54:33 against a pytest start of 02:34:21, so 20.2 min for the first 72 (findings: 20). Main qol job 107469374525: `113 passed in 4541.67s (1:15:41)` (table: 113 and 76), with 63% at 54.9 min (findings: 55). K2 smoke job 107470214388: `3 failed, 130 passed ... in 3963.40s (1:06:03)` (table: 133 and 66), with 54% at 41.6 min (findings: 42). The slowest-10 values the order quotes (hunt_f 213s and 187s, hunt_b 63 to 105s) are in that log. The per-shard test counts match my own `pytest --co -m "browser and not integration"` exactly: hunt 53, qol 18+16=34, qol-feedback 23+20=43, qol-wayfinding 36, pictures 12+18=30, smoke 24+1+1+2+3+14+4=49. The old smoke (49+53+30=132) and the old qol (113) add up too. findings.md has the shard-to-minutes table, and its slowest estimate is hunt at about 32 min on the slow runner, at most about 35. The PR's own run, 35956334489 on f143af4, confirms it in job wall minutes: hunt 31.1 (pytest `53 passed in 1792.34s`), qol-wayfinding 30.2 (`36 passed in 1742.10s`), bridges 29.8, webkit 27.5, qol 22.7, pictures 21.7, qol-feedback 18.6, ui 18.3, panels 14.2, phone 13.6, smoke 9.0. No shard is over 45 min, and the slowest is under 35. The default smoke shard is again the shortest leg by a wide margin, which is the headroom the order asks for. The old worst leg was 76 to 90 min, so a PR now waits about 31. qol-feedback went red on one test (first low finding): not a duration problem, and I found nothing linking it to the split.
+"""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_qol_feedback.py"
+text = """
+The PR run's qol-feedback shard is red, 1 failed and 42 passed. `test_a_hidden_page_stops_the_island_clock_and_comes_back_to_it` got `assert 10.5961 == 10.5837` on the read right after un-hiding. That is a race in the test: `until()` is `wait_for_function`, which polls on animation frames, so one game frame can land between `hidden === false` and the read of `t`. It is not the split. I ran the test alone four times after a browser slot came free: 4 of 4 passed. It did not fail in main's or K2's old-layout qol runs, and it runs on its own page fixture. The shard needs a rerun of the failed job to go green before landing. The test fix belongs to the test's owner, as a follow-up: read `t` in the same evaluate that sees `hidden === false`, or allow a single frame there.
+"""
+
+[[findings]]
+severity = "low"
+file = "work/orders/ci-shard-rebalance/findings.md"
+text = """
+The qol estimates are off in both directions on a runner that matched the slow column elsewhere (hunt 31 against 32, smoke 9 against 10, pictures 21.7 against 22). qol-wayfinding was estimated at 21 to 22 min and ran 29.0 min of pytest. qol-feedback was estimated at 27 to 28 and ran 17.8. The wayfinding tests are the expensive ones, about 48 s each here, not the state tests. Nothing is over the bar. The next rebalance should start from this run's `--durations`, not from the table.
+"""
+
+[[findings]]
+severity = "low"
+file = ".github/workflows/ci.yml"
+text = """
+The qol glob became explicit names, so a new `test_game_qol_*.py` no longer finds a qol home and falls into the default. findings.md says this for test_game_qol_continuity.py (#195, #202, about 14 min on a slow runner). The same goes for test_game_galaxy.py in #183 (14 test functions, about 20 cases, none in the slowest ten of that branch's slow smoke run). With both landed, smoke goes from 9 min to somewhere around 25 to 35, and it stops being the leg with headroom. When those land, give each a shard, as the order suggested for galaxy; neither file is on main, so a pattern for them today would fail the guard. hunt, at 31 min for a single file, is at the ceiling: its next growth means splitting test_game_hunt_b.py.
+"""
