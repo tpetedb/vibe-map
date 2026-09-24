@@ -16,8 +16,8 @@ needs = []
 
 [[criteria]]
 id = "c1"
-text = "At 640x480, 720x600 and 800x640 the minimap canvas and Bigger button do not intersect the zoom column; the 800x640 minimap keeps its original corner."
-check = "uv run pytest -q tests/test_minimap_short_window.py::test_short_window_keeps_zoom_clear_of_minimap"
+text = "At 640x480, 720x600 and 800x640 the minimap canvas and Bigger button do not intersect zoom; the 800x640 map keeps its original corner. A phone map stays below its corner toggle."
+check = "uv run pytest -q tests/test_minimap_short_window.py"
 
 [[criteria]]
 id = "c2"

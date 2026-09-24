@@ -1,1 +1,1 @@
-Keep the minimap and Bigger button clear of the zoom controls in short browser windows.
+- Keep the minimap and Bigger button clear of the zoom controls in short browser windows.
