@@ -115,6 +115,9 @@ EXPERIENCES.galaxy={
   where(){if(!galaxyWalk)return null;
     return galaxyWalk.near?{kind:"topic",id:galaxyWalk.near,place:galaxyWalk.place}:{kind:"place",id:galaxyWalk.place}},
   listing(){const model=galaxyModel(PLACES,TREE,galaxyDone()),places=Object.fromEntries(model.places.map(place=>[place.id,place]));return model.topics.map(topic=>({id:topic.id,title:topic.name,place:topic.place,placeTitle:places[topic.place].name,year:topic.year,state:topic.state}))},
+  // Grow's vault opens the lesson the journey points at and the ones already
+  // done; a topic further along stays earned the islands' way.
+  readable(){return galaxyModel(PLACES,TREE,galaxyDone()).topics.filter(t=>t.state!=="ahead").map(t=>t.name)},
 };
 
 // Progress can arrive through any shared entry point, including import while

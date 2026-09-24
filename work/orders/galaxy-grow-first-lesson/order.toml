@@ -6,7 +6,7 @@ branch = "claude/galaxy-grow-first-lesson"
 goal = "galaxy"
 issue = 209
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-galaxy-grow-first-lesson"
 
 owns = [
   "src/game/60-vault.js",
