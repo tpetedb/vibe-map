@@ -28,18 +28,9 @@ url = "https://www.w3.org/Protocols/HTTP/AsImplemented.html"
 label = "Source: Anthropic, Introducing the Model Context Protocol (November 2024)"
 url = "https://www.anthropic.com/news/model-context-protocol"
 
-[[sources]]
-label = "Source: Anthropic letter to Governor Newsom, San Francisco letterhead (August 2024)"
-url = "https://cdn.sanity.io/files/4zrzovbb/website/6a3b14a98a781a6b69b9a3c5b65da26a44ecddc6.pdf"
-
-# Where this happened. The place is a file in vibemap/data/places/;
-# exactly one origin is primary, and every source was opened.
-# The essay names no town; Anthropic's August 2024 letter to Governor Newsom in
-# the sources carries its San Francisco letterhead.
-
 [[origins]]
-place = "anthropic-sf"
+place = "the-internet"
 year = 2024
-what = "Anthropic publishes Building effective agents, distinguishing predefined workflows from agents that direct their own tool use."
+what = "Anthropic publishes Building effective agents online, distinguishing predefined workflows from agents that direct their own tool use."
 source = "https://www.anthropic.com/engineering/building-effective-agents"
 primary = true

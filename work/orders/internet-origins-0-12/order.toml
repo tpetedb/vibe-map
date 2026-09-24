@@ -1,6 +1,6 @@
 v = 1
 id = "internet-origins-0-12"
-title = "Galaxy origins leave the-internet where a first-party page places them: twenty moves, two new places (release blocker for 0.12.0)"
+title = "Galaxy origins leave the-internet where a first-party page places them: nineteen moves, two new places (release blocker for 0.12.0)"
 team = "content"
 branch = "claude/internet-origins"
 goal = "galaxy"
@@ -34,14 +34,21 @@ owns = [
   "vibemap/data/places/byu-provo.toml",
   "docs/TOPICS.md",
   "tests/test_internet_origins.py",
+  # Round-1 review: these five encoded the rule this order reverses (an online
+  # origin never at a company address); they are rewritten to the new rule.
+  "tests/test_integrated_origin_locations.py",
+  "tests/test_origins_agents.py",
+  "tests/test_origins_data_engineering.py",
+  "tests/test_origins_ship_docs.py",
+  "tests/test_origins_code_git.py",
 ]
 cross = ["docs", "cli"]
 needs = []
 
 [[criteria]]
 id = "c1"
-text = "The new test and the topic, places and syllabus tests pass: each of the twenty moved origins sits at its planned place with its dated first-party source listed under [[sources]], the two new places load, and the-internet holds no more primary origins than the plan leaves there."
-check = "uv run pytest -q tests/test_internet_origins.py tests/test_topics.py tests/test_places.py tests/test_syllabus.py"
+text = "The new test and the topic, places and syllabus tests pass: each of the nineteen moved origins sits at its planned place with its dated first-party source listed under [[sources]], the two new places load, the-internet holds exactly the primary origins the plan leaves there, and the five neighbouring origin tests hold the same rule."
+check = "uv run pytest -q tests/test_internet_origins.py tests/test_topics.py tests/test_places.py tests/test_syllabus.py tests/test_integrated_origin_locations.py tests/test_origins_agents.py tests/test_origins_data_engineering.py tests/test_origins_ship_docs.py tests/test_origins_code_git.py"
 
 [[criteria]]
 id = "c2"
@@ -50,5 +57,5 @@ check = "uv run python -c \"from vibemap import places; import sys; b=places.pro
 
 [[criteria]]
 id = "c3"
-text = "Each moved origin's page places the actor or event in that town at that date (a current office address is not proof); the eight refuted moves stayed; docs/TOPICS.md says in one sentence that the page placing an origin is listed under [[sources]]; no em dashes."
+text = "Each moved origin's page places the actor or event in that town at that date (a current office address is not proof); the nine refuted moves stayed (future joined them in review: a PMB letterhead is a mailing address); docs/TOPICS.md says in one sentence that the page placing an origin is listed under [[sources]]; no em dashes."
 judge = "reviewer"

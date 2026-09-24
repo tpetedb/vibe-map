@@ -1,6 +1,6 @@
 """Origins leave the-internet only where a dated first-party page places them.
 
-The board's plan for issue #168 moved twenty origins to the town a dated
+The board's plan for issue #168 moved nineteen origins to the town a dated
 first-party page names, and left at the-internet every origin no such page
 places. The page that gives the town is either the origin's own source, the
 place file's source, or a page listed under the topic's [[sources]]
@@ -51,12 +51,6 @@ MOVES: dict[str, tuple[str, int, str]] = {
         "https://www.sec.gov/Archives/edgar/data/1288776/"
         "000119312512025336/d260164d10k.htm",
     ),
-    "future": (
-        "anthropic-sf",
-        2024,
-        "https://cdn.sanity.io/files/4zrzovbb/website/"
-        "6a3b14a98a781a6b69b9a3c5b65da26a44ecddc6.pdf",
-    ),
     "headless": (
         "anthropic-sf",
         2025,
@@ -101,7 +95,10 @@ MOVES: dict[str, tuple[str, int, str]] = {
 }
 
 # Refuted by a checker: they wait at the-internet for the page named in the plan.
+# future joined them in review: its only town page was a letter on a private
+# mailbox letterhead (PMB), which places mail, not an event, as for harness.
 OPEN = {
+    "future",
     "harness",
     "subagents",
     "interfaces",
@@ -147,11 +144,35 @@ DOTFILES_REPO = "https://api.github.com/repos/dotfiles/dotfiles.github.com"
 GITHUB_LAUNCH = "https://github.blog/2008-04-10-we-launched/"
 
 
-def test_the_plan_moves_twenty_and_keeps_thirty() -> None:
-    assert len(MOVES) == 20
-    assert len(OPEN) == 8
+# A letterhead with a private mailbox is a mailing address, never a town page.
+MAILBOX_LETTERS = {
+    "https://cdn.sanity.io/files/4zrzovbb/website/"
+    "6a3b14a98a781a6b69b9a3c5b65da26a44ecddc6.pdf",
+}
+
+
+def test_the_plan_moves_nineteen_and_keeps_thirty_one() -> None:
+    assert len(MOVES) == 19
+    assert len(OPEN) == 9
     assert len(STAYS) == 22
     assert not (set(MOVES) & (OPEN | STAYS))
+
+
+def pages_that_place(topic: topics.Topic, origin: places.Origin) -> set[str]:
+    """The pages a learner can open from the topic that may give the town."""
+    return (
+        {s.url for s in topic.sources}
+        | {origin.source}
+        | {places.get(origin.place).source}
+    )
+
+
+def placed_as_planned(topic_id: str) -> bool:
+    """Whether the moved origin stands in its town with its town page listed."""
+    place_id, year, town_page = MOVES[topic_id]
+    topic = topics.get(topic_id)
+    origin = places.origin_at(topic, place_id)
+    return origin.year == year and town_page in pages_that_place(topic, origin)
 
 
 @pytest.mark.parametrize("topic_id", sorted(MOVES))
@@ -163,11 +184,7 @@ def test_each_move_stands_in_its_town_with_the_page_that_says_so(
     origin = places.origin_at(topic, place_id)
     assert origin.year == year, topic_id
     assert all(o.place != "the-internet" for o in topic.origins), topic_id
-    # The origin's own source, the place file's source, or a listed source.
-    readable = {s.url for s in topic.sources} | {
-        origin.source,
-        places.get(place_id).source,
-    }
+    readable = pages_that_place(topic, origin)
     assert town_page in readable, f"{topic_id}: {town_page} is not on the topic"
 
 
@@ -193,13 +210,23 @@ def test_only_the_planned_topics_are_left_at_the_internet() -> None:
         if any(o.place == "the-internet" for o in t.origins)
     }
     assert left <= OPEN | STAYS, sorted(left - (OPEN | STAYS))
-    primaries = sum(
-        1
+    present = {t.id for t in topics.all_topics()}
+    # Every planned topic that is loaded still waits there; interfaces keeps
+    # its primary at PARC and only its echo online.
+    assert left == (OPEN | STAYS) & present, sorted(((OPEN | STAYS) & present) - left)
+    primaries = {
+        t.id
         for t in topics.all_topics()
         for o in t.origins
         if o.place == "the-internet" and o.primary
-    )
-    assert primaries <= len(OPEN | STAYS)
+    }
+    assert primaries == left - {"interfaces"}
+
+
+def test_a_mailbox_letterhead_moves_no_origin() -> None:
+    for topic in topics.all_topics():
+        cited = {s.url for s in topic.sources} | {o.source for o in topic.origins}
+        assert not cited & MAILBOX_LETTERS, topic.id
 
 
 def test_dotfiles_names_its_own_guide_and_not_the_github_launch() -> None:
