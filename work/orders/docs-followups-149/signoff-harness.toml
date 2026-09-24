@@ -1,0 +1,16 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "docs-followups-149"
+team = "harness"
+by = "manager-harness"
+reviewed = "a4533382a807c459214092ee528faf1cfe2b7bae"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Checked as the owner of tools/, work/, .claude/, .agents/ and .github/. The diff against origin/main touches no harness file except the order's own folder (order.toml, findings.md, review.toml), which every order writes. What the docs now say about the harness is true against the code at this commit: ADR 0016 on touched.json matches tools/work.py (TOUCHED_KEEP = 32, the newest entries kept on each write, builder unless the agent wrote only inside the order folder, gitignored, removed with the order folder by `python3 tools/work.py sweep` from `just release`); the patch-id rule matches `git patch-id --verbatim` with review and sign-offs excluded; CONTRACTS.md's test-helper, CI-shard and work-order lines name helpers, workflows and tests that exist (conftest.py, ci.yml browser-shard, test_repo.py, tools/ci_shards.py). SKILLS.md's allowed-tools list matches the skill frontmatter and a test holds it.
+The builder's change of cross from ["harness"] to [] is right under work/teams.toml; this sign-off stands either way, so nothing on the order needs to move.
+What harness does after this lands: a harness order that renames or removes a conftest helper, a work.py constant, a hook, a recipe or a CI shard now has to change docs/CONTRACTS.md, docs/SKILLS.md or ADR 0016 in the same pull request, with cross = ["docs"], or tests/test_docs_followups.py fails. The #95 body still carries the contracts block and must be edited to point at docs/CONTRACTS.md after the merge, or the two drift. The 2026-09-23 board decisions on #95 (board room in the git common dir, one review round per order) are not in CONTRACTS.md yet; that goes with the board-room order.
+`just work-validate` fails on this checkout for two collisions between other orders (issue59-docs-played and issue161-minimap on tests/test_media.py; issue161-minimap and qol-2-wayfinding on src/game/32-minimap.js), none involving this order; those managers own that.
+"""

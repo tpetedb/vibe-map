@@ -1,0 +1,20 @@
+# The docs team's manager agreeing to the changelog claim owned by docs.
+v = 1
+order = "galaxy-model-visuals"
+team = "docs"
+by = "codex-docs-manager"
+reviewed = "514369418bc1dce3c900e55b190cf095b8988bcc"
+verdict = "accept"
+note = '''
+Accepted. The changelog now describes exactly what this order adds: a pure journey model and a procedural visual kit for sourced places, tiny globes and distinct dome dioramas. It no longer claims that this visual-only order makes the domes walkable. The model derives destinations and progress without mutating injected data, and the kit builds the documented procedural geometry without textures or downloaded models.
+
+Evidence at the reviewed checkpoint:
+- `.venv/bin/python -m pytest -q tests/test_galaxy_model.py tests/test_build.py` passed all 29 tests.
+- `.venv/bin/python tools/checks.py style` and `tools/checks.py sinks` passed.
+- `.venv/bin/python tools/build.py --check` and `tools/sync_fork_source.py --check` passed.
+- The order's implementation files did not change after the integration checkpoint; commit 5143694 changes only the docs-owned changelog wording.
+- `git diff --check 541df67^..5143694` passed for the order's owned files.
+- The two Galaxy source modules total 17,653 bytes, within the 80 KB procedural-geometry budget stated in docs/GALAXY.md.
+
+This sign-off covers the checkpoint above and lapses if the changelog fragment changes.
+'''
