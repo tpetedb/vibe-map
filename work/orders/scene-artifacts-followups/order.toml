@@ -13,6 +13,9 @@ owns = [
   "src/game/60-vault.js",
   "tests/test_game_hunt_f.py",
   "vibemap/data/campaign.json",
+  "tests/golden/campus.png",
+  "tests/golden/winter.png",
+  "tests/golden/prod.png",
 ]
 cross = ["content", "panels"]
 needs = []
