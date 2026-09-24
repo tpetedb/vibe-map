@@ -13,11 +13,11 @@ try_it = "gh repo create, gh pr create after a branch, then enable Pages. The 22
 unlocks = ["ci", "cloud"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
-# exactly one origin is primary, and every source was opened. The launch
-# post names no town; San Francisco is the place file's own.
+# exactly one origin is primary, and every source was opened. The launch post
+# is an online milestone and names no town.
 
 [[origins]]
-place = "github-sf"
+place = "the-internet"
 year = 2008
 what = "Chris Wanstrath posts that GitHub is officially live and thanks everyone for the beta, on 10 April 2008."
 source = "https://github.blog/2008-04-10-we-launched/"

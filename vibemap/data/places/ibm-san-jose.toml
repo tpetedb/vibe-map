@@ -1,4 +1,5 @@
-# IBM San Jose Research Lab. San Jose, California, where Ted Codd published the relational model in 1970.
+# IBM San Jose Research Lab. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "ibm-san-jose"
 name = "IBM San Jose Research Lab"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.24
 lon = -121.796
 look = "lab"
-landmark = "research-annex"
+landmark = "generic-marker"
 source = "https://www.ibm.com/history/relational-database"

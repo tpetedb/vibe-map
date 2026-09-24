@@ -1,4 +1,5 @@
-# University of California, Irvine. Irvine, California. Roy Fielding's dissertation named REST here.
+# University of California, Irvine. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "uc-irvine"
 name = "University of California, Irvine"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 33.641
 lon = -117.844
 look = "campus"
-landmark = "aldrich-park"
+landmark = "generic-marker"
 source = "https://uci.edu/about/"

@@ -1,4 +1,5 @@
-# Docker, Palo Alto. 3790 El Camino Real, Palo Alto.
+# Docker, Palo Alto. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "docker-palo-alto"
 name = "Docker, Palo Alto"
 kind = "company"
@@ -7,6 +8,6 @@ era = "data"
 globe = "earth"
 lat = 37.419
 lon = -122.129
-look = "harbour"
-landmark = "stacked-containers"
+look = "tower"
+landmark = "generic-marker"
 source = "https://www.docker.com/legal/docker-privacy-policy/"

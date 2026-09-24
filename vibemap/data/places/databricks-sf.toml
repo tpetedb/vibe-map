@@ -1,4 +1,5 @@
-# Databricks, San Francisco. Headquartered in San Francisco, founded in 2013.
+# Databricks, San Francisco. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "databricks-sf"
 name = "Databricks, San Francisco"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.791
 lon = -122.395
 look = "tower"
-landmark = "city-office"
+landmark = "generic-marker"
 source = "https://www.databricks.com/company/about-us"

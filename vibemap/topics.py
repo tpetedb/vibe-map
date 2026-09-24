@@ -21,7 +21,7 @@ from functools import cache
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, StrictInt, ValidationError
 
 from vibemap import project
 
@@ -53,7 +53,7 @@ class Origin(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     place: str
-    year: int
+    year: StrictInt
     what: str
     source: str
     primary: bool = False
@@ -192,7 +192,11 @@ def _check_origins(topic: Topic, where: str) -> None:
             f"has {len(primary)} primary origins; exactly one origin carries"
             " primary = true, and it is where the topic lives",
         )
+    seen: set[str] = set()
     for origin in topic.origins:
+        if origin.place in seen:
+            _fail(where, f"duplicate origin at {origin.place!r}")
+        seen.add(origin.place)
         at = f"the origin at {origin.place!r}"
         if not origin.source.startswith("https://"):
             _fail(where, f"{at} needs an https source that says what it claims")

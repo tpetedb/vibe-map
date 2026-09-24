@@ -1,0 +1,13 @@
+# The March 2012 engineering post names the new headquarters in Menlo Park.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "meta-menlo-park"
+name = "Facebook (Meta), Menlo Park"
+kind = "company"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.48
+lon = -122.15
+look = "campus"
+landmark = "generic-marker"
+source = "https://engineering.fb.com/2012/03/25/web/a-hack-of-epic-proportions-building-a-qr-code-on-the-roof/"

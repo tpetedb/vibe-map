@@ -18,6 +18,18 @@ try_it = '''printf '{"a":1}\n{"a":2}\n' > two.jsonl then duckdb -c "select sum(a
 unlocks = ["schemas", "dlt"]
 prerequisites = ["csv"]
 
+[[origins]]
+place = "the-internet"
+year = 2013
+what = "Ian Ward numbers the three JSON Lines requirements in the public website repository on 10 October 2013."
+source = "https://github.com/wardi/jsonlines/commit/92c32d4496d1f0b789cc4840e6cd65e11ef51e94"
+primary = true
+
+[[sources]]
+label = "Source: Ian Ward, JSON Lines specification commit"
+url = "https://github.com/wardi/jsonlines/commit/92c32d4496d1f0b789cc4840e6cd65e11ef51e94"
+checked = 2026-09-22
+
 [[sources]]
 label = "JSON Lines, the specification"
 url = "https://jsonlines.org/"

@@ -2,7 +2,7 @@
 title: "YAML in practice: CI and Compose"
 date: 2026-09-16
 tags: [tech, formats]
-generated: d57018d32b2d
+generated: b03bab0b62c3
 ---
 # YAML in practice: CI and Compose
 
@@ -12,7 +12,7 @@ YAML is data shaped by indentation: a map is key: value, a list is lines startin
 
 **Try in five minutes.** Read .github/workflows/ci.yml and change the Python version in one place.
 
-- Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions), [Docker Compose file reference](https://docs.docker.com/reference/compose-file/), [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/), [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/), [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
+- Docs: [GitHub Actions workflow syntax](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions), [Docker Compose file reference](https://docs.docker.com/reference/compose-file/), [Source: YAML 1.0 specification (2004)](https://yaml.org/spec/1.0/), [Source: YAML 1.2.2 specification (revision 2021-10-01)](https://yaml.org/spec/1.2.2/), [Source: GitHub Actions adds YAML workflows (August 2019)](https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/), [Source: GitHub changelog, Actions generally available (November 2019)](https://github.blog/changelog/2019-11-11-github-actions-is-generally-available/)
 - Unlocks: [[CI-CD and automation]], [[Docker and containers]]
 - Shelf: Config and formats · Depth: Working knowledge
 

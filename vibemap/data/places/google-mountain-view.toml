@@ -1,4 +1,5 @@
-# Google, Mountain View. 1600 Amphitheatre Parkway, Mountain View.
+# Google, Mountain View. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "google-mountain-view"
 name = "Google, Mountain View"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.422
 lon = -122.084
 look = "campus"
-landmark = "amphitheatre-parkway-lawn"
-source = "https://policies.google.com/privacy"
+landmark = "generic-marker"
+source = "https://support.google.com/legal-help-center/answer/14855708?hl=en"

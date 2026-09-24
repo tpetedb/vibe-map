@@ -1,4 +1,5 @@
-# USC Information Sciences Institute, Marina del Rey. Marina del Rey, California. It managed the RFC series for decades.
+# USC Information Sciences Institute, Marina del Rey. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "usc-isi"
 name = "USC Information Sciences Institute, Marina del Rey"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 33.98
 lon = -118.441
 look = "lab"
-landmark = "admiralty-way-tower"
+landmark = "generic-marker"
 source = "https://www.isi.edu/about/"

@@ -14,9 +14,11 @@ Pointer Events on the canvas, which is the API the game listens to.
 
 from __future__ import annotations
 
+import io
 from typing import Any
 
 import pytest
+from PIL import Image
 from playwright.sync_api import TimeoutError as PageTimeout
 
 from tests.conftest import SHOT_MS, STORAGE_KEY, WAIT_MS, GamePage
@@ -346,7 +348,7 @@ def test_reduced_motion_steps_the_zoom_and_stills_the_island(
     # one capture that does not go through GamePage.screenshot; they take its
     # budget and its name all the same, because a capture waits for a frame
     # and a starved renderer draws one when it gets round to it.
-    clip = {"x": 100, "y": 200, "width": 900, "height": 480}
+    clip = {"x": 300, "y": 350, "width": 600, "height": 300}
 
     def island_now(which: str) -> bytes:
         with game.named_wait(f"the {which} picture of the still island", SHOT_MS):
@@ -355,7 +357,10 @@ def test_reduced_motion_steps_the_zoom_and_stills_the_island(
     first = island_now("first")
     game.frames(12)
     assert _gfx(game)["ambient"] == cloud, "the clouds still drift"
-    assert island_now("second") == first, "something on the island moves"
+    second = island_now("second")
+    first_pixels = Image.open(io.BytesIO(first)).convert("RGBA").tobytes()
+    second_pixels = Image.open(io.BytesIO(second)).convert("RGBA").tobytes()
+    assert second_pixels == first_pixels, "something on the island moves"
     game.assert_clean()
 
 

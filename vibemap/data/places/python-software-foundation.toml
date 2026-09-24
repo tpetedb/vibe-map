@@ -1,5 +1,5 @@
-# The Python Software Foundation. It funds the community it serves: in 2024 it gave
-# 655,000 US dollars to 257 groups and individuals in 61 countries.
+# The Python Software Foundation. An abstract place, with no claim about an earthly location.
+# Generic marker: no claim about a physical object or building shape.
 id = "python-software-foundation"
 name = "The Python Software Foundation"
 kind = "foundation"
@@ -7,5 +7,5 @@ region = "everywhere"
 era = "open-source"
 globe = "cloud"
 look = "station"
-landmark = "grants-desk"
+landmark = "generic-marker"
 source = "https://www.python.org/psf/about/"

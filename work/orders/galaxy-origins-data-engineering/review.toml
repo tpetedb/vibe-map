@@ -1,0 +1,70 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "galaxy-origins-data-engineering"
+by = "codex-review-origins-data-engineering"
+reviewed = "8a30f05ad62c36e6ddb7cd97d8329f5e18502d76"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the stated pytest selection against the reviewed tree with a writable UV cache: \
+all 99 tests passed and the command exited 0. Read tests/test_origins_data_engineering.py \
+and all sixteen owned topic records. The order test fixes the complete pack id set, \
+requires exactly one primary origin per lesson, checks that every place resolves, \
+requires HTTPS, a matching source entry, the written year and lesson subject, exercises \
+the public `vibe topic duckdblab` command, and guards the corrected publication locations. \
+The shared places and topics suites exercise the same loaders and registry used by it.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the exact places.problems() check with a writable UV cache: it printed no defects \
+and exited 0. Independently inspected the sixteen records: every lesson has one primary \
+origin, a resolving place id, an integer year repeated in a one-line claim, an HTTPS \
+source and a matching source record. This directly proves the pack-level invariant in \
+the criterion rather than relying only on the order's parametrized tests.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the stated lint, format, style, sink and non-browser pytest gate with the project \
+virtual environment on PATH. Ruff check, Ruff format, the style guard and sink guard \
+passed; the full `not browser and not integration` selection reached 100% and exited 0. \
+The first sandboxed test attempt was inconclusive because macOS denied unrelated local \
+socket and Docker tests; rerunning the same criterion with those local permissions \
+produced the passing result.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Ran the stated six-command generator loop. build reported game/vibe-map.html matches \
+src; regen_tree reported its outputs match vibemap/tech.py; gen_cookbook, sync_template \
+and sync_fork_source exited 0; gen_syllabus reported syllabus OK. The loop exited 0, \
+so each generated consumer named by the criterion matches the current source data.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+Opened all 13 distinct HTTPS event links added across the sixteen origins. Airbnb's \
+article names Maxime Beauchemin, the 2 June 2015 publication and open-sourcing of Airflow. \
+ASF announcements support Arrow on 17 February 2016 and Parquet on 27 April 2015. RFC \
+4180 supports October 2005 documentation and text/csv registration. Dagster, dbt, dlt \
+and Polars pages support their stated release dates and bounded features. DuckDB \
+Foundation names both creators, CWI Amsterdam and 2018. Apache's Iceberg record supports \
+the 20 May 2020 graduation and 23 June 2019 specification migration. GitHub's API for \
+the cited JSON Lines commit names Ian Ward, dates it 10 October 2013 and shows the three \
+requirements being numbered. LinkedIn's invitation supports Neha Narkhede, its Mountain \
+View headquarters and the scheduled 27 July 2011 Kafka talk without claiming attendance. \
+Databricks' dated article supports its 24 June 2022 Bronze, Silver and Gold guidance and \
+CDC updates in Bronze. Every claim is limited to what its page establishes.
+"""

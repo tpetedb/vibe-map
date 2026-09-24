@@ -1,4 +1,5 @@
-# Airbnb, San Francisco. 888 Brannan Street, San Francisco.
+# Airbnb, San Francisco. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "airbnb-sf"
 name = "Airbnb, San Francisco"
 kind = "company"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 37.77
 lon = -122.403
 look = "tower"
-landmark = "brannan-street-office"
+landmark = "generic-marker"
 source = "https://news.airbnb.com/about-us/"
