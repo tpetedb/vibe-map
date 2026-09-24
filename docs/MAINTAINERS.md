@@ -91,7 +91,8 @@ can replace any file or push; a different camp or product checkout is refused.
 uv run python tools/regen_played.py --camp ../vibe-map-played --dry-run
 uv run python tools/regen_played.py --camp ../vibe-map-played
 git -C ../vibe-map-played show --stat --oneline HEAD
-git -C ../vibe-map-played diff HEAD^ -- .vibe/state.json config workspace vault docs/media game
+git -C ../vibe-map-played diff --name-status HEAD^ HEAD
+git -C ../vibe-map-played diff HEAD^ HEAD -- .vibe/state.json config workspace vault docs/media game
 uv run python tools/regen_played.py --camp ../vibe-map-played --push
 ```
 
@@ -100,14 +101,17 @@ nothing. The second creates a fresh camp from the current package, uses
 `tools/script_camp.py` for every learner deliverable, writes all thirty-two
 stops plus the items, achievements and wearables to the committed demo state,
 and copies the current built game and reviewed media. A missing built game or
-required media file stops before
-the played checkout changes. It preserves the target branch and origin and
-makes one local commit. Review that commit, especially the state, journey
-configuration, workspace, vault, pictures and built game. A source fingerprint
-in `.vibe/played-source.json` keeps a repeat run on the same product from
-creating another commit. The final command only pushes that clean reviewed
-commit; it does not regenerate it. `--push` is the sole path in this tool that
-contacts the remote.
+required media file stops before the played checkout changes. It preserves the
+target branch and origin and makes one local commit. Tracked files under
+`workspace/`, `vault/` and `docs/media/` that the fresh stage omits remain in
+the target, including `workspace/data/scores.csv`. If the target tracks scores,
+a differing staged copy stops regeneration before mutation. Files present in
+both can change. Inspect every added, changed or deleted path in the local
+commit before pushing. Review the state, journey configuration, learner work,
+vault, pictures and built game. A source fingerprint in
+`.vibe/played-source.json` keeps a repeat run on the same product from creating
+another commit. The final command pushes only that clean reviewed commit; it
+does not regenerate it. Only `--push` contacts the remote.
 
 An agent that hits one of these rules reports it; it never works around it.
 
