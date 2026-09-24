@@ -1,25 +1,25 @@
 v = 1
 order = "galaxy-echo-jump"
 by = "codex-reviewer-galaxy-echo"
-reviewed = "86272b4850d87a77bd446441ef293916734f5502"
+reviewed = "85f6c3604cd62e28f67f93d1fcdfeee175fbdb7e"
 verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = "At reviewed commit, .venv/bin/pytest -q tests/test_game_galaxy_echo.py passed 3 cases with Chromium outside the sandbox. The tests exercise keyboard Tab/Enter, Learn and Escape, phone tap, list rendering, arrival at both primary places, and unchanged topics/done. I read the diff: galaxyEchoJump validates an echo at the selected place and calls galaxyFly(primary.place); galaxyFly uses the established animated flight or reduced-motion/list cut and does not write shared progress. The new accessible names escape topic and primary-place text; visible names are escaped too, while ids come from validated package data."
+evidence = "At 85f6c36, .venv/bin/pytest -q tests/test_game_galaxy_echo.py passed all 6 cases with Chromium. The new two-row focus test checks that only the focused Echo action group has tabindex 0; the existing keyboard test tabs between Learn and Jump and opens Learn. Both primary destinations are checked for the chosen lesson's focused Learn button, check prompt, and historical context after a reduced-motion cut. The new animated Enter/Skip test checks the flight dialog and retained LLM focus after arrival; the phone test taps Jump through the list-only cut. State topics/done stay equal. I traced galaxyEchoJump to galaxyFly(id,topicId) and galaxyArrive(id,topicId), including the skip path and default Land fallback. Visible names and accessible labels use esc(); the inline ids come from validated package data."
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "I ran representative existing tests from both criterion files at the reviewed commit: test_galaxy_journey_globe_and_dome_share_one_listing, both profiles of test_galaxy_landing_walks_to_a_lesson_with_shared_input, and test_autopilot_arrives_without_input; all 4 passed. I read the surrounding regression tests and inspected tests/out/galaxy_place_hangzhou.png and galaxy_walk_lesson_game_desktop.png. The builder's exact-tree full c2 check passed, though my independent run was the focused subset. The change only adds controls in echo rows and invokes existing galaxyFly, leaving journey, chart, walk and flight implementations intact."
+evidence = "At 85f6c36, I independently ran 4 representative existing cases: test_landing_then_islands_keeps_progress, test_autopilot_arrives_without_input, and both desktop/WebKit profiles of test_galaxy_landing_walks_to_a_lesson_with_shared_input; all passed. These exercise ordinary Land's first-topic/default focus, flight, walking and Learn, experience switch, and unchanged shared progress. The 6 passing Echo cases also traverse chart and dome. I read the c2 test files and the diff; the builder's full exact-tree c2 check passed, while my independent run was this focused subset."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "At reviewed commit, .venv/bin/python tools/build.py --check reported that game/vibe-map.html matches src/, and .venv/bin/python tools/sync_fork_source.py --check exited 0. I compared the source and generated-file changes in the commit diff; the edits correspond."
+evidence = "At 85f6c36, .venv/bin/python tools/build.py --check reported game/vibe-map.html matches src/, and .venv/bin/python tools/sync_fork_source.py --check exited 0. I read the 8ef2f79..85f6c36 diff, including both generated mirrors; git diff --check found no whitespace errors."
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
-evidence = "I inspected tests/out/galaxy_echo_phone.png at original resolution (390 by 450, larger text) and tests/out/galaxy_place_hangzhou.png: Echo is distinct but subordinate to the lesson title, and Learn and Jump to primary are legible, separate controls. The phone test measures both controls at least 44 by 44 pixels and taps Jump. I read the primary/secondary origin entries in llm.toml and cloud.toml: the Hangzhou and data-centre markers are secondary and point to The internet and Amazon, Seattle respectively."
+evidence = "I inspected tests/out/galaxy_echo_phone.png at original resolution (390 by 450, larger text) and tests/out/galaxy_echo_desktop_larger.png at original resolution. Echo is subordinate to the lesson title; Learn and Jump to primary fit inside each row as separate, legible controls at both sizes. The tests measure both controls at least 44 by 44 pixels on phone and enlarged desktop. I checked the llm.toml and cloud.toml origins: Hangzhou and the data-centre are secondary, while The internet and Amazon, Seattle are their primary sites."
