@@ -13,7 +13,8 @@
 //   listing   the same stops as plain data, for the non-3D twin
 //
 // Boot, input and panels use the registry. Optional hooks are fallback(),
-// refresh(), layout(), world(), guidance(), plus presentation and backLabel.
+// refresh(), layout(), world(), guidance(), readable() (note titles Grow's
+// vault opens without island play), plus presentation and backLabel.
 // Their absence preserves Islands' original behavior and required contract.
 const EXPERIENCES={};
 const EXPERIENCE_DEFAULT="islands";
