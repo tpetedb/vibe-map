@@ -14,13 +14,7 @@ from contextlib import contextmanager
 import pytest
 from playwright.sync_api import Browser
 
-from tests.conftest import (
-    GAME_PATH,
-    WAIT_MS,
-    GamePage,
-    _attach_error_collectors,
-    phone_options,
-)
+from tests.conftest import WAIT_MS, GamePage, game_page, phone_options
 
 PROFILES = ("android", "iphone")
 # Contrast of two colours the page reports, straight from WCAG 2.1: the pair
@@ -51,21 +45,20 @@ def _phone(
     name: str = "Lotte",
     init_script: str | None = None,
 ) -> Iterator[GamePage]:
-    """A started game on one of the two phones, optionally at another size."""
-    context = phones[profile].new_context(
-        **phone_options(profile, width=width, height=height)
-    )
-    if init_script:
-        context.add_init_script(init_script)
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    game.goto()
-    game.start(name)
-    try:
+    """A started game on one of the two phones, optionally at another size.
+
+    Two browsers at five sizes is more than the fixtures offer, so the page is
+    opened here, through the helper the fixtures use: that is where the clock,
+    the toast record and the write rule are installed.
+    """
+    options = phone_options(profile, width=width, height=height)
+    with game_page(phones[profile], server, **options) as game:
+        if init_script:
+            # On the context, before the first load, like the three rules.
+            game.page.context.add_init_script(init_script)
+        game.goto()
+        game.start(name)
         yield game
-    finally:
-        context.close()
 
 
 @contextmanager
@@ -73,15 +66,11 @@ def _window(
     browser: Browser, server: str, width: int, height: int
 ) -> Iterator[GamePage]:
     """A page in a plain desktop window: a fine pointer, no touch."""
-    context = browser.new_context(viewport={"width": width, "height": height})
-    page = context.new_page()
-    game = GamePage(page=page, url=server + GAME_PATH)
-    _attach_error_collectors(page, game.errors)
-    game.goto()
-    try:
+    with game_page(
+        browser, server, viewport={"width": width, "height": height}
+    ) as game:
+        game.goto()
         yield game
-    finally:
-        context.close()
 
 
 def _open_menu(game: GamePage) -> None:

@@ -66,9 +66,7 @@ def test_walking_over_a_bottle_opens_it_and_the_backpack_keeps_it(
     target = min(here, key=lambda b: math.hypot(b["x"] - pos[0], b["z"] - pos[2]))
     island.walk_to(target["x"], target["z"], tol=0.9, steps=900)
     island.until(f"window.__bottles().found.includes('{target['id']}')")
-    island.page.wait_for_selector("#toast .tst", state="attached")
-    text = island.page.text_content("#toast") or ""
-    assert "A message in a bottle" in text
+    island.toast_said("A message in a bottle")
     island.screenshot("bottle_opened", clip_height=700)
 
     # Outside every count: the forty are untouched, and so are the badges.

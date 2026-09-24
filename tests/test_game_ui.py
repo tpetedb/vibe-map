@@ -413,9 +413,9 @@ def test_enter_opens_the_stop_you_are_standing_on(game: GamePage) -> None:
 def test_a_locked_signpost_says_why_it_is_locked(game: GamePage) -> None:
     game = _started(game)
     game.walk_to(-14.4, 12.8)
-    said = game.page.locator("#toast .tst", has_text="opens once").first
-    said.wait_for(state="attached", timeout=WAIT_MS)
-    assert "Centre of Excellence" in (said.text_content() or "")
+    game.toast_said("opens once")
+    why = [said for said in game.toasts() if "opens once" in said]
+    assert any("Centre of Excellence" in said for said in why), why
     assert game.near() == 0
     game.assert_clean()
 

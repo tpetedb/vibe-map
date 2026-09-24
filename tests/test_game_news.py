@@ -14,7 +14,7 @@ from typing import Any
 
 from playwright.sync_api import Browser, Route
 
-from tests.conftest import ROOT, WAIT_MS, GamePage
+from tests.conftest import ROOT, WAIT_MS, GamePage, game_page
 
 LIVE = {
     "version": 2,
@@ -136,29 +136,20 @@ def test_the_settings_screen_offers_the_live_world_dropdown(game: GamePage) -> N
 
 
 def test_a_file_url_game_shows_the_baked_feed_and_never_fetches(
-    chromium: Browser,
+    chromium: Browser, server: str
 ) -> None:
     """No origin to ask, so nothing is asked: the baked NEWS is the feed."""
-    context = chromium.new_context(viewport={"width": 420, "height": 860})
-    page = context.new_page()
-    errors: list[str] = []
-    page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    page.on(
-        "console",
-        lambda m: (
-            errors.append(f"console.error: {m.text}")
-            if m.type == "error" and "favicon" not in m.text
-            else None
-        ),
-    )
-    asked: list[str] = []
-    page.on("request", lambda r: asked.append(r.url) if "news.json" in r.url else None)
-    page.goto(Path(ROOT / "game" / "vibe-map.html").as_uri())
-    page.fill("#name", "Lotte")
-    page.click("#title .row.go button.primary")
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_selector("#newslist .pathrow", state="attached")
-    assert page.locator("#newslist .pathrow").count() > 0
-    assert asked == []
-    assert errors == [], f"page errors: {errors}"
-    context.close()
+    built = Path(ROOT / "game" / "vibe-map.html").as_uri()
+    with game_page(
+        chromium, server, url=built, viewport={"width": 420, "height": 860}
+    ) as game:
+        asked: list[str] = []
+        game.page.on(
+            "request", lambda r: asked.append(r.url) if "news.json" in r.url else None
+        )
+        _roadmap(game)
+        game.page.wait_for_selector("#newslist .pathrow", state="attached")
+        assert game.page.url.startswith("file://"), game.page.url
+        assert _rows(game) > 0
+        assert asked == []
+        game.assert_clean()
