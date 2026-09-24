@@ -2,19 +2,29 @@ v = 1
 order = "galaxy-v0"
 team = "state"
 by = "manager-state"
-reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
 verdict = "accept"
 note = '''
-Accepted at exact implementation commit a94d640. Galaxy remains a derived view over the existing shared record: completed topics come from S.topics, and the implementation adds no second progress store, no new progress-code field, and no version change. The experience choice is the existing browser-local S.settings.experience preference; setSetting writes it through save(), switching disposes and rebuilds the view without replacing S, and a URL override selects a view without writing the record. Unknown and inherited-property ids fall back to islands.
+Refreshed for the state team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. None of the
+state team's owned files changed in this delta: src/game/00-state.js,
+src/game/80-sync.js, vibemap/state.py, vibemap/config.py, vibemap/project.py
+and config/ are all untouched (confirmed with git diff --stat), same as the
+prior sign-off noted for vibemap/config.py.
 
-State-owned scope is clean for this order. vibemap/config.py is named in owns but has no diff in the implementation stack. The state files changed in the integrated branch belong to prerequisite order qol-4-feedback-companion and already carry their own state signoff; galaxy-v0 does not change src/game/00-state.js, src/game/80-sync.js, vibemap/state.py, vibemap/config.py, vibemap/project.py, or config/. The Galaxy source reads S.topics and the shared contract keeps state, saving, progress codes, settings, panels, search, and the vault in core.
+Read the rest of the diff for state-contract effects anyway. galaxyState and
+the new galaxyWalk are runtime view caches (module-scoped JS, never
+localStorage or S): galaxyState.progress is JSON.stringify(S.topics) used
+only to detect when the shared record changed and re-derive the view
+(galaxyRefresh in src/galaxy/20-experience.js), never a second store. The
+new galaxyCameraState in EXPERIENCES.galaxy.build()/dispose() only saves and
+restores the THREE.Camera's own transient fields around the switch; it is
+not persisted. setSetting's new branch clears a stale ?experience= URL
+param via history.replaceState before save(), which only tightens the
+existing contract that a URL override never overwrites the saved
+preference. No new progress-code field, no version bump, no format change.
 
-Evidence from an isolated git archive of commit a94d640:
-- The focused state/config, experience preference, URL precedence, Galaxy model, desktop keyboard/lesson, iPhone, and Android switch tests all passed.
-- The switch test proves selecting islands from Galaxy keeps the settings sheet open, restores focus to set-experience, and announces the new experience. The contract tests prove preference reads do not write, URL selection does not overwrite the saved preference, and invalid ids fall back safely.
-- The Chart and showcase changes duplicate a topic into additional origin rows only as derived model objects. Every row retains the canonical topic id and state derived from S.topics; Learn calls the shared openTopic(id) panel path and writes no state.
-- The final delta changes only the Chart camera, echo-place landing and screenshot coverage. Landing keeps the chosen place in ephemeral galaxyState while opening its canonical topic; it does not write S or localStorage.
-- tools/build.py --check and tools/sync_fork_source.py --check passed. src/galaxy/00-model.js, src/galaxy/20-experience.js, src/game/85-settings.js, and src/game/90-boot.js match their fork-source mirrors byte for byte.
-
-No findings.
+Verified: uv run python tools/build.py --check, just sinks-check,
+uv run ruff check tests/, and uv run pytest -q tests/test_repo.py
+tests/test_work.py tests/test_harness_determinism.py all pass. No findings.
 '''

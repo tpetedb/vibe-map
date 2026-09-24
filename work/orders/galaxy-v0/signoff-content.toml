@@ -1,0 +1,45 @@
+v = 1
+order = "galaxy-v0"
+team = "content"
+by = "manager-content"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+note = """
+Checked galaxy-v0's part only: the new [[origins]] in cloud.toml (place
+a-data-centre, 2006) and llm.toml (place hangzhou, 2025), plus the two place
+files, against docs/TOPICS.md.
+
+Fetched both new sources fresh (WebFetch, this session):
+- https://www.datacenters.google/locations/oregon/ says "In 2006, we began a
+  path of building and operating our own data centers - and it all began here
+  in The Dalles, Oregon," and lists "Google opens our first data center in
+  The Dalles, Oregon" as a 2006 milestone. Matches cloud.toml's what/year/actor
+  exactly. Neither origin is primary (amazon-seattle stays primary), so the
+  exactly-one-primary rule holds and no place is duplicated in the same topic.
+- https://www.alibabacloud.com/en/press-room/alibaba-introduces-qwen3-setting-new-benchmark
+  is datelined "Hangzhou, China, April 29, 2025" and states Alibaba "has
+  launched Qwen3." Matches llm.toml's hangzhou origin (year = 2025, an
+  integer) exactly, actor, event and town all from the same first-party page.
+
+vibemap/data/places/hangzhou.toml (new) matches the santa-clara.toml shape:
+one-line comment on the abstraction (generic marker, no building claim), then
+id/name/kind/region/era/globe/lat/lon/look/landmark/source in the documented
+order, plus the new showcase = true field. globe = "earth" carries lat/lon as
+required; look = "tower" and landmark = "generic-marker" are both in the
+schema's allowed lists. vibemap/data/places/a-data-centre.toml only gained
+showcase = true; it correctly still carries no lat/lon (globe = "datacentre").
+Both files cite their own https source.
+
+uv run pytest -q tests/test_topics.py passed (21). places.problems() is
+empty. uv run python tools/checks.py style passed (no em dash, no emoji).
+
+One thing to flag, not a block on galaxy-v0: cloud.toml now carries 10
+[[sources]] entries, above docs/TOPICS.md's "three to six" guidance. Only one
+of those (Source: Google, The Dalles data centre milestones) is galaxy-v0's;
+the rest predate it or belong to internet-origins-0-12, which another
+reviewer is re-checking now on the same file. Ask that order (or a follow-up)
+to trim the list once both land; galaxy-v0's own addition is sourced and
+correct on its own.
+
+[Claude Sonnet 5, effort medium, team-manager]
+"""

@@ -4,33 +4,30 @@ v = 1
 order = "galaxy-v0"
 team = "harness"
 by = "manager-harness"
-reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
 verdict = "accept"
 note = '''
-Accepted for the harness team at f9d9a6b80f8330b02143dcb354da0fcee447f31e.
+Refreshed for the harness team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. No harness-owned
+path (tools/, work/, .claude/, .agents/, .github/, justfile, agents.just,
+AGENTS.md, CLAUDE.md, pyproject.toml, uv.lock, src/vendor/, ...) changed in
+this delta; boot stays last by construction as before, unaffected by this
+stack. tests/test_game_experience.py and tests/test_game_galaxy.py grew
+(43 and 403 lines) but stayed inside the fast/browser split: the new
+test_galaxy_round_trip_preserves_the_zoomed_out_island waits on
+wait_for_function(AT_REST) and the revised
+test_a_new_destination_replaces_a_compound_trip waits via game.frames(3),
+neither sleeps. grep found no sleep(/time.sleep in the test diff. The
+extended islands/galaxy contract test asserts the islands shape ("expected")
+is untouched and only the galaxy shape gains the new optional hooks
+(fallback, refresh, layout, world, backLabel, presentation, guidance), so
+the islands contract stays put.
 
-The Galaxy browser test now uses the 1440 by 900 desktop fixture and runs the
-same phone assertions on Chromium with Pixel 7 metrics and WebKit with iPhone
-15 metrics. The declared Galaxy and experience suite passed all 20 tests. Its
-four island captures matched their goldens at mean 0.0000 and worst 0.000, and
-both deliberate mutations were detected.
-
-Ruff check and format are clean for the changed Galaxy test. All six generated
-checks pass. The size check uses commit 541df67 as the pre-Galaxy baseline and
-reports a 36,689 byte increase, within the order's 80 KB limit.
-
-The final delta adds three place-specific dome captures to the desktop browser
-test. That focused test and the shared Android and iPhone test pass. The built
-game and packaged fork source match the corrected Chart camera and place
-landing source byte for byte. The final isolated increase is 36,689 bytes.
-
-Boot remains last by construction: tools/build.py gathers the game and Galaxy
-module folders, removes game/90-boot.js from that sequence, then appends it.
-The focused build, module and Galaxy selection passed 12 tests, including the
-optional second folder, late game modules, missing boot and invalid module
-names.
-
-The final metadata-only change runs the style and sink checks through
-`uv run python`, where the project's Rich dependency is available. Both
-corrected commands pass.
+Verified directly: uv run python tools/build.py --check
+(game/vibe-map.html matches src/, so the build stays in sync with no
+harness-owned tooling change needed), just sinks-check (clean),
+uv run ruff check tests/ (clean), and uv run pytest -q tests/test_repo.py
+tests/test_work.py tests/test_harness_determinism.py (all pass, exit 0).
+No browser tests run here; Codex's reviewer already reran and accepted
+those (review.toml c1/c2/c3). No findings.
 '''

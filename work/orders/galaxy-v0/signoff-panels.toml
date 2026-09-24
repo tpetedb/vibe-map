@@ -4,32 +4,30 @@ v = 1
 order = "galaxy-v0"
 team = "panels"
 by = "manager-panels"
-reviewed = "f9d9a6b80f8330b02143dcb354da0fcee447f31e"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
 verdict = "accept"
 note = '''
-Accepted for the panels team at f9d9a6b80f8330b02143dcb354da0fcee447f31e.
+Refreshed for the panels team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. Panels-owned
+files that moved: src/body.html, src/game/40-sheet.js, src/game/85-settings.js,
+src/game/90-boot.js, src/style.css.
 
-The Experience setting switches through the shared registry while preserving
-the open sheet and restoring focus to the select. The existing live region
-announces the selected experience. Journey, Chart, Globe and Dome are named
-buttons, and every Galaxy button measures at least 44 by 44 CSS pixels on the
-iPhone and Android profiles.
+#galaxy-ui gained role="region" aria-labelledby="galaxy-title" in place of a
+bare aria-label; new galaxy-check, galaxy-overview and galaxy-walk regions are
+built with createElement/textContent, never innerHTML with unescaped text.
+The one interpolated value into markup, backLabel() in 85-settings.js, is
+now wrapped in esc() before going into the settings sheet. 40-sheet.js and
+90-boot.js route start(), closeSheet(), backLabel and the title copy through
+optional activeExperience() hooks (fallback, refresh, guidance, backLabel,
+presentation) with the prior islands behaviour kept as the fallback when a
+hook is absent, so the islands path is unchanged. CSS additions (type-scale
+font sizing, the check/overview/walk panels, the joystick's galaxy-specific
+position) are additive and scoped under body[data-experience="galaxy"] or
+#galaxy-* selectors.
 
-The accessible twin is topic ordered and carries the topic, state, year and
-place from listing(). State is written as text, and the next topic has
-aria-current="step". Focusing a list action creates a yellow Torus focus ring
-at its place in the 3D scene; blurring removes it. Arrow keys move through the
-actions, Escape returns to the Chart button, and native button activation opens
-the topic or lands at the place. Learn opens the existing topic view.
-
-The Chart groups places under real era headings, includes textual state and
-completion counts, marks the current place, and shows the California campus,
-Hangzhou and data centre examples in the reviewed showcase. Chart keeps the
-overview framing. Landing renders the chosen place's Dome before opening its
-topic, so the topic view does not replace the selected place.
-
-Focused evidence passed: tests/test_game_galaxy.py on desktop, WebKit iPhone
-and Android, plus the style and sink checks. The built game and fork source
-both match their sources. The test captures the chart and the three distinct
-showcase domes.
+Verified: uv run python tools/build.py --check (game/vibe-map.html matches
+src/), just sinks-check (clean), uv run ruff check tests/ (clean), and
+uv run pytest -q tests/test_repo.py tests/test_work.py
+tests/test_harness_determinism.py (all pass). No browser tests run here;
+Codex's reviewer covers those (review.toml c1/c4/c5 already accept).
 '''

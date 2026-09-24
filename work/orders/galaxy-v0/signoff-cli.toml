@@ -1,0 +1,35 @@
+v = 1
+order = "galaxy-v0"
+team = "cli"
+by = "manager-cli"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+note = """
+Checked galaxy-v0's part of vibemap/config.py and vibemap/places.py.
+
+vibemap/config.py carries no diff at all since 541df67 (the commit before
+galaxy-v0's showcase work): `git diff 541df67 f859c13 -- vibemap/config.py`
+is empty. Nothing to review there; it stays in owns for a file this order may
+still need to touch, but has not.
+
+vibemap/places.py's only change is one field: `showcase: bool = False` on the
+Place model (small, additive, opt-in). `payload()` already does
+`p.model_dump(exclude_none=True)` for every place, so showcase reaches the
+build with no further wiring; that is what lets src/galaxy/00-model.js keep a
+non-primary echo origin's dome instead of hiding it. Two unrelated docstring
+wording tweaks in the same file are harmless.
+
+Ran (this session, from /Users/maxgroupit/vibe-map/.claude/worktrees/claude-pr183-signoffs):
+- `uv run pytest -q tests/test_places.py tests/test_cli.py tests/test_config_levels.py tests/test_camp_config.py`
+  -> 149 passed under NO_COLOR=1. Without NO_COLOR, one test
+  (test_config_levels.py::test_vibe_fork_builds_and_is_checked_end_to_end)
+  failed on a literal substring match broken by ANSI colour codes; reproduced
+  and cleared by setting NO_COLOR=1, traced to my shell's FORCE_COLOR=3, not
+  a code defect.
+- `uv run python -c "import vibemap.places as p; print(p.problems())"` -> []
+- `uv run ruff check vibemap/config.py vibemap/places.py` -> All checks passed.
+
+No browser tests run (out of scope for this sign-off).
+
+[Claude Sonnet 5, effort medium, team-manager]
+"""
