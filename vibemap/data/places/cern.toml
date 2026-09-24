@@ -1,4 +1,5 @@
-# CERN, Geneva. Esplanade des Particules 1, Geneva. The laboratory sits astride the border.
+# CERN, Geneva. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "cern"
 name = "CERN, Geneva"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 46.234
 lon = 6.056
 look = "lab"
-landmark = "globe-of-science"
+landmark = "generic-marker"
 source = "https://home.cern/about"

@@ -12,6 +12,25 @@ try_it = "curl -s https://api.github.com/repos/duckdb/duckdb | head -20. You jus
 
 unlocks = ["apis", "mcp", "ssh"]
 
+[[origins]]
+place = "cern"
+year = 1990
+what = "In October 1990 Tim Berners-Lee, working at CERN, starts on the first World Wide Web server, httpd; the initial specification of HTTP is his."
+source = "https://www.w3.org/People/Berners-Lee/Longer.html"
+primary = true
+
+[[origins]]
+place = "uc-irvine"
+year = 1997
+what = "In January 1997 RFC 2068 defines HTTP/1.1; its first author is R. Fielding of UC Irvine."
+source = "https://www.rfc-editor.org/rfc/rfc2068"
+
+[[origins]]
+place = "ietf"
+year = 2015
+what = "In May 2015 the Internet Engineering Task Force publishes RFC 7540, Hypertext Transfer Protocol Version 2 (HTTP/2)."
+source = "https://www.rfc-editor.org/rfc/rfc7540"
+
 [[sources]]
 label = "MDN HTTP overview"
 url = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Overview"

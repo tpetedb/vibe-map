@@ -1,0 +1,13 @@
+# Joe Beda identifies his Google office as Kirkland, near Seattle, in this first-person interview.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "google-kirkland"
+name = "Google, Kirkland"
+kind = "company"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 47.68
+lon = -122.21
+look = "tower"
+landmark = "generic-marker"
+source = "https://thepodlets.io/episodes/006-joe-beda/"

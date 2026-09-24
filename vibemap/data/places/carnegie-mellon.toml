@@ -1,4 +1,5 @@
-# Carnegie Mellon University, Pittsburgh. 5000 Forbes Avenue, Pittsburgh.
+# Carnegie Mellon University, Pittsburgh. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "carnegie-mellon"
 name = "Carnegie Mellon University, Pittsburgh"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 40.443
 lon = -79.944
 look = "campus"
-landmark = "the-cut"
+landmark = "generic-marker"
 source = "https://www.cmu.edu/about/"

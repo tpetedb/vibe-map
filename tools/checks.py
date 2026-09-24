@@ -61,6 +61,7 @@ LINK_SOURCES = (
     "docs/ROADMAP.md",
     "docs/AOE-STUDY.md",
     "vibemap/data/topics",
+    "vibemap/data/places",
     "vibemap/data/campaign.json",
     "vibemap/data/resources.md",
 )

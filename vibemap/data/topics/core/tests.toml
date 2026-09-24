@@ -15,8 +15,8 @@ unlocks = ["ci"]
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. JUnit was
 # written on a flight, and pytest's history page names a conference and no
-# town, so the runner this camp uses stands on the network; the echo is a
-# post about evals by the company that wrote it.
+# town, so the runner this camp uses stands on the network. Anthropic's eval
+# article is also online, so it remains a source instead of a duplicate place.
 
 [[origins]]
 place = "the-internet"
@@ -24,12 +24,6 @@ year = 2004
 what = "The std project Holger Krekel started for EuroPython 2004 is renamed py, its std.utest becomes py.test, and the py library is split off from PyPy."
 source = "https://docs.pytest.org/en/stable/history.html"
 primary = true
-
-[[origins]]
-place = "anthropic-sf"
-year = 2023
-what = "Anthropic publishes Challenges in evaluating AI systems, on how difficult it is to build robust and reliable model evaluations."
-source = "https://www.anthropic.com/news/evaluating-ai-systems"
 
 [[sources]]
 label = "pytest"
@@ -50,3 +44,7 @@ url = "https://docs.pytest.org/en/stable/history.html"
 [[sources]]
 label = "Source: QuickCheck (Claessen and Hughes, ICFP 2000)"
 url = "https://www.cse.chalmers.se/~rjmh/QuickCheck/"
+
+[[sources]]
+label = "Source: Anthropic, Challenges in evaluating AI systems (October 2023)"
+url = "https://www.anthropic.com/news/evaluating-ai-systems"

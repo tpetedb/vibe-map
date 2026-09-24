@@ -1,5 +1,5 @@
-# Apple, Cupertino. Apple's own contact page gives One Apple Park Way, Cupertino,
-# California 95014.
+# Apple, Cupertino. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "apple-cupertino"
 name = "Apple, Cupertino"
 kind = "company"
@@ -9,5 +9,5 @@ globe = "earth"
 lat = 37.335
 lon = -122.009
 look = "campus"
-landmark = "one-apple-park-way"
+landmark = "generic-marker"
 source = "https://www.apple.com/contact/"

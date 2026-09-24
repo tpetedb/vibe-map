@@ -2,7 +2,7 @@
 title: "Polars"
 date: 2026-09-18
 tags: [tech, data]
-generated: 36f9990cc623
+generated: d1dc72c671c3
 ---
 # Polars
 
@@ -12,7 +12,7 @@ Polars is a DataFrame library whose best trick is that it does not run your quer
 
 **Try in five minutes.** uv run python -c "import polars as pl; print(pl.scan_csv('workspace/data/scores.csv').filter(pl.col('score') > 100).explain())" and read the plan.
 
-- Docs: [Polars user guide, the lazy API](https://docs.pola.rs/user-guide/concepts/lazy-api/), [Polars user guide, query plan and optimisations](https://docs.pola.rs/user-guide/lazy/optimizations/), [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/), [Polars, the Python API reference](https://docs.pola.rs/api/python/stable/reference/index.html)
+- Docs: [Source: Ritchie Vink, Python Polars 1.0 announcement](https://pola.rs/posts/announcing-polars-1/), [Polars user guide, the lazy API](https://docs.pola.rs/user-guide/concepts/lazy-api/), [Polars user guide, query plan and optimisations](https://docs.pola.rs/user-guide/lazy/optimizations/), [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/), [Polars, the Python API reference](https://docs.pola.rs/api/python/stable/reference/index.html)
 - Unlocks: [[dbt]], [[The medallion layering]]
 - Shelf: Data · Depth: Working knowledge
 

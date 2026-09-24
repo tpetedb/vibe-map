@@ -18,6 +18,18 @@ try_it = '''Write the three words on a page and put every data tool your employe
 unlocks = []
 prerequisites = ["dlt", "dbt", "airflow"]
 
+[[origins]]
+place = "the-internet"
+year = 2015
+what = "Airbnb publishes its Airflow workflow-management announcement online on 2 June 2015."
+source = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+primary = true
+
+[[sources]]
+label = "Source: Airbnb Engineering, workflow-management announcement"
+url = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+checked = 2026-09-22
+
 [[sources]]
 label = "dlt, the introduction: what ingestion is for"
 url = "https://dlthub.com/docs/intro"

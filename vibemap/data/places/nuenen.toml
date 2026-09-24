@@ -1,0 +1,13 @@
+# EWD 447 is signed from Nuenen in 1974. Coordinates locate the town, not a private house.
+# City-level coordinates and a generic marker, not a real building or product.
+id = "nuenen"
+name = "Nuenen, the Netherlands"
+kind = "city"
+region = "europe-west"
+era = "mainframe"
+globe = "earth"
+lat = 51.47
+lon = 5.55
+look = "house"
+landmark = "generic-marker"
+source = "https://www.cs.utexas.edu/~EWD/transcriptions/EWD04xx/EWD447.html"

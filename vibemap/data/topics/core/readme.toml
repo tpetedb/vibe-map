@@ -12,6 +12,16 @@ try_it = "head -30 README.md, then run the first Quickstart command exactly as w
 
 unlocks = ["github"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "bell-labs"
+year = 1979
+what = "Bell Telephone Laboratories copyrights the documents of Seventh Edition Unix in 1979, and the files shipped on its distribution tapes include a README with the papers of Volumes 2A and 2B."
+source = "https://9p.io/7thEdMan/index.html"
+primary = true
+
 [[sources]]
 label = "Make a README"
 url = "https://www.makeareadme.com"

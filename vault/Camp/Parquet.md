@@ -2,7 +2,7 @@
 title: "Parquet"
 date: 2026-09-18
 tags: [tech, data]
-generated: 72035d5715f0
+generated: 8731d766825b
 ---
 # Parquet
 
@@ -12,7 +12,7 @@ Parquet is a binary columnar file format: the rows are cut into row groups, each
 
 **Try in five minutes.** duckdb -c "copy (from 'workspace/data/scores.csv') to 'scores.parquet' (format parquet)" then duckdb -c "select * from parquet_metadata('scores.parquet')" and read the footer.
 
-- Docs: [Apache Parquet, the file format](https://parquet.apache.org/docs/file-format/), [DuckDB, reading and writing Parquet files](https://duckdb.org/docs/stable/data/parquet/overview), [DuckDB performance guide, file formats and row group sizes](https://duckdb.org/docs/stable/guides/performance/file_formats), [PyArrow, reading and writing the Parquet format](https://arrow.apache.org/docs/python/parquet.html)
+- Docs: [Source: Apache Software Foundation, Parquet graduation](https://news.apache.org/foundation/entry/the_apache_software_foundation_announces75), [Apache Parquet, the file format](https://parquet.apache.org/docs/file-format/), [DuckDB, reading and writing Parquet files](https://duckdb.org/docs/stable/data/parquet/overview), [DuckDB performance guide, file formats and row group sizes](https://duckdb.org/docs/stable/guides/performance/file_formats), [PyArrow, reading and writing the Parquet format](https://arrow.apache.org/docs/python/parquet.html)
 - Unlocks: [[Apache Arrow]], [[DuckDB beyond the basics]], [[Apache Iceberg]]
 - Shelf: Data · Depth: Working knowledge
 

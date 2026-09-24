@@ -2,7 +2,7 @@
 title: "Apache Arrow"
 date: 2026-09-18
 tags: [tech, data]
-generated: 4838973fc387
+generated: 9c6e68eabe29
 ---
 # Apache Arrow
 
@@ -12,7 +12,7 @@ Arrow is a columnar layout for data in memory, not a file format you store thing
 
 **Try in five minutes.** python3 -c "import polars as pl; pl.DataFrame({'a':[1,2]}).write_ipc('t.arrow')" then head -c 6 t.arrow and read ARROW1.
 
-- Docs: [Apache Arrow, the columnar format specification](https://arrow.apache.org/docs/format/Columnar.html), [Apache Arrow, introduction to the columnar format](https://arrow.apache.org/docs/format/Intro.html), [PyArrow, data types and the in-memory data model](https://arrow.apache.org/docs/python/data.html), [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/)
+- Docs: [Source: Apache Software Foundation, Arrow announcement](https://news.apache.org/foundation/entry/the_apache_software_foundation_announces87), [Apache Arrow, the columnar format specification](https://arrow.apache.org/docs/format/Columnar.html), [Apache Arrow, introduction to the columnar format](https://arrow.apache.org/docs/format/Intro.html), [PyArrow, data types and the in-memory data model](https://arrow.apache.org/docs/python/data.html), [Polars user guide, Polars and Apache Arrow](https://docs.pola.rs/user-guide/misc/arrow/)
 - Unlocks: [[Polars]], [[DuckDB beyond the basics]]
 - Shelf: Data · Depth: Deep
 

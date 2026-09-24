@@ -23,7 +23,7 @@ source = "https://ethw.org/Milestones:The_Xerox_Alto_Establishes_Personal_Networ
 primary = true
 
 [[origins]]
-place = "anthropic-sf"
+place = "the-internet"
 year = 2024
 what = "Anthropic publishes the Model Context Protocol, a standard for connecting assistants to the systems where data lives."
 source = "https://www.anthropic.com/news/model-context-protocol"

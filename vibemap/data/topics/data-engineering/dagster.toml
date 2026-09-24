@@ -18,6 +18,18 @@ try_it = '''uv run --with dagster python -c "import dagster as dg; print(dg.__ve
 unlocks = ["datamap"]
 prerequisites = ["airflow"]
 
+[[origins]]
+place = "the-internet"
+year = 2022
+what = "The Dagster team announces version 1.0 online on 5 August 2022, with stable software-defined assets."
+source = "https://dagster.io/blog/dagster-1-0-hello"
+primary = true
+
+[[sources]]
+label = "Source: Dagster, version 1.0 announcement"
+url = "https://dagster.io/blog/dagster-1-0-hello"
+checked = 2026-09-22
+
 [[sources]]
 label = "Dagster, getting started concepts: assets"
 url = "https://docs.dagster.io/getting-started/concepts"
