@@ -1,0 +1,7 @@
+v = 1
+order = "galaxy-echo-jump"
+team = "panels"
+by = "manager:panels"
+reviewed = "85f6c3604cd62e28f67f93d1fcdfeee175fbdb7e"
+verdict = "accept"
+note = "Galaxy-only row rules now stack the actions at all widths. Enlarged desktop and phone screenshots show legible, separate Learn and Jump controls inside the panel without collision with navigation or other panels. The tests check both actions are at least 44px, desktop bounds, group Tab order, Enter activation, and focus after flight. Other panel selectors are untouched."
