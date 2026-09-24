@@ -1,123 +1,59 @@
 # [Claude Opus 5.5, effort high, reviewer]
 v = 1
 order = "topics-craft"
-by = "reviewer-topics-craft-r2"
-reviewed = "bd5c536b570b6394a113aa3dcd187e86752a9ec8"
-verdict = "improve"
+by = "reviewer-topics-craft-r1"
+reviewed = "57714f54d6bf0a612cbe8068d2bc98569b219b72"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = """I ran the command at bd5c536 and it exits 0.
+evidence = """Round 3 is a delta review of d9aead4..57714f5. git diff d9aead4 57714f5 --stat shows three files and nothing else:
+- tests/test_origins_code_git.py (_shelved) and tests/test_origins_ship_docs.py (_topics) each gain 'and t.pack == "core"'.
+- order.toml widens owns to those two files.
+No craft topic, generated file or other test changed since the round 2 review. origin/main is an ancestor of HEAD.
 
-I reverted two round 1 fixes in a scratch copy made with git archive, with PYTHONPATH pointing at it. For fixtures.toml and refactoring.toml I restored the 75f2054 versions and the pack suite went red:
-- test_a_hands_on_is_red_before_the_work_and_green_after[fixtures]
-- all three test_a_pytest_hands_on_is_green_in_a_camp_whatever_its_pytest_settings[fixtures-*]
-- test_a_near_miss_is_red[refactoring-never-called]
-The new tests catch the defects they were written for.
+The filter matches test_origins_data_net.py, which reads 't.shelf in SHELVES and t.pack == PACK' with PACK = "core". tests/ belongs to no team in work/teams.toml, so the widened owns needs no sign-off. ruff check and ruff format --check pass on both files, and the longest line is 86.
 
-The sentence is true, but the command still does not decide whether the order can land. See the high finding: CI's unit job is red at this commit on two tests the command never runs."""
+At 57714f5, uv run pytest -o addopts="" on every tests/test_origins_*.py (five files) plus test_topics_craft, test_topics, test_syllabus and test_places gives 183 passed, exit 0. The c1 command passes (just work-check topics-craft: c1, c2, c3 pass).
+
+Revert test: in a git archive scratch copy of 57714f5, I restored the d9aead4 versions of the two test files. Exactly the five round 2 failures come back: three in code_git, including KeyError testdoubles, and two in ship_docs, including KeyError delivery. So the clause is what fixes them.
+
+CI run 35950910290 at 57714f5: in the job 'lint, unit tests, generated files in sync', step 13 (pytest -m "not browser and not integration") is now success. Only step 14, the review gate, failed. Locally, tools/work.py ci names one problem, the lapsed review, and no file outside owns.
+
+Coverage the filter drops: the craft pack no longer passes through the core registries' year, one-line, primary-first and no-duplicate-place rules. I applied those rules to all 17 craft topics by hand and none is broken. Craft keeps its own origin tests in test_topics_craft.py."""
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = """I ran the check. places.problems() reports nothing for /craft/. 4 of the 17 primary origins are at the-internet (codereview, fixtures, properties, refactoring), and 4*4 = 16 <= 17, so the command proves the sentence as written."""
+evidence = """Unchanged since round 2, when no craft file changed. I ran the check at 57714f5 and it passes. places.problems() says nothing for /craft/, and 4 of the 17 primary origins sit at the-internet (16 <= 17)."""
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = """Setup: build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus each exit 0 with --check, and tools/checks.py style prints 'style OK'.
-
-CLI:
-- uv run vibe topics lists 'The software craft and delivery pack (craft)'.
-- uv run vibe topic iac, manifests and incidents each render.
-- uv run vibe topic fixtures shows the new try_it, the three sources with 'checked 2026-09-24', the folder workspace/topics/fixtures/ and the check command.
-
-SYLLABUS: git diff -U0 origin/main...HEAD -- docs/SYLLABUS.md has hunks only at lines 1116 to 1153. The generated:tech-tree markers sit at lines 1114 and 1159, so every hunk is inside them."""
+evidence = """At 57714f5 the c3 command passes through work-check: the six generators pass --check, style is OK, and vibe topics lists craft. CI steps 5 to 12 (ruff, format, style, regen_tree, build, gen_cookbook, gen_syllabus, changelog fragment) are all success in run 35950910290."""
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
-evidence = """Sources: pass. I opened 24 cited pages myself, with curl, WebFetch or gh api, and each line says only what its page says:
-- Opdyke thesis PDF, extracted with pypdf: UIUC, 1992, Ralph E. Johnson advisor, and both quotes are verbatim.
-- Fowler, refactoring-2nd-changes: 05 September 2018, and "The testing chapter had to be completely redone, particularly due to change from Java to JavaScript".
-- pytest changelog: 2.3.0 (2012-10-19) "introduce @pytest.fixture which allows direct scoping", and 2.2.0 (2011-11-18) "add a @pytest.mark.parametrize helper".
-- Hypothesis changelog, raw HTML: 0.0.1 on 2013-03-10 reads "Initial release. Basic working prototype.", and 1.0.0 is on 2015-03-27.
-- python.org 3.3.0: 29 September 2012, with "The new 'unittest.mock' module" among the major features.
-- unittest.mock docs: both quotes.
-- Vocke: 26 February 2018, Cohn and Succeeding with Agile, and the pyramid quote.
-- CNCF OpenTelemetry page: 7 May 2019, 26 Aug 2021 and 11 May 2026.
-- opentelemetry.io: the definition, "not an observability backend itself", and the OpenTracing and OpenCensus merger. The merger claim comes from this page, not from the CNCF page.
-- OpenAPI FAQ: November 2015, the ten companies, the Linux Foundation, and Swagger 2.0 donated by SmartBear.
-- OAS latest: 3.2.1, dated 10 September 2026, and paths MUST begin with a forward slash.
-- LF CDF release: March 12, 2019, and Jenkins, Jenkins X, Spinnaker and Tekton.
-- LF OpenTofu: September 20, 2023, previously OpenTF, MPLv2 to BSL v1.1.
-- OpenSSF release: August 3, 2020, and GitHub's Open Source Security Coalition.
-- NIST SP 800-218: February 2022, v1.1, and the SSDF sentence.
-- NIST SP 800-61: January 2004, Grance, Kent and Kim, and the preparation to lessons learned sentence.
-- RFC 9745: March 2025, and @1688169599 is 30 June 2023 at 23:59:59 UTC.
-- RFC 9700: January 2025, with MUST use PKCE, MUST NOT be used and SHOULD NOT use the implicit grant, all verbatim.
-- Dependabot ecosystems: 'uv uv v0.11' and github-actions.
-- SPDX overview: August 2010, the Open Compliance Program, and ISO/IEC 5962 in August 2021.
-- OCI overview: June 22nd 2015, Docker, CoreOS, and the Linux Foundation auspices.
-- SRE example postmortem: 2015-10-21. The headings match postmortem.md's list exactly.
-- choosealicense: 'exclusive copyright by default', the MIT description, LICENSE or LICENSE.txt, and [year] [fullname].
-- gh api: the first commit to google/eng-practices README.md is 2019-09-05T18:48:38Z.
-Every source and topic carries checked = 2026-09-24.
-
-Origins: pass. Every primary origin is at an abstract place: python-software-foundation, ietf, linux-foundation, cncf, a-standards-body or the-internet. None of them claims an address. Each line names the body that acted on that date. The four the-internet origins are releases or publications that happened online. Refactoring's is the weakest: Fowler's 2018 post stands in for Opdyke at UIUC in 1992. That place is wished on #168 with the thesis as evidence, which is the rule.
-
-Hands-ons: pass. I built them in a scratch camp (git archive of bd5c536, VIBE_HOME set to it) from the try_its, and ran uv run vibe check --topic <id>:
-- fixtures: red with no report. After 'uv run --with pytest pytest -o addopts="" --junitxml=report.xml test_cart.py' under this repository's pyproject (addopts -q -ra), 4 passed and the check is green. With one row broken, 1 failed and the check is red. The run took 1.0 s.
-- properties: real Hypothesis via uv --with. Green on 1 passed. With encode broken, Hypothesis prints text='00' and the check is red on failures="0".
-- refactoring: red before Extract Function (inline prints), green after.
-- oauth: green on the RFC value, red with the = padding left on.
-- buildersec: green on the try_it answer, red on API_KEY="sk-...".
-- codereview: green with Verdict:, and also with **Design:** bold.
-- apidesign: green on the try_it form.
-All the checks are string or run checks on local files, so they are deterministic and offline. The first uv run downloads packages once, and the fixtures and properties try_its say so.
-
-No em dash: pass. The added lines of the diff contain 0 U+2014 and 0 U+2013, the style check is OK, and a pack test guards the TOML files."""
-
-[[findings]]
-severity = "high"
-file = "tests/test_origins_code_git.py"
-text = """Unresolved from round 1: the PR's CI is still red at the reviewed commit, so this cannot land as is.
-
-Run 35950213684, job 'lint, unit tests, generated files in sync', fails at step 13 (pytest) with exactly the five round 1 failures:
-- test_origins_code_git.py: test_the_table_covers_exactly_the_topics_of_these_shelves, test_every_topic_has_one_primary_origin_whose_line_names_it (KeyError testdoubles), test_a_line_at_an_address_names_who_is_at_that_address
-- test_origins_ship_docs.py: test_the_three_shelves_hold_the_topics_this_order_sourced, test_the_primary_line_of_every_topic_names_the_topic (KeyError delivery)
-I reproduced them locally.
-
-The builder has correctly named it outside owns. The order was not widened and no other order has fixed it, so the manager has to act.
-
-The builder's proposed fix is sound. I applied 'and t.pack == "core"' to _shelved() in test_origins_code_git.py and _topics() in test_origins_ship_docs.py in a scratch copy, which is the same filter test_origins_data_net.py already uses. All of tests/test_origins_*.py then pass (exit 0).
-
-Either widen owns to those two files, or land that one-clause change first through the owning team. After a sync-main that leaves the owned files alone, the rest of this order is ready: every other criterion passes."""
+evidence = """No content changed since the round 2 review. That review opened 24 cited pages, built the hands-ons in a scratch camp red then green, and judged the origins, and it all still applies to identical files. I re-checked the craft origins against the year-in-line and one-line rules. The two added test lines contain no em dash, and the style check passes."""
 
 [[findings]]
 severity = "low"
 file = "vibemap/data/topics/craft/buildersec.toml"
-text = """The absent list is a substring blacklist, so it is wrong in both directions.
-
-Red on correct work, reproduced:
-- ENV_KEY = "API_KEY" followed by os.environ.get(ENV_KEY)
-- sys.exit('Missing API_KEY; put API_KEY="..." in your .env')
-- monkey = "banana"
-
-Green on a secret, reproduced: TOKEN = "sk-live-123" next to os.environ.get("API_KEY")
-
-The fail message names the pattern, so a learner can recover. A follow-up could look for a quoted literal that looks like a key instead."""
+text = """Carried from round 2. The absent list is a substring blacklist, so it is wrong in both directions. It is red on correct work such as ENV_KEY = "API_KEY" or monkey = "banana". It is green on TOKEN = "sk-live-123" next to os.environ.get("API_KEY"). The fail message names the pattern, so a learner can recover."""
 
 [[findings]]
 severity = "low"
 file = "vibemap/data/topics/craft/refactoring.toml"
-text = """The '    print_details(' contains-check ties the answer to four-space indentation. Both cases are reproduced in a scratch camp.
-- A correct refactoring indented with two spaces is red with 'owing.py does not use'.
-- A file that keeps the prints inline in print_owing and calls print_details("x", 0) under an if __name__ guard is green.
-The first is the one a learner could hit. PEP 8 makes it rare."""
+text = """Carried from round 2. The '    print_details(' contains-check ties the answer to four-space indentation: a correct two-space refactoring is red, and an unrefactored file that calls print_details under a main guard is green."""
 
 [[findings]]
 severity = "low"
 file = "vibemap/data/topics/craft/observability.toml"
-text = """The fixtures and properties try_its now say that the first uv run downloads packages into uv's cache. The observability try_it runs 'uv run --with opentelemetry-sdk' and says nothing about it. The module check reads trace.py only where opentelemetry is importable, which is the kind's documented design."""
+text = """Carried from round 2. The try_it runs 'uv run --with opentelemetry-sdk' and does not say that the first run downloads packages. The fixtures and properties try_its do say so."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_origins_code_git.py"
+text = """With the core filter in place, craft origins no longer pass through the core registries' year-in-line, one-line and no-duplicate-place rules, and test_topics_craft.py does not repeat them. They all hold today, which I checked by hand. A follow-up could lift those rules into one shared helper that runs over every pack."""
