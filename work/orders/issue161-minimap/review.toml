@@ -1,0 +1,72 @@
+# A review of one order, by someone who did not build it. Copy to
+# work/orders/<id>/review.toml. `just work-review <id>` prints what to read
+# and the commit to put in `reviewed`.
+v = 1
+order = "issue161-minimap"
+by = "claude-reviewer-161"
+# The commit you read. If a file the order owns changes after it, the review
+# no longer counts and has to be done again.
+reviewed = "4fe80d6b729a3a44055395516c68d2ded5fe279a"
+# accept, or improve (then the findings say what).
+verdict = "accept"
+
+# One row per criterion of the order, checked or judged. A checked criterion
+# passing is not enough: say whether the command really proves the text.
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Round 2, delta d95b938..4fe80d6. Ran the check in the worktree at 4fe80d6: `uv run pytest -q tests/test_minimap_short_window.py`, 5 passed. The command proves the sentence. The desktop test measures the canvas and the Bigger button against #zoom with a full rectangle test at 800x640, 720x600 and 640x480, and pins right == 790 at 800x640. The phone test opens the map with its Map button at 375x667 and 320x568 on a touch context and pins both the map and the toggle to right == width - 10. It pins the corner, not the vertical order; I measured that (375x667: toggle 194-238, map from 246).
+Red on the old code, in scratch copies under /tmp/rev161b with the new test file and the game rebuilt there. On the round 1 source (src/game/32-minimap.js from d95b938) the run is `...FF`: both phone cases fail (map right 309 and 254). With the fix removed (32-minimap.js from the merge base 99e6db7) the run is `.FF..`: 720x600 fails (Bigger meets zoom) and 640x480 fails (map meets zoom); 800x640 and the phones pass, as they should.
+Across the matrix on the new build (640/1024/1440 wide by 360/480/540/600/900 tall) the desktop boxes are identical to the round 1 build: zoom is clear at every size, and the map keeps its corner wherever nothing meets (1024x600 right 1014, 1440x600 and 1440x900 right 1430, 640x900 right 630). Phones at 320x568, 390x844 and 560x700 are identical to the build with no fix.
+Context, not a finding: tests/test_media.py's 640x480 case compares vertical extents only and stays green. It is Team Codex's to update when #161 joins the train.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran `uv run python tools/build.py --check && uv run python tools/sync_fork_source.py --check` in the worktree at 4fe80d6: exit 0, "build OK: game/vibe-map.html matches src/". The worktree's game/vibe-map.html is byte-identical to a build of a clean git archive of 4fe80d6. The command proves the sentence.
+Also ran `uv run pytest -q tests/test_changelog.py`: all pass. `tools/changelog.py draft` now lists "- Keep the minimap and Bigger button clear of the zoom controls in short browser windows." under Fixed. ruff check and ruff format --check are clean on the test file.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Looked at the new build's screenshots, played state, campus, Chromium, dpr 1: /tmp/rev161b/new-640x480.png, new-1440x900.png, new-375x667-touch.png.
+640x480: the map at 442-578, 8px clear of the zoom column, with plus, fit, minus and Bigger all free. 1440x900: the map in its corner. 375x667 with the map open: the map sits under its Map toggle in the corner, exactly as before this order.
+Usable: a click on the next stop's plot on the moved map at 640x480 (plot 6 at 486,157) walks Lotte there. Bigger then Smaller brings the map back to 442-578, and the test now asserts that. Resizing 640x480, 1440x900, 640x480, 800x640, 640x480 moves the map out, back to the corner, out, back and out. Left-handed leaves the map in its corner. No page errors.
+Round 1 findings:
+- The fragment is now a bullet (fixed).
+- Phones are desktop-only now: map and toggle stay aligned at 375x667 and 320x568 (fixed).
+- mmLayout reads #zoom's box before any style write and works out the map's and Bigger's boxes from y, D, under and MM_TAP (fixed).
+- A constraint comment was added (fixed; see the low nit below).
+- The test uses game_page with no fixed sleeps, asserts page errors, and asserts the Smaller return (fixed).
+'''
+
+# What you found, most severe first. severity: high, medium, low.
+[[findings]]
+severity = "low"
+file = "src/game/32-minimap.js"
+text = '''
+For a follow-up, not blocking: the clearance is taken from #zoom alone. On a touch screen wider than MM_PHONE (844x390 landscape) the map still moves, and the wider #jump (56px against 44) keeps a 4px strip of its box under the moved map (map right 778, jump left 774). Before this order the map covered that button whole, so this is a gain, not a regression.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/32-minimap.js"
+text = '''
+Nit: the older comment over the placement still says "small, the map keeps its corner and its button sits under it there" without the exception. The new constraint comment a few lines above states the exception, so it reads correctly in context.
+'''
+
+[[findings]]
+severity = "low"
+file = "src/game/32-minimap.js"
+text = '''
+Pre-existing and unchanged by this order, for a follow-up issue:
+- On a phone with the map open (320x568, 375x667, 560x700) the map still covers the zoom column. That is the scope this order chose.
+- At 640x420, and at 360 tall at every width, the Bigger button runs into the talk band, and at 640x360 the map does too.
+- On an 844x390 touch screen the zoom column's plus and fit sit under the HUD.
+- In a 640x480 window the big map is only 136px, with the achievement toast drawn over it.
+'''

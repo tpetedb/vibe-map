@@ -4559,6 +4559,13 @@ function mmLayout(){
     phone=mmPhone(),show=!busy&&(!phone||mmOpen);
   const y=top+(phone&&!mmBig?MM_TAP+8:0),D=mmDim(),
     left=Math.max(12,(innerWidth-D)/2),under=y+D+8;
+  // Zoom follows the stage height. On desktop the compact map yields when
+  // its column meets zoom; on phones the Map toggle keeps the map in its corner.
+  const zoom=show&&!phone&&!mmBig?$("zoom"):null,
+    zr=zoom&&getComputedStyle(zoom).visibility!=="hidden"
+      ?zoom.getBoundingClientRect():null;
+  const meetsZoom=zr&&innerWidth-10-D<zr.right&&innerWidth-10>zr.left&&
+    ((y<zr.bottom&&y+D>zr.top)||(under<zr.bottom&&under+MM_TAP>zr.top));
   // Resizing a canvas clears it, so it is only ever resized when the size it
   // is drawn at has actually changed.
   if(mmW!==D){mmW=D;mmCv.width=mmCv.height=D*2;mmCv.style.width=mmCv.style.height=D+"px"}
@@ -4571,6 +4578,10 @@ function mmLayout(){
   mmBigBtn.style.display=show?"block":"none";
   mmBigBtn.style.top=under+"px";
   mmBigBtn.style.right=mmBig?"":"10px";mmBigBtn.style.left=mmBig?left+"px":"";
+  if(meetsZoom){
+    const right=Math.ceil(innerWidth-zr.left+8)+"px";
+    mmCv.style.right=right;mmBigBtn.style.right=right;
+  }
   mmList.style.display=show&&mmBig?"flex":"none";
   mmList.style.top=(under+MM_TAP+8)+"px";
   mmList.style.left=left+"px";
