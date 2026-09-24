@@ -4,27 +4,32 @@ order = "scene-artifacts-followups"
 team = "panels"
 by = "manager-panels"
 # The commit you read.
-reviewed = "38ad2d3aca555e7422549573df4a0ea4ca50a914"
+reviewed = "e5c5c46337bc920a25ad997d884ac3987dedd314"
 verdict = "accept"
 note = """
-Checked the diff against origin/main restricted to panels' paths (src/game/ minus the \
-src/game/1*.js, 2*.js, 3*.js and src/galaxy/, src/config/ that scene owns first): the only \
-panels-owned file touched is src/game/60-vault.js, four lines, two hunks, both the same \
-hunt B fix (issue 110, 09:07Z hand-on): the treeShelves comment and the vhint copy shown when \
-interests are set both said 'dimmed', now say 'set back', matching the mountain/tree wording \
-the rest of the game uses for an unchosen-but-open shelf. Its mirror in \
-vibemap/data/fork_source/src/game/60-vault.js carries the identical two-line change (sync \
-output, unedited by hand). Correct: a plain copy substitution inside an existing template \
-string, no new interpolation and no new sink; the surrounding treeShelves()/renderTree() \
-functions and the .tech/.age markup are untouched. No panel contract in docs/CONTRACTS.md \
-names this text, treeShelves, or the vhint string; vrender() (the one gate for opening a note, \
-#114) and window.__vault()/window.__finale() are not touched. No HTML value is built from \
-this new text that needs esc(): it lands only inside the existing \
-interestsAll()?...:"..." ternary already fed straight into innerHTML, same as before, and \
-carries no user- or campaign-supplied data. Keyboard focus ring: this file adds no focus-ring \
-code; the tree's buttons keep the repo-wide button:focus-visible rule (src/style.css:96, \
-2px solid var(--yellow-bright)), unchanged since style.css is frozen for #183 and not in this \
-diff. No em dash in either changed line or in the fork_source mirror. Nothing else under \
-panels' remit (src/body.html, src/head.html, src/style.css, src/errors.js, src/icon.svg) \
-appears in this order's diff. Nothing for team panels to do after this lands.
+Re-stamp: this order's review (round 1 at fbda8ed) found both sign-offs lapsed because \
+order.toml (owns) and the three goldens changed after they were read, not because the files \
+panels answers for moved. git diff 38ad2d3aca555e7422549573df4a0ea4ca50a914 e5c5c46 restricted \
+to src/game/60-vault.js, vibemap/data/fork_source/src/game/60-vault.js, src/body.html, \
+src/head.html, src/style.css, src/errors.js and src/icon.svg is empty, and git diff \
+origin/main...e5c5c46 -- <panels' paths> still touches only src/game/60-vault.js and its \
+fork_source mirror, byte for byte what I read before: `tools/work.py ci` now reports no \
+problem for this file. The substance stands as read at 38ad2d3: the only panels-owned file \
+touched is src/game/60-vault.js, four lines, two hunks, both the same hunt B fix (issue 110, \
+09:07Z hand-on), the treeShelves comment and the vhint copy shown when interests are set both \
+said 'dimmed', now say 'set back', matching the mountain/tree wording the rest of the game uses \
+for an unchosen-but-open shelf. Its mirror in vibemap/data/fork_source/src/game/60-vault.js \
+carries the identical two-line change (sync output, unedited by hand). Correct: a plain copy \
+substitution inside an existing template string, no new interpolation and no new sink; the \
+surrounding treeShelves()/renderTree() functions and the .tech/.age markup are untouched. No \
+panel contract in docs/CONTRACTS.md names this text, treeShelves, or the vhint string; \
+vrender() (the one gate for opening a note, #114) and window.__vault()/window.__finale() are \
+not touched. No HTML value is built from this new text that needs esc(): it lands only inside \
+the existing interestsAll()?...:"..." ternary already fed straight into innerHTML, same as \
+before, and carries no user- or campaign-supplied data. Keyboard focus ring: this file adds no \
+focus-ring code; the tree's buttons keep the repo-wide button:focus-visible rule \
+(src/style.css:96, 2px solid var(--yellow-bright)), unchanged since style.css is frozen for \
+#183 and not in this diff. No em dash in either changed line or in the fork_source mirror. \
+Nothing else under panels' remit (src/body.html, src/head.html, src/style.css, src/errors.js, \
+src/icon.svg) appears in this order's diff. Nothing for team panels to do after this lands.
 """
