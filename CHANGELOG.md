@@ -16,8 +16,8 @@ Nothing here between releases: an entry lives in its own file under
 
 ### Fixed
 
-- With Settings, Vault set to Grow and no topic done, Galaxy's Learn button opens the next lesson on the journey instead of a lock that asked for island play a Galaxy learner never does. Topics further along stay earned, and the islands unlock exactly as before.
-- `just start` keeps "Claude, YOLO mode" (`claude --dangerously-skip-permissions`) greyed out, with a hint that it skips every permission prompt, until both lessons that teach permissions are done: Hooks as gates (Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5). The first lesson points at those two lessons for permissions in depth, and the toolbelt's "YOLO: install everything" button is unchanged.
+- With Settings, Vault set to Grow, Galaxy's Learn button opens the next lesson on the journey, and every lesson already done, instead of a lock that asked for island play a Galaxy learner never does. Topics further along stay earned, and the islands unlock exactly as before.
+- `just start` keeps "Claude, YOLO mode" (`claude --dangerously-skip-permissions`) greyed out, with a hint that it skips every permission prompt, until both lessons that teach permissions are done: Hooks as gates (Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5). The toolbelt's "YOLO: install everything" button is unchanged. In the game, the first lesson points at those two lessons for permissions in depth.
 
 ## [0.12.0] - 2026-09-24
 
