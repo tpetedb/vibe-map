@@ -1,0 +1,120 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "topics-craft"
+by = "reviewer-topics-craft-r1"
+reviewed = "75f205490fb669b9b3f2b35a5900395cf0759a69"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """I ran the command at 75f2054 and every test passed. In a scratch copy I broke three things and the pack tests caught two of them. When manifests moved to the-internet, the quarter test failed. When refactoring's prints were emptied, the near-miss test failed. When apidesign's absent list was removed, nothing failed (see the lows). The sentence is true, but the command does not decide whether this can land. The unit job of the PR's own CI fails on two origins registries that the command never runs (the high finding)."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """I ran the command. places.problems() reports nothing for craft, and 4 of 17 primary origins are at the-internet (fixtures, properties, refactoring, codereview). 4*4 = 16 <= 17. The command proves the sentence."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """I ran each generator with --check (build, regen_tree, gen_cookbook, sync_template, sync_fork_source, gen_syllabus), and each exits 0. tools/checks.py style prints OK. uv run vibe topics lists the craft pack with its seventeen topics. uv run vibe topic oauth shows the history, origin, sources with their checked dates, the hands-on folder and the check command. docs/SYLLABUS.md changed only in lines 1116 to 1157, inside the generated:tech-tree markers (lines 1114 to 1159)."""
+
+[[criteria]]
+id = "c4"
+verdict = "fail"
+evidence = """Sources: pass. I opened more than forty of the cited pages and matched every quotation, year and actor. The checks included:
+- pytest changelog: 2.2.0 on 2011-11-18 and 2.3.0 on 2012-10-19, both quotes.
+- Hypothesis changelog: 0.0.1 on 2013-03-10 and 1.0.0 on 2015-03-27.
+- Hypothesis quickstart: n=50, and 100 examples by default.
+- CNCF: Kubernetes on 10 Mar 2016 and 6 Mar 2018; OpenTelemetry on 7 May 2019, 26 Aug 2021 and 11 May 2026.
+- OAS: 3.2.1, dated 10 September 2026.
+- RFCs 9110, 9457, 9745 (including @1688169599), 8594, 6749, 7636 (including the Appendix B pair) and 9700 (MUST/SHOULD wording).
+- OpenID Connect Core.
+- Fowler: TestDouble (17 Jan 2006), CI/CD note (30 May 2013), the 2nd edition changes (5 Sep 2018), CodeSmell, refactoring.com.
+- Vocke (26 Feb 2018).
+- Google eng-practices: all four pages. Through the GitHub API, the first commit to README.md is 2019-09-05.
+- SPDX overview: 2010/08 and 2021/08.
+- OCI (22 June 2015), CDF (12 Mar 2019), OpenSSF (3 Aug 2020), OpenTofu (20 Sep 2023, MPL to BSL), OpenAPI FAQ (the ten companies, Swagger 2.0).
+- NIST SP 800-61 (Jan 2004, Grance, Kent and Kim) and SP 800-218 (Feb 2022).
+- Python 3.3.0 (29 Sep 2012, unittest.mock).
+- DORA: five metrics and the quote.
+- SRE book: the example postmortem (2015-10-21, the headings) and the incident and postmortem quotes.
+- OWASP Top 10:2025 (A01, A02, A03, A05, A07, A10).
+- Dependabot: uv v0.11 and the intervals.
+- The secure-use quote, SLSA v1.2, push protection, the OpenTofu state docs (TACOS), and the Docker, Compose and Kubernetes pages.
+Every source has checked = 2026-09-24.
+
+Origins: pass. Every primary origin is at an abstract place (ietf, cncf, linux-foundation, python-software-foundation, a-standards-body, the-internet), and each event page names that body as the actor. No origin rests on an office address. The four the-internet origins are online releases or publications.
+
+No em dash: pass. The diff has none, and the style check is OK.
+
+Hands-ons: fail. I built each exercise from its try_it in a scratch copy of 75f2054 (which is a camp: config/camp.toml, work in workspace/topics/<id>/) and ran uv run vibe check --topic <id>.
+- Green on correct work: testdoubles, refactoring, iac, supplychain, apidesign, codereview, licences, buildersec, delivery, and observability (I ran it for real with opentelemetry-sdk).
+- Red on empty folders.
+- Red on near misses: wrong mock call, PUT safe, Nit missing, hardcoded API_KEY.
+- fixtures and properties are red on correct work here. The repository's pyproject addopts '-q -ra' plus the try_it's -q make -qq, so pytest-out.txt and props-out.txt have no 'N passed' line (the medium finding).
+- In a fresh `vibe new` camp the same files are green."""
+
+[[findings]]
+severity = "high"
+file = "tests/test_origins_code_git.py"
+text = """The PR's CI is red at the reviewed commit. Run 35948802425, job 'lint, unit tests, generated files in sync' ends '5 failed, 892 passed'. I reproduced it locally with uv run pytest tests/test_origins_code_git.py tests/test_origins_ship_docs.py.
+
+The two origins registries on main list every topic of their shelves. The craft pack adds topics to those shelves and adds no rows:
+- test_origins_code_git.py: NAMES has no row for testdoubles, fixtures, properties, refactoring, buildersec or codereview. It pins len(NAMES) == 15. ACTORS has no python-software-foundation.
+- test_origins_ship_docs.py: NAMES has no row for delivery, containers, manifests, iac, observability, incidents, supplychain or licences.
+
+The failing tests are:
+- test_the_table_covers_exactly_the_topics_of_these_shelves
+- test_every_topic_has_one_primary_origin_whose_line_names_it (KeyError testdoubles)
+- test_a_line_at_an_address_names_who_is_at_that_address
+- test_the_three_shelves_hold_the_topics_this_order_sourced
+- test_the_primary_line_of_every_topic_names_the_topic (KeyError delivery)
+
+Both files are outside owns (tests/ is shared), and c1 does not run them, so work-check stays OK while CI fails. The manager has to widen owns, or scope those registries to their own packs. Then the rows have to be written to the rules those files enforce: a word that names the topic in the primary line, and the actor for an addressed place."""
+
+[[findings]]
+severity = "medium"
+file = "vibemap/data/topics/craft/fixtures.toml"
+text = """A correct run of the fixtures and properties hands-ons is red in this repository.
+
+- Both try_its run 'pytest -q ... > out.txt'. Inside workspace/topics/<id>/, pytest takes the root pyproject.toml, whose addopts is '-q -ra'. That makes -qq, which prints only the progress line.
+- In a scratch copy of 75f2054 I wrote test_cart.py and test_props.py per the try_its. The runs exited 0, and pytest-out.txt and props-out.txt hold only '....  [100%]'.
+- vibe check --topic fixtures fails with 'pytest-out.txt does not mention: 4 passed', and properties fails the same way.
+- The same files are green in a fresh `vibe new` camp, so whether the check passes depends on pytest configuration it does not control.
+- tests/test_topics_craft.py runs pytest in tmp_path, outside the repository, so it never sees this. The rule is to test the entry point, not the mechanism.
+
+The same applies to properties.toml. Make the try_it independent of any ini: '-o addopts=' works, or a command without -q with a check that allows for it. Add one test that runs the exercise inside workspace/topics/<id>/ of a camp that sets addopts."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/refactoring.toml"
+text = """The check is green without the refactoring. 'print_details(' is a substring of 'def print_details(', so owing.py passes with an unused print_details and the two prints still inline (reproduced). The check never proves Extract Function was applied. Separately, the primary origin is a 2018 blog post about the second edition, placed at the-internet. That is honest, but it is a weak stand-in for where refactoring happened."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/codereview.toml"
+text = """done says 'and a verdict', but the check only wants Design:, Tests: and Nit:. A review.md with the three comments and no verdict is green (reproduced)."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/apidesign.toml"
+text = """Three correct answers are red because the checks require one exact spelling:
+- apidesign: compact JSON '"status":404' fails with 'does not mention: "status": 404'.
+- supplychain.toml: 'package-ecosystem: uv' is valid YAML the docs accept, and it fails because the quotes are required.
+- testdoubles.toml: 'from unittest import mock' plus mock.Mock() fails on 'from unittest.mock import'.
+All three reproduced. Also, the absent list in apidesign is untested: removing it keeps the whole pack suite green, because the near miss already fails on the missing 'POST neither'."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/buildersec.toml"
+text = """The absent list catches API_KEY = "..." and API_KEY="...", but not API_KEY='...' or a secret under another name. For example, key = "sk-live-123" next to os.environ.get("API_KEY") is green (reproduced). done promises 'no key written in it'."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/properties.toml"
+text = """Loose or unrun checks:
+- '1 passed' and '4 passed' are substrings of '11 passed' and '14 passed'.
+- observability uses kind module, and opentelemetry is not installed in this environment, so CI only reads trace.py and never runs it. I ran it with opentelemetry-sdk, and the prints the check expects are right today.
+- The fixtures, properties and observability try_its fetch packages with uv --with, so the first run needs the network even though the check itself is offline."""
