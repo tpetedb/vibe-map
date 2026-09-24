@@ -26,6 +26,8 @@ owns = [
   "docs/SKILLS.md",
   "tests/test_board.py",
   "tests/test_memory.py",
+  "tools/work.py",
+  "tests/test_work.py",
 ]
 cross = ["docs"]
 needs = []
