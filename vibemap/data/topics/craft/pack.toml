@@ -1,0 +1,29 @@
+# The software craft and delivery pack
+id = "craft"
+title = "The software craft and delivery pack"
+blurb = '''Seventeen topics for the craft around the code and the road it travels to production: tests in depth (the pyramid, test doubles, pytest fixtures, properties with Hypothesis), refactoring and code review, API design from the HTTP RFCs, OpenAPI, OAuth and OpenID Connect, then the DevOps sequence (continuous delivery and deploy strategies with the DORA metrics, container images and Compose, a Kubernetes manifest, infrastructure as code with OpenTofu, observability with OpenTelemetry, incidents and blameless postmortems), and licences, security basics and the supply chain. Every hands-on runs on a laptop with no account and no paid service.'''
+shelf = "ship"
+order = 30
+maintainer = '''Every topic is written from the project's own documentation, an RFC or a standard, opened on the day the topic records under checked, and every quotation is copied from that page. Every hands-on was built in a scratch folder before it landed and its check was confirmed red on an empty folder and on a stub, and green on the result. The core topics tests, ci, docker, kubernetes, http, apis, semver, changelog and security stay in the core pack: this pack links to them and never copies them. An origin sits at a place that already exists; a place this pack wishes for is a wish on issue 168, never a new place file.'''
+
+# Reading order, which is also the order of the roadmap and the notes. The run
+# from delivery to incidents is the DevOps module sequence, after core's ci.
+topics = [
+  "testdoubles",
+  "fixtures",
+  "properties",
+  "refactoring",
+  "codereview",
+  "apidesign",
+  "openapi",
+  "oauth",
+  "delivery",
+  "containers",
+  "manifests",
+  "iac",
+  "observability",
+  "incidents",
+  "licences",
+  "buildersec",
+  "supplychain",
+]

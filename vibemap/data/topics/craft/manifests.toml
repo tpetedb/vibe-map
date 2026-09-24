@@ -1,0 +1,58 @@
+# Reading a Kubernetes manifest. Written from the official docs, nothing from memory.
+id = "manifests"
+title = "Reading a Kubernetes manifest"
+age = "castle"
+shelf = "ship"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 15
+
+summary = '''A Kubernetes manifest is a YAML file that describes an object you want to exist, such as a Deployment that keeps three copies of a container running or a Service that gives them one address. You write the desired state and Kubernetes keeps working to make the cluster match it. Reach for this topic when a repository has a k8s folder you need to read, or when an agent writes a manifest you have to check, without running a cluster on your laptop.'''
+for_agents = '''And for an agent: check that a Service's selector matches the labels on the Deployment's pod template, and that its targetPort is the port the container listens on.'''
+
+history = '''Kubernetes objects are persistent entities that represent the state of a cluster, and an object is "a record of intent": once you create it, the system constantly works to ensure that it exists. Every manifest sets apiVersion, kind, metadata (which includes a name) and spec, the state you desire, while status is supplied and updated by Kubernetes itself. A Pod is the smallest deployable unit, "a group of one or more containers, with shared storage and network resources", and a Deployment provides declarative updates for Pods: the docs' nginx-deployment example asks for replicas: 3 of the image nginx:1.14.2 on containerPort: 80. A Service exposes a network application running as one or more Pods; its example my-service selects Pods labelled app.kubernetes.io/name: MyApp and maps port 80 to targetPort 9376. Kubernetes was accepted to the CNCF on 10 March 2016 and moved to the Graduated maturity level on 6 March 2018.'''
+
+try_it = '''Write deployment.yaml for a Deployment named scores with replicas: 2, pod labels app: scores and one container listening on containerPort: 8000. Write service.yaml for a Service whose selector is app: scores and whose port 80 goes to targetPort: 8000. Read both against the nginx-deployment example; kubectl is not needed.'''
+
+unlocks = ["kubernetes", "iac"]
+prerequisites = ["containers", "yaml"]
+
+[[origins]]
+place = "cncf"
+year = 2016
+what = "Kubernetes is accepted to the CNCF on 10 March 2016 at the Incubating maturity level, and moves to Graduated on 6 March 2018."
+source = "https://www.cncf.io/projects/kubernetes/"
+primary = true
+
+[[sources]]
+label = "Kubernetes documentation, Objects In Kubernetes"
+url = "https://kubernetes.io/docs/concepts/overview/working-with-objects/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Kubernetes documentation, Pods"
+url = "https://kubernetes.io/docs/concepts/workloads/pods/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Kubernetes documentation, Deployments"
+url = "https://kubernetes.io/docs/concepts/workloads/controllers/deployment/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Kubernetes documentation, Service"
+url = "https://kubernetes.io/docs/concepts/services-networking/service/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: CNCF, Kubernetes project page"
+url = "https://www.cncf.io/projects/kubernetes/"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A Deployment and the Service in front of it"
+minutes = 15
+done = "deployment.yaml asks for two replicas labelled app: scores on port 8000, and service.yaml selects them and targets 8000"
+check = { kind = "files", files = { "deployment.yaml" = ["apiVersion: apps/v1", "kind: Deployment", "replicas: 2", "app: scores", "containerPort: 8000"], "service.yaml" = ["apiVersion: v1", "kind: Service", "app: scores", "targetPort: 8000"] } }

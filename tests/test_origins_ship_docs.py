@@ -62,7 +62,7 @@ ONLINE_ANNOUNCEMENTS = {
 
 
 def _topics() -> list[topics.Topic]:
-    return [t for t in topics.all_topics() if t.shelf in SHELVES]
+    return [t for t in topics.all_topics() if t.shelf in SHELVES and t.pack == "core"]
 
 
 def test_the_three_shelves_hold_the_topics_this_order_sourced() -> None:

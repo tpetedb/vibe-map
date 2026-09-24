@@ -63,7 +63,7 @@ ABSTRACT = {"the-internet", "a-standards-body"}
 
 
 def _shelved() -> list[topics.Topic]:
-    return [t for t in topics.all_topics() if t.shelf in SHELVES]
+    return [t for t in topics.all_topics() if t.shelf in SHELVES and t.pack == "core"]
 
 
 def _names(what: str, words: tuple[str, ...]) -> bool:

@@ -1,0 +1,53 @@
+# Container images, layers and Compose. Written from the official docs, nothing from memory.
+id = "containers"
+title = "Container images, layers and Compose"
+age = "castle"
+shelf = "ship"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''An image is a stack of immutable layers, each one a set of filesystem changes, and a multi-stage build uses one stage to build and a later stage to keep only what should ship. Compose describes an application of several containers in one compose.yaml, as services that talk over networks. Reach for this topic once docker run works and your images are too big, your builds too slow, or your app needs a database next to it.'''
+for_agents = '''And for an agent: name build stages with AS and copy from them by name, so reordering the Dockerfile cannot break a COPY --from, and put the Compose file at compose.yaml, the name Compose prefers.'''
+
+history = '''The Open Container Initiative was launched on 22 June 2015 by Docker, CoreOS and other leaders in the container industry, under the auspices of the Linux Foundation, and its image specification defines an image as an image manifest, a filesystem (layer) serialization and an image configuration. In Docker's docs, container images are composed of layers, each layer "contains a set of filesystem changes - additions, deletions, or modifications", each layer is immutable once created, and layers can be reused between images. With multi-stage builds "you use multiple FROM statements in your Dockerfile", each FROM begins a new stage, and you selectively copy artifacts from one stage to another, "leaving behind everything you don't want in the final image". A stage is named by adding AS <NAME> to the FROM instruction, so COPY --from=build keeps working even if the instructions are reordered, and docker build --target build stops at that stage. Compose reads a YAML file, by default compose.yaml, that follows the Compose Specification: the computing components of an application are services, and services communicate with each other through networks.'''
+
+try_it = '''Write a Dockerfile with two stages: FROM python:3.12-slim AS build that writes a file, and a second FROM python:3.12-slim that does COPY --from=build of only that file. Then write compose.yaml with a services: block that builds it. If Docker is running, docker build --target build -t camp-build . stops at the first stage; the check reads the files and needs no Docker.'''
+
+unlocks = ["manifests"]
+prerequisites = ["docker", "delivery"]
+
+[[origins]]
+place = "linux-foundation"
+year = 2015
+what = "The Open Container Initiative is launched on 22 June 2015 by Docker, CoreOS and other leaders in the container industry, as a project under the auspices of the Linux Foundation."
+source = "https://opencontainers.org/about/overview/"
+primary = true
+
+[[sources]]
+label = "Docker Docs, Understanding the image layers"
+url = "https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Docker Docs, Multi-stage builds"
+url = "https://docs.docker.com/build/building/multi-stage/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Docker Docs, How Compose works"
+url = "https://docs.docker.com/compose/intro/compose-application-model/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Open Container Initiative, About the OCI"
+url = "https://opencontainers.org/about/overview/"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Two stages and a Compose file"
+minutes = 20
+done = "the Dockerfile has a stage named build that a later stage copies from, and compose.yaml declares services"
+check = { kind = "files", files = { "Dockerfile" = [" AS build", "COPY --from=build"], "compose.yaml" = ["services:"] } }

@@ -1,0 +1,48 @@
+# Property-based testing with Hypothesis. Written from the official docs, nothing from memory.
+id = "properties"
+title = "Property-based testing with Hypothesis"
+age = "imperial"
+shelf = "code"
+depth = 3
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''A property-based test states something that must hold for every input in a range, and a library picks the inputs, including edge cases you did not think of. Hypothesis is that library for Python, and its tests are still ordinary pytest or unittest functions. Reach for it when a function has a rule you can say in one line (decoding undoes encoding, sorting keeps every element) and a handful of hand-picked examples feels like luck.'''
+for_agents = '''And for an agent: write the property, not the examples, and when Hypothesis reports a failing test case, read the input it prints before you touch the code.'''
+
+history = '''The Hypothesis docs call it "the property-based testing library for Python": "you write tests which should pass for all inputs in whatever range you describe, and let Hypothesis randomly choose which of those inputs to check - including edge cases you might not have thought about." @given is the standard entrypoint, and it takes a strategy such as st.integers() that describes the inputs the test accepts. By default Hypothesis generates 100 random inputs, and the max_examples setting controls that. When the quickstart's test @given(st.integers(0, 200)) asserts n < 50, pytest reports the failing test case as n=50. The Hypothesis changelog records 0.0.1 on 2013-03-10 as "Initial release", and 1.0.0 on 2015-03-27.'''
+
+try_it = '''Write test_props.py with encode (text to a list of (character, count) runs), decode (back again), and @given(st.text()) def test_decode_undoes_encode(text): assert decode(encode(text)) == text. Run uv run --with hypothesis --with pytest pytest -o addopts="" --junitxml=props.xml test_props.py and read the last line: 1 passed. The first run downloads the two packages into uv's cache; after that it runs offline. Then break encode on purpose and watch Hypothesis print the small input that fails.'''
+
+unlocks = []
+prerequisites = ["fixtures"]
+
+[[origins]]
+place = "the-internet"
+year = 2013
+what = "Hypothesis 0.0.1, recorded in its changelog on 2013-03-10 as the initial release, a basic working prototype."
+source = "https://hypothesis.readthedocs.io/en/latest/changelog.html"
+primary = true
+
+[[sources]]
+label = "Hypothesis documentation, Welcome to Hypothesis"
+url = "https://hypothesis.readthedocs.io/en/latest/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Hypothesis documentation, Quickstart"
+url = "https://hypothesis.readthedocs.io/en/latest/quickstart.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: the Hypothesis changelog, 0.0.1 and 1.0.0"
+url = "https://hypothesis.readthedocs.io/en/latest/changelog.html"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Decoding undoes encoding, for every string"
+minutes = 20
+done = "test_props.py has a @given property over st.text(), and props.xml records 1 test with no failure, error or skip"
+check = { kind = "files", files = { "test_props.py" = ["from hypothesis import", "@given(", "st.text()"], "props.xml" = ["tests=\"1\"", "failures=\"0\"", "errors=\"0\"", "skipped=\"0\""] } }

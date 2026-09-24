@@ -1,0 +1,58 @@
+# Security basics for builders. Written from the official docs, nothing from memory.
+id = "buildersec"
+title = "Security basics for builders"
+age = "castle"
+shelf = "code"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 15
+
+summary = '''The OWASP Top 10 is a ranked list of the most critical security risks to web applications, agreed by broad consensus. One habit protects even a small project: keeping secrets such as API keys out of the source code, and a code host can refuse a push that contains one. Reach for this topic before your first public repository, before you add a login, and whenever a key has to reach code that you share.'''
+for_agents = '''And for an agent: never write a secret into a file that is committed, read it at runtime instead, and treat a blocked push from secret scanning as a real leak to fix, not a check to get around.'''
+
+history = '''The OWASP Top 10 is "a standard awareness document for developers and web application security" that represents a broad consensus about the most critical security risks to web applications, and the most current release is the 2025 edition. Its 2025 list opens with A01 Broken Access Control, A02 Security Misconfiguration and A03 Software Supply Chain Failures, has A05 Injection and A07 Authentication Failures, and ends with A10 Mishandling of Exceptional Conditions. OWASP's Secrets Management Cheat Sheet notes that many organisations have secrets hardcoded within the source code in plaintext, and warns that environment variables are generally accessible to all processes and may be included in logs or system dumps. GitHub's push protection is a secret scanning feature designed to prevent hardcoded credentials from ever being pushed: rather than alerting after the fact, it blocks pushes that contain secrets before they reach the repository. NIST SP 800-218, published in February 2022, recommends the Secure Software Development Framework, a core set of high-level secure software development practices that can be integrated into each software development life cycle.'''
+
+try_it = '''In a new folder, write .gitignore with the line .env, and app.py that reads API_KEY with os.environ.get and prints a clear message and exits when it is missing, with no key written in the file. Run python3 app.py once without the variable and once with API_KEY=test python3 app.py.'''
+
+unlocks = ["supplychain"]
+prerequisites = ["env", "security"]
+
+[[origins]]
+place = "a-standards-body"
+year = 2022
+what = "NIST publishes SP 800-218, the Secure Software Development Framework version 1.1, in February 2022."
+source = "https://csrc.nist.gov/pubs/sp/800/218/final"
+primary = true
+
+[[sources]]
+label = "OWASP Top 10:2025"
+url = "https://owasp.org/Top10/2025/"
+checked = 2026-09-24
+
+[[sources]]
+label = "OWASP Top Ten project page"
+url = "https://owasp.org/www-project-top-ten/"
+checked = 2026-09-24
+
+[[sources]]
+label = "OWASP Cheat Sheet Series, Secrets Management Cheat Sheet"
+url = "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "GitHub Docs, About push protection"
+url = "https://docs.github.com/en/code-security/secret-scanning/introduction/about-push-protection"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: NIST SP 800-218, Secure Software Development Framework"
+url = "https://csrc.nist.gov/pubs/sp/800/218/final"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A key that never touches the code"
+minutes = 15
+done = ".gitignore lists .env, and app.py reads API_KEY from the environment with no key written in it"
+check = { kind = "files", files = { ".gitignore" = [".env"], "app.py" = ["os.environ", "API_KEY"] }, absent = { "app.py" = ["KEY = \"", "KEY=\"", "KEY = '", "KEY='", "key = \"", "key=\"", "key = '", "key='"] } }

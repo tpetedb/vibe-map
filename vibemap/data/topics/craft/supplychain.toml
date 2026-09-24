@@ -1,0 +1,58 @@
+# Dependencies and the supply chain. Written from the official docs, nothing from memory.
+id = "supplychain"
+title = "Dependencies and the supply chain"
+age = "castle"
+shelf = "ship"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 15
+
+summary = '''Your software is also everything it depends on and everything that builds it: packages, base images and the actions in your CI. Keeping that supply chain safe means updating dependencies on a schedule instead of never, and pinning what your pipeline runs so it cannot change under you. Reach for this topic when you add a dependency, when you write a workflow that uses someone else's action, and when you set up a repository that will live longer than a weekend.'''
+for_agents = '''And for an agent: pin a third-party action to a full-length commit SHA, and let Dependabot open the pull requests that move it, so every update goes through review and CI.'''
+
+history = '''A Dependabot configuration lives in a dependabot.yml file that starts with version: 2 and lists, under updates, one entry per package-ecosystem, each with the directory of its manifest and a schedule.interval of daily, weekly, monthly, quarterly, semiannually, yearly or cron. Dependabot's supported ecosystems include github-actions, and uv with uv v0.11. GitHub's secure use reference says "pinning an action to a full-length commit SHA is currently the only way to use an action as an immutable release." Supply-chain Levels for Software Artifacts, SLSA, pronounced "salsa", "is a set of incrementally adoptable guidelines for supply chain security, established by industry consensus", useful to producers who follow it and to consumers deciding whether to trust a package. The Open Source Security Foundation, OpenSSF, was formed by the Linux Foundation on 3 August 2020 to improve the security of open source software, bringing together efforts that included GitHub's Open Source Security Coalition.'''
+
+try_it = '''Write dependabot.yml with version: 2 and two updates entries: package-ecosystem "uv" and package-ecosystem "github-actions", both with directory "/" and schedule interval "weekly". In a real repository it goes at .github/dependabot.yml.'''
+
+unlocks = []
+prerequisites = ["buildersec", "ci"]
+
+[[origins]]
+place = "linux-foundation"
+year = 2020
+what = "On 3 August 2020 the Linux Foundation announces the formation of the Open Source Security Foundation, OpenSSF."
+source = "https://openssf.org/press-release/2020/08/03/technology-and-enterprise-leaders-combine-efforts-to-improve-open-source-security/"
+primary = true
+
+[[sources]]
+label = "GitHub Docs, Dependabot options reference"
+url = "https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file"
+checked = 2026-09-24
+
+[[sources]]
+label = "GitHub Docs, Dependabot supported ecosystems and repositories"
+url = "https://docs.github.com/en/code-security/dependabot/ecosystems-supported-by-dependabot/supported-ecosystems-and-repositories"
+checked = 2026-09-24
+
+[[sources]]
+label = "GitHub Docs, Secure use reference: pin actions to a full-length commit SHA"
+url = "https://docs.github.com/en/actions/reference/security/secure-use"
+checked = 2026-09-24
+
+[[sources]]
+label = "SLSA v1.2, About SLSA"
+url = "https://slsa.dev/spec/v1.2/about"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: OpenSSF, Technology and Enterprise Leaders Combine Efforts to Improve Open Source Security"
+url = "https://openssf.org/press-release/2020/08/03/technology-and-enterprise-leaders-combine-efforts-to-improve-open-source-security/"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "Weekly updates for Python and for actions"
+minutes = 10
+done = "dependabot.yml is version 2 and schedules updates for uv and for github-actions"
+check = { kind = "files", files = { "dependabot.yml" = ["version: 2", "updates:", "package-ecosystem:", "uv", "github-actions", "interval:"] } }

@@ -1,0 +1,59 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "topics-craft"
+by = "reviewer-topics-craft-r1"
+reviewed = "57714f54d6bf0a612cbe8068d2bc98569b219b72"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """Round 3 is a delta review of d9aead4..57714f5. git diff d9aead4 57714f5 --stat shows three files and nothing else:
+- tests/test_origins_code_git.py (_shelved) and tests/test_origins_ship_docs.py (_topics) each gain 'and t.pack == "core"'.
+- order.toml widens owns to those two files.
+No craft topic, generated file or other test changed since the round 2 review. origin/main is an ancestor of HEAD.
+
+The filter matches test_origins_data_net.py, which reads 't.shelf in SHELVES and t.pack == PACK' with PACK = "core". tests/ belongs to no team in work/teams.toml, so the widened owns needs no sign-off. ruff check and ruff format --check pass on both files, and the longest line is 86.
+
+At 57714f5, uv run pytest -o addopts="" on every tests/test_origins_*.py (five files) plus test_topics_craft, test_topics, test_syllabus and test_places gives 183 passed, exit 0. The c1 command passes (just work-check topics-craft: c1, c2, c3 pass).
+
+Revert test: in a git archive scratch copy of 57714f5, I restored the d9aead4 versions of the two test files. Exactly the five round 2 failures come back: three in code_git, including KeyError testdoubles, and two in ship_docs, including KeyError delivery. So the clause is what fixes them.
+
+CI run 35950910290 at 57714f5: in the job 'lint, unit tests, generated files in sync', step 13 (pytest -m "not browser and not integration") is now success. Only step 14, the review gate, failed. Locally, tools/work.py ci names one problem, the lapsed review, and no file outside owns.
+
+Coverage the filter drops: the craft pack no longer passes through the core registries' year, one-line, primary-first and no-duplicate-place rules. I applied those rules to all 17 craft topics by hand and none is broken. Craft keeps its own origin tests in test_topics_craft.py."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """Unchanged since round 2, when no craft file changed. I ran the check at 57714f5 and it passes. places.problems() says nothing for /craft/, and 4 of the 17 primary origins sit at the-internet (16 <= 17)."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """At 57714f5 the c3 command passes through work-check: the six generators pass --check, style is OK, and vibe topics lists craft. CI steps 5 to 12 (ruff, format, style, regen_tree, build, gen_cookbook, gen_syllabus, changelog fragment) are all success in run 35950910290."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """No content changed since the round 2 review. That review opened 24 cited pages, built the hands-ons in a scratch camp red then green, and judged the origins, and it all still applies to identical files. I re-checked the craft origins against the year-in-line and one-line rules. The two added test lines contain no em dash, and the style check passes."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/buildersec.toml"
+text = """Carried from round 2. The absent list is a substring blacklist, so it is wrong in both directions. It is red on correct work such as ENV_KEY = "API_KEY" or monkey = "banana". It is green on TOKEN = "sk-live-123" next to os.environ.get("API_KEY"). The fail message names the pattern, so a learner can recover."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/refactoring.toml"
+text = """Carried from round 2. The '    print_details(' contains-check ties the answer to four-space indentation: a correct two-space refactoring is red, and an unrefactored file that calls print_details under a main guard is green."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/craft/observability.toml"
+text = """Carried from round 2. The try_it runs 'uv run --with opentelemetry-sdk' and does not say that the first run downloads packages. The fixtures and properties try_its do say so."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_origins_code_git.py"
+text = """With the core filter in place, craft origins no longer pass through the core registries' year-in-line, one-line and no-duplicate-place rules, and test_topics_craft.py does not repeat them. They all hold today, which I checked by hand. A follow-up could lift those rules into one shared helper that runs over every pack."""

@@ -1,0 +1,39 @@
+v = 1
+id = "topics-craft"
+title = "Topic pack: software craft and delivery"
+team = "content"
+branch = "claude/topics-craft"
+goal = "second-wave"
+issue = 87
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-topics-craft"
+
+owns = [
+  "vibemap/data/topics/craft/",
+  "tests/test_topics_craft.py",
+  "docs/SYLLABUS.md",
+  "tests/test_origins_code_git.py",
+  "tests/test_origins_ship_docs.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "The pack's own tests and the topic, syllabus and places tests pass."
+check = "uv run pytest -q tests/test_topics_craft.py tests/test_topics.py tests/test_syllabus.py tests/test_places.py"
+
+[[criteria]]
+id = "c2"
+text = "No place or origin problem in the new pack, and at most a quarter of its primary origins sit at the-internet."
+check = "uv run python -c \"from vibemap import places; import sys,tomllib,glob; bad=[p for p in places.problems() if '/craft/' in p]; print(chr(10).join(bad)); fs=glob.glob('vibemap/data/topics/craft/*.toml'); o=[x for f in fs for x in tomllib.load(open(f,'rb')).get('origins',[]) if x.get('primary')]; n=sum(1 for x in o if x.get('place')=='the-internet'); print('internet',n,'of',len(o)); sys.exit(1 if bad or (o and n*4>len(o)) else 0)\""
+
+[[criteria]]
+id = "c3"
+text = "Every generated file is in sync, style passes, and the CLI lists the pack."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/checks.py style && uv run vibe topics | grep -qi craft"
+
+[[criteria]]
+id = "c4"
+text = "Every source was opened and says what its line says (date of check recorded); each hands-on runs offline in under twenty minutes with a deterministic check; origins sit where the actor was at that date; no em dashes."
+judge = "reviewer"

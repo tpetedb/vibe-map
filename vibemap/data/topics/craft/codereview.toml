@@ -1,0 +1,58 @@
+# Code review as a practice. Written from the official docs, nothing from memory.
+id = "codereview"
+title = "Code review as a practice"
+age = "castle"
+shelf = "git"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''Code review is a second person reading a change before it is merged, to keep the health of the whole codebase improving over time. Google publishes the guidelines its engineers use: what a reviewer looks for, how small a change should be, and how to disagree. Reach for them when you review a pull request, when yours sits unreviewed because it is too big, or when an agent opens a pull request that has to pass the same gates as a person.'''
+for_agents = '''And for an agent: keep each pull request small and about one thing, put refactorings in their own change, and mark a comment that is only polish with Nit: so the author knows it is optional.'''
+
+history = '''Google's engineering practices documentation says "the primary purpose of code review is to make sure that the overall code health of Google's code base is improving over time", and gives the senior principle: reviewers "should favor approving a CL once it is in a state where it definitely improves the overall code health of the system being worked on, even if the CL isn't perfect." A CL is a changelist, what other organisations call a change, a patch or a pull request, and LGTM, "Looks Good to Me", is what a reviewer says when approving one. A comment that is only a point of polish is prefixed with "Nit:", and "technical facts and data overrule opinions and personal preferences", while the style guide is the absolute authority on style. What to look for in a code review starts with the overall design of the CL, then functionality, complexity, tests, naming, comments, style, consistency and documentation. On size, "100 lines is usually a reasonable size for a CL, and 1000 lines is usually too large", and it is usually best to do refactorings in a separate CL from feature changes.'''
+
+try_it = '''Take a small diff, your own last commit or git show HEAD in any repository. Write review.md with at least one comment under each of Design:, Tests: and Nit:, then end it with a line that starts Verdict: and says LGTM, or what has to change first.'''
+
+unlocks = ["delivery"]
+prerequisites = ["github", "refactoring"]
+
+[[origins]]
+place = "the-internet"
+year = 2019
+what = "The README of google/eng-practices, the public repository of Google's engineering practices documentation and its code review guidelines, gets its first commits on GitHub on 5 September 2019."
+source = "https://github.com/google/eng-practices/commits/master/README.md"
+primary = true
+
+[[sources]]
+label = "Google engineering practices, The Standard of Code Review"
+url = "https://google.github.io/eng-practices/review/reviewer/standard.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Google engineering practices, What to look for in a code review"
+url = "https://google.github.io/eng-practices/review/reviewer/looking-for.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Google engineering practices, Small CLs"
+url = "https://google.github.io/eng-practices/review/developer/small-cls.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Google engineering practices documentation, terminology"
+url = "https://google.github.io/eng-practices/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: the commit history of google/eng-practices"
+url = "https://github.com/google/eng-practices/commits/master/README.md"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "One review, three kinds of comment"
+minutes = 20
+done = "review.md has a Design, a Tests and a Nit comment, and a verdict"
+check = { kind = "files", files = { "review.md" = ["Design:", "Tests:", "Nit:", "Verdict:"] } }
