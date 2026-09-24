@@ -14,12 +14,14 @@ unlocks = ["config", "env", "harness"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened.
+# A community guide kept on GitHub has no single place; the repository's own
+# metadata carries the creation date.
 
 [[origins]]
 place = "the-internet"
-year = 2008
-what = "Chris Wanstrath posts that GitHub is officially live."
-source = "https://github.blog/2008-04-10-we-launched/"
+year = 2012
+what = "On 22 April 2012 the dotfiles/dotfiles.github.com repository, Your unofficial guide to doing dotfiles on GitHub, is created on GitHub."
+source = "https://api.github.com/repos/dotfiles/dotfiles.github.com"
 primary = true
 
 [[sources]]
@@ -29,10 +31,6 @@ url = "https://dotfiles.github.io"
 [[sources]]
 label = "Claude Code settings"
 url = "https://code.claude.com/docs/en/settings"
-
-[[sources]]
-label = "Source: GitHub launch post (April 2008)"
-url = "https://github.blog/2008-04-10-we-launched/"
 
 [[sources]]
 label = "Source: dotfiles.github.io repository (created April 2012)"

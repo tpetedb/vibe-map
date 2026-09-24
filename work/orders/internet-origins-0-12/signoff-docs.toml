@@ -1,0 +1,25 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "internet-origins-0-12"
+team = "docs"
+by = "manager-docs"
+reviewed = "e5a4af528e8cbfc999ae9329c2e9e19463123d97"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """[Claude Sonnet, effort medium, team manager] Checked the diff restricted to \
+docs/, *.md and site/ at e5a4af5: docs/TOPICS.md gains one clause (a dated \
+first-party page under [[sources]] can also support an origin's town) plus a \
+matching checklist line, both short, true and consistent with the round-2 \
+reviewer's own fetch of all nineteen town pages. docs/ROADMAP.md's added \
+Source: links match the sources the content reviewer verified by name; \
+changelog.d/internet-origins-0-12.changed.md follows house format. The touched \
+vault/Camp/*.md files and the generated-hash bumps are tech.py/gen_syllabus \
+output, not hand edits, and c2 already proves build/regen_tree/gen_cookbook/ \
+sync_template/sync_fork_source/gen_syllabus --check and style are clean; no em \
+dashes anywhere in the diff. Nothing here is docs' to fix. Docs team has no \
+follow-up: the four low findings (zsh's unsupported clause, skills' contested \
+second source, the harness/subagents re-check, cloud's named EC2 deviation) are \
+all vibemap/data/topics and tests files, content's own to act on, not docs \
+paths."""

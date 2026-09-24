@@ -24,9 +24,18 @@ url = "https://claude.com/pricing"
 label = "Source: OpenAI API announcement (June 2020)"
 url = "https://openai.com/index/openai-api/"
 
+[[sources]]
+label = "Source: Anthropic, Project Vend, the Anthropic office in San Francisco (June 2025)"
+url = "https://www.anthropic.com/research/project-vend-1"
+
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The pricing post names no town; Project Vend (June 2025) puts Anthropic's
+# office in San Francisco that year.
+
 [[origins]]
-place = "the-internet"
+place = "anthropic-sf"
 year = 2025
-what = "Anthropic announces Claude 3.7 Sonnet pricing online: $3 per million input tokens and $15 per million output tokens, including thinking tokens."
+what = "Anthropic announces Claude 3.7 Sonnet pricing: $3 per million input tokens and $15 per million output tokens, including thinking tokens."
 source = "https://www.anthropic.com/news/claude-3-7-sonnet"
 primary = true

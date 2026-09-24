@@ -15,7 +15,8 @@ unlocks = ["docker"]
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. The primary is
 # the first language in this topic's own history line, told by the person who
-# wrote it; the Go FAQ documents a public online release and names no town.
+# wrote it; the Go echo is the design meeting Rob Pike dates and places on his
+# own blog; the 2009 open-sourcing is in the sources.
 
 [[origins]]
 place = "bell-labs"
@@ -25,10 +26,10 @@ source = "https://cscie26.dce.harvard.edu/~dce-lib113/reference/c/c_history.html
 primary = true
 
 [[origins]]
-place = "the-internet"
-year = 2009
-what = "Go, which Robert Griesemer, Rob Pike and Ken Thompson began sketching in 2007 for the work they were doing at Google, becomes a public open source project on 10 November 2009."
-source = "https://go.dev/doc/faq"
+place = "google-mountain-view"
+year = 2007
+what = "Robert Griesemer, Rob Pike and Ken Thompson meet on 21 September 2007 in Building 43 on Google's Mountain View campus to start designing Go."
+source = "https://commandcenter.blogspot.com/2017/09/go-ten-years-and-climbing.html"
 
 [[sources]]
 label = "Stack Overflow developer survey"
@@ -73,3 +74,7 @@ url = "https://www.apple.com/newsroom/2014/06/02Apple-Releases-iOS-8-SDK-With-Ov
 [[sources]]
 label = "Source: Announcing TypeScript 1.0 (first release October 2012)"
 url = "https://devblogs.microsoft.com/typescript/announcing-typescript-1-0/"
+
+[[sources]]
+label = "Source: Rob Pike, Go: Ten years and climbing (September 2017)"
+url = "https://commandcenter.blogspot.com/2017/09/go-ten-years-and-climbing.html"

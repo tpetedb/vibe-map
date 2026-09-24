@@ -1,25 +1,26 @@
 """Regression proof for ten audited historical origin locations.
 
-The sources date online publications and standards registrations. They do not
-locate those events at the organisations' current offices, so the map uses the
-network or a standards body and drops online echoes that would duplicate a
-topic's existing online origin.
+A current office address proves nothing about where an event happened, so an
+origin stands in a town only where a dated first-party page places it there
+(issue #168, tests/test_internet_origins.py); the rest stay on the network or
+at a standards body, and no topic keeps two origins at one place.
 """
 
 from __future__ import annotations
 
+from tests.test_internet_origins import MOVES, placed_as_planned
 from vibemap import places, topics
 
 EXPECTED_PLACES = {
-    "ci": ("the-internet",),
+    "ci": ("github-sf",),
     "dotfiles": ("the-internet",),
-    "github": ("the-internet", "microsoft-redmond"),
-    "languages": ("bell-labs", "the-internet"),
+    "github": ("github-sf", "microsoft-redmond"),
+    "languages": ("bell-labs", "google-mountain-view"),
     "tests": ("the-internet",),
     "interfaces": ("parc", "the-internet"),
     "unix": ("bell-labs", "a-standards-body"),
     "yaml": ("the-internet",),
-    "zsh": ("the-internet",),
+    "zsh": ("apple-cupertino",),
     "config": ("a-standards-body",),
 }
 YAML_ACTIONS_SOURCE = (
@@ -27,7 +28,7 @@ YAML_ACTIONS_SOURCE = (
 )
 
 
-def test_audited_origins_do_not_infer_current_office_locations() -> None:
+def test_audited_origins_stand_in_a_town_only_where_a_dated_page_says_so() -> None:
     found = {topic.id: topic for topic in topics.all_topics()}
 
     for topic_id, expected in EXPECTED_PLACES.items():
@@ -35,6 +36,8 @@ def test_audited_origins_do_not_infer_current_office_locations() -> None:
         assert tuple(origin.place for origin in origins) == expected, topic_id
         assert len({origin.place for origin in origins}) == len(origins), topic_id
         assert sum(origin.primary for origin in origins) == 1, topic_id
+        if topic_id in MOVES:
+            assert placed_as_planned(topic_id), topic_id
 
 
 def test_config_cites_the_dated_first_edition_of_ecma_404() -> None:

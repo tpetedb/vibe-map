@@ -1,0 +1,105 @@
+v = 1
+order = "internet-origins-0-12"
+by = "reviewer-internet-origins-0-12-r2"
+reviewed = "a3a697c031995591b84411950ca643a775e5d4c8"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """Ran the nine files fresh (no cache, after slot-wait): all pass. The whole \
+unit suite (-m 'not browser and not integration') gives 888 passed, and CI run \
+35950345184 on a3a697c has that step green; only the work-orders step is red, which \
+waits for this review and the docs and cli sign-offs. The command proves the sentence: \
+in a scratch copy of a3a697c I put zsh back at the-internet and dropped the Q1 2015 SEC \
+source from apis; test_each_move fails on apis and zsh by name, as do the primaries \
+test, the exact left-at-the-internet set and the rewritten \
+test_integrated_origin_locations. Putting the d3e2f5d future.toml back fails \
+test_only_the_planned_topics_are_left_at_the_internet, \
+test_a_mailbox_letterhead_moves_no_origin and the rewritten agents test. Round 1 \
+findings dealt with: the high (five neighbour tests) is fixed by rewriting each \
+assertion to the new rule through placed_as_planned, not by deleting it, and byu-provo \
+is in the code_git ACTORS table; the medium (future) is fixed, future.toml is \
+byte-identical to origin/main and future is in OPEN; the low on the <= 30 bound is \
+fixed with an exact set equality over the topics present."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """Ran it fresh: places.problems() returns 0 lines; build, regen_tree, \
+gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check each exit 0; \
+checks.py style prints no em dashes, no emoji. No added diff line has an em dash. \
+The built game carries both new places, and vibe places byu-provo / san-francisco \
+print the pylibs and kubernetes lines. The command proves the sentence."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """I fetched and read the town page of all nineteen moves myself \
+(curl, tags stripped): Project Vend 'Jun 27, 2025 ... the Anthropic office in San \
+Francisco' (agenthooks, cost, hooks, skills); SEC exhibit 99.1 'MOUNTAIN VIEW, Calif. - \
+April 23, 2015' (apis); Google 10-K 'For the fiscal year ended December 31, 2011 ... \
+headquarters are located at 1600 Amphitheatre Parkway, Mountain View' (data); \
+github.blog 1 Aug 2019 'in San Francisco on November 13-14', and the Actions post (Nat \
+Friedman, August 8, 2019) 'generally available at GitHub Universe on November 13' (ci); \
+'SEATTLE--(BUSINESS WIRE)--March 14, 2006-- Amazon Web Services' (cloud); us.pycon.org \
+'PyCon US 2013 | Santa Clara, CA | March 13th - March 21st' plus the Docker blog 'March \
+15, 2013, Solomon Hykes ... first demoed Docker publicly ... at PyCon' (docker); Tom \
+Preston-Werner '18 Oct 2008 - San Francisco' and 'We publicly launched the site on \
+April 10th' (github); Code with Claude 'taking place on May 22, 2025 in San Francisco' \
+and Claude 4 'May 22, 2025 ... Claude Code is now generally available' (headless); \
+Docker 2022 'The very first one in June 2014 in San Francisco' and Docker 2024 'June \
+10th, 2014, day 2 of the first ever DockerCon ... Eric Brewer' (kubernetes); Rob Pike \
+'Building 43 on Google's Mountain View campus' (languages); science.byu.edu 'built \
+NumPy in 2005 while a professor in Electrical and Computer Engineering at BYU' and \
+byu.edu/about 'Brigham Young University Provo, UT' (pylibs); Apple 'Cupertino, \
+California - October 30, 2019' (zsh); Wayback 2 June 2015 'Founded in August of 2008 \
+and based in San Francisco' (airflow, datamap); EIN 'SAN FRANCISCO, CA, USA, August 9, \
+2022 ... Elementl is announcing the 1.0 release' (dagster); Databricks 'SAN FRANCISCO - \
+June 21, 2022' and 'headquartered in San Francisco' (medallion). Each is dated at the \
+event's year and places the actor or event in the town; none rests on a current \
+contact page alone (the BYU campus page is the place file's own source, for a \
+university that has not moved). The nine refuted moves stayed: printed from \
+vibemap.topics, future, harness, subagents, mcp, prompting, promptstructure, dbt and \
+dataquality are primary at the-internet, interfaces keeps PARC primary and its echo at \
+the-internet. The two place files follow santa-clara.toml key for key with the header \
+comment, and each source names the town. docs/TOPICS.md: one added clause ('or from a \
+dated first-party page that does, listed under [[sources]] and named in the comment \
+above the origins') plus the checklist line; it is true, every moved topic's comment \
+names its page, and it is short. No em dashes."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/zsh.toml"
+text = """The new clause in the origin line, 'the release from which zsh is the default \
+login and interactive shell on the Mac', is not on the origin's own source: the \
+Catalina newsroom page never mentions zsh or a shell. The support page listed under \
+sources says 'Starting with macOS 10.15, your Mac uses zsh as the default login shell \
+and interactive shell'. docs/TOPICS.md asks that the origin's page say what the line \
+says; either cite the support page for the clause in the comment or trim the clause."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/skills.toml"
+text = """skills still lists and leans on (in its comment) the November 2025 Paris and \
+Munich offices page, which the plan's checker refuted for subagents as a current office \
+list. Project Vend carries the move on its own and is what the test checks; the second \
+page adds a contested source, not proof."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_internet_origins.py"
+text = """Follow-up, not this order: harness and subagents (Anthropic, 2025) stay open \
+although the same Project Vend page moved agenthooks, cost, hooks and skills; the \
+plan's own Open table says one re-check settles them, and dbt and dataquality have a \
+datelined 2021 place source named there. anthropic-sf and the other San Francisco domes \
+(round 1 low on clustering, docs/GALAXY.md phase 3) still want the cluster rule."""
+
+[[findings]]
+severity = "low"
+file = "work/orders/internet-origins-0-12/order.toml"
+text = """Process: owns and the c1 check were widened in the builder's round-fix commit \
+(a3a697c), where round 1 asked the manager to do it; the change only makes c1 stronger. \
+The order also still needs signoff-docs and signoff-cli before work.py ci turns green. \
+Carried from round 1: cloud keeps the EC2 beta as its line with the S3 release under \
+sources, a named deviation from the plan's switch."""

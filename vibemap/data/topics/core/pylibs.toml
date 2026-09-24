@@ -13,16 +13,16 @@ try_it = '''uv pip install pandas, then python3 -c "import pandas as pd; print(p
 unlocks = ["apis", "tests"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
-# exactly one origin is primary, and every source was opened. Most of these
-# libraries were written by people at no shared address, and NumPy's own
-# about page names neither a town nor an employer, so the library sits on the
-# network it is published to.
+# exactly one origin is primary, and every source was opened.
+# BYU's own page says NumPy was built in 2005 while its founder was a professor
+# there; the place file's source gives Provo. The NumPy about page, on what it
+# grew from, is in the sources.
 
 [[origins]]
-place = "the-internet"
+place = "byu-provo"
 year = 2005
-what = "NumPy is created in 2005, building on the early work of the Numeric and Numarray libraries; Travis Oliphant is the project's founder."
-source = "https://numpy.org/about/"
+what = "Travis Oliphant builds NumPy in 2005 while a professor of Electrical and Computer Engineering at BYU."
+source = "https://science.byu.edu/college-events/lecture-travis-oliphant-2025-11-05"
 primary = true
 
 [[sources]]
@@ -72,3 +72,7 @@ url = "https://github.com/microsoft/playwright/releases/tag/v1.0.0"
 [[sources]]
 label = "Source: DuckDB v0.1.0 release (June 2019)"
 url = "https://github.com/duckdb/duckdb/releases/tag/v0.1.0"
+
+[[sources]]
+label = "Source: BYU College of Science, lecture by Travis Oliphant, NumPy built at BYU in 2005"
+url = "https://science.byu.edu/college-events/lecture-travis-oliphant-2025-11-05"

@@ -2,7 +2,7 @@
 title: "Agent hooks"
 date: 2026-09-17
 tags: [tech, agents]
-generated: f08116dca712
+generated: 353f9ba88f71
 ---
 # Agent hooks
 
@@ -12,7 +12,7 @@ The same idea inside a coding agent: shell commands (or HTTP endpoints, MCP tool
 
 **Try in five minutes.** Open .claude/settings.json in this repo, read the PostToolUse hook, then add a PreToolUse hook with matcher Bash whose command is `jq -e '.tool_input.command | test("rm -rf") | not' >/dev/null || exit 2`. Ask Claude to delete a folder with rm -rf and watch the refusal.
 
-- Docs: [Claude Code hooks reference](https://code.claude.com/docs/en/hooks), [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide), [This repo's hook](https://github.com/tpetedb/vibe-map/blob/main/.claude/settings.json), [Source: Claude Code hooks reference (events, scopes, exit codes)](https://code.claude.com/docs/en/hooks)
+- Docs: [Claude Code hooks reference](https://code.claude.com/docs/en/hooks), [Claude Code hooks guide](https://code.claude.com/docs/en/hooks-guide), [This repo's hook](https://github.com/tpetedb/vibe-map/blob/main/.claude/settings.json), [Source: Claude Code hooks reference (events, scopes, exit codes)](https://code.claude.com/docs/en/hooks), [Source: Anthropic, Project Vend, the Anthropic office in San Francisco (June 2025)](https://www.anthropic.com/research/project-vend-1)
 - Unlocks: [[Security and permissions]], [[Headless agents and scheduling]]
 - Shelf: Agents and the harness · Depth: Deep
 

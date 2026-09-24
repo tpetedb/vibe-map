@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
+from tests.test_internet_origins import MOVES, placed_as_planned
 from vibemap import places, topics
 from vibemap.cli import cli
 
@@ -102,10 +103,16 @@ def test_cli_exposes_the_same_dated_duckdb_origin_as_the_game() -> None:
     assert origin["source"] in output
 
 
-def test_publications_do_not_borrow_current_office_locations() -> None:
+def test_publications_stand_at_an_office_only_with_a_dated_town_page() -> None:
+    # A current office address proves nothing; a dated first-party page that
+    # places the publication in that town does (MOVES). The rest stay online.
     for topic_id in ("airflow", "datamap", "dbt", "dataquality", "medallion"):
         primary = next(o for o in topics.get(topic_id).origins if o.primary)
-        assert primary.place == "the-internet", topic_id
+        if topic_id in MOVES:
+            assert primary.place == MOVES[topic_id][0], topic_id
+            assert placed_as_planned(topic_id), topic_id
+        else:
+            assert primary.place == "the-internet", topic_id
     kafka = next(o for o in topics.get("kafka").origins if o.primary)
     assert kafka.place == "linkedin-mountain-view"
     assert "scheduled for 27 July 2011" in kafka.what
