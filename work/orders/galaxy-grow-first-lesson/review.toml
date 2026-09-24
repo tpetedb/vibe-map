@@ -1,0 +1,54 @@
+v = 1
+order = "galaxy-grow-first-lesson"
+by = "reviewer-galaxy-grow-first-lesson-r1"
+reviewed = "e76c1c354274ec17edbd6ef435452ce3d7cf46dc"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran it myself from a git archive of e76c1c3 in a scratch folder, after slot-wait: tests/test_game_galaxy.py -k grow passes (one test). The test sets Grow, 0 topics and experience galaxy through saved state, clicks the real Learn button found as aria-current="step" in #galaxy-list, and asserts the note's h1, the lesson's first sentence and the absence of "Not unlocked yet". So the command proves the sentence.
+Red on main, shown by mutation: deleting only the experienceReadable().forEach line from computeUnlocked and rebuilding, the test fails with "Actual value: Unix and the terminalNot unlocked yet: finish the stop..." at line 522, which is the #209 symptom.
+Second mutation: readable() returning every topic (the "ahead" filter removed) makes the test fail at line 528 on the dotfiles lock, so the "further along stays earned" half is guarded too.
+Clicked it in the built game with a scratch probe and looked at the screenshots: with 0 topics the vault reads 14 of 146 notes unlocked and shows the Unix lesson with History, Try in five minutes, the docs and the check commands; with topics ["unix"] the next button is "Learn Files, folders and paths", readable() is [Unix, Files], both open as lessons (15 of 146). assert_clean held in every step.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran tests/test_game_vault.py and tests/test_game_experience.py myself in the scratch copy after slot-wait: exit 0, all pass, including the two Grow vault tests (campus stop, renamed stop).
+Probe on the islands in Grow with 0 progress: the Unix note stays locked and 13 notes are unlocked, one fewer than Galaxy's 14, which is exactly the one topic Galaxy names. __experiences() shows readable is undefined on islands and a function on galaxy, so the islands path through computeUnlocked is the old one (experienceReadable returns []). Vault Full in Galaxy still unlocks 146 of 146.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+In the scratch copy of e76c1c3: ruff clean, checks.py style prints "no em dashes, no emoji", checks.py sinks exit 0, the non-browser battery passes (one skip: no GitHub origin in the scratch copy), and build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check all exit 0; the fork_source mirror carries the same three src changes. work.py validate: 47 orders, 0 collisions.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Read the diff. The rule lives in one helper, experienceReadable() in src/game/60-vault.js, which asks the active experience's optional readable() and maps through noteId() filtered by NOTES; computeUnlocked() adds its result with one line and no call site spells a Galaxy check. readable() is one optional hook: the header of src/game/24-experience.js lists it among the optional hooks with its meaning, and the contract test adds "readable:function" to Galaxy's expected shape only, while the islands' shape is unchanged.
+Galaxy's readable() returns next plus done (state != "ahead"). galaxyModel has no "available" state, only done, next and ahead, so "next and any it marks available" resolves to next and done; the changelog fragment says so plainly. All 70 Galaxy topic titles resolve to a note (checked in Full mode: none missing), so no name is dropped silently.
+galaxyModel, 00-state.js, 80-sync.js and buildGraph are untouched; the graph only gains the nodes computeUnlocked now lets through. openVault() rebuilds UNLOCKED on every open, so a topic finished mid-session is seen on the next Learn (the ["unix"] probe confirms). No em dash in the diff (grep of added lines and checks.py style).
+"""
+
+[[findings]]
+severity = "low"
+file = "src/game/60-vault.js"
+text = "In Galaxy the lock copy for a topic further along (LOCK_WHY, also the tooltip on locked wikilinks inside the lesson) still says 'finish the stop, meet the mentor or inspect the artifact', which a Galaxy learner never does; their way in is check and import. The test pins that copy for dotfiles. A follow-up could let the experience word the lock too."
+
+[[findings]]
+severity = "low"
+file = "src/game/60-vault.js"
+text = "experienceReadable() guards with typeof activeExperience===\"function\", but 24-experience.js always loads before 60-vault.js, so the guard is dead defence; harmless."
+
+[[findings]]
+severity = "low"
+file = "work/orders/galaxy-grow-first-lesson/order.toml"
+text = "Commits 14ae5af and 1e004f8 are titled 'scene signs off' and 'docs signs off' but only add the team to cross; no signoff-scene.toml or signoff-docs.toml exists at e76c1c3, so work-accept still needs both sign-offs before this lands."

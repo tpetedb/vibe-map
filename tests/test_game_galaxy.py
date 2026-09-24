@@ -500,3 +500,30 @@ def test_galaxy_walk_stick_collision_and_water(request, profile):
     expect(joy).not_to_be_visible()
     assert game.page.evaluate("window.__galaxyWalk()") is None
     game.assert_clean()
+
+
+def test_grow_vault_opens_the_next_galaxy_lesson(game_desktop):
+    """Grow unlocks through island play, so Galaxy names what it has reached."""
+    game = game_desktop
+    game.goto(
+        state={
+            "name": "Lotte",
+            "topics": [],
+            "settings": {"experience": "galaxy", "motion": "off", "vault": "grow"},
+        }
+    )
+    game.resume()
+    game.page.wait_for_function("document.body.dataset.experience === 'galaxy'")
+    learn = game.page.locator('#galaxy-list button[aria-current="step"]')
+    expect(learn).to_have_attribute("aria-label", "Learn Unix and the terminal")
+    learn.click()
+    note = game.page.locator("#vnote")
+    expect(note.locator("h1").first).to_have_text("Unix and the terminal")
+    expect(note).to_contain_text("The terminal is a text conversation")
+    expect(note).not_to_contain_text("Not unlocked yet")
+    expect(note).to_contain_text("uv run vibe check --topic unix")
+    game.page.keyboard.press("Escape")
+    # A topic further along the journey stays earned, as it is on the islands.
+    game.page.locator('[data-galaxy-topic="dotfiles"]').click()
+    expect(note).to_contain_text("Not unlocked yet")
+    game.assert_clean()

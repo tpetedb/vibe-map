@@ -1,0 +1,41 @@
+v = 1
+id = "galaxy-grow-first-lesson"
+title = "In Grow mode, Galaxy's next topic opens its lesson instead of a lock that asks for work the learner cannot do yet"
+team = "panels"
+branch = "claude/galaxy-grow-first-lesson"
+goal = "galaxy"
+issue = 209
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-galaxy-grow-first-lesson"
+
+owns = [
+  "src/game/60-vault.js",
+  "src/galaxy/20-experience.js",
+  "tests/test_game_galaxy.py",
+  # The contract test lists each experience's hooks; a new optional hook is one line there.
+  "tests/test_game_experience.py",
+  "src/game/24-experience.js",
+  "changelog.d/galaxy-grow-first-lesson.fixed.md",
+]
+cross = ["scene", "docs"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "A browser test clicks the real Galaxy Learn button of the next topic with Vault = Grow and 0 topics done and sees the lesson (its explanation), not the lock; it fails on main first."
+check = "/Users/maxgroupit/.claude/jobs/5d0da65f/tmp/slot-wait.sh 4 && uv run python tools/build.py && uv run pytest -q tests/test_game_galaxy.py -k grow"
+
+[[criteria]]
+id = "c2"
+text = "Islands in Grow mode are unchanged: the existing vault and grow tests pass."
+check = "/Users/maxgroupit/.claude/jobs/5d0da65f/tmp/slot-wait.sh 4 && uv run pytest -q tests/test_game_vault.py tests/test_game_experience.py"
+
+[[criteria]]
+id = "c3"
+text = "Lint, style, sinks, the non-browser battery and every generated file in sync."
+check = "uv run ruff check -q . && python3 tools/checks.py style && python3 tools/checks.py sinks && uv run pytest -q -m 'not browser and not integration' && for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done && uv run python tools/work.py validate"
+
+[[criteria]]
+id = "c4"
+text = "The rule is one helper, not a check spelled at a call site: the active experience may name topics that are always readable (Galaxy: its next topic, and any it marks available); the islands name none. The shared progress model and the Grow graph stay as they are. No em dashes."
+judge = "reviewer"
