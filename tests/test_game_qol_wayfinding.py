@@ -396,16 +396,33 @@ COUNT_BUFFERS = """() => {
 }"""
 
 
+# No dust is kicked up while this holds: what an unlucky draw of Math.random,
+# or a slow first frame, does to a walk on a runner.
+HOLD_DUST = "() => { window.__random = Math.random; Math.random = () => 0.999; }"
+LET_DUST = "() => { Math.random = window.__random; }"
+
+
+@pytest.mark.parametrize("dust", ["any-time", "late"])
 def test_a_walk_makes_its_buffers_once_and_not_every_frame(
-    game_desktop: GamePage,
+    game_desktop: GamePage, dust: str
 ) -> None:
     game_desktop.goto(state=RETURNING)
     game_desktop.resume()
     game_desktop.page.evaluate(COUNT_BUFFERS)
+    if dust == "late":
+        game_desktop.page.evaluate(HOLD_DUST)
     _walk_there_from_the_palette(game_desktop)
     # The first frames of a walk draw the way for the first time, and what it
     # is drawn with is made then.
     game_desktop.frames(3)
+    if dust == "late":
+        game_desktop.page.evaluate(LET_DUST)
+    # Every puff of dust shares one shape, made when the first is kicked up,
+    # and when that is is a random draw per frame; the count starts after it.
+    game_desktop.until(
+        "window.__scene().children.some(m => m.userData.dust)", what="a dust puff"
+    )
+    game_desktop.frames(1)
     made = int(game_desktop.page.evaluate("() => window.__buffers"))
     game_desktop.frames(12)
     assert _walk(game_desktop)["has"] is True

@@ -6,7 +6,7 @@ branch = "claude/wayfinding-flake"
 goal = "ways-of-working"
 issue = 205
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-wayfinding-buffers-flake"
 
 owns = [
   "tests/test_game_qol_wayfinding.py",
