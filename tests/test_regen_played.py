@@ -164,6 +164,28 @@ def test_failed_install_restores_the_clean_target(tmp_path: Path, monkeypatch) -
     assert _git(camp, "status", "--porcelain", "--ignored") == ""
 
 
+def test_failed_commit_preserves_target_git_metadata(tmp_path: Path) -> None:
+    camp, remote = _repo(tmp_path)
+    stage = tmp_path / "stage"
+    regen_played.prepare_stage(stage, ROOT)
+    assert (stage / ".git" / "HEAD").is_file()
+    hook = camp / ".git" / "hooks" / "pre-commit"
+    hook.write_text("#!/bin/sh\nexit 1\n")
+    hook.chmod(0o755)
+    before = _git(camp, "rev-parse", "HEAD")
+
+    with pytest.raises(regen_played.RegenerationError):
+        regen_played.install(stage, camp)
+
+    assert (camp / ".git" / "HEAD").is_file()
+    assert hook.read_text() == "#!/bin/sh\nexit 1\n"
+    assert _git(camp, "rev-parse", "HEAD") == before
+    assert _git(camp, "branch", "--show-current") == "played"
+    assert _git(camp, "remote", "get-url", "origin") == str(remote)
+    assert _git(camp, "status", "--porcelain") == ""
+    assert (camp / "stale.txt").read_text() == "old\n"
+
+
 def test_missing_product_inputs_are_refused_before_regeneration(
     tmp_path: Path,
 ) -> None:
@@ -323,6 +345,23 @@ def test_a_misdirected_push_url_is_refused(tmp_path: Path) -> None:
     other = tmp_path / "vibe-map.git"
     subprocess.run(["git", "init", "--bare", "-q", other], check=True)
     _git(camp, "remote", "set-url", "--push", "origin", str(other))
+
+    with pytest.raises(
+        regen_played.RegenerationError, match="not the tpetedb/vibe-map-played"
+    ):
+        regen_played.check_target(camp)
+
+
+@pytest.mark.parametrize("kind", ["fetch", "push"])
+def test_a_second_misdirected_remote_url_is_refused(tmp_path: Path, kind: str) -> None:
+    camp, remote = _repo(tmp_path)
+    other = tmp_path / "vibe-map.git"
+    subprocess.run(["git", "init", "--bare", "-q", other], check=True)
+    if kind == "push":
+        _git(camp, "remote", "set-url", "--push", "origin", str(remote))
+        _git(camp, "remote", "set-url", "--add", "--push", "origin", str(other))
+    else:
+        _git(camp, "remote", "set-url", "--add", "origin", str(other))
 
     with pytest.raises(
         regen_played.RegenerationError, match="not the tpetedb/vibe-map-played"

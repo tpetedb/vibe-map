@@ -88,7 +88,16 @@ def _played_origin(url: str) -> bool:
     return Path(url).is_absolute() and Path(url).name == "vibe-map-played.git"
 
 
-def check_target(camp: Path) -> tuple[str, str, str]:
+def _remote_urls(camp: Path, *, push: bool = False) -> tuple[str, ...]:
+    args = (
+        ("remote", "get-url", "--push", "--all", "origin")
+        if push
+        else ("remote", "get-url", "--all", "origin")
+    )
+    return tuple(_git(camp, *args).splitlines())
+
+
+def check_target(camp: Path) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
     """Return branch and remote URLs after proving the checkout is played."""
     camp = camp.resolve()
     if not (camp / ".git").exists() or not (camp / CAMP_MARKER).is_file():
@@ -101,9 +110,13 @@ def check_target(camp: Path) -> tuple[str, str, str]:
     branch = _git(camp, "branch", "--show-current")
     if not branch:
         raise RegenerationError(f"{camp} has a detached HEAD; choose a branch first")
-    origin = _git(camp, "remote", "get-url", "origin")
-    push_url = _git(camp, "remote", "get-url", "--push", "origin")
-    if not _played_origin(origin) or not _played_origin(push_url):
+    origin = _remote_urls(camp)
+    push_url = _remote_urls(camp, push=True)
+    if (
+        not origin
+        or not push_url
+        or not all(_played_origin(url) for url in (*origin, *push_url))
+    ):
         raise RegenerationError(
             f"{camp} is not the tpetedb/vibe-map-played checkout: "
             f"origin fetch={origin!r}, push={push_url!r}"
@@ -251,6 +264,10 @@ def _ignore(_directory: str, names: list[str]) -> set[str]:
     return set(names) & COPY_EXCLUDES
 
 
+def _copied_from_stage(path: Path, stage: Path) -> bool:
+    return not (COPY_EXCLUDES & set(path.relative_to(stage).parts))
+
+
 def _same_file(source: Path, target: Path) -> bool:
     """An ignored target may remain only when staging would leave it unchanged."""
     if source.is_symlink() or target.is_symlink():
@@ -285,7 +302,7 @@ def install(stage: Path, camp: Path) -> bool:
     stage_files = sorted(
         str(path.relative_to(stage))
         for path in stage.rglob("*")
-        if path.is_file() or path.is_symlink()
+        if (path.is_file() or path.is_symlink()) and _copied_from_stage(path, stage)
     )
     preserved = ignored & set(stage_files)
     overlaps = sorted(
@@ -302,7 +319,9 @@ def install(stage: Path, camp: Path) -> bool:
         (
             path.relative_to(stage)
             for path in stage.rglob("*")
-            if path.is_dir() and not (camp / path.relative_to(stage)).exists()
+            if path.is_dir()
+            and _copied_from_stage(path, stage)
+            and not (camp / path.relative_to(stage)).exists()
         ),
         key=lambda path: len(path.parts),
         reverse=True,
@@ -323,9 +342,9 @@ def install(stage: Path, camp: Path) -> bool:
 
         if _git(camp, "branch", "--show-current") != branch:
             raise RegenerationError("the regeneration changed the target branch")
-        if _git(camp, "remote", "get-url", "origin") != origin:
+        if _remote_urls(camp) != origin:
             raise RegenerationError("the regeneration changed the target origin")
-        if _git(camp, "remote", "get-url", "--push", "origin") != push_url:
+        if _remote_urls(camp, push=True) != push_url:
             raise RegenerationError("the regeneration changed the target push URL")
         still_ignored = set(
             _git(
