@@ -6,13 +6,13 @@ branch = "codex/galaxy-echo"
 goal = "galaxy"
 issue = 168
 builder = "codex-sol-galaxy-echo"
-owns = ["src/galaxy/20-experience.js", "src/style.css", "tests/test_game_galaxy_echo.py"]
+owns = ["src/galaxy/20-experience.js", "src/galaxy/60-flight.js", "src/style.css", "tests/test_game_galaxy_echo.py"]
 cross = ["panels"]
 needs = ["galaxy-flight"]
 
 [[criteria]]
 id = "c1"
-text = "A showcased secondary origin is named an echo and gives keyboard, pointer and list-only players a Jump to primary action. The action uses the existing flight/cut and lands at the topic's actual primary place without altering shared progress; Learn at the echo remains available."
+text = "A showcased secondary origin is named an echo and gives keyboard, pointer and list-only players a Jump to primary action. Only the current action group is tabbable. Jump uses the existing flight/cut and lands with the chosen topic selected and focused at its actual primary place without altering shared progress; Learn at the echo remains available."
 check = "uv run pytest -q tests/test_game_galaxy_echo.py"
 
 [[criteria]]

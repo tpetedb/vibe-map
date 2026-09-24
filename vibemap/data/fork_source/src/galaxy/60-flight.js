@@ -18,17 +18,18 @@ function galaxyFlightDispose(){
   galaxyFlightClear();
   if(galaxyCanvasFocus){const value=galaxyCanvasFocus.value;if(value===null)$("c").removeAttribute("tabindex");else $("c").setAttribute("tabindex",value);if(galaxyCanvasFocus.label===null)$("c").removeAttribute("aria-label");else $("c").setAttribute("aria-label",galaxyCanvasFocus.label);galaxyCanvasFocus=null}
 }
-function galaxyArrive(id){
+function galaxyArrive(id,topicId=null){
   galaxyFlightClear();if(!galaxyState)return;
-  galaxyState.landedPlace=id;galaxyState.selected=id;const topic=galaxySelected().topics[0];galaxyState.topic=topic?topic.id:null;
+  galaxyState.landedPlace=id;galaxyState.selected=id;const topics=galaxySelected().topics,topic=topics.find(item=>item.id===topicId)||topics[0];galaxyState.topic=topic?topic.id:null;
   galaxyShow("dome");if(!galaxyCanvasFocus)galaxyCanvasFocus={value:$("c").getAttribute("tabindex"),label:$("c").getAttribute("aria-label")};$("c").setAttribute("tabindex","-1");$("c").setAttribute("aria-label","Planet surface. Use arrow keys to walk, or Tab to browse lessons.");
-  ($("galaxy-ui").dataset.rendering==="scene"?$("c"):$("galaxy-title")).focus();
+  const lesson=topicId&&[...$("galaxy-list").querySelectorAll("[data-galaxy-topic]")].find(button=>button.dataset.galaxyTopic===topicId);
+  (lesson||($("galaxy-ui").dataset.rendering==="scene"?$("c"):$("galaxy-title"))).focus();
   copySay("Landed at "+galaxySelected().name+". Choose a lesson or walk inside the dome.");
 }
-window.galaxySkipFlight=function(){if(galaxyFlight)galaxyArrive(galaxyFlight.destination)};
-function galaxyFly(id){
+window.galaxySkipFlight=function(){if(galaxyFlight)galaxyArrive(galaxyFlight.destination,galaxyFlight.topicId)};
+function galaxyFly(id,topicId=null){
   const state=galaxyState,destination=state.model.places.find(place=>place.id===id);if(!destination)return;
-  if(reducedMotion()||!state.visuals||$("galaxy-ui").dataset.rendering==="list"){galaxyArrive(id);return}
+  if(reducedMotion()||!state.visuals||$("galaxy-ui").dataset.rendering==="list"){galaxyArrive(id,topicId);return}
   const origin=state.model.places.find(place=>place.id===state.landedPlace)||(state.model.places.find(place=>place.id===(state.model.next||{}).place))||galaxySelected();galaxyFlightClear();galaxyShow("chart");
   const end=new T.Vector3(...(GALAXY_POS[destination.globe]||[0,0,0]));end.y+=2.15;
   const start=new T.Vector3(...(GALAXY_POS[origin.globe]||[0,0,0]));start.y+=2.15;
@@ -36,7 +37,7 @@ function galaxyFly(id){
   if(start.distanceTo(end)<1)start.x-=2;
   const control=start.clone().lerp(end,.5);control.y+=1;
   const ship=galaxyShip();ship.position.copy(start);scene.add(ship);
-  galaxyFlight={destination:id,ship,start,control,end,started:performance.now()};
+  galaxyFlight={destination:id,topicId,ship,start,control,end,started:performance.now()};
   $("galaxy-flight-status").textContent="Autopilot to "+destination.name+". Arrival in a few seconds.";
   $("galaxy-flight").showModal();$("galaxy-skip-flight").focus();
 }
