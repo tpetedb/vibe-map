@@ -625,18 +625,20 @@ def inherited(order: Order, base: str, paths: list[str], rev: str | None) -> set
             theirs = tip(order.root, need.branch)
         except Bad:
             continue
-        point = git(order.root, "merge-base", rev or "HEAD", theirs)
-        if not point:
-            continue
-        built = set(diff_names(order.root, base, point)) & set(paths)
-        if not built:
-            continue
-        # Differs from what the needed branch built: in the tree, or staged.
-        moved: set[str] = set()
-        for where in ((), ("--cached",)) if not rev else ((),):
-            args = ("diff", *where, "--name-only", "--no-renames", "-z", point, *at)
-            moved |= set(names(order.root, *args, "--", *built, must=True))
-        out |= built - moved - new
+        # Once both branches merged main there are several merge bases, and
+        # git names main's when asked for one; the needed work is at another.
+        points = git(order.root, "merge-base", "--all", rev or "HEAD", theirs)
+        for point in points.split():
+            built = set(diff_names(order.root, base, point)) & set(paths)
+            if not built:
+                continue
+            # Differs from what the needed branch built: in the tree, or staged.
+            moved: set[str] = set()
+            for where in ((), ("--cached",)) if not rev else ((),):
+                args = ("diff", *where, "--name-only", "--no-renames", "-z")
+                args += (point, *at, "--", *built)
+                moved |= set(names(order.root, *args, must=True))
+            out |= built - moved - new
     return out
 
 

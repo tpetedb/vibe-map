@@ -825,6 +825,44 @@ def test_what_a_needed_order_built_is_not_the_later_orders_stray(repo: Path) -> 
     assert "src/scene.js" in work.strays(work.find("two", repo), "origin/main")
 
 
+def test_a_needed_branch_that_caught_up_with_main_still_vouches(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both branches merge main after the later one built on the earlier: git
+    then finds two merge bases, and names the newer, main's, when asked for
+    one; what the later branch took from the needed one is still read at the
+    commit it took."""
+    one = order_text("one", "feat/one", ["src/scene.js"], team="scene")
+    monkeypatch.setenv("GIT_COMMITTER_DATE", "2020-01-01T00:00:00Z")
+    branch_with(
+        repo, "feat/one", {"work/orders/one/order.toml": one, "src/scene.js": "// 1\n"}
+    )
+    monkeypatch.delenv("GIT_COMMITTER_DATE")
+    two = order_text("two", "feat/two", ["src/panel.js"], needs=["one"])
+    branch_with(
+        repo, "feat/two", {"work/orders/two/order.toml": two, "src/panel.js": "// 2\n"}
+    )
+    sh(repo, "merge", "-q", "--no-edit", "feat/one")
+    sh(repo, "checkout", "-q", "main")
+    (repo / "README.md").write_text("main moved\n")
+    commit(repo, "main moves")
+    sh(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    sh(repo, "checkout", "-q", "feat/one")
+    sh(repo, "merge", "-q", "--no-edit", "main")
+    (repo / "src" / "scene.js").write_text("// 1, round 2\n")
+    commit(repo, "one moves on")
+    sh(repo, "checkout", "-q", "feat/two")
+    sh(repo, "merge", "-q", "--no-edit", "main")
+    assert len(sh(repo, "merge-base", "--all", "HEAD", "feat/one").split()) == 2
+    assert sh(repo, "merge-base", "HEAD", "feat/one") == sh(repo, "rev-parse", "main")
+    order = work.find("two", repo)
+    assert work.strays(order, "origin/main") == []
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    (repo / "src" / "scene.js").write_text("// 1, and two touched it\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+
+
 # ------------------------------------------------------------ the follow-ups
 
 
