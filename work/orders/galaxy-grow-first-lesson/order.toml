@@ -14,7 +14,7 @@ owns = [
   "tests/test_game_galaxy.py",
   "changelog.d/galaxy-grow-first-lesson.fixed.md",
 ]
-cross = ["scene"]
+cross = ["scene", "docs"]
 needs = []
 
 [[criteria]]
