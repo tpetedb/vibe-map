@@ -1,0 +1,78 @@
+# [Claude Opus 5.5, effort high, reviewer]
+# Review round 2 of harness-core. No earlier review.toml exists for this order
+# on any branch (git log --all), so there were no earlier findings to re-check.
+v = 1
+order = "harness-core"
+by = "reviewer-harness-core-r2"
+reviewed = "347d3223d77bd1ac69c9cf9de28c8fd3dc16c19c"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "In a scratch clone at 347d322 I ran sync twice and hashed every output under .claude, .codex, CLAUDE.md and the lock: the two runs are byte-identical and git status stays clean. check exits 0 on the committed tree. Then I added one newline to each output in turn (.codex/config.toml, .claude/settings.json, CLAUDE.md, .claude/agents/builder.md, .codex/agents/reviewer.toml, .codex/hooks.json): each time check exits 1 and names the file as both 'edited by hand or stale' and 'differs from a fresh render'. An edit to fast.toml without a sync gives 'input changed since the last sync'; an untracked stray role file is ignored. One gap in 'tracked input only' (low finding): a profile or model file chosen by name in config.toml is read from disk even when untracked, and its hash is not in the lock."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "I ran uv run pytest tests/test_harness.py tests/test_work.py: exit 0. I read each test against the sentence and checked the behaviour myself. Overlay floor: 19 overlays through pick. Refused: safeguards light, defaultMode acceptEdits, allowUnsandboxedCommands true, failIfUnavailable false, loop.iterations 100, agents_md_chain_max_kb 64, review.independent 0, sandbox_mode danger-full-access, defaultMode bypassPermissions, network open, an unknown key, version 2. Accepted: the stronger ones, and the README's own example overlay. Root knobs: safeguards light, ralph on the host, agents 21, an unknown key and profile nope are all refused. Effort: the max-on-claude, ultra-on-codex and Haiku rules match the code. pick needs --provider, never crosses providers, steps down at slow_at and pauses at stop_at (exit 3). I parsed every fenced toml block in the DECISION copy, .agents/README.md and docs/ myself: all 12 parse. I reverted two of the builder's fixes in scratch. Without the sys.modules registration in work.regenerable, test_work_py_takes_lock_listed_outputs_as_regenerable fails. Without inherited() in strays, test_what_a_needed_order_built_is_not_the_later_orders_stray fails. One clause is stale: the sentence says writable_roots equal to ['../.git/board'], but the test asserts no writable_roots. That follows A2 as amended by the ROOM ruling on the #192 review, so the code is right and the order text needs amending (low finding)."
+
+[[criteria]]
+id = "c3"
+verdict = "fail"
+evidence = "doctor exits 0 offline and prints the two trust values on separate lines. The project-trust value is wrong in a linked worktree. project_trust() looks up the main checkout's path (main_checkout(root)), not the checkout's own path. Called on this worktree, it returns ('verified', 'projects.\"/Users/maxgroupit/vibe-map\".trust_level = \"trusted\"'). The board's ruling in ROOM at 2026-09-24T00:40:10Z says otherwise: it came ten minutes before this head and rested on the Codex receipt on #95, where the installed 0.156.1 client showed no project layer in a linked worktree even though the main checkout is trusted. Per that ruling, trust is enrolled per worktree (just codex-trust) and the main checkout's trust is not relied on for worktrees. So in every un-enrolled worktree doctor reports verified where the client skips .codex/ entirely. Hook trust reads the worktree's own key and correctly says missing (5 of 5); on 0.157.0 it says unknown."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "I ran the full command myself in the scratch clone. ruff check, ruff format --check, checks.py style ('no em dashes, no emoji') and checks.py sinks all pass. The non-browser battery (-m 'not browser and not integration') exits 0 with one skip (no GitHub origin in the clone). All six --check generators pass. work.py validate reads 39 orders with 0 collisions. I also tried the stacked-needs rule directly with collisions(). harness-core with board-and-memory as they stand: no collision. With harness-core's needs emptied: 'both own .claude/settings.json'. A probe order that owns what harness-core owns and needs nothing collides on config.toml and .codex/config.toml. The same probe with needs = ['harness-core'] still collides with board-and-memory on .codex/config.toml, because needs is not transitive: conservative, it fails closed. As a camp gets it, the change adds harmless permission rules to the camp settings (low finding)."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "Claude half only. I leave the Codex half, the installed-Codex-client receipt, to the Codex reviewer and rule nothing on it. The rendered .claude/agents frontmatter parses as YAML: builder is claude-opus-5-5 at high, reviewer claude-opus-5-5 at medium, team-manager claude-fable-5-1 at high, and scorekeeper has no model plus its tools. These are the model and effort keys F041 documents, and the values are what pick returns. In the scratch clone, 17 of 17 links under .claude/skills are relative (../../.agents/skills/<name>) and each resolves to a SKILL.md; doctor agrees. A live Claude listing was not available: 'claude agents' needs a TTY and --json lists running sessions, not definitions. So the 'appear' part rests on the documented format, not on a client screen. For the Codex reviewer, from reading: the project file now sets sandbox_mode workspace-write and approval_policy on-request, which Codex sessions in linked worktrees did not have before. Whether git commit still works there, with the common dir outside the workspace, is worth observing."
+
+[[findings]]
+severity = "medium"
+file = ".agents/utils/harness.py"
+text = "project_trust() reads projects.\"<main checkout>\".trust_level and reports 'verified' for every linked worktree of a trusted main checkout. The board ruled at 2026-09-24T00:40:10Z, on the #95 receipt from codex-cli 0.156.1, that project trust is enrolled per checkout path (just codex-trust) and that the root's trust is not relied on for worktrees. Every builder and Codex session works in a linked worktree, and there the doctor says verified while the client skips the whole .codex/ layer. harness-supervisor will refuse unattended starts on this value, so a false verified would let one start without the project config and hooks. Fix: look up the checkout's own absolute path (the resolved root), keep main_checkout only if a receipt ever proves inheritance, and change the test and .agents/README.md ('its worktrees inherit it') to match."
+
+[[findings]]
+severity = "medium"
+file = "tools/work.py"
+text = "regenerable() frees every lock-listed output from owns for every order, on the stated premise that 'harness.py check guards those files instead'. Nothing in CI or just verify runs harness.py check (ci.yml and the verify recipe have no harness step; harness-portable adds it last). I tried it: docs-followups-149, a docs order, now gets may_touch True for .claude/settings.json, CLAUDE.md, .codex/config.toml and .codex/hooks.json. So until harness-portable lands, any order can hand-edit the rendered deny floor or CLAUDE.md, and the pre-tool hook and work.py ci both let it through. Before this change, owns stopped that. Fix inside this order's files: have work.py check and work.py ci run harness.py check whenever a changed path is lock-listed, and fail on drift. Or keep the exemption only for orders whose own criteria run harness check."
+
+[[findings]]
+severity = "low"
+file = "work/orders/harness-core/order.toml"
+text = "c2's sentence still says .codex/config.toml carries writable_roots equal to ['../.git/board']. The amended A2 (ROOM, after the #192 review) removed it, and the test rightly asserts none. The manager should amend the sentence so it says what the test proves."
+
+[[findings]]
+severity = "low"
+file = ".agents/utils/harness.py"
+text = "sync reads tracked input only, except for the profile and model files named in config.toml. load_config accepts any file on disk, so profile = 'mine' with an untracked .agents/conf/profiles/mine.toml renders into tracked outputs, the lock does not hash it, and check stays OK. Doctor's 'untracked input, ignored by sync until added' line is false in that case. Refuse a profile or model file that is not tracked."
+
+[[findings]]
+severity = "low"
+file = ".agents/utils/harness.py"
+text = "sync unlinks every path the old lock lists that it no longer renders, with no bound on where that path is. I added docs/SKILLS.md to [outputs] and ran sync: it printed 'removed docs/SKILLS.md' and deleted the hand-maintained doc. A '../' entry would delete outside the repository. work.py refuses such a lock, but harness.py does not. Restrict removal to the output folders and template targets harness.py can render."
+
+[[findings]]
+severity = "low"
+file = ".agents/utils/harness.py"
+text = "EFFORTS['openai'] leaves out max, following F162 and the DECISION. The installed client's list (~/.codex/models_cache.json, codex-cli 0.156.1) offers max for every GPT model, so a Codex role at max would be refused although the client supports it; the fact should go back to the checker. Doctor also now reports gpt-5.6-luna and gpt-5.6-terra as listed by the client, so the commented luna56 and terra ids can be adopted by a reviewed change."
+
+[[findings]]
+severity = "low"
+file = ".codex/agents/"
+text = "The main checkout holds untracked .codex/agents/builder.toml, reviewer.toml, scorekeeper.toml and team-manager.toml (Team Codex's, the same text without model lines). This order tracks the same four names, so the main checkout's pull after landing will refuse with 'untracked working tree files would be overwritten', just as hooks.json did. work/BOARD.md, which board-and-memory owns, still says '.codex/agents/ stays untracked and is not touched'. Add the one-time move-aside step to .agents/README.md, and ask the owner to correct BOARD.md."
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/template/_claude/settings.json"
+text = "Camps are not quite unaffected. Through sync_template, the camp settings now carry the deny floor (harmless, arguably good), a sandbox block with enabled false, and an ask rule on ./config.toml, a file a camp does not have. The template's scorekeeper.md also gains a blank line. Either strip the harness-only ask rule in camp_settings or say in the changelog that camps get the floor."
+
+[[findings]]
+severity = "low"
+file = ".agents/utils/harness.py"
+text = "_floor exempts codex.approval_policy from the floor with no comment on why. The reason (never under workspace-write cannot escalate out of the sandbox, which is what the fast profile relies on) is a constraint, and AGENTS.md asks for it in one line."
