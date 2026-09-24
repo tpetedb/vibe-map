@@ -1,0 +1,28 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "galaxy-grow-first-lesson"
+team = "docs"
+by = "manager-docs"
+reviewed = "33b57d01f54a837ee0bae7092d2ecc2ee58a0107"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Checked changelog.d/galaxy-grow-first-lesson.fixed.md, the only file of
+docs's territory this order touches (docs/, site/, *.md, LICENSE; the other
+.md file in the diff, work/orders/galaxy-grow-first-lesson/findings.md,
+belongs to harness's work/ before docs's *.md, and review.toml/order.toml
+are not markdown). The fragment is type "fixed", matches the issue (#209):
+Grow's Learn button opened a lock instead of the lesson for a Galaxy-only
+learner. It states the fix (next topic and every topic already done open
+the lesson), the boundary already reviewed (topics further along stay
+earned), and that islands are unchanged, in plain voice with no em dash,
+matching Keep a Changelog style and AGENTS.md's rule that the fragment
+states what changed, not the mechanism. Confirmed against
+tests/test_game_galaxy.py -k grow and review.toml's c1/c4 evidence that
+this is exactly what shipped. Docs has nothing to do after this lands: no
+docs/ page describes Grow's Learn behaviour today, so nothing goes stale,
+and the fragment will assemble into CHANGELOG.md at release as any other
+does.
+"""
