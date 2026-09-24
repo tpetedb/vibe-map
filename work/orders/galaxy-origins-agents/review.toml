@@ -1,0 +1,75 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "galaxy-origins-agents"
+by = "codex-review-origins-agents"
+reviewed = "70c585d4048b040c44210a2c970b49902fa0e299"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran the stated pytest selection at 70c585d with a writable UV cache: 67 tests \
+passed and the command exited 0. Read tests/test_origins_agents.py and all sixteen \
+owned topic records. The order test fixes the complete agents/future id set, requires \
+one primary and no duplicate place per topic, checks actor, HTTPS source, one-line \
+claim and matching written year, exercises the public `vibe topic mcp` command, and \
+reserves Earth locations for the two historically evidenced publications. The shared \
+places and topics tests exercise the loaders and registry used by those assertions.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran the exact places.problems() command at 70c585d: it printed no defects and exited \
+0. Read places.problems() and topics._check_origins(). Loading the selected shelves \
+validates exactly one primary, an integer year between 1940 and the current year, a \
+non-empty one-line claim and an HTTPS source; problems() then requires every selected \
+topic to have an origin and every place id to resolve. An independent listing found \
+exactly 16 selected topics, each with one origin; 14 resolve to the-internet and the \
+two sourced historical papers resolve to MIT and SRI Menlo Park.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the stated four-part command at 70c585d with the project virtual environment and \
+a writable UV cache. Ruff check, Ruff format, the style guard and sink guard all \
+completed successfully; the full `not browser and not integration` pytest selection \
+then completed at 100% and exited 0. The first sandboxed attempt was inconclusive \
+because macOS denied unrelated loopback-socket and Docker tests; rerunning the same \
+criterion with those local permissions produced the passing result.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Ran the stated generator loop at 70c585d. build reported that game/vibe-map.html \
+matches src; regen_tree reported that outputs match vibemap/tech.py; gen_cookbook, \
+sync_template and sync_fork_source exited 0; gen_syllabus reported syllabus OK. The \
+loop exited 0, so every generated consumer named by the criterion matches its source.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+Opened all 15 distinct HTTPS links added for the 16 origins and the extra SRI location \
+citation. GitHub's commit API dates 390f110 to 30 June 2025 and its patch releases \
+hooks in 1.0.38. The Linux Foundation dates AGENTS.md's OpenAI release to August 2025. \
+Anthropic's dated pages support the 2023 9K-to-100K context expansion; 2025 Claude \
+Code preview, tools and $3/$15 token prices; 2024 MCP release; 2024 prompt guidance and \
+prompt-generator XML structure; 2025 Agent Skills and SKILL.md; 2025 parallel Research \
+subagents with their own contexts; and the 2024 workflow/agent distinction. ArXiv dates \
+Attention Is All You Need to 12 June 2017, names its authors and Transformer proposal, \
+with the linked paper giving the Google affiliations. Engelbart's October 1962 SRI \
+report states the successive-gains proposal, while the 1968 reference locates that \
+exact report at SRI in Menlo Park. MIT's 7 May 1975 Project MAC note names Saltzer, \
+Schroeder and their final manuscript. Gruber's 15 March 2004 post names Markdown's \
+readable plain-text syntax and HTML conversion. Every stored claim is a bounded \
+publication or announcement milestone supported by its page; none asserts invention \
+or borrows a present company address.
+"""

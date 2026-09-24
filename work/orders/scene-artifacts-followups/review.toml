@@ -1,0 +1,95 @@
+# A review of one order, by someone who did not build it.
+v = 1
+order = "scene-artifacts-followups"
+by = "reviewer-scene-artifacts-followups-r1"
+# The commit that was read.
+reviewed = "fbda8ed0a66bc4eaa202090dcd79cac930cfec5f"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Delta review: round 2 accepted 19b4d06 with every new test seen failing when its fix was \
+taken out. Since then git diff 19b4d06 fbda8ed on src/game/16-artifacts.js, \
+src/game/60-vault.js, tests/test_game_hunt_f.py and vibemap/data/campaign.json is empty: \
+the merge of origin/main (33e4dc7, parents f9a66fb and d2025a0) left the order's own files \
+as they were, and only the three goldens, order.toml (owns) and findings.md moved. I ran c1 \
+myself at fbda8ed after slot-wait (load 2.8): exit 0, photographs 26.9 s desktop, 26.0 s \
+android, 10.8 s iphone. CI run 35954588426 at fbda8ed: smoke shard success, 133 passed, \
+the photographs 206.4 s android and 188.0 s desktop against the old 354 and 316. That run \
+was a slow runner (the shard took 66 min, hunt B tests 65 to 96 s each), so the ratio there \
+is about 0.6 rather than round 2's half; the A/B on one machine in round 2 still stands."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+At fbda8ed: ruff check and format clean, checks.py style OK, checks.py sinks exit 0, the \
+non-browser battery all dots with no failure. CI lint job at fbda8ed is green on every step \
+but the last, 'work orders are readable, reviewed and inside their files', which waits on \
+this file. No em-dash in the diff (style check)."""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+All six generators --check exit 0 at fbda8ed (build OK, tree OK, cookbook OK, syllabus OK, \
+sync_template 0, sync_fork_source 0). The diff against origin/main names none of the \
+frozen files (src/body.html, src/style.css, src/game/85-settings.js, src/galaxy/)."""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+The substance is round 2's ruling at 19b4d06 (eight hunt F lows and the two hunt B \
+hand-ons, each fixed with a test or rejected with checked evidence); nothing it rests on \
+changed. The new part is the goldens, which I checked myself. owns lists \
+tests/golden/campus.png, winter.png and prod.png; tests/ is shared in teams.toml, so no \
+cross is needed for them. desert.png has the same blob at d2025a0 and fbda8ed. I extracted \
+campus, winter and prod at d2025a0 and fbda8ed and diffed them pixel by pixel, painting \
+every differing pixel red: campus 2407 pixels, winter 441, prod 579, and every one lies on \
+an artifact ring line (campus: the rings on finished slabs, the fountain, the bench, the \
+lighthouse, the windmill and the ring round the mountain's foot; winter: three rings, round \
+the windmill, the bookshelf and the dark box; prod: three rings on the dark slabs; the lava and \
+everything else identical). Golden tests after slot-wait: tests/test_game_experience.py -k \
+looks_the_way exit 0, four dots; campus, winter and prod mean 0.0000 worst 0.000, desert \
+mean 0.0010 worst 0.063. The same live shots against main's old goldens, through the \
+test's own _regions and _distance: campus 0.0123/0.114, winter 0.0031/0.136, prod \
+0.0040/0.129, all over the 0.002/0.1 tolerance, so the re-record was needed and the \
+builder's numbers are right. The CI smoke shard, which runs test_game_experience.py on \
+Linux, passed at fbda8ed, so the Mac-recorded pictures hold there. Screenshots looked at, \
+from my own c1 run: fountain desktop (walker inside the whole ring, 'Inspect the fountain' \
+up), sheet android (the cafe transcript whole, no sideways scroll), mountain iphone and \
+desktop (the sheet wraps cleanly, six layers and the Rolinda question whole)."""
+
+[[findings]]
+severity = "low"
+file = "work/orders/scene-artifacts-followups/signoff-panels.toml"
+text = """
+Both sign-offs have lapsed: panels read 38ad2d3 and content read 804b983, and order.toml \
+(owns) and the three goldens changed after them. work.acceptance(run=False) says so for \
+signoff-content.toml and signoff-panels.toml. Their files (60-vault.js, campaign.json) are \
+byte for byte what they signed, so it is a re-stamp of reviewed for each manager, not a \
+new look; work-accept stops until then."""
+
+[[findings]]
+severity = "low"
+file = "tests/golden/desert.png"
+text = """
+desert is left as recorded and sits at mean 0.0010, worst 0.063 against it on this Mac \
+(the builder puts that on the rings too): half the mean tolerance and most of the worst, \
+where the test's own table says an unchanged tree on a Mac differs by no pixel. The next small honest change to the desert fails the guard and looks like it did \
+all of it. Recording desert again too would have reset its headroom; fine to do with the \
+next desert change."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_game_hunt_f.py"
+text = """
+Carried from round 2: the slope rule counts a face only when its lowest corner reaches \
+the ring's height, which a subdivided hillside would slip past; and the smoke shard is \
+still the long pole on CI (66 min on the run at fbda8ed, 6.5 min of it these \
+photographs). Also still handed on: the mountain's footprint so UNDER_A_SLOPE can drop it, \
+the sinks register, props.artR, 'just dimmed' in 86-interests.js, and the .wl and ligature \
+rules for src/style.css once it thaws."""

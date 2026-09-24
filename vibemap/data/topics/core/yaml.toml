@@ -14,8 +14,8 @@ unlocks = ["ci", "docker"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened. The spec was
-# written by three people on a site with no address; the echo is the workflow
-# file a learner meets YAML in.
+# written by three people on a site with no address. Actions is also an online
+# milestone, so its history remains in sources without a duplicate place.
 
 [[origins]]
 place = "the-internet"
@@ -23,12 +23,6 @@ year = 2004
 what = "Oren Ben-Kiki, Clark Evans and Brian Ingerson publish the YAML 1.0 specification, a final draft dated 29 January 2004."
 source = "https://yaml.org/spec/1.0/"
 primary = true
-
-[[origins]]
-place = "github-sf"
-year = 2019
-what = "GitHub announces a new syntax for expressing Actions workflows, based on YAML, in the post that says Actions now supports CI/CD."
-source = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
 
 [[sources]]
 label = "GitHub Actions workflow syntax"
@@ -45,6 +39,10 @@ url = "https://yaml.org/spec/1.0/"
 [[sources]]
 label = "Source: YAML 1.2.2 specification (revision 2021-10-01)"
 url = "https://yaml.org/spec/1.2.2/"
+
+[[sources]]
+label = "Source: GitHub Actions adds YAML workflows (August 2019)"
+url = "https://github.blog/news-insights/product-news/github-actions-now-supports-ci-cd/"
 
 [[sources]]
 label = "Source: GitHub changelog, Actions generally available (November 2019)"

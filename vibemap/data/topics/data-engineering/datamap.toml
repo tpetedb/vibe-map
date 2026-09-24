@@ -18,6 +18,23 @@ try_it = '''Write the three words on a page and put every data tool your employe
 unlocks = []
 prerequisites = ["dlt", "dbt", "airflow"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The post names no town; Airbnb's About page as archived on 2 June 2015, in the
+# sources, says it is based in San Francisco.
+
+[[origins]]
+place = "airbnb-sf"
+year = 2015
+what = "Airbnb publishes its Airflow workflow-management announcement on 2 June 2015."
+source = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+primary = true
+
+[[sources]]
+label = "Source: Airbnb Engineering, workflow-management announcement"
+url = "https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON"
+checked = 2026-09-22
+
 [[sources]]
 label = "dlt, the introduction: what ingestion is for"
 url = "https://dlthub.com/docs/intro"
@@ -37,6 +54,11 @@ checked = 2026-09-18
 label = "Dagster, the documentation home"
 url = "https://docs.dagster.io/"
 checked = 2026-09-18
+
+[[sources]]
+label = "Source: Airbnb, About us, as archived on 2 June 2015 (based in San Francisco)"
+url = "https://web.archive.org/web/20150602181934/https://www.airbnb.com/about/about-us"
+checked = 2026-09-24
 
 # The hands-on: a folder in the workspace and one offline check.
 [hands_on]

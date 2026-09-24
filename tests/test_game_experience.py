@@ -284,18 +284,29 @@ def _island(game: GamePage, **over: Any) -> GamePage:
     return game
 
 
-def test_the_islands_are_registered_under_the_contract(game: GamePage) -> None:
-    """One experience, under its id, with the seven things core may ask for."""
+def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
+    """Both experiences answer the seven questions core may ask."""
     _island(game)
     shape = game.page.evaluate(
         "() => { const x = window.__experiences();"
-        " return {ids: Object.keys(x),"
-        " types: Object.keys(x.islands).map(k => k + ':' + typeof x.islands[k])} }"
+        " return {ids: Object.keys(x), types: Object.fromEntries("
+        " Object.entries(x).map(([id,view]) => [id, Object.keys(view).map("
+        " k => k + ':' + typeof view[k])]))} }"
     )
-    assert shape["ids"] == ["islands"], shape
-    for name in CONTRACT:
-        kind = "string" if name == "name" else "function"
-        assert f"{name}:{kind}" in shape["types"], (name, shape["types"])
+    assert shape["ids"] == ["islands", "galaxy"], shape
+    expected = ["name:string"] + [f"{name}:function" for name in CONTRACT[1:]]
+    assert shape["types"]["islands"] == expected
+    assert shape["types"]["galaxy"] == [
+        "name:string",
+        "fallback:function",
+        "refresh:function",
+        "layout:function",
+        "world:function",
+        "backLabel:string",
+        "presentation:object",
+        "guidance:function",
+        *expected[1:],
+    ]
     game.assert_clean()
 
 
@@ -448,7 +459,11 @@ def test_a_new_destination_replaces_a_compound_trip(game: GamePage) -> None:
         "() => window.__debug().world === 'desert' && !window.__debug().flying",
         timeout=WAIT_MS,
     )
-    assert game.page.evaluate("window.__experience().where()") is None
+    # where() may report an artifact near the landing point. A replaced stop
+    # must not open its lesson after the flight finishes.
+    game.frames(3)
+    assert game.page.evaluate("window.__debug().world") == "desert"
+    assert game.page.locator("#sheet.on").count() == 0
     game.assert_clean()
 
 
@@ -611,3 +626,27 @@ def test_a_region_that_moves_by_less_than_a_level_is_measured(tmp_path: Path) ->
     assert worst == pytest.approx(0.4, abs=1e-4)
     assert mean == pytest.approx(0.4 / (GRID[0] * GRID[1]), abs=1e-6)
     assert worst > WORST_TOL
+
+
+def test_galaxy_round_trip_preserves_the_zoomed_out_island(game: GamePage) -> None:
+    game.page.add_init_script(SEED)
+    game.page.add_init_script("Math.random=()=>0.5")
+    game.goto(state=_golden_state("campus"))
+    game.page.set_viewport_size(VIEW)
+    game.resume()
+    game.page.wait_for_function(AT_REST, timeout=WAIT_MS)
+    original_fog = game.page.evaluate("window.__scene().fog.far")
+    hide = game.page.add_style_tag(content=HIDE_OVERLAYS)
+    before = game.screenshot("galaxy_roundtrip_before", clip={"x": 0, "y": 0, **VIEW})
+    hide.evaluate("el=>el.remove()")
+    game.hud_action('#hud button[aria-label="Settings"]')
+    game.page.locator("#set-experience").select_option("galaxy")
+    game.page.locator("#set-experience").select_option("islands")
+    game.page.locator("#sheet > .x").click()
+    game.page.wait_for_function(AT_REST, timeout=WAIT_MS)
+    assert game.page.evaluate("window.__scene().fog.far") == original_fog
+    game.page.add_style_tag(content=HIDE_OVERLAYS)
+    after = game.screenshot("galaxy_roundtrip_after", clip={"x": 0, "y": 0, **VIEW})
+    mean, worst = _distance(_regions(before), _regions(after))
+    assert mean <= MEAN_TOL and worst <= WORST_TOL, (mean, worst)
+    game.assert_clean()

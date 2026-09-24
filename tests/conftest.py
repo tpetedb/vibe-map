@@ -23,6 +23,7 @@ from typing import Any
 
 import pytest
 from playwright.sync_api import Browser, Page, Playwright, sync_playwright
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import TimeoutError as PageTimeout
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,17 +40,14 @@ WAIT_MS = 20_000
 
 # How long a picture may take, which is not the usual budget.
 #
-# A capture is paid for in frames like every other wait here: the compositor
-# has to produce one, and under a software renderer that costs what everything
-# else costs. Measured on the heaviest island at the Pixel 7 profile, a
-# picture costs five to six frames: on a laptop drawing two to four a second,
-# 1.5 s to 3.1 s at one image pixel per CSS pixel and 2.3 s to 3.3 s at the
-# device scale it used to be taken at. A runner drawing a fifth of a frame a
-# second therefore needs thirty seconds, which is all Playwright gives a
-# screenshot by default and is what ran out twice in one job (run 35573982127,
-# the Android leg of the zoom budget test, at its first level). Doubling it
-# means a starved page gives up at the landing beside it, which says more,
-# before it gives up here.
+# A capture waits for the compositor to hand over a frame. Measured on one
+# laptop, on the heaviest island at the Pixel 7 profile, a picture cost five
+# to six frames, 1.5 s to 3.1 s. On CI, Playwright's default thirty seconds ran
+# out twice in one job (run 35573982127, the Android leg of the zoom budget
+# test, at its first level) after the landing wait beside it had passed, and
+# why is not known. The budget is doubled, and the wait around the capture
+# says which picture it was and how many frames the page drew, so the next
+# occurrence can be read.
 SHOT_MS = 60_000
 
 # Software WebGL for headless Chromium. Without ANGLE on SwiftShader the
@@ -291,14 +289,22 @@ class _NamedWait:
 
     def __enter__(self) -> _NamedWait:
         if self.frame is None:
-            self.frame = self.game.frame_count()
+            self.frame = self.game.frame_count_if_answering()
         return self
 
     def __exit__(self, kind: Any, error: BaseException | None, tb: Any) -> bool:
         if error is None or not isinstance(error, PageTimeout):
             return False
-        drawn = self.game.frame_count() - (self.frame or 0)
         seconds = self.budget / 1000
+        now = self.game.frame_count_if_answering()
+        if now is None or self.frame is None:
+            pace = "the page could not be asked how many frames it drew"
+        else:
+            drawn = now - self.frame
+            pace = (
+                f"the page drew {drawn} frames while waiting, "
+                f"{drawn / seconds:.1f} a second"
+            )
         said = ""
         if self.detail is not None:
             try:
@@ -308,8 +314,7 @@ class _NamedWait:
                 # out is a poor moment to raise a second failure.
                 said = ""
         raise AssertionError(
-            f"{self.what} did not happen inside {seconds:.0f} s; the page drew "
-            f"{drawn} frames while waiting, {drawn / seconds:.1f} a second{said}"
+            f"{self.what} did not happen inside {seconds:.0f} s; {pace}{said}"
         ) from error
 
 
@@ -393,17 +398,28 @@ class GamePage:
         return self
 
     def frame_count(self) -> int:
-        """How many frames the loop has drawn, or zero on a page without one."""
-        try:
-            return int(
-                self.page.evaluate(
-                    "() => (window.__debug ? window.__debug().frame : 0) || 0"
-                )
+        """How many frames the loop has drawn, or zero on a page without one.
+
+        A page that cannot answer raises: a count read as zero when it could
+        not be read makes a wait for more frames pass at once.
+        """
+        return int(
+            self.page.evaluate(
+                "() => (window.__debug ? window.__debug().frame : 0) || 0"
             )
-        except Exception:
-            # A page that is closing or navigating answers nothing, and a wait
-            # that ran out is a poor moment to raise a second failure.
-            return 0
+        )
+
+    def frame_count_if_answering(self) -> int | None:
+        """The count for a failure message, or None from a page that is gone.
+
+        A wait that ran out is a poor moment to raise a second failure, so a
+        page that is closing or navigating says it could not be asked. Only
+        the browser's own errors are taken for that; a bug of ours still fails.
+        """
+        try:
+            return self.frame_count()
+        except PlaywrightError:
+            return None
 
     def frames(self, n: int = 3) -> None:
         """Wait for the frame loop to draw n more frames.
@@ -749,15 +765,19 @@ def game_context(browser: Browser, **options: Any) -> Iterator[Page]:
 
 
 @contextmanager
-def game_page(browser: Browser, server: str, **options: Any) -> Iterator[GamePage]:
+def game_page(
+    browser: Browser, server: str, *, url: str | None = None, **options: Any
+) -> Iterator[GamePage]:
     """The one page every browser fixture hands out, whatever its size.
 
     One helper, so the three rules hold for every fixture rather than for
     whichever one was taught them, and a test that wants its own size or its
-    own browser opens it here rather than building a context by hand.
+    own browser opens it here rather than building a context by hand. `url`
+    is for the game at another address, such as the built file opened as a
+    file URL; everything else goes to the context.
     """
     with game_context(browser, **options) as page:
-        gp = GamePage(page=page, url=server + GAME_PATH)
+        gp = GamePage(page=page, url=url or server + GAME_PATH)
         _attach_error_collectors(page, gp.errors)
         yield gp
 

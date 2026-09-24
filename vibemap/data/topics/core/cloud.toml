@@ -12,6 +12,30 @@ try_it = "Deploy the game to GitHub Pages (free). Later: fly launch on the FastA
 
 unlocks = ["kubernetes", "cost"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The EC2 announcement names no town; the S3 release of March 2006 in the
+# sources is datelined Seattle, which places Amazon Web Services there that year.
+
+[[origins]]
+place = "amazon-seattle"
+year = 2006
+what = "Amazon announces the beta of Amazon Elastic Compute Cloud, a web service that provides resizable compute capacity in the cloud."
+source = "https://aws.amazon.com/about-aws/whats-new/2006/08/24/announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/"
+primary = true
+
+[[origins]]
+place = "the-cloud"
+year = 2011
+what = "NIST publishes SP 800-145, The NIST Definition of Cloud Computing, by Peter Mell and Tim Grance."
+source = "https://csrc.nist.gov/pubs/sp/800/145/final"
+
+[[origins]]
+place = "a-data-centre"
+year = 2006
+what = "Google opens its first data centre in The Dalles, Oregon, in 2006."
+source = "https://www.datacenters.google/locations/oregon/"
+
 [[sources]]
 label = "AWS getting started"
 url = "https://aws.amazon.com/getting-started/"
@@ -43,3 +67,10 @@ url = "https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availab
 [[sources]]
 label = "Source: AWS, Introducing AWS Lambda (November 2014)"
 url = "https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/"
+[[sources]]
+label = "Source: Google, The Dalles data centre milestones"
+url = "https://www.datacenters.google/locations/oregon/"
+
+[[sources]]
+label = "Source: Amazon press release, Amazon Web Services launches S3, datelined Seattle (March 2006)"
+url = "https://press.aboutamazon.com/2006/3/amazon-web-services-launches"

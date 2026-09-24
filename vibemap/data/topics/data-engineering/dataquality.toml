@@ -18,6 +18,18 @@ try_it = '''Add a not_null test to a column you know has a null in it, run dbt t
 unlocks = ["medallion", "datamap"]
 prerequisites = ["dbt", "schemas"]
 
+[[origins]]
+place = "the-internet"
+year = 2021
+what = "The dbt Core 1.0 online release announcement in 2021 renames schema tests to generic tests and data tests to singular tests."
+source = "https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180"
+primary = true
+
+[[sources]]
+label = "Source: dbt team, Core 1.0 test terminology"
+url = "https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180"
+checked = 2026-09-22
+
 [[sources]]
 label = "dbt, data tests: generic and singular"
 url = "https://docs.getdbt.com/docs/build/data-tests"

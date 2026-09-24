@@ -1,0 +1,45 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "qol-5-continuity-photo"
+team = "scene"
+by = "manager-scene"
+reviewed = "b8e8a29165b2e011b5ca2fd7ff0b673801d50596"
+verdict = "accept"
+note = """
+Accepted as owner of src/game/33-photo.js (matches src/game/3*.js), the only \
+scene path this order touches. git diff origin/main...HEAD --stat confirms no \
+other scene path moved: src/galaxy/, src/config/ and every other src/game/1*, \
+2*, 3*.js file are untouched.
+
+What I checked, at b8e8a29:
+- 33-photo.js reuses scene's own seams rather than re-spelling them: CAM, \
+zoomTo/zoomHud (23-camera.js), flight (22-archipelago.js), renderer/scene/camera \
+and reducedMotion/fx (00-state.js). It defines no name that collides with an \
+existing helper (checked stopCount, dashIsland, playerLabel, reducedMotion, fx, \
+inField, toast, $ all stay defined once, in their existing files).
+- DOM is built with createElement/textContent throughout, no raw HTML; the sink \
+guard (tools/checks.py sinks) and ruff/style pass per c2 and the reviewer's \
+evidence.
+- 89-dashboard.js:283 reads photoOn() defensively (typeof check), so panels' \
+break-card guard degrades safely if this file is ever absent; nothing of \
+scene's depends on panels or state code added here.
+- The reviewer's round-2 low on 33-photo.js is real and is scene's to carry: \
+a zoom made in photo mode lands in S.settings.zoom after Done (one Zoom-out in \
+photo mode leaves Settings at the extra step), which contradicts the file's own \
+comment that leaving photo mode returns to the level the player chose. It is \
+recorded, not silently dropped, but I want it fixed rather than left open \
+indefinitely.
+- Other round-2 lows on this file (Space taking a photo while focus sits on \
+Take photo; the keyboard hint shown on touch profiles; no camera icon; the \
+band under the island) are cosmetic and can wait for a follow-up, per the \
+builder's note.
+
+What I want, filed on the order's issue: a follow-up on 33-photo.js fixes the \
+zoom pass-through (restore the zoom level active before openPhoto() on Done/ \
+Escape/panel-interrupt, instead of leaving the one-step-out zoom in Settings), \
+with a test that zooms in photo mode, closes it, and asserts S.settings.zoom is \
+unchanged. Scene has nothing else to do after this lands; no scene file calls \
+into 33-photo.js today.
+"""

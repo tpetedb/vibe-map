@@ -12,6 +12,16 @@ try_it = "Run `uv run vibe vault feature --all`, open the vault in Obsidian, ope
 
 unlocks = ["vault"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+
+[[origins]]
+place = "obsidian"
+year = 2022
+what = "Obsidian 1.0.0 for desktop is released on 13 October 2022."
+source = "https://obsidian.md/changelog/2022-10-13-desktop-v1.0.0/"
+primary = true
+
 [[sources]]
 label = "Obsidian Help"
 url = "https://help.obsidian.md/"

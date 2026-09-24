@@ -12,6 +12,36 @@ try_it = "Ask Claude: 'wrap workspace/sql/per_player.sql in a FastAPI endpoint /
 
 unlocks = ["mcp", "docker"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The gRPC post names no town; Google's Q1 2015 results release in the sources
+# is datelined Mountain View.
+
+[[origins]]
+place = "uc-irvine"
+year = 2000
+what = "In 2000 Roy Thomas Fielding's doctoral dissertation at the University of California, Irvine, introduces the Representational State Transfer (REST) architectural style."
+source = "https://ics.uci.edu/~fielding/pubs/dissertation/abstract.htm"
+primary = true
+
+[[origins]]
+place = "a-standards-body"
+year = 2000
+what = "On 8 May 2000 W3C publishes SOAP 1.1 online as a Note for discussion, describing an XML protocol for distributed information exchange."
+source = "https://www.w3.org/TR/2000/NOTE-SOAP-20000508/"
+
+[[origins]]
+place = "amazon-seattle"
+year = 2002
+what = "On 16 July 2002 Amazon.com launches the first version of Amazon.com Web Services, which developers reach through XML and SOAP."
+source = "https://press.aboutamazon.com/2002/7/amazon-com-launches-web-services-developers-can-now-incorporate-amazon-com-content-and-features-into-their-own-web-sites-extends-welcome-mat-for-developers"
+
+[[origins]]
+place = "google-mountain-view"
+year = 2015
+what = "On 26 February 2015 Google announces the open-source release of gRPC, an HTTP/2 framework for remote procedure calls, APIs and microservices."
+source = "https://developers.googleblog.com/introducing-grpc-a-new-open-source-http2-rpc-framework/"
+
 [[sources]]
 label = "FastAPI tutorial"
 url = "https://fastapi.tiangolo.com/tutorial/"
@@ -35,3 +65,7 @@ url = "https://graphql.org/blog/2015-09-14-graphql/"
 [[sources]]
 label = "Source: gRPC 1.0 announcement (August 2016)"
 url = "https://grpc.io/blog/ga-announcement/"
+
+[[sources]]
+label = "Source: SEC EDGAR, Google Q1 2015 results, datelined Mountain View (April 2015)"
+url = "https://www.sec.gov/Archives/edgar/data/0001288776/000128877615000021/googq12015exhibit991.htm"

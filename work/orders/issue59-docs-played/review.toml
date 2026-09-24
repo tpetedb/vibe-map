@@ -1,0 +1,40 @@
+v = 1
+order = "issue59-docs-played"
+by = "reviewer-issue59-docs-codex"
+reviewed = "31c09f291d5d1e68ddfcf4e2a068dcab63bf4f91"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "I ran tests/test_issue59_docs.py (3 passed) and read docs/BRIEF.md sections 3 and 5. Cycle 3 maps X0-X9 to issues and delivered PRs, names 0.10.0/0.11.0 and their tag results, and identifies the played-repo and owner social-preview follow-ups. The old gaps no longer say played deliverables are missing."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "I opened all three guides and their README links and compared controls, state and accessibility claims with src/game/18-avatar.js, 20-worlds.js, 22-archipelago.js, 89-dashboard.js, vibemap/state.py and vibemap/cli.py. The avatar guide now names all four Backpack tabs, with Notifications browser-only; bridge opening on either adjoining island and the dashboard command match source. Source and test paths exist, and the guides link rather than repeat generated references."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "I ran the full tests/test_regen_played.py file (20 passed) and inspected the source diff. A failed commit preserves the target .git and its refs; extra hostile fetch or push URLs are rejected and all remote URLs rechecked after copying. I compared tracked filenames in the real played checkout against disposable prepare_stage output: all 59 omitted paths are under workspace/, vault/ or docs/media/. install() now retains those tracked paths, including scores.csv, and refuses a differing staged scores file before mutation. Tests cover the clean target, learner-file preservation, score conflict, rollback, no-op and explicit push using temporary bare repos."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "I read docs/MAINTAINERS.md at 31c09f2. It gives exact dry-run, regenerate, all-path name-status diff, focused content diff and explicit push commands. It names uv sync, built game, reviewed media, git and a clean played checkout; explains preservation of omitted workspace/vault/media paths, refusal of a differing staged scores.csv, and that overlapping files may change. It requires review of every added, changed or deleted path before the explicit push."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "I independently ran tests/test_media.py (8 passed) on the previously reviewed source, read _bridge_journey and its test, and opened committed GIF frames 0, 8, 15, 20 and 26. They show campus approach, the walker on the bridge deck, the winter workstream with Mark as done, and the winter HUD after claim. The test observes onBridge frames and doneW.winter[1] and rejects the old unmarked signpost GIF. Media source, test and GIF are byte-unchanged at this reviewed commit, so I did not repeat the two-minute browser run."
+
+[[criteria]]
+id = "c6"
+verdict = "pass"
+evidence = "At this source head I ran Ruff check and format on changed Python/tests, tools/checks.py style, the full tests/test_repo.py file (45 passed), and git diff --check origin/main...HEAD; all exited 0. I checked new README and guide relative links resolve. The named command checks style, not link reachability, so the link conclusion is based on separate path inspection."
+
+[[criteria]]
+id = "c7"
+verdict = "pass"
+evidence = "I read the three guides against the current source and inspected five frames of the committed 27-frame GIF, including the bridge, claim button and post-claim winter state. docs/BRIEF.md and docs/MAINTAINERS.md explicitly leave uploading docs/media/hero.png as the repository owner's GitHub Settings action after landing. No public played-repo update is claimed by this order review."

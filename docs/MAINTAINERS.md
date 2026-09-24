@@ -75,6 +75,44 @@ Several agents build at once, so a task is a work order and not a prompt: `work/
 - Branches are deleted automatically after their pull request merges.
 - Secret scanning with push protection and Dependabot security updates are on. The played instance `tpetedb/vibe-map-played` refuses force pushes and deletion of `main` but takes direct pushes, because its regeneration script writes to it.
 
+### Regenerate the played camp
+
+The public played camp is a separate repository. Regeneration starts from a
+clean local checkout and builds the replacement in a temporary directory. If
+copying or committing fails, the tool restores the original clean commit.
+
+Prerequisites are this product checkout with `uv sync` complete, its built
+`game/vibe-map.html`, reviewed `docs/media/README.md`, `gameplay.gif` and
+`hero.png`, git, and a clean local checkout of `tpetedb/vibe-map-played` on the
+branch to update. The tool checks the target's fetch and push URLs before it
+can replace any file or push; a different camp or product checkout is refused.
+
+```bash
+uv run python tools/regen_played.py --camp ../vibe-map-played --dry-run
+uv run python tools/regen_played.py --camp ../vibe-map-played
+git -C ../vibe-map-played show --stat --oneline HEAD
+git -C ../vibe-map-played diff --name-status HEAD^ HEAD
+git -C ../vibe-map-played diff HEAD^ HEAD -- .vibe/state.json config workspace vault docs/media game
+uv run python tools/regen_played.py --camp ../vibe-map-played --push
+```
+
+The first command checks the target and required product inputs and changes
+nothing. The second creates a fresh camp from the current package, uses
+`tools/script_camp.py` for every learner deliverable, writes all thirty-two
+stops plus the items, achievements and wearables to the committed demo state,
+and copies the current built game and reviewed media. A missing built game or
+required media file stops before the played checkout changes. It preserves the
+target branch and origin and makes one local commit. Tracked files under
+`workspace/`, `vault/` and `docs/media/` that the fresh stage omits remain in
+the target, including `workspace/data/scores.csv`. If the target tracks scores,
+a differing staged copy stops regeneration before mutation. Files present in
+both can change. Inspect every added, changed or deleted path in the local
+commit before pushing. Review the state, journey configuration, learner work,
+vault, pictures and built game. A source fingerprint in
+`.vibe/played-source.json` keeps a repeat run on the same product from creating
+another commit. The final command pushes only that clean reviewed commit; it
+does not regenerate it. Only `--push` contacts the remote.
+
 An agent that hits one of these rules reports it; it never works around it.
 
 ## Catching up with main, and the files that conflict

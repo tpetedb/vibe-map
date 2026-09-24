@@ -1,4 +1,0 @@
-- Where a topic happened is data: one file per place under `vibemap/data/places/`, `[[origins]]` on a topic, and `vibemap/places.py` to load both and refuse what it cannot vouch for.
-- Every place the two packs need is seeded with a source that was opened, and the nine topics of the shell shelf are sourced as the worked example.
-- `vibe places` lists the places by era with the topics that come from each, `vibe places <id>` is one of them, and `vibe topic <id>` shows its origins.
-- The build injects the same facts as `PLACES`, for the Galaxy view to come (ADR 0015, `docs/GALAXY.md`).

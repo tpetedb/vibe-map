@@ -18,6 +18,18 @@ try_it = '''uv run --with dbt-duckdb dbt --version and read which adapter you go
 unlocks = ["dataquality", "medallion", "airflow"]
 prerequisites = ["duckdblab", "sql"]
 
+[[origins]]
+place = "the-internet"
+year = 2021
+what = "The dbt team announces online that dbt Core 1.0.0 is available on 3 December 2021."
+source = "https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180"
+primary = true
+
+[[sources]]
+label = "Source: dbt team, Core 1.0 release announcement"
+url = "https://discourse.getdbt.com/t/release-dbt-core-v1-0-w-e-b-du-bois/3180"
+checked = 2026-09-22
+
 [[sources]]
 label = "dbt, building models"
 url = "https://docs.getdbt.com/docs/build/models"

@@ -1,0 +1,84 @@
+# Round 3: a delta review. Round 2 (below) accepted d55e7c8 at commit ed5e739.
+# Since then the manager touched only CHANGELOG.md, two lines (git diff
+# ed5e739 33252df): the Galaxy line now carries the Grow-mode caveat (Settings,
+# Vault = Grow with no topic done can leave the first lesson locked until
+# 0.12.1; Vault = Full shows it, issue #209) and the safe-copy line now says
+# what tests/test_safe_copy.py actually checks (an unguarded instruction to
+# approve a permission prompt) instead of the round-2 wording. Nothing else
+# changed; every other file is byte-identical to d55e7c8.
+v = 1
+order = "release-0-12-0"
+by = "reviewer-release-0-12-0-r3"
+reviewed = "33252df884807fdc9268343a778acb7ca217e9eb"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Round 3: reran on 33252df. `uv run pytest -q tests/test_changelog.py tests/test_build.py tests/test_repo.py` is still all green (same tests, same tree except the two CHANGELOG.md lines, neither of which either file reads). Round 2's evidence below still stands.
+
+Round 2 (on d55e7c8): tests/test_changelog.py, test_build.py and test_repo.py all pass. The command is the sentence: those are the changelog, build and repository guards. The three new tests in test_changelog.py guard the round-1 findings, and I made them fail in a scratch copy (git archive of HEAD under /tmp): putting back "walking up to a pavilion opens that topic's lesson" and "The map is one you can use: tap a plot to walk there" fails four tests (the walk line, the Open nearby lesson and Bigger controls, the map-once test); renaming the button in src/body.html to "Open the nearby lesson" fails two. Unreleased still carries no heading.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Round 3: reran on 33252df, same result: prints `0.12.0 []`, exit 0. The two edited lines are inside the already-released 0.12.0 section, between its `## [0.12.0] - 2026-09-24` heading and the `### Changed` heading that follows the first one and the `### Fixed` heading that follows the second; neither the heading nor the compare link moved, and `changelog.d/` is still empty of everything but README.md.
+
+Round 2 (on d55e7c8): prints `0.12.0 []`, exit 0. The branch is current: its merge base with origin/main is origin/main itself (1c173f4, car L #208 merged), and the 39 fragments it deletes are exactly the 39 that `git ls-tree origin/main changelog.d/` lists besides README.md. The version agrees wherever a tool reads it, beyond what c2 checks: uv.lock has vibe-map 0.12.0 and `uv lock --check` resolves clean, the built game has `const CONFIG={"version": "0.12.0"`, and `uv run vibe --version` prints `vibe, version 0.12.0`. `git grep 0.11.0` outside CHANGELOG.md and work/ finds only history that should keep it (docs/BRIEF.md, tests/test_issue59_docs.py). Diffing CHANGELOG.md against origin/main removes one line only, the old Unreleased compare link, so no released section was touched; `[0.12.0]` compares v0.11.0...v0.12.0.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Round 3: reran the whole chain on 33252df: `uv run ruff check -q .`, `uv run ruff format --check -q .`, `python3 tools/checks.py style` (prints "style OK: no em dashes, no emoji"), `python3 tools/checks.py sinks`, and `uv run pytest -q -m 'not browser and not integration'`, all green. CHANGELOG.md is not a lint, format or sink target and carries no test of its own, so the only thing this run could catch that round 2 did not is the style check, which it still passes: neither new clause uses an em or en dash.
+
+Round 2 (on d55e7c8): ran the whole chain, all green. Nothing under src/, vibemap/ or tools/ changed, so the browser battery is CI's (PR #212: the browser shards are queued; the lint job is red only on its last step, "work orders are readable, reviewed and inside their files", which waits for this review).
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Round 3: reran the loop on 33252df: build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus all still pass `--check`. CHANGELOG.md feeds none of these generators.
+
+Round 2 (on d55e7c8): ran the loop, all pass `--check`. The one generated change the order makes is the version in game/vibe-map.html, and round 1 showed build --check catches it left at 0.11.0.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = """
+Round 3, on the two edited lines only (the rest of the section is unchanged from round 2 and its ruling stands):
+
+Added, Galaxy line 1, new parenthetical: "(with Settings, Vault set to Grow and no topic done, the first lesson can stay locked until 0.12.1; Vault set to Full shows it)". True of 33252df's own code, not of a later fix: `vaultMode()` in src/game/60-vault.js reads Settings > vault (falling back to config/camp.toml's [vault].mode, default "full"); `computeUnlocked()` returns every note when the mode is not "grow", and in "grow" mode starts from ALWAYS_NOTES plus, for shelves the player wants, only each shelf's depth-1 topics (`if(typeof TREE!=="undefined"&&!interestsAll())... t.d===1`), so with no stop claimed yet and interests not narrowed (`interestsAll()`), no topic note is unlocked. `galaxyTopic` -> `openTopic` -> `openNote` -> `vrender` calls `noteLocked(id)`, which for an unlocked-set miss renders the card "Not unlocked yet: finish the stop, meet the mentor or inspect the artifact that leads here." instead of the note. That is exactly the "can stay locked" the line claims (hedged, not "always locked", since a player whose interests include that shelf gets the depth-1 head start and would see it). Vault = Full skips computeUnlocked's grow branch entirely, so "shows it" is unconditionally true there. The fix that removes the caveat exists as a separate, unmerged branch (`claude/galaxy-grow-first-lesson`, commit 7654b6a, "so Grow opens the next topic instead of a lock (#209)"); `git merge-base --is-ancestor 7654b6a HEAD` and `...origin/main` both fail, so it is not part of 33252df or main, and "until 0.12.1" correctly places the fix in a future release rather than claiming it here.
+
+Changed, safe-copy line, reworded from "a test keeps any learner-facing copy from asking for an approval again" to "a test checks the learner-facing text it scans for an unguarded instruction to approve a permission prompt". Read tests/test_safe_copy.py in full: `_learner_files()` walks game/vibe-map.html, docs/SYLLABUS.md, docs/site/syllabus.html and every src/ and vibemap/data/ text file (skipping vendor/pets); `unsafe_sentences()` flags a permission-mentioning sentence only when it matches `_APPROVE` ("answer/say/click/press/type/reply/hit yes/y/allow/accept", or "approve/accept/allow it/them/the prompt/the request/everything") and is not preceded by a `_GUARDED` phrase ("before you", "do not", "never", "only after you", ...). The new wording is the more accurate of the two: it names the actual mechanism (an unguarded instruction to approve, not literally "any... asking for an approval") and matches `test_the_detector_catches_the_old_instruction_and_passes_the_new_one`, which is built to accept a guarded "ask Tom before you say yes" and reject an unguarded "answer yes". Reads a little dense but is plain, accurate prose, no em dash, and does not repeat anything else in Changed.
+
+Neither line collides with another sentence in the section (checked both against the rest of Added and Changed again in full); order, headings and the rest of the prose are untouched from round 2.
+
+Round 2's whole-section read, for the record:
+
+Read the section top to bottom as a learner, then against the fragments (git show origin/main:changelog.d/...) and main's code. Order: Added, Changed, Fixed, the Keep a Changelog order; no Deprecated, Removed or Security fragment existed. Galaxy leads Added in four lines (the journey, walking a place, the sourced origins, `vibe places`). No em or en dash in the section. Maintainer detail is one "For maintainers" line at the end of Changed.
+
+Round-1 findings, each dealt with: (medium) the walk line now says "walking up to a pavilion names its lesson, which Open nearby lesson or Enter opens"; true of src/galaxy/50-walk.js (galaxyWalkNear sets "Nearby: <topic>" and enables #galaxy-near; galaxyOpenNearby is its onclick and the Enter handler) and of src/body.html. (low) the map is said once: "The map grows with its Bigger button, or a long press on a phone, and every stop is a labelled button under it", with tapping a plot left to Walk me there; `mmBigBtn` in 32-minimap.js is labelled Bigger/Smaller. (low) "The islands stay the default, unchanged by the switch" no longer reads against the ring, marker and arrow lines.
+
+Spot checks against main, several of them lines from #183 and #208: 70 topics, all with origins, 97 origins, 39 places in use, `places.problems()` empty, Kubernetes at san-francisco 2014; Settings has Experience with Islands and Galaxy (85-settings.js), labels Buzz, Battery saver, Hurrying with "Tap to hurry"; the break card is BREAK_AFTER_S=50*60 with a ten-minute gap and "Keep going"/"Stop reminding me" buttons (89-dashboard.js); Photo mode has Take photo and Done and focus returns to the opener (33-photo.js); the Definition of done says "ask Tom before you say yes" in the built game and docs/SYLLABUS.md; the balloon demo is 0.0228 USD an hour and 16.42 USD a month in eu-west-1 (16-artifacts.js); the palette has Walk there and Shift with Enter (41-search.js); the Backpack's Notifications tab is in 18-avatar.js. Nothing is said twice and no two lines contradict each other. Fragments left out are process or test-only (fork-integration-contract only changed tests/test_config_levels.py; the gameplay recording; the pure model and planet kit), which the order asks to drop.
+"""
+
+[[findings]]
+severity = "low"
+file = "tests/test_changelog.py"
+text = """
+test_a_control_the_0_12_0_section_names_exists_in_the_game searches the whole text of every .js and .html under src/, comments included. In a scratch copy I renamed the minimap's "Bigger" label strings and the test stayed green, because a comment in src/game/32-minimap.js still says "the Bigger button". Matching quoted strings (or the built game's visible text) would make it prove the control exists rather than that the word does.
+"""
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = """
+0.12.0, Added, second Galaxy line: "not the last place picked on the map" means the Galaxy chart, while every other "map" in the section is the island minimap. "not the last place picked on the globe" would keep the two apart. Land as is.
+"""

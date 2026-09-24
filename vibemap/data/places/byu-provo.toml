@@ -1,0 +1,14 @@
+# Brigham Young University, Provo, Utah, US. NumPy was built here in 2005 while its
+# founder was a professor of Electrical and Computer Engineering (science.byu.edu).
+# Campus-level coordinates and a generic marker, not a building or a product.
+id = "byu-provo"
+name = "Brigham Young University, Provo"
+kind = "university"
+region = "us-west"
+era = "open-source"
+globe = "earth"
+lat = 40.2518
+lon = -111.6493
+look = "campus"
+landmark = "generic-marker"
+source = "https://www.byu.edu/about"

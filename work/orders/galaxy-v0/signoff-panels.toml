@@ -1,0 +1,33 @@
+# The panels team's manager agreeing to the Galaxy order's panel and
+# accessibility changes. It covers the implementation commit reviewed below.
+v = 1
+order = "galaxy-v0"
+team = "panels"
+by = "manager-panels"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+note = '''
+Refreshed for the panels team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. Panels-owned
+files that moved: src/body.html, src/game/40-sheet.js, src/game/85-settings.js,
+src/game/90-boot.js, src/style.css.
+
+#galaxy-ui gained role="region" aria-labelledby="galaxy-title" in place of a
+bare aria-label; new galaxy-check, galaxy-overview and galaxy-walk regions are
+built with createElement/textContent, never innerHTML with unescaped text.
+The one interpolated value into markup, backLabel() in 85-settings.js, is
+now wrapped in esc() before going into the settings sheet. 40-sheet.js and
+90-boot.js route start(), closeSheet(), backLabel and the title copy through
+optional activeExperience() hooks (fallback, refresh, guidance, backLabel,
+presentation) with the prior islands behaviour kept as the fallback when a
+hook is absent, so the islands path is unchanged. CSS additions (type-scale
+font sizing, the check/overview/walk panels, the joystick's galaxy-specific
+position) are additive and scoped under body[data-experience="galaxy"] or
+#galaxy-* selectors.
+
+Verified: uv run python tools/build.py --check (game/vibe-map.html matches
+src/), just sinks-check (clean), uv run ruff check tests/ (clean), and
+uv run pytest -q tests/test_repo.py tests/test_work.py
+tests/test_harness_determinism.py (all pass). No browser tests run here;
+Codex's reviewer covers those (review.toml c1/c4/c5 already accept).
+'''

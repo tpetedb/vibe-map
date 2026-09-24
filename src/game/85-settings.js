@@ -3,9 +3,10 @@
 // config/camp.toml still sets the defaults for a fresh browser; these override them.
 // They belong to this browser and not to the journey: the progress code carries
 // the stops, so an import never moves a setting.
-const SETTINGS_DEFAULTS={difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start,
+const SETTINGS_DEFAULTS={experience:"islands",difficulty:"config",map:"big",vault:"config",live:"config",pairings:"config",shadows:"high",motion:"auto",speed:"normal",zoom:CAM.zoom.start,
   text:"normal",spacing:"normal",contrast:"auto",hand:"right",run:"hold",haptics:"on",saver:"auto",awake:"on",toasts:"all",breaks:"on"};
 const SETTINGS_OPTIONS={
+  experience:[["islands","Islands: walk the camp"],["galaxy","Galaxy: follow programming history"]],
   difficulty:[["config","From config/camp.toml ("+CONFIG.difficulty+")"],["beginner","Beginner: commands open, lenient"],["easy","Easy: commands open"],["normal","Normal: commands open, real checks"],["hard","Hard: commands folded, strict"],["expert","Expert: folded, tests must pass"],["god","God: folded, just verify must be green"]],
   map:[["compact","Compact (56% of the window)"],["big","Big (84% of the window)"],["tall","Tall (the whole window)"]],
   vault:[["config","From config/camp.toml ("+((CONFIG.vault&&CONFIG.vault.mode)||"full")+")"],["full","Full: every note in the graph"],["grow","Grow: notes unlock as you play"]],
@@ -25,12 +26,12 @@ const SETTINGS_OPTIONS={
   toasts:[["all","Show them"],["quiet","Quiet: none shown"]],
   breaks:[["on","Suggest a break"],["off","No break card"]]
 };
-const SETTINGS_LABELS={difficulty:"Difficulty",map:"Map size",vault:"Vault",live:"Live world",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed",
+const SETTINGS_LABELS={experience:"Experience",difficulty:"Difficulty",map:"Map size",vault:"Vault",live:"Live world",pairings:"Pairings",shadows:"Shadows",motion:"Motion",speed:"Walking speed",
   text:"Text size",spacing:"Line spacing",contrast:"Contrast",hand:"Handedness",run:"Hurrying",haptics:"Buzz",saver:"Battery saver",awake:"Screen",toasts:"Toasts",breaks:"Break card"};
 // The rows in the order a player looks for them. A key outside a group has no
 // dropdown: zoom is written by the wheel, the pinch and the stage buttons.
 const SETTINGS_GROUPS=[
-  ["The game",["difficulty","vault","live","pairings"]],
+  ["The game",["experience","difficulty","vault","live","pairings"]],
   ["Reading",["text","spacing","contrast"]],
   ["Controls",["hand","speed","run","haptics"]],
   ["The screen",["map","shadows","motion","saver","awake"]],
@@ -72,10 +73,14 @@ function applySettings(){const s=settings();
   if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   // Difficulty gates the bridges, so the island answers the setting at once.
   if(typeof refreshBridges==="function")refreshBridges();
+  if(activeExperience().layout)activeExperience().layout();
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
-window.setSetting=function(key,value){if(!S.settings)S.settings={};S.settings[key]=value;save();applySettings();if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
-function settingRow(k,s){return `<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`}
+window.setSetting=function(key,value,control){const focus=(control&&control.id)||(document.activeElement&&document.activeElement.id),before=key==="experience"?activeExperience():null;if(!S.settings)S.settings={};S.settings[key]=value;
+  if(key==="experience"){const url=new URL(location.href);url.searchParams.delete("experience");history.replaceState(null,"",url)}save();
+  if(key==="experience"&&before!==activeExperience()){before.dispose();activeExperience().build();announceExperience()}
+  applySettings();if(focus&&$(focus)){$(focus).focus();requestAnimationFrame(()=>{if($(focus))$(focus).focus()})}if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
+function settingRow(k,s){return `<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value,this)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`}
 // A first-time hint shows once and records its id, so the way back to them is
 // a button that empties the record. Offered only once there is one to show.
 function hintsRow(){return (S.hints&&S.hints.length)?`<button onclick="showHintsAgain()">Show the hints again</button>`:""}
@@ -85,7 +90,7 @@ function renderSettings(){const s=settings();
     SETTINGS_GROUPS.map(([title,keys])=>{const rows=keys.filter(settingShown).map(k=>settingRow(k,s)).join("");return rows?`<h3>${title}</h3>`+rows:""}).join("")+
     petPicker()+
     `<div class="setting wide"><label>What you want to learn</label>${interestChips()}<p class="small muted">${interestSummary()}</p>${presetRow()}</div>`+
-    `<div class="row"><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button>${hintsRow()}<button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
+    `<div class="row"><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button>${hintsRow()}<button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">${esc(backLabel())}</button></div>`+
     `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};

@@ -1,0 +1,43 @@
+# order: hunt-y-empty-scores
+# role: reviewer
+v = 1
+order = "hunt-y-empty-scores"
+by = "reviewer-hunt-y-empty-scores-r1"
+reviewed = "03076eeb40f12e10aa5a1e86372b7525d913c1c8"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Read the whole diff against origin/main (vibemap/scores.py +10/-1, tests/test_scores_empty.py, changelog fragment). The fix returns pl.DataFrame(schema=SCHEMA) when an existing file has st_size 0; every nonempty file still goes through pl.read_csv and the missing-column ValueError. `uv run pytest -q tests/test_scores_empty.py tests/test_dashboard.py`: all pass. The tests drive the real entry point (`python -m vibemap.cli scores` in a scratch camp through VIBE_HOME), no sleeps.
+Reverts in a scratch export of HEAD, run with PYTHONPATH on the scratch tree (checked vibemap.scores.__file__ resolved there, since the venv's editable install would otherwise test the worktree): (a) guard removed: test_zero_byte fails with polars NoDataError: empty CSV; (b) the `if missing:` raise disabled: test_nonempty_malformed_header fails, stderr ends in polars ColumnNotFoundError instead of the clear message; (c) origin/main scores.py: 1 failed (zero-byte), 1 passed (malformed). So the zero-byte test is a real regression test, and the malformed test is a guard that bites when the check is removed, though it did not fail before the fix (see the low on wording).
+By hand in a scratch camp: zero-byte file exits 0 with an empty Scores table and "0 runs", empty stderr; `player,points\nTom,10\n` exits 1 with last line `ValueError: scores.csv is missing columns: played_at, score, duration_s`; header-only file exits 0 with 0 runs; dashboard._scores on a zero-byte file returns the no-runs shape. The command proves the sentence for the default `vibe scores` path.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+Ran the criterion command verbatim in the worktree: Ruff check and format check exit 0 on both files, `tools/checks.py style` prints "style OK: no em dashes, no emoji", `tools/checks.py sinks` exits 0; the chain exits 0. `COLUMNS` is kept as tuple(SCHEMA), so no other importer changes (grep: cli.py, dashboard.py, quests.py, tests/test_cli.py import read_scores, summary, run_sql only); `uv run pytest -q tests/test_cli.py -k score` passes. The change adds no HTML or build sink and never writes scores.csv.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/scores.py"
+text = "A file holding only a newline or a UTF-8 BOM (what `echo > workspace/data/scores.csv` writes) still ends `vibe scores` in a raw traceback, `polars.exceptions.NoDataError: empty CSV`, exit 1, without naming the file. The order scoped zero-byte and this is loud, but a learner reads it as the same empty-scoreboard bug; either treat a file with no header as empty or raise the named ValueError."
+
+[[findings]]
+severity = "low"
+file = "vibemap/scores.py"
+text = "`vibe scores --sql top_runs` on a zero-byte scores.csv still exits 1 with a DuckDB traceback (Binder Error: Referenced column \"played_at\" not found), identical to main. run_sql lives in the owned file; out of the order's stated path, but the same command."
+
+[[findings]]
+severity = "low"
+file = "vibemap/scores.py"
+text = "A malformed header fails loudly as an uncaught ValueError traceback from the CLI, not a one-line `_fail` message; the last line is clear and this is unchanged from main. The empty caption also reads \"0 runs, best 0 by , mean 0.0\", as header-only did before."
+
+[[findings]]
+severity = "low"
+file = "work/orders/hunt-y-empty-scores/order.toml"
+text = "c1 says both regressions were seen failing first; against origin/main the malformed-header test passes (1 failed, 1 passed). It is a guard that fails only when the missing-column check is removed, which is what it should be, but the sentence overstates it."

@@ -2,7 +2,7 @@
 title: "CSV done properly"
 date: 2026-09-18
 tags: [tech, data]
-generated: 9a5104e7c6aa
+generated: f5af6c4a9197
 ---
 # CSV done properly
 
@@ -12,7 +12,7 @@ CSV is a text file of records separated by line breaks and fields separated by c
 
 **Try in five minutes.** python3 -c "import csv,io;print(list(csv.reader(io.StringIO('a,\"b,c\",d'))))" and watch three fields come back, not four.
 
-- Docs: [RFC 4180, Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180), [Python, the csv module: dialects, Sniffer and the newline rule](https://docs.python.org/3/library/csv.html), [DuckDB, reading CSV files and the CSV sniffer](https://duckdb.org/docs/stable/data/csv/overview)
+- Docs: [Source: RFC Editor, RFC 4180](https://www.rfc-editor.org/rfc/rfc4180.txt), [RFC 4180, Common Format and MIME Type for CSV Files](https://www.rfc-editor.org/rfc/rfc4180), [Python, the csv module: dialects, Sniffer and the newline rule](https://docs.python.org/3/library/csv.html), [DuckDB, reading CSV files and the CSV sniffer](https://duckdb.org/docs/stable/data/csv/overview)
 - Unlocks: [[JSON Lines]], [[Parquet]], [[Schemas and schema evolution]]
 - Shelf: Data · Depth: Basics
 

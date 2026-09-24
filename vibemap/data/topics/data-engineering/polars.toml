@@ -18,6 +18,18 @@ try_it = '''uv run python -c "import polars as pl; print(pl.scan_csv('workspace/
 unlocks = ["dbt", "medallion"]
 prerequisites = ["csv", "arrow"]
 
+[[origins]]
+place = "the-internet"
+year = 2024
+what = "Ritchie Vink announces the Python Polars 1.0 release online on 1 July 2024."
+source = "https://pola.rs/posts/announcing-polars-1/"
+primary = true
+
+[[sources]]
+label = "Source: Ritchie Vink, Python Polars 1.0 announcement"
+url = "https://pola.rs/posts/announcing-polars-1/"
+checked = 2026-09-22
+
 [[sources]]
 label = "Polars user guide, the lazy API"
 url = "https://docs.pola.rs/user-guide/concepts/lazy-api/"

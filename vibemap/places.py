@@ -107,7 +107,8 @@ REGIONS = (
 )
 # A landmark names one silhouette the diorama builder draws, so it is a slug
 # and not prose. It is a thing that stands at the place, never an
-# organisation's logo, wordmark or mascot: ADR 0010 gives a real organisation
+# organisation's logo, wordmark or mascot. `generic-marker` makes no physical
+# landmark claim. ADR 0010 gives a real organisation
 # its name as plain text and nothing else, and a place inherits that rule.
 LANDMARK = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 
@@ -129,6 +130,7 @@ class Place(BaseModel):
     look: str
     landmark: str
     source: str
+    showcase: bool = False
 
     @property
     def on_earth(self) -> bool:
@@ -146,7 +148,7 @@ def _read(path: Path) -> dict[str, Any]:
     try:
         return tomllib.loads(path.read_text(encoding="utf-8"))
     except tomllib.TOMLDecodeError as e:
-        raise ValueError(f"{path.name} is not valid TOML: {e}") from e
+        raise ValueError(f"places/{path.name} is not valid TOML: {e}") from e
 
 
 def _fail(where: str, msg: str) -> None:
@@ -330,7 +332,7 @@ def problems(
 
 
 def payload() -> dict[str, object]:
-    """The places and the origins as one blob, for the build and for --json.
+    """The places and the origins as one blob, for the build.
 
     The same facts `vibe places` and `vibe topic` print, so the game and the
     terminal can never disagree about where a topic happened.

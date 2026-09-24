@@ -1,6 +1,23 @@
 <body>
 <div id="stage">
 <canvas id="c"></canvas>
+<div id="galaxy-ui" class="ui" hidden role="region" aria-labelledby="galaxy-title">
+  <div class="galaxy-head">
+    <div><p class="kicker">Your programming journey</p><h2 id="galaxy-title">Galaxy</h2><p id="galaxy-summary" class="small muted"></p></div>
+    <div class="galaxy-scale" role="group" aria-label="Galaxy view">
+      <button onclick="galaxyView('journey')" data-galaxy-view="journey">Journey</button>
+      <button onclick="galaxyView('chart')" data-galaxy-view="chart">Chart</button>
+      <button onclick="galaxyView('globe')" data-galaxy-view="globe">Globe</button>
+      <button onclick="galaxyView('dome')" data-galaxy-view="dome">Dome</button>
+    </div>
+  </div>
+  <p id="galaxy-next" class="small"></p><p id="galaxy-context" class="small muted"></p>
+  <div id="galaxy-overview"></div>
+  <div id="galaxy-check"></div>
+  <div id="galaxy-walk" hidden><p id="galaxy-walk-status" class="small" role="status"></p><button id="galaxy-near" onclick="galaxyOpenNearby()" disabled>Open nearby lesson</button></div>
+  <div id="galaxy-list" role="list"></div>
+</div>
+<div id="galaxy-label" hidden aria-hidden="true"><b></b><span></span></div>
 <div id="err" style="display:none;position:fixed;left:12px;right:12px;top:60px;z-index:50;background:#7f1d1d;color:#fff;border-radius:12px;padding:10px 12px;font:13px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap"></div>
 
 <!-- One hierarchy, one DOM: Roadmap and Search are always in the pill, the
@@ -10,7 +27,7 @@
      whole menu is the popup. A new button is one more line in #hud-sec. -->
 <div class="ui" id="hud">
   <div class="pill" id="hud-name">Your Innovation Campus</div>
-  <div class="pill" id="hud-bar"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button id="hud-search" data-icon="search" onclick="openPalette()" title="Search everything (Cmd K)"><span class="lbl">Search</span></button><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><div id="hud-more"><div id="hud-menu"><div id="hud-sec"><button data-icon="backpack" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="nextWorld()">World</button></div><div id="hud-ter"><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div></div><button id="hud-more-btn" data-icon="menu" aria-expanded="false" aria-haspopup="true" onclick="toggleHudMenu()"><span class="lbl">More</span></button></div></div>
+  <div class="pill" id="hud-bar"><span id="hud-stoplabel">Stops</span> <span id="hud-okrs"></span><button id="hud-search" data-icon="search" onclick="openPalette()" title="Search everything (Cmd K)"><span class="lbl">Search</span></button><button data-icon="map" onclick="openSheet('s-map')">Roadmap</button><div id="hud-more"><div id="hud-menu"><div id="hud-sec"><button data-icon="backpack" onclick="openPack()" aria-label="Backpack">Backpack</button><button data-icon="message-circle" onclick="openChat()" title="Ask about what is on screen (C)">Ask</button><button data-icon="trophy" onclick="openDashboard()" title="Dashboard: your numbers">Stats</button><button data-icon="book-open" onclick="openVault()">Vault</button><button data-icon="git-branch" onclick="openTree()">Tree</button><button data-icon="globe" onclick="browseWorlds()">World</button></div><div id="hud-ter"><button data-icon="settings" onclick="openSettings()" aria-label="Settings">Settings</button></div></div><button id="hud-more-btn" data-icon="menu" aria-expanded="false" aria-haspopup="true" onclick="toggleHudMenu()"><span class="lbl">More</span></button></div></div>
   <div id="kpis" aria-live="polite">
     <div class="kpi"><b id="k1">0</b><span id="k1l">Progress</span></div>
     <div class="kpi"><b id="k2">0%</b><span id="k2l">Streak</span></div>
@@ -176,7 +193,7 @@ brew install jq</code></pre>
 </ol>
 <h4>One more thing, then stop</h4>
 <p>Ask for exactly one change, in one sentence, and watch it land. Then leave it alone. The next hour is about why that worked or did not.</p>
-<div class="callout ok"><b>Definition of done</b>workspace/game/index.html exists in your camp, it opens in a browser, and you can play it. If Claude asked a permission question you did not understand, answer yes and tell Tom; understanding permissions is workstream 4.</div>
+<div class="callout ok"><b>Definition of done</b>workspace/game/index.html exists in your camp, it opens in a browser, and you can play it. If Claude asks permission for something you do not understand, pause: read what it wants to run or change, and ask Tom before you say yes; understanding permissions in depth is workstream 4.</div>
 <div class="callout why"><b>Why it matters</b>You now know the loop: describe, wait, look, adjust. Everything after this is about making the loop reliable instead of lucky.</div>
 <div class="callout try"><b>Try this</b>If the first result is broken, do not fix it yourself. Paste the error, or describe what you see, and let it iterate. Say what is wrong, not how to fix it.</div>
 <p class="small muted">Source: <a href="https://code.claude.com/docs/en/quickstart" target="_blank" rel="noopener">Quickstart</a>, <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank" rel="noopener">How Claude Code works</a></p>

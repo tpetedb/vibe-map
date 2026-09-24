@@ -1,0 +1,35 @@
+v = 1
+id = "docs-followups-149"
+title = "Docs follow-ups from #149: skills, config levels, two ADRs, and the contracts in a file"
+team = "docs"
+branch = "claude/docs-followups-149"
+goal = "ways-of-working"
+issue = 149
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-docs-followups-149"
+
+owns = [
+  "docs/SKILLS.md",
+  "docs/CONFIG.md",
+  "docs/adr/0001-single-file-game.md",
+  "docs/adr/0016-work-orders.md",
+  "docs/CONTRACTS.md",
+  "tests/test_docs_followups.py",
+]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Every just recipe and skill the docs name exists; CONFIG.md and ADR 0001 no longer describe GAME_ORDER; ADR 0016 says what touched.json really keeps."
+check = "uv run pytest -q tests/test_docs_followups.py tests/test_repo.py"
+
+[[criteria]]
+id = "c2"
+text = "Style, the cookbook and the vault lint pass."
+check = "uv run python tools/checks.py style && uv run python tools/gen_cookbook.py --check && uv run vibe vault lint"
+
+[[criteria]]
+id = "c3"
+text = "Every claim in the changed docs matches the code or the cited page; CONTRACTS.md lists each current contract with its PR."
+judge = "reviewer"

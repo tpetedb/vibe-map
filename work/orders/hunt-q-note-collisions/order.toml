@@ -1,0 +1,49 @@
+v = 1
+id = "hunt-q-note-collisions"
+title = "Hunt batch Q: generated notes own Git and Python without title collisions"
+team = "panels"
+branch = "claude/hunt-q-note-collisions"
+goal = ""
+issue = 110
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "builder-hunt-q-note-collisions"
+
+# Files, or folders ending in /. No globs: two orders may never own the same file.
+owns = [
+  "src/game/50-notes.js",
+  "tests/test_hunt_q.py",
+  "tools/build.py",
+  "vibemap/data/topics/core/python.toml",
+]
+# Other teams whose files this order has to touch; each one signs off.
+cross = ["harness", "content"]
+# Orders that have to land before this one starts.
+needs = []
+
+# At least one criterion is a command. Exit 0 is pass; anything else is not.
+[[criteria]]
+id = "c1"
+text = "The Q3 tests pass and prove Git and Python use generated notes while every duplicate note title fails the build."
+check = "uv run pytest -q tests/test_hunt_q.py"
+
+[[criteria]]
+id = "c2"
+text = "The focused build and topic tests pass."
+check = "uv run pytest -q tests/test_build.py tests/test_topics.py"
+
+[[criteria]]
+id = "c3"
+text = "Lint, formatting, style and sink checks pass."
+check = "uv run ruff check -q tools/build.py tests/test_hunt_q.py && uv run ruff format --check -q tools/build.py tests/test_hunt_q.py && uv run python tools/checks.py style && uv run python tools/checks.py sinks"
+
+[[criteria]]
+id = "c4"
+text = "Every generated file is in sync with its source."
+check = "for c in build regen_tree gen_cookbook sync_template sync_fork_source gen_syllabus; do uv run python tools/$c.py --check || exit 1; done"
+
+# What a command cannot decide goes to a person in a role, who rules on it
+# in review.toml with evidence.
+[[criteria]]
+id = "c5"
+text = "The reviewer confirms each Q3 regression test failed before its fix, the collision diagnostic names every source, and Kaggle Learn is an official source opened during the work."
+judge = "reviewer"

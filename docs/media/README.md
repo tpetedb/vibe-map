@@ -25,11 +25,11 @@ Regenerate with `just media` (the game, through Playwright, from the built file)
 | `settings.png` | The Settings rows, grouped under their five headings | `just media` | this page |
 | `bottle.png` | A message in a bottle where it lies, on the shore | `just media` | this page |
 | `artifact-cafe.png` | The cafe sheet: order five in one second, get a 429 | `just media` | `README.md` |
-| `gameplay.gif` | Walking to the 18:00 signpost, opening the workstream, lighting the OKR | `just media` | `README.md` |
+| `gameplay.gif` | Walking across the campus bridge to winter, opening its first workstream and claiming it | `just media` | `README.md` |
 | `island-campus-start.png` | The campus as a first visit finds it | `tools/campus_shots.py` | `CHANGELOG.md` |
 | `pets-game/*` | The six pixel species as the browser game draws them, beside the walker | `just media` | this page |
 | `tui-pet.png`, `tui-pet.gif` | The pet strolling under the launch screen | `just tui-media` | `README.md` |
-| `pets.png`, `pets/*` | The six pixel species in the terminal, still and animated | `just tui-media --pets` | `README.md`, `docs/ABOUT.md` |
+| `pets.png`, `pets/*` | The six pixel species in the terminal, still and animated | `uv run python tools/tui_media.py --pets` | `README.md`, `docs/ABOUT.md` |
 | `tui-welcome.png` | `just start`, the Welcome screen on a first run | `just tui-media` | `README.md` |
 | `tui-map.png` | `just start`, the campaign map part way through evening 1, with the four marks and their legend | `just tui-media` | `README.md` |
 

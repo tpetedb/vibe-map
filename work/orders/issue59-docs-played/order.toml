@@ -1,0 +1,69 @@
+v = 1
+id = "issue59-docs-played"
+title = "Close issue 59 with the missing product history, feature guides, played-camp regeneration and bridge journey"
+team = "docs"
+branch = "codex/issue59-docs-played"
+issue = 59
+# The builder claims this before work starts. A different agent reviews it.
+builder = "codex-issue59-docs-builder"
+
+owns = [
+  "README.md",
+  "docs/BRIEF.md",
+  "docs/MAINTAINERS.md",
+  "docs/DASHBOARD.md",
+  "docs/AVATAR.md",
+  "docs/ARCHIPELAGO.md",
+  "docs/media/README.md",
+  "docs/media/gameplay.gif",
+  "tools/regen_played.py",
+  "tools/media.py",
+  "tests/test_issue59_docs.py",
+  "tests/test_regen_played.py",
+  "tests/test_media.py",
+]
+cross = ["harness"]
+needs = []
+
+# These are acceptance steps outside the repository. They are recorded here so
+# closing issue 59 cannot silently drop them, but no code check pretends to do
+# an owner's GitHub settings action.
+external_acceptance = [
+  "After the reviewed branch lands, the repository owner uploads docs/media/hero.png in GitHub Settings, General, Social preview and checks the repository card.",
+  "The literal gameplay scope is settled: docs/media/gameplay.gif must visibly cross a bridge before or while claiming a stop. The existing signpost-only journey does not satisfy issue 59.",
+]
+
+[[criteria]]
+id = "c1"
+text = "The Cycle 3 section in docs/BRIEF.md records the request, issues 53 through 69, the merged pull requests, the 0.10.0 and 0.11.0 outcome, and the gaps that remain after those releases. The old gaps section no longer reports delivered Cycle 3 work as pending."
+check = "uv run pytest -q tests/test_issue59_docs.py"
+
+[[criteria]]
+id = "c2"
+text = "Dedicated guides for the dashboard, avatar and archipelago exist, are linked from README.md, and describe the current product, saved state, controls, terminal counterpart where one exists, accessibility behavior and the responsible source and tests without duplicating generated reference material."
+judge = "reviewer"
+
+[[criteria]]
+id = "c3"
+text = "One tested tools/regen_played.py entry point updates an explicitly named local checkout of vibe-map-played from this product, uses tools/script_camp.py for the learner deliverables, produces a fully played state and current media, preserves the target remote and branch, refuses a dirty target, and never pushes unless the caller supplies an explicit push flag. Its tests use temporary local repositories and require no network or GitHub write."
+check = "uv run pytest -q tests/test_regen_played.py"
+
+[[criteria]]
+id = "c4"
+text = "The maintainer guide gives the exact dry-run, regenerate and explicit push commands, names every prerequisite, and explains which generated changes a human reviews before pushing the played repository."
+judge = "reviewer"
+
+[[criteria]]
+id = "c5"
+text = "The gameplay GIF is rendered by tools/media.py and visibly walks across a bridge before or while it claims a stop. The media test fails for the old signpost-only capture and proves the bridge journey through game state rather than elapsed time."
+check = "uv run pytest -q tests/test_media.py"
+
+[[criteria]]
+id = "c6"
+text = "The changed Python and tests pass lint and formatting, the repository documentation guards pass, and no em dash or stale internal link is introduced."
+check = "uv run ruff check -q tools/regen_played.py tools/media.py tests/test_issue59_docs.py tests/test_regen_played.py tests/test_media.py && uv run ruff format --check -q tools/regen_played.py tools/media.py tests/test_issue59_docs.py tests/test_regen_played.py tests/test_media.py && uv run python tools/checks.py style && uv run pytest -q tests/test_repo.py"
+
+[[criteria]]
+id = "c7"
+text = "The reviewer opens the three guides and the GIF, checks every product claim against main, confirms the GIF crosses a bridge and claims a stop, and confirms the social-preview upload remains clearly assigned to the repository owner after landing."
+judge = "reviewer"

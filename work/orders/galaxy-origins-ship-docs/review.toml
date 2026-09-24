@@ -1,0 +1,30 @@
+v = 1
+order = "galaxy-origins-ship-docs"
+by = "reviewer-galaxy-origins-ship-docs"
+reviewed = "40bb53a87e885f949f1656c60d4ed97781731071"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "Ran the stated focused pytest command at 40bb53a with a temporary uv cache and pytest cache disabled: all 71 tests in test_origins_ship_docs.py, test_places.py and test_topics.py passed. I also read the order-specific tests: they enumerate the exact ten shelf topics, require one first primary origin, resolve every place, validate HTTPS/year/one-line claims, reject duplicate places, and verify the game payload, so the command proves this order's behavior rather than merely loading the files."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "Ran the stated places.problems check for ship, docs and knowledge at 40bb53a; it exited 0 with no defects. Independently inspected all ten owned topic files: they contain 14 origins total, exactly one primary per topic, and every origin has an existing place id, a year, a non-empty claim and an HTTPS source."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Ran ruff check, ruff format --check, tools/checks.py style, tools/checks.py sinks, and the complete non-browser/non-integration pytest selection at 40bb53a. The first sandboxed pytest run could not bind loopback sockets or reach Docker; rerunning the same command with those local permissions completed at 100% with exit 0. Style reported no em dashes or emoji, and the sink guard passed."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "Ran every stated generator in --check mode at 40bb53a. build reported game/vibe-map.html matches src, regen_tree reported outputs match vibemap/tech.py, cookbook and syllabus reported OK, and sync_template plus sync_fork_source exited 0; the combined command exited 0."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "Opened all 14 origin links and checked each claim. AWS states EC2 beta, 24 Aug 2006 and resizable cloud compute; NIST states SP 800-145, Sep 2011, Mell and Grance; Moby's changelog states 0.1.0, 23 Mar 2013 and initial public release; OCI states Docker donated runC/container format and OCI launched under Linux Foundation on 22 Jun 2015; the Seventh Edition PDF states Jan 1979, Bell Telephone Laboratories in Murray Hill and cron's scheduled-command behavior; Anthropic states Claude Code GA with GitHub Actions background tasks on 22 May 2025; Google states its Kubernetes announcement on 10 Jun 2014; CNCF states acceptance at Incubating on 10 Mar 2016; Nygard's article states author/date and the numbered, repository-held architecturally significant decision records; Keep a Changelog states 0.0.1 on 31 May 2014; the Seventh Edition index states Bell Labs copyright, distribution-tape provenance and links the Volumes 2A/2B README; SemVer tags state v2.0.0 on 18 Jun 2013; and the two Obsidian changelogs state desktop 1.0.0 on 13 Oct 2022 and initial 0.0.1 on 30 Mar 2020 with vault selection and compatible-file listing."

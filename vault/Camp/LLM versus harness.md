@@ -2,7 +2,7 @@
 title: "LLM versus harness"
 date: 2026-09-16
 tags: [tech, agents]
-generated: 20e37a83bcd1
+generated: d0cee569fdcb
 ---
 # LLM versus harness
 
@@ -12,7 +12,7 @@ The LLM is the model: text in, text out, no memory, no hands. The harness is eve
 
 **Try in five minutes.** Run claude in the template folder and ask 'what files did you read before answering?'. That list is the harness.
 
-- Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works), [Source: Attention Is All You Need (arXiv, June 2017)](https://arxiv.org/abs/1706.03762), [Source: Language Models are Few-Shot Learners (arXiv, May 2020)](https://arxiv.org/abs/2005.14165), [Source: OpenAI, Introducing ChatGPT (November 2022)](https://openai.com/index/chatgpt/), [Source: Anthropic, Introducing Claude (March 2023)](https://www.anthropic.com/news/introducing-claude), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol), [Source: Cursor changelog 0.43 (November 2024)](https://cursor.com/changelog/0-43-x), [Source: Anthropic, Claude 3.7 Sonnet and Claude Code (February 2025)](https://www.anthropic.com/news/claude-3-7-sonnet), [Source: openai/codex repository (April 2025)](https://github.com/openai/codex), [Source: openai/agents.md repository (August 2025)](https://github.com/openai/agents.md)
+- Docs: [Anthropic: building effective agents](https://www.anthropic.com/research/building-effective-agents), [How Claude Code works](https://code.claude.com/docs/en/how-claude-code-works), [Source: Attention Is All You Need (arXiv, June 2017)](https://arxiv.org/abs/1706.03762), [Source: Language Models are Few-Shot Learners (arXiv, May 2020)](https://arxiv.org/abs/2005.14165), [Source: OpenAI, Introducing ChatGPT (November 2022)](https://openai.com/index/chatgpt/), [Source: Anthropic, Introducing Claude (March 2023)](https://www.anthropic.com/news/introducing-claude), [Source: Anthropic, Introducing the Model Context Protocol (November 2024)](https://www.anthropic.com/news/model-context-protocol), [Source: Cursor changelog 0.43 (November 2024)](https://cursor.com/changelog/0-43-x), [Source: Anthropic, Claude 3.7 Sonnet and Claude Code (February 2025)](https://www.anthropic.com/news/claude-3-7-sonnet), [Source: openai/codex repository (April 2025)](https://github.com/openai/codex), [Source: openai/agents.md repository (August 2025)](https://github.com/openai/agents.md), [Source: Alibaba Cloud, Qwen3 launch in Hangzhou (April 2025)](https://www.alibabacloud.com/en/press-room/alibaba-introduces-qwen3-setting-new-benchmark)
 - Unlocks: [[Context window and prompts]], [[Your harness - AGENTS.md, CLAUDE.md, dotfiles for agents]]
 - Shelf: Agents and the harness · Depth: Basics
 

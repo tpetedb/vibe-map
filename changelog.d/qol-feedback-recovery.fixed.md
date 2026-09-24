@@ -1,1 +1,0 @@
-- Award earned achievements promptly on slow-rendering devices while preserving hidden-page pause and reduced-motion settings.
