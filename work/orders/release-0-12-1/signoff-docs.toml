@@ -1,0 +1,20 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "release-0-12-1"
+team = "docs"
+by = "manager-docs"
+reviewed = "f02d795fcf3c1782dcde2d25daab9471a763eed6"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Checked CHANGELOG.md at f02d795 (review round 2, accept): the new
+[0.12.1] - 2026-09-24 section sits above [0.12.0], one heading (### Fixed),
+two bullets, one per car M fix, plain words, no em dash. Every released
+section from ## [0.12.0] down is byte-identical to origin/main. Both compare
+links are right: [Unreleased] now compares v0.12.1...HEAD and a new [0.12.1]
+line compares v0.12.0...v0.12.1 (CHANGELOG.md lines 15-19, 720-721). ISO date
+matches today. pyproject.toml version is 0.12.1. Nothing here touches docs/,
+site/ or LICENSE, so no follow-up for our team after this lands.
+"""
