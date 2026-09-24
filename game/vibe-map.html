@@ -4831,6 +4831,135 @@ window.__minimap=()=>({open:mmCv?mmCv.style.display!=="none":false,phone:mmPhone
   at:PLOT_POS.map(p=>[p.x,p.z]),
   guide:gGoal?{name:gGoal.name,stop:gGoal.stop,shown:gEl.style.display!=="none",
     at:[parseFloat(gEl.style.left),parseFloat(gEl.style.top)],said:gSaid}:null});
+/* ---------------- photo mode ---------------- */
+// A clean picture of the island to keep or send. Photo mode hides everything
+// laid over the scene except the zoom column, pulls the camera back one step,
+// and takes the frame as a PNG with a caption band: saved through a download
+// link everywhere, shared through the share sheet where the browser can share
+// files (MDN, Web Share API: navigator.canShare({files}) first, and share()
+// only inside a click of its own).
+// The canvas has no preserveDrawingBuffer, which would cost every frame, so
+// the frame is rendered and copied in one task: the drawing buffer holds it
+// until the browser composites, and nothing else draws in between.
+// Built with createElement and textContent: nothing here goes through HTML.
+const PHOTO_HIDE=["#hud","#bottom","#talk","#joy","#jump","#toast","#minimap","#minimap-btn","#breakcard"];
+let photo=null,photoShots=0;
+function photoOn(){return !!photo}
+function photoBtn(label,primary,fn){const b=document.createElement("button");b.type="button";b.textContent=label;
+  if(primary)b.className="primary";b.style.minHeight="44px";b.addEventListener("click",fn);return b}
+// Floating panels share one frame: centred, a 16 px gutter on a phone, clear
+// of the home indicator.
+function photoPanel(id,label){const el=document.createElement("div");el.id=id;el.className="card";
+  el.setAttribute("role","dialog");el.setAttribute("aria-label",label);
+  el.style.cssText="position:fixed;z-index:45;left:16px;right:16px;margin:0 auto;max-width:440px;"+
+    "bottom:calc(16px + env(safe-area-inset-bottom,0px));box-shadow:var(--lift)";
+  return el}
+// What stands over the island. Photo mode opens only between things: never
+// over a panel, the title or a flight.
+const PHOTO_OVER="#sheet.on,#vault.on,#pal.on,#title:not(.off)";
+function photoCanOpen(){return typeof started!=="undefined"&&started&&!flight&&!document.querySelector(PHOTO_OVER)}
+// Whatever opens over the island while photo mode is on (Ask on C, the
+// palette on Cmd K, a stop on Enter, a sheet from anywhere) ends photo mode
+// as it opens, so the HUD is back behind it and one Escape closes one thing. A card
+// that arrives after the mode opened, like the first toast, which toast()
+// only then creates, is hidden with the rest.
+function photoWatch(){const mo=new MutationObserver(()=>{if(!photo)return;
+    if(document.querySelector(PHOTO_OVER)){photoEnd(true);return}
+    PHOTO_HIDE.forEach(s=>{const el=document.querySelector(s);
+      if(el&&!photo.hidden.some(([h])=>h===el)){photo.hidden.push([el,el.style.visibility]);el.style.visibility="hidden"}})});
+  ["sheet","vault","pal","title"].forEach(id=>{const el=$(id);if(el)mo.observe(el,{attributes:true,attributeFilter:["class"]})});
+  mo.observe(document.body,{childList:true});return mo}
+// Focus goes back to what had it: the Photo button when the mode was opened
+// from it, else the element focused before, when it can still be seen.
+window.openPhoto=function(opener){if(photo||!photoCanOpen())return;
+  const had=document.activeElement,back=opener instanceof Element?opener:(had&&had!==document.body?had:null);
+  if(typeof closeHudMenu==="function")closeHudMenu();
+  if(typeof breakClose==="function")breakClose();
+  const hidden=PHOTO_HIDE.map(s=>document.querySelector(s)).filter(Boolean).map(el=>[el,el.style.visibility]);
+  hidden.forEach(([el])=>{el.style.visibility="hidden"});
+  // One step further out than the player stands, not written to Settings:
+  // leaving photo mode goes back to the level the player chose.
+  zoomTo=Math.min(CAM.zoom.max,zoomTo+CAM.zoom.step);zoomHud();
+  const bar=photoPanel("photobar","Photo mode");
+  const hint=document.createElement("p");hint.className="small muted";hint.style.margin="0 0 8px";
+  hint.textContent="Walk and zoom until the island looks right. P or Escape leaves.";
+  const row=document.createElement("div");row.className="row";row.style.marginTop="0";
+  row.append(photoBtn("Take photo",true,photoTake),photoBtn("Done",false,closePhoto));
+  bar.append(hint,row);document.body.appendChild(bar);fx(bar);
+  photo={hidden:hidden,bar:bar,view:null,url:"",back:back,watch:photoWatch()};
+  bar.querySelector("button").focus()};
+// A panel that ended the mode (over=true) keeps the focus it took.
+function photoEnd(over){if(!photo)return;photo.watch.disconnect();
+  const f=document.activeElement,ours=!over&&(!f||f===document.body||photo.bar.contains(f)||!!(photo.view&&photo.view.contains(f)));
+  photoDrop();photo.bar.remove();
+  photo.hidden.forEach(([el,v])=>{el.style.visibility=v});
+  const back=photo.back;photo=null;syncZoom();
+  if(!ours)return;
+  if(back&&back.isConnected&&back.getClientRects().length&&getComputedStyle(back).visibility!=="hidden")back.focus({preventScroll:true});
+  else if(document.activeElement)document.activeElement.blur()}
+window.closePhoto=function(){photoEnd(false)};
+function photoDrop(){if(photo.view){photo.view.remove();photo.view=null}
+  if(photo.url){URL.revokeObjectURL(photo.url);photo.url=""}}
+// The caption: who, where, how far, in the text colour of the palette on a
+// band that fades up from the bottom, so the island stays the picture. Two
+// lines on the left, sized from the short side, so a phone held upright has
+// the same caption as a laptop and nothing is squeezed.
+function photoCaption(g,w,h){const css=getComputedStyle(document.documentElement);
+  const ink=css.getPropertyValue("--text").trim()||"white",mute=css.getPropertyValue("--muted").trim()||"gray";
+  const fs=Math.max(14,Math.round(Math.min(w,h)*.034)),pad=Math.round(fs*1.1),band=fs*5;
+  const grad=g.createLinearGradient(0,h-band,0,h);grad.addColorStop(0,"rgba(0,0,0,0)");grad.addColorStop(1,"rgba(0,0,0,.72)");
+  g.fillStyle=grad;g.fillRect(0,h-band,w,band);
+  const who=typeof playerLabel==="function"?playerLabel():S.name;
+  const where=(who?who+" · ":"")+dashIsland(S.world||"campus")+" · "+S.done.length+" of "+stopCount()+" stops";
+  const font=px=>"600 "+px+"px system-ui,-apple-system,sans-serif";
+  g.textBaseline="alphabetic";g.textAlign="left";
+  g.font=font(Math.round(fs*.75));g.fillStyle=mute;g.fillText("Vibe Code Camp",pad,h-pad-fs*1.35,w-2*pad);
+  g.font=font(fs);g.fillStyle=ink;g.fillText(where,pad,h-pad,w-2*pad)}
+function photoTake(){if(!photo)return;photoDrop();
+  renderer.render(scene,camera);
+  const src=renderer.domElement,w=src.width,h=src.height,c=document.createElement("canvas");c.width=w;c.height=h;
+  const g=c.getContext("2d");g.drawImage(src,0,0);photoCaption(g,w,h);photoShots++;
+  photoFlash();
+  c.toBlob(blob=>{if(!photo||!blob){if(photo)toast("No photo","This browser would not hand over the picture. A screenshot works just as well.");return}
+    photoShow(blob)},"image/png")}
+// A short white flash says the picture was taken; under reduced motion the
+// preview appearing says it instead.
+function photoFlash(){if(reducedMotion())return;const f=document.createElement("div");f.id="photoflash";
+  f.style.cssText="position:fixed;inset:0;z-index:46;background:var(--text);opacity:.55;pointer-events:none;transition:opacity .35s ease-out";
+  document.body.appendChild(f);requestAnimationFrame(()=>{f.style.opacity="0"});setTimeout(()=>f.remove(),450)}
+function photoName(){return "vibe-map-"+(S.world||"campus")+".png"}
+function photoShow(blob){photo.url=URL.createObjectURL(blob);
+  const file=new File([blob],photoName(),{type:"image/png"});
+  const view=photoPanel("photoview","Your photo");
+  const img=document.createElement("img");img.src=photo.url;img.alt="The island, as the photo shows it";
+  img.style.cssText="display:block;width:100%;max-height:52vh;object-fit:contain;border-radius:12px;background:var(--bg);margin-bottom:10px";
+  const row=document.createElement("div");row.className="row";row.style.marginTop="0";
+  const share=!!(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]}));
+  if(share)row.appendChild(photoBtn("Share",true,()=>{navigator.share({files:[file],title:"Vibe Code Camp"}).catch(e=>{
+      if(e&&e.name!=="AbortError")toast("Not shared","The share sheet said no. Save the image instead and send it from your photos.")})}));
+  const save=document.createElement("a");save.href=photo.url;save.download=photoName();save.textContent="Save image";
+  // A link dressed as a button; the first action of the row is the primary
+  // one, so without a share sheet it is this one.
+  save.style.cssText="display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:12px;"+
+    "text-decoration:none;font-weight:600;font-size:.875em;"+
+    (share?"border:1px solid var(--line2);background:var(--panel2);color:var(--ink)":"border:1px solid transparent;background:var(--accent);color:#000");
+  row.append(save,photoBtn("Take another",false,()=>{photoDrop();photo.bar.style.visibility="";photo.bar.querySelector("button").focus()}),photoBtn("Done",false,closePhoto));
+  view.append(img,row);photo.bar.style.visibility="hidden";document.body.appendChild(view);photo.view=view;fx(view);
+  row.firstChild.focus()}
+// P opens and closes photo mode, Escape closes it; a key typed into a field
+// belongs to the field.
+addEventListener("keydown",e=>{if(e.metaKey||e.ctrlKey||e.altKey||inField(e.target))return;
+  if((e.key==="p"||e.key==="P")&&(photo||photoCanOpen())){photo?closePhoto():openPhoto();e.preventDefault()}
+  else if(e.key==="Escape"&&photo&&!e.defaultPrevented){closePhoto();e.preventDefault()}});
+// The HUD entry lives with the other secondary buttons, so on a phone it is
+// in the More menu and on a laptop in the pill.
+(()=>{const sec=$("hud-sec");if(!sec)return;const b=document.createElement("button");b.id="hud-photo";b.type="button";
+  b.textContent="Photo";b.title="Photo mode: the island without the HUD (P)";b.addEventListener("click",()=>openPhoto(b));sec.appendChild(b)})();
+// Test seam: whether photo mode is on, what it hid, how many frames it took,
+// and that the canvas still runs without a preserved buffer.
+window.__photo=()=>({on:!!photo,shots:photoShots,
+  hidden:photo?photo.hidden.filter(([el])=>el.style.visibility==="hidden").map(([el])=>"#"+el.id):[],
+  preserve:!!(renderer&&renderer.getContext().getContextAttributes().preserveDrawingBuffer)});
 window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){if(!activeExperience().fallback||!activeExperience().fallback()){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}}hud();track("session","start");activeExperience().guidance?activeExperience().guidance():say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line
 // their own headline and their own words with the link next to it. Never a
@@ -6244,6 +6373,9 @@ window.__finale=()=>({dates:DATES,pairings:WINES,pairing:CONFIG.theme.pairing});
 // refuses the clipboard still leaves one keystroke that works.
 const IMPORT_CMD="in your camp: vibe import <code>, with the code pasted in place of <code>.";
 window.exportProgress=function(){const code=btoa(unescape(encodeURIComponent(JSON.stringify({v:2,name:S.name,done:S.doneW.campus,doneW:S.doneW,path:S.path,artifacts:S.artifacts,mentors:S.mentors,artifactsBuilt:S.artifactsBuilt,items:sl("items"),ach:sl("ach"),wear:sl("wear"),interests:interestList(),topics:sl("topics"),pet:petId()})))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  // The moment a code exists is the moment the evening has a copy outside
+  // this browser, so the export line in the Roadmap can stand down.
+  S.exportedAt=Date.now();S.exportedN=totalDone();save();
   const box=$("impcode");box.value=code;box.focus();box.select();
   const paste="Code is in the box and selected. Press "+copyKey()+" to copy it, then "+IMPORT_CMD;
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{$("syncmsg").textContent="Code copied to your clipboard. Then "+IMPORT_CMD},()=>{$("syncmsg").textContent=paste});else $("syncmsg").textContent=paste};
@@ -6280,6 +6412,9 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     // mentors or only artifacts merged something, and the confirmation says so
     // instead of reporting the workstreams it never touched.
     const got={};const won=(k,n)=>{got[k]=(got[k]||0)+(n===undefined?1:n)};
+    // Stops that arrive in a code already live in one, so the export line
+    // counts them as carried: only what this browser added on its own is not.
+    const carried=totalDone()-exportDue().n;
     // How many stops an island has is the campaign's to say, so a camp that
     // adds a ninth stop can send it and a code cannot invent one.
     Object.keys(dw).forEach(w=>{const stops=CAMPAIGN[w].ws.length;if(!S.doneW[w])S.doneW[w]=[];dw[w].forEach(n=>{if(n>=1&&n<=stops&&!S.doneW[w].includes(n)){S.doneW[w].push(n);won("stop");if(started&&w===S.world)placeBuilding(n,true)}})});Object.assign(S.path,d.path||{});(d.artifacts||[]).forEach(a=>{if(!S.artifacts.includes(a)){S.artifacts.push(a);won("artifact")}});(d.mentors||[]).forEach(m=>{if(!S.mentors.includes(m)){S.mentors.push(m);won("mentor");track("verified",m)}});(d.artifactsBuilt||[]).forEach(a=>{if(!S.artifactsBuilt.includes(a)){S.artifactsBuilt.push(a);won("build");track("built",a)}if(!S.artifacts.includes(a))S.artifacts.push(a)});if(started)placePlaques(true);
@@ -6297,7 +6432,7 @@ window.importProgress=function(){try{let c=$("impcode").value.trim().replace(/-/
     if(started){(props.items||[]).filter(it=>sl("items").includes(it.id)).forEach(it=>{discard(it.m);props.items=props.items.filter(x=>x!==it)});applyWear(chars.lotte,sl("wear"))}
     // A camp nobody named exports the placeholder, which is not a person: the
     // same rule as a saved record, so the HUD never reads "<YOUR_NAME>".
-    if(d.name!==undefined){const n=cleanName(d.name);if(n)S.name=n}save();hud();renderMap();if(started)applySky(S.done.length,false);
+    if(d.name!==undefined){const n=cleanName(d.name);if(n)S.name=n}if(got.stop)S.exportedN=carried+got.stop;save();hud();renderMap();if(started)applySky(S.done.length,false);
     const parts=Object.keys(got).map(k=>got[k]+" "+k+(got[k]===1?"":"s"));
     $("syncmsg").textContent=(parts.length?"Imported: "+parts.join(", ")+". ":"That code held nothing new. ")+
       S.done.length+"/"+stopCount()+" workstreams on this island."}catch(e){$("syncmsg").textContent="That is not a valid code."}};
@@ -6322,7 +6457,44 @@ window.__avatar=()=>({pose:chars.lotte?chars.lotte.pose:null,seat:chars.lotte?ch
   sitting:(props.mentors||[]).filter(c=>c.pose==="sit").length,
   items:sl("items"),ach:sl("ach"),wear:sl("wear"),wearing:chars.lotte&&chars.lotte.wearG?chars.lotte.wearG.children.length:0});
 window.__debug=()=>({pos:chars.lotte?chars.lotte.g.position.toArray():null,vel:chars.lotte&&chars.lotte.vel?chars.lotte.vel.toArray():[0,0,0],label:playerPlate(),near:nearK,started,world:S.world,bridges:bridges.map(b=>({a:b.a,b:b.b,open:b.open,near:b.near,len:b.len,pa:[b.pa.x,b.pa.z],pb:[b.pb.x,b.pb.z],mid:[b.mid.x,b.mid.z]})),onBridge:chars.lotte?!!onBridge(chars.lotte.g.position.x,chars.lotte.g.position.z):false,onLand:chars.lotte?onLandW(chars.lotte.g.position.x,chars.lotte.g.position.z):false,flying:!!flight,draws:renderer?renderer.info.render.calls:0,frame:renderer?renderer.info.render.frame:0,mentors:MENTORS.map(m=>({id:m.id,world:m.world,exercise:m.encounter.exercise.file,done:S.mentors.includes(m.id),seen:S.met[m.id]||0})),vault:()=>VSIM?{alpha:VSIM.alpha(),n:VN.length,sample:VN.slice(0,4).map(n=>[Math.round(n.x),Math.round(n.y)])}:null});
-window.reset=function(){if(!confirm("Decommission the campus and reset to greenfield?"))return;try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}location.reload()};
+/* ---------------- continuity: the export line ---------------- */
+// The whole evening is one record in one browser's localStorage, so while
+// stops exist that no exported code carries, the Roadmap's sync card says so.
+// The mark that says a write happened is the save() tick in 00-state.js; this
+// is only the line, a view of S rebuilt on every write.
+// What has not left this browser, {n, since}: the stops beyond the number a
+// code is known to carry (S.exportedN, set by an export and by an import), or
+// every stop when no code ever did. A record from before S.exportedN counts
+// the claims since S.exportedAt, which is right until the event log, capped
+// at EVENT_CAP, lets them go.
+function exportDue(){const total=totalDone();
+  if(typeof S.exportedN==="number")return {n:Math.max(0,total-S.exportedN),since:true};
+  const at=typeof S.exportedAt==="number"?S.exportedAt:0;
+  if(!at)return {n:total,since:false};
+  return {n:(S.events||[]).filter(e=>e.kind==="claim"&&e.ts>at).length,since:true}}
+function exportLine(){const d=exportDue();if(!d.n)return "";
+  const stops=d.n+(d.n===1?" stop":" stops");
+  return d.since?stops+" since your last export. Export again so the code you keep is the whole evening."
+    :stops+" so far, and they live only in this browser. Export a code and keep it somewhere safe: clearing this browser's data clears them."}
+// The line is made once, above the Export button, and afterwards only its
+// text and its hidden flag change, and only when they differ.
+function exportNudge(){let el=$("exportnudge");
+  if(!el){const btn=document.querySelector('#s-map button[onclick="exportProgress()"]');if(!btn)return;
+    el=document.createElement("p");el.id="exportnudge";el.className="small";el.hidden=true;
+    el.style.cssText="border-left:3px solid var(--yellow);padding-left:10px;margin:8px 0";
+    btn.parentNode.parentNode.insertBefore(el,btn.parentNode)}
+  const t=exportLine();if(el.textContent!==t)el.textContent=t;if(el.hidden!==!t)el.hidden=!t}
+// save() stays the one write and keeps its own arguments and result: the
+// line follows it, and nothing else about a write changes here.
+const saveRecord=save;
+save=function(){const r=saveRecord.apply(this,arguments);exportNudge();return r};
+exportNudge();
+// A reset is the one thing that clears the record on purpose, so its confirm
+// says what no code carries yet.
+window.reset=function(){const d=exportDue(),one=d.n===1;
+  const warn=!d.n?"":"\n\n"+d.n+(one?" stop ":" stops ")+(d.since?"delivered since your last export "+(one?"is":"are")+" in no code yet."
+    :(one?"has":"have")+" never been exported, so nothing can bring "+(one?"it":"them")+" back.")+" Export progress in the Roadmap first to keep a copy.";
+  if(!confirm("Decommission the campus and reset to greenfield?"+warn))return;try{localStorage.removeItem(KEY);localStorage.removeItem(OLD_KEY)}catch(e){}location.reload()};
 
 // Settings: dropdowns that change the game without a rebuild. They persist
 // in S.settings (the same localStorage record as progress) and apply at once.
@@ -7066,6 +7238,68 @@ window.openDashboard=function(){renderDashboard();openSheet("s-dash")};
 // Time played is the one metric with no click behind it, so the panel counts
 // it: one event a minute while the island is on screen and the tab is visible.
 setInterval(()=>{if(typeof started!=="undefined"&&started&&!document.hidden)track("play","tick",60)},60000);
+/* ---------------- the break card ---------------- */
+// After about fifty minutes on screen in one sitting Rolinda says, once, that
+// this is a good place to stop, and where the player is. It never blocks: it
+// waits until no stop or panel is open, it goes with one click or Escape, and
+// it can be switched off. The sitting is read from the play ticks above, which
+// only count while the tab is visible, so a locked phone earns nothing; a gap
+// of ten minutes between ticks ends a sitting. A card nobody is there to read
+// is not shown: some key or touch in the last two minutes is the proof.
+const BREAK_AFTER_S=50*60,BREAK_GAP_MS=10*60000,BREAK_AWAY_MS=2*60000,BREAK_EVERY_MS=3000;
+let breakInputAt=0,breakChecks=0;
+const breakHere=()=>{breakInputAt=Date.now()};
+addEventListener("keydown",breakHere,{capture:true,passive:true});
+addEventListener("pointerdown",breakHere,{capture:true,passive:true});
+// The current sitting: its seconds on screen and the time of its first tick.
+function breakSitting(){const now=Date.now(),ticks=dashEvents().filter(e=>e.kind==="play"&&e.id==="tick");
+  let s=0,from=0,next=now;
+  for(let i=ticks.length-1;i>=0;i--){const e=ticks[i];if(next-e.ts>BREAK_GAP_MS)break;s+=e.v||60;from=e.ts;next=e.ts}
+  return {s:s,from:from}}
+function breakDue(){if(settings().breaks==="off")return false;const st=breakSitting();
+  return st.s>=BREAK_AFTER_S&&!(typeof S.breakAt==="number"&&S.breakAt>=st.from)}
+// Between stops: the island is on screen and nothing stands in front of it.
+function breakClear(){return typeof started!=="undefined"&&started&&!flight&&
+  !document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")&&!(typeof photoOn==="function"&&photoOn())}
+function breakCheck(){breakChecks++;
+  if($("breakcard")||!breakDue()||!breakClear()||Date.now()-breakInputAt>BREAK_AWAY_MS)return;
+  showBreak(breakSitting().s)}
+function breakClose(){const el=$("breakcard");if(el)el.remove()}
+function breakButton(label,primary,fn){const b=document.createElement("button");b.type="button";b.textContent=label;
+  if(primary)b.className="primary";b.style.minHeight="44px";b.addEventListener("click",fn);return b}
+// Where the player is, in Rolinda's words: the island, the stops, the next one.
+function breakWhere(){const n=S.done.length,total=stopCount(),next=CH.findIndex((c,i)=>!S.done.includes(i+1));
+  return "You are on "+dashIsland(S.world||"campus")+", "+n+" of "+total+" stops delivered"+
+    (next<0?", which is all of them.":", and "+CH[next].h+" "+CH[next].n+" is next.")}
+// Just under the HUD, whose height is the width's business (one row on a
+// laptop, three on a phone), so it is measured again when the screen turns.
+function breakPlace(card){card.style.top=Math.round($("hud").getBoundingClientRect().bottom-$("stage").getBoundingClientRect().top+12)+"px"}
+addEventListener("resize",()=>{const c=$("breakcard");if(c)breakPlace(c)});
+function showBreak(secs){S.breakAt=Date.now();save();
+  const card=document.createElement("div");card.id="breakcard";card.className="card";
+  card.setAttribute("role","region");card.setAttribute("aria-label","A good place to stop");
+  card.style.cssText="position:absolute;z-index:41;left:16px;right:16px;margin:0 auto;max-width:420px;"+
+    "box-shadow:var(--lift);pointer-events:auto";breakPlace(card);
+  const hudEl=$("hud");
+  const who=document.createElement("p");who.className="small muted";who.style.margin="0 0 4px";who.textContent=roleName("rolinda");
+  const h=document.createElement("h3");h.style.margin="0 0 6px";h.textContent=Math.floor(secs/60)+" minutes. A good place to stop.";
+  // The words are a status line, so a screen reader hears them once as they
+  // arrive; the buttons follow in the tab order right after the HUD.
+  const p=document.createElement("p");p.className="small";p.setAttribute("role","status");
+  const due=exportDue().n>0;
+  p.textContent="You have been at it for a while. "+breakWhere()+" Everything is saved in this browser, so it will be right here when you come back."+
+    (due?" If you might carry on somewhere else, export a code first.":"");
+  const row=document.createElement("div");row.className="row";
+  row.appendChild(breakButton("Keep going",true,breakClose));
+  if(due)row.appendChild(breakButton("Export progress",false,()=>{breakClose();openSheet("s-map");exportProgress()}));
+  row.appendChild(breakButton("Stop reminding me",false,()=>{breakClose();setSetting("breaks","off")}));
+  card.append(who,h,p,row);
+  hudEl.parentNode.insertBefore(card,hudEl.nextSibling);fx(card)}
+addEventListener("keydown",e=>{if(e.key==="Escape"&&!e.defaultPrevented&&$("breakcard")&&!document.querySelector("#sheet.on,#vault.on,#pal.on")){breakClose();e.preventDefault()}});
+setInterval(breakCheck,BREAK_EVERY_MS);
+// Test seams: the break check as it stands, and a player who walked away.
+window.__breaks=()=>({checks:breakChecks,due:breakDue(),sitting:breakSitting().s});
+window.__breakAway=()=>{breakInputAt=0};
 // Test seam: the derived numbers, so a test can assert on them without
 // re-deriving the shapes by hand.
 window.__dash=()=>{const st=dashStats();return {events:st.ev.length,stops:st.stops,xp:st.xp,stopXp:dashStopXp(),streak:st.streak,played:st.played,dwell:st.dwell,met:st.met,claims:st.claims.length}};
