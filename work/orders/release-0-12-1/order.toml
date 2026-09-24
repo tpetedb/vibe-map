@@ -6,7 +6,7 @@ branch = "release/0.12.1"
 goal = "release-0-12-1"
 issue = 214
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-release-0-12-1"
 
 owns = [
   "CHANGELOG.md",
