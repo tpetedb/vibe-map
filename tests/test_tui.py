@@ -21,6 +21,7 @@ from vibemap.themes import THEMES
 from vibemap.tui import Checks, Dotfiles, Launch, Map, VibeApp, Welcome
 
 SMALL = (80, 24)
+ST = State(name="Lotte")
 
 
 def drive(coro: Callable[[], Awaitable[Any]]) -> Any:
@@ -81,8 +82,8 @@ def test_onboarding_screens_walk_through(tmp_path: Path) -> None:
             await pilot.click("#next")
             await pilot.pause()
             assert isinstance(app.screen, Launch)
-            buttons = app.screen.query(Button)
-            assert any(b.id == "act-yolo" for b in buttons)
+            # A learner who has not done the permissions lessons cannot skip them.
+            assert app.screen.query_one("#act-yolo", Button).disabled
             await pilot.click("#act-map")
             await pilot.pause()
             assert isinstance(app.screen, Map)
@@ -304,14 +305,32 @@ def test_a_version_string_arrives_without_escape_codes() -> None:
 def test_launchers_grey_out_what_a_camp_cannot_run(tmp_path: Path, monkeypatch) -> None:
     from vibemap import tui
 
-    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers()}
+    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers(ST)}
     assert rows["tests"][1] is False  # the product has tools/build.py
     assert "hosted" in rows["play"][0] and "build" not in rows["news"][0]
     monkeypatch.setattr(tui, "ROOT", tmp_path)
-    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers()}
+    rows = {key: (hint, disabled) for key, _, hint, disabled in tui.launchers(ST)}
     assert rows["tests"][1] is True
     assert rows["tests"][0] == tui.NO_ENGINE
     assert rows["play"][1] is False and rows["news"][1] is False
+
+
+def test_yolo_mode_waits_for_the_permissions_lessons() -> None:
+    from vibemap import tui
+
+    def yolo(st: State) -> tuple[str, bool]:
+        rows = {key: (hint, off) for key, _, hint, off in tui.launchers(st)}
+        return rows["yolo"]
+
+    st = State(name="Lotte")
+    hint, off = yolo(st)
+    assert off, "a beginner was offered claude --dangerously-skip-permissions"
+    assert "skips every permission prompt" in hint
+    assert "Hooks as gates" in hint and "Claude Code, the power settings" in hint
+    st.mark_done("desert", 4)
+    assert yolo(st)[1], "one of the two permissions lessons is not enough"
+    st.mark_done("prod", 5)
+    assert yolo(st) == ("claude --dangerously-skip-permissions", False)
 
 
 def test_the_progress_line_carries_stops_mentors_and_artifacts() -> None:

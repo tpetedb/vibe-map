@@ -71,14 +71,38 @@ def has_engine() -> bool:
     return (ROOT / "tools" / "build.py").exists()
 
 
-def launchers() -> list[tuple[str, str, str, bool]]:
+# The stops that teach permissions; YOLO mode skips every prompt they explain.
+PERMISSION_STOPS = (("desert", 4), ("prod", 5))
+
+
+def knows_permissions(state: State) -> bool:
+    """True once the learner has done every stop that teaches permissions."""
+    return all(state.is_done(world, n) for world, n in PERMISSION_STOPS)
+
+
+def yolo_locked_hint() -> str:
+    """Why YOLO mode is greyed out, naming the lessons that open it."""
+    evs = campaign.evenings()
+    lessons = " and ".join(
+        f"{evs[w].workstreams[n - 1].name} ({evs[w].short}, stop {n})"
+        for w, n in PERMISSION_STOPS
+    )
+    return f"skips every permission prompt; opens once you have done {lessons}"
+
+
+def launchers(state: State) -> list[tuple[str, str, str, bool]]:
     """(key, title, hint, disabled) for the launch screen, camp or product."""
     engine = has_engine()
-    return [
-        (key, title, NO_ENGINE if key in ENGINE_ONLY and not engine else hint,
-         key in ENGINE_ONLY and not engine)
-        for key, (title, hint) in ACTIONS.items()
-    ]  # fmt: skip
+    locked = not knows_permissions(state)
+    rows = []
+    for key, (title, hint) in ACTIONS.items():
+        off = key in ENGINE_ONLY and not engine
+        if off:
+            hint = NO_ENGINE
+        if key == "yolo" and locked:
+            hint, off = yolo_locked_hint(), True
+        rows.append((key, title, hint, off))
+    return rows
 
 
 BANNER = r"""
@@ -405,7 +429,7 @@ class Launch(Screen[None]):
             )
             if self.cfg.pet.enabled:
                 yield PetWidget(self.cfg, self.state.name)
-            for key, title, hint, disabled in launchers():
+            for key, title, hint, disabled in launchers(self.state):
                 with Horizontal(classes="action"):
                     yield Button(
                         title,
