@@ -2,65 +2,70 @@
 v = 1
 order = "board-and-memory"
 by = "reviewer-board-and-memory-r1"
-reviewed = "f628b01214e103043a1cb9629ec7843e9243a8d7"
-verdict = "improve"
+reviewed = "bf87b3e28a101fd4ef45d1a8e68da58de7bcbd36"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = "Ran uv run pytest -q tests/test_board.py tests/test_memory.py: all pass. Then broke the fixes one at a time in a scratch copy (git archive of f628b01 in /tmp): removing the lock around mutations in serve() fails test_two_server_processes_writing_at_once_lose_nothing ('41 writes lost'); removing the room lock in append() (keeping the mkdir, splitting the write) fails the two-writers test 3 of 3 runs; disabling the SECRET check fails both secret cases; disabling the entity cap fails the 301-entity case; dropping tools/board.py from PRODUCT_ONLY_HOOKS fails the camp test. So the tests bite. Beyond the fake server the tests use, I raced three REAL @modelcontextprotocol/server-memory@2026.8.31 processes, 40 create_entities each: without the proxy 55 of 120 entities survived, through tools/board.py memory-serve 120 of 120. The pinned server's dist/index.js does write a temp file and fs.rename it, as the ADR says. The hook-with-no-memory-file test runs the literal command strings from both config files under sh."
+evidence = "Ran uv run pytest -q tests/test_board.py tests/test_memory.py on bf87b3e: all pass, the 3.9 hook cases included (not skipped; /usr/bin/python3 is 3.9.6). Broke three fixes in a scratch copy (git archive of bf87b3e in /tmp): the memory lock in remember() swapped for a nullcontext (mkdir kept) fails test_two_cli_writers_at_once_lose_nothing 3 of 3 runs with 24, 27 and 24 writes lost; 'from datetime import UTC' put back fails both older-python3 hook cases with the ImportError; READ_BUDGET 12000 fails the budget test at 11,783 characters. So the tests bite. Beyond the tests I raced two real CLI loops, 40 'board.py memory add' processes each, into a scratch VIBE_MEMORY_FILE: 80 of 80 entities, lint ok, index.json 118 rows (38 orders, 80 entities), no .tmp left, 'memory index' afterwards leaves index.json byte-identical (same md5). search finds an entity and an order row. Under /usr/bin/python3 3.9 'memory search' works and 'memory add' refuses with exit 2 and writes nothing."
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "The command passes, but it proves less than the sentence: it runs THIS worktree's tools/board.py from another cwd, and board.py resolves the room from its own file location (git -C ROOT), so the cd changes nothing. The sentence is proven elsewhere: test_a_linked_worktree_reads_and_writes_the_same_room runs each checkout's own copy of board.py in a real main plus linked worktree and gets identical output naming main/.git/board; and on this machine every one of the 32 worktrees reports /Users/maxgroupit/vibe-map/.git as its common dir. I ran the reader here and from the main checkout's cwd: byte-identical, 10,684 characters. memory-lint on the live file: 'memory ok: 11 entities'. The reader takes 2.0 s and touches no network (work.landed reads origin/main locally)."
+evidence = "The command passes, and I widened it: git grep over every tracked file for server-memory, memory-mcp, read_graph, mcp_servers, memory-serve and mcp__memory finds only history (ADR 0018's record of the server choice), the order's own text, and the assertions in tests/test_board.py that say they are absent; vibemap/quests.py _local_mcp_servers is older product code. scripts/ holds setup.sh and vibe.zsh only, no .mcp.json, .codex/config.toml has no [mcp_servers], .claude/settings.json has no deny rule for memory, tools/sync_template.py lost the matching exclusion. Neither file ever existed on origin/main (git cat-file). 'claude mcp list' and 'claude mcp get memory' from this worktree: no server named memory. The live store: 'memory ok: 11 entities in /Users/maxgroupit/vibe-map/.git/board/memory.jsonl'. Three of those 11 still describe the dropped server (low finding)."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "Ran the c3 command myself on f628b01: ruff, format, style, sinks, the non-browser battery and build/regen_tree/gen_cookbook/sync_template/sync_fork_source/gen_syllabus --check all exit 0; vibemap/data/template/_claude/settings.json holds only the backup PostToolUse hook, no SessionStart, no permissions, no 'memory'. The template has no .mcp.json, no _mcp.json and no _agents/skills/shared-memory (listed). The grep is narrow (only the word memory) but the camp test in test_board.py also asserts no board.py and no SessionStart, and I saw it fail when the strip is reverted."
+evidence = "The command passes but proves less than the sentence (low finding, carried from round 1): it runs THIS worktree's board.py from another cwd and board.py resolves the room from its own location, so the cd changes nothing. The sentence is proven by test_a_linked_worktree_reads_and_writes_the_same_room, which builds a real main plus linked worktree and runs each checkout's own board.py; it passed. Live: the reader here names /Users/maxgroupit/vibe-map/.git/board/ROOM.md, the main checkout's common dir."
 
 [[criteria]]
 id = "c4"
-verdict = "fail"
-evidence = "Not proven, and the Codex half is not mine to rule: I leave the Codex-client proof (codex mcp list, read_graph disabled, the cross-worktree probe from a Codex session, the Codex digest on first turn, hook trust through Codex's own prompt) to the Codex reviewer, explicitly. The Claude half on this machine: from the worktree, `claude mcp list` shows 'memory: sh -c exec sh \"$CLAUDE_PROJECT_DIR/scripts/memory-mcp.sh\" - Pending approval (run `claude` to approve)' and `claude mcp get memory` shows Scope: Project config, Status: Pending approval. So memory does not connect yet; it waits on the one-time human approval, which a reviewer must not grant. What I could prove: the exact .mcp.json launch line, run under sh with CLAUDE_PROJECT_DIR set (Claude Code's MCP docs say it sets that variable in a stdio server's environment, and the unbraced $VAR is left for sh), initializes the real pinned server (memory-server 0.6.3, nine tools), create_entities and search_nodes round-trip into VIBE_MEMORY_FILE, read_graph comes back isError with the search_nodes hint and never reaches the server. This criterion passes when the Codex reviewer rules it and the Claude server is approved and shows Connected."
+verdict = "pass"
+evidence = "Read the diff of work/teams.toml: harness gains .codex/, .mcp.json, config.toml, compose.agents.yaml, mise.toml, mise.lock, copier.yml, .copier-answers.yml, .pre-commit-config.yaml, .gemini/, .aider.conf.yml, evals/, nothing removed. .codex/config.toml holds exactly [sandbox_workspace_write] writable_roots = [\"../.git/board\"], nothing else (no sandbox_mode, no profile, no mcp_servers), which is DECISION section 2 amendment A2 to the letter; the test asserts the table equals that one key. Relative to .codex/ in the main checkout that is /Users/maxgroupit/vibe-map/.git/board, the folder the reader uses. 'work.py validate' reads 38 orders with 0 collisions this checkout answers for. That Codex resolves the relative root as documented is the Codex reviewer's receipt (c6)."
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
-evidence = "Read work/BOARD.md, .agents/skills/shared-memory/SKILL.md and docs/adr/0018-shared-memory.md in full. BOARD.md: what the board decides (scope and sequence, review swaps, machine use, the harness through an order), what it never overrides (work-check, work-accept, CI on the exact head plus branch protection, Tom), names kind:slug with entityType = kind, observations 'YYYY-MM-DD [team:t] fact, src: pointer' at 200 characters and 8 per entity, the never-store list, and 'The room: short-term, append-only'. The skill repeats the conventions and the never-store list and defers the decides/never-overrides part to BOARD.md as 'the protocol'; I accept that split. ADR 0018: the choice (official server pinned 2026.8.31), the runner-up Basic Memory with four reasons, and the switch condition 'about 300 entities, or when a question cannot be answered by a substring search on one keyword'. One contradiction noted as a low finding (LANDED)."
+evidence = "Ran every part myself on bf87b3e: ruff check, ruff format --check, checks.py style, checks.py sinks, the non-browser battery (pytest -m 'not browser and not integration', exit 0), build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check, work.py validate, and the template grep: all exit 0. vibemap/data/template/_claude/settings.json holds only the backup PostToolUse hook; _agents/skills has no shared-memory; the template has no _codex, no .mcp.json; a grep of the template and fork_source for board.py, shared-memory and .git/board finds nothing (one false hit on dashboard.py). The camp test in test_board.py covers the strip."
 
-[[findings]]
-severity = "high"
-file = ".codex/hooks.json"
-text = "Landing this breaks Tom's main checkout and strips Codex's work-order hooks there. /Users/maxgroupit/vibe-map carries an UNTRACKED .codex/hooks.json (plus .codex/agents/*.toml) holding Codex's copy of the harness hooks: PreToolUse edit guard (tools/work.py hook pre-tool), PostToolUse data backup, SubagentStop and Stop (tools/work.py hook stop). This order tracks a different .codex/hooks.json with only SessionStart. Reproduced in a scratch repo: merging a branch that adds a tracked file over an untracked one aborts with 'The following untracked working tree files would be overwritten by merge: .codex/hooks.json'. Whoever clears it by taking the tracked file silently loses Codex's four work-order hooks in the main checkout. The .codex/config.toml comment 'Everything else in .codex/ is the client's own machine state' is also untrue: .codex/agents holds Codex's role definitions. Fix inside the order's own files: make the tracked .codex/hooks.json the union (SessionStart plus the four hooks Codex already runs, checked against tools/work.py), agree it with Team Codex on the issue, correct the config.toml comment, and say in BOARD.md what the main checkout must do once (move the untracked file aside) before pulling."
+[[criteria]]
+id = "c6"
+verdict = "fail"
+evidence = "Not ruled by me, and left to the Codex reviewer as the order and the orchestrator say: the fresh, resumed and linked-worktree Codex sessions writing ROOM.md through the board root, the denials on .agents/ and other .git paths, the Codex digest on the first turn, hook trust through Codex's own /hooks prompt, and no server in 'codex mcp list' are unobserved here (installed client: codex-cli 0.156.1). Marked fail only because it is unproven: work-accept must wait for that receipt. What I could check: Codex's hooks docs (learn.chatgpt.com/docs/hooks) say additionalContextLimit is in tokens, default about 2,500, and SessionStart matchers are exactly startup, resume, clear, compact, so the tracked 5000 and the four-source matcher are valid; the live read text is 8,693 characters with the 2,009-character digest in the first lines, well inside 5,000 tokens. The Codex hook command run under sh with no CLAUDE_PROJECT_DIR and under /usr/bin/python3 3.9 prints the header and exits 0 (tests, and by hand). Claude half: 'claude mcp list' in this worktree registers no memory server; the Claude SessionStart command run by hand prints the digest."
 
-[[findings]]
-severity = "low"
-file = "work/orders/board-and-memory/order.toml"
-text = "c2's command does not prove its sentence: it runs this worktree's board.py from another cwd, and board.py resolves the room from its own location, so the cd is a no-op. The real proof is the linked-worktree test in c1. A command that runs the reader through the other worktree's own tools/board.py (once it exists there) or through git -C <other> rev-parse --git-common-dir would say what the sentence says."
-
-[[findings]]
-severity = "low"
-file = "tools/board.py"
-text = "Nothing bounds the whole session-start text, only the digest. Live today it is 10,684 characters, of which the checked-out list is 20 lines up to 200 characters each and grows with every worktree; the digest comes last, so any truncation cuts the memory first. Codex's additionalContextLimit 5000 is a token threshold (per its hooks docs, default 2500) so it fits today; the ADR's 'a few thousand characters' understates it. Cap the checked-out list (ids and branches only, or the N most recent) or put the digest before it."
-
-[[findings]]
-severity = "low"
-file = "tools/board.py"
-text = "The hook runs a bare python3, and board.py needs 3.11+ (from datetime import UTC). /usr/bin/python3 on this Mac is 3.9.6: the import fails with a traceback and exit 1 before the reader's own try/except, so a session whose PATH lacks Homebrew or a venv gets a hook error instead of the digest. The existing tools/work.py hooks share this precondition, so it is not new, but the docstring 'a hook can run it with a bare python3' should say 3.11 or the import should not need it."
+[[criteria]]
+id = "c7"
+verdict = "pass"
+evidence = "Read work/BOARD.md, .agents/skills/shared-memory/SKILL.md and docs/adr/0018-shared-memory.md whole. BOARD.md: what the board decides (scope and sequence, review swaps, machine use, the harness through an order), what it never overrides (work-check, work-accept, CI on the exact head and branch protection, Tom), the record schema (kind:slug, entityType = kind, 'YYYY-MM-DD [team:t] fact, src: pointer'), caps (200 characters, 8 observations, 300 entities), the never-store list, 'every read and write goes through tools/board.py' with add, search, index and lint in a table, and 'The room: short-term, append-only'. The skill repeats schema, caps, never-store and the commands. ADR 0018 carries 'Superseded by: DECISION #193 section 4' and a status line naming it, and keeps the server choice with Basic Memory as runner-up and the four reasons. The round-1 LANDED contradiction is resolved: BOARD.md and the skill now say the landing manager types LANDED and mirror posts it only when the derived column agrees. No em-dashes (checks.py style)."
 
 [[findings]]
 severity = "low"
 file = "work/BOARD.md"
-text = "BOARD.md says CLAIM and LANDED 'are derived from facts rather than typed' and the skill says 'never post those by hand', yet mirror posts typed LANDED entries whose order work.py confirms, and the ADR says 'verified LANDED entries are mirrored'. Say who types LANDED (the landing manager) or drop LANDED from the mirror."
+text = "The live memory still teaches the dropped design at every session start: decision:shared-memory says 'Official MCP memory server pinned 2026.8.31, writes serialized, read_graph off; switch to Basic Memory', gotcha:memory-substring-search talks about search_nodes, and component:tools/board.py calls it 'the memory proxy that serializes writes'. All three are in the digest both teams see. Runtime state, not a file of this branch, so it does not hold the landing: whoever lands it runs three 'just memory-add ... --replace' writes (or adds decision:memory-files with --relate supersedes=decision:shared-memory) in the same step."
 
 [[findings]]
 severity = "low"
-file = ".claude/settings.json"
-text = "The SessionStart matcher is startup|resume|clear|compact; Claude Code's hooks docs list a fifth source, fork. A forked session inherits the earlier context, so the cost is small, but the matcher could simply be omitted to fire on every start."
+file = "work/orders/board-and-memory/order.toml"
+text = "c3's command does not prove its sentence: it runs this worktree's board.py from another cwd, and board.py resolves the room from its own location, so the cd is a no-op (carried from round 1). The linked-worktree test in c1 is the real proof; a command using git -C <other> rev-parse --git-common-dir, or the other checkout's own board.py once it has one, would say what the sentence says."
 
 [[findings]]
 severity = "low"
 file = "tools/board.py"
-text = "serve() holds the memory lock for up to 60 s waiting for a mutation's response and blocks that proxy's whole input loop meanwhile. A server reply that carries no id (a parse error) or a hung npx fetch holds every other session's writes for the full minute. Acceptable for now; worth a shorter timeout or releasing on any error response."
+text = "index.json is shared by every worktree, but its order rows come from the work/orders of whichever checkout last ran memory add or memory index, so the rows change with the writer's branch (an order folder that exists only on its branch appears and vanishes). BOARD.md says so; reading the orders from origin/main plus the checked-out branches would make the shared index the same from every checkout."
+
+[[findings]]
+severity = "low"
+file = "work/orders/board-and-memory/order.toml"
+text = "owns lists scripts/memory-mcp.sh and .mcp.json 'so that this order may delete them', but neither exists on origin/main (PR #192 never landed), and DECISION #193 section 4 says the order's owns go without them. Harmless dead entries; drop them."
+
+[[findings]]
+severity = "low"
+file = "tools/board.py"
+text = "memory add --replace drops every observation containing the substring, not one: a short --replace value can silently remove several facts in one write. Refuse when more than one observation matches, or say 'every' in the help."
+
+[[findings]]
+severity = "low"
+file = "docs/adr/0018-shared-memory.md"
+text = "'The switch condition below (Basic Memory) is replaced by that rule' points below, but the switch condition is in the Decision section above it."
