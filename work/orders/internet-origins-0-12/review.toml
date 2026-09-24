@@ -1,13 +1,33 @@
+# Round 3, a delta review for the PR183 train. Round 2 accepted a3a697c (unchanged
+# at 47879cd). This round read only what changed in the order's files since then:
+# git diff 47879cd f859c13 -- vibemap/data/topics/core/cloud.toml
+# tests/test_origins_agents.py (the Galaxy merge: a Google data-centre echo on
+# cloud, and an llm actor pair in the agents test). Each criterion opens with the
+# delta ruling; the round 2 evidence and findings below it are kept as history.
 v = 1
 order = "internet-origins-0-12"
-by = "reviewer-internet-origins-0-12-r2"
-reviewed = "a3a697c031995591b84411950ca643a775e5d4c8"
+by = "reviewer-internet-origins-0-12-pr183-delta"
+reviewed = "f859c1336d28a66c85bcabbce979f6b5f4fc1a11"
 verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = """Ran the nine files fresh (no cache, after slot-wait): all pass. The whole \
+evidence = """Round 3 (f859c13): ran tests/test_internet_origins.py, test_origins_agents.py, \
+test_origins_code_git.py, test_origins_ship_docs.py and test_places.py fresh with no \
+cache: 86 passed, exit 0; the other four c1 files (topics, syllabus, \
+integrated_origin_locations, origins_data_engineering) pass too. The changed test \
+still bites, proved in a scratch copy of f859c13 under ~/.cache with its own venv \
+(vibemap imported from the copy): cloud's primary put back at the-internet fails \
+test_each_move[cloud], the primaries-and-echoes test, the left-at-the-internet test \
+and test_origins_ship_docs::test_announcements_stand_in_a_town_only_with_a_dated_page; \
+amazon-seattle kept but the Seattle press release dropped from sources fails \
+test_each_move[cloud] and that ship_docs test; skills put back online fails \
+test_origins_agents::test_a_company_address_needs_a_dated_page_that_places_the_event; \
+an llm line naming neither Google nor Alibaba fails \
+test_milestones_name_the_actor_and_use_dated_sources. So the any-of actor change \
+still requires a named actor on every agents-shelf line. Round 2: \
+Ran the nine files fresh (no cache, after slot-wait): all pass. The whole \
 unit suite (-m 'not browser and not integration') gives 888 passed, and CI run \
 35950345184 on a3a697c has that step green; only the work-orders step is red, which \
 waits for this review and the docs and cli sign-offs. The command proves the sentence: \
@@ -26,7 +46,11 @@ fixed with an exact set equality over the topics present."""
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = """Ran it fresh: places.problems() returns 0 lines; build, regen_tree, \
+evidence = """Round 3 (f859c13): places.problems() prints []; build, regen_tree, \
+gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check each exit 0 \
+with the echo in; checks.py style prints style OK; neither changed file has an em \
+dash. Round 2: \
+Ran it fresh: places.problems() returns 0 lines; build, regen_tree, \
 gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check each exit 0; \
 checks.py style prints no em dashes, no emoji. No added diff line has an em dash. \
 The built game carries both new places, and vibe places byu-provo / san-francisco \
@@ -35,7 +59,24 @@ print the pylibs and kubernetes lines. The command proves the sentence."""
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = """I fetched and read the town page of all nineteen moves myself \
+evidence = """Round 3 (f859c13): cloud keeps the accepted move. Its one primary is \
+amazon-seattle 2006 with the EC2 beta line, and the Seattle-datelined S3 press \
+release is still under sources, which the test pins. The added echo sits at \
+a-data-centre, an abstract place whose file claims no earthly location: year 2006, \
+'Google opens its first data centre in The Dalles, Oregon, in 2006.', source \
+https://www.datacenters.google/locations/oregon/, also listed under sources. I opened \
+that page (WebFetch). It is Google's own page, and its 2006 milestone reads 'Google \
+opens our first data center in The Dalles, Oregon.' Its intro reads 'In 2006, we \
+began a path of building and operating our own data centers ... and it all began here \
+in The Dalles, Oregon.' The page carries no publication date; the year is its own \
+2006 milestone entry. It gives the year, the actor and the event the line states, so \
+it meets the first rule in docs/TOPICS.md. The pin is abstract, so no town claim needs \
+a dated town page; the rule's last clause ('an appropriate abstract place supported \
+by the event source') covers it. The echo moves nothing off the-internet, so the \
+nineteen moves and the nine refuted ones are as accepted. docs/TOPICS.md is \
+byte-identical to 47879cd, and so is every other owned file except these two. No em \
+dashes. Round 2: \
+I fetched and read the town page of all nineteen moves myself \
 (curl, tags stripped): Project Vend 'Jun 27, 2025 ... the Anthropic office in San \
 Francisco' (agenthooks, cost, hooks, skills); SEC exhibit 99.1 'MOUNTAIN VIEW, Calif. - \
 April 23, 2015' (apis); Google 10-K 'For the fiscal year ended December 31, 2011 ... \
@@ -67,6 +108,43 @@ comment, and each source names the town. docs/TOPICS.md: one added clause ('or f
 dated first-party page that does, listed under [[sources]] and named in the comment \
 above the origins') plus the checklist line; it is true, every moved topic's comment \
 names its page, and it is short. No em dashes."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/cloud.toml"
+text = """Round 3. The echo's 'its first data centre' copies Google's milestone, but the \
+same page frames it as the first data centre Google built and operates itself \
+('building and operating our own data centers ... began here'). Google ran servers in \
+leased space before 2006, so 'its first own data centre' would say exactly what the \
+page says. Also, the page is a current location page with no publication date. It \
+carries the 2006 year for an abstract pin, but it would not on its own carry a move \
+to a The Dalles town place."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/cloud.toml"
+text = """Round 3, cosmetic. The new [[sources]] block for The Dalles has no blank line \
+before it, unlike every other block in the file. Its URL is the echo's own source, \
+which a learner already opens from the origin. cloud now lists ten sources against \
+the checklist's three to six (nine before the merge)."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_origins_agents.py"
+text = """Round 3. ACTORS['llm'] = ('Google', 'Alibaba') is an any-of, so either name \
+satisfies either llm line. A line naming neither still fails (checked). A map keyed \
+by (topic, place) would be exact. The Hangzhou echo it accommodates is in llm.toml \
+and hangzhou.toml, which galaxy-v0 owns, not this order; this delta did not check \
+the Qwen3 source."""
+
+[[findings]]
+severity = "low"
+file = "work/orders/internet-origins-0-12/order.toml"
+text = """Round 3, process. As committed at f859c13, signoff-docs (e5a4af5) and \
+signoff-cli (44a6a4e) predate this delta to owned files. work.py compares the order's \
+whole contribution, so both lapse. While this review ran, someone else re-pointed \
+both to f859c13 in the working tree, uncommitted. They count once committed, and \
+again only if no owned file changes after f859c13."""
 
 [[findings]]
 severity = "low"
