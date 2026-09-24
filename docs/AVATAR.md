@@ -6,13 +6,15 @@ rebuilt from saved state whenever the island is rebuilt.
 
 ## What the player does
 
-Walk over a collectible to pick it up. Open **Backpack** for three tabs:
+Walk over a collectible to pick it up. Open **Backpack** for four tabs:
 
 - **Inventory** groups the collected objects by island and links each idea to
   the tech tree.
 - **Achievements** says what unlocked and what remains.
 - **Wardrobe** equips one earned item per slot. A second item in the same slot
   replaces the first.
+- **Notifications** keeps the messages the island has shown, newest first, even
+  after their temporary toasts fade. Quiet mode keeps the log without the toast.
 
 Walk to a free chair and use the prompt to sit. The walker opens the laptop;
 moving away stands up again. Mentors use the same seating rules, so the view
@@ -20,10 +22,12 @@ does not place two people in one chair.
 
 ## Saved state
 
-`S.items`, `S.ach` and `S.wear` are the complete record. Pose, nearby seats,
-laptop light and meshes are derived scene state. A progress code carries the
-three lists between the browser and `.vibe/state.json` without replacing
-things already earned on the other side.
+`S.items`, `S.ach` and `S.wear` record the collected and equipped rewards.
+`S.notes` keeps the browser's recent notifications. Pose, nearby seats, laptop
+light and meshes are derived scene state. A progress code carries the three
+reward lists between the browser and `.vibe/state.json` without replacing
+things already earned on the other side; the notification log stays in this
+browser.
 
 Collectibles and wearable definitions live in `vibemap/data/items.json`.
 Positions are relative to an island feature, never fixed world coordinates,
@@ -40,9 +44,10 @@ configuration.
 
 Backpack is a labelled keyboard-reachable sheet. Inventory, achievements and
 wardrobe are text lists with explicit collected, locked, unlocked and equipped
-words. Colour and the 3D mesh are supporting cues. Toasts announce a pickup or
-achievement, and quiet mode keeps the same event record without showing the
-temporary toast.
+words. Notifications is a text list of the messages behind the toasts. Colour
+and the 3D mesh are supporting cues. Toasts announce a pickup or achievement;
+quiet mode keeps the message in Notifications without showing the temporary
+toast.
 
 ## Responsible code and checks
 
