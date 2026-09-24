@@ -1,0 +1,25 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "internet-origins-0-12"
+team = "cli"
+by = "manager-cli"
+reviewed = "44a6a4e8c10d79e34523f3c434e92e55e79601ce"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """[Claude Sonnet, effort medium, team manager] Checked the diff restricted \
+to cli's files at 44a6a4e: two new place files under vibemap/data/places/ \
+(san-francisco.toml, byu-provo.toml), which fall to cli because content's own \
+path is the single file vibemap/data/places.toml, not the places/ directory. \
+Both follow santa-clara.toml key for key (id, name, kind, region, era, globe, \
+lat, lon, look, landmark, source), each with a dated source in the header \
+comment placing the actor/event in the town, matching the round-2 reviewer's \
+own fetch of the source pages. Ran vibemap.places.problems() fresh: zero. Ran \
+tests/test_places.py, tests/test_cli.py and tests/test_cli_rest.py: all pass. \
+tools/sync_fork_source.py --check passes; the touched \
+vibemap/data/fork_source/tools/generated/notes.js is that generator's own \
+output, not hand-edited. uv run vibe places lists both new places wired to \
+kubernetes (san-francisco) and pylibs (byu-provo). Nothing here is cli's to \
+fix; the four low findings in review.toml are all content's own files \
+(topics/tests), not cli paths. No follow-up for cli team."""
