@@ -50,4 +50,4 @@ checked = 2026-09-24
 title = "Safe, idempotent, neither"
 minutes = 15
 done = "methods.txt marks each method as RFC 9110 does, and problem.json carries type, title and status 404"
-check = { kind = "files", files = { "methods.txt" = ["GET safe idempotent", "HEAD safe idempotent", "PUT idempotent", "DELETE idempotent", "POST neither"], "problem.json" = ["\"type\"", "\"title\"", "\"status\": 404"] }, absent = { "methods.txt" = ["PUT safe", "DELETE safe", "POST safe", "POST idempotent"] } }
+check = { kind = "files", files = { "methods.txt" = ["GET safe idempotent", "HEAD safe idempotent", "PUT idempotent", "DELETE idempotent", "POST neither"], "problem.json" = ["\"type\"", "\"title\"", "\"status\"", "404"] }, absent = { "methods.txt" = ["PUT safe", "DELETE safe", "POST safe", "POST idempotent"] } }

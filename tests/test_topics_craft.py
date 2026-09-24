@@ -10,8 +10,12 @@ exercises where a near miss is the likely mistake.
 
 from __future__ import annotations
 
+import os
+import re
+import shlex
 import subprocess
 import sys
+from importlib.util import find_spec
 from pathlib import Path
 
 import pytest
@@ -104,6 +108,21 @@ def decode(runs):
 def test_decode_undoes_encode(text):
     assert decode(encode(text)) == text
 """
+# The same property checked over a few fixed strings, for a machine without
+# Hypothesis: nobody here depends on it, and the report the check reads should
+# still be one that the try_it's own pytest command wrote.
+PROPS_STANDIN = """def encode(text):
+    return [(ch, 1) for ch in text]
+
+
+def decode(runs):
+    return "".join(ch * n for ch, n in runs)
+
+
+def test_decode_undoes_encode():
+    for text in ["", "a", "aab", "abba"]:
+        assert decode(encode(text)) == text
+"""
 OWING = """def print_owing(customer, amounts):
     print("***********************")
     print("**** Customer Owes ****")
@@ -158,19 +177,19 @@ if not key:
 print("key found")
 """
 
-# The folder a learner ends up with, per topic: file name to text. What a tool
-# prints for the check is produced by running the tool, see RUN_PYTEST.
+# The folder a learner ends up with, per topic: file name to text. The report a
+# pytest exercise's check reads is produced by running its try_it, see PYTEST_RUN.
 WORKED: dict[str, dict[str, str]] = {
     "testdoubles": {"test_notify.py": NOTIFY},
     "fixtures": {"test_cart.py": CART},
-    "properties": {"test_props.py": PROPS, "props-out.txt": ".\n1 passed in 0.52s\n"},
+    "properties": {"test_props.py": PROPS},
     "refactoring": {"owing.py": OWING},
     "codereview": {
         "review.md": (
             "Design: the retry belongs in the client, not the handler.\n"
             "Tests: add a case for an empty list.\n"
             "Nit: the variable n could be named count.\n\n"
-            "LGTM once the retry moves.\n"
+            "Verdict: LGTM once the retry moves.\n"
         )
     },
     "apidesign": {
@@ -254,51 +273,161 @@ WORKED: dict[str, dict[str, str]] = {
     },
 }
 
-# Output the check reads that the learner produces by running a tool. Where the
-# tool is pytest, the test runs it for real and writes what it printed.
-RUN_PYTEST = {"fixtures": ("test_cart.py", "pytest-out.txt")}
+# The exercises whose check reads a report pytest writes, and the test file the
+# try_it runs. The test runs the try_it's own pytest arguments, so a try_it that
+# drifts from its check fails here.
+PYTEST_RUN = {"fixtures": "test_cart.py", "properties": "test_props.py"}
+TRY_PYTEST = re.compile(r"\buv run (?:--with \S+ )*pytest (.+?\.py)\b")
 
-# A near miss per exercise where one is the likely mistake; each must be red.
-NEAR_MISS: dict[str, dict[str, str]] = {
+# The pytest settings of the folder a hands-on sits in. Its folder is
+# workspace/topics/<id> of a camp, and pytest reads the settings of the nearest
+# pyproject.toml above it: this repository's adds -q, a fresh camp has none.
+CAMP_INI = {
+    "this-repository": (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
+    "a-fresh-camp": "",
+    "a-quiet-ini": '[tool.pytest.ini_options]\naddopts = "-qq -x"\n',
+}
+
+# Correct work the checks have to accept, written another way than WORKED.
+GREEN_VARIANT: dict[str, tuple[str, dict[str, str]]] = {
+    "apidesign-compact-json": (
+        "apidesign",
+        {
+            "methods.txt": WORKED["apidesign"]["methods.txt"],
+            "problem.json": (
+                '{"type":"https://example.com/probs/no-such-player",'
+                '"title":"No such player.","status":404}'
+            ),
+        },
+    ),
+    "supplychain-unquoted": (
+        "supplychain",
+        {"dependabot.yml": WORKED["supplychain"]["dependabot.yml"].replace('"', "")},
+    ),
+    "testdoubles-module-import": (
+        "testdoubles",
+        {
+            "test_notify.py": NOTIFY.replace(
+                "from unittest.mock import Mock", "from unittest import mock"
+            ).replace("send = Mock()", "send = mock.Mock()")
+        },
+    ),
+}
+
+# A near miss where one is the likely mistake, by case: (topic, folder); each
+# must be red.
+NEAR_MISS: dict[str, tuple[str, dict[str, str]]] = {
     # base64 with padding, the classic PKCE slip: RFC 7636 wants it stripped.
-    "oauth": {
-        "pkce.py": PKCE.replace('.rstrip(b"=")', ""),
-    },
+    "oauth": ("oauth", {"pkce.py": PKCE.replace('.rstrip(b"=")', "")}),
     # the stage is copied by number, so reordering the Dockerfile breaks it
-    "containers": {
-        "Dockerfile": (
-            "FROM python:3.12-slim\nFROM python:3.12-slim\nCOPY --from=0 /a /a\n"
-        ),
-        "compose.yaml": "services:\n  hello:\n    build: .\n",
-    },
+    "containers": (
+        "containers",
+        {
+            "Dockerfile": (
+                "FROM python:3.12-slim\nFROM python:3.12-slim\nCOPY --from=0 /a /a\n"
+            ),
+            "compose.yaml": "services:\n  hello:\n    build: .\n",
+        },
+    ),
     # POST marked idempotent, which RFC 9110 does not say
-    "apidesign": {
-        "methods.txt": WORKED["apidesign"]["methods.txt"].replace(
-            "POST neither", "POST idempotent"
-        ),
-        "problem.json": WORKED["apidesign"]["problem.json"],
-    },
+    "apidesign": (
+        "apidesign",
+        {
+            "methods.txt": WORKED["apidesign"]["methods.txt"].replace(
+                "POST neither", "POST idempotent"
+            ),
+            "problem.json": WORKED["apidesign"]["problem.json"],
+        },
+    ),
+    # every answer written down in the hope that one is right: only the absent
+    # list sees it, since the right lines are all there
+    "apidesign-every-answer": (
+        "apidesign",
+        {
+            "methods.txt": WORKED["apidesign"]["methods.txt"] + "POST idempotent\n",
+            "problem.json": WORKED["apidesign"]["problem.json"],
+        },
+    ),
     # the licence still carries the choosealicense.com placeholders
-    "licences": {
-        "LICENSE": MIT.replace("2026 Ada Lovelace", "[year] [fullname]"),
-        "hello.py": "# SPDX-License-Identifier: MIT\n",
-    },
-    # the key written into the code
-    "buildersec": {
-        ".gitignore": ".env\n",
-        "app.py": 'import os\nAPI_KEY = "sk-live-123"\nos.environ\n',
-    },
+    "licences": (
+        "licences",
+        {
+            "LICENSE": MIT.replace("2026 Ada Lovelace", "[year] [fullname]"),
+            "hello.py": "# SPDX-License-Identifier: MIT\n",
+        },
+    ),
+    # the key written into the code, under its own name or another, in either
+    # quote
+    "buildersec": (
+        "buildersec",
+        {
+            ".gitignore": ".env\n",
+            "app.py": 'import os\nAPI_KEY = "sk-live-123"\nos.environ\n',
+        },
+    ),
+    "buildersec-other-name": (
+        "buildersec",
+        {
+            ".gitignore": ".env\n",
+            "app.py": APP.replace(
+                'key = os.environ.get("API_KEY")',
+                'key = "sk-live-123"\nos.environ.get("API_KEY")',
+            ),
+        },
+    ),
+    "buildersec-single-quotes": (
+        "buildersec",
+        {
+            ".gitignore": ".env\n",
+            "app.py": "import os\nAPI_KEY='sk-live-123'\nos.environ\n",
+        },
+    ),
     # the refactoring changed the behaviour: the amount is no longer printed
-    "refactoring": {
-        "owing.py": OWING.replace('print(f"amount: {outstanding}")', "pass"),
-    },
+    "refactoring": (
+        "refactoring",
+        {"owing.py": OWING.replace('print(f"amount: {outstanding}")', "pass")},
+    ),
+    # print_details is written but never called: the prints are still inline
+    "refactoring-never-called": (
+        "refactoring",
+        {
+            "owing.py": OWING.replace(
+                "    print_details(customer, outstanding)\n",
+                '    print(f"name: {customer}")\n    print(f"amount: {outstanding}")\n',
+            )
+        },
+    ),
+    # a review with no verdict at the end
+    "codereview": (
+        "codereview",
+        {
+            "review.md": WORKED["codereview"]["review.md"].replace(
+                "Verdict: LGTM once the retry moves.\n", ""
+            )
+        },
+    ),
     # the mock expects the wrong call, so the test itself fails
-    "testdoubles": {
-        "test_notify.py": NOTIFY.replace(
-            'assert_called_once_with("ada", "welcome")',
-            'assert_called_once_with("ada", "goodbye")',
+    "testdoubles": (
+        "testdoubles",
+        {
+            "test_notify.py": NOTIFY.replace(
+                'assert_called_once_with("ada", "welcome")',
+                'assert_called_once_with("ada", "goodbye")',
+            )
+        },
+    ),
+}
+
+# A pytest exercise whose run is wrong, by case: (topic, test file text).
+PYTEST_NEAR_MISS: dict[str, tuple[str, str]] = {
+    "fixtures-a-failing-test": ("fixtures", CART.replace("== total", "== total + 1")),
+    # fourteen passed is not four passed, though its line ends in "4 passed"
+    "fixtures-fourteen-tests": (
+        "fixtures",
+        CART.replace(
+            "[(2, 3, 6), (5, 0, 0), (1, 10, 10)]", "[(n, 1, n) for n in range(13)]"
         ),
-    },
+    ),
 }
 
 
@@ -311,15 +440,42 @@ def _write(here: Path, files: dict[str, str]) -> None:
         (here / name).write_text(text, encoding="utf-8")
 
 
-def _run_pytest(here: Path, test_file: str, out_file: str) -> None:
-    out = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-p", "no:cacheprovider", test_file],
-        cwd=here,
-        capture_output=True,
-        text=True,
-        timeout=120,
-    )
-    (here / out_file).write_text(out.stdout, encoding="utf-8")
+def _pytest_args(topic_id: str) -> list[str]:
+    """The arguments the try_it gives pytest, up to the test file it names."""
+    found = TRY_PYTEST.search(topics.get(topic_id).try_it or "")
+    assert found, f"{topic_id}: the try_it names no uv run ... pytest command"
+    return shlex.split(found.group(1))
+
+
+def _run_try_it(here: Path, topic_id: str) -> str:
+    """Run the try_it's pytest command in the folder; the report is its output."""
+    name = PYTEST_RUN[topic_id]
+    written = (here / name).read_text(encoding="utf-8")
+    if "hypothesis" in written and find_spec("hypothesis") is None:
+        (here / name).write_text(PROPS_STANDIN, encoding="utf-8")
+    # The options of the run this test is part of are not the learner's.
+    env = {k: v for k, v in os.environ.items() if k != "PYTEST_ADDOPTS"}
+    try:
+        out = subprocess.run(
+            [sys.executable, "-m", "pytest", *_pytest_args(topic_id)],
+            cwd=here,
+            capture_output=True,
+            text=True,
+            timeout=120,
+            env=env,
+        )
+    finally:
+        (here / name).write_text(written, encoding="utf-8")
+    return out.stdout
+
+
+def _camp_folder(root: Path, topic_id: str, ini: str) -> Path:
+    """workspace/topics/<id> of a camp whose pyproject.toml holds `ini`."""
+    if ini:
+        (root / "pyproject.toml").write_text(ini, encoding="utf-8")
+    here = root / "workspace" / "topics" / topic_id
+    here.mkdir(parents=True)
+    return here
 
 
 # ---- the pack -------------------------------------------------------------------
@@ -428,25 +584,51 @@ def test_a_hands_on_is_red_before_the_work_and_green_after(
     done = tmp_path / "done"
     done.mkdir()
     _write(done, WORKED[topic_id])
-    if topic_id in RUN_PYTEST:
-        _run_pytest(done, *RUN_PYTEST[topic_id])
+    if topic_id in PYTEST_RUN:
+        _run_try_it(done, topic_id)
     ok, detail = run_spec(done, spec)
     assert ok, detail
 
 
-@pytest.mark.parametrize("topic_id", sorted(NEAR_MISS))
-def test_a_near_miss_is_red(topic_id: str, tmp_path: Path) -> None:
+@pytest.mark.parametrize("case", sorted(NEAR_MISS))
+def test_a_near_miss_is_red(case: str, tmp_path: Path) -> None:
+    topic_id, files = NEAR_MISS[case]
     spec = topics.get(topic_id).hands_on.check  # type: ignore[union-attr]
-    _write(tmp_path, NEAR_MISS[topic_id])
+    _write(tmp_path, files)
     ok, detail = run_spec(tmp_path, spec)
     assert not ok, detail
 
 
-def test_a_failing_pytest_run_is_red_for_the_fixtures_exercise(tmp_path: Path) -> None:
-    spec = topics.get("fixtures").hands_on.check  # type: ignore[union-attr]
-    _write(tmp_path, {"test_cart.py": CART.replace("== total", "== total + 1")})
-    _run_pytest(tmp_path, "test_cart.py", "pytest-out.txt")
+@pytest.mark.parametrize("case", sorted(GREEN_VARIANT))
+def test_correct_work_written_another_way_is_green(case: str, tmp_path: Path) -> None:
+    topic_id, files = GREEN_VARIANT[case]
+    spec = topics.get(topic_id).hands_on.check  # type: ignore[union-attr]
+    _write(tmp_path, files)
     ok, detail = run_spec(tmp_path, spec)
+    assert ok, detail
+
+
+@pytest.mark.parametrize("ini", sorted(CAMP_INI))
+@pytest.mark.parametrize("topic_id", sorted(PYTEST_RUN))
+def test_a_pytest_hands_on_is_green_in_a_camp_whatever_its_pytest_settings(
+    topic_id: str, ini: str, tmp_path: Path
+) -> None:
+    spec = topics.get(topic_id).hands_on.check  # type: ignore[union-attr]
+    here = _camp_folder(tmp_path, topic_id, CAMP_INI[ini])
+    _write(here, WORKED[topic_id])
+    printed = _run_try_it(here, topic_id)
+    ok, detail = run_spec(here, spec)
+    assert ok, f"{detail}; pytest printed: {printed[-300:]}"
+
+
+@pytest.mark.parametrize("case", sorted(PYTEST_NEAR_MISS))
+def test_a_wrong_pytest_run_is_red(case: str, tmp_path: Path) -> None:
+    topic_id, text = PYTEST_NEAR_MISS[case]
+    spec = topics.get(topic_id).hands_on.check  # type: ignore[union-attr]
+    here = _camp_folder(tmp_path, topic_id, CAMP_INI["this-repository"])
+    _write(here, {PYTEST_RUN[topic_id]: text})
+    _run_try_it(here, topic_id)
+    ok, detail = run_spec(here, spec)
     assert not ok, detail
 
 

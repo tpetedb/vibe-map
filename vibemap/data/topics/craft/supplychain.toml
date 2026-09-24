@@ -55,4 +55,4 @@ checked = 2026-09-24
 title = "Weekly updates for Python and for actions"
 minutes = 10
 done = "dependabot.yml is version 2 and schedules updates for uv and for github-actions"
-check = { kind = "files", files = { "dependabot.yml" = ["version: 2", "updates:", "package-ecosystem: \"uv\"", "package-ecosystem: \"github-actions\"", "interval:"] } }
+check = { kind = "files", files = { "dependabot.yml" = ["version: 2", "updates:", "package-ecosystem:", "uv", "github-actions", "interval:"] } }

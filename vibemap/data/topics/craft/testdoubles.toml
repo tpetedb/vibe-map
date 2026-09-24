@@ -50,4 +50,4 @@ checked = 2026-09-24
 title = "A mock that checks the call"
 minutes = 15
 done = "python3 test_notify.py exits 0 and the test asserts the call with assert_called_once_with"
-check = { kind = "script", file = "test_notify.py", contains = ["from unittest.mock import", "assert_called_once_with", "unittest.main("], prints = [] }
+check = { kind = "script", file = "test_notify.py", contains = ["Mock(", "assert_called_once_with", "unittest.main("], prints = [] }

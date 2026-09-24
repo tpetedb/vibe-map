@@ -13,7 +13,7 @@ for_agents = '''And for an agent: write the property, not the examples, and when
 
 history = '''The Hypothesis docs call it "the property-based testing library for Python": "you write tests which should pass for all inputs in whatever range you describe, and let Hypothesis randomly choose which of those inputs to check - including edge cases you might not have thought about." @given is the standard entrypoint, and it takes a strategy such as st.integers() that describes the inputs the test accepts. By default Hypothesis generates 100 random inputs, and the max_examples setting controls that. When the quickstart's test @given(st.integers(0, 200)) asserts n < 50, pytest reports the failing test case as n=50. The Hypothesis changelog records 0.0.1 on 2013-03-10 as "Initial release", and 1.0.0 on 2015-03-27.'''
 
-try_it = '''Write test_props.py with encode (text to a list of (character, count) runs), decode (back again), and @given(st.text()) def test_decode_undoes_encode(text): assert decode(encode(text)) == text. Run uv run --with hypothesis --with pytest pytest -q test_props.py > props-out.txt. Then break encode on purpose and watch Hypothesis print the small input that fails.'''
+try_it = '''Write test_props.py with encode (text to a list of (character, count) runs), decode (back again), and @given(st.text()) def test_decode_undoes_encode(text): assert decode(encode(text)) == text. Run uv run --with hypothesis --with pytest pytest -o addopts="" --junitxml=props.xml test_props.py and read the last line: 1 passed. The first run downloads the two packages into uv's cache; after that it runs offline. Then break encode on purpose and watch Hypothesis print the small input that fails.'''
 
 unlocks = []
 prerequisites = ["fixtures"]
@@ -44,5 +44,5 @@ checked = 2026-09-24
 [hands_on]
 title = "Decoding undoes encoding, for every string"
 minutes = 20
-done = "test_props.py has a @given property over st.text(), and props-out.txt ends with 1 passed"
-check = { kind = "files", files = { "test_props.py" = ["from hypothesis import", "@given(", "st.text()"], "props-out.txt" = ["1 passed"] }, absent = { "props-out.txt" = ["failed", "error"] } }
+done = "test_props.py has a @given property over st.text(), and props.xml records 1 test with no failure, error or skip"
+check = { kind = "files", files = { "test_props.py" = ["from hypothesis import", "@given(", "st.text()"], "props.xml" = ["tests=\"1\"", "failures=\"0\"", "errors=\"0\"", "skipped=\"0\""] } }

@@ -55,4 +55,4 @@ checked = 2026-09-24
 title = "A key that never touches the code"
 minutes = 15
 done = ".gitignore lists .env, and app.py reads API_KEY from the environment with no key written in it"
-check = { kind = "files", files = { ".gitignore" = [".env"], "app.py" = ["os.environ", "API_KEY"] }, absent = { "app.py" = ["API_KEY = \"", "API_KEY=\"", "API_KEY = '"] } }
+check = { kind = "files", files = { ".gitignore" = [".env"], "app.py" = ["os.environ", "API_KEY"] }, absent = { "app.py" = ["KEY = \"", "KEY=\"", "KEY = '", "KEY='", "key = \"", "key=\"", "key = '", "key='"] } }
