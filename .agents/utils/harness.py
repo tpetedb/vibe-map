@@ -642,10 +642,10 @@ def codex_config(src: Source) -> str:
     doc = {
         "sandbox_mode": v["codex.sandbox_mode"].value,
         "approval_policy": v["codex.approval_policy"].value,
+        # Command networking is off by default in workspace-write (F079), and
+        # network = "allowlist" keeps it off until a tested proxy exists (A3).
         "sandbox_workspace_write": {
             "writable_roots": src.policy["codex"]["writable_roots"],
-            # network = "allowlist" without a tested proxy is off (A3, F083).
-            "network_access": v["network"].value not in ("off", "allowlist"),
         },
     }
     header = _header(

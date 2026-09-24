@@ -6,4 +6,3 @@ approval_policy = "on-request"
 
 [sandbox_workspace_write]
 writable_roots = ["../.git/board"]
-network_access = false
