@@ -3,10 +3,7 @@
 # work-order hooks as .claude/settings.json). .codex/agents/ holds Team Codex's
 # role definitions and is theirs; this setup neither tracks nor touches it.
 
-# The board room and the shared memory live in the git common dir, which the
-# workspace sandbox does not grant. This is the one extra root, relative to this
-# folder, so it is the main checkout's .git/board; a linked worktree's session
-# gets the absolute common dir's board through --add-dir instead (work/BOARD.md).
-# Nothing under .agents/ or elsewhere in .git is writable.
-[sandbox_workspace_write]
-writable_roots = ["../.git/board"]
+# No writable root is tracked here. The board room and the shared memory live in
+# the git common dir; a relative root is not a directory in a linked worktree,
+# whose .git is a file, and Codex then refuses every shell tool. `just codex`
+# adds the absolute board with --add-dir instead (work/BOARD.md).
