@@ -14,7 +14,6 @@ is the protocol, the skill `shared-memory` the how-to and ADR 0018 the history.
     python3 tools/board.py memory-lint
     python3 tools/board.py mirror [--issue 95] [--dry-run]    a manager, never a hook
     python3 tools/board.py codex [codex args...]    what just codex runs
-    uv run python tools/board.py codex-trust [path]    what just codex-trust runs
 
 Standard library only. read, say, slot, memory search and memory-lint import
 from Python 3.9, because a hook runs a bare python3 and macOS ships 3.9 in
@@ -763,8 +762,8 @@ CODEX_SUBCOMMANDS = {
 }
 CODEX_FED = (
     "Session-start board digest, fed by just codex because the project hooks of "
-    "this checkout are off (not enrolled with just codex-trust, or not approved "
-    "in /hooks yet). Read it, then answer what follows."
+    "this checkout are off (the project is not trusted, or its SessionStart hook "
+    "is not approved in /hooks yet). Read it, then answer what follows."
 )
 
 
@@ -785,61 +784,20 @@ def codex_config() -> Path:
     return Path(home) / "config.toml"
 
 
-def codex_trust(path: Path) -> tuple[bool, str]:
-    """Enrol a checkout of this repository as a trusted Codex project: one
-    [projects."<abs>"] table appended when absent, nothing else in the file
-    touched. Hook trust stays with /hooks; no hash is ever written."""
-    if sys.version_info < (3, 11):  # noqa: UP036  tomllib is 3.11
-        raise ValueError("codex-trust reads TOML, which needs Python 3.11: uv run")
-    import tomllib  # noqa: PLC0415
-
-    top = _git_dir(path.expanduser().resolve(), "--show-toplevel")
-    theirs, ours = _git_dir(top, "--git-common-dir"), _git_dir(ROOT, "--git-common-dir")
-    if theirs != ours:
-        raise ValueError(
-            f"{top} is not a checkout of this repository (its git common dir is "
-            f"{theirs}, this one's is {ours}); nothing written"
-        )
-    # Written through a symlink to its target, so a synced config stays linked.
-    cfg = codex_config().resolve()
-    text = cfg.read_text(encoding="utf-8") if cfg.exists() else ""
-    try:
-        projects = tomllib.loads(text).get("projects", {})
-    except tomllib.TOMLDecodeError as e:
-        raise ValueError(f"{cfg} is not valid TOML ({e}); nothing written") from e
-    if isinstance(projects, dict) and str(top) in projects:
-        level = (projects[str(top)] or {}).get("trust_level")
-        if level == "trusted":
-            return True, f"codex-trust: {top} is already trusted in {cfg}"
-        return False, (
-            f"codex-trust: {top} is in {cfg} with trust_level = {level!r}; left as "
-            "it is, change it there or in Codex's own trust prompt"
-        )
-    table = f'[projects.{json.dumps(str(top))}]\ntrust_level = "trusted"\n'
-    new = text + ("\n" if text and not text.endswith("\n") else "")
-    new += ("\n" if new.strip() else "") + table
-    try:
-        ok = tomllib.loads(new)["projects"][str(top)]["trust_level"] == "trusted"
-    except (tomllib.TOMLDecodeError, KeyError, TypeError):
-        ok = False
-    if not ok:
-        raise ValueError(f"{cfg} would not read back with the table; nothing written")
-    cfg.parent.mkdir(parents=True, exist_ok=True)
-    mode = cfg.stat().st_mode & 0o777 if cfg.exists() else 0o600
-    tmp = cfg.with_name(f"{cfg.name}.{os.getpid()}.tmp")
-    tmp.write_text(new, encoding="utf-8")
-    tmp.chmod(mode)
-    os.replace(tmp, cfg)
-    return True, (
-        f"codex-trust: {top} enrolled as trusted in {cfg}; its project hooks load "
-        "once approved in /hooks there"
-    )
+def codex_hooks_root(top: Path) -> Path:
+    """The checkout whose .codex/hooks.json Codex loads for top: a linked
+    worktree takes its project hooks from the main checkout, and /hooks keys
+    their trust by that path (codex-rs config loader, openai/codex PR 21969)."""
+    common = _git_dir(top, "--git-common-dir")
+    return common.parent if common.name == ".git" else top
 
 
-def codex_hooks_on(top: Path, cfg: Path) -> bool:
-    """Whether Codex runs this checkout's SessionStart hook: the project is
-    trusted and /hooks recorded a trust for its session_start entry. Unknown
-    counts as off, so the digest is fed rather than lost."""
+def codex_hooks_on(top: Path, cfg: Path, root: Path | None = None) -> bool:
+    """Whether Codex runs the SessionStart hook in checkout top: the project is
+    trusted (its own entry first, else the main checkout's, the order Codex
+    uses) and /hooks recorded a trust for the main checkout's session_start
+    entry. Unknown counts as off, so the digest is fed rather than lost."""
+    root = root or top
     try:
         import tomllib  # noqa: PLC0415  3.11; under 3.9 the answer is off
 
@@ -847,11 +805,19 @@ def codex_hooks_on(top: Path, cfg: Path) -> bool:
     except (ImportError, OSError, ValueError):
         return False
     projects = data.get("projects")
-    project = projects.get(str(top)) if isinstance(projects, dict) else None
-    if not isinstance(project, dict) or project.get("trust_level") != "trusted":
+    projects = projects if isinstance(projects, dict) else {}
+    level = next(
+        (
+            p.get("trust_level")
+            for key in (str(top), str(root))
+            if isinstance(p := projects.get(key), dict) and "trust_level" in p
+        ),
+        None,
+    )
+    if level != "trusted":
         return False
     state = data.get("hooks", {}).get("state", {})
-    prefix = f"{top}/.codex/hooks.json:session_start:"
+    prefix = f"{root}/.codex/hooks.json:session_start:"
     return isinstance(state, dict) and any(
         k.startswith(prefix) and isinstance(v, dict) and v.get("trusted_hash")
         for k, v in state.items()
@@ -906,7 +872,7 @@ def launch_codex(args: list[str]) -> int:
     folder.mkdir(parents=True, exist_ok=True)
     top = _git_dir(ROOT, "--show-toplevel")
     digest = None
-    if not codex_hooks_on(top, codex_config()):
+    if not codex_hooks_on(top, codex_config(), codex_hooks_root(top)):
         try:
             digest = read()
         except Exception as e:  # noqa: BLE001  a launch must not fail on the board
@@ -915,7 +881,7 @@ def launch_codex(args: list[str]) -> int:
     if digest is not None and argv[-1].startswith(CODEX_FED):
         print(
             "board: the project hooks are off here, the digest goes in the first "
-            "prompt (just codex-trust, then /hooks, turns them on)",
+            "prompt (approving SessionStart once in /hooks turns them on)",
             file=sys.stderr,
         )
     os.execvp(argv[0], argv)
@@ -961,18 +927,7 @@ def main(argv: list[str] | None = None) -> int:
     ms.add_argument("term")
     ms.add_argument("--full", action="store_true", help="every observation")
     mem.add_parser("index", help="rebuild index.json from the memory and the orders")
-    ct = sub.add_parser("codex-trust", help="enrol a checkout in Codex's user config")
-    ct.add_argument("path", nargs="?", default=".", help="a checkout of this repo")
     a = p.parse_args(argv)
-
-    if a.cmd == "codex-trust":
-        try:
-            ok, line = codex_trust(Path(a.path))
-        except (ValueError, OSError) as err:
-            print(f"codex-trust: {err}", file=sys.stderr)
-            return 2
-        print(line)
-        return 0 if ok else 1
 
     if a.cmd == "read":
         try:

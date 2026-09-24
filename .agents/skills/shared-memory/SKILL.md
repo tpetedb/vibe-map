@@ -70,6 +70,6 @@ Kinds: DECISION (the board only), QUESTION, HANDOFF, CHECKPOINT, SLOT, and LANDE
 |---|---|
 | `memory add` says it needs Python 3.11 | Run it with `uv run python tools/board.py ...` or `just memory-add`. |
 | Codex cannot write the board | Start it with `just codex`, which adds `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)/board"`; no writable root is tracked. |
-| Codex shows no digest in a worktree | Its project hooks are off there: `just codex-trust` once, then approve them in `/hooks`. Until then `just codex` puts the digest in the first prompt. |
+| Codex shows no digest in a worktree | A worktree runs the main checkout's `.codex/hooks.json`: the SessionStart hook shows only once the main checkout has it and it is approved once in `/hooks`. Until then `just codex` puts the digest in the first prompt. |
 | A write seems lost | `just memory-lint`, then search again. Writes are serialized, so report it on the board. |
 | The memory is getting big | At about 300 entities, fold the details into a doc and leave a pointer. |

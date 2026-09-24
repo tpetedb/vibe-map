@@ -382,85 +382,10 @@ def codex_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return tmp_path / "home" / ".codex" / "config.toml"
 
 
-def _trust(*args: str) -> subprocess.CompletedProcess[str]:
-    env = {k: v for k, v in os.environ.items() if k != "CODEX_HOME"}
-    return subprocess.run(
-        [sys.executable, str(BOARD), "codex-trust", *args],
-        cwd=ROOT,
-        env=env,
-        capture_output=True,
-        text=True,
-    )
-
-
 def test_just_codex_goes_through_the_launcher_and_names_the_flag() -> None:
     assert "python3 tools/board.py codex" in _recipe("codex *args:")
-    assert "board.py" in _recipe('codex-trust path=".":')
-    board_md = (ROOT / "work" / "BOARD.md").read_text()
-    assert board.CODEX_FLAG in board_md and "just codex-trust" in board_md
-
-
-def test_codex_trust_enrols_this_checkout_once_and_keeps_the_rest(
-    codex_home: Path,
-) -> None:
-    codex_home.parent.mkdir(parents=True)
-    before = '# mine\nmodel = "m"\n\n[projects."/elsewhere"]\ntrust_level = "trusted"\n'
-    codex_home.write_text(before)
-    codex_home.chmod(0o600)
-    top = str(ROOT.resolve())
-
-    first = _trust()
-    assert first.returncode == 0, first.stderr
-    after = codex_home.read_text()
-    assert after.startswith(before)
-    conf = tomllib.loads(after)
-    assert conf["projects"][top] == {"trust_level": "trusted"}
-    assert conf["projects"]["/elsewhere"] == {"trust_level": "trusted"}
-    assert "hooks" not in conf and "hash" not in after
-    assert codex_home.stat().st_mode & 0o777 == 0o600
-
-    again = _trust(str(ROOT / "tools"))
-    assert again.returncode == 0 and "already trusted" in again.stdout
-    assert codex_home.read_text() == after
-
-
-def test_codex_trust_refuses_a_foreign_checkout_and_a_plain_folder(
-    tmp_path: Path, codex_home: Path
-) -> None:
-    foreign = tmp_path / "foreign"
-    subprocess.run(["git", "init", "-q", str(foreign)], check=True)
-    plain = tmp_path / "plain"
-    plain.mkdir()
-    for where, why in (
-        (foreign, "not a checkout of this repository"),
-        (plain, "not a git checkout"),
-    ):
-        run = _trust(str(where))
-        assert run.returncode == 2 and why in run.stderr, run.stderr
-        assert "Traceback" not in run.stderr
-    assert not codex_home.exists()
-
-
-def test_codex_trust_leaves_an_existing_entry_as_it_is(codex_home: Path) -> None:
-    codex_home.parent.mkdir(parents=True)
-    text = f'[projects.{json.dumps(str(ROOT.resolve()))}]\ntrust_level = "untrusted"\n'
-    codex_home.write_text(text)
-    run = _trust()
-    assert run.returncode == 1 and "left as it is" in run.stdout
-    assert codex_home.read_text() == text
-
-
-def test_codex_trust_writes_through_a_linked_config(
-    tmp_path: Path, codex_home: Path
-) -> None:
-    real = tmp_path / "synced" / "config.toml"
-    real.parent.mkdir()
-    real.write_text('model = "m"\n')
-    codex_home.parent.mkdir(parents=True)
-    codex_home.symlink_to(real)
-    assert _trust().returncode == 0
-    assert codex_home.is_symlink()
-    assert str(ROOT.resolve()) in tomllib.loads(real.read_text())["projects"]
+    assert "codex-trust" not in (ROOT / "justfile").read_text()
+    assert board.CODEX_FLAG in (ROOT / "work" / "BOARD.md").read_text()
 
 
 def test_the_hooks_count_as_on_only_when_trusted_and_approved(
@@ -484,6 +409,42 @@ def test_the_hooks_count_as_on_only_when_trusted_and_approved(
     )
     assert board.codex_hooks_on(top, cfg)
     assert not board.codex_hooks_on(Path("/r/other"), cfg)
+
+
+def test_a_linked_worktree_counts_the_main_checkouts_hooks(tmp_path: Path) -> None:
+    # Codex loads a linked worktree's project hooks from the main checkout and
+    # keys their /hooks trust by that path; the worktree inherits its trust.
+    top, root, cfg = Path("/r/wt"), Path("/r"), tmp_path / "config.toml"
+    approved = '[hooks.state."{}/.codex/hooks.json:session_start:0:0"]\n'
+    approved += 'trusted_hash = "sha256:1"\n'
+    for trusted in ("/r/wt", "/r"):
+        project = f'[projects."{trusted}"]\ntrust_level = "trusted"\n'
+        cfg.write_text(project + approved.format("/r/wt"))
+        assert not board.codex_hooks_on(top, cfg, root)
+        cfg.write_text(project + approved.format("/r"))
+        assert board.codex_hooks_on(top, cfg, root)
+    cfg.write_text(
+        '[projects."/r/wt"]\ntrust_level = "untrusted"\n'
+        + '[projects."/r"]\ntrust_level = "trusted"\n'
+        + approved.format("/r")
+    )
+    assert not board.codex_hooks_on(top, cfg, root)
+
+
+def test_the_hooks_root_is_the_main_checkout(tmp_path: Path) -> None:
+    main, linked = tmp_path / "main", tmp_path / "main" / "wt"
+    subprocess.run(["git", "init", "-q", "-b", "main", str(main)], check=True)
+    subprocess.run(
+        ["git", "-C", str(main), "-c", "user.name=t", "-c", "user.email=t@t"]
+        + ["commit", "-q", "--allow-empty", "-m", "root"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(main), "worktree", "add", "-q", "-b", "o", str(linked)],
+        check=True,
+    )
+    assert board.codex_hooks_root(main) == main.resolve()
+    assert board.codex_hooks_root(linked) == main.resolve()
 
 
 @pytest.mark.parametrize(

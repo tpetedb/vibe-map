@@ -2,6 +2,12 @@
 # Tracked here: this file and hooks.json (the SessionStart reader and the same
 # work-order hooks as .claude/settings.json). .codex/agents/ holds Team Codex's
 # role definitions and is theirs; this setup neither tracks nor touches it.
+#
+# In a linked worktree Codex reads project hooks (hooks.json and any [hooks]
+# here) from the main checkout's .codex/, never from the worktree's copy, and
+# /hooks keys their trust by the main checkout's path; the commands still run
+# in the worktree. A hook change takes effect once the main checkout has it.
+# A worktree also inherits the main checkout's project trust.
 
 # No writable root is tracked here. The board room and the shared memory live in
 # the git common dir; a relative root is not a directory in a linked worktree,
