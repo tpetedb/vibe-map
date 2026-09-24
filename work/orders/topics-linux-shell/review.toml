@@ -1,0 +1,59 @@
+# [Claude Opus 5.5, effort high, reviewer]
+v = 1
+order = "topics-linux-shell"
+by = "reviewer-topics-linux-shell-r1"
+reviewed = "0a456a3204b8eb51087f1e9f988fe915e9dad0aa"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = '''
+Ran the command at 0a456a3: tests/test_topics_linux.py, test_topics.py, test_syllabus.py and test_places.py all pass. The pack test does what its sentence claims and more: for every topic the hands-on check is red on an empty folder and on a stub, and green on a folder built by running the topic's own try_it lines with bash where the exercise is plain shell (permissions, processes, texttools, scripting, wslmac). To see it bite I mutated a scratch copy (git archive of HEAD): processes' check to "exit: 137", wslmac with its `absent` guard removed, and permissions' origin to a place that does not exist. Four tests went red (the processes hands-on, the portable-sed refusal, the primary-origin test and the places report), so the suite is not vacuous.
+'''
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = '''
+`places.problems(packs=['linux'])` returns [] at the reviewed commit, and the mutation above (permissions at "linux-foundashun") makes it name the file, so the check really reads the pack. All seven places used (university-of-helsinki, linux-foundation, bell-labs, a-standards-body, the-internet, openbsd-project, microsoft-redmond) exist on origin/main; the diff adds no place file.
+'''
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = '''
+Ran build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus with --check: all in sync. `tools/checks.py style` prints "no em dashes, no emoji". `uv run vibe topics` lists the pack with its blurb; I also opened four topics from the CLI (`vibe topic kernel`, `texttools`, `wslmac` and `netshell`) and all render with history, the Where line and the hands-on. `uv run vibe topics linux`, the command the changelog fragment names, works. In a scratch camp (VIBE_HOME on the archive copy) `vibe check --topic cron` said "not yet" with no folder and "cron and timers done" after a right crontab.txt, so the entry point, not only run_spec, passes.
+'''
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = '''
+Sources: I downloaded over forty of the cited pages (kernel README and process doc, Debian about and project history, os-release(5), FHS 3.0, coreutils perm.texi for the umask and modes text since gnu.org refused connections, Ritchie's Evolution of Unix, signal(7), POSIX kill, grep, sed, awk, uniq, crontab and Shell Command Language, TUHS V7, apt(8), DNF command reference, brew.sh, Brew Bundle, tmux(1), the tmux README, OpenBSD 4.6, curl history and man page, ss(8), lsof(8), http.server, Rethinking PID 1, systemd.unit/service/timer, journalctl(1), WSL about and filesystems, the WSL open-source post via WebFetch because curl was blocked by Cloudflare, GNU sed(1), Apple text_cmds sed.1, ShellCheck README, bash(1)) and matched every double-quoted phrase in summary, for_agents and history against them by script. Every citation quote is on its page, with whitespace and nroff markup the only differences, except one: kernel for_agents quotes os-release as "suitable for scripts" where the page says "suitable for processing by scripts" (low finding below). Years and actors checked: Torvalds to comp.os.minix on 19 August 1991, 21 and studying computer science at the university (Helsinki page); FHS 3.0 by the LSB Workgroup, March 19, 2015; Ritchie "Unix was born in 1969" and "precisely two of them, one for each of the two terminals"; V7 released by Bell Laboratories in January 1979 with awk and sed among "many new applications"; Debian 2.1 Slink March 9th, 1999 with apt; curl 4 on March 20, 1998 after HttpGet (extended by Daniel in 1996) and urlget (1997); OpenBSD 4.6 released Oct 18, 2009, "Imported the tmux(1) terminal multiplexer, replacing window(1)"; Rethinking PID 1 with the quoted phrases; WSL "first announced at BUILD back in 2016 and first shipped with the Windows 10 Anniversary update", WSL 2 in 2019; POSIX.1-2024 Issue 8 "Austin Group Defect 789 is applied, adding -o pipefail", and the crontab format "based on the System V crontab". Places: every origin is at a place on main or an abstract one, and each follows docs/TOPICS.md (a project with no address at the-internet, a specification at a-standards-body, the actor's place file for the town). Em dashes: none in any added diff line (byte scan of `git diff origin/main...HEAD`), and the pack test forbids U+2014 in every pack file. docs/SYLLABUS.md changes only between `<!-- generated:tech-tree` (line 1114) and its closing marker (line 1159), and gen_syllabus --check agrees. Hands-ons, right and wrong, run for real on this Mac: permissions 640 passes and 644 fails; processes TERM gives 143 and passes, KILL gives 137 and fails; texttools passes, and the same pipeline without sort before uniq fails; scripting passes (and shellcheck is clean on it), an unquoted script without pipefail fails; packages passes, an extra `apt install` line is refused by `absent`; netshell against a live http.server on 127.0.0.1:8765 passes, a 404 fails; tmux with a real session passes; cron weekday line passes, a daily line fails; wslmac passes, a Mac-only `sed -i` fails.
+'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/linux/kernel.toml"
+text = '''for_agents puts "suitable for scripts" in quotation marks, but os-release(5) says the ID= value is "suitable for processing by scripts or usage in generated filenames". The meaning holds; the quotation does not, and the pack's maintainer line promises every quotation is copied from its page. Quote the page's words or drop the quotation marks.'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/linux/packages.toml"
+text = '''Three of the eleven primaries (packages 1999, netshell 1998, systemd 2010) sit at `the-internet`, the abstract place whose era is "mainframe" and which the Codex handoff on #95 asks a content order to split. That is what docs/TOPICS.md prescribes today, so it is not a defect of this order, but the follow-up that splits `the-internet` should carry these three as well.'''
+
+[[findings]]
+severity = "low"
+file = "tests/test_topics_linux.py"
+text = '''The `absent = { "install-debian.sh" = ["apt install"] }` guard in packages has no test: removing it keeps the suite green, because only wslmac's `absent` is pinned by a dedicated test. I confirmed by hand that the guard refuses a script with an extra `apt install` line; a two-line test like the portable-sed one would keep it.'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/linux/cron.toml"
+text = '''Two checks are substring matches that a near miss also satisfies: cron's "30 7 * * 1-5" passes on a commented-out line, and texttools' "2 ada" passes on "12 ada". Neither is reachable by following the try_it, so they are fine for a hands-on, but a line-anchored form would be tighter.'''
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/linux/tmux.toml"
+text = '''try_it starts with `tmux new-session` but a Mac does not ship tmux and nothing says to install it (brew install tmux, or apt-get in a Codespace). The pack's blurb promises every hands-on runs on a Mac; one clause would make that true for a first-time learner.'''

@@ -1,0 +1,28 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "topics-linux-shell"
+team = "docs"
+by = "manager-docs"
+reviewed = "76ea95bb99eeb56e400114e80858b72037db2186"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = '''
+Checked docs/SYLLABUS.md between the generated:tech-tree markers (lines 1114-1159):
+the pack count (three), the topic count (eighty-one, matching 54+16+11), the new
+"Linux and shell pack" paragraph and the eleven added shelf entries under
+"Terminal and shell" all match vibemap/data/topics/linux/pack.toml's title, blurb
+and topics list in order (kernel, permissions, processes, texttools, scripting,
+packages, tmux, netshell, systemd, cron, wslmac). House style holds: numbers
+spelled out as elsewhere, no em dashes (checked the whole file, count 0), voice
+matches the surrounding paragraphs. gen_syllabus.py --check passes at this
+commit, so the block is not hand-edited. docs/ROADMAP.md and docs/site/syllabus.html
+also changed but are on the GENERATED allowlist (tools/sync_main.py), so they are
+not an ownership question for docs. Nothing else of the docs team's depends on
+this; no follow-up action for docs after it lands. One cosmetic nit, not
+blocking: docs/SYLLABUS.md now has two blank lines between the Linux pack
+paragraph and "### The shelves" where the other two pack paragraphs leave one;
+worth a look next time gen_syllabus.py's template runs, but it is generated
+output, not a docs-owned hand edit.
+'''
