@@ -1,0 +1,63 @@
+v = 1
+order = "release-0-12-0"
+by = "reviewer-release-0-12-0-r1"
+reviewed = "1b2b21a272a599ca645add19fdba18ad2e591f1b"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Ran it on 1b2b21a: every test in tests/test_changelog.py, tests/test_build.py and tests/test_repo.py passes, exit 0. The command is the sentence: those three files are the changelog, build and repository guards. test_changelog keeps Unreleased free of headings, which the diff respects (Unreleased still only points at changelog.d).
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Ran it: prints `0.12.0 []`, exit 0. Tried each clause the other way in a scratch copy (git archive of HEAD under /tmp): pyproject back at 0.11.0 exits 1, a stray changelog.d/left.fixed.md exits 1 and is named, the `[0.12.0]:` link line removed exits 1. The version agrees wherever a tool reads it, which c2 alone does not prove: `vibe-map` in uv.lock is 0.12.0 and `uv lock --check` passes (in the scratch copy a lock left at 0.11.0 makes it ask for `uv lock`), `const CONFIG={"version": "0.12.0"` in game/vibe-map.html (in the scratch copy a CONFIG left at 0.11.0 fails `tools/build.py --check`), and `uv run vibe --version` prints `vibe, version 0.12.0`. `git grep 0.11.0` outside CHANGELOG.md and work/ finds only history that should keep it: docs/BRIEF.md (Cycle 3 delivered in 0.10.0 and 0.11.0, released 2026-09-21) and tests/test_issue59_docs.py, which asserts that guide names both. The 39 fragments the branch deletes are exactly the 39 origin/main (1c173f4) carries; README.md stays. The section is `## [0.12.0] - 2026-09-24`, `[Unreleased]` compares v0.12.0...HEAD and `[0.12.0]` compares v0.11.0...v0.12.0; the CHANGELOG diff is 46 insertions and the one Unreleased link line, so no released section was touched.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Ran the whole chain myself on 1b2b21a: ruff check, ruff format --check, `checks.py style` (no em dashes, no emoji), `checks.py sinks`, and `pytest -m 'not browser and not integration'`, all green. It proves the sentence as written; nothing under src/, vibemap/ or tools/ changed, so the browser battery is CI's.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Ran the loop: build, tree, cookbook, template, fork source and syllabus all report in sync. It does catch the one generated change this order makes: with CONFIG.version put back to 0.11.0 in the scratch copy, `tools/build.py --check` says game/vibe-map.html differs from a fresh build.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = """
+Read the section top to bottom against all 39 fragments (git show origin/main:changelog.d/...) and against main's code. What holds: Added, Changed, Fixed in Keep a Changelog order; Galaxy leads Added (the journey, walking a place, the list twin, the sourced origins, `vibe places`); no em dash (grep and `checks.py style`). Lines the fragments contradicted are resolved in main's favour: Kubernetes sits at San Francisco (ship-docs fragment said the internet, internet-origins moved it; `vibe topic kubernetes` shows San Francisco 2014, DockerCon keynote), and the two Battery saver fragments become one true line (`saver` in 85-settings.js is "Pause when you look away" / "Keep running", and both pageHidden() in 00-state.js and saverIdle() in 31-animate.js obey `saver!=="off"`). Spot checks that are true of main: 70 topics, all 70 with origins, 97 origins, 39 distinct places used (`topics_by_place()`), `places.problems()` empty, IBM San Jose 1970 and CERN 1990 via `vibe places`; GLOBES is earth, datacentre, cloud; Settings has an Experience row with Islands and Galaxy; Photo button and P in 33-photo.js; BREAK_AFTER_S=50*60; the Backpack's Notifications tab; walkTo() is called from the search palette and the minimap only, so "The Roadmap has no Walk there button yet" holds, and 85-settings.js has no guide row, so "Settings has no row for it yet" holds.
+
+What does not hold: the second Galaxy line says "walking up to a pavilion opens that topic's lesson". It does not. galaxyWalkNear() in src/galaxy/50-walk.js only writes "Nearby: <topic>", says it, and enables the "Open nearby lesson" button; the lesson opens on that button or Enter. I ran tests/test_game_galaxy.py::test_galaxy_landing_walks_to_a_lesson_with_shared_input in Chromium (one slot, passed) and looked at tests/out/galaxy_walk_arrived_game_desktop.png: the walker stands at the Bash and shell scripts pavilion at UC Santa Barbara with "Nearby: Bash and shell scripts" and the button, no lesson open; the test then has to click "Open nearby lesson" before #vault is on. A learner reading the line walks up and waits. One line untrue of main fails the criterion.
+"""
+
+[[findings]]
+severity = "medium"
+file = "CHANGELOG.md"
+text = """
+0.12.0, Added, second bullet: "walking up to a pavilion opens that topic's lesson" is not what main does. Walking up names the lesson ("Nearby: <topic>") and enables the "Open nearby lesson" button; that button or Enter opens it (galaxyWalkNear and galaxyOpenNearby in src/galaxy/50-walk.js, body.html #galaxy-near, and tests/test_game_galaxy.py clicks the button). Something like "walking up to a pavilion names its lesson, and Open nearby lesson or Enter opens it". A place with more than six topics shows six pavilions and sends the rest to the list (20-experience.js), which the line could say in passing.
+"""
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = """
+0.12.0, Added: the map is said twice. "Walk me there" already has "a plot tapped on the map or a row in the big map's list of stops sets the walker off"; "The map is one you can use" repeats "tap a plot to walk there" and "every stop is a labelled button under it". The second bullet could keep only what is new in it: the Bigger button, the long press and the labelled buttons for a keyboard or screen reader.
+"""
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = """
+0.12.0, Added, first bullet: "The islands stay the default and look exactly as they did" reads against the same section, which adds an edge arrow, lit markers and ground dashes and moves every artifact ring (car L re-recorded three goldens for the rings). What is meant is that choosing Galaxy is what changes the view and the islands are not redrawn by it; "The islands stay the default, unchanged by the switch" says that without the contradiction.
+"""
