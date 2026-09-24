@@ -8,6 +8,7 @@ them back.
 
     uv run python tools/media.py            all screenshots and the GIF
     uv run python tools/media.py --quick    screenshots only
+    uv run python tools/media.py --gif      gameplay GIF only
 """
 
 from __future__ import annotations
@@ -61,14 +62,12 @@ PETS = ("cat", "crab", "dog", "duck", "snail", "turtle")
 SOCIAL = (1200, 630)  # the Open Graph size, the one pages.yml publishes
 DESKTOP = (1280, 760)
 PHONE = (393, 852)
-# The signpost the GIF walks to: workstream 1 of the campus, by the plate the
-# island draws over it.
-SIGNPOST = "18:00"
 # The GIF's window. In a shorter one the zoom column, which sits above the
 # stage's bottom edge, is drawn over the minimap, which hangs below the HUD at
 # the top of the window (issue 161), and the picture opens on two controls at
 # once.
 GIF_WINDOW = (800, 640)
+GAMEPLAY_MARKER = b"vibe-map:campus-to-winter-bridge:v1"
 # A panel worth a picture, by the function its HUD button calls, the screen
 # that function opens and what to do once it is open. The picture is the
 # sheet, which is what a player sees.
@@ -177,7 +176,7 @@ def _load(page: Page, url: str, state: dict | None) -> None:
         )
         page.reload()
     page.wait_for_function("typeof window.__S === 'function'")
-    page.wait_for_timeout(400)
+    _frames(page, 3)
 
 
 def _start(page: Page, name: str = "Lotte") -> None:
@@ -193,7 +192,8 @@ def _start(page: Page, name: str = "Lotte") -> None:
         page.fill("#name", name)
         page.click("#btn-go")
     page.wait_for_selector("#title.off", state="attached")
-    page.wait_for_timeout(1500)
+    page.wait_for_function("window.__debug().started === true")
+    _frames(page, 3)
 
 
 def _px(ndc: float, width: int) -> float:
@@ -572,71 +572,143 @@ def _workstream(page: Page, n: int):
     return buttons.nth((1 if "Pre-flight" in first else 0) + n - 1)
 
 
-def gameplay_gif(browser, url: str, *, frames: int = 36) -> Path:
-    """Walk to the 18:00 signpost, open the workstream, claim it: one GIF.
+def _walk_to(
+    page: Page,
+    x: float,
+    z: float,
+    snap,
+    *,
+    tol: float = 2.2,
+    steps: int = 160,
+) -> int:
+    """Steer with the keyboard until the page reports arrival.
 
-    Every step is the control a player uses, and the walk is checked against
-    the walker's own position: a GIF of a caption that did not happen is
-    worse than no GIF.
+    Returns the number of sampled frames for which the page said the walker
+    was on a bridge. Rendering frames are the clock, so a loaded machine takes
+    longer without changing where the walk ends.
+    """
+    keyboard = page.keyboard
+    held: set[str] = set()
+    deck_frames = 0
+    start_world = page.evaluate("window.__S().world")
+
+    def hold(wanted: set[str]) -> None:
+        for key in wanted - held:
+            keyboard.down(key)
+            held.add(key)
+        for key in held - wanted:
+            keyboard.up(key)
+        held.intersection_update(wanted)
+
+    try:
+        for step in range(steps):
+            debug = page.evaluate("window.__debug()")
+            px, _, pz = debug["pos"]
+            dx, dz = x - px, z - pz
+            if math.hypot(dx, dz) < tol:
+                return deck_frames
+            wanted: set[str] = set()
+            if dx > 0.5:
+                wanted.add("ArrowRight")
+            elif dx < -0.5:
+                wanted.add("ArrowLeft")
+            if dz > 0.5:
+                wanted.add("ArrowDown")
+            elif dz < -0.5:
+                wanted.add("ArrowUp")
+            hold(wanted)
+            _frames(page, 3)
+            if page.evaluate("window.__debug().onBridge"):
+                deck_frames += 3
+            if step % 2 == 0:
+                snap()
+            if page.evaluate("window.__S().world") != start_world:
+                return deck_frames
+    finally:
+        hold(set())
+        _frames(page, 2)
+    raise Cut(f"the walker did not reach {x:.1f},{z:.1f} in {steps} steps")
+
+
+def _bridge_journey(page: Page, snap) -> dict[str, int | str]:
+    """Cross campus to winter, then claim winter's first stop."""
+    start = page.evaluate("window.__S().world")
+    bridge = page.evaluate(
+        "() => window.__debug().bridges.find(b => "
+        "new Set([b.a,b.b]).has('campus') && "
+        "new Set([b.a,b.b]).has('winter'))"
+    )
+    if not bridge or not bridge["open"] or not bridge["near"]:
+        raise Cut(f"the campus to winter bridge is not open and near: {bridge}")
+
+    _zoom(page, "island")
+    for _ in range(3):
+        snap()
+        _frames(page, 3)
+
+    ax, az = bridge["pa"]
+    bx, bz = bridge["pb"]
+    deck_frames = _walk_to(page, ax, az, snap, steps=180)
+    hops = max(2, round(bridge["len"] * 0.62 / 7))
+    for index in range(1, hops + 1):
+        share = 0.62 * index / hops
+        deck_frames += _walk_to(
+            page,
+            ax + (bx - ax) * share,
+            az + (bz - az) * share,
+            snap,
+            steps=60,
+        )
+        if page.evaluate("window.__S().world") != start:
+            break
+    page.wait_for_function("() => window.__S().world === 'winter'")
+    _settled(page, "winter")
+    snap()
+
+    page.click("#hud button:has-text('Roadmap')")
+    page.wait_for_selector("#plotlist button", state="attached")
+    _frames(page, 10)
+    snap()
+    _workstream(page, 1).click()
+    page.wait_for_selector("#sheet .screen.on", state="attached")
+    _frames(page, 10)
+    snap()
+    page.click("#sheet .screen.on button:has-text('Mark as done')")
+    page.wait_for_function("() => (window.__S().doneW.winter || []).includes(1)")
+    for _ in range(6):
+        _frames(page, 3)
+        snap()
+    return {"from": start, "to": "winter", "deck_frames": deck_frames, "claimed": 1}
+
+
+def gameplay_gif(browser, url: str) -> Path:
+    """Walk a real bridge to winter and claim its first stop: one GIF.
+
+    Every step uses the keyboard control and waits on state or rendered frames.
+    A GIF of a caption that did not happen is worse than no GIF.
     """
     wide, tall = GIF_WINDOW
     ctx = browser.new_context(
         viewport={"width": wide, "height": tall}, device_scale_factor=1
     )
     page = ctx.new_page()
-    _load(page, url, None)
+    _load(
+        page,
+        url,
+        {"name": "Lotte", "done": [1], "doneW": {"campus": [1]}},
+    )
     _start(page)
     _settled(page, "campus")
     _calm(page)
     clip = _window(page, wide, tall)
     shots: list[Image.Image] = []
 
-    def snap(n: int = 1) -> None:
-        # The pause is the capture rate, not a wait for the page: the GIF
-        # plays a frame every 120ms and is recorded at the same cadence.
-        for _ in range(n):
-            shots.append(Image.open(_bytes(page.screenshot(clip=clip))).convert("RGB"))
-            page.wait_for_timeout(120)
+    def snap() -> None:
+        shots.append(Image.open(_bytes(page.screenshot(clip=clip))).convert("RGB"))
 
-    def arrived() -> bool:
-        """The game's own word for standing at the first signpost."""
-        return page.evaluate("() => window.__debug().near") == 1
-
-    snap(3)
-    before = page.evaluate("() => window.__debug().pos")
-    for tap in range(3):
-        if arrived():
-            break
-        at = page.evaluate("() => window.__debug().pos")
-        _tap_towards(page, _signpost(page, SIGNPOST), share=0.9)
-        page.wait_for_function(
-            "p => { const q = window.__debug().pos;"
-            " return Math.hypot(q[0] - p[0], q[2] - p[2]) > 1 }",
-            arg=at,
-        )
-        for _ in range(frames // 3 if tap == 0 else frames // 6):
-            snap()
-        _still(page, "window.__debug().pos[0] + window.__debug().pos[2]")
-    walked = _walked(page, before)
-    if not arrived() or walked < 4:
-        raise Cut(
-            f"the walker is {walked:.1f} from where she stood and not at the "
-            f"{SIGNPOST} signpost: the caption says she walks there"
-        )
-    page.click("#hud button:has-text('Roadmap')")
-    page.wait_for_selector("#plotlist button", state="attached")
-    _frames(page, 10)
-    snap(4)
-    _workstream(page, 1).click()
-    page.wait_for_selector("#sheet .screen.on", state="attached")
-    _frames(page, 10)
-    snap(4)
-    page.click("#sheet .screen.on button:has-text('Mark as done')")
-    page.wait_for_function(
-        "() => (window.__S().doneW[window.__S().world] || []).includes(1)"
-    )
-    for _ in range(frames // 3):
-        snap()
+    result = _bridge_journey(page, snap)
+    if result["deck_frames"] <= 0:
+        raise Cut("the recorded journey never put the walker on the bridge deck")
     ctx.close()
     target = OUT / "gameplay.gif"
     small = [
@@ -650,6 +722,7 @@ def gameplay_gif(browser, url: str, *, frames: int = 36) -> Path:
         duration=120,
         loop=0,
         optimize=True,
+        comment=GAMEPLAY_MARKER,
     )
     return target
 
@@ -662,11 +735,12 @@ def _bytes(data: bytes):
 
 def main() -> None:
     quick = "--quick" in sys.argv
+    gif_only = "--gif" in sys.argv
     httpd, url = _serve()
     with sync_playwright() as p:
         browser = p.chromium.launch(args=CHROMIUM_ARGS)
-        paths = screenshots(browser, url)
-        if not quick:
+        paths = [] if gif_only else screenshots(browser, url)
+        if gif_only or not quick:
             paths.append(gameplay_gif(browser, url))
         browser.close()
     httpd.shutdown()

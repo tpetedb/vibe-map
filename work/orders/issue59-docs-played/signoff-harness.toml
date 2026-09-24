@@ -1,0 +1,26 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "issue59-docs-played"
+team = "harness"
+by = "manager-harness-claude"
+reviewed = "31c09f291d5d1e68ddfcf4e2a068dcab63bf4f91"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Round 3. The code was tested at d2bbeba. 31c09f2 changes only docs/MAINTAINERS.md (git diff --stat d2bbeba 31c09f2: 1 file, nothing under tools/ or tests/), and I read that change against the code. Every run used throwaway repositories under /tmp; the real played repository was never touched. The throwaway copy of vibe-map-played is a clone with origin pointed at a local bare repository.
+
+1. Rollback. A refusing pre-commit hook after the copy raises the hook's own error. HEAD, the branch, origin and .git/config survive. This holds on a small camp and on the real played shape, where scores.csv also stays byte-identical. The one leftover is low, see (i).
+2. Every URL. A hostile second push URL, and a hostile second fetch URL through the CLI with --push, are refused. No bare repository received a ref.
+3. Scores. On the played clone, a real regeneration keeps the tracked workspace/data/scores.csv byte-identical and tracked. It is not in the commit, 0 files are deleted (59 in round 1), a repeat run reports "already current", and the bare repository is unchanged. A stage given a differing scores.csv is refused ("would overwrite tracked workspace/data/scores.csv"), and HEAD, the full tree including ignored files, and status are unchanged.
+4. Tests fail without each fix. In a git-archive scratch copy of d2bbeba, which imports its own tools and vibemap, each revert fails exactly its new test: the rollback filter fails test_failed_commit_preserves_target_git_metadata; dropping --all fails both multi-URL cases; dropping retention fails test_install_preserves_tracked_learner_files_missing_from_stage; dropping the refusal fails test_install_refuses_to_overwrite_tracked_scores. The restored file passes 20/20. In the worktree, test_regen_played plus test_issue59_docs pass (23), ruff, format and the style guard are OK.
+5. Guide. The 31c09f2 text matches the code: retention of workspace/, vault/ and docs/media/; the scores refusal before mutation; every fetch and push URL checked; the name-status review of the whole commit; only --push contacts the remote.
+
+Lows, owners' call, none blocking:
+(i) copytree follows the 14 .claude/skills symlinks of the stage, so the target gets ignored real-directory copies. After a failed run, 37 such ignored files stay behind. Tracked content and .git are intact. copytree(symlinks=True) would keep them symlinks, and the rollback already unlinks symlinks.
+(ii) With retention, notes and media that a newer release drops stay in the played repository; pruning them is a manual step.
+(iii) The round-1 lows still stand: --push pushes whatever HEAD is (consider requiring _same_source); --product only partly redirects; the local-path identity is a test affordance; the bridge mcp.json names the maintainer's real path; one basedpyright error at tools/media.py:710 (not gated); a cleanup error is not chained to the original.
+
+Harness next: nothing blocks landing from harness. Harness will take the tools/sync_main.py exit-0-on-lock-failure defect named in builder-notes.md as its own order. Note: a new commit that changes tools/regen_played.py or tests/test_regen_played.py lapses this sign-off.
+"""
