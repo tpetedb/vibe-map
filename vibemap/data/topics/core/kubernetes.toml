@@ -14,12 +14,14 @@ unlocks = ["future"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened.
+# The announcement was a DockerCon keynote; the place file's own source puts the
+# first DockerCon in San Francisco.
 
 [[origins]]
-place = "the-internet"
+place = "san-francisco"
 year = 2014
-what = "Google announces Kubernetes, an open source container manager, on 10 June 2014."
-source = "https://cloudplatform.googleblog.com/2014/06/an-update-on-container-support-on-google-cloud-platform.html"
+what = "Google's Eric Brewer announces Kubernetes in a keynote on 10 June 2014, day 2 of the first DockerCon."
+source = "https://www.docker.com/blog/10-years-since-kubernetes-launched-at-dockercon/"
 primary = true
 
 [[origins]]
@@ -39,3 +41,11 @@ url = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-
 [[sources]]
 label = "Source: Kubernetes blog, Borg: the predecessor to Kubernetes (2015)"
 url = "https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/"
+
+[[sources]]
+label = "Source: Docker blog, 10 years since Kubernetes launched at DockerCon (2024)"
+url = "https://www.docker.com/blog/10-years-since-kubernetes-launched-at-dockercon/"
+
+[[sources]]
+label = "Source: Google Cloud Platform blog, container support update (June 2014)"
+url = "https://cloudplatform.googleblog.com/2014/06/an-update-on-container-support-on-google-cloud-platform.html"

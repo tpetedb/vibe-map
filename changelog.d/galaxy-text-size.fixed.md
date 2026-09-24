@@ -1,0 +1,1 @@
+- Galaxy topic names, progress labels and Learn buttons now follow the larger-text setting without horizontal overflow on narrow screens.

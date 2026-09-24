@@ -1,0 +1,35 @@
+v = 1
+order = "galaxy-v0"
+by = "codex-galaxy-v0-independent-reviewer"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "I read the Galaxy and experience entry-point tests, inspected the isolated Galaxy source diff, and ran the focused browser subset at this exact source: five desktop/WebKit text and walking cases passed. I stopped the duplicate 42-case local run after its early tests passed under the board's CI speed rule. The only change since the earlier complete Galaxy/golden run is Galaxy CSS, its generated copy, a browser regression, and a changelog fragment; island golden rendering is unaffected. Protected CI remains the complete c1 gate."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "At this source I ran Ruff check, Ruff format check, style, and sink checks directly; all passed. I inspected the final delta: it changes Galaxy CSS, its generated copy, one browser test, and a changelog fragment, with no non-browser product code change. The earlier complete non-browser battery passed before that delta; protected CI is the authoritative full rerun under the board speed rule."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "I ran all six generated-output checks at d8566de: build, tree, cookbook, template, fork source, and syllabus match. The declared built-game comparison against 541df67 is 73,009 bytes, below 80,000, even with the other two accepted train orders included."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "I checked docs/GALAXY.md section 6 against the source, focused tests, and rendered game. Journey and Chart expose the complete named list with year/state and era/place counts; four zoom levels have buttons; reduced motion cuts level changes and stops drift; route state has words and shapes; phone targets are at least 44 CSS px; focus ring, keyboard paths, experience announcement, focus and open sheet are exercised by entry-point tests. I independently reproduced the fixed reading scale in Chromium: normal topic/state/Learn were 16/12/14 px and larger were 23.2/17.4/20.3 px. At 360x450 the panel scrollWidth and clientWidth both measured 330 px. The new short-screen test and four walking cases passed. Flight and locked routes are later phases; no version-zero flight input is required."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "I inspected the three-place side-by-side capture and the desktop dome capture beside concept.html's campus, city, and rack design. UC Santa Barbara has a low courtyard and trees, Hangzhou has illuminated stepped towers, and the data-centre globe has rack rows and cooling shapes. Labels and place pins make the locations findable, and the source binds the two echo showcases to their actual selected place rather than redirecting to the primary topic origin."
+
+[[criteria]]
+id = "c6"
+verdict = "pass"
+evidence = "I ran the four desktop/WebKit landing_walks and walk_stick entry-point regressions on d8566de; all passed. They drive the actual Land button, keyboard, touch/stick, pavilion tap and nearby lesson, verify valid ground/water/building collision, pause movement under the lesson, and verify Journey exits and removes the walker. I also inspected src/galaxy/50-walk.js to confirm paths stay in local miniature coordinates and never write campaign progress."

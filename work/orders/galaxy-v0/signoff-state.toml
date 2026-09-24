@@ -1,0 +1,30 @@
+v = 1
+order = "galaxy-v0"
+team = "state"
+by = "manager-state"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+note = '''
+Refreshed for the state team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. None of the
+state team's owned files changed in this delta: src/game/00-state.js,
+src/game/80-sync.js, vibemap/state.py, vibemap/config.py, vibemap/project.py
+and config/ are all untouched (confirmed with git diff --stat), same as the
+prior sign-off noted for vibemap/config.py.
+
+Read the rest of the diff for state-contract effects anyway. galaxyState and
+the new galaxyWalk are runtime view caches (module-scoped JS, never
+localStorage or S): galaxyState.progress is JSON.stringify(S.topics) used
+only to detect when the shared record changed and re-derive the view
+(galaxyRefresh in src/galaxy/20-experience.js), never a second store. The
+new galaxyCameraState in EXPERIENCES.galaxy.build()/dispose() only saves and
+restores the THREE.Camera's own transient fields around the switch; it is
+not persisted. setSetting's new branch clears a stale ?experience= URL
+param via history.replaceState before save(), which only tightens the
+existing contract that a URL override never overwrites the saved
+preference. No new progress-code field, no version bump, no format change.
+
+Verified: uv run python tools/build.py --check, just sinks-check,
+uv run ruff check tests/, and uv run pytest -q tests/test_repo.py
+tests/test_work.py tests/test_harness_determinism.py all pass. No findings.
+'''

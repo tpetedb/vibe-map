@@ -49,6 +49,7 @@ NAMES: dict[str, tuple[str, ...]] = {
 ACTORS: dict[str, str] = {
     "anthropic-sf": "anthropic",
     "bell-labs": "bell telephone laboratories",
+    "byu-provo": "byu",
     "carnegie-mellon": "carnegie-mellon university",
     "cern": "cern",
     "cwi-amsterdam": "cwi",

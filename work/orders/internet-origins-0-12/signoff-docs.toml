@@ -1,0 +1,26 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "internet-origins-0-12"
+team = "docs"
+by = "manager-docs"
+reviewed = "f859c1336d28a66c85bcabbce979f6b5f4fc1a11"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """[Claude Sonnet 5, effort medium, team-manager] Re-checked after the \
+prior accept at 47879cd lapsed. git diff 47879cd f859c13 -- docs/ '*.md' site/ \
+shows docs/TOPICS.md and the order's changelog fragment untouched; the only \
+docs-path change traceable to this order is docs/ROADMAP.md and vault/Camp/Cloud \
+and servers.md picking up one new Source: line (Google, The Dalles data centre) \
+because the merge added that origin to vibemap/data/topics/core/cloud.toml, \
+which this order owns and is content's to judge, not docs'; those two files are \
+generated output, not hand-edited. Everything else that touched docs/ or \
+vault/Camp/*.md in this combined train (README.md, ARCHIPELAGO.md, AVATAR.md, \
+BRIEF.md, DASHBOARD.md, MAINTAINERS.md, docs/media/*, LLM versus harness.md, \
+work/orders/issue59-docs-played/*) belongs to the unrelated issue59-docs-played \
+order and is out of scope for this sign-off. Ran uv run python \
+tools/gen_syllabus.py --check (syllabus OK) and tools/regen_tree.py --check \
+(tree OK: outputs match vibemap/tech.py) at f859c13: both clean, so the \
+generated docs are in sync with the merged topic data. No browser tests run, \
+per instruction. Nothing here is docs' to fix."""

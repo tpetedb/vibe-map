@@ -13,14 +13,15 @@ try_it = "gh repo create, gh pr create after a branch, then enable Pages. The 22
 unlocks = ["ci", "cloud"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
-# exactly one origin is primary, and every source was opened. The launch post
-# is an online milestone and names no town.
+# exactly one origin is primary, and every source was opened.
+# The co-founder's own post is dated in San Francisco and gives the launch date;
+# the launch-day blog post is in the sources.
 
 [[origins]]
-place = "the-internet"
+place = "github-sf"
 year = 2008
-what = "Chris Wanstrath posts that GitHub is officially live and thanks everyone for the beta, on 10 April 2008."
-source = "https://github.blog/2008-04-10-we-launched/"
+what = "GitHub publicly launches its site on 10 April 2008, co-founder Tom Preston-Werner writes in a post dated San Francisco, 18 October 2008."
+source = "https://tom.preston-werner.com/2008/10/18/how-i-turned-down-300k.html"
 primary = true
 
 [[origins]]
@@ -64,3 +65,7 @@ url = "https://github.blog/news-insights/product-news/github-copilot-meet-the-ne
 [[sources]]
 label = "Source: openai/codex repository (April 2025)"
 url = "https://github.com/openai/codex"
+
+[[sources]]
+label = "Source: GitHub blog, We launched (April 2008)"
+url = "https://github.blog/2008-04-10-we-launched/"

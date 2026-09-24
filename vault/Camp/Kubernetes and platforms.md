@@ -2,7 +2,7 @@
 title: "Kubernetes and platforms"
 date: 2026-09-16
 tags: [tech, ship]
-generated: 9d1970e7dbf1
+generated: fb416afc6e23
 ---
 # Kubernetes and platforms
 
@@ -12,7 +12,7 @@ Kubernetes runs containers across many machines: scheduling, scaling, self-heali
 
 **Try in five minutes.** Read one Deployment YAML and identify: image, replicas, port.
 
-- Docs: [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story), [Source: Kubernetes blog, Borg: the predecessor to Kubernetes (2015)](https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/)
+- Docs: [Kubernetes basics](https://kubernetes.io/docs/tutorials/kubernetes-basics/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story), [Source: Kubernetes blog, Borg: the predecessor to Kubernetes (2015)](https://kubernetes.io/blog/2015/04/borg-predecessor-to-kubernetes/), [Source: Docker blog, 10 years since Kubernetes launched at DockerCon (2024)](https://www.docker.com/blog/10-years-since-kubernetes-launched-at-dockercon/), [Source: Google Cloud Platform blog, container support update (June 2014)](https://cloudplatform.googleblog.com/2014/06/an-update-on-container-support-on-google-cloud-platform.html)
 - Unlocks: [[The future perspective]]
 - Shelf: Ship and run · Depth: Deep
 

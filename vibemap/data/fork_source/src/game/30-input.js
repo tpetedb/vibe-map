@@ -152,7 +152,7 @@ function stopShort(){const name=aimFor;clearAim();
 window.walkTo=function(n){const p=PLOT_POS[n-1];
   // The flight to another island owns the frame while it lasts and lands on
   // an island this one's coordinates say nothing about.
-  if(!started||flight||!marker||!p||!onLandW(p.x,p.z))return false;
+  if(experienceId()!=="islands"||!started||flight||!marker||!p||!onLandW(p.x,p.z))return false;
   const c=CH[n-1],name=c?c.h+", "+c.n:"stop "+n;aim(p.x,p.z,name);
   // Said as well as drawn: the toast is the announcement for anyone who
   // cannot see the marker land, and the quiet setting still silences it.
@@ -165,7 +165,7 @@ function setupInput(){
   // reading a panel is here, and the saver's minute is about nobody being.
   ["pointerdown","keydown","wheel"].forEach(k=>addEventListener(k,noteInput,true));
   c.addEventListener("pointerdown",e=>{downPos=[e.clientX,e.clientY]});
-  c.addEventListener("pointerup",e=>{if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
+  c.addEventListener("pointerup",e=>{if(experienceId()!=="islands"){downPos=null;return}if(pinching()){downPos=null;return}if(!downPos)return;const d=Math.hypot(e.clientX-downPos[0],e.clientY-downPos[1]);downPos=null;if(d>10)return;
     const rc=$("c").getBoundingClientRect();ndc.set((e.clientX-rc.left)/rc.width*2-1,-((e.clientY-rc.top)/rc.height)*2+1);ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(island.userData.parts)[0];if(!hit)return;
     aim(hit.point.x,hit.point.z)});
   addEventListener("keydown",e=>{if(inField(e.target))return;const k=e.key.toLowerCase();keys[k]=true;if(k===" "){wantJump=true;if(document.activeElement===document.body)e.preventDefault()}if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault()
@@ -176,7 +176,7 @@ function setupInput(){
     // Enter is the keyboard twin of the proximity button, so it only fires
     // while the page itself has focus and nothing is standing in front of it:
     // a form field and an open panel keep their own Enter.
-    if(k==="enter"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
+    if(k==="enter"&&experienceId()==="islands"&&nearK&&document.activeElement===document.body&&!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")){enterNear();e.preventDefault()}});
   addEventListener("keyup",e=>{const k=e.key.toLowerCase();keys[k]=false;
     if(k!=="shift"||!shiftAlone)return;shiftAlone=false;
     if(settings().run!=="toggle")return;runOn=!runOn;
@@ -210,3 +210,12 @@ window.__walk=()=>({target:[target.x,target.z],has:hasTarget,
 // click, and a click needs somewhere to land.
 window.__groundAt=(x,z)=>{const v=new T.Vector3(x,0,z).project(camera),rc=$("c").getBoundingClientRect();
   return [rc.left+(v.x+1)/2*rc.width,rc.top+(1-v.y)/2*rc.height]};
+
+// Alternative surfaces share the same keys and touch stick, but own their space.
+function surfaceInput(){const blocked=!!document.querySelector("#sheet.on,#vault.on,#pal.on,#title:not(.off)")||inField(document.activeElement);
+  if(blocked)return {x:0,z:0,blocked:true};
+  const focused=document.activeElement,ui=focused&&focused!==document.body&&focused!==$("c");
+  return {x:joy.on?joy.x:ui?0:(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),
+    z:joy.on?joy.y:ui?0:(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0),blocked:false};
+}
+function surfaceInputReset(){for(const k of STEER)keys[k]=false;joy={x:0,y:0,on:false};$("knob").style.transform="";wantJump=false}

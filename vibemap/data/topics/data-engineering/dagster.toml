@@ -18,17 +18,26 @@ try_it = '''uv run --with dagster python -c "import dagster as dg; print(dg.__ve
 unlocks = ["datamap"]
 prerequisites = ["airflow"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The release is datelined San Francisco; the 1.0 blog post is in the sources.
+
 [[origins]]
-place = "the-internet"
+place = "dagster-sf"
 year = 2022
-what = "The Dagster team announces version 1.0 online on 5 August 2022, with stable software-defined assets."
-source = "https://dagster.io/blog/dagster-1-0-hello"
+what = "Elementl announces the 1.0 release of Dagster and Dagster Cloud in a release datelined San Francisco on 9 August 2022."
+source = "https://www.einpresswire.com/article/584322636/dagster-1-0-and-dagster-cloud-bring-full-cycle-development-best-practices-to-data-orchestration"
 primary = true
 
 [[sources]]
 label = "Source: Dagster, version 1.0 announcement"
 url = "https://dagster.io/blog/dagster-1-0-hello"
 checked = 2026-09-22
+
+[[sources]]
+label = "Source: Elementl press release, Dagster 1.0, datelined San Francisco (August 2022)"
+url = "https://www.einpresswire.com/article/584322636/dagster-1-0-and-dagster-cloud-bring-full-cycle-development-best-practices-to-data-orchestration"
+checked = 2026-09-24
 
 [[sources]]
 label = "Dagster, getting started concepts: assets"

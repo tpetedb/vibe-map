@@ -135,7 +135,7 @@ const pinch={pts:new Map(),on:false,span:0,dist:0};
 const pinching=()=>pinch.on;
 function pinchSpan(){const p=[...pinch.pts.values()];return Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1])}
 function setupZoom(){const c=$("c");
-  c.addEventListener("wheel",e=>{if(!started||flight)return;e.preventDefault();
+  c.addEventListener("wheel",e=>{if(experienceId()!=="islands"||!started||flight)return;e.preventDefault();
     const px=e.deltaMode===1?e.deltaY*16:e.deltaMode===2?e.deltaY*VIEW.h:e.deltaY;
     zoomSet(zoomRaw+px*CAM.zoom.wheel*(e.ctrlKey?CAM.zoom.pinch:1))},{passive:false});
   // A pinch is over when the last finger lifts, but the tap handler runs after
@@ -155,7 +155,7 @@ function setupZoom(){const c=$("c");
   // them; the stage keeps its size and the camera takes the gesture.
   ["gesturestart","gesturechange","gestureend"].forEach(n=>
     $("stage").addEventListener(n,e=>e.preventDefault(),{passive:false}));
-  addEventListener("keydown",e=>{if(!started||e.ctrlKey||e.metaKey||e.altKey||inField(e.target))return;
+  addEventListener("keydown",e=>{if(experienceId()!=="islands"||!started||e.ctrlKey||e.metaKey||e.altKey||inField(e.target))return;
     if(document.querySelector("#sheet.on,#vault.on,#pal.on"))return;
     if(e.key==="+"||e.key==="=")zoomStep(1);else if(e.key==="-"||e.key==="_")zoomStep(-1);
     else if(e.key==="0")zoomFit();else return;

@@ -56,9 +56,19 @@ url = "https://github.com/openai/codex"
 label = "Source: openai/agents.md repository (August 2025)"
 url = "https://github.com/openai/agents.md"
 
+[[sources]]
+label = "Source: Alibaba Cloud, Qwen3 launch in Hangzhou (April 2025)"
+url = "https://www.alibabacloud.com/en/press-room/alibaba-introduces-qwen3-setting-new-benchmark"
+
 [[origins]]
 place = "the-internet"
 year = 2017
 what = "Google researchers and collaborators publish Attention Is All You Need online on arXiv, proposing the attention-based Transformer model."
 source = "https://arxiv.org/abs/1706.03762"
 primary = true
+
+[[origins]]
+place = "hangzhou"
+year = 2025
+what = "Alibaba launches its open-source Qwen3 model family in Hangzhou on 29 April 2025."
+source = "https://www.alibabacloud.com/en/press-room/alibaba-introduces-qwen3-setting-new-benchmark"

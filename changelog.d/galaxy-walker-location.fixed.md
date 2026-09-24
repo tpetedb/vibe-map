@@ -1,0 +1,1 @@
+- Galaxy location now follows the lesson the walker reaches instead of the last place selected on the map.

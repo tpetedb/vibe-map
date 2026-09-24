@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 
+from tests.test_internet_origins import MOVES, placed_as_planned
 from vibemap import places, topics
 
 SHELVES = ("ship", "docs", "knowledge")
@@ -38,26 +39,12 @@ NAMES = {
 # the manual's title page are where Bell Laboratories is named.
 TUHS_FILE_PAGE = re.compile(r"tuhs\.org/cgi-bin/utree\.pl\?file=[^/&]+/")
 
-# These sources establish dated online announcements, not events at the
-# organisations' present headquarters.
-ONLINE_ANNOUNCEMENTS = {
-    "cloud": (
-        2006,
-        "Amazon",
-        "https://aws.amazon.com/about-aws/whats-new/2006/08/24/"
-        "announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/",
-    ),
-    "headless": (
-        2025,
-        "Anthropic",
-        "https://www.anthropic.com/news/claude-4",
-    ),
-    "kubernetes": (
-        2014,
-        "Google",
-        "https://cloudplatform.googleblog.com/2014/06/"
-        "an-update-on-container-support-on-google-cloud-platform.html",
-    ),
+# Announcements that stand in a town. An office address alone proves nothing:
+# each one has a dated first-party page that places it there (MOVES).
+ANNOUNCEMENTS = {
+    "cloud": (2006, "Amazon"),
+    "headless": (2025, "Anthropic"),
+    "kubernetes": (2014, "Google"),
 }
 
 
@@ -109,16 +96,13 @@ def test_no_topic_of_them_stands_twice_at_the_same_place() -> None:
         assert len(used) == len(set(used)), topic.id
 
 
-def test_online_announcements_are_not_placed_at_current_headquarters() -> None:
+def test_announcements_stand_in_a_town_only_with_a_dated_page() -> None:
     by_id = {topic.id: topic for topic in _topics()}
-    for topic_id, (year, actor, source) in ONLINE_ANNOUNCEMENTS.items():
-        origin = next(
-            origin
-            for origin in places.origins_of(by_id[topic_id])
-            if origin.year == year and origin.source == source
-        )
+    for topic_id, (year, actor) in ANNOUNCEMENTS.items():
+        origin = places.origin_at(by_id[topic_id], MOVES[topic_id][0])
+        assert origin.year == year, topic_id
         assert actor in origin.what, topic_id
-        assert origin.place == "the-internet", topic_id
+        assert placed_as_planned(topic_id), topic_id
 
 
 def test_no_origin_of_them_stands_on_a_page_that_names_no_one() -> None:

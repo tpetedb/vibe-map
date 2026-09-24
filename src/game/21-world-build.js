@@ -8,7 +8,7 @@ function init3d(){
   addEventListener("resize",fitRenderer);watchContext($("c"));
   // The zoom listens before the walk does, so a pinch is known to be a pinch
   // by the time the tap handler sees the same finger lift.
-  buildWorld(S.world||"campus");setupZoom();setupInput();inited=true;animate();
+  inited=true;activeExperience().build();setupZoom();setupInput();animate();
 }
 // The browser may take the WebGL context back: a phone short of memory, a tab
 // that slept, a driver reset. three.js stops drawing and says nothing, and a
@@ -37,10 +37,13 @@ function camFitDist(){const asp=Math.max(.35,VIEW.w/VIEW.h);
   return Math.max(r*Math.cos(p)+r*Math.sin(p)/Math.tan(vf),r/Math.tan(hf))}
 // A land blob: a grass disc with a dirt skirt below the waterline, the same
 // shape for the island, its satellites and the annexes. Returns the grass.
-function landBlob(group,x,z,r,seg){
-  const g=new T.Mesh(tintGeo(new T.CylinderGeometry(r,r+1.2,2.4,seg||9,3),.58,1),mat(W.grass,{vertexColors:true}));
+function landBlob(group,x,z,r,seg){return buildLandSurface(group,{x,z,r,segments:seg||9,grass:W.grass,dirt:W.dirt})}
+// Geometry only: miniature surfaces share the island builder without changing
+// the campaign, globals or the order in which an island consumes randomness.
+function buildLandSurface(group,{x=0,z=0,r,segments=9,grass,dirt}){
+  const g=new T.Mesh(tintGeo(new T.CylinderGeometry(r,r+1.2,2.4,segments,3),.58,1),mat(grass,{vertexColors:true}));
   g.position.set(x,-1.2,z);g.castShadow=g.receiveShadow=true;
-  const d=new T.Mesh(tintGeo(new T.CylinderGeometry(r+1.1,r+2.2,2.2,seg||9,2),.72,1),mat(W.dirt,{vertexColors:true}));
+  const d=new T.Mesh(tintGeo(new T.CylinderGeometry(r+1.1,r+2.2,2.2,segments,2),.72,1),mat(dirt,{vertexColors:true}));
   d.position.set(x,-2.6,z);d.castShadow=d.receiveShadow=true;
   group.add(g,d);return g}
 function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id==="desert"?"#C9A24E":"#E9D9B5")}
@@ -247,7 +250,8 @@ function addPlaque(m){const g=new T.Group();
   const off=P(1.7,1.3);g.position.set(m.pos[0]+off[0],0,m.pos[1]+off[1]);g.rotation.y=-.3;g.traverse(o=>{if(o.isMesh)o.castShadow=true});mergeStatic(g);
   const lb=label(m.encounter.plaque,.45);lb.position.y=1.75;g.add(lb);
   fixColors(g);scene.add(g);props.plaques[m.id]=g;obstacles.push([g.position.x,g.position.z,.7]);return g}
-function placePlaques(pop){MENTORS.filter(m=>m.world===(S.world||"campus")).forEach(m=>{
+function islandSceneReady(){return experienceId()==="islands"&&!!scene}
+function placePlaques(pop){if(!islandSceneReady())return;MENTORS.filter(m=>m.world===(S.world||"campus")).forEach(m=>{
   if(!S.mentors.includes(m.id)||props.plaques[m.id])return;const g=addPlaque(m);
   const c=(props.mentors||[]).find(x=>x.id===m.id);if(c)c.ring.material.color.set(PALETTE.greenBright);
   if(pop)popIn(g)})}
@@ -261,12 +265,14 @@ window.nextWorld=function(){const ids=Object.keys(WORLDS);const i=(ids.indexOf(S
 // Fast travel. Before the island runs it is only a choice; once it runs the
 // camera flies there first, and the world changes when it arrives.
 window.setWorld=function(id){
+  if(experienceId()!=="islands")return false;
   if(!started){S.world=id;save();renderWorldPicker();return}
   if(flight||id===S.world)return;
   if(reducedMotion()){buildWorld(id);renderWorldPicker();return}
   startFlight(id)};
 function renderWorldPicker(){const el=$("worlds");if(!el)return;el.innerHTML=Object.keys(WORLDS).map(k=>`<button class="world${(S.world||"campus")===k?' pick':''}" onclick="setWorld('${k}')"><b><i style="background:${WORLDS[k].swatch}"></i>${CAMPAIGN[k].title.split(":")[0]}</b>${WORLDS[k].name}. ${CAMPAIGN[k].title.split(": ")[1]}</button>`).join("")}
 function placeBuilding(k,pop){
+  if(!islandSceneReady())return;
   const g=building(k);g.position.copy(PLOT_POS[k-1]);const p=plots[k-1];p.userData.ring.visible=false;p.userData.post.visible=false;p.userData.sign.visible=false;p.userData.lb.userData.off=1;
   fixColors(g);scene.add(g);builds[k]=g;
   if(pop)popIn(g);else g.scale.set(1,1,1);
@@ -379,7 +385,7 @@ function seaMaterial(){
 
 let skyFrom=new T.Color("#9BD3F5"),skyTo=new T.Color("#9BD3F5"),skyT=1,skyN=0;
 const rigSun=new T.Color(),rigZen=new T.Color("#3E8FD8"),_rigZenTo=new T.Color(),_dir=new T.Vector3(),_far=new T.Vector3();
-function applySky(n,instant){skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
+function applySky(n,instant){if(!islandSceneReady())return;skyN=Math.min(8,n);skyFrom.copy(scene.background||new T.Color(W.sky[0]));skyTo.set(W.sky[skyN]);skyT=instant?1:0;
   if(instant){scene.background=skyTo.clone();scene.fog.color.copy(skyTo)}
   if(instant)tickRig(1)}
 // The rig follows the stage: the sun swings round and down, warm to cold, the

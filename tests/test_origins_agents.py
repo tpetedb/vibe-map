@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+from tests.test_internet_origins import MOVES, placed_as_planned
 from vibemap import places, topics
 
 TOPICS = {
@@ -24,14 +25,16 @@ TOPICS = {
     "symbols",
     "future",
 }
-ACTORS = {topic: "Anthropic" for topic in TOPICS} | {
-    "agentsmd": "OpenAI",
-    "security": "MIT",
-    "meta": "SRI",
-    "llm": "Google",
-    "symbols": "John Gruber",
+ACTORS = {topic: ("Anthropic",) for topic in TOPICS} | {
+    "agentsmd": ("OpenAI",),
+    "security": ("MIT",),
+    "meta": ("SRI",),
+    "llm": ("Google", "Alibaba"),
+    "symbols": ("John Gruber",),
 }
-# Only these two milestones have contemporary evidence for an Earth location.
+# Historical sites with contemporary evidence. A publication stands at a
+# company's address only where a dated first-party page places it in that town
+# (MOVES); an office address alone proves nothing, so the rest stay online.
 HISTORICAL_SITES = {"security": "mit", "meta": "sri-menlo-park"}
 
 
@@ -51,7 +54,7 @@ def test_milestones_name_the_actor_and_use_dated_sources() -> None:
     for topic in selected():
         assert topic.origins, topic.id
         for origin in topic.origins:
-            assert ACTORS[topic.id] in origin.what, topic.id
+            assert any(actor in origin.what for actor in ACTORS[topic.id]), topic.id
             assert origin.source.startswith("https://"), topic.id
             assert origin.what.endswith("."), topic.id
             assert "\n" not in origin.what, topic.id
@@ -71,11 +74,14 @@ def test_cli_prints_a_named_origin_for_an_agent_topic() -> None:
     assert "Model Context Protocol" in result.output
 
 
-def test_online_publications_do_not_borrow_a_current_company_address() -> None:
+def test_a_company_address_needs_a_dated_page_that_places_the_event() -> None:
     for topic in selected():
         primary = next(origin for origin in topic.origins if origin.primary)
         if topic.id in HISTORICAL_SITES:
             assert primary.place == HISTORICAL_SITES[topic.id], topic.id
+        elif topic.id in MOVES:
+            assert primary.place == MOVES[topic.id][0], topic.id
+            assert placed_as_planned(topic.id), topic.id
         else:
             assert primary.place == "the-internet", topic.id
             assert "online" in primary.what.lower(), topic.id

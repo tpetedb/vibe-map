@@ -1,0 +1,33 @@
+# The harness team's manager agreeing to Galaxy's tests, generated checks and
+# boot-order dependency. It covers the implementation commit reviewed below.
+v = 1
+order = "galaxy-v0"
+team = "harness"
+by = "manager-harness"
+reviewed = "d8566de08ea00aa62db95e9262c1f48b2c9d567b"
+verdict = "accept"
+note = '''
+Refreshed for the harness team at d8566de08ea00aa62db95e9262c1f48b2c9d567b
+(PR183 train), diffed against the prior f9d9a6b80 sign-off. No harness-owned
+path (tools/, work/, .claude/, .agents/, .github/, justfile, agents.just,
+AGENTS.md, CLAUDE.md, pyproject.toml, uv.lock, src/vendor/, ...) changed in
+this delta; boot stays last by construction as before, unaffected by this
+stack. tests/test_game_experience.py and tests/test_game_galaxy.py grew
+(43 and 403 lines) but stayed inside the fast/browser split: the new
+test_galaxy_round_trip_preserves_the_zoomed_out_island waits on
+wait_for_function(AT_REST) and the revised
+test_a_new_destination_replaces_a_compound_trip waits via game.frames(3),
+neither sleeps. grep found no sleep(/time.sleep in the test diff. The
+extended islands/galaxy contract test asserts the islands shape ("expected")
+is untouched and only the galaxy shape gains the new optional hooks
+(fallback, refresh, layout, world, backLabel, presentation, guidance), so
+the islands contract stays put.
+
+Verified directly: uv run python tools/build.py --check
+(game/vibe-map.html matches src/, so the build stays in sync with no
+harness-owned tooling change needed), just sinks-check (clean),
+uv run ruff check tests/ (clean), and uv run pytest -q tests/test_repo.py
+tests/test_work.py tests/test_harness_determinism.py (all pass, exit 0).
+No browser tests run here; Codex's reviewer already reran and accepted
+those (review.toml c1/c2/c3). No findings.
+'''

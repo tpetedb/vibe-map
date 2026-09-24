@@ -2,7 +2,7 @@
 title: "Python libraries: what they are for"
 date: 2026-09-16
 tags: [tech, code]
-generated: 908fc5e4dcc3
+generated: 74acceed01a5
 ---
 # Python libraries: what they are for
 
@@ -12,7 +12,7 @@ pandas (tables), numpy (numbers), matplotlib/plotly (charts), requests/httpx (ta
 
 **Try in five minutes.** uv pip install pandas, then python3 -c "import pandas as pd; print(pd.read_csv('workspace/data/scores.csv').describe())".
 
-- Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html), [Requests](https://requests.readthedocs.io), [pytest](https://docs.pytest.org), [FastAPI](https://fastapi.tiangolo.com), [Source: numpy.org, About NumPy](https://numpy.org/about/), [Source: pandas.pydata.org, About pandas](https://pandas.pydata.org/about/), [Source: requests release history on PyPI (February 2011)](https://pypi.org/project/requests/#history), [Source: pytest history](https://docs.pytest.org/en/stable/history.html), [Source: FastAPI release history on PyPI (December 2018)](https://pypi.org/project/fastapi/#history), [Source: pydantic v0.1 release (June 2017)](https://github.com/pydantic/pydantic/releases/tag/v0.1), [Source: Playwright v1.0.0 release (May 2020)](https://github.com/microsoft/playwright/releases/tag/v1.0.0), [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0)
+- Docs: [pandas 10 minutes](https://pandas.pydata.org/docs/user_guide/10min.html), [Requests](https://requests.readthedocs.io), [pytest](https://docs.pytest.org), [FastAPI](https://fastapi.tiangolo.com), [Source: numpy.org, About NumPy](https://numpy.org/about/), [Source: pandas.pydata.org, About pandas](https://pandas.pydata.org/about/), [Source: requests release history on PyPI (February 2011)](https://pypi.org/project/requests/#history), [Source: pytest history](https://docs.pytest.org/en/stable/history.html), [Source: FastAPI release history on PyPI (December 2018)](https://pypi.org/project/fastapi/#history), [Source: pydantic v0.1 release (June 2017)](https://github.com/pydantic/pydantic/releases/tag/v0.1), [Source: Playwright v1.0.0 release (May 2020)](https://github.com/microsoft/playwright/releases/tag/v1.0.0), [Source: DuckDB v0.1.0 release (June 2019)](https://github.com/duckdb/duckdb/releases/tag/v0.1.0), [Source: BYU College of Science, lecture by Travis Oliphant, NumPy built at BYU in 2005](https://science.byu.edu/college-events/lecture-travis-oliphant-2025-11-05)
 - Unlocks: [[Building and consuming APIs]], [[Tests and evals]]
 - Shelf: Languages and code · Depth: Working knowledge
 

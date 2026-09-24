@@ -3,9 +3,9 @@
 function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
   const TAU=Math.PI*2,UP=new T.Vector3(0,1,0);
   const mix=(a,b,k)=>new T.Color(a).lerp(new T.Color(b),k).getHex();
-  const C={ocean:mix(P.blue,P.black,.77),land:mix(P.green,P.ink,.38),
-    ground:mix(P.green,P.ink,.73),glass:mix(P.blueBright,P.snow,.65),
-    steel:mix(P.ink,P.blue,.16),cream:mix(P.snow,P.deck,.16)};
+  const C={ocean:mix(P.blue,P.black,.35),land:mix(P.green,P.ink,.08),
+    ground:mix(P.green,P.ink,.3),glass:mix(P.blueBright,P.snow,.65),
+    steel:mix(P.stone,P.blue,.32),cream:mix(P.snow,P.deck,.16)};
   const stateColor=s=>s==='done'?P.greenBright:s==='next'?P.yellow:P.muted;
   function surface(lat,lon,r=1){
     const a=lat*Math.PI/180,b=lon*Math.PI/180;
@@ -23,10 +23,11 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
   }
   // A kit is instanced by shape and finish: a hundred tiny details cost a few draws.
   function kit(parent){
-    const batches=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler();
+    const obstacles=[],batches=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler();
     function put(shape,color,x,y,z,sx,sy,sz,ry=0,glow=false){
       // Matte instances share one draw per shape and carry their own colour.
       // Glowing parts keep a colour batch because emissive is not instanced.
+      if(['box','cylinder'].includes(shape)&&sy>.1&&y-sy/2<.04&&Math.max(sx,sz)<1.3)obstacles.push([x,z,Math.hypot(sx,sz)/2]);
       const key=shape+'|'+(glow?color:'matte')+'|'+glow;
       if(!batches.has(key))batches.set(key,{shape,color,glow,transforms:[],colors:[]});
       q.setFromEuler(e.set(0,ry,0));
@@ -34,13 +35,14 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       const batch=batches.get(key);batch.transforms.push(matrix.clone());batch.colors.push(color);
     }
     return {
+      obstacles,
       box:(x,y,z,w,h,d,color,ry=0,glow=false)=>put('box',color,x,y+h/2,z,w,h,d,ry,glow),
       tree:(x,z,h=.28)=>{put('cylinder',P.timber,x,h*.23,z,.035,h*.46,.035);put('cone',P.green,x,h*.64,z,h*.40,h*.8,h*.40)},
       ball:(x,y,z,r,color)=>put('sphere',color,x,y,z,r,r,r),
       cylinder:(x,y,z,r,h,color)=>put('cylinder',color,x,y+h/2,z,r,h,r),
       flush:()=>batches.forEach(({shape,color,glow,transforms,colors})=>{
         const geo=shape==='box'?new T.BoxGeometry(1,1,1):shape==='cone'?new T.ConeGeometry(1,1,7):shape==='cylinder'?new T.CylinderGeometry(1,1,1,12):new T.IcosahedronGeometry(1,1);
-        const m=mat(glow?color:P.snow,glow?{emissive:color,emissiveIntensity:.75}:{vertexColors:true});
+        const m=mat(glow?color:P.snow,glow?{emissive:color,emissiveIntensity:.75}:{});
         const mesh=new T.InstancedMesh(geo,m,transforms.length);
         transforms.forEach((v,i)=>{mesh.setMatrixAt(i,v);
           if(!glow)mesh.setColorAt(i,new T.Color(colors[i]).convertSRGBToLinear())});
@@ -142,11 +144,11 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       for(let i=0;i<4;i++)k.tree(-.45+i*.30,.38,.24);
     }
   }
-  function makeDome(place,state='ahead'){
-    const g=new T.Group(),k=kit(g),look=place.look;
+  function makeDome(place,state='ahead',miniatureBuilder=null){
+    const g=new T.Group(),structures=new T.Group(),k=kit(structures),look=place.look;
     g.userData={placeId:place.id,look,state};
-    k.cylinder(0,-.095,0,1.01,.075,C.steel);
-    k.cylinder(0,-.025,0,.965,.025,look==='racks'?P.surface:C.ground);
+    if(!miniatureBuilder){k.cylinder(0,-.095,0,1.01,.075,C.steel);k.cylinder(0,-.025,0,.965,.025,look==='racks'?P.surface:C.ground)}
+
     if(look==='campus'||look==='lab')campus(k,look);
     else if(look==='tower')city(k);
     else if(look==='racks')datacentre(k);
@@ -154,6 +156,12 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     else if(['station','house','harbour','hall'].includes(look))station(k,look);
     else throw new Error('Unsupported Galaxy look: '+look);
     k.flush();
+    const topics=(place.topics||[]).slice(0,6),lessonSites=topics.map((topic,i)=>{
+      const angle=topics.length===1?0:(i/(topics.length-1)-.5)*2.2;
+      return {id:topic.id,position:[Math.sin(angle)*.76,Math.cos(angle)*.76]};
+    });
+    if(miniatureBuilder){const miniature=miniatureBuilder({look,terrain:{radius:.965,grass:look==='racks'?P.surface:C.ground,dirt:C.steel},structures,lessonSites,obstacles:k.obstacles,water:look==='tower'?[{kind:'disc',x:-.33,z:.10,radius:.37}]:look==='harbour'?[{kind:'box',x:0,z:.25,width:1.3,depth:.55}]:[]});g.add(miniature.root)}
+    else g.add(structures);
     const color=stateColor(state);
     ring(g,1.016,-.022,color,1);
     ring(g,.965,.003,C.glass,.45);
@@ -230,7 +238,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       shell.dispose();g.add(new T.LineSegments(edges,new T.LineBasicMaterial({color:P.blueBright,transparent:true,opacity:.36,depthWrite:false})));
     }
     if(globe==='cloud'){
-      const k=kit(g);for(let i=0;i<9;i++){const a=i*2.4;k.ball(Math.cos(a)*.64,Math.sin(i*1.7)*.35,Math.sin(a)*.64,.47,mix(P.blue,P.snow,.6))}k.flush();body.visible=false;
+      const k=kit(g);for(let i=0;i<9;i++){const a=i*2.4;k.ball(Math.cos(a)*.64,Math.sin(i*1.7)*.35,Math.sin(a)*.64,.47,mix(P.blue,P.snow,.6))}k.flush();body.scale.setScalar(.7);
     }
     const siteScale=Math.min(domeScale,.62/Math.sqrt(places.length));
     const vectors=places.map((p,i)=>{
@@ -271,7 +279,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     const g=new T.Group();
     for(let i=1;i<nodes.length;i++){
       const a=new T.Vector3(...nodes[i-1].position),b=new T.Vector3(...nodes[i].position),mid=a.clone().lerp(b,.5);
-      mid.y+=i%2?.60:-.60;mid.z-=.45;
+      mid.z-=.08;
       const curve=new T.QuadraticBezierCurve3(a,mid,b),state=nodes[i].state||'ahead';
       line(g,curve.getPoints(64),stateColor(state),state==='ahead'?.48:1,state==='ahead');
       if(state==='next'){
@@ -280,5 +288,5 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     }
     fixColors(g);return g;
   }
-  return {surface,makeDome,makePlanet,makeJourney};
+  return {surface,stateColor,makeDome,makePlanet,makeJourney};
 }

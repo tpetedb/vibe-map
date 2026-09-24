@@ -12,6 +12,11 @@ try_it = '''duckdb -c "copy 'workspace/data/scores.csv' to 'workspace/data/score
 
 unlocks = ["apis", "tests"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The BigQuery post names no town; Google's 10-K for 2011 in the sources puts
+# its headquarters in Mountain View.
+
 [[origins]]
 place = "ibm-san-jose"
 year = 1970
@@ -26,9 +31,9 @@ what = "In 1986 the implementation of POSTGRES begins at the University of Calif
 source = "https://www.postgresql.org/docs/current/history.html"
 
 [[origins]]
-place = "the-internet"
+place = "google-mountain-view"
 year = 2011
-what = "On 14 November 2011 Google announces online that BigQuery is opening to more companies after a limited preview, with a web interface and an improved REST API."
+what = "On 14 November 2011 Google announces that BigQuery is opening to more companies after a limited preview, with a web interface and an improved REST API."
 source = "https://developers.googleblog.com/google-bigquery-service-big-data-analytics-at-google-speed/"
 
 [[origins]]
@@ -86,3 +91,7 @@ url = "https://info.snowflake.net/rs/252-RFO-227/images/Snowflake_SIGMOD.pdf"
 [[sources]]
 label = "Source: Twitter Engineering, Announcing Parquet 1.0 (2013)"
 url = "https://blog.x.com/engineering/en_us/a/2013/announcing-parquet-10-columnar-storage-for-hadoop"
+
+[[sources]]
+label = "Source: SEC EDGAR, Google 10-K for 2011, headquarters in Mountain View"
+url = "https://www.sec.gov/Archives/edgar/data/1288776/000119312512025336/d260164d10k.htm"

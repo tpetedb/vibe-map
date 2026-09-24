@@ -130,6 +130,7 @@ class Place(BaseModel):
     look: str
     landmark: str
     source: str
+    showcase: bool = False
 
     @property
     def on_earth(self) -> bool:

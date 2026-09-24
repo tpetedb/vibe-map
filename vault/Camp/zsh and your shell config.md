@@ -2,7 +2,7 @@
 title: "zsh and your shell config"
 date: 2026-09-16
 tags: [tech, shell]
-generated: 10e571c7a992
+generated: 9853b73f15ff
 ---
 # zsh and your shell config
 
@@ -12,7 +12,7 @@ generated: 10e571c7a992
 
 **Try in five minutes.** source scripts/vibe.zsh then g status.
 
-- Docs: [zsh manual](https://zsh.sourceforge.io/Doc/), [oh-my-zsh](https://ohmyz.sh), [starship prompt](https://starship.rs), [Source: zsh FAQ, 1.1 What is it?](https://zsh.sourceforge.io/FAQ/zshfaq01.html), [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360), [Source: Apple newsroom, macOS Catalina is available today (October 2019)](https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/)
+- Docs: [zsh manual](https://zsh.sourceforge.io/Doc/), [oh-my-zsh](https://ohmyz.sh), [starship prompt](https://starship.rs), [Source: zsh FAQ, 1.1 What is it?](https://zsh.sourceforge.io/FAQ/zshfaq01.html), [Source: Apple, Use zsh as the default shell on your Mac](https://support.apple.com/en-us/102360), [Source: Apple newsroom, macOS Catalina is available today (October 2019)](https://www.apple.com/newsroom/2019/10/macos-catalina-is-available-today/), [Source: Apple newsroom, Q4 2019 results, datelined Cupertino (October 2019)](https://www.apple.com/newsroom/2019/10/apple-reports-fourth-quarter-results/)
 - Unlocks: [[Dotfiles]]
 - Shelf: Terminal and shell · Depth: Working knowledge
 

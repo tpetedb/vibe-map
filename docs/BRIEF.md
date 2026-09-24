@@ -86,7 +86,8 @@ Still open:
 - The in-game vault graph is decoration, and the tech tree has arrows but no search.
 - The camp's `pages.yml` copies a built fork to `/fork/` when `workspace/forks/vibe-map/game/vibe-map.html` is committed, so a learner's own game is hosted only if they commit the build. Nothing tells them to, and the forking stop does not mention the URL.
 - Palette literals remain in several game modules (`12-buildings.js`, `17-artifact-props.js`, `21-world-build.js`, `60-vault.js`, `70-minigames.js`, `87-onboarding.js`) rather than reading `src/config/00-config.js`.
-- The product checkout is a valid camp but does not satisfy the new winter, desert and production checks: its `workspace/` holds the campus deliverables only. The played instance has to script those deliverables before it plays, or the played camp will show red where the course expects green.
+- The repository owner still has to upload `docs/media/hero.png` as the GitHub social preview. A repository file cannot change that setting.
+- The played camp now has one tested regeneration entry point. Its public repository remains an external release artifact, so a maintainer reviews and explicitly pushes the generated commit after a release.
 
 ## 4. Cycle 2: professionalize (delivered in 0.9.0)
 
@@ -130,6 +131,39 @@ flowchart LR
 
 Wave 1 (parallel, independent files): W1 (layout and CLI), W3 (game mentors and campaign data), W4 (game title and mini-games), W6 (tests and CI). Wave 2 (after W1 lands): W2 and W5, which write checks against the new workspace layout. Wave 3: W7, then the release. Each workstream is a GitHub issue; each agent works in its own worktree, merges `origin/main` before opening its PR, and touches only the files its issue names.
 
-## 5. The rule for agents
+## 5. Cycle 3: make it awesome (delivered in 0.10.0 and 0.11.0)
+
+Cycle 3 started with a complete play-test hunt and then made the three faces of
+the product feel like one place. The work was deliberately split by surface:
+
+| Work | Issue | Delivery |
+|---|---|---|
+| X0, play-test every path and turn findings into bounded work | #56 | the backlog for X1 through X9 |
+| X1, local in-game chat through the learner's own subscription | #53 | PR #64 |
+| X2, analytics in the game and a terminal HTML report | #54 | PR #61 |
+| X3, avatar actions, collectibles, achievements and wearables | #55 | PR #62 |
+| X4, four islands in one archipelago with walkable bridges | #57 | PR #67 |
+| X5, HUD, sheets, graphics, light and scene performance | #58 | PRs #68 and #72 |
+| X6, documentation, media, release and independent verification | #59 | release PRs #116 and #159, plus this closeout |
+| X7, CLI findings from the hunt | #60 | PR #63 |
+| X8, credited pixel pets in the terminal and game | #65 | PR #66 |
+| X9, cat and dog sprites and the complete pet gallery | #69 | PR #71 |
+
+Release 0.10.0 on 2026-09-19 delivered the Cycle 3 features and the first
+release pass. Its tag run exposed a feed check that treated arXiv's normal
+weekend silence as an outage. Release 0.11.0 on 2026-09-21 carried the complete
+documentation and media pass, corrected that liveness rule and passed the tag
+run on Linux and macOS: a fresh installed camp, every island, every stop, every
+mentor, the finale and every registered feed. GitHub Pages deployed the same
+release commit.
+
+The release review left four concrete closeout items on #59: a Cycle 3 record
+in this brief, proper guides for the dashboard, avatar and archipelago, a safe
+played-camp regeneration command, and the literal gameplay journey across a
+bridge. They are kept together because the pictures and the played camp are
+the proof of the documentation. The custom repository social preview remains
+an owner action after the reviewed `hero.png` lands.
+
+## 6. The rule for agents
 
 Read this document, `AGENTS.md`, `docs/MAINTAINERS.md`, then the issue. Do the whole issue, with tests. Do not widen scope; note what you saw for another issue in your PR body. Never hand-edit generated files; regenerate. Never delete or rewrite `workspace/data/scores.csv`. No em dashes, no emoji. Merge `origin/main` into your branch before the PR and resolve conflicts by regenerating, not by hand. Green CI or no merge.
