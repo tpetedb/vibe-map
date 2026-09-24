@@ -1,0 +1,118 @@
+v = 1
+order = "internet-origins-0-12"
+by = "reviewer-internet-origins-0-12-r1"
+reviewed = "d3e2f5d4de02f57f203c375004a85e7d746f382d"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """Ran the four files fresh (no cache): all pass. The new test proves the \
+sentence: in a scratch copy of d3e2f5d I put hooks and future back at the-internet \
+and dropped the Apple Q4 2019 source from zsh; test_internet_origins then fails on \
+future, hooks and zsh by name, on the primaries test, and on the left-at-the-internet \
+set (['future', 'hooks']). The two new places load on earth (vibe places san-francisco \
+and byu-provo print the kubernetes and pylibs lines). Weak spot: the primaries bound is \
+<= 30 while 26 primaries stand there today (netshell, packages and systemd are in STAYS \
+but live only in PR #202); the set check is the real guard. The criterion's command \
+does not cover the rest of the unit suite, which fails: see the high finding."""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """Ran it fresh: places.problems() returns 0 lines; build, regen_tree, \
+gen_cookbook, sync_template, sync_fork_source and gen_syllabus --check all exit 0; \
+checks.py style prints no em dashes, no emoji. The command proves the sentence. The \
+built game carries the new places."""
+
+[[criteria]]
+id = "c3"
+verdict = "fail"
+evidence = """I opened the town page of all twenty moves myself (WebFetch or curl): \
+agenthooks, cost, hooks, skills: Project Vend, 27 Jun 2025, 'the Anthropic office in \
+San Francisco'; skills also the Paris/Munich page, 7 Nov 2025, 'offices ... including in \
+San Francisco'. apis: SEC exhibit 99.1 'MOUNTAIN VIEW, Calif. - April 23, 2015'. data: \
+10-K for FY ended 31 Dec 2011 'Our headquarters are located in Mountain View'. ci: \
+github.blog 1 Aug 2019 'in San Francisco on November 13-14'; the Actions post (8 Aug \
+2019) says GA 'at GitHub Universe on November 13'. cloud: 'SEATTLE--(BUSINESS WIRE)--March \
+14, 2006-- Amazon Web Services Launches'. docker: Docker blog 'March 15, 2013 ... first \
+demoed Docker publicly ... at PyCon', place source us.pycon.org/2013 'PyCon 2013 Santa \
+Clara, CA, March 13-21'. github: '18 Oct 2008 - San Francisco', 'We publicly launched the \
+site on April 10th'. headless: Code with Claude page 'May 22, 2025 in San Francisco'. \
+kubernetes: Docker blog 'Eric Brewer', 'June 10th, 2014', 'day 2 of the first ever \
+DockerCon'; place source (10 May 2022) 'The very first one in June 2014 in San \
+Francisco'. languages: Rob Pike 'Thursday, the 20th of September, 2007 ... meeting ... at \
+2PM the next day ... in Building 43 on Google's Mountain View campus'. pylibs: \
+science.byu.edu 'having built NumPy in 2005 while a professor in Electrical and Computer \
+Engineering at BYU'. zsh: 'Cupertino, California - October 30, 2019'. airflow, datamap: \
+the archived 2 June 2015 page 'Founded in August of 2008 and based in San Francisco, \
+California'. dagster: 'SAN FRANCISCO, CA, USA, August 9, 2022 / EINPresswire.com / -- \
+Elementl is announcing the 1.0 release'. medallion: 'SAN FRANCISCO - June 21, 2022' and \
+'Databricks is headquartered in San Francisco'. dotfiles: GitHub API created_at \
+2012-04-22T20:52:49Z, description matches the line. Nineteen hold. future does not: \
+the Newsom letter's letterhead, extracted from the PDF, is '548 Market St., PMB 90375 \
+San Francisco, CA 94104-5401': a private mailbox, the same letterhead batch-2 records \
+for the harness OSTP letter that the checker refuted as a mailing address (medium \
+finding). The eight refuted moves stayed: harness, subagents, mcp, prompting, \
+promptstructure, dbt, dataquality primary at the-internet, interfaces' echo at \
+the-internet. The two place files match the format of santa-clara and uc-irvine key for \
+key, header comment included, each with an https source that names the town. \
+docs/TOPICS.md: the added clause is true, and each moved topic's comment names its \
+page; it is a clause folded into the existing sentence plus the checklist line, short \
+enough. No em dashes in the diff."""
+
+[[findings]]
+severity = "high"
+file = "tests/test_integrated_origin_locations.py"
+text = """Five existing unit tests fail at d3e2f5d, locally and in CI (run 35949076648, \
+step 'uv run pytest -m \"not browser and not integration\"': failure). They encode the \
+decision this order reverses: test_integrated_origin_locations.py \
+test_audited_origins_do_not_infer_current_office_locations (ci, and github, languages, \
+zsh, dotfiles expected at the-internet); test_origins_agents.py \
+test_online_publications_do_not_borrow_a_current_company_address (skills, and it demands \
+'online' in the line); test_origins_data_engineering.py \
+test_publications_do_not_borrow_current_office_locations (airflow); \
+test_origins_ship_docs.py test_online_announcements_are_not_placed_at_current_headquarters \
+(cloud); test_origins_code_git.py test_a_line_at_an_address_names_who_is_at_that_address \
+('core/pylibs.toml at byu-provo: say who the line has to name': byu-provo is not in its \
+ACTORS table). None of the five files is in owns, so the manager has to add them to the \
+order (their earlier orders are galaxy-integrated-origin-locations, galaxy-origins-agents, \
+galaxy-origins-data-engineering, galaxy-origins-ship-docs, galaxy-origins-code-git) and \
+the builder rewrites each assertion to the new rule, not deletes it. The order cannot \
+land red."""
+
+[[findings]]
+severity = "medium"
+file = "vibemap/data/topics/core/future.toml"
+text = """The plan asked the reviewer to rule once on letterheads for future and harness. \
+Ruling: a PMB letterhead does not count. The Newsom letter (21 Aug 2024) carries '548 \
+Market St., PMB 90375 San Francisco': a private mailbox, a mailing address, which is \
+what docs/TOPICS.md says proves nothing about where an event happened, and it is the \
+same letterhead on which the checker refuted harness. Moving future while harness stays \
+applies one piece of evidence two ways. Put future back at the-internet (still primary), drop the letter from its sources, move it from MOVES to \
+OPEN in tests/test_internet_origins.py (nineteen moves, nine open), or replace the letter \
+with a dated 2024 first-party page that names Anthropic's San Francisco office rather \
+than a mailbox."""
+
+[[findings]]
+severity = "low"
+file = "tests/test_internet_origins.py"
+text = """test_only_the_planned_topics_are_left_at_the_internet bounds the primaries at \
+<= 30 while 26 stand there (netshell, packages, systemd in STAYS exist only in PR #202). \
+The set check carries the criterion; an exact count computed from the topics present \
+would say more."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/topics/core/cloud.toml"
+text = """The plan said to switch the cloud origin to the S3 release (March 2006); the \
+builder kept the EC2 beta (August 2006) as the line and listed the S3 release under \
+sources. Valid under the new rule and arguably the better primary for compute, but it \
+is a deviation from 'apply PLAN.md exactly' that the report should name."""
+
+[[findings]]
+severity = "low"
+file = "vibemap/data/places/san-francisco.toml"
+text = """The new city dome at 37.7749, -122.4194 is about 1.7 km from dagster-sf and \
+sits among nine other San Francisco domes; the plan flags it for a cluster rule in \
+docs/GALAXY.md phase 3. Not a blocker; the galaxy team should get the follow-up."""
