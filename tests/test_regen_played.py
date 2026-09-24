@@ -102,6 +102,85 @@ def test_install_preserves_branch_and_origin_and_does_not_push(
     assert _git(camp, "status", "--porcelain") == ""
 
 
+def test_install_preserves_tracked_learner_files_missing_from_stage(
+    tmp_path: Path,
+) -> None:
+    camp, _ = _repo(tmp_path)
+    scores = camp / "workspace" / "data" / "scores.csv"
+    scores.parent.mkdir(parents=True)
+    scores.write_bytes(b"played_at,player,score,duration_s\n2026-09-01,Tom,42,60\n")
+    sql = camp / "workspace" / "sql" / "top_runs.sql"
+    sql.parent.mkdir(parents=True)
+    sql.write_text("select * from scores;\n")
+    note = camp / "vault" / "Camp" / "Lesson.md"
+    note.parent.mkdir(parents=True)
+    note.write_text("# Played lesson\n")
+    media = camp / "docs" / "media" / "older.png"
+    media.parent.mkdir(parents=True)
+    media.write_bytes(b"older media")
+    _git(camp, "add", "-A")
+    _git(
+        camp,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "record learner data",
+    )
+    before_scores = scores.read_bytes()
+    before_sql = sql.read_bytes()
+    before_note = note.read_bytes()
+    before_media = media.read_bytes()
+    stage = tmp_path / "stage"
+    (stage / "config").mkdir(parents=True)
+    (stage / "config" / "camp.toml").write_text("[learner]\nname = 'Tom'\n")
+    (stage / "README.md").write_text("# New played camp\n")
+
+    assert regen_played.install(stage, camp) is True
+
+    assert scores.read_bytes() == before_scores
+    assert sql.read_bytes() == before_sql
+    assert note.read_bytes() == before_note
+    assert media.read_bytes() == before_media
+    assert _git(camp, "ls-files", "workspace/data/scores.csv")
+    assert _git(camp, "ls-files", "workspace/sql/top_runs.sql")
+    assert _git(camp, "status", "--porcelain") == ""
+
+
+def test_install_refuses_to_overwrite_tracked_scores(tmp_path: Path) -> None:
+    camp, _ = _repo(tmp_path)
+    scores = camp / "workspace" / "data" / "scores.csv"
+    scores.parent.mkdir(parents=True)
+    scores.write_bytes(b"played_at,player,score,duration_s\n2026-09-01,Tom,42,60\n")
+    before_scores = scores.read_bytes()
+    _git(camp, "add", "-A")
+    _git(
+        camp,
+        "-c",
+        "user.name=Test",
+        "-c",
+        "user.email=test@example.invalid",
+        "commit",
+        "-qm",
+        "record scores",
+    )
+    before = _git(camp, "rev-parse", "HEAD")
+    stage = tmp_path / "stage"
+    staged_scores = stage / "workspace" / "data" / "scores.csv"
+    staged_scores.parent.mkdir(parents=True)
+    staged_scores.write_bytes(b"played_at,player,score,duration_s\n")
+    (stage / "README.md").write_text("# New played camp\n")
+
+    with pytest.raises(regen_played.RegenerationError, match="scores.csv"):
+        regen_played.install(stage, camp)
+
+    assert scores.read_bytes() == before_scores
+    assert _git(camp, "rev-parse", "HEAD") == before
+    assert _git(camp, "status", "--porcelain") == ""
+
+
 def test_push_flag_pushes_the_reviewed_commit_without_regenerating(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -29,6 +29,7 @@ from vibemap.state import CheckRecord, State
 ROOT = Path(__file__).resolve().parents[1]
 COMMIT_MESSAGE = "Regenerate the played camp from the current release"
 COPY_EXCLUDES = {".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
+RETAINED_PREFIXES = ("workspace/", "vault/", "docs/media/")
 REQUIRED_PRODUCT_FILE = "game/vibe-map.html"
 REQUIRED_PRODUCT_DIR = "docs/media"
 REQUIRED_MEDIA_FILES = ("README.md", "gameplay.gif", "hero.png")
@@ -304,6 +305,18 @@ def install(stage: Path, camp: Path) -> bool:
         for path in stage.rglob("*")
         if (path.is_file() or path.is_symlink()) and _copied_from_stage(path, stage)
     )
+    # A new release may omit older learner artifacts, vault notes or media.
+    # Keep those tracked records unless the stage explicitly replaces them.
+    retained_tracked = {
+        relative
+        for relative in tracked - set(stage_files)
+        if relative.startswith(RETAINED_PREFIXES)
+    }
+    scores = "workspace/data/scores.csv"
+    if scores in tracked:
+        if scores in stage_files and not _same_file(stage / scores, camp / scores):
+            raise RegenerationError(f"{camp} would overwrite tracked {scores}")
+        retained_tracked.add(scores)
     preserved = ignored & set(stage_files)
     overlaps = sorted(
         relative
@@ -330,11 +343,11 @@ def install(stage: Path, camp: Path) -> bool:
     def keep_ignored(directory: str, names: list[str]) -> set[str]:
         parent = Path(directory).relative_to(stage)
         return _ignore(directory, names) | {
-            name for name in names if str(parent / name) in preserved
+            name for name in names if str(parent / name) in preserved | retained_tracked
         }
 
     try:
-        for relative in tracked:
+        for relative in tracked - retained_tracked:
             path = camp / relative
             if path.is_file() or path.is_symlink():
                 path.unlink()
