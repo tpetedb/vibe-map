@@ -1,0 +1,58 @@
+# Infrastructure as code with OpenTofu. Written from the official docs, nothing from memory.
+id = "iac"
+title = "Infrastructure as code with OpenTofu"
+age = "castle"
+shelf = "ship"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''Infrastructure as code means your servers, networks and DNS entries are described in configuration files you can version, review and share, and a tool makes the real world match them. OpenTofu is an open source tool of that kind: you write the configuration, it shows a plan of what it would create, change or destroy, and it applies the plan only on approval. Reach for this topic when someone clicks the same settings into a cloud console twice, or when a change to infrastructure should go through a pull request like any other change.'''
+for_agents = '''And for an agent: run tofu plan and show the plan before any tofu apply, and treat terraform.tfstate with care: it holds the bindings to real resources, and the docs recommend keeping state in TACOS, versioned and encrypted, rather than in the local file.'''
+
+history = '''OpenTofu "is an infrastructure as code tool that lets you define both cloud and on-prem resources in human-readable configuration files that you can version, reuse, and share", and providers let it work with virtually any platform or service with an accessible API. Its core workflow has three steps: write, plan, where it "creates an execution plan describing the infrastructure it will create, update, or destroy", and apply, where on approval it performs the proposed operations in the correct order. OpenTofu stores state about your managed infrastructure, by default in a local file named terraform.tfstate, and the primary purpose of state is to store bindings between remote objects and the resources in your configuration. The terraform_data resource needs no provider to be configured, because it is always available through a built-in provider, and its input argument is stored in state and reflected in its output attribute after apply. The Linux Foundation announced OpenTofu on 20 September 2023 as an open source alternative to Terraform, after Terraform's licence changed from the Mozilla Public License v2.0 to the Business Source License v1.1.'''
+
+try_it = '''Write main.tf with one resource "terraform_data" "greeting" whose input is "hello, camp", and one output "greeting" whose value is terraform_data.greeting.output. If you have OpenTofu installed, run tofu init and tofu plan in that folder and read the plan: one resource to add, no cloud account and no provider to configure.'''
+
+unlocks = ["observability"]
+prerequisites = ["delivery", "cloud"]
+
+[[origins]]
+place = "linux-foundation"
+year = 2023
+what = "On 20 September 2023 the Linux Foundation announces the formation of OpenTofu, previously named OpenTF, an open source alternative to Terraform."
+source = "https://www.linuxfoundation.org/press/announcing-opentofu"
+primary = true
+
+[[sources]]
+label = "OpenTofu documentation, Getting started"
+url = "https://opentofu.org/docs/intro/"
+checked = 2026-09-24
+
+[[sources]]
+label = "OpenTofu documentation, Working with OpenTofu"
+url = "https://opentofu.org/docs/intro/core-workflow/"
+checked = 2026-09-24
+
+[[sources]]
+label = "OpenTofu documentation, State"
+url = "https://opentofu.org/docs/language/state/"
+checked = 2026-09-24
+
+[[sources]]
+label = "OpenTofu documentation, The terraform_data Managed Resource Type"
+url = "https://opentofu.org/docs/language/resources/tf-data/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: the Linux Foundation, Linux Foundation Launches OpenTofu"
+url = "https://www.linuxfoundation.org/press/announcing-opentofu"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "One resource, no provider"
+minutes = 15
+done = "main.tf declares a terraform_data resource and an output that reads it"
+check = { kind = "files", files = { "main.tf" = ["resource \"terraform_data\"", "input", "output \"", "terraform_data."] } }

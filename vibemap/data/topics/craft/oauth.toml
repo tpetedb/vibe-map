@@ -1,0 +1,53 @@
+# OAuth 2.0 and OpenID Connect. Written from the official docs, nothing from memory.
+id = "oauth"
+title = "OAuth 2.0 and OpenID Connect"
+age = "imperial"
+shelf = "net"
+depth = 3
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''OAuth 2.0 lets an application get limited access to an HTTP service, either for a user who approves it at an authorization server or on the application's own behalf, and the application receives an access token. OpenID Connect is an identity layer on top of it that lets the application verify who the user is. Reach for this topic when you add "Sign in with" to an app, when a tool asks you to authorize it, or when you have to choose which OAuth flow a client should use.'''
+for_agents = '''And for an agent: use the authorization code grant with PKCE and the S256 method, never the resource owner password credentials grant, and not the implicit grant, which RFC 9700 says clients SHOULD NOT use.'''
+
+history = '''RFC 6749, published by the IETF in October 2012, defines an authorization framework that "enables a third-party application to obtain limited access to an HTTP service", and it names four grant types: authorization code, implicit, resource owner password credentials and client credentials. RFC 7636 (September 2015) adds Proof Key for Code Exchange, PKCE, pronounced "pixy", against the authorization code interception attack, with code_challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier))) for the S256 method. Its Appendix B works one example through: the code_verifier dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk gives the code_challenge E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM. RFC 9700, the Best Current Practice for OAuth 2.0 Security (January 2025), says public clients "MUST use PKCE", the resource owner password credentials grant "MUST NOT be used", and clients "SHOULD NOT use the implicit grant". OpenID Connect Core 1.0 describes OpenID Connect as "a simple identity layer on top of the OAuth 2.0 protocol", and its ID Token, a JSON Web Token, carries claims about how the end user was authenticated.'''
+
+try_it = '''Write pkce.py with only the standard library: take the code_verifier from RFC 7636 Appendix B, hash it with hashlib.sha256, encode it with base64.urlsafe_b64encode, strip the trailing = padding, and print code_challenge=<the result>&code_challenge_method=S256. Run python3 pkce.py and compare it with the RFC.'''
+
+unlocks = []
+prerequisites = ["apidesign"]
+
+[[origins]]
+place = "ietf"
+year = 2012
+what = "The IETF publishes RFC 6749, The OAuth 2.0 Authorization Framework, in October 2012, replacing and obsoleting OAuth 1.0."
+source = "https://www.rfc-editor.org/rfc/rfc6749.html"
+primary = true
+
+[[sources]]
+label = "RFC 6749, The OAuth 2.0 Authorization Framework"
+url = "https://www.rfc-editor.org/rfc/rfc6749.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "RFC 7636, Proof Key for Code Exchange by OAuth Public Clients"
+url = "https://www.rfc-editor.org/rfc/rfc7636.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "RFC 9700, Best Current Practice for OAuth 2.0 Security"
+url = "https://www.rfc-editor.org/rfc/rfc9700.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "OpenID Connect Core 1.0"
+url = "https://openid.net/specs/openid-connect-core-1_0.html"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "The PKCE challenge from RFC 7636, by hand"
+minutes = 15
+done = "python3 pkce.py prints the code_challenge of RFC 7636 Appendix B, unpadded, followed by the S256 method"
+check = { kind = "script", file = "pkce.py", contains = ["hashlib", "urlsafe_b64encode"], prints = ["code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256"] }

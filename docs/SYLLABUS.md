@@ -1113,7 +1113,7 @@ The tree is the second way through the course: the thirty-two stops are a night,
 
 <!-- generated:tech-tree. Do not edit inside; run `just syllabus`. -->
 
-Seventy topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. `vibe topics` lists them, `vibe topic <id>` opens one, `vibe check --topic <id>` marks it done, and [ROADMAP.md](ROADMAP.md) is the same tree in full.
+Eighty-seven topics on eleven shelves, in five ages from intern to expert. A topic carries its own depth, so a shelf is something to come back to rather than a rank to pass. `vibe topics` lists them, `vibe topic <id>` opens one, `vibe check --topic <id>` marks it done, and [ROADMAP.md](ROADMAP.md) is the same tree in full.
 
 | Age | Level | What it covers |
 |---|---|---|
@@ -1123,32 +1123,34 @@ Seventy topics on eleven shelves, in five ages from intern to expert. A topic ca
 | Imperial Age | Senior | The AI harness. You stop typing code and start directing agents, with guardrails you wrote. |
 | Future Age | Expert | What is coming, what stays the same, and what a knowledge worker or founder should actually do about it. |
 
-### The packs (two)
+### The packs (three)
 
 **The core map** (fifty-four topics, first shelf shell). Everything the four evenings lean on, intern to expert: the terminal, git, the formats, the languages, data, the web, shipping, the agent harness, the docs and the vault.
 
 **The data engineering pack** (sixteen topics, first shelf data). Sixteen topics that read as one path: the file formats data arrives in, the table formats it rests in, the tools that ingest it, transform it, schedule it and test it, and the map that says which of those three any tool is doing. Everything runs on a laptop with uv, with no account and no paid service.
+
+**The software craft and delivery pack** (seventeen topics, first shelf ship). Seventeen topics for the craft around the code and the road it travels to production: tests in depth (the pyramid, test doubles, pytest fixtures, properties with Hypothesis), refactoring and code review, API design from the HTTP RFCs, OpenAPI, OAuth and OpenID Connect, then the DevOps sequence (continuous delivery and deploy strategies with the DORA metrics, container images and Compose, a Kubernetes manifest, infrastructure as code with OpenTofu, observability with OpenTelemetry, incidents and blameless postmortems), and licences, security basics and the supply chain. Every hands-on runs on a laptop with no account and no paid service.
 
 
 ### The shelves
 
 **Terminal and shell.** Where every command starts: the terminal, files, the shell and its config, ports, remote machines. Unix and the terminal (Basics), Bash and shell scripts (Working knowledge), zsh and your shell config (Working knowledge), Files, folders and paths (Basics), Dotfiles (Working knowledge), Justfiles and task running (Working knowledge), localhost and ports (Working knowledge), SSH and remote machines (Deep), Interfaces: GUI, TUI, CLI, API (Basics).
 
-**Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. Git (Basics), GitHub, pull requests, Pages (Working knowledge), CI/CD and automation (Deep), Git hooks (Working knowledge).
+**Git and GitHub.** Versions, branches, hooks, pull requests, Pages and the pipelines that run on every push. Git (Basics), GitHub, pull requests, Pages (Working knowledge), CI/CD and automation (Deep), Git hooks (Working knowledge), Code review as a practice (Working knowledge).
 
 **Config and formats.** The small languages configuration is written in: JSON, YAML, TOML, Markdown, .env. Config formats: JSON, YAML, TOML, Markdown (Basics), .env files and secrets (Basics), TOML in practice: pyproject.toml (Working knowledge), Markdown and Obsidian (Basics), YAML in practice: CI and Compose (Working knowledge).
 
-**Languages and code.** Python first, then the web, the other languages and how to know the code works. Python (Basics), Python libraries: what they are for (Working knowledge), HTML, CSS and JavaScript (Working knowledge), Other languages and what they are for (Deep), Separation of concerns (Working knowledge), Tests and evals (Deep).
+**Languages and code.** Python first, then the web, the other languages and how to know the code works. Python (Basics), Python libraries: what they are for (Working knowledge), HTML, CSS and JavaScript (Working knowledge), Other languages and what they are for (Deep), Separation of concerns (Working knowledge), Tests and evals (Deep), The test pyramid and test doubles (Working knowledge), pytest fixtures and parametrize (Working knowledge), Property-based testing with Hypothesis (Deep), Refactoring and code smells (Working knowledge), Security basics for builders (Working knowledge).
 
 **Data.** Files, schemas, warehouses and SQL over all of it. SQL and DuckDB (Working knowledge), Data: files, schemas, warehouses (Basics), CSV done properly (Basics), JSON Lines (Basics), Parquet (Working knowledge), Apache Arrow (Deep), Schemas and schema evolution (Working knowledge), DuckDB beyond the basics (Working knowledge), Apache Iceberg (Deep), dlt, ingestion as code (Working knowledge), Kafka concepts (Working knowledge), Polars (Working knowledge), dbt (Working knowledge), Apache Airflow (Working knowledge), Dagster and Prefect (Deep), Data quality and contracts (Working knowledge), The medallion layering (Working knowledge), Ingestion, transformation, orchestration (Basics).
 
-**Web, networks and APIs.** How programs talk over HTTP and how to build and consume an API. HTTP and APIs (Basics), Building and consuming APIs (Working knowledge).
+**Web, networks and APIs.** How programs talk over HTTP and how to build and consume an API. HTTP and APIs (Basics), Building and consuming APIs (Working knowledge), Designing an HTTP API (Working knowledge), Describing an API with OpenAPI (Working knowledge), OAuth 2.0 and OpenID Connect (Deep).
 
-**Ship and run.** Containers, the cloud, platforms and agents that run without you. Docker and containers (Working knowledge), Cloud and servers (Working knowledge), Headless agents and scheduling (Deep), Kubernetes and platforms (Deep).
+**Ship and run.** Containers, the cloud, platforms and agents that run without you. Docker and containers (Working knowledge), Cloud and servers (Working knowledge), Headless agents and scheduling (Deep), Kubernetes and platforms (Deep), Continuous delivery and deploy strategies (Working knowledge), Container images, layers and Compose (Working knowledge), Reading a Kubernetes manifest (Working knowledge), Infrastructure as code with OpenTofu (Working knowledge), Observability with OpenTelemetry (Working knowledge), Incidents and blameless postmortems (Working knowledge), Dependencies and the supply chain (Working knowledge).
 
 **Agents and the harness.** What a model is and is not, the context, the harness, skills, hooks, MCP, subagents, security and cost. LLM versus harness (Basics), Context window and prompts (Basics), Your harness: AGENTS.md, CLAUDE.md, dotfiles for agents (Working knowledge), AGENTS.md (Basics), Skills (Agent Skills standard) (Working knowledge), Hooks (Working knowledge), Agent hooks (Deep), Prompting: task, goal, hard constraints (Basics), Structure: XML tags and Markdown blocks (Working knowledge), The symbols: slash, at, bang, hash (Basics), Building the builder (Working knowledge), MCP (Model Context Protocol) (Working knowledge), Subagents and multi-agent (Deep), Security and permissions (Working knowledge), Cost, tokens and model choice (Working knowledge).
 
-**Docs and versioning.** The README, semantic versioning, changelogs and decision records. Semantic Versioning (Working knowledge), Changelogs (Keep a Changelog) (Working knowledge), Architecture decision records (Deep), README and the quickstart (Basics).
+**Docs and versioning.** The README, semantic versioning, changelogs and decision records. Semantic Versioning (Working knowledge), Changelogs (Keep a Changelog) (Working knowledge), Architecture decision records (Deep), README and the quickstart (Basics), Licences and open source etiquette (Basics).
 
 **Knowledge and Obsidian.** Obsidian feature by feature and the vault as long-term memory. Obsidian features (Basics), Memory: the vault as long-term memory (Working knowledge).
 

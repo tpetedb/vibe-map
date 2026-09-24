@@ -1,0 +1,63 @@
+# Continuous delivery and deploy strategies. Written from the official docs, nothing from memory.
+id = "delivery"
+title = "Continuous delivery and deploy strategies"
+age = "castle"
+shelf = "ship"
+depth = 2
+# The day every source below was read. Move it when you check them again.
+checked = 2026-09-24
+minutes = 20
+
+summary = '''Continuous delivery means the software can be released to production at any time; continuous deployment goes one step further and puts every change that passes the pipeline into production automatically. Deploy strategies such as blue-green and canary make that release low risk, and a deploy job that names an environment has to pass that environment's protection rules first. Reach for this topic once CI is green on every push and the next question is how a change gets to users, and how you would know whether you are getting better at it: the DORA metrics.'''
+for_agents = '''And for an agent: deploy through a job that names its environment, so the environment's protection rules and secrets apply, and keep each change small, because small changes are easier to move through delivery and to recover from.'''
+
+history = '''Martin Fowler's note of 30 May 2013 defines continuous delivery as "a software development discipline where you build software in such a way that the software can be released to production at any time", and says continuous deployment means every change goes through the pipeline and automatically gets put into production. In a blue-green deployment there are two production environments, as identical as possible, and a router switches all incoming requests from the live one to the other, which also gives "a rapid way to rollback". A canary release, as Danilo Sato describes it, slowly rolls a change out to a small subset of users before rolling it out to everybody, and the rollback is to reroute users back to the old version. In GitHub Actions, jobs.<job_id>.environment names the environment a job references, and all deployment protection rules must pass before that job is sent to a runner. DORA measures software delivery with change lead time, deployment frequency, failed deployment recovery time, change fail rate and deployment rework rate, and its research "has repeatedly demonstrated that speed and stability are not tradeoffs."'''
+
+try_it = '''Write deploy.yml: a workflow started by workflow_dispatch, with one job deploy that runs on ubuntu-latest, names environment: production, and has one step that runs echo deploying. Read it back and say what has to pass before GitHub sends that job to a runner.'''
+
+unlocks = ["containers", "iac", "observability"]
+prerequisites = ["ci", "codereview"]
+
+[[origins]]
+place = "linux-foundation"
+year = 2019
+what = "On 12 March 2019 the Linux Foundation announces the Continuous Delivery Foundation, a new foundation for the CI/CD space whose first projects include Jenkins, Jenkins X, Spinnaker and Tekton."
+source = "https://www.linuxfoundation.org/press/press-release/the-linux-foundation-announces-new-foundation-to-support-continuous-delivery-collaboration"
+primary = true
+
+[[sources]]
+label = "Martin Fowler, ContinuousDelivery"
+url = "https://martinfowler.com/bliki/ContinuousDelivery.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Martin Fowler, BlueGreenDeployment"
+url = "https://martinfowler.com/bliki/BlueGreenDeployment.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "Danilo Sato on martinfowler.com, CanaryRelease"
+url = "https://martinfowler.com/bliki/CanaryRelease.html"
+checked = 2026-09-24
+
+[[sources]]
+label = "GitHub Docs, Workflow syntax for GitHub Actions: jobs.<job_id>.environment"
+url = "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax"
+checked = 2026-09-24
+
+[[sources]]
+label = "DORA, software delivery performance metrics"
+url = "https://dora.dev/guides/dora-metrics/"
+checked = 2026-09-24
+
+[[sources]]
+label = "Source: the Linux Foundation, announcing the Continuous Delivery Foundation"
+url = "https://www.linuxfoundation.org/press/press-release/the-linux-foundation-announces-new-foundation-to-support-continuous-delivery-collaboration"
+checked = 2026-09-24
+
+# The hands-on: a folder in the workspace and one offline check.
+[hands_on]
+title = "A deploy job that names its environment"
+minutes = 15
+done = "deploy.yml parses as a workflow started by workflow_dispatch, and its job names environment: production"
+check = { kind = "workflow", file = "deploy.yml", contains = ["environment: production"], triggers = ["workflow_dispatch"] }
