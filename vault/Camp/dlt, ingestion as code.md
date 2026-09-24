@@ -2,7 +2,7 @@
 title: "dlt, ingestion as code"
 date: 2026-09-18
 tags: [tech, data]
-generated: ed1e07da76da
+generated: d9c332b2db0e
 ---
 # dlt, ingestion as code
 
@@ -12,7 +12,7 @@ dlt is a Python library that takes whatever a source hands you and lands it in a
 
 **Try in five minutes.** uv run --with "dlt[duckdb]" python -c "import dlt; p = dlt.pipeline(destination='duckdb'); print(p.pipeline_name)" and you have a pipeline.
 
-- Docs: [dlt, the introduction](https://dlthub.com/docs/intro), [dlt, creating a pipeline](https://dlthub.com/docs/walkthroughs/create-a-pipeline), [dlt, incremental loading and write dispositions](https://dlthub.com/docs/general-usage/incremental-loading), [DuckDB, the destination this hands-on uses](https://duckdb.org/docs/stable/)
+- Docs: [Source: dltHub, version 1.0.0 announcement](https://dlthub.com/blog/dlt-v1), [dlt, the introduction](https://dlthub.com/docs/intro), [dlt, creating a pipeline](https://dlthub.com/docs/walkthroughs/create-a-pipeline), [dlt, incremental loading and write dispositions](https://dlthub.com/docs/general-usage/incremental-loading), [DuckDB, the destination this hands-on uses](https://duckdb.org/docs/stable/)
 - Unlocks: [[dbt]], [[The medallion layering]], [[Data quality and contracts]]
 - Shelf: Data · Depth: Working knowledge
 

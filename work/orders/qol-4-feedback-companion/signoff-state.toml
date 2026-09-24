@@ -1,36 +1,43 @@
-# The state team's manager on what this order does to src/game/00-state.js,
-# the one file of ours it owns. Read at the commit below; the only commit after
-# 7a6208f, which the second review read, is that review, and it touches no
-# source. Nothing under src/game/80-sync.js, vibemap/state.py, vibemap/config.py,
-# vibemap/project.py or config/ is changed by this branch.
+# The state team's agreement on this order's change to src/game/00-state.js.
+# Refreshed on the integrated train after recovery changed scene-owned code,
+# tests and order metadata; the state-owned implementation itself is unchanged.
 v = 1
 order = "qol-4-feedback-companion"
 team = "state"
 by = "manager-state"
-reviewed = "0aa66b2d6e034dd396cec33dbc59bd503926cc29"
+reviewed = "efc64e2e817c4ad5696faa4663e52e5311493e3e"
 verdict = "accept"
 note = '''
-Accepted: the three changes to 00-state.js are true of the code, each is asked for by a proposal in findings.md (24 the mark on save, 20 and 22 the two lists, 7 the pause), and they are written the way the file already is. What I want changed is low, sits in our own file, and goes to a follow-up that the state team signs; it does not hold the landing, which is the bar the second review used.
+Accepted at the integrated contribution checkpoint. The recovery changes the
+achievement cadence in src/game/18-avatar.js and its tests. It does not change
+src/game/00-state.js or another state-owned path. The state contribution is
+byte-identical to the accepted recovery branch and therefore keeps the same
+contract:
+- save(mark) raises the saved indicator only after localStorage accepted the
+  record, while save(false) lets message-log writes avoid raising it.
+- S.hints and S.notes have defaults and are validated entry by entry during
+  load. They remain local browser state and do not enter the versioned progress
+  code.
+- visibility handling pauses and restores the shared game clock when battery
+  saver is active, so hidden wall-clock time does not advance island time.
 
-What I read and ran, as the owner of the file:
-- `git diff origin/main...HEAD` on the team's paths: 48 lines in src/game/00-state.js and nothing else of ours. The fork mirror of the file is byte for byte the same (`cmp`), `tools/build.py --check` and `tools/sync_fork_source.py --check` exit 0, `tools/checks.py style` is OK.
-- The team's own tests on this commit, the way CI runs them (`-m "not integration"`): tests/test_game_state.py 20, test_reset.py 3, test_config_levels.py 11, test_camp_config.py 32, test_project.py 4, all 70 green, tree clean afterwards.
-- `save(mark)`: the write is still the only thing inside the try, the mark is raised only after `setItem` returned and never when it threw, and only `false` silences it, so a caller that hands save an event or an index by accident still behaves as before. The forward reference is guarded (`typeof savedTick`), the way `toast` and `settings` already are in this file. No caller runs before 18-avatar.js has executed: the only calls in modules 00 to 17 are inside `track()` and `openArtifact()`.
-- `S.hints` and `S.notes`: both have defaults in S, both are in the list that has to be an array, and both are then filtered entry by entry (`plainId` for a hint, a map with a finite `ts` and two strings for a note), with `bad(k)` naming the list, in the pattern of the other fields. A record from before this order loads unchanged, and an older build reading a newer record carries the two keys along untouched, so the key `vibemap1` does not need to move.
-- What else of ours depends on it. src/game/80-sync.js exports an allow-list, so neither list travels in the progress code, the same as `events` and `settings`, and `importProgress()` merges named keys only: the code stays version 2 and vibemap/state.py has nothing to learn. `resetProgress()` in 85-settings.js rebuilds S without the two keys, so a reset empties both after the reload, which is what starting over should mean; test_reset.py agrees. `showHintsAgain()` was already on main writing `S.hints`, and now the field it writes has a default and a check.
-- One behaviour that is new and that nobody named: `load()` now writes. `reportLoad()` raises a toast, the toast logs a note and calls `save(false)`, so a record that needed a repair, or was not JSON at all, is written back repaired before `load()` returns, where main left the broken string under the key until the first save. I checked the order of the lines: every repair, and `S.done`, is in place before `reportLoad()` runs, nothing ever reads the raw string a second time, and `test_a_record_that_is_not_an_object_is_a_fresh_start` passes on all four bad records. Not a loss, and the repair line now survives a reload, which is better.
-- The pause block: `hiddenT` is taken before `clock.stop()`, which is what makes "where the last drawn frame left it" true, since three r128's `stop()` adds the time since that frame first; `start()` zeroes `elapsedTime`, which is why it is put back by hand, as the comment says. The play tick in 89-dashboard.js already asks `document.hidden` on main, so the Stats half of proposal 7 needed nothing here. The block is not saved state, but this file is also where the early helpers every module reaches live, so it is in place.
+Evidence at efc64e2e817c4ad5696faa4663e52e5311493e3e:
+- The state-owned diff against the accepted recovery branch is empty. The only
+  owned-file difference between this train and feat/qol-batch4 is in
+  tests/test_harness_determinism.py; it belongs to the shared test area and does
+  not alter the state contract.
+- tests/test_game_state.py, test_reset.py, test_config_levels.py,
+  test_camp_config.py and test_project.py, excluding browser and integration
+  markers: 47 passed.
+- tools/build.py --check, tools/sync_fork_source.py --check,
+  tools/checks.py style, git diff --check and the source-to-mirror cmp passed.
+- just work-validate read 29 orders and found zero active ownership collisions;
+  it separately reported an unrelated draft whose owns list is empty.
 
-What I want changed, all low, all in src/game/00-state.js unless said:
-1. Line 162 reads `NOTE_CAP`, which is declared in src/game/18-avatar.js line 175. The cap of a saved list is a fact about the record: it belongs next to `EVENT_CAP` (line 174) and `toast()` reads it from here. It is also the one forward reference in the file with no guard.
-2. Line 161: a finite `ts` outside what Date can hold gets through and the tab prints NaN:NaN; `t` and `b` have no length limit, so a 400 KB record is kept and written back on every toast; line 160 keeps any number of hint ids. Bound `ts` to 8.64e15 either side, cut the two strings, cap the hints.
-3. Lines 119 to 122 say the mark is a word about progress, and `track()` on line 179 calls `save()` bare, so the minute tick of a player standing still raises it. Either the tick passes false or the comment says what is true.
-4. Line 200, "so nothing pauses": the browser stops the frames either way and only the clock keeps running. One clause.
-
-What the state team does after this lands:
-- Items 1 to 4 ride in the follow-up for the second review's nine lows, as one order, because it has to own both 00-state.js and 18-avatar.js and two active orders cannot. If scene writes it, `cross` names state and I sign when the four are in it; the tests for item 2 go into tests/test_game_state.py beside `test_a_broken_field_costs_that_field_and_not_the_evening`, where a reader looks for what a record may hold, and the four parametrised cases for hints and notes in tests/test_game_qol_feedback.py can move there with them.
-- Batch 5 owns src/game/80-sync.js and brings `S.exportedAt`. That field needs what these two got, a default in S and a check in `load()`, and 00-state.js is not in that batch's files today. I say so on its order when it is written.
-- Not this order's, found while running our tests: tests/test_config_levels.py line 152 (`-m integration`, so nightly) waits for "your fork builds and is yours" after `vibe check --fork config`, and vibemap/cli.py prints that sentence only for `--fork all`. The test and the CLI are the same on origin/main and this branch touches neither. A small state order: the test asks for `config passes` there, or runs `--fork all`.
-
-If the builder edits 00-state.js again for any reason, items 1 and 4 can ride along; such an edit ends this sign-off as it ends the review, and I read again.
+The existing low findings remain follow-up work: NOTE_CAP belongs with the
+saved-record constants; note timestamps and text plus the hints list need
+bounds; track() should not raise a progress-saved mark for its minute tick, or
+the comment must describe that behavior; and the battery-saver-off comment
+should say only the clock keeps running while browsers suspend hidden frames.
+These do not make the accepted state change unsafe.
 '''

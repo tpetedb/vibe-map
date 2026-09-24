@@ -1,20 +1,24 @@
-# The panels team's manager on what this order does to the panels files. One
-# of ours is changed, src/game/90-boot.js, by three lines; src/body.html,
-# src/head.html, src/style.css, src/errors.js, src/icon.svg and every other
-# module of ours under src/game/ are untouched by this branch. Read at the
-# commit below: the only commits after 7a6208f, which the second review read,
-# are that review and the state team's sign-off, and neither touches source.
+# The panels team's manager on the panels-owned source file this scene order
+# changes. This refresh covers the recovered contribution at the checkpoint below.
 v = 1
 order = "qol-4-feedback-companion"
 team = "panels"
 by = "manager-panels"
-reviewed = "53291a9bfe910eee5c087fff94796ffd7e590c7c"
+reviewed = "efc64e2e817c4ad5696faa4663e52e5311493e3e"
 verdict = "accept"
 note = '''
+Refresh at efc64e2: accepted again after the recovery change and review. The
+panels-owned delta remains only the visibility listener in src/game/90-boot.js.
+The recovery changes the achievement cadence in scene-owned 18-avatar.js from
+a capped movement delta to the elapsed clock that onVisibility pauses. Sparse
+visible frames can now raise an earned achievement on schedule; hidden time
+still raises nothing. The panels interaction contract below is unchanged.
+
 Accepted: the change to src/game/90-boot.js is true of the code, is the listener proposal 7 asks for in that file by name, and is written the way the file is. Nothing I want changed holds the landing. What follows from it for the panels team is real and is mostly work in our own files, through our own orders, named below.
 
 What I read and ran, as the owner of the files:
 - `git diff origin/main...HEAD` on the team's paths: lines 49 to 51 of src/game/90-boot.js and nothing else. The comment is two lines, says why, names the function and the file it lives in and no line number. The listener is wired after the boot chain and before `init3d()`, which is safe because `pageHidden()` and `pageVisible()` ask `hasClock()` first, and a page that loads in a background tab gets no event and no frame, so there is nothing to pause. `onVisibility` has this one caller (grep), so without the line `__awake().hidden` can never turn true, which is what the second review's mutation saw.
+- On this recovery checkpoint, `uv run pytest -q tests/test_game_qol_feedback.py -k 'hidden_page or saver_off or earned_achievements_follow_elapsed_time'` passed all three focused browser tests. `tools/build.py --check` passed; src/game/90-boot.js is byte-identical to its fork-source mirror; the style check and `git diff --check` passed.
 - Through the real listener in the built game, Chromium at 1440x900 and 412x915, zero page errors: hidden gives `__awake()` hidden true with the clock held, and the return starts it where it stopped (17.6230 s hidden, 17.6235 s one frame after coming back). Battery saver off I did not drive by hand; the order's own test for it is one of the six below.
 - The team's own tests on this commit, `-m "not integration"`: tests/test_game_qol.py 18, test_game_qol_settings.py 16, test_game_smoke.py 24, all 58 green, tree clean afterwards. Of the order's tests, the hidden page, the saver off, the mark and the hint: 6 green. `cmp` says the fork mirror of 90-boot.js is the same, `tools/build.py --check` and `tools/sync_fork_source.py --check` exit 0, `tools/checks.py style` OK, `just work-validate` 25 orders and 0 collisions.
 - What else of ours depends on what changed. `save()` has a parameter now and no panel hands it one (40-sheet.js 5 calls, 85-settings.js 4, 87-onboarding.js 4, 70-minigames.js 3, 88-chat.js 3, 71-finale.js 2, 86-interests.js 1, all 22 bare; the one callback is `setTimeout(save,250)` in 23-camera.js, which passes nothing), so every one of them now raises the Saved mark, throttled. `toast()` keeps its signature and `__toasts()` still counts under Quiet, which our settings tests wait on. No panel module calls `toast()` itself. `showHintsAgain()` in 85-settings.js line 82 already wrote `S.hints`; `hint()` reads the same list through `sl()`, so the button and the helper agree. The play tick in 89-dashboard.js line 260 already asks `document.hidden`, so the Stats half of proposal 7 needed nothing from us. src/game/40-sheet.js line 64 has a `visibilitychange` listener of its own for the wake lock; the two answer for different things, neither depends on the order they run in, and "One listener" in 00-state.js is true of the pause.

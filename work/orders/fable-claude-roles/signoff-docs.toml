@@ -1,0 +1,25 @@
+# The docs team's manager agreeing to the wording in CLAUDE.md and
+# docs/BRIEF.md. This covers the exact commit below and lapses if either file
+# moves.
+v = 1
+order = "fable-claude-roles"
+team = "docs"
+by = "manager-docs"
+reviewed = "121100f22d80f185c3930db7ba84d0409e1df557"
+verdict = "accept"
+note = '''
+Accepted. CLAUDE.md names the three Claude Code work-order subagents and says
+that builder, reviewer and team-manager run on Fable. Their frontmatter agrees:
+each has `model: fable`. docs/BRIEF.md makes the same claim at the role level
+and attributes the policy change specifically to Opus builders in the measured
+mix. Neither document claims that Codex, scorekeeper or every agent runtime
+uses Fable.
+
+Issue #149 describes the follow-up work that first exercised the work-order
+system and separates harness and docs ownership. This order changes no promise
+or open item recorded there. Its wording stays scoped to the Claude Code roles
+that build, review and manage those orders.
+
+No docs change is needed before landing. This sign-off covers the commit above
+and lapses when an owned file moves.
+'''

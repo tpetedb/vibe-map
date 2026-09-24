@@ -1,0 +1,21 @@
+v = 1
+id = "news-protected-main"
+title = "Publish daily news through a protected-branch compatible review path"
+team = "harness"
+branch = "codex/news-protected-main"
+goal = ""
+issue = 174
+builder = "codex-news-builder"
+owns = [".github/workflows/news.yml", "tools/publish_news.py", "tests/test_news_publish.py"]
+cross = []
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Publishing uses a dedicated branch and PR, preserves pending work, and leaves a recoverable handoff on denied PR creation"
+check = "uv run pytest tests/test_news_publish.py"
+
+[[criteria]]
+id = "c2"
+text = "Publisher and workflow conform to repository formatting and style"
+check = "uv run ruff check tools/publish_news.py tests/test_news_publish.py && uv run ruff format --check tools/publish_news.py tests/test_news_publish.py && uv run python tools/checks.py style"

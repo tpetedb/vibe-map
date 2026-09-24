@@ -1,0 +1,24 @@
+# The docs team's manager agreeing to this order's changes to docs/TOPICS.md.
+# AGENTS.md is covered separately by the harness team.
+v = 1
+order = "galaxy-places-more"
+team = "docs"
+by = "codex-docs-manager"
+reviewed = "73c2107ac39110cf17102dd06f74c8bfcb0954ed"
+verdict = "accept"
+note = '''
+Accepted. docs/TOPICS.md now states the evidence rule precisely: an origin source carries the year, actor and event, while a physical town must be supported for the relevant historical date by that source or the place source. It explicitly rejects using a current contact address to locate an earlier event, permits an event-supported abstract place, and routes a missing physical place through the issue and the order that owns the place registry.
+
+The place-writing guidance matches the implemented registry. It distinguishes a generic marker and fictional diorama look from a factual landmark, forbids real building likenesses, organisation marks and products, and explains that city coordinates do not identify an office or private home. The strict integer year and duplicate-place statements match the loader behavior. The review checklist repeats the historical-location requirement without weakening it.
+
+Evidence at the reviewed checkpoint:
+- `git diff --exit-code 3c85fa5..73c2107 -- docs/TOPICS.md AGENTS.md vibemap/data/places vibemap/places.py vibemap/topics.py tools/checks.py tests/test_places.py` passed, so the correction and implementation files did not move during the review-only descendants.
+- `.venv/bin/python tools/checks.py style` passed with no em dashes or emoji.
+- `.venv/bin/python -m pytest -q tests/test_places.py tests/test_topics.py` passed all 63 tests.
+- A focused assertion probe found the relevant-date rule, current-address prohibition, issue routing, generic-marker rule and duplicate-origin rule in docs/TOPICS.md.
+- `git diff --check 4c71061^..73c2107 -- docs/TOPICS.md AGENTS.md` passed.
+
+`just work-validate` and `just work-plan galaxy` were also attempted. They are currently blocked by a separate draft in `.claude/worktrees/o-galaxy-v0`: its order has empty ownership and the plan reports `galaxy-v0 wait on each other`. The validator still reports zero active-order collisions. This external draft does not change or qualify the docs agreement recorded here.
+
+This sign-off covers the checkpoint above and lapses if docs/TOPICS.md changes.
+'''

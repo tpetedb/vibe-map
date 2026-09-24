@@ -1,0 +1,15 @@
+v = 1
+order = "ci-cache-version"
+team = "docs"
+by = "manager-docs"
+reviewed = "3ea255b031ec4c5b9cf484340738e886c1c9b2c1"
+verdict = "accept"
+note = '''
+Accepted. The docs-owned surface is the changelog fragment. It accurately says
+that browser CI keys its cache on the installed Playwright version and that a
+failed version lookup now fails the step. The workflow diff and regression test
+support both claims, while job names and shard coverage remain unchanged.
+
+No reader-facing documentation needs a follow-up. This sign-off covers the
+synchronized commit above and lapses if an owned file moves.
+'''
