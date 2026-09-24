@@ -6,7 +6,7 @@ branch = "claude/harness-core"
 goal = "ways-of-working"
 issue = 193
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-harness-core"
 
 # tools/work.py: paths listed in .agents/generated.lock join ANYONE, so later orders
 # regenerate outputs without owning them; the drift check guards those files instead.
