@@ -1,5 +1,5 @@
-# The Free Software Foundation, Boston. A nonprofit "with a worldwide mission to
-# promote computer user freedom"; it dates its own announcements from Boston.
+# The Free Software Foundation, Boston. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "free-software-foundation"
 name = "The Free Software Foundation, Boston"
 kind = "foundation"
@@ -9,5 +9,5 @@ globe = "earth"
 lat = 42.357
 lon = -71.059
 look = "house"
-landmark = "foundation-office"
-source = "https://www.fsf.org/about/"
+landmark = "generic-marker"
+source = "https://www.fsf.org/news/fsf40-hackathon/"

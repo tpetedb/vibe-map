@@ -18,6 +18,18 @@ try_it = '''uv run --with "dlt[duckdb]" python -c "import dlt; p = dlt.pipeline(
 unlocks = ["dbt", "medallion", "dataquality"]
 prerequisites = ["jsonl", "schemas"]
 
+[[origins]]
+place = "the-internet"
+year = 2024
+what = "Marcin Rudolf announces dlt 1.0.0 online on 16 September 2024, bringing database, file and REST API sources into the core library."
+source = "https://dlthub.com/blog/dlt-v1"
+primary = true
+
+[[sources]]
+label = "Source: dltHub, version 1.0.0 announcement"
+url = "https://dlthub.com/blog/dlt-v1"
+checked = 2026-09-22
+
 [[sources]]
 label = "dlt, the introduction"
 url = "https://dlthub.com/docs/intro"

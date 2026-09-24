@@ -12,6 +12,17 @@ try_it = "ls docs/adr, then cat docs/adr/0004-quests-verify-real-work.md. Write 
 
 unlocks = []
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened. A blog post has
+# no address, so it sits at the-internet.
+
+[[origins]]
+place = "the-internet"
+year = 2011
+what = "Michael Nygard publishes Documenting Architecture Decisions on 15 November 2011, proposing one numbered record per architecturally significant decision, kept in the project repository."
+source = "https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions"
+primary = true
+
 [[sources]]
 label = "ADR home (the GitHub adr organisation)"
 url = "https://adr.github.io"

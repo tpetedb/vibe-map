@@ -2,7 +2,7 @@
 title: "Apache Iceberg"
 date: 2026-09-18
 tags: [tech, data]
-generated: 9cfb04c61290
+generated: 017a6a15c140
 ---
 # Apache Iceberg
 
@@ -12,7 +12,7 @@ Iceberg is a table format: a pile of Parquet files plus metadata that says which
 
 **Try in five minutes.** uv run --with "pyiceberg[sql-sqlite,pyarrow]" python -c "from pyiceberg.catalog.sql import SqlCatalog; print(SqlCatalog)" and you have a catalog with no server.
 
-- Docs: [Apache Iceberg, the table specification](https://iceberg.apache.org/spec/), [Apache Iceberg, evolution](https://iceberg.apache.org/docs/latest/evolution/), [PyIceberg, the Python implementation and its SQL catalog](https://py.iceberg.apache.org/), [Delta Lake, what it is](https://docs.delta.io/latest/delta-intro.html), [Source: Apache Iceberg, format/spec.md in the project repository](https://github.com/apache/iceberg/blob/main/format/spec.md)
+- Docs: [Source: Apache Incubator, Iceberg project status](https://incubator.apache.org/projects/iceberg.html), [Apache Iceberg, the table specification](https://iceberg.apache.org/spec/), [Apache Iceberg, evolution](https://iceberg.apache.org/docs/latest/evolution/), [PyIceberg, the Python implementation and its SQL catalog](https://py.iceberg.apache.org/), [Delta Lake, what it is](https://docs.delta.io/latest/delta-intro.html), [Source: Apache Iceberg, format/spec.md in the project repository](https://github.com/apache/iceberg/blob/main/format/spec.md)
 - Unlocks: [[The medallion layering]], [[Data quality and contracts]]
 - Shelf: Data · Depth: Deep
 

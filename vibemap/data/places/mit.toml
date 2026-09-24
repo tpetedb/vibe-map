@@ -1,4 +1,5 @@
-# MIT, Cambridge. 77 Massachusetts Avenue, Cambridge. Project MAC and Multics were here.
+# MIT, Cambridge. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "mit"
 name = "MIT, Cambridge"
 kind = "university"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 42.36
 lon = -71.094
 look = "campus"
-landmark = "great-dome"
+landmark = "generic-marker"
 source = "https://www.mit.edu/about/"

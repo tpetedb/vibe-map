@@ -6,7 +6,7 @@ branch = "feat/galaxy-origins-data-engineering"
 goal = "galaxy"
 issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "codex-origins-data-engineering"
 
 owns = [
   "vibemap/data/topics/data-engineering/airflow.toml",

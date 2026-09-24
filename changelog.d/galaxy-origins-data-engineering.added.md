@@ -1,0 +1,2 @@
+- Add sourced, dated milestones for the data-engineering lessons on the Galaxy map.
+- Clarify that preserving append-only Bronze data is the camp exercise policy; medallion architectures can also apply change-data capture updates.

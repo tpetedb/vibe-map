@@ -35,3 +35,15 @@ url = "https://code.claude.com/docs/en/memory"
 [[sources]]
 label = "Source: Engelbart 1962, the bootstrapping section; Brooks 1986, essence and accident"
 url = "https://dougengelbart.org/pubs/augment-3906.html"
+
+[[origins]]
+place = "sri-menlo-park"
+year = 1962
+what = "Douglas Engelbart proposes using gains in human intellectual effectiveness to pursue further gains in his SRI report, Augmenting Human Intellect."
+source = "https://dougengelbart.org/content/view/138"
+primary = true
+
+[[sources]]
+label = "Source: Engelbart and English 1968, reference 6c locates the October 1962 report at SRI, Menlo Park"
+url = "https://dougengelbart.org/content/view/140/"
+checked = 2026-09-22

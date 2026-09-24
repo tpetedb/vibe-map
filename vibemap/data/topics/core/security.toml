@@ -23,3 +23,10 @@ url = "https://owasp.org/www-project-top-10-for-large-language-model-application
 [[sources]]
 label = "Source: Saltzer and Schroeder, The Protection of Information in Computer Systems (1975)"
 url = "https://web.mit.edu/Saltzer/www/publications/protection/"
+
+[[origins]]
+place = "mit"
+year = 1975
+what = "Jerome Saltzer and Michael Schroeder of MIT publish The Protection of Information in Computer Systems."
+source = "https://web.mit.edu/saltzer/www/publications/rfc/csr-rfc-075.pdf"
+primary = true

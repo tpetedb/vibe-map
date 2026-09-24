@@ -35,3 +35,10 @@ url = "https://blog.google/technology/ai/google-gemini-next-generation-model-feb
 [[sources]]
 label = "Source: Claude Sonnet 4 1M token context (August 2025)"
 url = "https://claude.com/blog/1m-context"
+
+[[origins]]
+place = "the-internet"
+year = 2023
+what = "Anthropic announces online that the Claude context window has expanded from 9,000 to 100,000 tokens."
+source = "https://www.anthropic.com/news/100k-context-windows"
+primary = true

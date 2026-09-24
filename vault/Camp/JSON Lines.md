@@ -2,7 +2,7 @@
 title: "JSON Lines"
 date: 2026-09-18
 tags: [tech, data]
-generated: 05a3dc176743
+generated: 7ef7a0390435
 ---
 # JSON Lines
 
@@ -12,7 +12,7 @@ JSON Lines is one JSON value per line in a UTF-8 text file, extension .jsonl. Re
 
 **Try in five minutes.** printf '{"a":1}\n{"a":2}\n' > two.jsonl then duckdb -c "select sum(a) from read_json('two.jsonl')" and read 3.
 
-- Docs: [JSON Lines, the specification](https://jsonlines.org/), [Python, the json module](https://docs.python.org/3/library/json.html), [DuckDB, reading JSON and newline-delimited JSON](https://duckdb.org/docs/stable/data/json/overview)
+- Docs: [Source: Ian Ward, JSON Lines specification commit](https://github.com/wardi/jsonlines/commit/92c32d4496d1f0b789cc4840e6cd65e11ef51e94), [JSON Lines, the specification](https://jsonlines.org/), [Python, the json module](https://docs.python.org/3/library/json.html), [DuckDB, reading JSON and newline-delimited JSON](https://duckdb.org/docs/stable/data/json/overview)
 - Unlocks: [[Schemas and schema evolution]], [[dlt, ingestion as code]]
 - Shelf: Data · Depth: Basics
 

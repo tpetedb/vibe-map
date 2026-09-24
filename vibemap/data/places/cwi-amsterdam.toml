@@ -1,4 +1,5 @@
-# CWI, Amsterdam Science Park. Science Park 123, Amsterdam. It kick-started Python and created DuckDB.
+# CWI, Amsterdam Science Park. The source locates the organisation, not a historical event.
+# Generic marker: no claim about a physical object or building shape.
 id = "cwi-amsterdam"
 name = "CWI, Amsterdam Science Park"
 kind = "lab"
@@ -8,5 +9,5 @@ globe = "earth"
 lat = 52.356
 lon = 4.952
 look = "lab"
-landmark = "science-park-hall"
+landmark = "generic-marker"
 source = "https://www.cwi.nl/en/about/"
