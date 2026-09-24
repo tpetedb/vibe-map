@@ -2,7 +2,7 @@ v = 1
 id = "galaxy-v0"
 title = "Galaxy, version zero: the journey and its list twin, tiny globes, domes you can look into, travel as a cut"
 team = "scene"
-branch = "codex/galaxy-gameplay"
+branch = "codex/galaxy-v0-source"
 goal = "galaxy"
 issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
@@ -12,8 +12,10 @@ owns = [
   "src/galaxy/",
   "src/game/12-buildings.js",
   "src/game/21-world-build.js",
+  "src/game/23-camera.js",
   "src/game/24-experience.js",
   "src/game/30-input.js",
+  "src/game/31-animate.js",
   "src/game/90-boot.js",
   # Optional fallback/refresh/guidance/back-label hooks keep Start usable without WebGL;
   # Islands retain the seven required methods and their original defaults.
@@ -24,9 +26,15 @@ owns = [
   "vibemap/config.py",
   "tests/test_game_galaxy.py",
   "tests/test_game_experience.py",
+  "tests/test_origins_agents.py",
+  "vibemap/data/places/a-data-centre.toml",
+  "vibemap/data/places/hangzhou.toml",
+  "vibemap/data/topics/core/cloud.toml",
+  "vibemap/data/topics/core/llm.toml",
+  "vibemap/places.py",
 ]
-cross = ["panels", "state", "harness"]
-needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "harness-boot-stays-last"]
+cross = ["panels", "state", "harness", "content", "cli"]
+needs = ["galaxy-places-schema", "galaxy-seam", "qol-4-feedback-companion", "harness-boot-stays-last", "internet-origins-0-12"]
 
 [[criteria]]
 id = "c1"
