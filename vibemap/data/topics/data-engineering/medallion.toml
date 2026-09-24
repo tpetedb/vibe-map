@@ -18,10 +18,15 @@ try_it = '''Name the three tables you touched at work this week bronze, silver o
 unlocks = ["datamap"]
 prerequisites = ["duckdblab", "dbt"]
 
+# Where this happened. The place is a file in vibemap/data/places/;
+# exactly one origin is primary, and every source was opened.
+# The guidance names no town; the Databricks release in the sources, datelined
+# San Francisco in June 2022, says it is headquartered there.
+
 [[origins]]
-place = "the-internet"
+place = "databricks-sf"
 year = 2022
-what = "Databricks publishes online guidance for Bronze, Silver and Gold data layers on 24 June 2022."
+what = "Databricks publishes guidance for Bronze, Silver and Gold data layers on 24 June 2022."
 source = "https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html"
 primary = true
 
@@ -44,6 +49,11 @@ checked = 2026-09-18
 label = "dbt, how we structure our projects"
 url = "https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview"
 checked = 2026-09-18
+
+[[sources]]
+label = "Source: Databricks press release, datelined San Francisco, headquartered in San Francisco (June 2022)"
+url = "https://www.databricks.com/company/newsroom/press-releases/databricks-releases-final-keynote-lineup-and-industry-programming-for-2022-data-ai-summit"
+checked = 2026-09-24
 
 # The hands-on: a folder in the workspace and one offline check.
 [hands_on]

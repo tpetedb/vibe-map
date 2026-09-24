@@ -2,7 +2,7 @@
 title: "The medallion layering"
 date: 2026-09-18
 tags: [tech, data]
-generated: a13eb13e4a43
+generated: ee9d99009b9d
 ---
 # The medallion layering
 
@@ -12,7 +12,7 @@ Medallion is a naming convention for the stages data passes through: bronze hold
 
 **Try in five minutes.** Name the three tables you touched at work this week bronze, silver or gold. The one you cannot name is the one to look at.
 
-- Docs: [Source: Databricks, data layers and modeling (2022)](https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html), [Databricks, what is a medallion architecture](https://docs.databricks.com/aws/en/lakehouse/medallion), [Databricks, the lakehouse architecture](https://docs.databricks.com/aws/en/lakehouse/), [dbt, how we structure our projects](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview)
+- Docs: [Source: Databricks, data layers and modeling (2022)](https://www.databricks.com/blog/2022/06/24/data-warehousing-modeling-techniques-and-their-implementation-on-the-databricks-lakehouse-platform.html), [Databricks, what is a medallion architecture](https://docs.databricks.com/aws/en/lakehouse/medallion), [Databricks, the lakehouse architecture](https://docs.databricks.com/aws/en/lakehouse/), [dbt, how we structure our projects](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview), [Source: Databricks press release, datelined San Francisco, headquartered in San Francisco (June 2022)](https://www.databricks.com/company/newsroom/press-releases/databricks-releases-final-keynote-lineup-and-industry-programming-for-2022-data-ai-summit)
 - Unlocks: [[Ingestion, transformation, orchestration]]
 - Shelf: Data · Depth: Working knowledge
 

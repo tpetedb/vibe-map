@@ -109,8 +109,10 @@ Rules, all of them checked:
 - The source is https, it was opened while writing, and the page says what the
   line says: the year, the actor and what happened. The town may instead come
   from the place file's own source only when that source locates the actor or
-  event there at the relevant date. A current contact address does not prove
-  an earlier event's town, building or exact address. If neither source supports
+  event there at the relevant date, or from a dated first-party page that does,
+  listed under `[[sources]]` and named in the comment above the origins. A
+  current contact address does not prove an earlier event's town, building or
+  exact address. If no such page supports
   the historical location, leave the origin out and record the gap, or use an
   appropriate abstract place supported by the event source.
 - `year` is a year the page gives, never the year you read the page. A page
@@ -212,7 +214,8 @@ as done and the progress code carries as `topics`.
 - [ ] Every factual sentence is covered by a cited URL that was fetched today.
 - [ ] Exactly one origin is primary, its place exists, and every origin's source
       was opened and says the year, actor and event it claims; its town is
-      supported at the relevant date by that page or the place file's source.
+      supported at the relevant date by that page, the place file's source or
+      a dated first-party page listed under `[[sources]]`.
 - [ ] Three to six sources, all https, each with a label that says what it is.
 - [ ] `try_it` is a command a learner can paste, and it works.
 - [ ] The hands-on is under twenty minutes, offline, and its check fails before

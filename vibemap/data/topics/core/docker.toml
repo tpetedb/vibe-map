@@ -14,15 +14,14 @@ unlocks = ["cloud", "ci", "kubernetes"]
 
 # Where this happened. The place is a file in vibemap/data/places/;
 # exactly one origin is primary, and every source was opened.
-# Docker's first public demo was a talk at PyCon and its first release a tag in
-# a repository: no source puts either at an address, so the project sits at
-# the-internet and not at a company address.
+# Docker was first shown at PyCon 2013, and the place file's own source puts
+# that PyCon in Santa Clara. The 0.1.0 tag a week later is in the sources.
 
 [[origins]]
-place = "the-internet"
+place = "santa-clara"
 year = 2013
-what = "Docker 0.1.0, the initial public release, is dated 23 March 2013."
-source = "https://github.com/moby/moby/blob/v1.5.0/CHANGELOG.md"
+what = "On 15 March 2013 Solomon Hykes, the founder of Docker, first demos Docker publicly at PyCon."
+source = "https://www.docker.com/blog/docker-nine-years-young/"
 primary = true
 
 [[origins]]
@@ -66,3 +65,7 @@ url = "https://www.docker.com/blog/docker-nine-years-young/"
 [[sources]]
 label = "Source: Google Cloud, the Kubernetes origin story (2016)"
 url = "https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story"
+
+[[sources]]
+label = "Source: moby/moby changelog, 0.1.0 (March 2013)"
+url = "https://github.com/moby/moby/blob/v1.5.0/CHANGELOG.md"

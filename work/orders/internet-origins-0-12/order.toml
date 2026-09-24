@@ -6,7 +6,7 @@ branch = "claude/internet-origins"
 goal = "galaxy"
 issue = 168
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-internet-origins-0-12"
 
 owns = [
   "vibemap/data/topics/core/agenthooks.toml",

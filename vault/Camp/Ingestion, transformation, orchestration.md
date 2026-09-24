@@ -2,7 +2,7 @@
 title: "Ingestion, transformation, orchestration"
 date: 2026-09-18
 tags: [tech, data]
-generated: cd98d69a2cb1
+generated: 136f9525f977
 ---
 # Ingestion, transformation, orchestration
 
@@ -12,7 +12,7 @@ Every data tool you will be handed does one of three things, and the fastest way
 
 **Try in five minutes.** Write the three words on a page and put every data tool your employer pays for under one of them. The ones you cannot place are the ones to ask about.
 
-- Docs: [Source: Airbnb Engineering, workflow-management announcement](https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON), [dlt, the introduction: what ingestion is for](https://dlthub.com/docs/intro), [dbt, building models: transformation where the data is](https://docs.getdbt.com/docs/build/models), [Airflow, core concepts: DAGs, tasks and schedules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html), [Dagster, the documentation home](https://docs.dagster.io/)
+- Docs: [Source: Airbnb Engineering, workflow-management announcement](https://medium.com/airbnb-engineering/airflow-a-workflow-management-platform-46318b977fd8?responsesOpen=true&sortBy=REVERSE_CHRON), [dlt, the introduction: what ingestion is for](https://dlthub.com/docs/intro), [dbt, building models: transformation where the data is](https://docs.getdbt.com/docs/build/models), [Airflow, core concepts: DAGs, tasks and schedules](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/dags.html), [Dagster, the documentation home](https://docs.dagster.io/), [Source: Airbnb, About us, as archived on 2 June 2015 (based in San Francisco)](https://web.archive.org/web/20150602181934/https://www.airbnb.com/about/about-us)
 - Shelf: Data · Depth: Basics
 
 <!-- generated from vibemap/tech.py; edit there -->

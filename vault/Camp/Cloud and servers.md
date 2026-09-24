@@ -2,7 +2,7 @@
 title: "Cloud and servers"
 date: 2026-09-16
 tags: [tech, ship]
-generated: ab71332c23b0
+generated: 7bd54e5eb806
 ---
 # Cloud and servers
 
@@ -12,7 +12,7 @@ A server is a computer that is always on. The cloud rents you one by the hour (A
 
 **Try in five minutes.** Deploy the game to GitHub Pages (free). Later: fly launch on the FastAPI endpoint.
 
-- Docs: [AWS getting started](https://aws.amazon.com/getting-started/), [Fly.io docs](https://fly.io/docs/), [Cloudflare Pages](https://developers.cloudflare.com/pages/), [Source: AWS, Announcing Amazon S3 (March 2006)](https://aws.amazon.com/about-aws/whats-new/2006/03/announcing-amazon-s3---simple-storage-service), [Source: AWS, Announcing Amazon EC2 beta (August 2006)](https://aws.amazon.com/about-aws/whats-new/2006/08/24/announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/), [Source: Google blog, Developers, start your engines (April 2008)](https://googleblog.blogspot.com/2008/04/developers-start-your-engines.html), [Source: Microsoft, Windows Azure general availability (February 2010)](https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availability/), [Source: AWS, Introducing AWS Lambda (November 2014)](https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/)
+- Docs: [AWS getting started](https://aws.amazon.com/getting-started/), [Fly.io docs](https://fly.io/docs/), [Cloudflare Pages](https://developers.cloudflare.com/pages/), [Source: AWS, Announcing Amazon S3 (March 2006)](https://aws.amazon.com/about-aws/whats-new/2006/03/announcing-amazon-s3---simple-storage-service), [Source: AWS, Announcing Amazon EC2 beta (August 2006)](https://aws.amazon.com/about-aws/whats-new/2006/08/24/announcing-amazon-elastic-compute-cloud-amazon-ec2---beta/), [Source: Google blog, Developers, start your engines (April 2008)](https://googleblog.blogspot.com/2008/04/developers-start-your-engines.html), [Source: Microsoft, Windows Azure general availability (February 2010)](https://blogs.microsoft.com/blog/2010/02/01/windows-azure-general-availability/), [Source: AWS, Introducing AWS Lambda (November 2014)](https://aws.amazon.com/about-aws/whats-new/2014/11/13/introducing-aws-lambda/), [Source: Amazon press release, Amazon Web Services launches S3, datelined Seattle (March 2006)](https://press.aboutamazon.com/2006/3/amazon-web-services-launches)
 - Unlocks: [[Kubernetes and platforms]], [[Cost, tokens and model choice]]
 - Shelf: Ship and run · Depth: Working knowledge
 

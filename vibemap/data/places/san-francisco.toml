@@ -1,0 +1,14 @@
+# San Francisco, California, US. DockerCon 2014, where Kubernetes was announced, was held
+# in the city; Docker's own DockerCon history says "June 2014 in San Francisco".
+# City-level coordinates and a generic marker, not a venue, a building or a product.
+id = "san-francisco"
+name = "San Francisco, California"
+kind = "city"
+region = "us-west"
+era = "data"
+globe = "earth"
+lat = 37.7749
+lon = -122.4194
+look = "hall"
+landmark = "generic-marker"
+source = "https://www.docker.com/blog/dockercon-2022-community-powered-developer-obsessed/"

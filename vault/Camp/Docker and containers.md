@@ -2,7 +2,7 @@
 title: "Docker and containers"
 date: 2026-09-16
 tags: [tech, ship]
-generated: 19dccb7a1702
+generated: 736b8da4094c
 ---
 # Docker and containers
 
@@ -12,7 +12,7 @@ A container is a packaged process: your code, its dependencies, and a slice of a
 
 **Try in five minutes.** Install Docker Desktop or OrbStack. docker run -it python:3.12 python -c 'print(1)'. You just ran Python in a box you did not install.
 
-- Docs: [Docker get started](https://docs.docker.com/get-started/), [OrbStack (lighter on Mac)](https://orbstack.dev), [Dev containers](https://containers.dev), [Source: TUHS, V7 chdir/chroot(2) manual page](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/man/man2/chdir.2), [Source: TUHS, Seventh Edition Unix (January 1979)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7), [Source: mount_namespaces(7), history](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html), [Source: cgroups(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html), [Source: Docker blog, Docker: Nine Years Young (2022)](https://www.docker.com/blog/docker-nine-years-young/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story)
+- Docs: [Docker get started](https://docs.docker.com/get-started/), [OrbStack (lighter on Mac)](https://orbstack.dev), [Dev containers](https://containers.dev), [Source: TUHS, V7 chdir/chroot(2) manual page](https://www.tuhs.org/cgi-bin/utree.pl?file=V7/usr/man/man2/chdir.2), [Source: TUHS, Seventh Edition Unix (January 1979)](https://www.tuhs.org/cgi-bin/utree.pl?file=V7), [Source: mount_namespaces(7), history](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html), [Source: cgroups(7)](https://man7.org/linux/man-pages/man7/cgroups.7.html), [Source: Docker blog, Docker: Nine Years Young (2022)](https://www.docker.com/blog/docker-nine-years-young/), [Source: Google Cloud, the Kubernetes origin story (2016)](https://cloud.google.com/blog/products/containers-kubernetes/from-google-to-the-world-the-kubernetes-origin-story), [Source: moby/moby changelog, 0.1.0 (March 2013)](https://github.com/moby/moby/blob/v1.5.0/CHANGELOG.md)
 - Unlocks: [[Cloud and servers]], [[CI-CD and automation]], [[Kubernetes and platforms]]
 - Shelf: Ship and run · Depth: Working knowledge
 

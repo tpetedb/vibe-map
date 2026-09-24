@@ -2,7 +2,7 @@
 title: "Headless agents and scheduling"
 date: 2026-09-16
 tags: [tech, ship]
-generated: ebd5d007b104
+generated: eee40641cb72
 ---
 # Headless agents and scheduling
 
@@ -12,7 +12,7 @@ claude -p runs the agent as a command: prompt in, result out, no chat. Put it in
 
 **Try in five minutes.** The 23:00 workstream: schedule the scorekeeper for 08:00.
 
-- Docs: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless), [launchd tutorial](https://www.launchd.info), [Source: TUHS, V6 cron(8) manual page](https://www.tuhs.org/cgi-bin/utree.pl?file=V6/usr/man/man8/cron.8)
+- Docs: [Run Claude Code programmatically](https://code.claude.com/docs/en/headless), [launchd tutorial](https://www.launchd.info), [Source: TUHS, V6 cron(8) manual page](https://www.tuhs.org/cgi-bin/utree.pl?file=V6/usr/man/man8/cron.8), [Source: Anthropic, Introducing Code with Claude, San Francisco (May 2025)](https://www.anthropic.com/news/Introducing-code-with-claude)
 - Unlocks: [[Tests and evals]], [[Cost, tokens and model choice]]
 - Shelf: Ship and run · Depth: Deep
 
