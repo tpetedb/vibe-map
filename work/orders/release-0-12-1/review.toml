@@ -1,0 +1,69 @@
+# Round 1. Read the order, findings.md, and the whole diff (git diff
+# origin/main...HEAD, origin/main at 7c13086, car M #214 merged), reran every
+# check myself, mutated c2 in a scratch copy, and ran the Grow fix in Chromium
+# on the built game before and after car M to see what the Fixed line claims.
+v = 1
+order = "release-0-12-1"
+by = "reviewer-release-0-12-1-r1"
+reviewed = "6badda10001c5ad419283991112ac058562f31d8"
+verdict = "improve"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = """
+Reran `uv run pytest -q tests/test_changelog.py tests/test_build.py tests/test_repo.py` on 6badda1: all green. The command is the sentence: those three files are the changelog, build and repository guards. tests/test_changelog.py is owned but unchanged; nothing in it pins the 0.12.1 wording, which is why c5 is a judgement.
+"""
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = """
+Reran: prints `0.12.1 []`, exit 0. It bites: in a scratch copy (git archive of HEAD under /tmp) setting pyproject back to 0.12.0 exits 1, and restoring changelog.d/yolo-after-permissions.fixed.md from origin/main exits 1. The sentence goes further than the command reads, so I checked the rest of "wherever a tool reads it" by hand: uv.lock has vibe-map 0.12.1 and `uv lock --check` resolves clean, `uv run vibe --version` prints `vibe, version 0.12.1`, `vibemap.__version__` is 0.12.1, and the built game carries `const CONFIG={"version": "0.12.1"`. `git grep 0.12.0` outside CHANGELOG.md finds only work/ history and tests/test_changelog.py reading the released section, both right to keep it. The compare links are right: Unreleased compares v0.12.1...HEAD, [0.12.1] compares v0.12.0...v0.12.1, and v0.12.0 exists on origin. The two deleted fragments are exactly the two car M added (git show 25a894f, 691296e), and changelog.d holds only README.md.
+"""
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = """
+Reran the whole chain on 6badda1: ruff check and format clean, `style OK: no em dashes, no emoji`, sinks quiet, the non-browser battery all dots, no failure. The command is the sentence.
+"""
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = """
+Reran the six `--check` tools: all exit 0. The only generated change on the branch is the one CONFIG version string in game/vibe-map.html, which `tools/build.py --check` would refuse if it disagreed with the package version. The command is the sentence.
+"""
+
+[[criteria]]
+id = "c5"
+verdict = "fail"
+evidence = """
+Short, Fixed only, two bullets, one per car M fix (#211 for #209, #213 for #201), plain words, no em dash or en dash in the section (grep), and released sections untouched: against origin/main the only other line CHANGELOG.md changes is the old Unreleased compare link; 0.12.0, Grow caveat included, is byte-identical.
+
+The YOLO line is true of main: `vibemap.tui.yolo_locked_hint()` prints "skips every permission prompt; opens once you have done Hooks as gates (Evening 3, stop 4) and Claude Code, the power settings (Evening 4, stop 5)", launchers() passes it with disabled=True until both PERMISSION_STOPS are done, the toolbelt "YOLO: install everything" button is untouched, and src/body.html's first Definition of done points at the two lessons (see the low below for the syllabus).
+
+The Grow line is not true to the fix. I ran the built game in Chromium (scratch script, Settings experience galaxy, vault grow, one slot) before car M (game/vibe-map.html at 5735434) and at HEAD. Before: with no topic done, Learn on Unix and the terminal shows the lock; with `topics: ["unix"]`, Learn on the next topic, Files, folders and paths, also shows the lock, and so does the done Unix lesson. At HEAD all three open. The fix (readable() returns every topic whose state is not "ahead") opens the next lesson and every done one at any progress, as the fragment on main said ("and of every topic already done"). The release line narrows it to "no topic done" and drops the done lessons. A Galaxy learner with three topics done who hit the lock reads 0.12.1 as not about them. See the medium finding.
+"""
+
+[[findings]]
+severity = "medium"
+file = "CHANGELOG.md"
+text = """
+0.12.1, Fixed, first line: "With Settings, Vault set to Grow and no topic done, Galaxy's Learn button opens the next lesson" narrows the fix to a case it is not limited to, and drops half of what it does. Reproduced in Chromium on the built game before car M (5735434) and at 6badda1 with topics ["unix"], vault grow, experience galaxy: before, the next lesson (Files, folders and paths) and the done one (Unix and the terminal) were both locked; now both open. The fragment this line replaces said so ("the lesson of the next topic on the journey, and of every topic already done"). The wording mirrors the 0.12.0 caveat, which was itself too narrow; that section stays as released, so this line is where the record gets corrected. Suggested: "With Settings, Vault set to Grow, Galaxy's Learn button opens the next lesson on the journey, and every lesson already done, instead of a lock that asked for island play a Galaxy learner never does. Topics further along stay earned, and the islands unlock exactly as before." Rerun c1 to c4 after.
+"""
+
+[[findings]]
+severity = "low"
+file = "CHANGELOG.md"
+text = """
+0.12.1, Fixed, second line: "The first lesson points at those two lessons for permissions in depth" is true of the game (src/body.html) only. docs/SYLLABUS.md line 165 and docs/site/syllabus.html still say "understanding permissions in depth is workstream 4", the known follow-up the yolo-after-permissions review and both its sign-offs left to the open #190/#203 orders. The 0.12.0 line right below says "in the game and in the syllabus", so a reader will take this one the same way. "In the game, the first lesson points at..." keeps it exact until the syllabus catches up. Land as is if the medium is fixed without it.
+"""
+
+[[findings]]
+severity = "low"
+file = "work/orders/release-0-12-1/order.toml"
+text = """
+c2 reads only pyproject.toml, while its sentence (and the goal's "everywhere a tool reads it") also covers uv.lock and the built game's CONFIG. Both are right here (checked by hand, see c2), and c4 would catch the game. A future release order could add `uv lock --check` and `uv run vibe --version` to c2. No change needed for this landing.
+"""
