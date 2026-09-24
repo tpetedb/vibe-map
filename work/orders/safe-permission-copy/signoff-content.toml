@@ -1,0 +1,19 @@
+v = 1
+order = "safe-permission-copy"
+team = "content"
+by = "manager-content"
+reviewed = "47ad21005c349d74757d9d09271bc24a759b4dc7"
+verdict = "accept"
+note = '''
+Checked docs/SYLLABUS.md: one line changed (the 18:00 Definition of done), outside
+every <!-- generated:... --> block, so it is the right place for a direct edit.
+The new sentence matches src/body.html word for word and keeps the campaign's
+plain voice, no em dash. reviewer-safe-permission-copy-r1 already confirmed
+gen_syllabus --check passes and docs/site/syllabus.html carries the same line.
+Nothing else in docs/SYLLABUS.md moved. Content team has nothing to do after
+this lands; the low finding about the workstream 4 pointer (src/body.html /
+SYLLABUS.md both say "understanding permissions in depth is workstream 4" but
+workstream 4 does not teach permissions) is a good follow-up for whichever
+order next touches SYLLABUS.md's 21:00 section or campaign.json's permission
+stops.
+'''
