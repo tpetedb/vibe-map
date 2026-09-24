@@ -1,0 +1,7 @@
+# yolo-after-permissions
+
+Issue #201, found by the reviewer of #200 (#186): `vibemap/tui.py`, the `just start` onboarding menu, offers "Claude, YOLO mode" (`claude --dangerously-skip-permissions`, CHOICES "yolo" and the handler near `elif choice == "yolo"`). A beginner who picks it never sees a permission prompt, which undercuts the first lesson's guidance (pause, read, ask before saying yes). Also, "understanding permissions in depth is workstream 4" in the first lesson's Definition of done (src/body.html, pinned by tests/test_safe_copy.py) points at the 21:00 lesson, which does not teach permissions; the permissions lessons are Evening 3 stop 4 and Evening 4 stop 5 (find their titles in vibemap/data/campaign.json).
+
+Do: gate the Claude YOLO launcher on progress (the CLI's state.json, the same source `vibe status` reads): before those two stops are done, the menu leaves it out or shows it only with a plain warning naming what it skips; after, as now. The toolbelt's "YOLO: install everything" button installs tools and is out of scope; leave it. Fix the pointer in src/body.html and update tests/test_safe_copy.py to pin the new true text. docs/SYLLABUS.md carries the same sentence but is owned by the open #190 and #203 orders; do not touch it, say so in the PR body. Red first. Changelog fragment changelog.d/yolo-after-permissions.fixed.md. PR body starts with the tag line and says "Closes #201".
+
+builder:
