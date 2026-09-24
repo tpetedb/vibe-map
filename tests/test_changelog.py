@@ -237,3 +237,20 @@ def test_a_control_the_0_12_0_section_names_exists_in_the_game(control) -> None:
 
 def test_the_0_12_0_section_says_the_map_once() -> None:
     assert "The map is one you can use" not in _section("0.12.0")
+
+
+def test_the_0_12_1_grow_line_says_what_galaxy_opens() -> None:
+    """Galaxy's readable() opens every topic not ahead: the next and the done."""
+    section = _section("0.12.1")
+    source = (ROOT / "src" / "galaxy" / "20-experience.js").read_text()
+    assert 'filter(t=>t.state!=="ahead")' in source
+    assert "no topic done" not in section
+    assert "every lesson already done" in section
+
+
+def test_the_0_12_1_permissions_pointer_is_scoped_to_where_it_is_true() -> None:
+    """The syllabus still says workstream 4, so the line names the game."""
+    section = _section("0.12.1")
+    syllabus = (ROOT / "docs" / "SYLLABUS.md").read_text()
+    if "in depth is workstream 4" in syllabus:
+        assert "In the game, the first lesson points at" in section

@@ -1,0 +1,28 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "galaxy-grow-first-lesson"
+team = "scene"
+by = "manager-scene"
+reviewed = "c8e6b0f683494e56a6e27c9b6ca4add77f8872ec"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Checked src/galaxy/20-experience.js and src/game/24-experience.js (scene's files
+in this order) against origin/main...HEAD. readable() on EXPERIENCES.galaxy
+filters galaxyModel(PLACES,TREE,galaxyDone()).topics by state!=="ahead", which
+is exactly next+done in galaxyModel's own enum (src/galaxy/00-model.js: done,
+next, ahead; no "available" state exists, so the order's "next and any it
+marks available" resolves to next+done, as the changelog fragment states).
+galaxyModel, buildGraph and the walk/route code are untouched; readable() only
+reads the existing model, same pattern as listing() a few lines above it. The
+24-experience.js change is comment-only, adding readable() to the optional
+hook list, and the contract test only requires it on Galaxy's shape, so
+Islands keeps its required contract untouched. No em dashes, house style
+matches the surrounding file. Scene has nothing to do after this lands: no
+change to galaxyModel's state semantics, the route/walk code, or scene's own
+tests (test_game_camera.py, test_game_graphics.py, test_game_smoke.py), and
+none of them exercise readable(). One low finding already on review.toml
+(dead typeof guard in 60-vault.js, harmless) needs no scene action.
+"""
