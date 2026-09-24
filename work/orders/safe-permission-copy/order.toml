@@ -6,7 +6,7 @@ branch = "claude/safe-permission-copy"
 goal = "second-wave"
 issue = 186
 # Whoever builds this writes their name here; a review by the same name does not count.
-builder = ""
+builder = "builder-safe-permission-copy"
 
 owns = [
   "src/body.html",
