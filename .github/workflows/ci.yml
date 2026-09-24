@@ -99,8 +99,11 @@ jobs:
     name: browser shard, ${{ matrix.shard }}
     runs-on: ubuntu-latest
     strategy:
-      # One red shard should not hide the state of the other six.
+      # One red shard should not hide the state of the others.
       fail-fast: false
+      # Sized so no shard runs much over half an hour on a slow runner; the
+      # default stays small because every unclaimed browser file lands in it.
+      # The estimates per shard are in work/orders/ci-shard-rebalance/findings.md.
       matrix:
         include:
           - shard: smoke
@@ -108,6 +111,10 @@ jobs:
             files: >-
               tests/test_game_smoke.py tests/test_stops.py
               tests/test_grow_game.py tests/test_game_bottles.py
+          - shard: hunt
+            files: tests/test_game_hunt_b.py
+          - shard: pictures
+            files: tests/test_game_hunt_f.py tests/test_game_experience.py
           - shard: ui
             files: >-
               tests/test_game_ui.py tests/test_interests.py
@@ -126,7 +133,11 @@ jobs:
               tests/test_onboarding.py tests/test_reset.py
               tests/test_syllabus.py
           - shard: qol
-            files: tests/test_game_qol*.py tests/test_game_state.py
+            files: tests/test_game_qol.py tests/test_game_qol_settings.py
+          - shard: qol-feedback
+            files: tests/test_game_qol_feedback.py tests/test_game_state.py
+          - shard: qol-wayfinding
+            files: tests/test_game_qol_wayfinding.py
           - shard: webkit
             files: tests/test_game_webkit.py tests/test_game_camera.py
             retry: true
