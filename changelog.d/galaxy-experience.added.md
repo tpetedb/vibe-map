@@ -1,2 +1,0 @@
-- Add the Galaxy experience, with a programming-history journey, tiny place domes, three scales, and an accessible list twin.
-- Draw every course topic on an ordered journey with live imported progress, a readable next stop, and separate landing and learning. Correct miniature materials and keep the selected site facing the globe camera.

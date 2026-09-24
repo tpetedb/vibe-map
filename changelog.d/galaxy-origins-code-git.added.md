@@ -1,3 +1,0 @@
-- The fifteen topics of the git, code and formats shelves say where they happened: one primary origin each and nine echoes, 24 origins at 13 places, every year, actor and claim read off the page it cites. `places.problems(shelves=["git", "code", "formats"])` is empty.
-- Nine of those origins sit at the internet and one at a standards body, because no primary source puts a format or an open-source project at an address; the places that were wished for are named on issue 168 rather than guessed at.
-- `tests/test_origins_code_git.py` holds what is specific to these shelves: a primary line names what its topic is about, a line at a real address names who is at that address, and a year spelled in a line is the year of its origin.

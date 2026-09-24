@@ -207,3 +207,33 @@ def test_the_generated_files_are_marked_for_review() -> None:
     ]
     merges = {a for _, *rest in rules for a in rest if a.startswith("merge=")}
     assert merges == {"merge=binary"}
+
+
+def _section(version: str) -> str:
+    text = changelog.CHANGELOG.read_text()
+    start = text.index(f"## [{version}]")
+    return text[start : text.index("\n## [", start + 1)]
+
+
+def test_the_0_12_0_galaxy_walk_says_a_button_opens_the_lesson() -> None:
+    """Walking up only names the lesson; the button or Enter opens it."""
+    section = _section("0.12.0")
+    assert "walking up to a pavilion opens" not in section
+    assert "Open nearby lesson" in section
+    assert "Open nearby lesson" in (ROOT / "src" / "body.html").read_text()
+
+
+@pytest.mark.parametrize(
+    "control",
+    ["Open nearby lesson", "Bigger", "Walk there", "Take photo", "Keep going",
+     "Stop reminding me", "Tap to hurry", "Keep running"],
+)  # fmt: skip
+def test_a_control_the_0_12_0_section_names_exists_in_the_game(control) -> None:
+    assert control in _section("0.12.0")
+    source = " ".join(p.read_text() for p in (ROOT / "src").rglob("*.*")
+                      if p.suffix in {".js", ".html"})  # fmt: skip
+    assert control in source
+
+
+def test_the_0_12_0_section_says_the_map_once() -> None:
+    assert "The map is one you can use" not in _section("0.12.0")

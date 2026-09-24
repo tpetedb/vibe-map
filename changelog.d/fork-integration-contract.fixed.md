@@ -1,1 +1,0 @@
-- Full verification checks the current fork contract: a single challenge does not claim the stop, and replacing learner work requires explicit confirmation.

@@ -1,0 +1,24 @@
+# Another team's manager agreeing to a change in that team's files. Copy to
+# work/orders/<id>/signoff-<team>.toml. Same rule as a review: it covers one
+# commit and lapses when the owned files move.
+v = 1
+order = "release-0-12-0"
+team = "docs"
+by = "manager-docs"
+reviewed = "33252df884807fdc9268343a778acb7ca217e9eb"
+verdict = "accept"
+# What the other team has to know, or to do after this lands.
+note = """
+Re-read the whole 0.12.0 section at 33252df: still Added, Changed, Fixed in
+Keep a Changelog order, Galaxy first, and `python3 tools/checks.py style`
+passes (no em dashes, no emoji). Since ed5e739 the diff is exactly the two
+lines the board asked for, nothing else: the Galaxy line's new Grow-mode
+caveat is true of what ships (the fix lives on unmerged branch
+claude/galaxy-grow-first-lesson, issue #209, not on this branch or main, so
+the first lesson can indeed stay locked until that lands), and the Changed
+line's new wording matches tests/test_safe_copy.py's unsafe_sentences scan
+exactly (an unguarded instruction to approve, guarded by a "before you"/"do
+not" phrase ahead of it).
+
+Nothing to change before landing. No other docs/ or *.md file moved.
+"""

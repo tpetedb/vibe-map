@@ -12,6 +12,50 @@ A branch never edits this file: it adds a fragment under `changelog.d/`, and
 Nothing here between releases: an entry lives in its own file under
 [`changelog.d/`](changelog.d/) until a release assembles them.
 
+## [0.12.0] - 2026-09-24
+
+### Added
+
+- Galaxy, a second way to travel the same course. Settings, Experience, switches between the islands and Galaxy, which follows the history of programming: every topic of the tech tree is a stop on one ordered journey across three globes (the Earth, the data centre and the cloud), each place where a topic happened is a tiny domed miniature, and the next stop is marked and readable from the overview (with Settings, Vault set to Grow and no topic done, the first lesson can stay locked until 0.12.1; Vault set to Full shows it). The islands stay the default, unchanged by the switch, both share one progress, and progress imported from the terminal or a code shows on the route at once. Travelling the world or importing progress keeps the experience you chose, and switching back puts the island camera where it was.
+- In Galaxy you land in a place and walk it with the keyboard, the touch stick or a tap on the ground; buildings, water and the shore stop you, and walking up to a pavilion names its lesson, which Open nearby lesson or Enter opens. Where you are follows the lesson you reached, not the last place picked on the map. The whole journey is also a plain list next to the scene, for a keyboard, a screen reader, a short screen or a browser without WebGL, and its names, progress and Learn buttons follow the text size setting without running off a phone.
+- Every one of the seventy topics says where it happened: 97 dated origins at 39 places, among them Codd's relational model at IBM San Jose in 1970, the web at CERN in 1990 and Kubernetes announced in San Francisco in 2014, each with the year, the actor, one plain line and a source that was opened and supports all of it. A topic sits at a town only when a dated first-party page puts it there; where no page names a place (a format, a specification, an open-source project, an online announcement) it sits at the internet or a standards body rather than at a guessed office, and the pages behind each origin are listed under the topic's sources so a learner can open the proof.
+- `vibe places` lists the places by era with the topics that come from each, `vibe places <id>` shows one of them, and `vibe topic <id>` shows a topic's origins. The data is one file per place under `vibemap/data/places/` and `[[origins]]` on a topic; `vibemap/places.py` refuses what it cannot vouch for, such as an ambiguous year or a duplicate place, and the weekly link check opens the place sources too.
+- Photo mode (the Photo button, or P): the HUD steps aside, the camera pulls back one step, and Take photo hands over the drawn frame as a PNG with a caption, to save, or to share where the browser can share files. Opening a panel ends it, and Done gives the focus back to the Photo button.
+- The Roadmap's sync card says how many stops live only in this browser, or were delivered since the last export, and the line goes once a code is exported. Stops that arrived in an imported code count as carried. Reset to greenfield says the same before it clears anything.
+- After about fifty minutes on screen in one sitting, Rolinda says once, between stops, that this is a good place to stop and where you are. Keep going, Escape or Stop reminding me closes it; a hidden tab, a gap of ten minutes or nobody at the keys earns nothing.
+- Walk me there. A stop picked in the search palette (Cmd K, then Walk there or Shift and Enter), a plot tapped on the map or a row in the big map's list of stops sets the walker off for it, and the island says where it is going. The way goes round the hub, the lake and the bays, for a tap on the ground as much as for a stop; a walk that cannot get nearer, to the hub's roof or across a shut bridge, stops and says so, and leaving the island ends it. The Roadmap has no Walk there button yet, and a stop on another island is not walked to.
+- The marker where you are walking to stays lit until you arrive, with dashes on the ground that follow the way round, light on dark so they show on grass, snow, sand and lava rock alike.
+- An arrow at the edge of the screen points at the next stop with its distance, and at the bridge that has opened once the island is finished. It takes no press of its own, so a tap under it reaches the island, and it is off at the two hardest difficulties. Settings has no row for it yet, so the difficulty is the only switch.
+- The map grows with its Bigger button, or a long press on a phone, and every stop is a labelled button under it for a keyboard or a screen reader.
+- Hurrying: hold Shift, or push the stick to its rim, to move half again as fast, and "Tap to hurry" in Settings now does what it says. Shift with Tab does not hurry, and changing apps releases held movement keys.
+- The island pauses when you look away: a hidden tab or a locked phone stops the ambient clock, so coming back is not an hour of boats, birds and weather in one jump. Battery saver also draws half the frames after a minute with nothing touched and no panel open, back to full rate at the next key, tap or stick; setting it to Keep running turns both off.
+- A short buzz on a claim, an achievement and a collectible where the browser has one (Android Chrome; iOS has none), gated by the Buzz setting, silent under reduced motion and never asked for before you have touched the page.
+- The Backpack has a Notifications tab: every message the island has shown, newest first, with its time, so what a toast said while you were reading can be read late. Quiet mode raises no toast and keeps the list, at most three cards are on screen at once, a first-time hint shows once, and a quiet "Saved" mark follows a save.
+
+### Changed
+
+- The first lesson no longer tells a beginner to answer yes to a permission prompt they do not understand. Its Definition of done, in the game and in the syllabus, says to pause, read what Claude wants to run or change, and ask Tom before saying yes, and a test checks the learner-facing text it scans for an unguarded instruction to approve a permission prompt.
+- `vibe new`, a new camp's agent rules and the Codespaces path say plainly that the camp, the coding-agent subscription and any Codespace bill belong to the learner, and the Codespaces path starts from the learner's own repository.
+- The Cycle 3 guide documents the dashboard, the avatar and the archipelago.
+- The data-engineering lesson says that keeping Bronze data append-only is this camp's exercise policy; a medallion architecture can also apply change-data capture updates.
+- For maintainers: the build reads the game's modules from `src/game/` and `src/galaxy/` by file name, with boot last, and ADR 0001 and `docs/CONFIG.md` say so; the islands sit behind the experience contract of ADR 0015, held by golden pictures in `tests/golden/`; `docs/CONTRACTS.md` lists what other agents depend on; every browser test takes its page from one fixture (a noon clock, a record of every toast, screenshots only under `tests/out`) and a wait that runs out names itself; CI shards stop when the battery cannot be collected and the browser cache follows the Playwright version; `tools/work.py` judges each order on its own branch; one tested command regenerates the whole played camp; and the daily news opens a pull request instead of pushing to main.
+
+### Fixed
+
+- An artifact's yellow ring is drawn at the radius the walk-up test uses, so "walk up to the yellow ring" is true everywhere: the fountain's ring is on the grass, not under the lake, the mountain's is clear of the mountain, and on a finished island a delivered stop's slab no longer cuts one in half.
+- The market stall answers a path it does not have with 404 and a body it cannot read with 400, as its demo shows, so the code says which half was wrong.
+- The vault links at the foot of an artifact sheet are links: the vault's colour and underline, the yellow focus ring every other control has, and Enter opens the note.
+- A second demo button cancels what the first still owed instead of interleaving two transcripts; under reduced motion a demo prints its whole transcript at once and a screen reader hears one line at a time; a line too wide for the panel folds with a hanging indent, and a number such as "1 200 tokens" no longer breaks across two lines on a phone.
+- The balloon demo charges the region it rents in: t3.small in `eu-west-1` is 0.0228 USD an hour, and a month of forgetting it is 16.42 USD. The mountain demo names `vibemap/cli.py`, the file the package has, and its columns line up again.
+- The "Do it for real" walkthrough and the demo terminal are drawn with ligatures off, so a fork's typeface cannot join `->` or `--` in a line the learner is told to copy exactly.
+- An open panel starts and scrolls below the HUD, so a lesson scrolled past the first screen no longer slides behind the bar, and the band it keeps clear grows with the bar on a touch screen.
+- An achievement message hangs under the HUD instead of over Stats, Vault, Tree, World, More, the map or the panel's Close button, and moves nothing on its way. A batch of them stacks within the room between the bar and the bottom buttons, newest on top, each takes the whole row (half the lines on a phone) and carries its own surface, so it reads over a panel and over the island alike.
+- The panel is announced as a named dialog, opening the More menu on a laptop no longer blanks the numbers beside it, and a group heading that wraps has room between its lines.
+- A tech tree shelf outside your interests is set back with its surface rather than dimmed to a fifth of its contrast, so its description reads on a touch screen.
+- Achievements earned on a slow-rendering device arrive promptly, and a hidden page and reduced motion are still respected.
+- The generated Git and Python topic notes open in the game, and a duplicate note title stops the build and names every file that defines it.
+- `vibe scores` treats an existing empty scores file as an empty scoreboard.
+
 ## [0.11.0] - 2026-09-21
 
 ### Added
@@ -666,7 +710,8 @@ The initial package on `main`: the course as one folder, no dependencies beyond 
 - The Obsidian vault seed in `vault/Camp/`, `README.md`, `docs/SYLLABUS.md`, `docs/RESOURCES.md` and `docs/ROADMAP.md`.
 - The tech tree source `tools/tech.py` with its generator `tools/regen_tree.py`.
 
-[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/tpetedb/vibe-map/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/tpetedb/vibe-map/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/tpetedb/vibe-map/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/tpetedb/vibe-map/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/tpetedb/vibe-map/compare/v0.8.0...v0.9.0

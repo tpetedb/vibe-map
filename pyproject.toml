@@ -4,7 +4,7 @@
 # Read it top to bottom; every table is explained in docs/SYLLABUS.md.
 [project]
 name = "vibe-map"
-version = "0.11.0"
+version = "0.12.0"
 description = "Terminal companion, vault builder and test harness for Vibe Code Camp"
 readme = "README.md"
 requires-python = ">=3.12"

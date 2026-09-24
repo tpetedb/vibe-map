@@ -1,1 +1,0 @@
-- State and guard the ownership boundary: every camp, coding-agent subscription and Codespace bill belongs to the learner, and the Codespaces path now starts from their repository.
