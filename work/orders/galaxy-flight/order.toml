@@ -1,0 +1,31 @@
+v = 1
+id = "galaxy-flight"
+title = "Fly a ship to a Galaxy destination with accessible skip and motion-safe cuts"
+team = "scene"
+branch = "codex/galaxy-phase4"
+goal = "galaxy"
+issue = 168
+builder = "codex-astra-galaxy-flight"
+owns = ["src/galaxy/20-experience.js", "src/galaxy/60-flight.js", "src/body.html", "src/style.css", "tests/test_game_galaxy_flight.py"]
+cross = ["panels"]
+needs = []
+
+[[criteria]]
+id = "c1"
+text = "Autopilot arrives without input; Skip and Escape arrive early; reduced motion cuts; experience switching disposes flight and leaves shared progress intact."
+check = "uv run pytest -q tests/test_game_galaxy_flight.py"
+
+[[criteria]]
+id = "c2"
+text = "Existing Galaxy journeys and Island goldens still pass."
+check = "uv run pytest -q tests/test_game_galaxy.py tests/test_game_experience.py"
+
+[[criteria]]
+id = "c3"
+text = "Generated game and installed fork source match source."
+check = "uv run python tools/build.py --check && uv run python tools/sync_fork_source.py --check"
+
+[[criteria]]
+id = "c4"
+text = "The ship is recognisable, flight stays short and calm, and keyboard/touch users can skip and reach the destination lessons. Age jump range and echoes are excluded for subsequent phase-4 orders."
+judge = "reviewer"
