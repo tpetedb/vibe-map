@@ -386,11 +386,16 @@ def test_mixed_progress_import_does_not_build_island_graphics_in_galaxy(game_des
 def test_galaxy_landing_walks_to_a_lesson_with_shared_input(request, profile):
     game = request.getfixturevalue(profile)
     _open(game)
+    assert game.page.evaluate("window.__experience().where()") is None
     game.page.get_by_role("button", name="Chart", exact=True).click()
     game.page.locator("#galaxy-list .galaxy-place").filter(
         has_text="UC Santa Barbara"
     ).get_by_role("button", name="Land").click()
     game.page.wait_for_function("window.__galaxyWalk?.()?.active")
+    assert game.page.evaluate("window.__experience().where()") == {
+        "kind": "place",
+        "id": "uc-santa-barbara",
+    }
     start = game.page.evaluate("window.__galaxyWalk()")
     assert start["valid"]
     game.page.locator("#c").focus()
@@ -407,6 +412,11 @@ def test_galaxy_landing_walks_to_a_lesson_with_shared_input(request, profile):
     game.page.wait_for_function(
         "id => window.__galaxyWalk().near === id", arg=site["id"]
     )
+    assert game.page.evaluate("window.__experience().where()") == {
+        "kind": "topic",
+        "id": site["id"],
+        "place": "uc-santa-barbara",
+    }
     game.screenshot("galaxy_walk_arrived_" + profile)
     game.page.get_by_role("button", name="Open nearby lesson").click()
     expect(game.page.locator("#vault")).to_have_class("on")

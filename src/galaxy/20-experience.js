@@ -112,7 +112,8 @@ EXPERIENCES.galaxy={
   tick(dt,t){if(!galaxyState)return;galaxyRefresh();galaxyWalkTick(dt,t);if(!reducedMotion()&&galaxyState.view==="chart")Object.values(galaxyState.planets).forEach((planet,i)=>{planet.root.rotation.y=t*(.035+i*.008)});
     const ring=galaxyState.focusRing;if(ring&&ring.userData.anchor){ring.userData.anchor.getWorldPosition(ring.position);ring.lookAt(camera.position)}if(!reducedMotion()&&galaxyState.view==="chart")galaxyLabel()},
   goTo(to){if(!to)return false;if(to.topic&&galaxyState.model.topics.some(t=>t.id===to.topic)){galaxyTopic(to.topic);return true}if(to.place&&galaxyState.model.places.some(p=>p.id===to.place)){galaxyPlace(to.place);return true}return false},
-  where(){const place=galaxySelected();return place?{kind:"place",id:place.id}:null},
+  where(){if(!galaxyWalk)return null;
+    return galaxyWalk.near?{kind:"topic",id:galaxyWalk.near,place:galaxyWalk.place}:{kind:"place",id:galaxyWalk.place}},
   listing(){const model=galaxyModel(PLACES,TREE,galaxyDone()),places=Object.fromEntries(model.places.map(place=>[place.id,place]));return model.topics.map(topic=>({id:topic.id,title:topic.name,place:topic.place,placeTitle:places[topic.place].name,year:topic.year,state:topic.state}))},
 };
 
