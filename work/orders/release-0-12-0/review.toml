@@ -1,63 +1,58 @@
 v = 1
 order = "release-0-12-0"
-by = "reviewer-release-0-12-0-r1"
-reviewed = "1b2b21a272a599ca645add19fdba18ad2e591f1b"
-verdict = "improve"
+by = "reviewer-release-0-12-0-r2"
+reviewed = "d55e7c8086fd1ded3bb85bf2f2e18deb06fc55b1"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
 evidence = """
-Ran it on 1b2b21a: every test in tests/test_changelog.py, tests/test_build.py and tests/test_repo.py passes, exit 0. The command is the sentence: those three files are the changelog, build and repository guards. test_changelog keeps Unreleased free of headings, which the diff respects (Unreleased still only points at changelog.d).
+Ran it myself on d55e7c8: tests/test_changelog.py, test_build.py and test_repo.py all pass. The command is the sentence: those are the changelog, build and repository guards. The three new tests in test_changelog.py guard the round-1 findings, and I made them fail in a scratch copy (git archive of HEAD under /tmp): putting back "walking up to a pavilion opens that topic's lesson" and "The map is one you can use: tap a plot to walk there" fails four tests (the walk line, the Open nearby lesson and Bigger controls, the map-once test); renaming the button in src/body.html to "Open the nearby lesson" fails two. Unreleased still carries no heading.
 """
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
 evidence = """
-Ran it: prints `0.12.0 []`, exit 0. Tried each clause the other way in a scratch copy (git archive of HEAD under /tmp): pyproject back at 0.11.0 exits 1, a stray changelog.d/left.fixed.md exits 1 and is named, the `[0.12.0]:` link line removed exits 1. The version agrees wherever a tool reads it, which c2 alone does not prove: `vibe-map` in uv.lock is 0.12.0 and `uv lock --check` passes (in the scratch copy a lock left at 0.11.0 makes it ask for `uv lock`), `const CONFIG={"version": "0.12.0"` in game/vibe-map.html (in the scratch copy a CONFIG left at 0.11.0 fails `tools/build.py --check`), and `uv run vibe --version` prints `vibe, version 0.12.0`. `git grep 0.11.0` outside CHANGELOG.md and work/ finds only history that should keep it: docs/BRIEF.md (Cycle 3 delivered in 0.10.0 and 0.11.0, released 2026-09-21) and tests/test_issue59_docs.py, which asserts that guide names both. The 39 fragments the branch deletes are exactly the 39 origin/main (1c173f4) carries; README.md stays. The section is `## [0.12.0] - 2026-09-24`, `[Unreleased]` compares v0.12.0...HEAD and `[0.12.0]` compares v0.11.0...v0.12.0; the CHANGELOG diff is 46 insertions and the one Unreleased link line, so no released section was touched.
+Ran it: prints `0.12.0 []`, exit 0. The branch is current: its merge base with origin/main is origin/main itself (1c173f4, car L #208 merged), and the 39 fragments it deletes are exactly the 39 that `git ls-tree origin/main changelog.d/` lists besides README.md. The version agrees wherever a tool reads it, beyond what c2 checks: uv.lock has vibe-map 0.12.0 and `uv lock --check` resolves clean, the built game has `const CONFIG={"version": "0.12.0"`, and `uv run vibe --version` prints `vibe, version 0.12.0`. `git grep 0.11.0` outside CHANGELOG.md and work/ finds only history that should keep it (docs/BRIEF.md, tests/test_issue59_docs.py). Diffing CHANGELOG.md against origin/main removes one line only, the old Unreleased compare link, so no released section was touched; `[0.12.0]` compares v0.11.0...v0.12.0.
 """
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
 evidence = """
-Ran the whole chain myself on 1b2b21a: ruff check, ruff format --check, `checks.py style` (no em dashes, no emoji), `checks.py sinks`, and `pytest -m 'not browser and not integration'`, all green. It proves the sentence as written; nothing under src/, vibemap/ or tools/ changed, so the browser battery is CI's.
+Ran the whole chain on d55e7c8: ruff check, ruff format --check, `checks.py style` (no em dashes, no emoji), `checks.py sinks`, and `pytest -m 'not browser and not integration'`, all green. Nothing under src/, vibemap/ or tools/ changed, so the browser battery is CI's (PR #212: the browser shards are queued; the lint job is red only on its last step, "work orders are readable, reviewed and inside their files", which waits for this review).
 """
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
 evidence = """
-Ran the loop: build, tree, cookbook, template, fork source and syllabus all report in sync. It does catch the one generated change this order makes: with CONFIG.version put back to 0.11.0 in the scratch copy, `tools/build.py --check` says game/vibe-map.html differs from a fresh build.
+Ran the loop: build, regen_tree, gen_cookbook, sync_template, sync_fork_source and gen_syllabus all pass `--check`. The one generated change the order makes is the version in game/vibe-map.html, and round 1 showed build --check catches it left at 0.11.0.
 """
 
 [[criteria]]
 id = "c5"
-verdict = "fail"
+verdict = "pass"
 evidence = """
-Read the section top to bottom against all 39 fragments (git show origin/main:changelog.d/...) and against main's code. What holds: Added, Changed, Fixed in Keep a Changelog order; Galaxy leads Added (the journey, walking a place, the list twin, the sourced origins, `vibe places`); no em dash (grep and `checks.py style`). Lines the fragments contradicted are resolved in main's favour: Kubernetes sits at San Francisco (ship-docs fragment said the internet, internet-origins moved it; `vibe topic kubernetes` shows San Francisco 2014, DockerCon keynote), and the two Battery saver fragments become one true line (`saver` in 85-settings.js is "Pause when you look away" / "Keep running", and both pageHidden() in 00-state.js and saverIdle() in 31-animate.js obey `saver!=="off"`). Spot checks that are true of main: 70 topics, all 70 with origins, 97 origins, 39 distinct places used (`topics_by_place()`), `places.problems()` empty, IBM San Jose 1970 and CERN 1990 via `vibe places`; GLOBES is earth, datacentre, cloud; Settings has an Experience row with Islands and Galaxy; Photo button and P in 33-photo.js; BREAK_AFTER_S=50*60; the Backpack's Notifications tab; walkTo() is called from the search palette and the minimap only, so "The Roadmap has no Walk there button yet" holds, and 85-settings.js has no guide row, so "Settings has no row for it yet" holds.
+Read the section top to bottom as a learner, then against the fragments (git show origin/main:changelog.d/...) and main's code. Order: Added, Changed, Fixed, the Keep a Changelog order; no Deprecated, Removed or Security fragment existed. Galaxy leads Added in four lines (the journey, walking a place, the sourced origins, `vibe places`). No em or en dash in the section. Maintainer detail is one "For maintainers" line at the end of Changed.
 
-What does not hold: the second Galaxy line says "walking up to a pavilion opens that topic's lesson". It does not. galaxyWalkNear() in src/galaxy/50-walk.js only writes "Nearby: <topic>", says it, and enables the "Open nearby lesson" button; the lesson opens on that button or Enter. I ran tests/test_game_galaxy.py::test_galaxy_landing_walks_to_a_lesson_with_shared_input in Chromium (one slot, passed) and looked at tests/out/galaxy_walk_arrived_game_desktop.png: the walker stands at the Bash and shell scripts pavilion at UC Santa Barbara with "Nearby: Bash and shell scripts" and the button, no lesson open; the test then has to click "Open nearby lesson" before #vault is on. A learner reading the line walks up and waits. One line untrue of main fails the criterion.
+Round-1 findings, each dealt with: (medium) the walk line now says "walking up to a pavilion names its lesson, which Open nearby lesson or Enter opens"; true of src/galaxy/50-walk.js (galaxyWalkNear sets "Nearby: <topic>" and enables #galaxy-near; galaxyOpenNearby is its onclick and the Enter handler) and of src/body.html. (low) the map is said once: "The map grows with its Bigger button, or a long press on a phone, and every stop is a labelled button under it", with tapping a plot left to Walk me there; `mmBigBtn` in 32-minimap.js is labelled Bigger/Smaller. (low) "The islands stay the default, unchanged by the switch" no longer reads against the ring, marker and arrow lines.
+
+Spot checks against main, several of them lines from #183 and #208: 70 topics, all with origins, 97 origins, 39 places in use, `places.problems()` empty, Kubernetes at san-francisco 2014; Settings has Experience with Islands and Galaxy (85-settings.js), labels Buzz, Battery saver, Hurrying with "Tap to hurry"; the break card is BREAK_AFTER_S=50*60 with a ten-minute gap and "Keep going"/"Stop reminding me" buttons (89-dashboard.js); Photo mode has Take photo and Done and focus returns to the opener (33-photo.js); the Definition of done says "ask Tom before you say yes" in the built game and docs/SYLLABUS.md; the balloon demo is 0.0228 USD an hour and 16.42 USD a month in eu-west-1 (16-artifacts.js); the palette has Walk there and Shift with Enter (41-search.js); the Backpack's Notifications tab is in 18-avatar.js. Nothing is said twice and no two lines contradict each other. Fragments left out are process or test-only (fork-integration-contract only changed tests/test_config_levels.py; the gameplay recording; the pure model and planet kit), which the order asks to drop.
 """
 
 [[findings]]
-severity = "medium"
-file = "CHANGELOG.md"
+severity = "low"
+file = "tests/test_changelog.py"
 text = """
-0.12.0, Added, second bullet: "walking up to a pavilion opens that topic's lesson" is not what main does. Walking up names the lesson ("Nearby: <topic>") and enables the "Open nearby lesson" button; that button or Enter opens it (galaxyWalkNear and galaxyOpenNearby in src/galaxy/50-walk.js, body.html #galaxy-near, and tests/test_game_galaxy.py clicks the button). Something like "walking up to a pavilion names its lesson, and Open nearby lesson or Enter opens it". A place with more than six topics shows six pavilions and sends the rest to the list (20-experience.js), which the line could say in passing.
+test_a_control_the_0_12_0_section_names_exists_in_the_game searches the whole text of every .js and .html under src/, comments included. In a scratch copy I renamed the minimap's "Bigger" label strings and the test stayed green, because a comment in src/game/32-minimap.js still says "the Bigger button". Matching quoted strings (or the built game's visible text) would make it prove the control exists rather than that the word does.
 """
 
 [[findings]]
 severity = "low"
 file = "CHANGELOG.md"
 text = """
-0.12.0, Added: the map is said twice. "Walk me there" already has "a plot tapped on the map or a row in the big map's list of stops sets the walker off"; "The map is one you can use" repeats "tap a plot to walk there" and "every stop is a labelled button under it". The second bullet could keep only what is new in it: the Bigger button, the long press and the labelled buttons for a keyboard or screen reader.
-"""
-
-[[findings]]
-severity = "low"
-file = "CHANGELOG.md"
-text = """
-0.12.0, Added, first bullet: "The islands stay the default and look exactly as they did" reads against the same section, which adds an edge arrow, lit markers and ground dashes and moves every artifact ring (car L re-recorded three goldens for the rings). What is meant is that choosing Galaxy is what changes the view and the islands are not redrawn by it; "The islands stay the default, unchanged by the switch" says that without the contradiction.
+0.12.0, Added, second Galaxy line: "not the last place picked on the map" means the Galaxy chart, while every other "map" in the section is the island minimap. "not the last place picked on the globe" would keep the two apart. Land as is.
 """
