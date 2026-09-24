@@ -60,11 +60,12 @@ INPUT_LATER = (".agents/hooks/",)
 PROVIDERS = {"claude": "claude", "codex": "openai", "gemini": None, "aider": None}
 SAFEGUARDS = ("strict", "standard", "light")
 AUTONOMY = ("pair", "lead", "ralph")
-# F162: Claude runs low to max and Haiku takes no effort at all; Codex runs low
-# to ultra. So max is a Claude level and ultra a Codex one, each a client's top.
+# Claude runs low to max and Haiku takes no effort at all (F162). Codex runs low
+# to ultra, and its client lists max for every GPT model (models_cache.json of
+# codex-cli 0.156.1), which F162 leaves out: that fact goes back to the checker.
 EFFORTS = {
     "claude": ("low", "medium", "high", "xhigh", "max"),
-    "openai": ("low", "medium", "high", "xhigh", "ultra"),
+    "openai": ("low", "medium", "high", "xhigh", "max", "ultra"),
 }
 NO_EFFORT = ("claude-haiku-",)
 
@@ -290,10 +291,14 @@ def load_config(root: Path = ROOT) -> dict:
         if not 0 <= limits["slow_at"] <= limits["stop_at"] <= 1:
             raise Bad(f"{where}: 0 <= slow_at <= stop_at <= 1")
     for key, folder in (("profile", "profiles"), ("models", "models")):
-        if not (root / ".agents" / "conf" / folder / f"{data[key]}.toml").is_file():
+        rel = f".agents/conf/{folder}/{data[key]}.toml"
+        if not (root / rel).is_file():
+            raise Bad(f"config.toml: {key} = {data[key]!r}, and there is no {rel}")
+        # Sync reads tracked input only, and the lock hashes nothing else.
+        if rel not in tracked(root, rel):
             raise Bad(
-                f"config.toml: {key} = {data[key]!r}, and there is no "
-                f".agents/conf/{folder}/{data[key]}.toml"
+                f"config.toml: {key} = {data[key]!r}, and {rel} is not tracked: "
+                f"`git add` it, or name a tracked one"
             )
     return data
 
@@ -442,6 +447,8 @@ def _floor(key: str, floor: Value, new: object, source: str) -> None:
         weaker = new > floor.value  # type: ignore[operator]
     elif key in UPWARD:
         weaker = new < floor.value  # type: ignore[operator]
+    # Neither approval policy is weaker: under workspace-write, never keeps every
+    # command in the sandbox and on-request only asks a person to leave it.
     elif new != floor.value and key not in ("codex.approval_policy",):
         weaker = True
     if weaker:
@@ -712,6 +719,31 @@ def rendered_paths(root: Path = ROOT) -> list[str]:
     return sorted(set(out))
 
 
+def renders_at(root: Path, rel: str) -> bool:
+    """Whether rel is a path harness.py renders for some provider and role: the
+    fixed outputs, a Codex agent, or a template's target. Sync removes nothing
+    else, so a hand-maintained file or a path outside the repository that an
+    old lock lists is left where it is."""
+    path = (root / rel).resolve()
+    if Path(rel).is_absolute() or ".." in Path(rel).parts:
+        return False
+    if not path.is_relative_to(root.resolve()):
+        return False
+    role = "[A-Za-z0-9_-][A-Za-z0-9_.-]*"
+    targets = [
+        ".claude/settings.json",
+        ".codex/config.toml",
+        ".codex/hooks.json",
+        ".codex/agents/{role}.toml",
+        *(target for _, target, _ in templates(root)),
+    ]
+    for t in targets:
+        pattern = re.escape(t).replace(re.escape("{role}"), role)
+        if re.fullmatch(pattern, rel):
+            return True
+    return False
+
+
 def _jinja():
     try:
         return importlib.import_module("jinja2")
@@ -821,7 +853,9 @@ def sync(root: Path = ROOT) -> list[str]:
             path.write_text(text, encoding="utf-8")
             done.append(f"wrote {rel}")
     for rel in sorted(old - set(outs)):
-        if (root / rel).is_file():
+        if not renders_at(root, rel):
+            done.append(f"left {rel}: harness.py renders nothing there")
+        elif (root / rel).is_file():
             (root / rel).unlink()
             done.append(f"removed {rel}")
     text = lock_text(root, outs)
@@ -1047,6 +1081,7 @@ def project_trust(root: Path) -> tuple[str, str]:
     decides by the checkout's own [projects] entry, else the main checkout's
     (config loader decision_for_dir), so a linked worktree inherits the main
     checkout's trust unless it carries an entry of its own."""
+    # Proven (source, hooks/list): .git/board/harness/deep/16-codex-project-hooks.md
     own, main = root.resolve(), main_checkout(root)
     cfg = _codex_user_config()
     if cfg is None:

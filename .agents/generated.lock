@@ -20,7 +20,7 @@ version = 1
 ".agents/context/claude.md" = "sha256:3e4843f17195a3a7365718818779a12f296832ea235aa5bcd6b4c82e767e3ade"
 ".agents/templates/CLAUDE.md.j2" = "sha256:78c502040b4c45436b91c88952a2e4941b4c334f4a09de68c1d10055b9261c9c"
 ".agents/templates/claude-agent.md.j2" = "sha256:0ab46aa4cab5fa3445e5418527b2021a4c57cc628bf17e31b28279a79a2e5773"
-".agents/utils/harness.py" = "sha256:6ab4eb0b10e83db9f6048d448c5a118bc56f8d35ea35a47ffc54ad8dda4bdff5"
+".agents/utils/harness.py" = "sha256:3289a00458b40762e3b08a55083ea7406b7cf7ed67d51dffe0304ed49532a7a2"
 "config.toml" = "sha256:f045fb8da8b688f99e85c01ea960364a84b1d77f1b0c0efc805b2d93b5fd84c9"
 
 [outputs]

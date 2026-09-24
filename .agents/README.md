@@ -31,7 +31,10 @@ Then `uv run python .agents/utils/harness.py sync`. It renders
 `.claude/settings.json`, `.claude/agents/`, `.codex/config.toml`,
 `.codex/hooks.json`, `.codex/agents/` and `CLAUDE.md`, links every skill into
 `.claude/skills/`, and writes `generated.lock`. It reads tracked files only: add
-a new source file to git before you sync.
+a new source file to git before you sync; a profile or model table that git
+does not know is refused. An output the last sync wrote and nothing renders now
+is removed, and only where harness.py renders: any other path the lock names is
+left alone.
 
 `config.local.toml` is a private overlay with the keys of a profile. It is never
 rendered into a tracked file, and it may only make a value stronger: a weaker
@@ -69,6 +72,22 @@ loop = { iterations = 10, wall_minutes = 30 }
   unless it carries an entry of its own, and doctor reports which entry decided.
   A worktree also runs the main checkout's `.codex/hooks.json`, approved once in
   `/hooks` for every checkout (openai/codex PR 21969).
+
+## Once, in the main checkout, before the first pull that brings this
+
+The main checkout may hold untracked `.codex/hooks.json` and
+`.codex/agents/*.toml` from before they were rendered; git then refuses the pull
+("untracked working tree files would be overwritten"). Move them aside, pull,
+compare, and carry anything worth keeping into `conf/roles/` or `conf/hooks.toml`:
+
+```sh
+cd "$(git rev-parse --path-format=absolute --git-common-dir)/.."
+mv .codex/hooks.json .codex/hooks.json.local
+mv .codex/agents .codex/agents.local
+git pull --ff-only
+diff -r .codex/agents.local .codex/agents; diff .codex/hooks.json.local .codex/hooks.json
+rm -r .codex/agents.local .codex/hooks.json.local  # once nothing is left to carry
+```
 
 ## The rest of the folder
 

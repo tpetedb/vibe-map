@@ -156,6 +156,25 @@ def test_an_unknown_profile_fails_loudly(tree: Path) -> None:
         harness.load_config(tree)
 
 
+@pytest.mark.parametrize(
+    ("key", "folder", "name"),
+    [("profile", "profiles", "balanced"), ("models", "models", "tom")],
+)
+def test_a_profile_or_model_file_that_is_not_tracked_is_refused(
+    tree: Path, key: str, folder: str, name: str
+) -> None:
+    """Sync renders tracked input only, and the lock hashes only tracked input:
+    a file chosen by name that git does not know would reach committed outputs
+    unhashed."""
+    conf = tree / ".agents" / "conf" / folder
+    shutil.copy(conf / f"{name}.toml", conf / "mine.toml")
+    edit(tree / "config.toml", f'{key} = "{name}"', f'{key} = "mine"')
+    with pytest.raises(harness.Bad, match=f"conf/{folder}/mine.toml is not tracked"):
+        harness.load_config(tree)
+    sh(tree, "add", f".agents/conf/{folder}/mine.toml")
+    harness.load_config(tree)
+
+
 def test_an_unknown_version_is_refused(tree: Path) -> None:
     edit(tree / "config.toml", "version = 1", "version = 2")
     with pytest.raises(harness.Bad, match="version = 2"):
@@ -170,26 +189,17 @@ def test_haiku_takes_no_effort() -> None:
     assert harness.model_effort("claude", "claude-sonnet-5", "low") == "low"
 
 
-@pytest.mark.parametrize(
-    ("old", "new", "why"),
-    [
-        (
-            'effort = { claude = "max", openai = "ultra" }',
-            'effort = { claude = "max", openai = "max" }',
-            "'max' is not a openai level",
-        ),
-        (
-            'effort = { claude = "max", openai = "ultra" }',
-            'effort = { claude = "ultra", openai = "ultra" }',
-            "'ultra' is not a claude level",
-        ),
-    ],
-)
-def test_max_is_claude_only_and_ultra_codex_only(
-    tree: Path, old: str, new: str, why: str
-) -> None:
-    edit(tree / ".agents/conf/models/tom.toml", old, new)
-    with pytest.raises(harness.Bad, match=why):
+def test_max_is_a_level_of_both_clients_and_ultra_of_codex_only(tree: Path) -> None:
+    """The installed Codex client lists max for every GPT model it offers
+    (~/.codex/models_cache.json, codex-cli 0.156.1), so a Codex role may run at
+    max; ultra stays a Codex level only."""
+    table = tree / ".agents/conf/models/tom.toml"
+    old = 'effort = { claude = "max", openai = "ultra" }'
+    edit(table, old, 'effort = { claude = "max", openai = "max" }')
+    harness.load_models(tree, "tom")
+    edit(table, 'openai = "max" }', 'openai = "ultra" }')
+    edit(table, old, 'effort = { claude = "ultra", openai = "ultra" }')
+    with pytest.raises(harness.Bad, match="'ultra' is not a claude level"):
         harness.load_models(tree, "tom")
 
 
@@ -423,6 +433,43 @@ def test_sync_renders_from_tracked_input_only(tree: Path) -> None:
     assert harness.check(tree) == []
 
 
+@pytest.mark.skipif(not shutil.which("uv"), reason="sync renders through uv")
+def test_sync_removes_only_what_it_renders_inside_the_repository(
+    tree: Path, tmp_path: Path
+) -> None:
+    """A path an earlier lock lists and nothing renders now is removed only when
+    it is one harness.py itself renders: a hand-maintained doc, or a path that
+    leaves the repository, stays where it is."""
+    (tree / "docs").mkdir()
+    (tree / "docs" / "SKILLS.md").write_text("# skills, by hand\n")
+    outside = tmp_path / "outside.txt"
+    outside.write_text("not ours\n")
+    gone = tree / ".codex" / "agents" / "gone.toml"
+    gone.write_text("# a role that was removed\n")
+    edit(
+        tree / ".agents" / "generated.lock",
+        "[outputs]\n",
+        '[outputs]\n"../outside.txt" = "sha256:0"\n"docs/SKILLS.md" = "sha256:0"\n'
+        '".codex/agents/gone.toml" = "sha256:0"\n',
+    )
+    out = subprocess.run(
+        [sys.executable, ".agents/utils/harness.py", "sync"],
+        cwd=tree,
+        capture_output=True,
+        text=True,
+        check=False,
+        env={k: v for k, v in os.environ.items() if k != "HARNESS_REEXEC"},
+    )
+    assert out.returncode == 0, out.stderr
+    assert (tree / "docs" / "SKILLS.md").read_text() == "# skills, by hand\n"
+    assert outside.read_text() == "not ours\n"
+    assert not gone.exists()
+    assert "left docs/SKILLS.md" in out.stdout
+    assert "left ../outside.txt" in out.stdout
+    assert "removed .codex/agents/gone.toml" in out.stdout
+    assert harness.check(tree) == []
+
+
 # ------------------------------------------------------------ doctor
 
 
@@ -646,6 +693,51 @@ def test_a_hand_edit_to_a_lock_listed_output_is_refused(tree: Path) -> None:
     commit(tree)
     out = work.strays(order, "main", work.diff_names(tree, "main"), "HEAD")
     assert [s for s in out if s.startswith(".claude/settings.json")], out
+
+
+def test_work_check_and_ci_run_the_harness_check_whenever_there_is_a_lock(
+    tree: Path,
+) -> None:
+    """Lock-listed outputs leave owns because harness.py check guards them, so
+    work.py check and work.py ci run that check themselves: a hand edit to a
+    rendered file fails them even in a pull request that carries no order."""
+    for rel in ("tools/work.py", "tools/sync_main.py", "work/teams.toml"):
+        copy(rel, tree)
+    folder = tree / "work" / "orders" / "one"
+    folder.mkdir(parents=True)
+    (folder / "order.toml").write_text(
+        'v = 1\nid = "one"\ntitle = "t"\nteam = "harness"\nbranch = "feat/x"\n'
+        'builder = "b"\nowns = ["CLAUDE.md"]\ncross = []\nneeds = []\n'
+        '[[criteria]]\nid = "c1"\ntext = "t"\ncheck = "true"\n'
+    )
+    with (tree / ".gitignore").open("a") as f:
+        f.write("__pycache__/\nwork/orders/*/result.json\n")
+    commit(tree)
+    sh(tree, "update-ref", "refs/remotes/origin/main", "HEAD")
+
+    def work_py(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [sys.executable, "tools/work.py", *args],
+            cwd=tree,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    for branch in ("feat/x", "docs/y"):
+        sh(tree, "checkout", "-qB", branch, "main")
+        edit(tree / "CLAUDE.md", "\n", "\n\nA line by hand.\n")
+        commit(tree)
+        ran = work_py("ci", "--base", "origin/main", "--head", branch)
+        assert ran.returncode == 1, ran.stdout
+        assert "harness.py check: edited by hand or stale: CLAUDE.md" in ran.stdout
+    sh(tree, "checkout", "-q", "feat/x")
+    ran = work_py("check", "one", "--base", "origin/main")
+    assert ran.returncode == 1, ran.stdout
+    assert "DRIFT  edited by hand or stale: CLAUDE.md" in ran.stdout
+    sh(tree, "checkout", "-qB", "clean", "main")
+    ran = work_py("ci", "--base", "origin/main", "--head", "clean")
+    assert ran.returncode == 0 and "harness.py check" not in ran.stdout, ran.stdout
 
 
 # ------------------------------------------------------------ the docs

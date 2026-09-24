@@ -25,9 +25,19 @@
   listed there is refused. Such a file changed by an order that does not own
   it passes `work.py check` and `work.py ci` only while `harness.py check`
   reproduces it, and the edit hook refuses a hand edit to it outright.
+  `work.py check` and `work.py ci` run `harness.py check` themselves whenever
+  the lock exists and fail on drift, in a pull request that carries no order
+  too.
   `just harness-sync`, `harness-check`, `harness-doctor`, `harness-explain`
   and `harness-pick` run the tool.
 - `doctor` reads Codex trust the way Codex 0.156.1 resolves it: a checkout's
   own `[projects]` entry first, else the main checkout's, and in a linked
   worktree the hooks of the main checkout's `.codex/hooks.json`, keyed by that
   path.
+- `sync` removes an output an earlier lock lists only where `harness.py`
+  renders, never a hand-maintained file or a path outside the repository; a
+  profile or model table that git does not track is refused; a Codex role may
+  run at effort max, which the installed client lists for every GPT model.
+- Camps get the permission floor too: through `tools/sync_template.py` the
+  camp settings carry the deny rules, a sandbox block that is off, and the ask
+  rule on `./config.toml`, a file a camp does not have.
