@@ -6,18 +6,36 @@ v = 1
 order = "board-and-memory"
 team = "docs"
 by = "manager-docs"
-reviewed = "f2fe6ee713188cf1b1884e8aaac13d21f15c36c4"
+reviewed = "c309ab8f40a5f440ba606566645aa4342aa3ad05"
 verdict = "accept"
 note = '''
-Accepted. Nothing in docs's files has to change before this lands.
+Accepted (round 2, delta since f2fe6ee). Nothing in docs's files has to change
+before this lands.
 
-What I read and ran, at the commit above, in the worktree:
+Delta since the last sign-off: two sentences, both about how Codex loads the
+board's hook in a linked worktree (report harness/deep/16). In
+`.agents/skills/shared-memory/SKILL.md`'s troubleshooting table, "Codex cannot
+write the board" now says to start it with `just codex` rather than naming a
+tracked writable root, and a new row, "Codex shows no digest in a worktree",
+explains the main-checkout hook keying and the one-time `/hooks` approval. In
+`docs/adr/0018-shared-memory.md`, the writable-root bullet now says the
+tracked `.codex/config.toml` names no writable root (a relative one breaks
+every shell tool in a linked worktree) and that `just codex` is what passes
+`--add-dir`. I checked both against the code on this head: `.codex/config.toml`
+carries no `[sandbox_workspace_write]` table at all, `justfile`'s `codex`
+recipe runs `tools/board.py codex`, and `codex_hooks_state` in `tools/board.py`
+requires the main checkout's (or the worktree's own) trust, the main
+checkout's `.codex/hooks.json` to carry the SessionStart hook, and a trusted
+hash equal to the hook's current one, unknown counting as off. That matches
+both sentences.
+
+What else I read and ran, unchanged from the last round:
 - `git diff origin/main...HEAD` restricted to docs-team paths: docs/adr/0018-shared-memory.md (new, 97 lines), docs/adr/README.md (the 0018 row and the next-number line), docs/SKILLS.md (a row in each table for `shared-memory`), and changelog.d/board-and-memory.added.md.
 - Checked every claim against the code on this branch. `.codex/config.toml` holds exactly `[sandbox_workspace_write] writable_roots = ["../.git/board"]`, matching the ADR's "one writable root, `../.git/board` relative to the main checkout's `.codex/`". `.claude/settings.json` adds the SessionStart hook `python3 tools/board.py read` that the ADR describes. `tools/board.py` defines `READ_BUDGET = 9000` and `DIGEST_BUDGET = 6000`, matching "under 9,000 characters" and "a digest under 6,000 characters"; it has `memory add`, `memory search`, `memory index` and `memory-lint` subcommands, matching the ADR and the skill; `justfile` wraps them as `just memory-add`, `just memory-search`, `just memory-index`, `just memory-lint`, `just board`, `just board-say`, `just board-slot`, all present. `tools/sync_template.py` now lists `shared-memory` in `PRODUCT_ONLY_SKILLS` and `tools/board.py` in `PRODUCT_ONLY_HOOKS`, so "Product-only, a camp does not get it" in both the ADR and SKILLS.md is true of the code, not just asserted.
 - ADR 0018 carries the required supersession: the status line reads "Accepted, 2026-09-24. The memory half is superseded by DECISION #193 section 4 ..." and a `Superseded by: DECISION #193 section 4 (issue #193; ...)` line follows the title. The original Decision section (the server choice, Basic Memory as runner-up, the rejected candidates, the sources) is kept verbatim as history; a new "## What changed with DECISION #193 section 4" section records the drop, the new record shape and the two amendments, and Consequences keeps its original text too. docs/adr/README.md's row and next-number line agree with this (0018 now listed, next is 0019).
 - docs/SKILLS.md's two new rows describe `.agents/skills/shared-memory/SKILL.md` correctly: the summary row's mechanism and trigger phrases ("what do we know about", "remember this", "is there a gotcha for", "post to the board") match the skill's frontmatter `description` word for word in substance, and the second table's example prompts match what the skill actually does (search vs. `obsidian-notes` for a written note).
 - `grep -n` for U+2014 (the em dash, spelled by code point here so this file passes the style check) over every docs-owned file plus the skill and the changelog fragment: no em dashes.
-- Read the reviewer's `review.toml` (commit bf87b3e, same tree as this HEAD apart from the review file itself). Its c7 ruling covers ADR 0018, work/BOARD.md and the skill and found them true and consistent; I agree with that reading for the files docs owns.
+- Read the reviewer's `review.toml` at this head (by reviewer-board-and-memory-r1, reviewed ea2d9aa, verdict accept). Its c7 ruling covers ADR 0018, work/BOARD.md and the skill and found them true and consistent; I agree with that reading for the files docs owns. c6 (the Codex evidence receipt) is left to the Codex reviewer and does not touch a docs-owned file either way.
 
 Known low, carried from the reviewer, accepted with a follow-up rather than a blocker: ADR 0018 says "The switch condition below (Basic Memory) is replaced by that rule", but the switch condition it means is in the Decision section above, not below. It does not mislead: the condition is bolded ("**The switch condition.**") and named by its subject (Basic Memory) in the same sentence, so a reader finds it either way. Fix the direction word to "above" the next time this file is touched; it does not have to hold up this order.
 '''
