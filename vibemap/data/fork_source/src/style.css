@@ -54,7 +54,8 @@ body[data-experience="galaxy"] #bottom,body[data-experience="galaxy"] #joy,body[
 .galaxy-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}.galaxy-head h2,.galaxy-head p{margin:0}.galaxy-scale{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.galaxy-scale button{min-height:44px}.galaxy-scale button.on{border-color:var(--yellow);color:var(--yellow-bright)}
 #galaxy-list{display:grid;gap:8px;margin-top:12px}.galaxy-place{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:9px 10px;border:1px solid var(--hairline);border-radius:var(--radius-s);background:var(--surface-1)}.galaxy-place[data-state="next"]{border-color:var(--yellow)}.galaxy-place b,.galaxy-place span{grid-column:1}.galaxy-place button{grid-column:2;grid-row:1 / span 2;min-width:70px;min-height:44px}.galaxy-state{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.galaxy-place[data-state="done"] .galaxy-state{color:var(--green-bright)}.galaxy-place[data-state="next"] .galaxy-state{color:var(--yellow)}
 body:has(#title:not(.off)) #galaxy-ui{visibility:hidden}
-@media (max-width:620px){#galaxy-ui{top:auto;bottom:8px;max-height:48%;}.galaxy-head{display:block}.galaxy-scale{justify-content:flex-start;margin-top:10px}}
+@media (max-width:1100px){#galaxy-ui{top:auto;bottom:8px;max-height:44%;width:calc(100% - 28px);}.galaxy-head{display:block}.galaxy-scale{justify-content:flex-start;margin-top:10px}}
+#galaxy-ui[data-rendering="list"]{top:160px;bottom:12px;width:calc(100% - 28px);max-height:calc(100% - 172px)}
 #stage.map-compact{--stage-h:min(56vh,520px)}
 /* The whole window: the band stops being a strip under the stage and becomes
    the bottom of it, so the line that says what to do stays on screen. */

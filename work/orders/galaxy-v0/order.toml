@@ -10,7 +10,12 @@ builder = "codex-galaxy-astra"
 
 owns = [
   "src/galaxy/",
+  "src/game/12-buildings.js",
+  "src/game/21-world-build.js",
   "src/game/90-boot.js",
+  # Optional fallback/refresh/guidance/back-label hooks keep Start usable without WebGL;
+  # Islands retain the seven required methods and their original defaults.
+  "src/game/40-sheet.js",
   "src/game/85-settings.js",
   "src/body.html",
   "src/style.css",

@@ -1,4 +1,4 @@
-window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}hud();track("session","start");say(S.done.length>=stopCount()?"fin":"walk")};
+window.start=function(){const nm=$("name").value.trim();if(!nm){refuseEmptyName();return}S.name=nm;save();if(typeof chars!=="undefined"&&chars.lotte&&typeof rebuildPlayer==="function")rebuildPlayer();$("title").classList.add("off");if(!started){try{if(!inited){if(typeof THREE==="undefined")throw new Error("three.js not loaded");init3d()}started=true}catch(e){if(!activeExperience().fallback||!activeExperience().fallback()){__err("3D failed: "+(e&&e.message||e)+". Falling back to the Roadmap list.");openSheet("s-map")}}}hud();track("session","start");activeExperience().guidance?activeExperience().guidance():say(S.done.length>=stopCount()?"fin":"walk")};
 // The world feed: real organisations, projects and people by name, each line
 // their own headline and their own words with the link next to it. Never a
 // logo, never a sentence written for them (docs/adr/0010). NEWS is baked in at
@@ -75,7 +75,7 @@ window.openSheet=function(id){closeVault();sheetDwell();sheetOpen={id:id,at:Date
   // of it and the page behind the overlay never moves.
   $("sheet").querySelector(".inner").scrollTop=0;
   setTimeout(()=>{const x=$("sheet").querySelector(".x");if(x)x.focus({preventScroll:true})},30)};
-window.closeSheet=function(){sheetDwell();$("sheet").classList.remove("on");wakeWant=false;wakeSync()};
+window.closeSheet=function(){if(activeExperience().refresh)activeExperience().refresh();sheetDwell();$("sheet").classList.remove("on");wakeWant=false;wakeSync()};
 // Both panels are role=dialog, so Escape has to close them; the palette sits
 // on top of everything, then the vault, then the sheet.
 addEventListener("keydown",e=>{if(e.key!=="Escape")return;
@@ -102,7 +102,7 @@ window.openCh=open;
 function renderEveningDone(){const id=S.world||"campus",t=CAMPAIGN[id],ids=Object.keys(WORLDS),last=ids.indexOf(id)===ids.length-1;
   $("s-gen").innerHTML=`<div class="evening">${t.title}</div><h2>${last?"Campaign complete":"Island complete"}</h2><p>Every stop on this island is done. Your path through the mentors is recorded under Roadmap, and every note is in the Vault. ${last?"That was the last environment of the campaign, so there is nothing left to deploy tonight.":"Pick the next environment from the World button, or walk the bridge."} Export your progress to the CLI so the vault on your Mac catches up.</p><div class="row">${last?"":`<button class="primary" onclick="nextWorld();closeSheet()">Next environment</button>`}<button class="${last?"primary":""}" onclick="openSheet('s-map')">Roadmap</button></div>`}
 // The way back out of a stop, in the words of the island you are on.
-const backLabel=()=>(S.world||"campus")==="campus"?"Back to the campus":"Back to the island";
+const backLabel=()=>activeExperience().backLabel||((S.world||"campus")==="campus"?"Back to the campus":"Back to the island");
 // The claim row is a view over S.done: a delivered stop offers one way back,
 // so no two buttons in the row ever carry the same name and the primary is
 // never a button that does nothing.

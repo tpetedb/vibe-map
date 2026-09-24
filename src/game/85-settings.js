@@ -73,6 +73,7 @@ function applySettings(){const s=settings();
   if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   // Difficulty gates the bridges, so the island answers the setting at once.
   if(typeof refreshBridges==="function")refreshBridges();
+  if(experienceId()==="galaxy"&&typeof galaxyFrame==="function")galaxyFrame();
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
 window.setSetting=function(key,value,control){const focus=(control&&control.id)||(document.activeElement&&document.activeElement.id),before=key==="experience"?activeExperience():null;if(!S.settings)S.settings={};S.settings[key]=value;save();
@@ -88,7 +89,7 @@ function renderSettings(){const s=settings();
     SETTINGS_GROUPS.map(([title,keys])=>{const rows=keys.filter(settingShown).map(k=>settingRow(k,s)).join("");return rows?`<h3>${title}</h3>`+rows:""}).join("")+
     petPicker()+
     `<div class="setting wide"><label>What you want to learn</label>${interestChips()}<p class="small muted">${interestSummary()}</p>${presetRow()}</div>`+
-    `<div class="row"><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button>${hintsRow()}<button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">Back to the campus</button></div>`+
+    `<div class="row"><button class="fs-only" data-icon="maximize" onclick="goFullscreen()">Full screen</button><button onclick="resetSettings()">Back to the defaults</button>${hintsRow()}<button onclick="resetProgress(this)">Reset progress</button><button onclick="closeSheet()">${esc(backLabel())}</button></div>`+
     `<p class="small muted">Persona and theme live in config/camp.toml (uv run vibe persona, theme). They are baked into the game when it is built, so a hosted game keeps the theme it was published with. Difficulty here changes the folding of the commands and the copy; the terminal's checks follow vibe difficulty.</p>`;
   iconize($("s-settings"))}
 window.openSettings=function(){renderSettings();openSheet("s-settings")};

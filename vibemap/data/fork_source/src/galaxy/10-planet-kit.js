@@ -23,10 +23,11 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
   }
   // A kit is instanced by shape and finish: a hundred tiny details cost a few draws.
   function kit(parent){
-    const batches=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler();
+    const obstacles=[],batches=new Map(),matrix=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler();
     function put(shape,color,x,y,z,sx,sy,sz,ry=0,glow=false){
       // Matte instances share one draw per shape and carry their own colour.
       // Glowing parts keep a colour batch because emissive is not instanced.
+      if(['box','cylinder'].includes(shape)&&sy>.1&&y-sy/2<.04&&Math.max(sx,sz)<1.3)obstacles.push([x,z,Math.hypot(sx,sz)/2]);
       const key=shape+'|'+(glow?color:'matte')+'|'+glow;
       if(!batches.has(key))batches.set(key,{shape,color,glow,transforms:[],colors:[]});
       q.setFromEuler(e.set(0,ry,0));
@@ -34,6 +35,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       const batch=batches.get(key);batch.transforms.push(matrix.clone());batch.colors.push(color);
     }
     return {
+      obstacles,
       box:(x,y,z,w,h,d,color,ry=0,glow=false)=>put('box',color,x,y+h/2,z,w,h,d,ry,glow),
       tree:(x,z,h=.28)=>{put('cylinder',P.timber,x,h*.23,z,.035,h*.46,.035);put('cone',P.green,x,h*.64,z,h*.40,h*.8,h*.40)},
       ball:(x,y,z,r,color)=>put('sphere',color,x,y,z,r,r,r),
@@ -142,11 +144,11 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       for(let i=0;i<4;i++)k.tree(-.45+i*.30,.38,.24);
     }
   }
-  function makeDome(place,state='ahead'){
-    const g=new T.Group(),k=kit(g),look=place.look;
+  function makeDome(place,state='ahead',miniatureBuilder=null){
+    const g=new T.Group(),structures=new T.Group(),k=kit(structures),look=place.look;
     g.userData={placeId:place.id,look,state};
-    k.cylinder(0,-.095,0,1.01,.075,C.steel);
-    k.cylinder(0,-.025,0,.965,.025,look==='racks'?P.surface:C.ground);
+    if(!miniatureBuilder){k.cylinder(0,-.095,0,1.01,.075,C.steel);k.cylinder(0,-.025,0,.965,.025,look==='racks'?P.surface:C.ground)}
+
     if(look==='campus'||look==='lab')campus(k,look);
     else if(look==='tower')city(k);
     else if(look==='racks')datacentre(k);
@@ -154,6 +156,12 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     else if(['station','house','harbour','hall'].includes(look))station(k,look);
     else throw new Error('Unsupported Galaxy look: '+look);
     k.flush();
+    const topics=place.topics||[],lessonSites=topics.map((topic,i)=>{
+      const angle=topics.length===1?0:(i/(topics.length-1)-.5)*2.2;
+      return {id:topic.id,position:[Math.sin(angle)*.76,Math.cos(angle)*.76]};
+    });
+    if(miniatureBuilder){const miniature=miniatureBuilder({look,terrain:{radius:.965,grass:look==='racks'?P.surface:C.ground,dirt:C.steel},structures,lessonSites,obstacles:k.obstacles});g.add(miniature.root)}
+    else g.add(structures);
     const color=stateColor(state);
     ring(g,1.016,-.022,color,1);
     ring(g,.965,.003,C.glass,.45);

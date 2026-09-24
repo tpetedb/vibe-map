@@ -295,7 +295,16 @@ def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
     )
     assert shape["ids"] == ["islands", "galaxy"], shape
     expected = ["name:string"] + [f"{name}:function" for name in CONTRACT[1:]]
-    assert shape["types"] == {"islands": expected, "galaxy": expected}
+    assert shape["types"]["islands"] == expected
+    assert shape["types"]["galaxy"] == [
+        "name:string",
+        "fallback:function",
+        "refresh:function",
+        "backLabel:string",
+        "presentation:object",
+        "guidance:function",
+        *expected[1:],
+    ]
     game.assert_clean()
 
 

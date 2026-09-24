@@ -37,10 +37,13 @@ function camFitDist(){const asp=Math.max(.35,VIEW.w/VIEW.h);
   return Math.max(r*Math.cos(p)+r*Math.sin(p)/Math.tan(vf),r/Math.tan(hf))}
 // A land blob: a grass disc with a dirt skirt below the waterline, the same
 // shape for the island, its satellites and the annexes. Returns the grass.
-function landBlob(group,x,z,r,seg){
-  const g=new T.Mesh(tintGeo(new T.CylinderGeometry(r,r+1.2,2.4,seg||9,3),.58,1),mat(W.grass,{vertexColors:true}));
+function landBlob(group,x,z,r,seg){return buildLandSurface(group,{x,z,r,segments:seg||9,grass:W.grass,dirt:W.dirt})}
+// Geometry only: miniature surfaces share the island builder without changing
+// the campaign, globals or the order in which an island consumes randomness.
+function buildLandSurface(group,{x=0,z=0,r,segments=9,grass,dirt}){
+  const g=new T.Mesh(tintGeo(new T.CylinderGeometry(r,r+1.2,2.4,segments,3),.58,1),mat(grass,{vertexColors:true}));
   g.position.set(x,-1.2,z);g.castShadow=g.receiveShadow=true;
-  const d=new T.Mesh(tintGeo(new T.CylinderGeometry(r+1.1,r+2.2,2.2,seg||9,2),.72,1),mat(W.dirt,{vertexColors:true}));
+  const d=new T.Mesh(tintGeo(new T.CylinderGeometry(r+1.1,r+2.2,2.2,segments,2),.72,1),mat(dirt,{vertexColors:true}));
   d.position.set(x,-2.6,z);d.castShadow=d.receiveShadow=true;
   group.add(g,d);return g}
 function slabMat(id){return mat(id==="prod"?"#8A8A98":id==="winter"?"#C9D6E2":id==="desert"?"#C9A24E":"#E9D9B5")}

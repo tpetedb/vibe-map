@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 
 import pytest
 from playwright.sync_api import expect
@@ -153,4 +154,104 @@ def test_import_refreshes_the_visible_course_with_motion_off(request, profile) -
     game.page.locator('#vault button[onclick="closeVault()"]').click()
     game.page.get_by_role("button", name="Chart", exact=True).click()
     expect(game.page.locator("#galaxy-list")).to_contain_text("1 of")
+    game.assert_clean()
+
+
+@pytest.mark.parametrize("profile", ["game_desktop", "game_webkit_iphone"])
+def test_galaxy_list_land_and_learn_without_webgl(request, profile) -> None:
+    game = request.getfixturevalue(profile)
+    game.page.add_init_script("""const context=HTMLCanvasElement.prototype.getContext;
+        HTMLCanvasElement.prototype.getContext=function(kind,...args){
+          return /webgl/.test(kind)?null:context.call(this,kind,...args);
+        };""")
+    game.goto(state={"name": "Lotte", "settings": {"experience": "galaxy"}})
+    expect(game.page.locator("#btn-continue")).to_have_text("Resume Galaxy")
+    expect(game.page.locator("#intro")).to_contain_text("Welcome to Galaxy")
+    game.page.locator("#btn-continue").click()
+    expect(game.page.locator("#sheet")).not_to_have_class("on")
+    expect(game.page.locator("#bub-text")).to_have_attribute(
+        "aria-label", re.compile("Follow the numbered journey")
+    )
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    row = game.page.locator("#galaxy-list .galaxy-place").filter(has_text="Hangzhou")
+    row.get_by_role("button", name="Land").click()
+    expect(game.page.locator("#galaxy-title")).to_have_text("Hangzhou, China")
+    game.page.locator("#galaxy-list").get_by_role("button", name="Learn").first.click()
+    expect(game.page.locator("#vault")).to_have_class("on")
+    game.page.get_by_role("button", name="Back to Galaxy", exact=True).click()
+    game.page.get_by_role("button", name="More", exact=True).click()
+    game.page.get_by_role("button", name="Settings", exact=True).click()
+    expect(
+        game.page.locator("#s-settings").get_by_role(
+            "button", name="Back to Galaxy", exact=True
+        )
+    ).to_be_visible()
+    game.page.locator("#s-settings").get_by_role(
+        "button", name="Back to Galaxy", exact=True
+    ).click()
+    game.page.get_by_role("button", name="Journey", exact=True).click()
+    payload = (
+        base64.urlsafe_b64encode(json.dumps({"v": 2, "topics": ["unix"]}).encode())
+        .decode()
+        .rstrip("=")
+    )
+    assert "1 topic" in game.import_code(payload)
+    game.page.locator("#sheet > .x").click()
+    expect(game.page.locator("#galaxy-summary")).to_have_text("1 of 70 topics complete")
+    expect(
+        game.page.locator('[data-galaxy-topic="unix"]').locator("..")
+    ).to_have_attribute("data-state", "done")
+    assert not [error for error in game.errors if "WebGL context" not in error]
+
+
+@pytest.mark.parametrize("profile", ["game_desktop", "game_webkit_iphone"])
+def test_galaxy_tablet_composition_leaves_room_for_the_dome(request, profile) -> None:
+    game = request.getfixturevalue(profile)
+    game.page.set_viewport_size({"width": 807, "height": 1571})
+    _open(game)
+    for place, shot in [("Hangzhou", "city"), ("A data centre", "racks")]:
+        game.page.get_by_role("button", name="Chart", exact=True).click()
+        game.page.locator("#galaxy-list .galaxy-place").filter(
+            has_text=place
+        ).get_by_role("button", name="Land").click()
+        frame = game.page.evaluate("window.__galaxyFrame()")
+        assert frame["inside"], frame
+        assert frame["clearOfUi"], frame
+        game.screenshot("galaxy_tablet_" + shot)
+    game.assert_clean()
+
+
+def test_landing_reuses_the_island_builder_without_changing_the_campaign(
+    game_desktop: GamePage,
+) -> None:
+    game = game_desktop
+    _open(game)
+    campaign = game.page.evaluate(
+        """() => {const s=window.__S();return {
+          world:s.world,done:s.done,doneW:s.doneW,
+          chapters:window.__experiences().islands.listing()}}"""
+    )
+    for place in ("UC Santa Barbara", "Hangzhou", "A data centre"):
+        game.page.get_by_role("button", name="Chart", exact=True).click()
+        game.page.locator("#galaxy-list .galaxy-place").filter(
+            has_text=place
+        ).get_by_role("button", name="Land").click()
+        model = game.page.evaluate("""() => {
+          let miniature=null;
+          window.__scene().traverse(o=>{if(o.userData.miniature)miniature=o});
+          return miniature && {surface:miniature.userData.walkSurface,
+            lessons:miniature.userData.lessonSites.map(s=>s.id),
+            pavilions:miniature.children.filter(o=>o.userData.lessonId).length};
+        }""")
+        assert model, "Landing must use the shared miniature builder"
+        assert model["surface"]["radius"] > 0
+        assert model["lessons"] == game.page.locator(
+            "#galaxy-list [data-galaxy-topic]"
+        ).evaluate_all("buttons=>buttons.map(b=>b.dataset.galaxyTopic)")
+        assert model["pavilions"] == len(model["lessons"])
+        assert campaign == game.page.evaluate(
+            """() => {const s=window.__S();return {
+          world:s.world,done:s.done,doneW:s.doneW,
+          chapters:window.__experiences().islands.listing()}}"""
+        )
     game.assert_clean()
