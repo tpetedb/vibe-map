@@ -1,69 +1,56 @@
 v = 1
 order = "board-and-memory"
 by = "reviewer-board-and-memory-r1"
-reviewed = "452a97ff0c45a942adc59326834a28d61aa451d8"
-verdict = "improve"
+reviewed = "ea2d9aa073a94bb24dba277e3487a1a2bd234f69"
+verdict = "accept"
 
-# Delta review of the worktree-hooks fix (8361b66, then the merge 452a97f of
-# origin/main, which leaves every owned file as 8361b66 wrote it). c6 is left
-# to the Codex reviewer, as the orchestrator asked.
+# Delta review since 452a97f: bc7ec58 (codex_hooks_state with Codex's trust
+# hash, the reason line, the launcher tests) and ea2d9aa (c6 restated by the
+# manager). c6 is left to the Codex reviewer, as the orchestrator asked; it is
+# marked fail below only because nobody has ruled it yet, not because of a
+# defect. Both findings of the last round are dealt with, see c1, c6 and c7.
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = "I ran uv run pytest -q on tests/test_board.py, tests/test_memory.py and tests/test_work.py on this head: all pass. In a git-archive scratch copy I reverted two parts of the fix one at a time: codex_hooks_root returning top fails test_the_hooks_root_is_the_main_checkout, and the session_start prefix keyed on top fails test_a_linked_worktree_counts_the_main_checkouts_hooks. Reverting the launch_codex call to codex_hooks_on(top, codex_config()) fails nothing (low finding). The c1 behaviours the delta did not touch (lock, ids, digest size, lint, index) were ruled pass on f2fe6ee; the delta removed only codex-trust code and tests."
+evidence = "I ran uv run pytest on tests/test_board.py, tests/test_memory.py and tests/test_work.py on this head: exit 0. In git-archive scratch copies of ea2d9aa I reverted the launcher wiring three ways: root = top in launch_codex, codex_hooks_state called without the main checkout root, and the reason line formatted with the worktree path. Each fails test_the_launcher_in_a_linked_worktree_asks_the_main_checkout and test_the_launcher_says_the_main_checkout_must_carry_the_hook, and the unmodified copy passes, so the low finding of the last round about the untested launcher is fixed. The c1 behaviours the delta did not touch (lock, ids, digest size, lint, two CLI writers, index) were ruled pass on f2fe6ee and their tests still pass."
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "I ran the c2 command on this head: exit 0, memory-lint reports 11 entities. git grep finds no server-memory, read_graph or memory-serve in the tracked tree. The delta touches none of this."
+evidence = "I ran the c2 command on this head: exit 0, memory-lint reports 11 entities. git grep finds no codex-trust outside a test that asserts its absence. The delta touches none of the server removal."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "I ran the c3 command: exit 0, the reader from this worktree and from the main checkout gives the same 8,536-character output. The delta does not touch read()."
+evidence = "I ran the c3 command: exit 0. The reader in this worktree and in the main checkout /Users/maxgroupit/vibe-map resolves the same room, and both outputs are the same 8,750 characters. The delta does not touch read()."
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
-evidence = "I ran the c4 command: missing [], .codex/config.toml parses to {} (no writable_roots), --add-dir is in the justfile and BOARD.md. The delta dropped only the two codex-trust greps from the check, which matches the recipe being removed; the text never named codex-trust."
+evidence = "I ran the c4 command: missing [], .codex/config.toml has no writable_roots, and --add-dir is in the justfile and in BOARD.md. With a fake codex on PATH, board.py codex hello from a scratch linked worktree passed --add-dir with <main>/.git/board, the absolute common dir."
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
-evidence = "On this head I ran ruff check and ruff format --check on the whole tree, checks.py style and sinks, sync_template.py --check, the template grep and work.py validate (39 orders, 0 collisions, which answers the earlier review's medium collision finding). The full non-browser battery and the other generators I did not rerun: work-review shows the builder's cached pass on this exact tree (182.5 s), and the delta only touches board.py, one test file and prose."
+evidence = "On this head I ran the whole c5 command: ruff check, ruff format --check, checks.py style and sinks, the six generator --check runs, work.py validate (39 orders, 0 collisions this checkout answers for) and the template grep all exit 0, and the non-browser battery (pytest -m 'not browser and not integration') exits 0."
 
 [[criteria]]
 id = "c6"
 verdict = "fail"
-evidence = "Not ruled here: the Codex reviewer owns the runtime receipt. Its text still requires the linked worktree to be enrolled with just codex-trust and an un-enrolled worktree whose hooks are off. The recipe is gone, and a worktree inherits the main checkout's trust (my hooks/list run, case A below), so that scenario cannot be set up as the text states (medium finding on order.toml)."
+evidence = "Not ruled by me; the Codex reviewer proves this and has not yet. What I checked from this side with codex-cli 0.156.1: I built a scratch repo with a linked worktree, put this branch's .codex/hooks.json in the main checkout and used a temporary CODEX_HOME. app-server hooks/list for the worktree then lists sessionStart with key <main>/.codex/hooks.json:session_start:0:0 and trustStatus untrusted until an approval is recorded. With a fake codex, board.py codex fed the digest and named the reason in each state that was off. The live parts of the text, not run by me, are the fresh and resumed sessions appending to ROOM.md, the denied writes to .agents/ and .git, and no MCP server on either client. The last round's medium finding on this text is dealt with: the restated c6 no longer names just codex-trust or an un-enrolled worktree."
 
 [[criteria]]
 id = "c7"
 verdict = "pass"
-evidence = "I read the delta to work/BOARD.md, the skill's troubleshooting row and the .codex/config.toml comment against harness/deep/16-codex-project-hooks.md: the config comment matches the report's section 3 word for word, and the BOARD.md bullet says what the report says (hooks and their /hooks trust keyed on the main checkout, commands run in the worktree, trust inherited, one approval covers every worktree). My own hooks/list run confirmed the inheritance claims (cases A, E, F, G). What the board decides and never overrides, the schema, caps, never-store list, memory add|search|index and ROOM.md as short-term are unchanged and present; ADR 0018 keeps its superseded-by line naming DECISION #193 section 4."
-
-[[findings]]
-severity = "medium"
-file = "tools/board.py"
-text = "codex_hooks_on is not true exactly when the main checkout's SessionStart hook is present and trusted. It never reads <root>/.codex/hooks.json and never compares the hash, so it says on in three cases where Codex does not run the hook. just codex then feeds no digest, and the session starts without the board, which breaks the docstring's own rule that unknown counts as off. I tested this in /tmp/rev-bm-r1: a scratch repo with a nested linked worktree, the branch's .codex files in the main checkout, and a temporary CODEX_HOME. I compared board.codex_hooks_on(top, cfg, codex_hooks_root(top)) with codex-cli 0.156.1's own app-server hooks/list for the worktree. They agree on 6 cases: no approval, approved, only the worktree trusted, worktree untrusted with main trusted, main untrusted with the worktree trusted, nothing trusted. They disagree on 3: (C) trusted_hash stale after the hook changes: Codex says modified, board says on; (D) the main checkout's hooks.json has no SessionStart but an old approval remains: Codex lists nothing, board says on; (I) approved but enabled = false in /hooks: Codex reports enabled false, board says on. D is the main checkout's own situation whenever it sits on a commit without the hook, and C follows every edit to the SessionStart hook until someone approves it again. Fix: require a SessionStart entry in <root>/.codex/hooks.json, treat enabled = false as off, and either match Codex's hash (hooks/src/engine/discovery.rs, event plus matcher plus handler) or say in the docstring and BOARD.md that an edited hook reads as on until it is approved again. Add a test for each case."
-
-[[findings]]
-severity = "medium"
-file = "work/orders/board-and-memory/order.toml"
-text = "c6 still says the linked worktree is enrolled with just codex-trust (F055) and asks for one un-enrolled worktree whose hook trust is missing. The recipe was removed in 8361b66, and a worktree inherits the main checkout's trust and hooks, so the Codex reviewer cannot set up that scenario as written. The manager should restate c6 (for example: hooks/list or /hooks in a worktree lists the main checkout's SessionStart, pending review until it is approved once; just codex feeds the digest until then) before Codex rules on it. 'codex-trust fully gone' holds for the code, justfile, docs and changelog, but not for this text."
-
-[[findings]]
-severity = "low"
-file = "tests/test_board.py"
-text = "The launcher's wiring is untested. When I reverted launch_codex to codex_hooks_on(top, codex_config()), which is the exact bug report 16 section 4 describes, every test in tests/test_board.py still passed. A test that runs launch_codex from a linked worktree, with the main checkout's session_start approved in a temporary CODEX_HOME, and asserts that no digest is fed would pin it."
-
-[[findings]]
-severity = "low"
-file = "tools/board.py"
-text = "The hint when the digest is fed ('approving SessionStart once in /hooks turns them on') and CODEX_FED leave out the case that applies today: the main checkout does not carry the SessionStart hook yet, so there is nothing to approve in /hooks. Naming the main checkout would save a confused search in /hooks."
+evidence = "I read the changed bullet in work/BOARD.md and the troubleshooting row in the shared-memory skill against the code. Both say the hook counts as on only when the project is trusted, the main checkout's .codex/hooks.json carries it, and /hooks has it enabled with the current hash. Both say an edited, turned-off or missing hook still gets the digest, and that just codex names the reason in one line, which is what I saw it print. What the board decides and never overrides (work-check, work-accept, CI, Tom), the schema, caps, never-store list, memory add|search|index and ROOM.md as short-term are unchanged. ADR 0018 keeps Superseded by: DECISION #193 section 4 and the Basic Memory runner-up row. The seeded gotcha:memory-substring-search now reads 'memory search keeps a row only if every word is a substring ... src: board.py search', which matches search() in board.py; search_nodes appears only in the ADR's historical consequences."
 
 [[findings]]
 severity = "low"
 file = "work/BOARD.md"
-text = "Carried from the earlier review: the live memory still holds gotcha:memory-substring-search advising search_nodes, a tool of the retired server. Replace it at landing so the first-turn digest teaches the shipped design."
+text = "The digest still teaches the retired server through another seeded entity. Live memory.jsonl holds decision:shared-memory 'Official MCP memory server pinned 2026.8.31, writes serialized, read_graph off; switch to Basic Memory at about 300 entities, src: ADR 0018'. board.py read prints it on line 17 of every first-turn digest, under 10 newest decisions. That contradicts DECISION #193 section 4 and the ADR's superseded-by line. It is runtime data, not part of this tree, so it does not block landing. At landing, one board.py memory add decision:shared-memory ... --replace naming files plus index.json and no server fixes it. The gotcha fixed in this round was the other one of these two."
+
+[[findings]]
+severity = "low"
+file = "tools/board.py"
+text = "Under a python3 without tomllib (the macOS /usr/bin/python3 3.9.6 that the hooks are written for), codex_hooks_state always returns unknown. just codex then prints 'the digest goes in the first prompt, as Codex's user config could not be read', even when the config is fine and the hook is approved, and the digest arrives twice. I reproduced this by running /usr/bin/python3 tools/board.py codex with a trusted and approved scratch config. On this machine just codex gets Python 3.12 from PATH and says the right thing. The unknown reason should say the Python lacks tomllib, or the recipe should run under uv, as memory-add does."
