@@ -388,45 +388,136 @@ def test_just_codex_goes_through_the_launcher_and_names_the_flag() -> None:
     assert board.CODEX_FLAG in (ROOT / "work" / "BOARD.md").read_text()
 
 
+# Four SessionStart handlers and the trust hash codex-cli 0.156.1 listed for
+# each through app-server hooks/list: defaults filled, a default context limit
+# and commandWindows dropped, an unknown key ignored, non-ASCII kept.
+CODEX_SEEN = [
+    (
+        {"matcher": "startup"},
+        {"type": "command", "command": "python3 tools/board.py read"},
+        "sha256:fd48c10cdd888b3ec1d463e3ee7f446faf47a91cbd009e7154cc647a4b7bf837",
+    ),
+    (
+        {},
+        {
+            "type": "command",
+            "command": 'echo "\u00e9\\t/x"',
+            "timeout": 0,
+            "async": True,
+            "statusMessage": "L\u00e4s",
+            "additionalContextLimit": 2500,
+            "commandWindows": "w",
+        },
+        "sha256:e4b4c43068197c3b81f1d0bad8b72686819a2f02ad17cfa64b139f5f16364c0f",
+    ),
+    (
+        {"matcher": "*"},
+        {
+            "type": "command",
+            "command": "a",
+            "additionalContextLimit": 0,
+            "description": "x",
+        },
+        "sha256:1f93855fa07ac08a59ac902cd49f4b637904623a50f991b94c45ca269e3144da",
+    ),
+    (
+        {"matcher": "*"},
+        {"type": "command", "command": "b", "timeout": 5},
+        "sha256:977cdf2e5f4ad1d894028a0822c63da67760c25d4813d1e5eeade6d4f9e1bf18",
+    ),
+]
+
+
+@pytest.mark.parametrize(("group", "handler", "seen"), CODEX_SEEN)
+def test_the_hook_hash_is_the_one_codex_computes(
+    group: dict, handler: dict, seen: str
+) -> None:
+    assert board.codex_hook_hash(group.get("matcher"), handler) == seen
+
+
+def _tracked_hook() -> tuple[dict, str]:
+    group = _hooks("codex")["SessionStart"][0]
+    return group, str(board.codex_hook_hash(group["matcher"], group["hooks"][0]))
+
+
+def _checkout(where: Path, session_start: bool = True) -> Path:
+    hooks = json.loads((ROOT / ".codex" / "hooks.json").read_text())
+    if not session_start:
+        hooks["hooks"].pop("SessionStart")
+    (where / ".codex").mkdir(parents=True, exist_ok=True)
+    (where / ".codex" / "hooks.json").write_text(json.dumps(hooks))
+    return where
+
+
+def _approval(root: Path, trusted_hash: str, enabled: bool | None = None) -> str:
+    text = f'[hooks.state."{root}/.codex/hooks.json:session_start:0:0"]\n'
+    text += f'trusted_hash = "{trusted_hash}"\n'
+    return text + ("" if enabled is None else f"enabled = {str(enabled).lower()}\n")
+
+
+def _trusted(*paths: Path, level: str = "trusted") -> str:
+    return "".join(f'[projects."{p}"]\ntrust_level = "{level}"\n' for p in paths)
+
+
 def test_the_hooks_count_as_on_only_when_trusted_and_approved(
     tmp_path: Path,
 ) -> None:
-    top, cfg = Path("/r/wt"), tmp_path / "config.toml"
-    assert not board.codex_hooks_on(top, cfg)
-    project = '[projects."/r/wt"]\ntrust_level = "trusted"\n'
-    cfg.write_text(project)
-    assert not board.codex_hooks_on(top, cfg)
-    cfg.write_text(
-        project
-        + '[hooks.state."/r/wt/.codex/hooks.json:pre_tool_use:0:0"]\n'
-        + 'trusted_hash = "sha256:1"\n'
-    )
-    assert not board.codex_hooks_on(top, cfg)
-    cfg.write_text(
-        project
-        + '[hooks.state."/r/wt/.codex/hooks.json:session_start:0:0"]\n'
-        + 'trusted_hash = "sha256:1"\n'
-    )
+    top, cfg = _checkout(tmp_path / "wt"), tmp_path / "config.toml"
+    _, good = _tracked_hook()
+    assert board.codex_hooks_state(top, cfg) == "untrusted"
+    cfg.write_text(_trusted(top))
+    assert board.codex_hooks_state(top, cfg) == "unapproved"
+    other = f'[hooks.state."{top}/.codex/hooks.json:pre_tool_use:0:0"]\n'
+    cfg.write_text(_trusted(top) + other + f'trusted_hash = "{good}"\n')
+    assert board.codex_hooks_state(top, cfg) == "unapproved"
+    cfg.write_text(_trusted(top) + _approval(top, good))
+    assert board.codex_hooks_state(top, cfg) == "on"
     assert board.codex_hooks_on(top, cfg)
-    assert not board.codex_hooks_on(Path("/r/other"), cfg)
+    assert not board.codex_hooks_on(_checkout(tmp_path / "other"), cfg)
+
+
+def test_an_edited_hook_counts_as_off_until_approved_again(tmp_path: Path) -> None:
+    # Codex lists it as modified and does not run it (case C of the review).
+    top, cfg = _checkout(tmp_path / "wt"), tmp_path / "config.toml"
+    cfg.write_text(_trusted(top) + _approval(top, "sha256:" + "0" * 64))
+    assert board.codex_hooks_state(top, cfg) == "modified"
+
+
+def test_an_approval_left_for_a_hook_the_file_no_longer_has_is_off(
+    tmp_path: Path,
+) -> None:
+    # The main checkout on a commit without the hook (case D): nothing runs.
+    top, cfg = _checkout(tmp_path / "wt", session_start=False), tmp_path / "c.toml"
+    _, good = _tracked_hook()
+    cfg.write_text(_trusted(top) + _approval(top, good))
+    assert board.codex_hooks_state(top, cfg) == "absent"
+    (top / ".codex" / "hooks.json").unlink()
+    assert board.codex_hooks_state(top, cfg) == "absent"
+
+
+def test_a_hook_turned_off_in_hooks_is_off(tmp_path: Path) -> None:
+    # Approved but enabled = false (case I): Codex skips the handler.
+    top, cfg = _checkout(tmp_path / "wt"), tmp_path / "config.toml"
+    _, good = _tracked_hook()
+    cfg.write_text(_trusted(top) + _approval(top, good, enabled=False))
+    assert board.codex_hooks_state(top, cfg) == "disabled"
+    cfg.write_text(_trusted(top) + _approval(top, good, enabled=True))
+    assert board.codex_hooks_state(top, cfg) == "on"
 
 
 def test_a_linked_worktree_counts_the_main_checkouts_hooks(tmp_path: Path) -> None:
     # Codex loads a linked worktree's project hooks from the main checkout and
     # keys their /hooks trust by that path; the worktree inherits its trust.
-    top, root, cfg = Path("/r/wt"), Path("/r"), tmp_path / "config.toml"
-    approved = '[hooks.state."{}/.codex/hooks.json:session_start:0:0"]\n'
-    approved += 'trusted_hash = "sha256:1"\n'
-    for trusted in ("/r/wt", "/r"):
-        project = f'[projects."{trusted}"]\ntrust_level = "trusted"\n'
-        cfg.write_text(project + approved.format("/r/wt"))
+    root = _checkout(tmp_path / "r")
+    top, cfg = _checkout(root / "wt"), tmp_path / "config.toml"
+    _, good = _tracked_hook()
+    for trusted in (top, root):
+        cfg.write_text(_trusted(trusted) + _approval(top, good))
         assert not board.codex_hooks_on(top, cfg, root)
-        cfg.write_text(project + approved.format("/r"))
+        cfg.write_text(_trusted(trusted) + _approval(root, good))
         assert board.codex_hooks_on(top, cfg, root)
     cfg.write_text(
-        '[projects."/r/wt"]\ntrust_level = "untrusted"\n'
-        + '[projects."/r"]\ntrust_level = "trusted"\n'
-        + approved.format("/r")
+        _trusted(top, level="untrusted") + _trusted(root) + _approval(root, good)
     )
     assert not board.codex_hooks_on(top, cfg, root)
 
@@ -489,6 +580,70 @@ def test_the_launcher_feeds_the_digest_where_the_hooks_are_off(
     assert argv[1:3] == ["--add-dir", str(room.parent.resolve())]
     assert room.parent.is_dir()
     assert board.HEADER in argv[-1] and argv[-1].endswith("\n\nhello")
+
+
+def _linked_checkout(tmp_path: Path) -> tuple[Path, Path]:
+    """A main checkout that tracks this repository's .codex/hooks.json, and a
+    linked worktree of it, which carries its own copy of that file."""
+    main, linked = tmp_path / "main", tmp_path / "main" / "wt"
+    _checkout(main)
+    subprocess.run(["git", "init", "-q", "-b", "main", str(main)], check=True)
+    subprocess.run(["git", "-C", str(main), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(main), "-c", "user.name=t", "-c", "user.email=t@t"]
+        + ["commit", "-qm", "hooks"],
+        check=True,
+    )
+    subprocess.run(
+        ["git", "-C", str(main), "worktree", "add", "-q", "-b", "o", str(linked)],
+        check=True,
+    )
+    return main.resolve(), linked.resolve()
+
+
+def test_the_launcher_in_a_linked_worktree_asks_the_main_checkout(
+    room: Path,
+    codex_home: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The main checkout's hook approved: Codex runs it in the worktree, so no
+    digest is fed. Before, just codex keyed on the worktree and fed it twice."""
+    main, linked = _linked_checkout(tmp_path)
+    _, good = _tracked_hook()
+    codex_home.parent.mkdir(parents=True)
+    codex_home.write_text(_trusted(main) + _approval(main, good))
+    seen: list[list[str]] = []
+    monkeypatch.setattr(board, "ROOT", linked)
+    monkeypatch.setattr(board.os, "execvp", lambda _f, argv: seen.append(argv))
+    board.launch_codex(["hello"])
+    assert seen[-1][:2] == ["codex", "hello"]
+    assert not [a for a in seen[-1] if a.startswith(board.CODEX_FED)]
+    assert not capsys.readouterr().err
+    codex_home.write_text(_trusted(main) + _approval(linked, good))
+    board.launch_codex(["hello"])
+    assert seen[-1][-1].startswith(board.CODEX_FED)
+    assert f"{main}/.codex/hooks.json is not approved" in capsys.readouterr().err
+
+
+def test_the_launcher_says_the_main_checkout_must_carry_the_hook(
+    room: Path,
+    codex_home: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    main, linked = _linked_checkout(tmp_path)
+    _checkout(main, session_start=False)
+    codex_home.parent.mkdir(parents=True)
+    codex_home.write_text(_trusted(main))
+    monkeypatch.setattr(board, "ROOT", linked)
+    monkeypatch.setattr(board.os, "execvp", lambda _f, _argv: None)
+    board.launch_codex(["hello"])
+    (line,) = capsys.readouterr().err.splitlines()
+    assert f"{main}/.codex/hooks.json carries no SessionStart board hook" in line
+    assert "main checkout" in line and "main checkout" in board.CODEX_FED
 
 
 @pytest.mark.parametrize(

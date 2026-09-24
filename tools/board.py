@@ -761,10 +761,25 @@ CODEX_SUBCOMMANDS = {
     *"delete migrate-rollouts unarchive fork cloud exec-server features help".split(),
 }
 CODEX_FED = (
-    "Session-start board digest, fed by just codex because the project hooks of "
-    "this checkout are off (the project is not trusted, or its SessionStart hook "
-    "is not approved in /hooks yet). Read it, then answer what follows."
+    "Session-start board digest, fed by just codex because Codex will not run "
+    "this project's SessionStart hook here (the project is not trusted, the main "
+    "checkout's .codex/hooks.json does not carry the hook, or /hooks has not "
+    "approved it). Read it, then answer what follows."
 )
+# Why the hook does not run, for the one line just codex prints; {h} is the
+# hooks.json Codex loads, which for a linked worktree is the main checkout's.
+CODEX_OFF = {
+    "unknown": "Codex's user config could not be read",
+    "untrusted": "this project is not trusted in Codex",
+    "absent": "{h} carries no SessionStart board hook, so /hooks has nothing to "
+    "approve until the main checkout is on a commit that has it",
+    "unapproved": "the SessionStart hook in {h} is not approved in /hooks yet "
+    "(once covers every worktree)",
+    "modified": "the SessionStart hook in {h} changed since it was approved; "
+    "approve it again in /hooks",
+    "disabled": "the SessionStart hook in {h} is turned off in /hooks",
+}
+CODEX_CONTEXT_DEFAULT = 2500  # codex-rs hooks output_spill.rs
 
 
 def _git_dir(path: Path, *args: str) -> Path:
@@ -792,18 +807,47 @@ def codex_hooks_root(top: Path) -> Path:
     return common.parent if common.name == ".git" else top
 
 
-def codex_hooks_on(top: Path, cfg: Path, root: Path | None = None) -> bool:
-    """Whether Codex runs the SessionStart hook in checkout top: the project is
+def codex_hook_hash(matcher: object, handler: dict) -> str | None:
+    """The trust hash Codex 0.156 gives one SessionStart command handler: the
+    sha256 of the canonical JSON of the event, the matcher and the handler with
+    its defaults filled (codex-rs hooks discovery.rs hook_hash, config
+    fingerprint.rs). A handler it would not load hashes to None. Should a later
+    Codex hash differently, a match fails and the hook counts as off, which only
+    feeds the digest twice."""
+    command, timeout = handler.get("command"), handler.get("timeout")
+    if handler.get("type") != "command" or not isinstance(command, str):
+        return None
+    if not command.strip() or not isinstance(timeout, (int, type(None))):
+        return None
+    ident: dict = {"type": "command", "command": command}
+    ident["timeout"] = max(1, 600 if timeout is None else timeout)
+    ident["async"] = handler.get("async") is True
+    if handler.get("statusMessage") is not None:
+        ident["statusMessage"] = handler["statusMessage"]
+    limit = handler.get("additionalContextLimit")
+    if limit is not None and limit != CODEX_CONTEXT_DEFAULT:
+        ident["additionalContextLimit"] = limit
+    group: dict = {"event_name": "session_start", "hooks": [ident]}
+    if matcher is not None:
+        group["matcher"] = matcher
+    text = json.dumps(group, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def codex_hooks_state(top: Path, cfg: Path, root: Path | None = None) -> str:
+    """Whether Codex runs the board's SessionStart hook in checkout top: "on",
+    or the first reason it does not (a key of CODEX_OFF). The project must be
     trusted (its own entry first, else the main checkout's, the order Codex
-    uses) and /hooks recorded a trust for the main checkout's session_start
-    entry. Unknown counts as off, so the digest is fed rather than lost."""
+    uses), root/.codex/hooks.json must carry the hook, and /hooks must have it
+    enabled with a trusted hash equal to its current one. Unknown counts as
+    off, so the digest is fed rather than lost."""
     root = root or top
     try:
         import tomllib  # noqa: PLC0415  3.11; under 3.9 the answer is off
 
-        data = tomllib.loads(cfg.read_text(encoding="utf-8"))
+        data = tomllib.loads(cfg.read_text(encoding="utf-8")) if cfg.exists() else {}
     except (ImportError, OSError, ValueError):
-        return False
+        return "unknown"
     projects = data.get("projects")
     projects = projects if isinstance(projects, dict) else {}
     level = next(
@@ -815,13 +859,41 @@ def codex_hooks_on(top: Path, cfg: Path, root: Path | None = None) -> bool:
         None,
     )
     if level != "trusted":
-        return False
-    state = data.get("hooks", {}).get("state", {})
-    prefix = f"{root}/.codex/hooks.json:session_start:"
-    return isinstance(state, dict) and any(
-        k.startswith(prefix) and isinstance(v, dict) and v.get("trusted_hash")
-        for k, v in state.items()
-    )
+        return "untrusted"
+    path = root / ".codex" / "hooks.json"
+    try:
+        groups = json.loads(path.read_text(encoding="utf-8"))["hooks"]["SessionStart"]
+    except (OSError, ValueError, KeyError, TypeError):
+        groups = []
+    hooks = data.get("hooks")
+    state = hooks.get("state") if isinstance(hooks, dict) else None
+    state = state if isinstance(state, dict) else {}
+    reasons = []
+    for g, group in enumerate(groups if isinstance(groups, list) else []):
+        handlers = group.get("hooks") if isinstance(group, dict) else None
+        for h, handler in enumerate(handlers if isinstance(handlers, list) else []):
+            if not isinstance(handler, dict):
+                continue
+            current = codex_hook_hash(group.get("matcher"), handler)
+            if current is None or "board.py" not in handler["command"]:
+                continue
+            seen = state.get(f"{path}:session_start:{g}:{h}")
+            seen = seen if isinstance(seen, dict) else {}
+            if seen.get("enabled") is False:
+                reasons.append("disabled")
+            elif not seen.get("trusted_hash"):
+                reasons.append("unapproved")
+            elif seen["trusted_hash"] != current:
+                reasons.append("modified")
+            else:
+                return "on"
+    return reasons[0] if reasons else "absent"
+
+
+def codex_hooks_on(top: Path, cfg: Path, root: Path | None = None) -> bool:
+    """Whether Codex runs the board's SessionStart hook in top; see
+    codex_hooks_state for the rules."""
+    return codex_hooks_state(top, cfg, root) == "on"
 
 
 def codex_argv(args: list[str], board: Path, digest: str | None) -> list[str]:
@@ -871,19 +943,18 @@ def launch_codex(args: list[str]) -> int:
     folder = board_dir()
     folder.mkdir(parents=True, exist_ok=True)
     top = _git_dir(ROOT, "--show-toplevel")
+    root = codex_hooks_root(top)
+    state = codex_hooks_state(top, codex_config(), root)
     digest = None
-    if not codex_hooks_on(top, codex_config(), codex_hooks_root(top)):
+    if state != "on":
         try:
             digest = read()
         except Exception as e:  # noqa: BLE001  a launch must not fail on the board
             digest = f"{HEADER}\nboard unreadable: {type(e).__name__}: {e}"
     argv = codex_argv(args, folder.resolve(), digest)
     if digest is not None and argv[-1].startswith(CODEX_FED):
-        print(
-            "board: the project hooks are off here, the digest goes in the first "
-            "prompt (approving SessionStart once in /hooks turns them on)",
-            file=sys.stderr,
-        )
+        why = CODEX_OFF[state].format(h=root / ".codex" / "hooks.json")
+        print(f"board: the digest goes in the first prompt, as {why}", file=sys.stderr)
     os.execvp(argv[0], argv)
     return 0  # pragma: no cover  execvp does not return
 
