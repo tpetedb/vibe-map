@@ -73,10 +73,11 @@ function applySettings(){const s=settings();
   if(typeof difficulty==="function"){document.body.dataset.difficulty=difficulty();syncCmds()}
   // Difficulty gates the bridges, so the island answers the setting at once.
   if(typeof refreshBridges==="function")refreshBridges();
-  if(experienceId()==="galaxy"&&typeof galaxyFrame==="function")galaxyFrame();
+  if(activeExperience().layout)activeExperience().layout();
   const sel=$("s-settings");if(sel&&sel.classList.contains("on"))renderSettings();
 }
-window.setSetting=function(key,value,control){const focus=(control&&control.id)||(document.activeElement&&document.activeElement.id),before=key==="experience"?activeExperience():null;if(!S.settings)S.settings={};S.settings[key]=value;save();
+window.setSetting=function(key,value,control){const focus=(control&&control.id)||(document.activeElement&&document.activeElement.id),before=key==="experience"?activeExperience():null;if(!S.settings)S.settings={};S.settings[key]=value;
+  if(key==="experience"){const url=new URL(location.href);url.searchParams.delete("experience");history.replaceState(null,"",url)}save();
   if(key==="experience"&&before!==activeExperience()){before.dispose();activeExperience().build();announceExperience()}
   applySettings();if(focus&&$(focus)){$(focus).focus();requestAnimationFrame(()=>{if($(focus))$(focus).focus()})}if(key==="vault"&&$("vault").classList.contains("on"))openVault()};
 function settingRow(k,s){return `<div class="setting"><label for="set-${k}">${SETTINGS_LABELS[k]}</label><select id="set-${k}" onchange="setSetting('${k}',this.value,this)">${SETTINGS_OPTIONS[k].map(([v,l])=>`<option value="${v}"${s[k]===v?" selected":""}>${l}</option>`).join("")}</select></div>`}

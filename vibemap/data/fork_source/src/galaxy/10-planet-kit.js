@@ -156,11 +156,11 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     else if(['station','house','harbour','hall'].includes(look))station(k,look);
     else throw new Error('Unsupported Galaxy look: '+look);
     k.flush();
-    const topics=place.topics||[],lessonSites=topics.map((topic,i)=>{
+    const topics=(place.topics||[]).slice(0,6),lessonSites=topics.map((topic,i)=>{
       const angle=topics.length===1?0:(i/(topics.length-1)-.5)*2.2;
       return {id:topic.id,position:[Math.sin(angle)*.76,Math.cos(angle)*.76]};
     });
-    if(miniatureBuilder){const miniature=miniatureBuilder({look,terrain:{radius:.965,grass:look==='racks'?P.surface:C.ground,dirt:C.steel},structures,lessonSites,obstacles:k.obstacles});g.add(miniature.root)}
+    if(miniatureBuilder){const miniature=miniatureBuilder({look,terrain:{radius:.965,grass:look==='racks'?P.surface:C.ground,dirt:C.steel},structures,lessonSites,obstacles:k.obstacles,water:look==='tower'?[{kind:'disc',x:-.33,z:.10,radius:.37}]:look==='harbour'?[{kind:'box',x:0,z:.25,width:1.3,depth:.55}]:[]});g.add(miniature.root)}
     else g.add(structures);
     const color=stateColor(state);
     ring(g,1.016,-.022,color,1);
@@ -238,7 +238,7 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
       shell.dispose();g.add(new T.LineSegments(edges,new T.LineBasicMaterial({color:P.blueBright,transparent:true,opacity:.36,depthWrite:false})));
     }
     if(globe==='cloud'){
-      const k=kit(g);for(let i=0;i<9;i++){const a=i*2.4;k.ball(Math.cos(a)*.64,Math.sin(i*1.7)*.35,Math.sin(a)*.64,.47,mix(P.blue,P.snow,.6))}k.flush();body.visible=false;
+      const k=kit(g);for(let i=0;i<9;i++){const a=i*2.4;k.ball(Math.cos(a)*.64,Math.sin(i*1.7)*.35,Math.sin(a)*.64,.47,mix(P.blue,P.snow,.6))}k.flush();body.scale.setScalar(.7);
     }
     const siteScale=Math.min(domeScale,.62/Math.sqrt(places.length));
     const vectors=places.map((p,i)=>{
@@ -288,5 +288,5 @@ function createGalaxyVisuals({three:T,palette:P,material:mat,finish:fixColors}){
     }
     fixColors(g);return g;
   }
-  return {surface,makeDome,makePlanet,makeJourney};
+  return {surface,stateColor,makeDome,makePlanet,makeJourney};
 }

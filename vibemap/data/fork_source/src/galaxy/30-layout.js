@@ -1,7 +1,7 @@
 // Fit the visible subject into the space the actual HUD and list leave free.
 // View offsets retain the full canvas, so pointer picking uses canvas coordinates.
 function galaxySubject(){const state=galaxyState;
-  if(state.view==="dome")return [state.detail];
+  if(state.view==="dome")return [state.detail.children[0]];
   if(state.view==="journey")return [state.journey];
   return Object.values(state.planets).map(p=>p.root).filter(root=>root.visible)}
 function galaxyBounds(){const bounds=new T.Box3(),instance=new T.Matrix4(),matrix=new T.Matrix4();
@@ -15,7 +15,7 @@ function galaxyBounds(){const bounds=new T.Box3(),instance=new T.Matrix4(),matri
 function galaxyCorners(bounds){const points=[];for(const x of [bounds.min.x,bounds.max.x])for(const y of [bounds.min.y,bounds.max.y])for(const z of [bounds.min.z,bounds.max.z])points.push(new T.Vector3(x,y,z));return points}
 function galaxyFrame(){if(!galaxyState||!galaxyState.visuals)return;
   const canvas=$("c").getBoundingClientRect(),panel=$("galaxy-ui").getBoundingClientRect(),hud=$("hud").getBoundingClientRect();
-  const top=Math.max(16,hud.bottom-canvas.top+16),bottom=innerWidth<=1100?panel.top-canvas.top-18:canvas.height-18;
+  const top=Math.max(16,hud.bottom-canvas.top+(galaxyState.view==="journey"?72:16)),bottom=innerWidth<=1100?panel.top-canvas.top-18:canvas.height-18;
   const left=innerWidth<=1100?20:panel.right-canvas.left+24,right=canvas.width-20;
   const width=Math.max(80,right-left),height=Math.max(80,bottom-top),centerX=left+width/2,centerY=top+height/2;
   camera.clearViewOffset();camera.aspect=canvas.width/canvas.height;camera.near=.05;camera.far=200;
@@ -24,9 +24,9 @@ function galaxyFrame(){if(!galaxyState||!galaxyState.visuals)return;
   camera.position.copy(center).add(direction);camera.lookAt(center);camera.updateMatrixWorld(true);
   const local=galaxyCorners(bounds).map(p=>p.sub(center).applyQuaternion(camera.quaternion.clone().invert()));
   const halfX=Math.max(...local.map(p=>Math.abs(p.x))),halfY=Math.max(...local.map(p=>Math.abs(p.y))),depth=Math.max(...local.map(p=>Math.abs(p.z)));
-  const tan=Math.tan(camera.fov*Math.PI/360),distance=1.13*Math.max(halfY/(tan*height/canvas.height),halfX/(tan*camera.aspect*width/canvas.width))+depth;
+  const tan=Math.tan(camera.fov*Math.PI/360),distance=1.12*Math.max(halfY/(tan*height/canvas.height),halfX/(tan*camera.aspect*width/canvas.width))+depth*.5;
   camera.position.copy(center).addScaledVector(direction,distance);camera.lookAt(center);
-  camera.setViewOffset(canvas.width,canvas.height,canvas.width/2-centerX,canvas.height/2-centerY,canvas.width,canvas.height);camera.updateMatrixWorld(true);
+  camera.setViewOffset(canvas.width,canvas.height,canvas.width/2-centerX,canvas.height/2-centerY,canvas.width,canvas.height);camera.updateMatrixWorld(true);galaxyLabel();
 }
 // Read-only projection evidence: geometry bounds, not the intended layout box.
 window.__galaxyFrame=()=>{if(!galaxyState||!galaxyState.visuals)return null;
@@ -44,3 +44,6 @@ function galaxyStars(){const points=[];for(let i=0;i<360;i++){
   const field=new T.Points(geometry,new T.PointsMaterial({color:PALETTE.muted,size:.11,sizeAttenuation:true,transparent:true,opacity:.65,depthWrite:false}));
   field.raycast=()=>{};return field;
 }
+
+// Opening check instructions or changing text size changes the space available.
+if(typeof ResizeObserver!=="undefined")new ResizeObserver(()=>{if(galaxyState&&galaxyState.visuals)galaxyFrame()}).observe($("galaxy-ui"));

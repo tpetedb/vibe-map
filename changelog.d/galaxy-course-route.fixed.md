@@ -1,0 +1,1 @@
+- Galaxy follows a continuous planetary course route with a complete overview, readable next stop and accessible focus. World travel and mixed progress imports preserve the active experience; switching back restores the Island camera. Lessons explain checking and importing progress, short screens use the list, and the dome fills the available view.

@@ -36,7 +36,7 @@ function building(k){
 
 // Scene assembly is separate from buildWorld's campaign and progress writes.
 // Coordinates here are local to a miniature; its caller owns scale and travel.
-function buildMiniature({look,terrain,structures,lessonSites,obstacles=[]}){
+function buildMiniature({look,terrain,structures,lessonSites,obstacles=[],water=[]}){
   const root=new T.Group(),ground=new T.Group(),radius=terrain.radius;
   buildLandSurface(ground,{r:15,segments:24,grass:terrain.grass,dirt:terrain.dirt});
   ground.scale.setScalar(radius/15);root.add(ground,structures);
@@ -44,6 +44,6 @@ function buildMiniature({look,terrain,structures,lessonSites,obstacles=[]}){
   sites.forEach(site=>{const pavilion=building(2);pavilion.scale.setScalar(.045);
     pavilion.position.set(site.position[0],0,site.position[1]);pavilion.userData.lessonId=site.id;
     pavilion.userData.topicId=site.id;root.add(pavilion)});
-  const walkSurface={radius,y:0};root.userData={miniature:true,look,walkSurface,lessonSites:sites,obstacles};
+  const walkSurface={radius,y:0,water:water.map(area=>({...area}))};root.userData={miniature:true,look,walkSurface,lessonSites:sites,obstacles};
   return {root,walkSurface,obstacles,lessonSites:sites};
 }

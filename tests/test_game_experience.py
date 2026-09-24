@@ -300,6 +300,8 @@ def test_the_views_are_registered_under_the_contract(game: GamePage) -> None:
         "name:string",
         "fallback:function",
         "refresh:function",
+        "layout:function",
+        "world:function",
         "backLabel:string",
         "presentation:object",
         "guidance:function",
@@ -620,3 +622,27 @@ def test_a_region_that_moves_by_less_than_a_level_is_measured(tmp_path: Path) ->
     assert worst == pytest.approx(0.4, abs=1e-4)
     assert mean == pytest.approx(0.4 / (GRID[0] * GRID[1]), abs=1e-6)
     assert worst > WORST_TOL
+
+
+def test_galaxy_round_trip_preserves_the_zoomed_out_island(game: GamePage) -> None:
+    game.page.add_init_script(SEED)
+    game.page.add_init_script("Math.random=()=>0.5")
+    game.goto(state=_golden_state("campus"))
+    game.page.set_viewport_size(VIEW)
+    game.resume()
+    game.page.wait_for_function(AT_REST, timeout=WAIT_MS)
+    original_fog = game.page.evaluate("window.__scene().fog.far")
+    hide = game.page.add_style_tag(content=HIDE_OVERLAYS)
+    before = game.screenshot("galaxy_roundtrip_before", clip={"x": 0, "y": 0, **VIEW})
+    hide.evaluate("el=>el.remove()")
+    game.hud_action('#hud button[aria-label="Settings"]')
+    game.page.locator("#set-experience").select_option("galaxy")
+    game.page.locator("#set-experience").select_option("islands")
+    game.page.locator("#sheet > .x").click()
+    game.page.wait_for_function(AT_REST, timeout=WAIT_MS)
+    assert game.page.evaluate("window.__scene().fog.far") == original_fog
+    game.page.add_style_tag(content=HIDE_OVERLAYS)
+    after = game.screenshot("galaxy_roundtrip_after", clip={"x": 0, "y": 0, **VIEW})
+    mean, worst = _distance(_regions(before), _regions(after))
+    assert mean <= MEAN_TOL and worst <= WORST_TOL, (mean, worst)
+    game.assert_clean()

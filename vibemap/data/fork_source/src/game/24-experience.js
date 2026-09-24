@@ -8,15 +8,13 @@
 //   build     make the scene from S and the data; idempotent
 //   dispose   give back everything it added
 //   tick      the per-frame work, honouring reducedMotion()
-//   goTo      {island, stop}: bring the player there
+//   goTo      {island, stop}, {topic} or {place}: travel to a destination
 //   where     what the player is standing at, or null
 //   listing   the same stops as plain data, for the non-3D twin
 //
-// Nothing calls the registry yet. Boot, the panels and the frame loop go on
-// calling buildWorld, openCh and the loop's own helpers by name; this names
-// what already exists so a second view can stand next to it. Moving the call
-// sites over is the next order's work, and the golden pictures in
-// tests/test_game_experience.py are what proves the islands did not move.
+// Boot, input and panels use the registry. Optional hooks are fallback(),
+// refresh(), layout(), world(), guidance(), plus presentation and backLabel.
+// Their absence preserves Islands' original behavior and required contract.
 const EXPERIENCES={};
 const EXPERIENCE_DEFAULT="islands";
 // The first stop of a list that is not delivered, or 0 when it is finished:
@@ -110,3 +108,6 @@ function activeExperience(){return EXPERIENCES[experienceId()]}
 window.__experiences=()=>EXPERIENCES;
 window.__experience=()=>activeExperience();
 window.__experienceId=()=>experienceId();
+
+window.browseWorlds=function(){const view=activeExperience();if(view.world)view.world();else nextWorld()};
+function announceExperience(){experiencePresentation();const view=activeExperience();if(view.guidance)view.guidance();document.body.dataset.experience=experienceId();copySay(view.name+" experience shown")}

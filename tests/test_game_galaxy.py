@@ -144,13 +144,18 @@ def test_import_refreshes_the_visible_course_with_motion_off(request, profile) -
     expect(game.page.locator("#galaxy-next")).to_contain_text("Next:")
     game.screenshot("galaxy_journey_" + profile, clip_height=760)
     points = game.page.evaluate("window.__galaxyRoute()")
+    assert len(points) <= 12
+    assert game.page.locator("#galaxy-overview circle").count() == 70
+    assert game.page.evaluate("window.__debug().draws") < 150
+    assert all(p["hitRadius"] >= 22 for p in points)
     viewport = game.page.viewport_size
     assert all(0 < p["x"] < viewport["width"] for p in points)
     assert all(0 < p["y"] < viewport["height"] for p in points)
     target = next(p for p in points if p["state"] == "next")
+    game.page.mouse.click(target["x"] + 18, target["y"])
     game.page.mouse.click(target["x"], target["y"])
     expect(game.page.locator("#vault")).to_have_class("on")
-    expect(game.page.locator('[data-galaxy-view="dome"]')).to_have_class("on")
+    expect(game.page.locator('[data-galaxy-view="journey"]')).to_have_class("on")
     game.page.locator('#vault button[onclick="closeVault()"]').click()
     game.page.get_by_role("button", name="Chart", exact=True).click()
     expect(game.page.locator("#galaxy-list")).to_contain_text("1 of")
@@ -254,4 +259,124 @@ def test_landing_reuses_the_island_builder_without_changing_the_campaign(
           world:s.world,done:s.done,doneW:s.doneW,
           chapters:window.__experiences().islands.listing()}}"""
         )
+    game.assert_clean()
+
+
+@pytest.mark.parametrize("motion", ["off", "auto"])
+def test_world_control_keeps_galaxy_and_campaign_intact(game_desktop, motion):
+    game = game_desktop
+    game.goto(
+        state={"name": "Lotte", "settings": {"experience": "galaxy", "motion": motion}}
+    )
+    game.resume()
+    before = game.page.evaluate("window.__S().world")
+    game.hud_action('#hud button:has-text("World")')
+    assert game.page.evaluate("window.__S().world") == before
+    assert not game.page.evaluate("window.__debug().flying")
+    expect(game.page.locator('[data-galaxy-view="chart"]')).to_have_class("on")
+    game.page.get_by_role("button", name="Journey", exact=True).click()
+    expect(game.page.locator('[data-galaxy-topic="unix"]')).to_be_visible()
+    game.assert_clean()
+
+
+def test_galaxy_learning_keeps_focus_and_explains_check_import(game_desktop):
+    game = game_desktop
+    _open(game)
+    button = game.page.get_by_role(
+        "button", name="Learn Unix and the terminal", exact=True
+    )
+    button.focus()
+    button.press("Enter")
+    expect(game.page.locator("#vault")).to_have_class("on")
+    expect(game.page.locator("#vnote")).to_contain_text(
+        "uv run vibe check --topic unix"
+    )
+    expect(game.page.locator("#vnote")).to_contain_text("uv run vibe export")
+    expect(game.page.locator("#vnote .galaxy-check .copy")).to_be_visible()
+    game.page.keyboard.press("Escape")
+    expect(button).to_be_focused()
+    expect(game.page.locator('[data-galaxy-view="journey"]')).to_have_attribute(
+        "aria-pressed", "true"
+    )
+    assert game.page.locator('#galaxy-list button[tabindex="0"]').count() == 1
+    button.press("ArrowDown")
+    expect(
+        game.page.get_by_role(
+            "button", name="Learn Files, folders and paths", exact=True
+        )
+    ).to_be_focused()
+    game.assert_clean()
+
+
+def test_galaxy_focus_names_the_exact_topic_and_chart_resets_north(game_desktop):
+    game = game_desktop
+    _open(game)
+    dotfiles = game.page.locator('[data-galaxy-topic="dotfiles"]')
+    dotfiles.focus()
+    assert game.page.evaluate(
+        "window.__scene().children.some(o=>o.userData.focusTopic==='dotfiles')"
+    )
+    expect(game.page.locator("#galaxy-label")).to_contain_text("Dotfiles")
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    game.page.get_by_role("button", name="Land at Hangzhou, China", exact=True).click()
+    game.page.get_by_role("button", name="Globe", exact=True).click()
+    expect(game.page.locator("#galaxy-label")).to_contain_text("Hangzhou")
+    game.page.get_by_role("button", name="Chart", exact=True).click()
+    assert game.page.evaluate(
+        "window.__scene().children.filter(o=>o.userData.globe).every(o=>Math.abs(o.rotation.x)+Math.abs(o.rotation.z)<1e-8)"
+    )
+    game.assert_clean()
+
+
+def test_explicit_setting_overrides_the_galaxy_url(game_desktop):
+    game = game_desktop
+    game.goto(state={"name": "Lotte", "settings": {"motion": "off"}})
+    game.page.goto(game.url + "?experience=galaxy")
+    game.resume()
+    game.hud_action('#hud button[aria-label="Settings"]')
+    game.page.locator("#set-experience").select_option("islands")
+    expect(game.page.locator("body")).to_have_attribute("data-experience", "islands")
+    assert "experience=" not in game.page.url
+    assert game.state()["settings"]["experience"] == "islands"
+    game.assert_clean()
+
+
+def test_galaxy_short_screen_uses_the_complete_list(game_desktop):
+    game = game_desktop
+    game.page.set_viewport_size({"width": 720, "height": 450})
+    _open(game)
+    game.hud_action('#hud button[aria-label="Settings"]')
+    game.page.locator("#set-text").select_option("larger")
+    game.page.locator("#sheet > .x").click()
+    expect(game.page.locator("#galaxy-ui")).to_have_attribute("data-rendering", "list")
+    expect(game.page.locator("#c")).not_to_be_visible()
+    assert game.page.locator("#galaxy-list [data-galaxy-topic]").count() == 70
+    game.page.locator('[data-galaxy-topic="unix"]').click()
+    expect(game.page.locator("#vault")).to_have_class("on")
+    game.screenshot("galaxy_short_screen_lesson")
+    game.assert_clean()
+
+
+def test_mixed_progress_import_does_not_build_island_graphics_in_galaxy(game_desktop):
+    game = game_desktop
+    game.goto(
+        state={
+            "name": "Lotte",
+            "world": "campus",
+            "settings": {"experience": "galaxy", "motion": "off"},
+        }
+    )
+    game.resume()
+    payload = (
+        base64.urlsafe_b64encode(
+            json.dumps({"v": 2, "doneW": {"campus": [1]}, "topics": ["unix"]}).encode()
+        )
+        .decode()
+        .rstrip("=")
+    )
+    assert "1 topic" in game.import_code(payload)
+    game.page.locator("#sheet > .x").click()
+    expect(game.page.locator("#galaxy-summary")).to_have_text("1 of 70 topics complete")
+    assert game.page.evaluate("window.__scene().background.getHex()") == 0
+    assert game.state()["doneW"]["campus"] == [1]
     game.assert_clean()

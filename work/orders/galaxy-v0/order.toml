@@ -12,6 +12,7 @@ owns = [
   "src/galaxy/",
   "src/game/12-buildings.js",
   "src/game/21-world-build.js",
+  "src/game/24-experience.js",
   "src/game/90-boot.js",
   # Optional fallback/refresh/guidance/back-label hooks keep Start usable without WebGL;
   # Islands retain the seven required methods and their original defaults.
