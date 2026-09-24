@@ -59,6 +59,9 @@ function galaxyRenderCheck(){const state=galaxyState;if(!state)return;const topi
 }
 window.galaxyPlace=function(id){if(!galaxyState||!galaxyState.model.places.some(place=>place.id===id))return;
   galaxyFly(id)};
+window.galaxyEchoJump=function(id){if(!galaxyState)return;
+  const primary=galaxyState.model.topics.find(topic=>topic.id===id),here=galaxySelected();
+  if(primary&&here&&here.topics.some(topic=>topic.id===id&&topic.echo)&&primary.place!==here.id)galaxyFly(primary.place)};
 function renderGalaxyList(){const ui=$("galaxy-ui");if(!ui)return;ui.hidden=false;
   ui.dataset.rendering=galaxyState&&galaxyState.visuals&&$("stage").clientHeight>=520?"scene":"list";
   const state=galaxyState,model=state?state.model:galaxyModel(PLACES,TREE,galaxyDone()),selected=state?galaxySelected():model.places[0];
@@ -70,9 +73,12 @@ function renderGalaxyList(){const ui=$("galaxy-ui");if(!ui)return;ui.hidden=fals
   if(!state||!state.visuals)$("galaxy-context").textContent+=" · 3D is unavailable. All destinations and lessons are available in this list.";
   const places=Object.fromEntries(model.places.map(place=>[place.id,place]));
   if(state&&state.view==="chart")$("galaxy-list").innerHTML=model.eras.map(era=>`<section class="galaxy-era" role="listitem"><h3>${esc(era.name)}</h3>${model.places.filter(place=>place.era===era.id).map(place=>`<div class="galaxy-place" data-state="${place.state}"><b>${esc(place.name)}</b><span class="galaxy-state">${place.state} · ${place.done} of ${place.count}</span><button data-galaxy-place="${place.id}"${place.id===selected.id?' aria-current="location"':""} onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true)" onblur="galaxyFocus('${place.id}',false)" aria-label="Land at ${esc(place.name)}" onclick="galaxyPlace('${place.id}')">Land</button></div>`).join("")}</section>`).join("");
-  else $("galaxy-list").innerHTML=(state&&["dome","globe"].includes(state.view)?selected.topics:model.topics).map(topic=>{const place=places[topic.place];return `<div class="galaxy-place" role="listitem" data-state="${topic.state}"><b>${model.topics.findIndex(item=>item.id===topic.id)+1}. ${esc(topic.name)}</b><span class="galaxy-state">${topic.state} · ${topic.year} · ${esc(place.name)}</span><button data-galaxy-topic="${topic.id}" data-galaxy-place="${place.id}"${topic.state==="next"?' aria-current="step"':""} onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true,'${topic.id}')" onblur="galaxyFocus('${place.id}',false,'${topic.id}')" aria-label="Learn ${esc(topic.name)}" onclick="galaxyTopic('${topic.id}')">Learn</button></div>`}).join("");
+  else $("galaxy-list").innerHTML=(state&&["dome","globe"].includes(state.view)?selected.topics:model.topics).map(topic=>{const place=places[topic.place],primary=model.topics.find(item=>item.id===topic.id),echo=topic.echo&&primary&&primary.place!==place.id;
+    const learn=`<button data-galaxy-topic="${topic.id}" data-galaxy-place="${place.id}"${topic.state==="next"?' aria-current="step"':""} onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true,'${topic.id}')" onblur="galaxyFocus('${place.id}',false,'${topic.id}')" aria-label="Learn ${esc(topic.name)}" onclick="galaxyTopic('${topic.id}')">Learn</button>`;
+    const jump=echo?`<button data-galaxy-jump="${topic.id}" data-galaxy-place="${place.id}" onkeydown="galaxyKey(event)" onfocus="galaxyFocus('${place.id}',true,'${topic.id}')" onblur="galaxyFocus('${place.id}',false,'${topic.id}')" aria-label="Jump to primary for ${esc(topic.name)} at ${esc(places[primary.place].name)}" onclick="galaxyEchoJump('${topic.id}')">Jump to primary</button>`:"";
+    return `<div class="galaxy-place" role="listitem" data-state="${topic.state}"><b>${model.topics.findIndex(item=>item.id===topic.id)+1}. ${esc(topic.name)}</b><span class="galaxy-state">${echo?'<span class="galaxy-echo">Echo</span> · ':""}${topic.state} · ${topic.year} · ${esc(place.name)}</span>${echo?`<div class="galaxy-actions">${learn}${jump}</div>`:learn}</div>`}).join("");
   document.querySelectorAll("[data-galaxy-view]").forEach(button=>{const on=!!state&&button.dataset.galaxyView===state.view;button.classList.toggle("on",on);button.setAttribute("aria-pressed",String(on))});
-  const buttons=[...$("galaxy-list").querySelectorAll("button")],current=buttons.find(b=>b.dataset.galaxyTopic===state.topic)||buttons.find(b=>b.hasAttribute("aria-current"))||buttons[0];buttons.forEach(b=>b.tabIndex=b===current?0:-1);
+  const buttons=[...$("galaxy-list").querySelectorAll("button")],current=buttons.find(b=>b.dataset.galaxyTopic===state.topic)||buttons.find(b=>b.hasAttribute("aria-current"))||buttons[0];buttons.forEach(b=>b.tabIndex=b===current||b.hasAttribute("data-galaxy-jump")?0:-1);
   galaxyRenderCheck();galaxyOverview(model);
 }
 let galaxyDown=null;
@@ -134,4 +140,5 @@ function galaxyRefresh(){if(!galaxyState)return;const state=galaxyState,key=JSON
 }
 addEventListener("resize",()=>{if(galaxyFlight){galaxyFrame();return}if(galaxyState){if(galaxyState.visuals){discard(galaxyState.journey);galaxyState.journey=galaxyRoute(galaxyState.visuals,galaxyState.model,galaxyState.topic);scene.add(galaxyState.journey)}galaxyShow(galaxyState.view)}});
 
-$("galaxy-list").addEventListener("focusin",event=>{const button=event.target.closest("button");if(button)$("galaxy-list").querySelectorAll("button").forEach(b=>b.tabIndex=b===button?0:-1)});
+$("galaxy-list").addEventListener("focusin",event=>{const button=event.target.closest("button");if(!button)return;const actions=button.closest(".galaxy-actions");
+  $("galaxy-list").querySelectorAll("button").forEach(b=>b.tabIndex=b===button||b.hasAttribute("data-galaxy-jump")||(actions&&b.closest(".galaxy-actions")===actions)?0:-1)});
