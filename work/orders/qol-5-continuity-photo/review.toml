@@ -1,92 +1,68 @@
 # [Claude Opus 5.5, effort high, reviewer]
-# Review of qol-5-continuity-photo, round 1. Everything below was produced by
-# the reviewer on commit 2d0d04a: a scratch copy of the tree (git archive), a
-# scratch clone that merges feat/qol-batch4 into it, Playwright on a 1440x900
-# Chromium, a Pixel 7 Chromium profile with touch and an iPhone 15 WebKit
-# profile with touch, each once with reduced motion on the desktop, driven by
-# mouse, keyboard and touch taps, and screenshots looked at on all three.
+# Review of qol-5-continuity-photo, round 2. Everything below was produced by
+# the reviewer on commit d16435c: a scratch copy of the tree (git archive), a
+# scratch clone of the branch merged with origin/feat/qol-batch4 and rebuilt,
+# and Playwright on a 1440x900 Chromium (once more with reduced motion), a
+# Pixel 7 Chromium profile with touch and an iPhone 15 WebKit profile with
+# touch, driven by mouse, keyboard and touch taps; screenshots and the saved
+# PNGs looked at on all four.
 v = 1
 order = "qol-5-continuity-photo"
-by = "reviewer-qol-5-continuity-photo-r1"
-reviewed = "2d0d04af6a12b2037aa029efe63bf34f02007e86"
-verdict = "improve"
+by = "reviewer-qol-5-continuity-photo-r2"
+reviewed = "d16435c0246c9b64c04ff41131901bf0e364a1f8"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
-verdict = "fail"
-evidence = """The file runs green in the builder's cache, but it does not prove its sentence. (1) My own full run of tests/test_game_qol_continuity.py on the identical build (tools/build.py output cmp-equal to the branch) failed test_a_sitting_nobody_is_at_earns_no_card; rerun alone it failed 1 of 5 and 1 of 4, so about 3 in 10. It is a race: the Resume click is a pointerdown, so a 3 s break check can land between resume() and window.__breakAway(), show the card and write S.breakAt, and then __breaks().due is false (line 258). The test above it names exactly this race and switches breaks off to avoid it; this one does not. (2) Mutations in a scratch copy: removing `if(savedOn)return;` fails the mark test (54 - 4 <= 1); removing `S.exportedAt=Date.now()` fails the export test; removing the sheet check from breakClear() fails the between-stops test. Removing `renderer.render(scene,camera)` from photoTake() does NOT fail test_photo_mode_hides_the_hud_and_takes_the_drawn_frame: the captured scene area is then one flat colour (1 colour above the caption band in Chromium and in WebKit, against 908 and 720 on the real build), and the test still passes because the caption gradient and its anti-aliased text alone give more than 24 colours. So the same-frame capture, the one risk proposal 27 names, is not held by a test that was seen failing."""
+verdict = "pass"
+evidence = """All 24 tests of tests/test_game_qol_continuity.py pass in my scratch copy (build cmp-equal to the branch). The break tests that were flaky in round 1 (nobody-is-at, between-stops, switched-off, Escape) ran 8 times in a row, 32 runs, 0 failures. Each fix was reverted in the scratch copy, rebuilt, and its test ran red: renderer.render() out of photoTake fails the photo test ({'colours': 1} above the caption band, was blind in round 1); the PHOTO_OVER check out of photoWatch fails both panel-in-photo-mode cases; the late-toast hiding out fails the toast test; the S.exportedN branch out of exportDue fails the capped-log test; the import's exportedN line out fails the imported-code test; the resize listener out fails the turned-screen test; focus return replaced by blur fails the Done test; the away check out of breakCheck fails the nobody-is-at test. One fix is not held on main by any test: the wrapper passing save()'s arguments through (see the low finding), because batch 4 is not on main yet. No test sleeps or waits on a timer: every wait is on a check counter, a frame count, a DOM fact or a seam."""
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "Ran it myself in the worktree: ruff check, ruff format --check, checks.py style ('no em dashes, no emoji'), checks.py sinks all exit 0, and pytest -m 'not browser and not integration' passes. The new code builds every node with createElement and textContent; the only innerHTML it reaches is toast(), with fixed strings. On the PR the lint job is green up to the work-order step, which waits on this review."
+evidence = "Ran it myself in the scratch copy: ruff check, ruff format --check, checks.py style ('no em dashes, no emoji') and checks.py sinks exit 0, and pytest -m 'not browser and not integration' passes (one skip there only because the scratch copy has no GitHub origin). On PR #195 at d16435c every step of the lint job is green up to 'work orders are readable, reviewed and inside their files', which waits on this review. The new DOM is built with createElement and textContent throughout."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "Ran the six generators with --check in the worktree: build OK, tree OK, cookbook OK, sync_template and sync_fork_source exit 0, syllabus OK. The fork_source mirror of 33-photo.js, 80-sync.js and 89-dashboard.js matches src/. No frozen file is touched: the diff against origin/main has nothing under 85-settings.js, body.html, style.css, src/galaxy/, tools/build.py or pages.yml."
+evidence = "Ran the six generators with --check in the scratch copy: build OK, tree OK, cookbook OK, sync_template and sync_fork_source exit 0, syllabus OK. The fork_source mirrors of 33-photo.js, 80-sync.js and 89-dashboard.js match src/. No frozen file is touched: git diff origin/main...HEAD names nothing under 85-settings.js, body.html, style.css, src/galaxy/, tools/build.py, pages.yml or vibemap/dashboard.py."
 
 [[criteria]]
 id = "c4"
-verdict = "fail"
-evidence = """findings.md after the board trim is proposals 24 to 27. 24, 25 and 27 are built. 26 (the forgiving streak) is neither built nor rejected in the order: findings.md and order.toml say nothing about it, and the pull request's claim that it 'is named as a follow-up on the order' is not true; only the PR body names it. The reason given (vibemap/dashboard.py is outside owns and must change with the game, or R10 comes back) is a good one, and is exactly the builder's step 2: tell the manager, and record it in the order as batch 4 did with its Builder's note. The same holds for the half of 24 the trim deferred: the reset warning reaches only reset() on the s-9 screen; both 'Reset progress' buttons (Roadmap and Settings, resetProgress in 85-settings.js) still clear without it, which is right under the trim but unrecorded in the order."""
+verdict = "pass"
+evidence = """findings.md after the board trim is proposals 24 to 27. Nothing is silently skipped: the Builder's note names each part not built, why, and where it goes, and the PR text now matches it. 24: the export line is built and tested (Roadmap line, gone after an export, back after a new stop, correct across a capped event log and an imported code, reset() on the s-9 screen warns; I saw all of it by touch on both phones and by mouse and keyboard on the laptop, and the break card's Export progress button opens the Roadmap and exports in one tap). The saved mark is batch 4's by agreement: in a scratch clone merging feat/qol-batch4 into d16435c there is one mark and one __saved of batch 4's shape, and this file's tests plus batch 4's saved-mark and export tests (28) pass together; round 1's high finding is dealt with. The two Reset progress buttons wait for #183 (85-settings.js frozen), recorded. 25: built and complete; shown only between stops, only with input in the last two minutes, once a sitting, closable by Keep going, Escape and Stop reminding me, reachable by Tab right after the HUD, 46 px buttons, follows the HUD when the screen turns. 26: not built, recorded with a sound reason (vibemap/dashboard.py is the cli team's and outside owns; changing only the game brings R10 back), and posted on #127; it needs its own order. 27: built and complete on all three profiles: Photo in the pill on a laptop, in More on a phone, P on a keyboard; the HUD, joystick, jump, toasts and break card step aside; walking works by keys and by tapping the ground on both phones; the PNG is the drawn island with a two-line caption; Share first where files can be shared (WebKit), Save image first otherwise; a panel opened in photo mode ends it and one Escape closes one thing; Done returns focus to Photo on a laptop."""
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
-evidence = "Builder's qol5-* shots exist for the three profiles, and I took my own of the mark, the break card, the export line, photo mode and the preview on desktop, Android and iPhone (and desktop with reduced motion) and looked at them. The break card sits under the HUD, inside the viewport with a 16 px gutter, buttons 44 to 46 px; the preview fits the phone with Share first on WebKit and Save image first on Chromium; the saved PNG (739 KB desktop, 677 KB Android, 608 KB iPhone) is the island with a readable two-line caption. Rolinda's card is plain ('You have been at it for a while...'), the photo and export copy is plain system copy, no em-dash and no emoji in the diff. Under reduced motion the mark's transition is 'none', fx() skips the entrance and the flash is not drawn."
+evidence = "I took my own screenshots of the break card, the export line, photo mode, the preview and the state after Done on the desktop, desktop with reduced motion, Pixel 7 and iPhone 15, plus the saved PNG on each, and looked at them. The card sits under the HUD inside a 16 px gutter; the preview fits each phone; the caption is readable on a 1440 and a 393 wide picture. Under reduced motion fx() skips the entrances and no flash is drawn. Rolinda's card is plain ('You have been at it for a while...'), the export and photo copy is plain system copy; no em-dash and no emoji in the diff."
 
 [[findings]]
-severity = "high"
+severity = "low"
 file = "src/game/80-sync.js"
-text = """A second saved mark for a concept another accepted order already owns. qol-4-feedback-companion (PR #164, accepted, waiting for its train car) built 'the save() tick from 24' (its findings.md, line 7): savedTick() in 18-avatar.js, raised from save(mark) in 00-state.js, with window.__saved = {n, on}. This order builds a second mark beside the stop dots, redefines window.__saved as {on, raised}, and wraps save with `save=function(){saveRecord();...}`, which drops batch 4's `mark` argument, so every save(false) batch 4 kept quiet would raise a mark again. In a scratch clone merging feat/qol-batch4 with 2d0d04a and rebuilding, the game carries both marks and both seams (the later one wins), and batch 4's test_a_claim_shows_the_saved_mark_and_takes_it_away_again and test_the_mark_is_throttled_because_save_is_called_constantly fail with TypeError on window.__saved().n. Whichever of #164 and #195 lands second breaks. One helper per concept: keep one mark (batch 4's, which is in 00-state.js where the proposal put it), have this order hook only the export line onto the write, and agree it on #127 with the state manager."""
+text = "Nothing holds the save() wrapper's pass-through: replacing `saveRecord.apply(this,arguments)` with `saveRecord()` passes this file's tests on main and, in the scratch clone merged with feat/qol-batch4, batch 4's saved-mark tests too, although save(false) would then raise the mark. Whichever of #164 and #195 lands second should add a test that a save(false) leaves window.__saved().n unchanged with this wrapper in place."
 
 [[findings]]
-severity = "medium"
-file = "tests/test_game_qol_continuity.py"
-text = "test_a_sitting_nobody_is_at_earns_no_card is flaky (failed 3 of about 10 runs here). The Resume click counts as input, and a break check that fires before window.__breakAway() shows the card and writes S.breakAt, so due is false at line 258. Do what the between-stops test does: seed breaks off, resume, call __breakAway(), then switch breaks on, and only then wait for the checks."
-
-[[findings]]
-severity = "medium"
-file = "tests/test_game_qol_continuity.py"
-text = "The photo test cannot see a blank capture. With renderer.render() removed from photoTake() the scene part of the PNG is one flat colour in Chromium and WebKit, yet colours > 24 still passes, because it counts the whole image and the caption band alone clears it. Count colours in the part above the caption band (for example the top 75 percent), so the test fails without the same-frame render; it then does what its comment says."
-
-[[findings]]
-severity = "medium"
+severity = "low"
 file = "src/game/33-photo.js"
-text = "Photo mode does not hold the keyboard. With it open, c opens Ask and Cmd K opens the palette (desktop, Chromium, after a click on the island to frame the shot): the HUD stays hidden, the photo bar (z-index 45) floats over the lower part of the Ask sheet, and one Escape closes both the photo mode and the sheet, because this module's Escape listener is registered before the sheet's and the sheet's ignores defaultPrevented. Enter beside a stop goes the same way through enterNear(). Either close photo mode when a panel opens, or have the global shortcuts ask photoOn() first; the break card already asks it."
+text = "A zoom made in photo mode is written to Settings on top of the extra step photo mode added: from zoom 0, one Zoom out in photo mode leaves Settings at 0.5 after Done, two steps out, while the comment says leaving goes back to the level the player chose."
 
 [[findings]]
-severity = "medium"
+severity = "low"
+file = "src/game/33-photo.js"
+text = "Focus sits on Take photo, so Space, the jump key, takes a photo for a player walking with WASD in photo mode (seen: one shot and the preview after a single Space). Harmless, but surprising; Take photo could stay unfocused until Tab."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "The photo bar's hint says 'P or Escape leaves' on a phone as well, where there are no keys; on touch the Done button is the way out."
+
+[[findings]]
+severity = "low"
+file = "src/game/33-photo.js"
+text = "Carried from round 1 and recorded in the Builder's note: the Photo button has no icon, and #bottom hidden by visibility leaves a black band under the island in photo mode (not in the PNG). Both wait for a file outside this order."
+
+[[findings]]
+severity = "low"
 file = "work/orders/qol-5-continuity-photo/findings.md"
-text = "Proposal 26 and the resetProgress half of 24 are not built and not recorded in the order (see c4). Add a builder's note naming each, why (vibemap/dashboard.py outside owns and the R10 coupling; 85-settings.js frozen for #183), and where it goes, and correct the PR text that says the order already names them."
-
-[[findings]]
-severity = "low"
-file = "src/game/33-photo.js"
-text = "#toast is created lazily by toast(), so when no toast has been raised before photo mode opens, PHOTO_HIDE finds nothing to hide and the next toast shows over the clean view (seen: the First light achievement over photo mode on the desktop). The PNG itself stays clean."
-
-[[findings]]
-severity = "low"
-file = "src/game/33-photo.js"
-text = "Done and P blur focus to the body instead of returning it to the Photo button that opened the mode; a keyboard player starts again from the top of the page."
-
-[[findings]]
-severity = "low"
-file = "src/game/33-photo.js"
-text = "The Photo button is the only one in the pill without an icon (Search, Roadmap, Backpack, Ask, Stats, Vault, Tree, World and More all carry one); the builder names it as a follow-up."
-
-[[findings]]
-severity = "low"
-file = "src/game/89-dashboard.js"
-text = "The break card's top is measured once as it appears; turning a phone while it is up leaves it at the old HUD height."
-
-[[findings]]
-severity = "low"
-file = "src/game/80-sync.js"
-text = "exportDue() after an export counts claim events, and S.events is capped at 600, so after about ten hours of play ticks since an export the claims fall off and the line goes quiet while stops are still in no code. A code imported into a fresh browser is also reported as stops that 'live only in this browser'."
-
-[[findings]]
-severity = "low"
-file = "src/game/33-photo.js"
-text = "Hiding #bottom with visibility keeps its room, so in photo mode a black band stays under the island on every profile; the PNG does not include it, but the framing view looks cut off."
+text = "PR #195's title still reads 'the game says it saved', which this order no longer builds; the body is right."
