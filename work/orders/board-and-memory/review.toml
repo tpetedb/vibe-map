@@ -1,53 +1,40 @@
 v = 1
 order = "board-and-memory"
 by = "codex-reviewer-board-and-memory"
-reviewed = "850dbe079c9221b19c7a4623eb0b87a25cd6d614"
-verdict = "improve"
-
-# The requested f2fe6ee head moved before this review. just work-review named
-# 850dbe0, the clean branch head and source of the disposable clone below.
+reviewed = "2e07c402330319be8cce26c1ba3662cee3c4b951"
+verdict = "accept"
 
 [[criteria]]
 id = "c1"
 verdict = "pass"
-evidence = "I ran .venv/bin/pytest -q tests/test_board.py tests/test_memory.py: 67 passed. I read the test cases for concurrent room writers, stable ids, derived columns, digest cap, lint refusals, missing memory, two CLI writers and idempotent index. They run board commands or inspect emitted files, so they test the stated behavior rather than only source text."
+evidence = "I ran the exact c1 command on 2e07c40. I read the cases and inspected the CLI paths they exercise: two-process locked append, stable derived ids, three derived columns, the 300-entity digest cap, lint refusals, missing-memory hooks, concurrent memory writers and idempotent index rebuild. The tests exercise commands and files, not merely importability."
 
 [[criteria]]
 id = "c2"
 verdict = "pass"
-evidence = "I checked scripts/memory-mcp.sh and .mcp.json are absent; searched .codex, .claude, justfile and tools/board.py for server-memory, read_graph and memory-serve (no matches); and ran python3 tools/board.py memory-lint: 11 entities, OK. The branch adds no project memory MCP registration."
+evidence = "The c2 command passed, including memory-lint on 11 surviving entities. I inspected the project config and diff: scripts/memory-mcp.sh, .mcp.json, server-memory registration, read_graph deny and memory-serve are absent. This proves removal of the project memory MCP; unrelated user-level Codex MCP tools are outside this order."
 
 [[criteria]]
 id = "c3"
 verdict = "pass"
-evidence = "I ran the branch's board.py read from this worktree and the main checkout with the branch script. Both exited 0 and returned identical 8,256-character output, including the same common-dir ROOM.md path and 207 entries at that time. In the disposable clone, main and linked worktree sessions also appended to one ROOM.md."
+evidence = "The c3 main/linked read comparison passed on this head. In a disposable main checkout and linked worktree at 2e07c40, both resolved /private/tmp/board-c6-head.vxkisG/main/.git as common dir; their Codex sessions wrote one board/ROOM.md. The read command checks identical output, and the live append checks common storage."
 
 [[criteria]]
 id = "c4"
 verdict = "pass"
-evidence = "I parsed teams.toml: every listed later-harness prefix is present. I parsed tracked .codex/config.toml: no sandbox_workspace_write.writable_roots. I read the launcher and observed its exact argv in the linked clone: codex exec -s workspace-write --json <prompt> --add-dir /private/tmp/board-review.P8gVjb/main/.git/board. The linked session appended through that absolute common board. tests/test_board.py exercises board.py's refusal message naming --add-dir. The sibling .git protection failure is ruled under c6."
+evidence = "The c4 check passed. I parsed the harness path list and tracked .codex/config.toml (no sandbox_workspace_write.writable_roots), then read justfile and tools/board.py: just codex adds only the absolute common board as --add-dir. The linked installed-client run wrote that board and denied sibling .git writes. board.py's refused error names the --add-dir launch."
 
 [[criteria]]
 id = "c5"
 verdict = "pass"
-evidence = "I ran the exact c5 gate with uv: ruff check and format --check, checks.py style and sinks, the non-browser non-integration pytest battery, all six generator --check commands, work.py validate and the camp-template grep. The gate exited 0. An initial run in this task's restricted shell could not bind loopback sockets; the same gate passed with normal local test permissions. This gate does not prove the separate Codex sandbox promise in c6."
+evidence = "I ran just work-check board-and-memory on the clean 2e07c40 tree: c1-c5 passed. Its c5 command ran ruff check/format, style and sink checks, the non-browser/non-integration pytest battery, six generated-file checks, work.py validate and the camp-template grep. I inspected the 850dbe0..2e07c40 diff: the new untrusted-checkout hint leaves sandbox choice with the caller. I tested the Codex boundary separately for c6."
 
 [[criteria]]
 id = "c6"
-verdict = "fail"
-evidence = "Installed codex-cli 0.156.1. In a disposable clone of reviewed commit 850dbe0 (main=/private/tmp/board-review.P8gVjb/main, linked=/private/tmp/board-review.P8gVjb/linked), app-server hooks/list from linked listed sessionStart keyed to main/.codex/hooks.json:session_start:0:0, source project, trustStatus untrusted, hash sha256:a066f63aa1c2747dc523b8fec03669e94839cf6c2f648c3d63bbb27853755112. I gave no hook trust or bypass. With -s workspace-write, just codex exec wrote ROOM entries d8aaa1ed from main and 98114f03 from linked; interactive just codex resume --include-non-interactive <the fresh thread id> wrote e28b2ede. The linked client denied touch .agents/review-probe with Operation not permitted. But from the same linked just codex exec -s workspace-write --json launch, touch /private/tmp/board-review.P8gVjb/main/.git/review-probe exited 0 with empty stderr; I confirmed the file exists. The launcher appended --add-dir /private/tmp/board-review.P8gVjb/main/.git/board. This fails the required denial of another .git path. Plain just codex without -s also exited before a session because effective permissions rejected --add-dir; this host needed an explicit workspace-write override. With the hook pending review I did not claim live hook output; the launcher printed the untrusted reason and its prompt construction is covered by tests."
+verdict = "pass"
+evidence = "Installed codex-cli 0.156.1. I made disposable main and linked checkouts at 2e07c40 under /private/tmp/board-c6-head.vxkisG, with branch .codex/hooks.json in main. Every live workspace-write run used -s workspace-write, -c sandbox_workspace_write.exclude_slash_tmp=true and -c sandbox_workspace_write.exclude_tmpdir_env_var=true, removing both default temp writable roots; just codex supplied --add-dir /private/tmp/board-c6-head.vxkisG/main/.git/board. App-server hooks/list from linked, with only the disposable main path trusted in disposable config, listed project sessionStart keyed to main/.codex/hooks.json:session_start:0:0, hash sha256:a066f63aa1c2747dc523b8fec03669e94839cf6c2f648c3d63bbb27853755112, trustStatus untrusted/pending. I granted no hook trust or bypass. Fresh just codex exec --json appended CHECKPOINT at 03:49:51Z (id b67a6b6b); just codex interactive resume 01a0d188-8fc5-79e1-8718-dab9d952fa9d, skipping hook review with Esc, appended at 03:50:40Z (bea448ed); linked just codex exec --json appended at 03:51:06Z (6eed5ab3). I inspected the common ROOM.md. In the linked session, touch .agents/c6-exact-probe, common .git/c6-exact-probe and common .git/refs/c6-exact-probe each exited 1, Operation not permitted; touch common .git/board/c6-exact-board-probe exited 0. The denied files do not exist and the board probe does. The launcher printed that it feeds the digest in the first prompt while hooks are off; I read codex_argv and its test showing the board read prepended to a fresh interactive prompt. This is launcher-fed context, not a claim that the unapproved hook fired. The actual older main checkout lacks the branch SessionStart hook, so its linked /hooks listing of 3 non-project hooks is deployment state, not this disposable-main receipt. No project memory MCP is registered. Limitation: exec resume rejects the launcher's trailing --add-dir, while the supported interactive just codex resume above works. The old 850dbe0 IMPROVE was a false boundary result caused by Codex's default /tmp writable root; the two exclusions make this denial test valid."
 
 [[criteria]]
 id = "c7"
 verdict = "pass"
-evidence = "I read work/BOARD.md, .agents/skills/shared-memory/SKILL.md and docs/adr/0018-shared-memory.md against the commands. They describe the board's decisions and limits, ROOM.md as the short-term channel, the memory schema, caps, never-store list and board.py memory add|search|index. ADR 0018 has the explicit Superseded by: DECISION #193 section 4 line while retaining the earlier server comparison as history. BOARD.md's assertion that nothing else under .git is writable is false on this Codex client, as described below."
-
-[[findings]]
-severity = "high"
-file = "work/BOARD.md"
-text = "c6 security boundary fails on Codex 0.156.1: a linked worktree launched by just codex exec -s workspace-write --json with only common .git/board passed as --add-dir can write a sibling file in common .git. Reproduction: ask that Codex session to run touch /private/tmp/board-review.P8gVjb/main/.git/review-probe; it reports exit 0 and the file exists. .agents/review-probe was denied in the same client. BOARD.md says nothing elsewhere in .git is writable. Fix the boundary or change the acceptance and setup before landing."
-
-[[findings]]
-severity = "medium"
-file = "tools/board.py"
-text = "On this installed client, plain just codex exited before a session with 'Ignoring --add-dir ... effective permissions do not allow additional writable roots'. Explicit -s workspace-write made the launch work. The documented just codex entry point does not by itself provide a writable board with this host's effective defaults."
+evidence = "I read work/BOARD.md, .agents/skills/shared-memory/SKILL.md and docs/adr/0018-shared-memory.md. The protocol names board decisions and the work-check/work-accept/CI/Tom limits; the skill and board describe ROOM as short-term, the indexed record schema, caps, never-store list, and board.py memory add|search|index writes. ADR 0018 says Superseded by DECISION #193 section 4 and retains the former server and runner-up comparison as history. BOARD.md's new untrusted-checkout hint matches the installed client."
