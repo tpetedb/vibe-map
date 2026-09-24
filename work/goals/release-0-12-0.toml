@@ -1,0 +1,14 @@
+v = 1
+id = "release-0-12-0"
+statement = "0.12.0 goes out: the changelog fragments on main after the Galaxy train and car L are assembled into one dated section that reads as one changelog, and the version is 0.12.0 everywhere a tool reads it."
+# What this goal deliberately leaves out.
+not = [
+  "The tag, the GitHub release, the nightly on the tag and Pages: the orchestrator's, after this lands and the board has looked.",
+  "Anything behind an open pull request (#190, #192, #197, #203): a fragment that arrives later belongs to 0.13.0.",
+  "New pictures under docs/media: the issue59 order refreshed them tonight; a Galaxy picture is a 0.13.0 follow-up.",
+  "1.0.0: the course is still changing shape, so this is a minor.",
+]
+budget = 1
+orders = [
+  "release-0-12-0",
+]
