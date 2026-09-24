@@ -1,0 +1,43 @@
+# The state team's agreement on this order's change to src/game/00-state.js.
+# Refreshed on the integrated train after recovery changed scene-owned code,
+# tests and order metadata; the state-owned implementation itself is unchanged.
+v = 1
+order = "qol-4-feedback-companion"
+team = "state"
+by = "manager-state"
+reviewed = "efc64e2e817c4ad5696faa4663e52e5311493e3e"
+verdict = "accept"
+note = '''
+Accepted at the integrated contribution checkpoint. The recovery changes the
+achievement cadence in src/game/18-avatar.js and its tests. It does not change
+src/game/00-state.js or another state-owned path. The state contribution is
+byte-identical to the accepted recovery branch and therefore keeps the same
+contract:
+- save(mark) raises the saved indicator only after localStorage accepted the
+  record, while save(false) lets message-log writes avoid raising it.
+- S.hints and S.notes have defaults and are validated entry by entry during
+  load. They remain local browser state and do not enter the versioned progress
+  code.
+- visibility handling pauses and restores the shared game clock when battery
+  saver is active, so hidden wall-clock time does not advance island time.
+
+Evidence at efc64e2e817c4ad5696faa4663e52e5311493e3e:
+- The state-owned diff against the accepted recovery branch is empty. The only
+  owned-file difference between this train and feat/qol-batch4 is in
+  tests/test_harness_determinism.py; it belongs to the shared test area and does
+  not alter the state contract.
+- tests/test_game_state.py, test_reset.py, test_config_levels.py,
+  test_camp_config.py and test_project.py, excluding browser and integration
+  markers: 47 passed.
+- tools/build.py --check, tools/sync_fork_source.py --check,
+  tools/checks.py style, git diff --check and the source-to-mirror cmp passed.
+- just work-validate read 29 orders and found zero active ownership collisions;
+  it separately reported an unrelated draft whose owns list is empty.
+
+The existing low findings remain follow-up work: NOTE_CAP belongs with the
+saved-record constants; note timestamps and text plus the hints list need
+bounds; track() should not raise a progress-saved mark for its minute tick, or
+the comment must describe that behavior; and the battery-saver-off comment
+should say only the clock keeps running while browsers suspend hidden frames.
+These do not make the accepted state change unsafe.
+'''
