@@ -780,6 +780,31 @@ CODEX_OFF = {
     "disabled": "the SessionStart hook in {h} is turned off in /hooks",
 }
 CODEX_CONTEXT_DEFAULT = 2500  # codex-rs hooks output_spill.rs
+# Codex starts an untrusted project read-only and then ignores --add-dir; the
+# sandbox is the caller's to choose, so just codex only says so.
+CODEX_READ_ONLY = (
+    "board: this checkout is untrusted in Codex, so Codex starts read-only and "
+    "ignores --add-dir; pass -s workspace-write to write the board"
+)
+
+
+# The flags that choose a sandbox (codex --help, codex-cli 0.156.1; --yolo is its
+# hidden alias, --full-auto an older client's). --dangerously-bypass-hook-trust
+# does not, so it still gets the hint.
+CODEX_SANDBOX = {
+    "-s",
+    "--sandbox",
+    "--approve-for-me",
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--yolo",
+    "--full-auto",
+}
+
+
+def codex_sandbox_given(args: list[str]) -> bool:
+    """Whether the codex arguments already choose a sandbox or bypass it,
+    counting the -sVALUE, -s=VALUE and --sandbox=VALUE spellings too."""
+    return any(a in CODEX_SANDBOX or a.startswith(("-s", "--sandbox=")) for a in args)
 
 
 def _git_dir(path: Path, *args: str) -> Path:
@@ -955,6 +980,8 @@ def launch_codex(args: list[str]) -> int:
     if digest is not None and argv[-1].startswith(CODEX_FED):
         why = CODEX_OFF[state].format(h=root / ".codex" / "hooks.json")
         print(f"board: the digest goes in the first prompt, as {why}", file=sys.stderr)
+    if state == "untrusted" and not codex_sandbox_given(args):
+        print(CODEX_READ_ONLY, file=sys.stderr)
     os.execvp(argv[0], argv)
     return 0  # pragma: no cover  execvp does not return
 

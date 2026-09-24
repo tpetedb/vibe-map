@@ -582,6 +582,45 @@ def test_the_launcher_feeds_the_digest_where_the_hooks_are_off(
     assert board.HEADER in argv[-1] and argv[-1].endswith("\n\nhello")
 
 
+def test_an_untrusted_launch_is_told_to_pass_the_sandbox_and_given_none(
+    room: Path,
+    codex_home: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Codex starts an untrusted project read-only and then ignores --add-dir,
+    so the launcher says to pass -s workspace-write, and never adds it itself."""
+    seen: list[list[str]] = []
+    monkeypatch.setattr(board.os, "execvp", lambda _f, argv: seen.append(argv))
+
+    def sandbox(argv: list[str]) -> list[str]:
+        return [a for a in argv if a in ("-s", "--sandbox")]
+
+    # Trusting hooks chooses no sandbox, so it still gets the hint.
+    for given in (["hello"], ["--dangerously-bypass-hook-trust", "hello"]):
+        board.launch_codex(given)
+        (line,) = [x for x in capsys.readouterr().err.splitlines() if "-s " in x]
+        assert "untrusted" in line and "read-only" in line and "--add-dir" in line
+        assert "pass -s workspace-write" in line
+        assert not sandbox(seen[-1])
+    for given in (
+        ["-s", "workspace-write", "hello"],
+        ["-sworkspace-write"],
+        ["--sandbox", "workspace-write"],
+        ["--sandbox=workspace-write"],
+        ["--approve-for-me"],
+        ["--dangerously-bypass-approvals-and-sandbox"],
+        ["--yolo"],
+    ):
+        board.launch_codex(given)
+        assert "-s workspace-write" not in capsys.readouterr().err, given
+        assert sandbox(seen[-1]) == sandbox(given)
+    codex_home.parent.mkdir(parents=True)
+    codex_home.write_text(_trusted(ROOT, board.codex_hooks_root(ROOT)))
+    board.launch_codex(["hello"])
+    assert "-s workspace-write" not in capsys.readouterr().err
+
+
 def _linked_checkout(tmp_path: Path) -> tuple[Path, Path]:
     """A main checkout that tracks this repository's .codex/hooks.json, and a
     linked worktree of it, which carries its own copy of that file."""
