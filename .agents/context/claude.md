@@ -1,5 +1,3 @@
-@AGENTS.md
-
 # Claude Code specifics
 
 - The harness: `config.toml` at the root is the one file a person edits. `.claude/settings.json`, `.claude/agents/`, `.codex/` and this file are rendered from `.agents/` by `uv run python .agents/utils/harness.py sync`; `python3 .agents/utils/harness.py check` finds drift, `explain` says where each value comes from. Edit the source, never an output (`.agents/README.md`).
@@ -10,5 +8,3 @@
 - Vault path for the Obsidian skill: `vault/`.
 - Before a commit: `just verify`. Before touching the game: the file map in `AGENTS.md` and the conventions in `docs/AOE-STUDY.md`.
 - Other sessions may be active in this repo (`git worktree list`). Work in a worktree and never pop a shared stash.
-
-<!-- Rendered by .agents/utils/harness.py sync from .agents/context/claude.md: edit that file, then sync. -->

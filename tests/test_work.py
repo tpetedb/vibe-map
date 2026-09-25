@@ -220,6 +220,35 @@ def test_two_active_orders_may_not_own_the_same_file(repo: Path) -> None:
     assert "one" in clash[0] and "two" in clash[0]
 
 
+def test_a_shared_file_is_sequential_when_one_order_needs_the_other(
+    repo: Path,
+) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    commit(repo)
+    other = repo.parent / "other"
+    sh(repo, "worktree", "add", "-q", str(other), "-b", "feat/y", "origin/main")
+    put_order(other, "two", order_text("two", "feat/y", ["src/panel.js"]))
+    assert len(work.collisions(work.active(repo))) == 1, "undeclared stays a clash"
+    put_order(
+        other, "two", order_text("two", "feat/y", ["src/panel.js"], needs=["one"])
+    )
+    assert work.collisions(work.active(repo)) == []
+
+
+def test_a_plan_puts_an_order_after_the_one_it_shares_a_file_with(
+    repo: Path,
+) -> None:
+    put_order(repo, "aaa", order_text("aaa", "b/a", ["src/panel.js"]))
+    put_order(repo, "bbb", order_text("bbb", "b/b", ["src/panel.js"], needs=["aaa"]))
+    (repo / "work" / "goals").mkdir()
+    (repo / "work" / "goals" / "g.toml").write_text(
+        'v = 1\nid = "g"\nstatement = "s"\norders = ["aaa", "bbb"]\n'
+    )
+    groups, blocked = work.plan("g", repo)
+    assert [[o.id for o in g] for g in groups] == [["aaa"], ["bbb"]]
+    assert blocked == {}
+
+
 def test_an_order_is_landed_once_its_review_is_on_main(repo: Path) -> None:
     put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
     review = repo / "work" / "orders" / "one" / "review.toml"
@@ -754,6 +783,83 @@ def test_what_arrives_from_main_in_a_merge_is_not_the_orders_doing(repo: Path) -
     assert work.strays(order, "origin/main") == []
     # And a file of another team edited on top of that merge is still caught.
     (repo / "src" / "scene.js").write_text("// and now I touched it too\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+
+
+def test_what_a_needed_order_built_is_not_the_later_orders_stray(repo: Path) -> None:
+    """A later order builds on the branch of the order it needs, before that one
+    lands: what it carries from there unchanged is the earlier order's work."""
+    one = order_text("one", "feat/one", ["src/scene.js"], team="scene")
+    branch_with(
+        repo, "feat/one", {"work/orders/one/order.toml": one, "src/scene.js": "// 1\n"}
+    )
+    two = order_text("two", "feat/two", ["src/panel.js"], needs=["one"])
+    branch_with(
+        repo, "feat/two", {"work/orders/two/order.toml": two, "src/panel.js": "// 2\n"}
+    )
+    sh(repo, "merge", "-q", "--no-edit", "feat/one")
+    order = work.find("two", repo)
+    assert work.strays(order, "origin/main") == []
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    # A train car carrying both reads the later branch at the commit it merged.
+    car(repo, "feat/one", "feat/two")
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "car")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    sh(repo, "checkout", "-q", "feat/two")
+    # Changing the needed order's file on top of what it built is still a stray,
+    # in the working tree and once committed.
+    (repo / "src" / "scene.js").write_text("// 1, and two touched it\n")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+    commit(repo, "a stray on top")
+    assert work.strays(order, "origin/main") == ["src/scene.js"]
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "two: src/scene.js is outside what it owns" in ran.stdout, ran.stdout
+    # Without the need, the same merge is somebody else's files.
+    sh(repo, "reset", "-q", "--hard", "HEAD~1")
+    (repo / "work/orders/two/order.toml").write_text(two.replace('["one"]', "[]"))
+    assert "src/scene.js" in work.strays(work.find("two", repo), "origin/main")
+    # And a needed order whose branch cannot be found vouches for nothing.
+    sh(repo, "checkout", "-q", "--", "work/orders/two/order.toml")
+    sh(repo, "branch", "-D", "feat/one")
+    assert "src/scene.js" in work.strays(work.find("two", repo), "origin/main")
+
+
+def test_a_needed_branch_that_caught_up_with_main_still_vouches(
+    repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both branches merge main after the later one built on the earlier: git
+    then finds two merge bases, and names the newer, main's, when asked for
+    one; what the later branch took from the needed one is still read at the
+    commit it took."""
+    one = order_text("one", "feat/one", ["src/scene.js"], team="scene")
+    monkeypatch.setenv("GIT_COMMITTER_DATE", "2020-01-01T00:00:00Z")
+    branch_with(
+        repo, "feat/one", {"work/orders/one/order.toml": one, "src/scene.js": "// 1\n"}
+    )
+    monkeypatch.delenv("GIT_COMMITTER_DATE")
+    two = order_text("two", "feat/two", ["src/panel.js"], needs=["one"])
+    branch_with(
+        repo, "feat/two", {"work/orders/two/order.toml": two, "src/panel.js": "// 2\n"}
+    )
+    sh(repo, "merge", "-q", "--no-edit", "feat/one")
+    sh(repo, "checkout", "-q", "main")
+    (repo / "README.md").write_text("main moved\n")
+    commit(repo, "main moves")
+    sh(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
+    sh(repo, "checkout", "-q", "feat/one")
+    sh(repo, "merge", "-q", "--no-edit", "main")
+    (repo / "src" / "scene.js").write_text("// 1, round 2\n")
+    commit(repo, "one moves on")
+    sh(repo, "checkout", "-q", "feat/two")
+    sh(repo, "merge", "-q", "--no-edit", "main")
+    assert len(sh(repo, "merge-base", "--all", "HEAD", "feat/one").split()) == 2
+    assert sh(repo, "merge-base", "HEAD", "feat/one") == sh(repo, "rev-parse", "main")
+    order = work.find("two", repo)
+    assert work.strays(order, "origin/main") == []
+    ran = tool(repo, "ci", "--base", "origin/main", "--head", "feat/two")
+    assert "outside what it owns" not in ran.stdout, ran.stdout
+    (repo / "src" / "scene.js").write_text("// 1, and two touched it\n")
     assert work.strays(order, "origin/main") == ["src/scene.js"]
 
 

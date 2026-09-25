@@ -1,0 +1,15 @@
+# The balanced profile, the default: the host with the clients' own sandboxes.
+# Complete, no inheritance: the three profiles declare the same keys.
+version = 1
+safeguards = "standard"
+runner = "native-sandbox"
+network = "allowlist"
+escalation = "on-request"
+local_checks = "affected"
+review = { independent = 1, second = "deterministic" }
+effort = "models"
+mcp_servers = "from-conf"
+loop = { blocks_no_progress = 2, blocks_max = 8, iterations = 25, wall_minutes = 60 }
+context = { digest_max_chars = 6000, tool_output_max_chars = 12000, read_max_kb = 200, agents_md_chain_max_kb = 24 }
+claude = { failIfUnavailable = true, allowUnsandboxedCommands = false, defaultMode = "default" }
+codex = { sandbox_mode = "workspace-write", approval_policy = "on-request" }

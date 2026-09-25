@@ -30,6 +30,7 @@ What each skill in this repo does, when Claude Code loads it, how to prove that 
 | `python-data` | Small readable Python for reading the CSV, summaries and charts, run with uv | "write a script", "make a chart", "plot", "automate this", "do it in Python" | house |
 | `readme-quickstart` | Writes or repairs a README that gets a stranger from clone to a working run on the first screen, after makeareadme.com and the doc-doc templates | "write a README", "improve the README", "add a quickstart", "how do people get started", "document how to run this" | house |
 | `semver` | Picks the next version with Semantic Versioning 2.0.0 and bumps `pyproject.toml` and the git tag | "bump the version", "is this a breaking change", "release 0.3.0", "tag it", "what does 0.x mean" | house |
+| `shared-memory` | Reads and writes the shared memory both teams search (one `memory.jsonl` and a derived index for every worktree, Claude and Codex, through `tools/board.py memory`) and posts to the board room next to it. Product-only, a camp does not get it | "what do we know about", "remember this", "is there a gotcha for", "post to the board" | house |
 | `work-order` | How several agents work here at once: a task is a work order with the files it owns and acceptance criteria that are commands, a different agent reviews it, managers agree what crosses teams. Product-only, a camp does not get it | "build this order", "review this order", "plan this goal", "split this into orders", "how do the teams work together" | house |
 | `webapp-testing` | Drives a local web app with Playwright: screenshots, console logs, element discovery, a server helper | "test the game in a browser", "take a screenshot of the page", "check the console for errors", "Playwright" | vendored, https://github.com/anthropics/skills/tree/main/skills/webapp-testing, Apache-2.0 |
 | `verification-before-completion` | Refuses to claim done, fixed or passing without running the proving command first | fires on its own before "done", "fixed", "tests pass", a commit or a PR | vendored, https://github.com/obra/superpowers/tree/main/skills/verification-before-completion, MIT |
@@ -72,6 +73,8 @@ Every folder in `.agents/skills/` has a row in both tables here. `tests/test_rep
 | | "why does just check take an argument?" | |
 | `semver` | "should this be 0.3.0 or 1.0.0?" | "add a changelog entry" |
 | | "bump the version and tag it" | |
+| `shared-memory` | "remember this gotcha for the next session: ..." | "write a note about what we learned" (that is `obsidian-notes`) |
+| | "what do we know about the sync-main conflicts?" | |
 | `webapp-testing` | "open the game in a headless browser and screenshot the title" | "run the smoke tests" (that is `just smoke`, develop-camp) |
 | | "check the browser console for errors on game/vibe-map.html" | |
 | `verification-before-completion` | ask for any change, then "is it done?" or "commit it" | a plain question |
