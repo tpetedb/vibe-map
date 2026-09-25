@@ -1,0 +1,1 @@
+- Keep the expanded minimap and its controls clear of the zoom column on compact phones.

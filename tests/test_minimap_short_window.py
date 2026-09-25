@@ -17,6 +17,15 @@ def _boxes(page: Page) -> dict[str, dict[str, float]]:
     )
 
 
+def _overlaps(a: dict[str, float], b: dict[str, float]) -> bool:
+    return not (
+        a["right"] <= b["left"]
+        or b["right"] <= a["left"]
+        or a["bottom"] <= b["top"]
+        or b["bottom"] <= a["top"]
+    )
+
+
 @pytest.mark.parametrize("window", [(800, 640), (720, 600), (640, 480)])
 def test_short_window_keeps_zoom_clear_of_minimap(
     chromium: Browser, server: str, window: tuple[int, int]
@@ -66,7 +75,31 @@ def test_phone_map_opens_below_its_toggle_without_shifting(
         game.goto().start()
         game.page.locator("#minimap-btn").click()
         game.until("window.__minimap().open === true")
-        boxes = _boxes(game.page)
-        assert boxes["minimap"]["right"] == window[0] - 10, boxes
-        assert boxes["minimap-btn"]["right"] == window[0] - 10, boxes
+        small = _boxes(game.page)
+        assert small["minimap"]["right"] == window[0] - 10, small
+        assert small["minimap-btn"]["right"] == window[0] - 10, small
+
+        game.page.locator("#minimap-big").click()
+        game.until("window.__minimap().big === true")
+        big = _boxes(game.page)
+        for name in ("minimap", "minimap-big", "minimap-btn"):
+            assert not _overlaps(big[name], big["zoom"]), (
+                f"{name} intersects zoom in a {window[0]}x{window[1]} phone: {big}"
+            )
+        game.screenshot(f"minimap_phone_{window[0]}x{window[1]}", clip_height=window[1])
+
+        game.page.locator("#minimap-btn").click()
+        game.until("window.__minimap().open === false")
+        game.page.locator("#minimap-btn").click()
+        game.until("window.__minimap().open === true")
+        game.page.locator("#minimap-big").click()
+        game.until("window.__minimap().big === true")
+        game.page.locator("#minimap-big").click()
+        game.until("window.__minimap().big === false")
+        game.page.locator("#minimap-big").click()
+        game.until("window.__minimap().big === true")
+
+        plot = game.page.evaluate("window.__minimap().plots[0]")
+        game.page.mouse.click(plot[0], plot[1])
+        game.until("window.__minimap().open === false")
         game.assert_clean()

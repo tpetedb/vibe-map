@@ -1,0 +1,20 @@
+v = 1
+order = "issue217-minimap"
+by = "codex-issue217-review"
+reviewed = "82b9495d61915a193136317a9c1e824135f8276b"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "I ran UV_CACHE_DIR=/tmp/vibe-map-uv-cache uv run pytest -q tests/test_minimap_short_window.py at the reviewed commit: all five cases passed. I also read the test: it exercises 800x640, 720x600 and 640x480 desktop clearance; at 375x667 and 320x568 it opens Map, enlarges to Bigger, asserts the canvas, Smaller button and Map button do not overlap zoom, cycles Map and Bigger/Smaller through their state transitions, clicks the first plotted point and requires the map to close, then checks page and console cleanliness. The assertions therefore prove the stated geometry and interactions rather than merely loading the page."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "I ran tools/build.py --check and tools/sync_fork_source.py --check with uv at the reviewed commit; both exited zero and build.py printed that game/vibe-map.html matches src/. I separately compared src/game/32-minimap.js with vibemap/data/fork_source/src/game/32-minimap.js byte for byte."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "I opened the freshly generated tests/out/minimap_phone_375x667.png and tests/out/minimap_phone_320x568.png at original resolution. In both, the expanded canvas is visually separate from the zoom buttons; Smaller and Map sit below it as distinct, legible 44 px controls with visible clearance from zoom. The 320 px layout remains compact but usable, and neither screenshot shows clipped map controls or overlap with the zoom column."

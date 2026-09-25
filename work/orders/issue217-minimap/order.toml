@@ -1,0 +1,42 @@
+v = 1
+id = "issue217-minimap"
+title = "Keep expanded minimap clear of phone zoom controls"
+team = "scene"
+branch = "codex/issue217-minimap"
+goal = ""
+issue = 217
+# Whoever builds this writes their name here; a review by the same name does not count.
+builder = "codex-issue217-minimap"
+
+# Files, or folders ending in /. No globs: two orders may never own the same file.
+owns = [
+  "src/game/32-minimap.js",
+  "tests/test_minimap_short_window.py",
+]
+# Other teams whose files this order has to touch; each one signs off.
+cross = []
+# Orders that have to land before this one starts.
+needs = ["issue161-minimap"]
+
+# At least one criterion is a command. Exit 0 is pass; anything else is not.
+[[criteria]]
+id = "c1"
+text = "At 375x667 and 320x568, opening and enlarging the map leaves the canvas, Map and Bigger or Smaller controls clear of the zoom column; map plotting and the controls still work. The 640x480, 720x600 and 800x640 desktop clearance stays intact."
+check = "uv run pytest -q tests/test_minimap_short_window.py"
+
+[[criteria]]
+id = "c2"
+text = "The built game and installed fork source match their source."
+check = "uv run python tools/build.py --check && uv run python tools/sync_fork_source.py --check"
+
+[[criteria]]
+id = "c3"
+text = "The expanded phone map and zoom controls remain visually separated and usable at compact widths."
+judge = "reviewer"
+
+# What a command cannot decide goes to a person in a role, who rules on it
+# in review.toml with evidence.
+# [[criteria]]
+# id = "c2"
+# text = ""
+# judge = "reviewer"
