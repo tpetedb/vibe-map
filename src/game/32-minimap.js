@@ -102,9 +102,9 @@ function mmLayout(){
     phone=mmPhone(),show=!busy&&(!phone||mmOpen);
   const y=top+(phone&&!mmBig?MM_TAP+8:0),D=mmDim(),
     left=Math.max(12,(innerWidth-D)/2),under=y+D+8;
-  // Zoom follows the stage height. On desktop the compact map yields when
-  // its column meets zoom; on phones the Map toggle keeps the map in its corner.
-  const zoom=show&&!phone&&!mmBig?$("zoom"):null,
+  // Zoom follows the stage height. The compact desktop map and the expanded
+  // phone map yield when their column meets it.
+  const zoom=show&&((!phone&&!mmBig)||(phone&&mmBig))?$("zoom"):null,
     zr=zoom&&getComputedStyle(zoom).visibility!=="hidden"
       ?zoom.getBoundingClientRect():null;
   const meetsZoom=zr&&innerWidth-10-D<zr.right&&innerWidth-10>zr.left&&
@@ -122,9 +122,21 @@ function mmLayout(){
   mmBigBtn.style.top=under+"px";
   mmBigBtn.style.right=mmBig?"":"10px";mmBigBtn.style.left=mmBig?left+"px":"";
   if(meetsZoom){
-    const right=Math.ceil(innerWidth-zr.left+8)+"px";
-    mmCv.style.right=right;mmBigBtn.style.right=right;
+    const edge=Math.floor(zr.left-8);
+    if(mmBig){
+      const shifted=Math.max(12,edge-D)+"px";
+      mmCv.style.left=shifted;mmBigBtn.style.left=shifted;
+    }else{
+      const right=Math.ceil(innerWidth-edge)+"px";
+      mmCv.style.right=right;mmBigBtn.style.right=right;
+    }
   }
+  // Expanded on a phone, Map joins Smaller under the canvas. It stays usable
+  // above the backing sheet and leaves the zoom column its own lane.
+  if(phone&&mmBig){
+    mmBtn.style.top=under+"px";mmBtn.style.right=zr
+      ?Math.ceil(innerWidth-zr.left+8)+"px":"10px";
+  }else mmBtn.style.right="10px";
   mmList.style.display=show&&mmBig?"flex":"none";
   mmList.style.top=(under+MM_TAP+8)+"px";
   mmList.style.left=left+"px";
@@ -132,7 +144,7 @@ function mmLayout(){
   mmList.style.maxHeight=MM_LIST+"px";
   // Big, the map and what belongs to it stand in front of the sheet.
   mmBack.style.display=show&&mmBig?"block":"none";
-  [mmCv,mmBigBtn,mmList].forEach(el=>{el.style.zIndex=mmBig?"20":"6"});
+  [mmCv,mmBigBtn,mmList,mmBtn].forEach(el=>{el.style.zIndex=mmBig?"20":"6"});
   mmBtnState();if(mmBig)mmStops();guideLayout()}
 // The stops of this island as buttons: the map is a canvas, so a tap on a
 // plot needs a twin that a keyboard and a screen reader can reach. The list is
