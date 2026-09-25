@@ -399,7 +399,10 @@ def active(root: Path = ROOT, drafts: list[str] | None = None) -> list[Order]:
 def collisions(orders: list[Order], involving: set[str] | None = None) -> list[str]:
     """Two orders that cannot both be built as written: they own the same file,
     or they share a branch, where each would count the other's files as strays.
-    With `involving`, only the pairs one of those orders is part of."""
+    A shared file is no clash when one order lists the other in `needs`: they
+    run one after the other, as `plan` puts them, and the later one builds on
+    the earlier one's branch. With `involving`, only the pairs one of those
+    orders is part of."""
     out = []
     for i, a in enumerate(orders):
         for b in orders[i + 1 :]:
@@ -407,6 +410,8 @@ def collisions(orders: list[Order], involving: set[str] | None = None) -> list[s
                 continue
             if a.branch == b.branch:
                 out.append(f"{a.id} and {b.id} share the branch {a.branch}")
+            if a.id in b.needs or b.id in a.needs:
+                continue
             hit = [(x, y) for x in a.owns for y in b.owns if overlap(x, y)]
             if hit:
                 x, y = hit[0]

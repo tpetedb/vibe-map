@@ -220,6 +220,35 @@ def test_two_active_orders_may_not_own_the_same_file(repo: Path) -> None:
     assert "one" in clash[0] and "two" in clash[0]
 
 
+def test_a_shared_file_is_sequential_when_one_order_needs_the_other(
+    repo: Path,
+) -> None:
+    put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
+    commit(repo)
+    other = repo.parent / "other"
+    sh(repo, "worktree", "add", "-q", str(other), "-b", "feat/y", "origin/main")
+    put_order(other, "two", order_text("two", "feat/y", ["src/panel.js"]))
+    assert len(work.collisions(work.active(repo))) == 1, "undeclared stays a clash"
+    put_order(
+        other, "two", order_text("two", "feat/y", ["src/panel.js"], needs=["one"])
+    )
+    assert work.collisions(work.active(repo)) == []
+
+
+def test_a_plan_puts_an_order_after_the_one_it_shares_a_file_with(
+    repo: Path,
+) -> None:
+    put_order(repo, "aaa", order_text("aaa", "b/a", ["src/panel.js"]))
+    put_order(repo, "bbb", order_text("bbb", "b/b", ["src/panel.js"], needs=["aaa"]))
+    (repo / "work" / "goals").mkdir()
+    (repo / "work" / "goals" / "g.toml").write_text(
+        'v = 1\nid = "g"\nstatement = "s"\norders = ["aaa", "bbb"]\n'
+    )
+    groups, blocked = work.plan("g", repo)
+    assert [[o.id for o in g] for g in groups] == [["aaa"], ["bbb"]]
+    assert blocked == {}
+
+
 def test_an_order_is_landed_once_its_review_is_on_main(repo: Path) -> None:
     put_order(repo, "one", order_text("one", "feat/x", ["src/panel.js"]))
     review = repo / "work" / "orders" / "one" / "review.toml"

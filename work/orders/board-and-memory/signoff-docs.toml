@@ -1,0 +1,45 @@
+# The docs team's manager on what this order does to docs files: by
+# work/teams.toml that is docs/adr/0018-shared-memory.md, docs/adr/README.md
+# and docs/SKILLS.md (the "*.md" glob also hands docs the changelog fragment,
+# which the order leaves to anyone).
+v = 1
+order = "board-and-memory"
+team = "docs"
+by = "manager-docs"
+reviewed = "2e07c402330319be8cce26c1ba3662cee3c4b951"
+verdict = "accept"
+note = '''
+Accepted (round 3, delta since c309ab8). None of the three docs-owned files
+changed in that delta: `git diff c309ab8 2e07c40 -- docs/ '*.md' changelog.d/`
+touches only `work/BOARD.md` (harness-owned) and `changelog.d/board-and-memory.added.md`
+(left to anyone), each gaining one sentence about Codex's untrusted-checkout
+behaviour; `docs/adr/0018-shared-memory.md`, `docs/adr/README.md` and
+`docs/SKILLS.md` are byte-for-byte what the c309ab8 sign-off already read. The
+sign-off lapsed only because the order's overall contribution moved (BOARD.md,
+tools/board.py, tests/test_board.py, order.toml's c6 text), not because a
+docs-owned file did.
+
+I checked the new sentence anyway, since it lands next to what docs already
+vouched for. `tools/board.py` at 2e07c40 defines `CODEX_READ_ONLY` = "board:
+this checkout is untrusted in Codex, so Codex starts read-only and ignores
+--add-dir; pass -s workspace-write to write the board", and `launch_codex`
+prints it to stderr exactly when `state == "untrusted" and not
+codex_sandbox_given(args)`, then execs the original argv unchanged (only
+`--add-dir` added by `codex_argv`) - it never appends `-s workspace-write`
+itself. That matches BOARD.md's new line ("Codex starts an untrusted checkout
+read-only and then ignores `--add-dir`, so there `just codex` says in one line
+to pass `-s workspace-write`, and never adds it itself") and the changelog
+fragment's equivalent sentence, word for fact. `tests/test_board.py`'s new
+`test_an_untrusted_launch_is_told_to_pass_the_sandbox_and_given_none` exercises
+both halves: the hint fires and no sandbox flag is injected when none is given
+(including when only hook trust is bypassed), and the hint is silent across
+every spelling of an already-chosen sandbox. `uv run python tools/checks.py
+style` passes (no em dashes, no emoji) and a direct grep for U+2014 over
+BOARD.md, the changelog fragment and the three docs-owned files finds none.
+
+Codex's own review at this exact commit (`work/orders/board-and-memory/review.toml`,
+by codex-reviewer-board-and-memory, reviewed 2e07c40, verdict accept) rules c7
+pass and notes "BOARD.md's new untrusted-checkout hint matches the installed
+client," which is the live-Codex confirmation of the same claim I checked from
+the source.
+'''

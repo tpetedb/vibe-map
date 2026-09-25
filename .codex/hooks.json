@@ -2,24 +2,14 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact|fork",
+        "matcher": "startup|resume|clear|compact",
         "hooks": [
           {
             "type": "command",
-            "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/tools/board.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" read",
+            "command": "root=\"$(git rev-parse --show-toplevel 2>/dev/null)\" || exit 0; f=\"$root/tools/board.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" read",
+            "statusMessage": "Reading the board room and the shared memory",
+            "additionalContextLimit": 5000,
             "timeout": 60
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|MultiEdit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && mkdir -p backups && cp -R workspace/data \"backups/data-$(date +%Y%m%d-%H%M%S)-$$\" 2>/dev/null || true",
-            "timeout": 30
           }
         ]
       }
@@ -32,6 +22,18 @@
             "type": "command",
             "command": "f=\"${CLAUDE_PROJECT_DIR:-.}/tools/work.py\"; [ -f \"$f\" ] || exit 0; python3 \"$f\" hook pre-tool",
             "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && mkdir -p backups && cp -R workspace/data \"backups/data-$(date +%Y%m%d-%H%M%S)-$$\" 2>/dev/null || true",
+            "timeout": 30
           }
         ]
       }

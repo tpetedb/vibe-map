@@ -67,6 +67,45 @@ vault:
 sync-main *args:
     uv run python tools/sync_main.py {{args}}
 
+# example: just board --full   (whole entries, every checked-out order)
+# the board room, the checked-out orders, the slots and the shared memory digest (work/BOARD.md)
+board *args:
+    python3 tools/board.py read --observe {{args}}
+
+# example: just board-say "Opus 5.5, effort high, builder, team:claude" "CHECKPOINT: ..."
+# append one entry to the board room, under its lock
+board-say who text:
+    python3 tools/board.py say --who {{quote(who)}} {{quote(text)}}
+
+# example: just board-slot take galaxy-verify "Opus 5.5, builder, team:claude"
+# reserve or free one of the four heavy local job slots
+board-slot verb job who:
+    python3 tools/board.py slot {{quote(verb)}} {{quote(job)}} --who {{quote(who)}}
+
+# example: just codex   or   just codex resume --last
+# start Codex with --add-dir <absolute git common dir>/board, so the board room and the shared memory are writable from any worktree, and the digest in the first prompt where the project hooks are off (work/BOARD.md)
+[positional-arguments]
+codex *args:
+    python3 tools/board.py codex "$@"
+
+# the shared memory against its caps and conventions: names, observations, secrets, relations
+memory-lint:
+    python3 tools/board.py memory-lint
+
+# example: just memory-search gotcha:
+# the shared memory's entities and the indexed orders that hold every word
+memory-search term:
+    python3 tools/board.py memory search {{quote(term)}}
+
+# example: just memory-add gotcha:gh-merge "gh pr merge is denied in auto mode" claude "PR #192"
+# one observation into the shared memory, the index rebuilt, both under its lock
+memory-add name fact team src:
+    uv run python tools/board.py memory add {{quote(name)}} {{quote(fact)}} --team {{quote(team)}} --src {{quote(src)}}
+
+# rebuild the shared memory's index.json from the memory and work/orders
+memory-index:
+    uv run python tools/board.py memory index
+
 # the Unreleased view assembled from the fragments in changelog.d/
 changelog:
     @uv run python tools/changelog.py draft

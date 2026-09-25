@@ -19,5 +19,6 @@ One file per decision, in Michael Nygard's form (Title, Status, Context, Decisio
 | [0015](0015-experiences-share-one-core.md) | An experience is a view over one shared core, and where a topic happened is data | Accepted, 2026-09-21 |
 | [0016](0016-work-orders.md) | A task for an agent is a work order, and its acceptance is a command | Proposed, 2026-09-21 |
 | [0017](0017-own-camp-own-bill.md) | A camp and its bill belong to the learner | Accepted, 2026-09-22 |
+| [0018](0018-shared-memory.md) | The teams share one board room and one memory, read by one command at session start | Accepted, 2026-09-24; the memory half superseded by DECISION #193 section 4 |
 
-Next number: 0018. 0011 and 0012 were reserved for work that did not land and are never reused: a number names one decision, forever. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+Next number: 0019. 0011 and 0012 were reserved for work that did not land and are never reused: a number names one decision, forever. The form: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
