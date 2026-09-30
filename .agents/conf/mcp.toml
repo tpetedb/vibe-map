@@ -1,0 +1,7 @@
+# MCP servers for both clients (DECISION #193 section 2). None today: the board
+# and the memory are files and a CLI, and a CLI costs less context than a server
+# (F114). A server goes in as [servers.<name>] with a pinned command and env
+# given by name only; the strict profile renders none.
+version = 1
+
+[servers]

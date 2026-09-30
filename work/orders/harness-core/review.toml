@@ -1,0 +1,55 @@
+# [Claude Opus 5.5, effort high, reviewer]
+# Review round 1 (by name) of harness-core, a delta review since 347d322, the
+# head the earlier review (reviewer-harness-core-r2, improve) read. Each of its
+# eight findings is re-checked below. Strays that come only from the stacked
+# board-and-memory (#192) files are left out.
+v = 1
+order = "harness-core"
+by = "reviewer-harness-core-r1"
+reviewed = "685fc9c5098bb541050f24bd57e4d6b641f736b2"
+verdict = "accept"
+
+[[criteria]]
+id = "c1"
+verdict = "pass"
+evidence = "In a scratch clone at 685fc9c I ran the c1 command: sync, check and git diff all exit 0, and harness check prints OK. Hand edits still drift. In a branch with one deny rule removed from .claude/settings.json, check names the file both as 'edited by hand or stale' and as 'differs from a fresh render'. The same happens with one line added to CLAUDE.md. The earlier low on 'tracked input only' is fixed. I copied fast.toml to an untracked profiles/mine.toml and set profile = 'mine'. sync, check and doctor all refuse it with 'mine.toml is not tracked: `git add` it'. Once the file is staged, it is accepted and hashed into the lock."
+
+[[criteria]]
+id = "c2"
+verdict = "pass"
+evidence = "uv run pytest -q tests/test_harness.py tests/test_work.py exits 0 in the scratch clone. I reverted seven fixes one at a time and ran the new tests. Every revert fails the test written for it. (1) sync removes every old lock path: test_sync_removes_only_what_it_renders_inside_the_repository fails. (2) No harness_gate in ci or check: test_work_check_and_ci_run_the_harness_check_whenever_there_is_a_lock fails. (3) The tracked-file refusal dropped: both params of test_a_profile_or_model_file_that_is_not_tracked_is_refused fail. (4) project_trust reads only the main checkout: the linked-worktree trust test fails, 'verified' where 'missing' is expected. (5) hook_trust reads the worktree's own hooks.json: the same test fails. (6) No drift check in strays(): test_a_hand_edit_to_a_lock_listed_output_is_refused fails. (7) A single merge-base: test_a_needed_branch_that_caught_up_with_main_still_vouches fails. The writable_roots clause now matches amended A2 (manager commit 2b3ea60). One clause is contradicted, not stale: the sentence still says 'max only on claude', but EFFORTS['openai'] now includes max and the test asserts that a Codex max is accepted. The code follows the installed client, and doctor still checks effort per model against ~/.codex/models_cache.json. So the sentence and DECISION-final line 25 need the amendment (low finding), not the code."
+
+[[criteria]]
+id = "c3"
+verdict = "pass"
+evidence = "Doctor exits 0 offline in the scratch clone and in the worktree. It prints project trust and hook trust on separate lines. The earlier medium finding (trust read from the main checkout only) was rejected by the builder, citing .git/board/harness/deep/16-codex-project-hooks.md. The citation holds, and I reproduced it myself on the installed codex-cli 0.156.1. I made a scratch repo with a nested linked worktree, gave it the rendered .codex/hooks.json, and ran 'codex app-server' hooks/list with a throwaway CODEX_HOME. No model call was made and no trust was granted. Results by config: main checkout trusted only, 5 project hooks. Nothing trusted, 0. Main trusted plus the worktree's own entry untrusted, 0. Worktree's own entry trusted only, 5. Every key is <main>/.codex/hooks.json. That is exactly the own-entry-first-then-main order project_trust() now uses, and hook_trust() now reads the main checkout's file and key. The board's 00:40 per-worktree ruling was overtaken by the orchestrator's ROOT CAUSE amendment (ROOM, deep/16), and nobody objected. In this worktree doctor now says project trust 'verified' (the path is inherited from the main checkout, and doctor names that path). It says hook trust 'unknown': the four handlers of the main checkout's file have hashes. The main checkout's untracked hooks.json holds the same four handlers, byte-equal to the rendered ones, so their trust survives the move-aside."
+
+[[criteria]]
+id = "c4"
+verdict = "pass"
+evidence = "I ran the full c4 command in the scratch clone at 685fc9c: exit 0. ruff check and format pass, style and sinks are OK, and the non-browser battery passes with one skip (no GitHub origin in the clone). All six --check generators pass. work.py validate reads 40 orders, 0 collisions."
+
+[[criteria]]
+id = "c5"
+verdict = "pass"
+evidence = "Claude half only. The Codex client receipt is the Codex reviewer's, and I rule nothing on it. The rendered .claude/agents frontmatter is unchanged since 347d322: builder claude-opus-5-5 at high, reviewer claude-opus-5-5 at medium, team-manager claude-fable-5-1 at high. Doctor reports that every skill resolves through .claude/skills. One aside for the Codex reviewer: codex doctor --json in this worktree, with a throwaway copy of the user config, reports no config or ignored-key warning. It does report a websocket 401, because the copy carries no auth. Its agent TOMLs carry gpt-6-sol high, gpt-6-sol medium and gpt-6-astra medium."
+
+[[findings]]
+severity = "low"
+file = "work/orders/harness-core/order.toml"
+text = "c2 still says 'max only on claude', and DECISION-final section 1 (line 25) says the same, citing F162. The code and its test now accept effort max for a Codex role. The installed client's models_cache.json offers max for gpt-6-astra, gpt-6-sol, gpt-6-luna and the 5.6 models, so the code is right, and the per-model doctor check still refuses max where a model lacks it (gpt-5.5). The manager should amend c2 the way 2b3ea60 amended writable_roots, and the board should send the F162 correction to the checker."
+
+[[findings]]
+severity = "low"
+file = ".agents/utils/harness.py"
+text = "The EFFORTS comment, the changelog ('which the installed client lists for every GPT model') and the comment heading .agents/conf/models/tom.toml ('max is Claude's top level and ultra Codex's') do not match the client list. gpt-5.5 offers no max, and the luna models offer no ultra. Say that effort is checked per model against the client list, which doctor does."
+
+[[findings]]
+severity = "low"
+file = "work/BOARD.md"
+text = "BOARD.md (board-and-memory's file) still says that `.codex/agents/` stays untracked and is not touched. This order tracks those four files, and .agents/README.md now carries the move-aside step. The owner should correct BOARD.md before or with this order's landing."
+
+[[findings]]
+severity = "low"
+file = "tools/work.py"
+text = "A pull request that carries no order can edit .agents/utils/harness.py so that check() returns [], and hand-edit .claude/settings.json in the same change. work.py ci then passes: I tried it, and it reported '0 orders, 0 problems'. The same PR could edit the settings before this change too, so this is not a regression. The harness gate imports the checker it is guarding from the head under review, so a no-order change to harness.py deserves a CODEOWNERS-style guard in harness-portable."

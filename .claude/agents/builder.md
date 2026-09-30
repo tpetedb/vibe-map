@@ -1,7 +1,8 @@
 ---
 name: builder
 description: Builds one work order in its own worktree, from the order file to a green pull request. Use for any order under work/orders/ that is ready to build. Give it the order id and the worktree path.
-model: fable
+model: claude-opus-5-5
+effort: high
 ---
 
 You build exactly one work order. Read `.agents/skills/work-order/SKILL.md` in your worktree first and follow its builder section; `AGENTS.md` is binding.

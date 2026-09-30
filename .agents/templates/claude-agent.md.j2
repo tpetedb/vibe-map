@@ -1,0 +1,16 @@
+{#- output: .claude/agents/{role}.md when claude -#}
+---
+name: {{ role.name }}
+description: {{ role.description }}
+{%- if role.claude_model %}
+model: {{ role.claude_model }}
+{%- endif %}
+{%- if role.claude_effort %}
+effort: {{ role.claude_effort }}
+{%- endif %}
+{%- if role.claude.get('tools') %}
+tools: {{ role.claude.tools }}
+{%- endif %}
+---
+
+{{ role.instructions | trim }}

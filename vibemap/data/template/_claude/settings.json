@@ -1,4 +1,25 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.codex/auth*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ],
+    "ask": [
+      "Edit(./config.toml)",
+      "Write(./config.toml)"
+    ],
+    "defaultMode": "default"
+  },
+  "sandbox": {
+    "enabled": false,
+    "failIfUnavailable": true,
+    "allowUnsandboxedCommands": false
+  },
   "hooks": {
     "PostToolUse": [
       {

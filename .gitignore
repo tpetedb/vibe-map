@@ -13,8 +13,10 @@ __pycache__/
 tests/out/
 node_modules/
 .env
-# symlinks that `just setup` creates so Claude Code sees .agents/skills
+# links that `harness.py sync` and `just setup` create so Claude Code sees .agents/skills
 .claude/skills/
+# a private harness overlay: launch arguments only, never rendered
+.agents/config.local.toml
 
 # What tools/work.py last measured; good only for the tree it saw.
 work/orders/*/result.json

@@ -1,0 +1,54 @@
+# Tom's model table (DECISION #193 section 1, amendment A1). His preferences are
+# requirements. `harness.py pick <role> --provider <p>` reads it at every spawn;
+# `harness.py doctor` checks each id against the client's own model list.
+# Effort is checked per model: Haiku takes none, max is Claude's top level and
+# ultra Codex's.
+version = 1
+fallback = "report-before-switch"    # a session never changes provider; switching provider is a spawn decision, logged
+
+[ids.claude]
+fable = "claude-fable-5-1"
+opus = "claude-opus-5-5"
+sonnet = "claude-sonnet-5"
+haiku = "claude-haiku-4-5"           # retirement not before 2026-10-15; no effort setting
+
+[ids.openai]
+astra = "gpt-6-astra"
+sol = "gpt-6-sol"
+luna = "gpt-6-luna"
+sol56 = "gpt-5.6-sol"
+# luna56 = "gpt-5.6-luna"            # requested, not in the price table yet; doctor says when a client lists it
+# terra = "gpt-5.6-terra"            # the same
+
+[requested]                          # asked for and not yet adopted: doctor reports each one a client lists
+openai = ["gpt-5.6-luna", "gpt-5.6-terra"]
+
+[roles.build]                        # Opus 5.5 over Sol
+claude = ["opus"]
+openai = ["sol"]
+effort = { claude = "high", openai = "high" }
+
+[roles.cheap]
+claude = ["sonnet", "haiku"]
+openai = ["luna"]
+effort = { claude = "low", openai = "low" }   # dropped for haiku
+
+[roles.design]                       # Astra for beautiful design
+openai = ["astra"]
+claude = ["opus"]
+effort = { claude = "high", openai = "high" }
+
+[roles.coordinate]                   # Fable coordinates
+claude = ["fable"]
+openai = ["astra"]
+effort = { claude = "high", openai = "medium" }
+
+[roles.hard]                         # Fable for really hard maths or code
+claude = ["fable"]
+openai = ["astra"]
+effort = { claude = "max", openai = "ultra" }
+
+[roles.review]                       # the other team's build model
+openai = ["sol"]
+claude = ["opus"]
+effort = { claude = "medium", openai = "medium" }

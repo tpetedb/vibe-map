@@ -1,0 +1,11 @@
+# What the harness needs to know about this repository.
+version = 1
+name = "vibe-map"
+main = "main"
+# The runtime store: <git common dir>/<board>, shared by every worktree and both
+# clients, never committed (tools/board.py, work/BOARD.md).
+board = "board"
+# Skills live once, in the Agent Skills standard's folder; Claude Code reads
+# them only from .claude/skills, so each gets a relative link there (F013).
+skills = ".agents/skills"
+claude_skills = ".claude/skills"

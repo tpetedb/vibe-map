@@ -1,0 +1,16 @@
+# The harness knobs: the one file a person edits day to day. Everything under
+# .claude/ and .codex/, and CLAUDE.md, is rendered from this and .agents/ by
+# `uv run python .agents/utils/harness.py sync`; `harness.py explain` prints
+# every effective value, where it comes from and when it applies.
+# .agents/README.md is the map. An unknown key or value is refused, not ignored.
+version = 1
+profile = "balanced"                 # .agents/conf/profiles/<name>.toml, complete files; switching is this line
+safeguards = "profile"               # or light | standard | strict, overriding the profile, never below it
+autonomy = "lead"                    # pair | lead | ralph, the toolbox vocabulary; ralph only inside the verified strict container
+providers = ["claude", "codex"]      # gemini and aider add their two adapters
+agents = 4                           # concurrent local agents, the host budget, under the client cap of 20
+models = "tom"                       # .agents/conf/models/<name>.toml
+
+[usage]                              # share of the plan window; pick steps down the prefer list at slow_at, spawns pause at stop_at
+claude = { plan = "max-20x", slow_at = 0.60, stop_at = 0.85 }
+openai = { plan = "pro-5x", slow_at = 0.50, stop_at = 0.70 }
